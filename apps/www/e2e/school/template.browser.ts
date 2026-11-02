@@ -441,9 +441,14 @@ test("a teacher turns a question into a true or false table, marks the key in th
       .getByRole("group", { name: "Column for statement 2 of question 1" })
       .getByRole("button", { exact: true, name: "False" })
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.getByRole("region", { name: FIRST_QUESTION }).getByRole("radiogroup")
-  ).toHaveCount(0);
+  const circles = page
+    .getByRole("region", { name: FIRST_QUESTION })
+    .getByRole("radio");
+  await expect(circles).toHaveCount(6);
+  for (const circle of await circles.all()) {
+    await expect(circle).toBeDisabled();
+    await expect(circle).not.toBeChecked();
+  }
   await expect(
     page.getByRole("region", { name: FIRST_QUESTION })
   ).not.toContainText("No key yet");
@@ -458,10 +463,9 @@ test("a teacher turns a question into a true or false table, marks the key in th
     name: "Air mendidih pada 100 derajat Celsius.",
   });
   await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await first.getByRole("radio", { name: optionNamed("True") }).click();
-  await expect(
-    first.getByRole("radio", { name: optionNamed("True") })
-  ).toBeChecked();
+  const truth = first.getByRole("radio", { exact: true, name: "True" });
+  await truth.click();
+  await expect(truth).toBeChecked();
   await expect(trying.getByRole("radiogroup")).toHaveCount(3);
   await context.close();
 });

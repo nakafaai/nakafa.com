@@ -18,15 +18,7 @@ function firstOption(page: Page, question: number) {
     .first();
 }
 
-/** Reloads `page` until it shows the first option of `question` as chosen, once the other tab's answer is kept. */
-async function expectChosenAfterReload(page: Page, question: number) {
-  await expect(async () => {
-    await page.reload();
-    await expect(firstOption(page, question)).toBeChecked({ timeout: 3000 });
-  }).toPass({ timeout: readinessTimeoutMilliseconds });
-}
-
-test("a student with a sitting open in two tabs answers in both, and each tab keeps the other's answer", async ({
+test("a student with a sitting open in two tabs answers in the one that holds the paper, the other says where it is, and takes it over with the answers once that tab closes", async ({
   baseURL,
   browser,
 }) => {
@@ -60,25 +52,26 @@ test("a student with a sitting open in two tabs answers in both, and each tab ke
     timeout: readinessTimeoutMilliseconds,
   });
 
-  // The second tab is the same browser, which already holds the attempt, so it opens the paper with no entry.
+  // The second tab is the same browser, which already holds the attempt, so it needs no entry, and one tab holds
+  // the paper, because two would report every switch between them as the student leaving the exam.
   const second = await context.newPage();
   await second.goto(address(`/sittings/${sitting.sittingId}`));
-  await expect(firstOption(second, 1)).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
+  await expect(
+    second.getByText("This exam is open in another tab.")
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(firstOption(second, 1)).toHaveCount(0);
 
   await firstOption(first, 1).click();
   await expect(firstOption(first, 1)).toBeChecked();
-  await firstOption(second, 2).click();
-  await expect(firstOption(second, 2)).toBeChecked();
+  await firstOption(first, 2).click();
+  await expect(firstOption(first, 2)).toBeChecked();
 
-  // Neither tab's answer replaces the other's.
-  await expectChosenAfterReload(second, 1);
+  // The first tab closes, and the second takes the paper over by itself with both answers.
+  await first.close();
+  await expect(firstOption(second, 1)).toBeChecked({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(firstOption(second, 2)).toBeChecked();
-  await expectChosenAfterReload(first, 2);
-  await expect(firstOption(first, 1)).toBeChecked();
-  for (const page of [first, second]) {
-    await expect(page.getByText("We could not load this data.")).toHaveCount(0);
-  }
+  await expect(second.getByText("We could not load this data.")).toHaveCount(0);
   await context.close();
 });

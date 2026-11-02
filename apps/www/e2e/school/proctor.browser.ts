@@ -195,9 +195,14 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   await expect(
     proctor.getByRole("button", { name: "Create exam" })
   ).toHaveCount(0);
-  await expect(
-    proctor.getByRole("button", { name: "More actions" })
-  ).toHaveCount(0);
+  // The row's one menu opens the rooms, and holds nothing that edits, copies or deletes the exam.
+  const rowMenu = proctor
+    .getByRole("row", { name: sitting.title })
+    .getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(rowMenu);
+  await rowMenu.click();
+  await expect(proctor.getByRole("menuitem")).toHaveText(["Rooms"]);
+  await proctor.keyboard.press("Escape");
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}/results`)
   );

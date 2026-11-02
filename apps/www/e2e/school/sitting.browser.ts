@@ -236,19 +236,19 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   const student = await studentContext.newPage();
   await student.goto(address("/"));
   // The school's root opens the student's own exams. They draw once Convex holds the session and the student's
-  // sittings answer: the open exam comes first, and its Start enters the sitting.
+  // sittings answer: the open exam comes first, and Start in its row's menu enters the sitting.
   await student.waitForURL(SITTINGS_ADDRESS);
-  await expect(
-    student
-      .getByRole("table")
-      .getByRole("link", { name: "Start exam", exact: true })
-  ).toHaveAttribute(
-    "href",
-    new RegExp(`/sittings/${sitting.sittingId}$`, "u"),
-    {
-      timeout: readinessTimeoutMilliseconds,
-    }
-  );
+  const start = student
+    .getByRole("table")
+    .getByRole("button", { name: "More actions" })
+    .first();
+  await expect(start).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await waitUntilTakenOver(start);
+  await start.click();
+  await student
+    .getByRole("menuitem", { name: "Start exam", exact: true })
+    .click();
+  await student.waitForURL(new RegExp(`/sittings/${sitting.sittingId}$`, "u"));
 
   await studentContext.close();
   await proctorContext.close();

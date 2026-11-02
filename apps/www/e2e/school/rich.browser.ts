@@ -196,8 +196,11 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(
     reopened.getByRole("article", { name: "Question 1" }).locator("ul li")
   ).toHaveCount(2);
+  // A paper is drawn without an editor, so its formula is the schema's element with the lesson's inline pieces.
   await expect(
-    reopened.locator('[data-formula="inline"] .katex')
+    reopened
+      .getByRole("article", { name: "Question 1" })
+      .locator('[data-type="math-inline"] .katex')
   ).toBeVisible();
   await context.close();
 });

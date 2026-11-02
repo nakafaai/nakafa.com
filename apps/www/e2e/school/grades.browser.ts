@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   grantStudent,
@@ -56,6 +57,7 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   await owner.close();
 
   const page = await teacher.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   await page.goto(address("/classes/fisika-x-1/grades"));
   const row = page.getByRole("row").filter({ hasText: "Acceptance Learner" });
   await expect(row).toContainText("Not entered", {
@@ -67,23 +69,27 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
       .getByRole("tab", { name: "Grades" })
   ).toHaveAttribute("aria-selected", "true");
 
-  // No grade holds a result yet, so the column's head is its name, and no filter opens an empty menu.
+  // No grade holds a result yet, so the column's head stands as every head does and its menu says so.
+  const resultFilter = page.getByRole("button", { name: "Filter by Result" });
+  await waitUntilTakenOver(resultFilter);
+  await resultFilter.click();
   await expect(
-    page.getByRole("button", { name: "Filter by Result" })
-  ).toHaveCount(0);
-  await expect(
-    page.getByRole("columnheader", { name: "Result" })
+    page.getByRole("menuitem", { name: "No values yet" })
   ).toBeVisible();
+  await page.keyboard.press("Escape");
 
   // A typed value shows at once as the draft, judged by the school's scheme.
   const field = row.getByRole("textbox", {
     name: "Grade of Acceptance Learner",
   });
   await waitUntilTakenOver(field);
+  const sentBefore = changes.sent;
   await field.fill("82");
   await field.press("Enter");
   await expect(row).toContainText("Draft");
   await expect(row).toContainText("Meets KKTP");
+  // A reload drops a change still on its way, so it waits for the server to answer the grade.
+  await saved(changes, sentBefore);
   await page.reload();
   await expect(row).toContainText("Draft", {
     timeout: readinessTimeoutMilliseconds,

@@ -23,7 +23,9 @@ test("an admin stores a grading scheme version with a band, then a newer one, an
   await expect(page.getByText("No version stored yet.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page.getByText("KKTP 75, no bands")).toBeVisible();
+  await expect(
+    page.getByText("Grades use the built-in scheme with KKTP 75 and no bands.")
+  ).toBeVisible();
 
   // The first version starts from the built-in scheme, and gains one band.
   const add = page

@@ -94,11 +94,12 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   });
   await teacher.keyboard.press("Escape");
   await expect(integrity).toBeHidden();
-  // The results list each question's answers in the Questions sheet of the header.
+  // The results list each question's answers in the Questions sheet of the header, whose select picks the question.
   await teacher.getByRole("button", { name: "Questions", exact: true }).click();
   const questions = teacher.getByRole("dialog", { name: "Questions" });
-  await questions
-    .getByRole("button", { name: "Question 3", exact: true })
+  await questions.getByRole("combobox").click();
+  await teacher
+    .getByRole("option", { name: "Question 3", exact: true })
     .click();
   const answers = teacher.getByRole("table").filter({
     has: teacher.getByRole("columnheader", { name: "Points", exact: true }),
