@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { KEPT_NAME_SCRIPT } from "@/components/tryout/set/kept";
+import { useKeptPageName } from "@/components/tryout/set/name";
 
 /**
  * Renders the production summary card used by try-out section pages. While `waiting` under a signed-in
@@ -14,9 +15,11 @@ export function TryoutPartSummary({
   /** The learner read that decides the page has not answered yet. */
   waiting: boolean;
 }) {
+  const keptName = useKeptPageName();
   return (
     <section
       className="bg-card space-y-4 rounded-xl border p-5 shadow-sm [--number-flow-mask-height:0.125em]"
+      data-kept-name={keptName}
       data-summary-read={waiting ? "pending" : undefined}
     >
       {waiting ? (

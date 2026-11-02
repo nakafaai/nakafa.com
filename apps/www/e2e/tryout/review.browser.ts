@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import type { Changes } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
@@ -48,8 +48,8 @@ const attemptOfUrl = (page: Page) =>
   new URL(page.url()).searchParams.get("attemptId");
 
 /**
- * Records, from the first frame that holds the page's action, whether the attempt picker beside it
- * stands and whether a summary card shows. The script runs in the page, so it uses the browser's own API.
+ * Records, from the first frame that holds the page's action, whether its attempt picker stands and
+ * whether a summary card shows. The script runs in the page, so it uses the browser's own API.
  */
 const recordFinishedFrames = (page: Page) =>
   Effect.promise(() =>
@@ -57,18 +57,18 @@ const recordFinishedFrames = (page: Page) =>
       const frames: { card: boolean; picker: boolean }[] = [];
       Object.defineProperty(window, key, { value: frames });
       const sample = () => {
-        const action = document
-          .querySelector("main [data-slot=tryout-action-name]")
-          ?.closest("a, button");
-        if (action) {
+        const name = document.querySelector(
+          "main [data-slot=tryout-action-name]"
+        );
+        if (name) {
           frames.push({
             card: [...document.querySelectorAll("main section.bg-card")].some(
               (card) => card.checkVisibility({ checkVisibilityCSS: true })
             ),
             picker:
-              action.previousElementSibling?.checkVisibility({
-                checkVisibilityCSS: true,
-              }) ?? false,
+              document
+                .querySelector("main [data-attempt-picker]")
+                ?.checkVisibility({ checkVisibilityCSS: true }) ?? false,
           });
         }
         requestAnimationFrame(sample);
@@ -329,8 +329,8 @@ test.describe("The review of a finished try-out", () => {
         );
         yield* Effect.sync(() => {
           expect(frames.length).toBeGreaterThan(0);
-          expect(frames.filter((frame) => frame.card)).toEqual([]);
-          expect(frames.filter((frame) => !frame.picker)).toEqual([]);
+          expect(Arr.filter(frames, (frame) => frame.card)).toEqual([]);
+          expect(Arr.filter(frames, (frame) => !frame.picker)).toEqual([]);
         });
       })
     );

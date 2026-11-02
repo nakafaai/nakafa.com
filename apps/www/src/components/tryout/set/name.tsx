@@ -1,15 +1,20 @@
 import { cn } from "cn";
-import { Array as Arr, Effect } from "effect";
-import { useEffect } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import type { KeyValueStore } from "effect/persistence";
+import { useEffect, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
+import { keptStorage } from "@/components/player/storage";
 import { useLiveSession } from "@/components/providers/live";
 import {
   KEPT_NAME_SCRIPT,
   keepActionName,
   keepAttemptLabel,
+  readKeptAttempt,
+  readKeptName,
   type TryoutActionNameKey,
   TryoutActionNameSchema,
 } from "@/components/tryout/set/kept";
+import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**
  * The name on a try-out action. The button hugs the one name it shows. No first paint knows a
@@ -81,4 +86,52 @@ export function useKeepAttemptLabel(
       Effect.runFork(keepAttemptLabel(address, label));
     }
   }, [address, label]);
+}
+
+/** What a browser kept does not change under a page, so nothing ever says it did. */
+function subscribeToNothing() {
+  return () => undefined;
+}
+
+/** Reads what this browser kept. Storage the page cannot read keeps nothing. */
+function readKept(
+  read: Effect.Effect<
+    Option.Option<string>,
+    KeyValueStore.KeyValueStoreError,
+    KeyValueStore.KeyValueStore
+  >
+) {
+  return Effect.runSync(
+    read.pipe(
+      Effect.provide(keptStorage),
+      Effect.map(Option.getOrUndefined),
+      Effect.orElseSucceed(() => undefined)
+    )
+  );
+}
+
+/**
+ * The name this browser kept for the page it is on. An inline script names a hard load's first paint,
+ * but React draws a learner's page and a navigation's, where no inline script runs.
+ */
+export function useKeptPageName() {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => readKept(readKeptName(window.location.pathname)),
+    () => undefined
+  );
+}
+
+/** The picker label this browser kept for the page it is on, for a signed-in reader only. */
+export function useKeptPageAttempt() {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () =>
+      hasSignedInHint(document.cookie)
+        ? readKept(
+            readKeptAttempt(window.location.pathname, window.location.search)
+          )
+        : undefined,
+    () => undefined
+  );
 }

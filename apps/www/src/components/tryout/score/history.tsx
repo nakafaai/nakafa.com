@@ -28,21 +28,19 @@ import {
 import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr, Effect, Option } from "effect";
-import { type ReactNode, useState, useSyncExternalStore } from "react";
+import { Array as Arr, Option } from "effect";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { keptStorage } from "@/components/player/storage";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useFactsWaiting } from "@/components/tryout/section/summary";
-import {
-  KEPT_ATTEMPT_SCRIPT,
-  readKeptAttempt,
-} from "@/components/tryout/set/kept";
+import { KEPT_ATTEMPT_SCRIPT } from "@/components/tryout/set/kept";
 import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
-import { useKeepAttemptLabel } from "@/components/tryout/set/name";
-import { hasSignedInHint } from "@/lib/auth/hint";
+import {
+  useKeepAttemptLabel,
+  useKeptPageAttempt,
+} from "@/components/tryout/set/name";
 import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
@@ -117,39 +115,17 @@ function TryoutAttemptFace({ children }: { children?: ReactNode }) {
   );
 }
 
-/** Stands for nothing until something subscribes: what a browser kept does not change under a page. */
-function subscribeToNothing() {
-  return () => undefined;
-}
-
-/** The picker label this browser kept for the page it is on, for a page that navigates here. */
-function readPageAttempt() {
-  if (!hasSignedInHint(document.cookie)) {
-    return;
-  }
-  return Effect.runSync(
-    readKeptAttempt(window.location.pathname, window.location.search).pipe(
-      Effect.provide(keptStorage),
-      Effect.map(Option.getOrUndefined),
-      Effect.orElseSucceed(() => undefined)
-    )
-  );
-}
-
 /**
  * The picker's place until a learner's read answers. A button that appears late is a flicker, so a set
  * this browser saw tried more than once shows its picker from the first frame, and the live one
  * replaces it where it stands. A first visit has nothing to draw, so its place stays empty.
  */
 function TryoutAttemptPlace() {
-  const label = useSyncExternalStore(
-    subscribeToNothing,
-    readPageAttempt,
-    () => undefined
-  );
+  const label = useKeptPageAttempt();
   return (
     <Button
       className="data-empty:hidden"
+      data-attempt-picker=""
       data-empty={label === undefined ? "" : undefined}
       inert
       type="button"
@@ -213,6 +189,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
         render={
           <Button
             className="group data-open:[&_.tryout-history-chevron]:rotate-180"
+            data-attempt-picker=""
             type="button"
             variant="outline"
           />
