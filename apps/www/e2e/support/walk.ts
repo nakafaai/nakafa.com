@@ -80,9 +80,12 @@ function recordMoves({ key, watched }: { key: string; watched: string }) {
         continue;
       }
       // A table that scrolls moves its cells, which a press on a far column does and no reader calls a shift.
+      // A sticky cell holds its place through that scroll, so the scroller's distance is not part of its place.
       let scrolled = 0;
-      for (let node = item.parentElement; node; node = node.parentElement) {
-        scrolled += node.scrollLeft;
+      let pinned = false;
+      for (let node: Element | null = item; node; node = node.parentElement) {
+        scrolled += pinned || node === item ? 0 : node.scrollLeft;
+        pinned ||= getComputedStyle(node).position === "sticky";
       }
       const x = box.x + scrolled;
       const before = places.get(item);

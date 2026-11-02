@@ -124,7 +124,7 @@ export function readControlProblems(page: Page) {
   });
 }
 
-/** The four radii of every part of every group on the page, group by group, in reading order. */
+/** The four radii of every part of every group the page keeps at rest, group by group, in reading order: what an open overlay holds comes and goes with it. */
 function readPartRadii(page: Page) {
   return page.evaluate(() => {
     const seen = (node: Element) => {
@@ -133,6 +133,12 @@ function readPartRadii(page: Page) {
     };
     return Array.from(document.querySelectorAll('[data-slot="button-group"]'))
       .filter(seen)
+      .filter(
+        (group) =>
+          group.closest(
+            '[role="menu"], [role="dialog"], [data-slot="popover-content"]'
+          ) === null
+      )
       .map((group) =>
         Array.from(group.children)
           .filter(seen)
@@ -159,6 +165,10 @@ const GROUP_CONTROLS =
 /** What a control opens, which says so on the page: a control's own attributes can belong to its tooltip. */
 const OPEN_OVERLAY =
   '[role="menu"]:visible, [role="dialog"]:visible, [data-slot="popover-content"]:visible';
+
+/** What is open and not on its way out. */
+const STAYS_OPEN =
+  '[role="menu"]:not([data-closed]):visible, [role="dialog"]:not([data-closed]):visible, [data-slot="popover-content"]:not([data-closed]):visible';
 
 /**
  * The owner's rule (31 Oct): a control never changes shape on any state. Takes one control of a group through hover,
@@ -193,12 +203,15 @@ const expectControlKeepsShape = Effect.fn("NakafaE2E.expectControlKeepsShape")(
       await page.mouse.down();
     });
     yield* held("press");
-    // A menu opens on the press, and a release on its trigger after a held press closes it, so the press ends away from
-    // the control with Escape, and the open state comes from the keyboard.
+    // A menu opens on the press and closes itself on a release away from it, so the press ends there, and the open
+    // state comes from the keyboard. Escape closes only what stays open, because on a settings page with nothing open
+    // it leaves the page.
     yield* Effect.promise(async () => {
       await page.mouse.move(0, 0);
       await page.mouse.up();
-      await page.keyboard.press("Escape");
+      if ((await page.locator(STAYS_OPEN).count()) > 0) {
+        await page.keyboard.press("Escape");
+      }
       await expect(page.locator(OPEN_OVERLAY)).toHaveCount(0);
     });
     if (opens === null) {

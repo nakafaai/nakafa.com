@@ -9,7 +9,18 @@ import type { Page } from "@playwright/test";
  * its class names: a text clipped by a scroller counts only as far as the scroller shows it.
  */
 export function readFrameProblems(page: Page) {
-  return page.evaluate(() => {
+  return page.evaluate(async () => {
+    // A change of width slides the underline to its tab, so it is read where it comes to rest.
+    await Promise.allSettled(
+      document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.effect instanceof KeyframeEffect &&
+            animation.effect.target?.matches('[data-slot="tab-indicator"]')
+        )
+        .map((animation) => animation.finished)
+    );
     const widest = 1280;
     const tolerance = 1;
     const desktop = 1024;
@@ -116,7 +127,7 @@ export function readFrameProblems(page: Page) {
           `the first tab stands at ${Math.round(left)}, the header's first letter at ${Math.round(line)}`,
         current &&
           off(underline) &&
-          "the underline stands off the header's first letter",
+          `the underline stands at ${Math.round(underline)}, the header's first letter at ${Math.round(line)}`,
       ].filter((problem) => typeof problem === "string");
     };
 
