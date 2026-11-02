@@ -42,6 +42,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -172,7 +173,7 @@ function QuestionResults({
   );
 }
 
-/** The share a question scored, how many answers that counts, the search over them, and each option's count. */
+/** The share a question scored, how many answers that counts, and each option's count. */
 function QuestionCounts({
   question,
   stats,
@@ -185,23 +186,18 @@ function QuestionCounts({
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="min-w-0 text-sm">
-          <p className="font-medium">
-            {share === null
-              ? t("results-no-answers")
-              : t("results-share", { share })}
-          </p>
-          <p className="text-muted-foreground">
-            {stats.complete
-              ? t("results-counted", {
-                  answered: stats.answered,
-                  counted: stats.counted,
-                })
-              : t("results-incomplete", { counted: stats.counted })}
-          </p>
-        </div>
-        <TableSearch placeholder={t("results-search")} />
+      <div className="min-w-0 text-sm">
+        {share === null ? null : (
+          <p className="font-medium">{t("results-share", { share })}</p>
+        )}
+        <p className="text-muted-foreground">
+          {stats.complete
+            ? t("results-counted", {
+                answered: stats.answered,
+                counted: stats.counted,
+              })
+            : t("results-incomplete", { counted: stats.counted })}
+        </p>
       </div>
       <ul className="flex flex-wrap gap-2">
         {Arr.map(stats.optionCounts, (option, index) => (
@@ -346,7 +342,7 @@ function AnswerList({
 
 /**
  * Questions, in the results page's header row: it opens a sheet with the questions of the exam, one at a
- * time, however many there are. The header row of the sheet's body steps through them or picks one from a
+ * time, however many there are. The sheet's footer steps through them or picks one from a
  * list, and stays in place while the statistics and answers scroll under it. The selection lives in this
  * component, so nothing above it is re-rendered. In a narrow header the button keeps its icon, so the page's
  * path keeps its room.
@@ -380,73 +376,70 @@ export function QuestionsAction({
         }
       />
       <SheetContent className="sm:max-w-3xl">
-        <SheetHeader>
+        <SheetHeader className="flex-row items-center gap-3 pe-12">
+          <HugeIcons className="size-5 shrink-0" icon={ChartHistogramIcon} />
           <SheetTitle>{t("questions")}</SheetTitle>
         </SheetHeader>
         {Option.match(current, {
           onNone: () => null,
+          // Each question holds its own search and verdict filter, so a question opened next starts whole.
           onSome: (question) => (
-            <div className="border-b p-4">
-              <ButtonGroup className="w-full">
-                <Button
-                  aria-label={common("previous")}
-                  disabled={selected === 0}
-                  onClick={() => move(selected - 1)}
-                  size="icon"
-                  type="button"
-                  variant="outline"
-                >
-                  <HugeIcons icon={ArrowLeft01Icon} />
-                </Button>
-                <Select
-                  items={items}
-                  onValueChange={(id) =>
-                    Option.map(
-                      Arr.findFirstIndex(
-                        questions,
-                        (candidate) => candidate.id === id
-                      ),
-                      move
-                    )
-                  }
-                  value={question.id}
-                >
-                  <SelectTrigger className="min-w-0 flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Arr.map(items, (item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  aria-label={common("next")}
-                  disabled={selected === questions.length - 1}
-                  onClick={() => move(selected + 1)}
-                  size="icon"
-                  type="button"
-                  variant="outline"
-                >
-                  <HugeIcons icon={ArrowRight01Icon} />
-                </Button>
-              </ButtonGroup>
-            </div>
+            <TableFiltersProvider key={question.id}>
+              <ScrollArea className="min-h-0 flex-1">
+                <QuestionResults question={question} waits={!moved} />
+              </ScrollArea>
+              <SheetFooter className="flex-row items-center gap-2">
+                <ButtonGroup className="min-w-0 flex-1">
+                  <Button
+                    aria-label={common("previous")}
+                    disabled={selected === 0}
+                    onClick={() => move(selected - 1)}
+                    size="icon"
+                    type="button"
+                    variant="outline"
+                  >
+                    <HugeIcons icon={ArrowLeft01Icon} />
+                  </Button>
+                  <Select
+                    items={items}
+                    onValueChange={(id) =>
+                      Option.map(
+                        Arr.findFirstIndex(
+                          questions,
+                          (candidate) => candidate.id === id
+                        ),
+                        move
+                      )
+                    }
+                    value={question.id}
+                  >
+                    <SelectTrigger className="min-w-0 flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Arr.map(items, (item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    aria-label={common("next")}
+                    disabled={selected === questions.length - 1}
+                    onClick={() => move(selected + 1)}
+                    size="icon"
+                    type="button"
+                    variant="outline"
+                  >
+                    <HugeIcons icon={ArrowRight01Icon} />
+                  </Button>
+                </ButtonGroup>
+                <TableSearch placeholder={t("results-search")} />
+              </SheetFooter>
+            </TableFiltersProvider>
           ),
         })}
-        <ScrollArea className="min-h-0 flex-1">
-          {Option.match(current, {
-            onNone: () => null,
-            // Each question holds its own search and verdict filter, so a question opened next starts with every answer.
-            onSome: (question) => (
-              <TableFiltersProvider key={question.id}>
-                <QuestionResults question={question} waits={!moved} />
-              </TableFiltersProvider>
-            ),
-          })}
-        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

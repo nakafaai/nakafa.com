@@ -210,7 +210,9 @@ test("a subject teacher makes a folder, moves a link into it, adds another insid
     .getByRole("dialog")
     .getByRole("button", { name: "Delete" })
     .click();
-  await expect(page.getByRole("link", { name: "Gerak lurus" })).toBeHidden();
+  await expect(
+    page.getByRole("link", { exact: true, name: "Gerak lurus" })
+  ).toBeHidden();
   await expect(
     page.getByRole("link", { name: "Video gerak lurus" })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });

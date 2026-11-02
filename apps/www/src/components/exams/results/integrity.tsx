@@ -9,7 +9,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -23,7 +23,7 @@ import {
 import { AwayCell } from "@/components/exams/results/students";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -89,15 +89,15 @@ function IntegrityRows() {
   }
 
   return (
-    <div className="grid gap-4">
-      <p className="text-muted-foreground text-sm">
+    <>
+      <p className="text-muted-foreground border-b p-4 text-sm">
         {t("integrity-clean", {
           clean: students - rows.length,
           students,
         })}
       </p>
       <TableFiltersProvider>
-        <TableFrame>
+        <div className="[&_[data-slot=table-cell]]:whitespace-nowrap">
           <DataTable
             columns={[
               integrityColumns.text((row) => row.name, {
@@ -126,15 +126,15 @@ function IntegrityRows() {
             plain
             rowId={(row) => row.attemptId}
           />
-        </TableFrame>
+        </div>
       </TableFiltersProvider>
-    </div>
+    </>
   );
 }
 
 /**
  * Integrity, in the results page's header row: it opens the sitting's integrity report (K25) in a sheet, read only
- * once the teacher opens it. The sheet says what the report is before anything else, an indication for a teacher to
+ * once the teacher opens it. Its footer says what the report is, an indication for a teacher to
  * weigh, and it holds no action on a student, so nothing here decides anything.
  */
 export function IntegrityAction() {
@@ -152,22 +152,25 @@ export function IntegrityAction() {
         }
       />
       <SheetContent className="sm:max-w-3xl">
-        <SheetHeader>
+        <SheetHeader className="flex-row items-center gap-3 pe-12">
+          <HugeIcons className="size-5 shrink-0" icon={SecurityCheckIcon} />
           <SheetTitle>{t("integrity-title")}</SheetTitle>
-          <SheetDescription>{t("integrity-description")}</SheetDescription>
         </SheetHeader>
-        <ScrollArea className="flex-1">
-          <div className="p-4">
-            <ReadBoundary
-              read={{
-                args: { sittingId, slug },
-                ref: exams.results.results.integrity,
-              }}
-            >
-              <IntegrityRows />
-            </ReadBoundary>
-          </div>
+        <ScrollArea className="min-h-0 flex-1">
+          <ReadBoundary
+            read={{
+              args: { sittingId, slug },
+              ref: exams.results.results.integrity,
+            }}
+          >
+            <IntegrityRows />
+          </ReadBoundary>
         </ScrollArea>
+        <SheetFooter>
+          <p className="text-muted-foreground text-sm">
+            {t("integrity-description")}
+          </p>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
