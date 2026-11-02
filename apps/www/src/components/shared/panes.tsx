@@ -21,7 +21,8 @@ import {
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { pageBoxVariants } from "@/components/shared/content/width";
-import { isTyping } from "@/components/shared/settings/return";
+import { PaneStartContext } from "@/components/shared/panes/start";
+import { isTyping } from "@/components/shared/typing";
 
 /** From which width two panes stand side by side: tablet for a list, laptop for the exam editor, wide for a chat's discussion. */
 const PanesWidth = Schema.Literals(["md", "lg", "xl"]);
@@ -38,9 +39,6 @@ const decodePaneSizes = Schema.decodeUnknownOption(
 
 /** Names the group of panes that the panes inside it keep their sizes under. */
 const PanesGroupContext = createContext("panes");
-
-/** The size a pane starts at until a person sets one, as a share of the group's width or a length. */
-export const PaneStartContext = createContext("35%");
 
 /** Which row of a page's list is open beside it, by its ID, and whether the phone's sheet shows it. */
 const PanesState = Schema.Struct({

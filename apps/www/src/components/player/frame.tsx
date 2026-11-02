@@ -9,11 +9,8 @@ import {
   pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/content/width";
-import {
-  PaneStartContext,
-  PanesGroupProvider,
-  SizedPane,
-} from "@/components/shared/panes";
+import { PanesGroupProvider, SizedPane } from "@/components/shared/panes";
+import { PaneStartContext } from "@/components/shared/panes/start";
 
 /**
  * The questions beside the navigator across the page's frame,

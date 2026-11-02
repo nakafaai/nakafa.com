@@ -14,6 +14,7 @@ import { type AnyRouter, useNavigate, useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option, String as Str } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { isTyping } from "@/components/shared/typing";
 import { Link, type LinkTarget } from "@/lib/routing/link";
 
 /**
@@ -78,17 +79,6 @@ function useSettingsReturn(): Option.Option<string> {
     );
   }
   return useStore(store);
-}
-
-/** Whether a key press belongs to a field the viewer is typing in. */
-export function isTyping(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target instanceof HTMLSelectElement)
-  );
 }
 
 /**

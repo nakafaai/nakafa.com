@@ -2,15 +2,13 @@ import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
-import { keptStorage } from "@/components/player/storage";
 import { useLiveSession } from "@/components/providers/live";
 import {
   KEPT_NAME_SCRIPT,
-  keepName,
+  keepActionName,
   type TryoutActionNameKey,
   TryoutActionNameSchema,
 } from "@/components/tryout/set/kept";
-import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * The name on a try-out action. Every name holds the same cell, so the button keeps the width of the
@@ -56,23 +54,6 @@ export function TryoutActionName({
   );
 }
 
-/**
- * Keeps a set's name for this browser's next hard load. A browser that refuses its storage paints the
- * page as a first visit does.
- */
-export function keepActionName(address: string, name: TryoutActionNameKey) {
-  Effect.runFork(
-    keepName(address, name).pipe(
-      Effect.provide(keptStorage),
-      Effect.catchTag("KeyValueStoreError", (error) =>
-        reportClientException(error, {
-          source: "components/tryout/set/name",
-        })
-      )
-    )
-  );
-}
-
 /** Keeps the name a page's read answered with, once it has answered. */
 export function useKeepActionName(
   address: string,
@@ -80,7 +61,7 @@ export function useKeepActionName(
 ) {
   useEffect(() => {
     if (name !== null) {
-      keepActionName(address, name);
+      Effect.runFork(keepActionName(address, name));
     }
   }, [address, name]);
 }

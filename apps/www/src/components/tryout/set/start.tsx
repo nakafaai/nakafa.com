@@ -34,9 +34,13 @@ import {
 } from "@/components/tryout/runtime/start";
 import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
-import { readKeptName, tryoutActionNameOf } from "@/components/tryout/set/kept";
+import {
+  keepActionName,
+  readKeptName,
+  tryoutActionNameOf,
+} from "@/components/tryout/set/kept";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
-import { keepActionName, TryoutActionName } from "@/components/tryout/set/name";
+import { TryoutActionName } from "@/components/tryout/set/name";
 import {
   startAttemptProgram,
   startEntrySectionProgram,
@@ -306,22 +310,25 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       mutation: startAttempt,
       onFailure: Effect.sync(() => setPhase("idle")),
       onSuccess: (result) =>
-        Effect.sync(() => {
-          // The attempt runs from here on, whichever page the learner next loads the set from.
-          keepActionName(
-            `/${request.locale}${getTryoutPublicPathHref(request.setPath)}`,
-            "continue-cta"
-          );
-          const destination = {
-            attemptId: result.attemptId,
-            publicPath: result.navigation.publicPath,
-          };
-          if (request.successNavigation === "stay") {
-            navigateTo(destination, { replace: true });
-            return;
-          }
-          navigateTo(destination);
-        }),
+        // The attempt runs from here on, whichever page the learner next loads the set from.
+        keepActionName(
+          `/${request.locale}${getTryoutPublicPathHref(request.setPath)}`,
+          "continue-cta"
+        ).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              const destination = {
+                attemptId: result.attemptId,
+                publicPath: result.navigation.publicPath,
+              };
+              if (request.successNavigation === "stay") {
+                navigateTo(destination, { replace: true });
+                return;
+              }
+              navigateTo(destination);
+            })
+          )
+        ),
     });
     Effect.runPromise(
       requireConvexOnline(convex).pipe(

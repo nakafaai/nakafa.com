@@ -1,12 +1,24 @@
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
+import { keptStorage } from "@/components/player/storage";
 import {
   KEPT_NAME_SCRIPT,
+  keepActionName,
   keepName,
   readKeptName,
   tryoutActionNameOf,
 } from "@/components/tryout/set/kept";
+
+const mocks = vi.hoisted(() => ({ report: vi.fn() }));
+
+vi.mock("@/lib/analytics/client", async () => {
+  const { Effect: Fx } = await import("effect");
+  return {
+    reportClientException: (error: unknown, properties: unknown) =>
+      Fx.sync(() => mocks.report(error, properties)),
+  };
+});
 
 const SET = "/en/try-out/indonesia/snbt/2027/set-1";
 
@@ -94,6 +106,38 @@ describe("kept names", () => {
 
 /** What the browser holds after it kept the set's name. */
 const storedNames = `{"${SET}":"continue-cta"}`;
+
+describe("keepActionName", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  it.effect("keeps the name in the browser for the next hard load", () =>
+    Effect.gen(function* () {
+      yield* keepActionName(SET, "continue-cta");
+
+      const kept = yield* readKeptName(SET).pipe(Effect.provide(keptStorage));
+      expect(kept).toEqual(Option.some("continue-cta"));
+      expect(mocks.report).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("reports a browser that refuses its storage and goes on", () =>
+    Effect.gen(function* () {
+      const refused = vi
+        .spyOn(Storage.prototype, "getItem")
+        .mockImplementation(() => {
+          throw new Error("refused");
+        });
+
+      yield* keepActionName(SET, "continue-cta");
+
+      refused.mockRestore();
+      expect(mocks.report).toHaveBeenCalledOnce();
+    })
+  );
+});
 
 describe("KEPT_NAME_SCRIPT", () => {
   it("names the cell with what the browser kept for this address", () => {
