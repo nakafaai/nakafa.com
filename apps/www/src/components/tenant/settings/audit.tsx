@@ -108,7 +108,7 @@ function useAuditActors() {
  * Renders the audit log of the school, newest first, in a data table that filters by who
  * made each change and searches the changes, and loads more rows as its end comes into
  * view. The rows hold no policy value and no secret, so the page shows none. The body waits for the first page, and an empty school shows the empty
- * state alone. The note of what the trail leaves out closes the empty state, and the table once its last page is in.
+ * state alone. The note of what the trail leaves out arrives with the first page, so it never moves as the rows read.
  */
 function SchoolAuditBody() {
   const { slug } = useTenant();
