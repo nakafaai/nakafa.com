@@ -60,14 +60,31 @@ const publicRoutes = [
 const EXAM_PAGE = /\/en\/try-out\/indonesia\/snbt$/u;
 
 /** The pages of a signed-in learner, each with its own header. */
-const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];
+const learnerRoutes = [
+  "/en/chat",
+  "/en/user/settings",
+  "/en/user/settings/connectors",
+  "/en/user/settings/learning",
+  "/en/user/settings/memory",
+  "/en/user/settings/subscriptions",
+  "/en/notifications",
+];
 
 /** The pages of a school host that an Owner sees without an exam: the exams and every setting. */
 const schoolPaths = [
   "/notifications",
   "/exams",
+  "/insight",
+  "/reports",
+  "/graduation",
   "/settings/profile",
   "/settings/units",
+  "/settings/billing",
+  "/settings/classes",
+  "/settings/grading",
+  "/settings/guardians",
+  "/settings/roster",
+  "/settings/webhooks",
   "/settings/periods",
   "/settings/members",
   "/settings/students",
@@ -94,6 +111,9 @@ const classPaths = [
   "/classes/fisika-x-1",
   "/classes/fisika-x-1/forum",
   "/classes/fisika-x-1/library",
+  "/classes/fisika-x-1/tasks",
+  "/classes/fisika-x-1/people",
+  "/classes/fisika-x-1/grades",
 ];
 
 /**

@@ -49,6 +49,7 @@ export function readFrameProblems(page: Page) {
 
     /** Whether an element stands over the page or beside it, outside the page's own flow. */
     const standsApart = (element: Element) =>
+      element.closest("aside") !== null ||
       element.closest(
         '[data-slot="sidebar"],[data-slot="page-header"],[role="dialog"],[data-slot$="popup"],[data-slot="toaster"],[data-canvas]'
       ) !== null;

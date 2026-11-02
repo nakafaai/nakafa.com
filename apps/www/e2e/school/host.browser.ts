@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { createSchool, hostAddress } from "@/e2e/support/school";
+import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
 /** A school address that no school holds, so the school host answers not found. */
 const UNKNOWN_SCHOOL = "zz-unknown";
@@ -138,5 +138,37 @@ test("Accept-Language chooses the language of a school host without a cookie", a
   await expect(
     page.getByRole("heading", { name: `Masuk ke ${school.name}` })
   ).toBeVisible();
+  await context.close();
+});
+
+test("an address that cannot name a row answers not found in the school's own shell", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  for (const path of [
+    "/exams/not-an-exam",
+    "/exams/not-an-exam/edit",
+    "/sittings/not-a-room",
+    "/settings/cohorts/not-a-group",
+    "/graduation/not-a-group",
+    "/reports/not-a-group",
+  ]) {
+    await page.goto(address(path));
+    await expect(
+      page.getByRole("heading", { name: "We can't find this page" }),
+      path
+    ).toBeVisible();
+    await expect(
+      page.getByText("We could not load this data."),
+      path
+    ).toHaveCount(0);
+  }
   await context.close();
 });

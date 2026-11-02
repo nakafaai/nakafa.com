@@ -41,7 +41,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
   ).toBeVisible();
   await expect(owner.getByRole("combobox", { name: "Class" })).toHaveCount(0);
 
-  const learner = `raka-${testInfo.testId.slice(0, 6)}@example.com`;
+  const learner = `raka-${testInfo.testId.slice(-6)}@example.com`;
   const learnerContext = await browser.newContext();
   await Effect.runPromise(
     inviteLearner({

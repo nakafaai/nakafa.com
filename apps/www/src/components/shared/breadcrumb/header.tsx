@@ -33,12 +33,17 @@ function breadcrumbItem(item: {
 export type BreadcrumbHeaderItem = ReturnType<typeof breadcrumbItem>;
 
 /**
- * What a phone's row hides of a path: a part that stays only while the row has the room, at 21rem, which holds the
- * menu, a short parent and the page beside a page's toggle.
+ * What a phone's row hides of a path, each part once the row is narrower than the part needs: Home beside
+ * one item stays from 21rem, which holds it, a short page and the page's toggle, and the parent of a longer
+ * path stays from 26rem, so a page's actions never cut it to a letter.
  */
 const phonePartVariants = cva("", {
   variants: {
-    kept: { false: "max-sm:hidden", true: "max-sm:@max-[21rem]/header:hidden" },
+    kept: {
+      home: "max-sm:@max-[21rem]/header:hidden",
+      never: "max-sm:hidden",
+      parent: "max-sm:@max-[26rem]/header:hidden",
+    },
   },
 });
 
@@ -82,7 +87,8 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
  * and shadcn's responsive breadcrumb fold a long path. From the small breakpoint up it
  * shows Home, a menu of the middle items, and the nearest `visibleItemCount` items. On a
  * phone a path of two items or more keeps its last item and, while the row has the room,
- * the parent before it, beside one menu that holds Home and every item before the last,
+ * the parent before it, beside one menu that holds Home and every item before the last and that a
+ * 320 px row folds too, so the page's name stands whole,
  * and a path of one item keeps Home beside it while the row has the room, so the page's
  * name stays whole next to the page's actions. A path that `unfolds` shows every item in a frame row of 42rem or wider, whose
  * `@container` the header sets, and only its last item truncates. CSS alone folds it, so
@@ -107,7 +113,7 @@ export function BreadcrumbHeaderPath({
       <BreadcrumbList className="flex-nowrap">
         {foldsOnPhone ? (
           <BreadcrumbMenu
-            className="sm:hidden"
+            className="sm:hidden @max-xs/header:hidden"
             items={[
               { label: homeLabel, target: home },
               ...Arr.dropRight(items, 1),
@@ -117,7 +123,8 @@ export function BreadcrumbHeaderPath({
         <BreadcrumbItem
           className={cn(
             "shrink-0",
-            items.length > 0 && phonePartVariants({ kept: !foldsOnPhone })
+            items.length > 0 &&
+              phonePartVariants({ kept: foldsOnPhone ? "never" : "home" })
           )}
         >
           <BreadcrumbLink
@@ -150,14 +157,14 @@ export function BreadcrumbHeaderPath({
             className={cn(
               foldsOnPhone &&
                 index < visibleItems.length - 1 &&
-                cn(phonePartVariants({ kept: true }), "max-sm:max-w-28"),
+                cn(phonePartVariants({ kept: "parent" }), "max-sm:max-w-28"),
               unfolds && index < visibleItems.length - 1 && "@2xl:shrink-0"
             )}
             item={item}
             key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
             separatorClassName={cn(
               index === visibleItems.length - 1 &&
-                phonePartVariants({ kept: true })
+                phonePartVariants({ kept: foldsOnPhone ? "parent" : "home" })
             )}
           />
         ))}

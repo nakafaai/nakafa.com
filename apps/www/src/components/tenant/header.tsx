@@ -31,7 +31,8 @@ import { schoolHomeTarget } from "@/lib/routing/school/target";
  * On a phone the path folds into one menu beside the page's name, so the page's actions
  * have their room. The bar and its border run the screen's full width, and its row is one
  * row of the page (`pageHeaderRowVariants`), so the path and actions line up with the body's edges
- * at every width. The shell draws no header of its own.
+ * at every width, and it stands one control high from the first paint, so actions that arrive later
+ * move nothing. The shell draws no header of its own.
  */
 export function SchoolHeader({
   children,
@@ -57,7 +58,7 @@ export function SchoolHeader({
       <div
         className={cn(
           pageHeaderRowVariants(),
-          "@max-3xs/bar:flex-wrap @max-3xs/bar:py-2"
+          "min-h-12 @max-3xs/bar:flex-wrap @max-3xs/bar:py-2"
         )}
       >
         {/* The exam editor draws no sidebar, so a page that shows in its place, such as its not-found page, has none to toggle. */}

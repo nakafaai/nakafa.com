@@ -1,4 +1,5 @@
 import { useMediaQuery } from "@mantine/hooks";
+import { ResizeGrip } from "@repo/design-system/components/ui/resizable";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   Sheet,
@@ -219,14 +220,16 @@ function MemoryEditorPanel({
         aria-valuemin={resizerProps["aria-valuemin"]}
         aria-valuenow={resizerProps["aria-valuenow"]}
         className={cn(
-          "hover:bg-ring focus-visible:bg-ring absolute inset-y-0 start-0 z-10 cursor-col-resize bg-transparent transition-colors outline-none data-[orientation=vertical]:w-1",
-          !!isResizing && "bg-ring"
+          "focus-visible:ring-ring bg-border absolute inset-y-0 start-0 z-10 flex w-px! cursor-col-resize items-center justify-center outline-none after:absolute after:inset-y-0 after:-start-1 after:w-2 focus-visible:ring-1",
+          !!isResizing && "w-0.5!"
         )}
         onKeyDown={resizerProps.onKeyDown}
         onMouseDown={resizerProps.onMouseDown}
         orientation={resizerProps["aria-orientation"]}
         tabIndex={0}
-      />
+      >
+        <ResizeGrip />
+      </Separator>
     </aside>,
     panel
   );

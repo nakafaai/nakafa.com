@@ -181,8 +181,8 @@ function ExamWorkspace() {
         {grid ? (
           <ExamGrid />
         ) : (
-          <Panes fill="parent" id="editor" width="full">
-            <PanesList>
+          <Panes fill="parent" id="editor">
+            <PanesList wide>
               <ExamCanvas canvas={canvas} />
             </PanesList>
             <ExamPanel />

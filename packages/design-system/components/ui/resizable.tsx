@@ -26,13 +26,19 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof Panel>) {
   return <Panel data-slot="resizable-panel" {...props} />;
 }
 
+/** The grip that says an edge resizes, drawn the same on every resizable edge of Nakafa. */
+function ResizeGrip() {
+  return (
+    <div className="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+      <HugeIcons className="size-2.5" icon={DragDropVerticalIcon} />
+    </div>
+  );
+}
+
 function ResizableHandle({
-  withHandle,
   className,
   ...props
-}: React.ComponentProps<typeof Separator> & {
-  withHandle?: boolean;
-}) {
+}: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
       className={cn(
@@ -42,11 +48,7 @@ function ResizableHandle({
       data-slot="resizable-handle"
       {...props}
     >
-      {!!withHandle && (
-        <div className="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
-          <HugeIcons className="size-2.5" icon={DragDropVerticalIcon} />
-        </div>
-      )}
+      <ResizeGrip />
     </Separator>
   );
 }
@@ -57,5 +59,6 @@ export {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
+  ResizeGrip,
   useResizableDefaultLayout,
 };

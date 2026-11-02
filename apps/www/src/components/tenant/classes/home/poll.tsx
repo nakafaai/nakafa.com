@@ -7,6 +7,7 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import {
   forumCall,
   runForumCall,
@@ -43,10 +44,10 @@ export function NewPostPoll() {
       >
         <HugeIcons
           aria-hidden="true"
-          className="@xs/header:hidden"
+          className="@2xl/header:hidden"
           icon={ChartBarLineIcon}
         />
-        <span className="@max-xs/header:sr-only">{t("post-new-poll")}</span>
+        <HeaderLabel>{t("post-new-poll")}</HeaderLabel>
       </Button>
       <NewPoll
         onSend={(poll) => {
