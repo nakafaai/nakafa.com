@@ -35,7 +35,6 @@ export function PaneSide({
   group,
   label,
   row,
-  startWidth = PANE_WIDTH.initialWidth,
 }: {
   /** The pane's header, body and footer. */
   children: ReactNode;
@@ -45,12 +44,10 @@ export function PaneSide({
   label: string;
   /** Whether a row stands open in it, which Escape closes first. */
   row: boolean;
-  /** How wide the pane starts, in pixels, for a detail that holds more. */
-  startWidth?: number | undefined;
 }) {
   const room = useSyncExternalStore(subscribeToWindow, readRoom, readNoRoom);
   const { width, resizerProps } = useResizable({
-    initialWidth: startWidth,
+    initialWidth: PANE_WIDTH.initialWidth,
     // Never narrower than the smallest pane, whatever the room says.
     maxWidth: Math.max(
       PANE_WIDTH.minWidth,

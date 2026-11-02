@@ -278,6 +278,17 @@ export function PanesRail({
   );
 }
 
+/** The page's frame around what a list holds, which the exam editor's canvas goes without. */
+const paneFrameVariants = cva("", {
+  defaultVariants: { wide: false },
+  variants: {
+    wide: {
+      false: "mx-auto flex min-h-0 w-full max-w-(--page-width) flex-1 flex-col",
+      true: "contents",
+    },
+  },
+});
+
 /** The pane that takes the width the other leaves: the page's list or canvas, or the open chat beside its rail. */
 export function PanesList({
   children,
@@ -293,7 +304,7 @@ export function PanesList({
   if (besidePage) {
     return (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-        <PaneFrame wide={wide}>{children}</PaneFrame>
+        <div className={paneFrameVariants({ wide })}>{children}</div>
       </div>
     );
   }
@@ -304,19 +315,8 @@ export function PanesList({
       id={`${group}-list`}
       minSize="40%"
     >
-      <PaneFrame wide={wide}>{children}</PaneFrame>
+      <div className={paneFrameVariants({ wide })}>{children}</div>
     </ResizablePanel>
-  );
-}
-
-/** The page's frame around what a list holds, which the exam editor's canvas goes without. */
-function PaneFrame({ children, wide }: { children: ReactNode; wide: boolean }) {
-  return wide ? (
-    children
-  ) : (
-    <div className="mx-auto flex min-h-0 w-full max-w-(--page-width) flex-1 flex-col">
-      {children}
-    </div>
   );
 }
 
@@ -334,7 +334,6 @@ export function PanesDetail({
   label,
   onClose,
   open,
-  startWidth,
 }: {
   /** Whether the detail stands beside the first pane with no row open, as the exam editor's panel does. */
   alwaysOn?: boolean;
@@ -346,8 +345,6 @@ export function PanesDetail({
   onClose?: () => void;
   /** Whether a row that the page's own selection holds is open, in place of the panes' own. */
   open?: boolean;
-  /** How wide the pane starts, in pixels, for a detail that holds more. */
-  startWidth?: number;
 }) {
   const wide = useWide();
   const group = use(PanesGroupContext);
@@ -378,12 +375,7 @@ export function PanesDetail({
   return (
     <>
       {beside && besidePage ? (
-        <PaneSide
-          group={group}
-          label={label}
-          row={closes}
-          startWidth={startWidth}
-        >
+        <PaneSide group={group} label={label} row={closes}>
           <PaneModeContext
             value={{ close: alwaysOn ? undefined : close, place: "aside" }}
           >

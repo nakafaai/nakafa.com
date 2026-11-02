@@ -146,7 +146,7 @@ export function AccountDirectory({
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail label={t("detail")} startWidth={560}>
+        <PanesDetail label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
             <PaneFill>
