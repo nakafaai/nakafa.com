@@ -20,6 +20,7 @@ const WALK_MILLISECONDS = 15 * 60 * 1000;
 const WALKS = [
   { role: "owner", width: 1440 },
   { role: "owner", width: 390 },
+  { role: "teacher", width: 1280 },
   { role: "teacher", width: 1024 },
   { role: "teacher", width: 320 },
   { role: "student", width: 768 },
