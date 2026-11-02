@@ -7,7 +7,6 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
-import { FeedNotice } from "@/components/user/feed";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   type PushState,
@@ -16,11 +15,10 @@ import {
 } from "@/lib/notifications/device";
 
 /**
- * The offer of push under the inbox (ADR 0027): a browser that takes push and has it off offers
- * one button that turns it on after the person's tap; an iPhone or iPad tab says that push comes
- * only from the Home Screen. A browser with push on, blocked, or without push shows nothing, and the
- * inbox stays the source of every notice either way. The offer stands at the end of the list, so
- * it moves no row when the browser answers.
+ * The footer of the notification preferences (ADR 0027): a browser that takes push and has it off
+ * gets one button that turns it on after the person's tap; an iPhone or iPad tab says that push
+ * works only from the Home Screen. A browser with push on, blocked, or without push says where the
+ * preferences live. The inbox stays the source of every notice either way.
  */
 export function PushOffer() {
   const t = useTranslations("Notifications");
@@ -70,23 +68,21 @@ export function PushOffer() {
 
   if (state === "homeScreen") {
     return (
-      <FeedNotice>
-        <p className="text-muted-foreground text-sm">{t("push-home-screen")}</p>
-      </FeedNotice>
+      <p className="text-muted-foreground text-sm">{t("push-home-screen")}</p>
     );
   }
   if (state !== "off") {
-    return null;
+    return (
+      <p className="text-muted-foreground text-sm">{t("preferences-footer")}</p>
+    );
   }
   return (
-    <FeedNotice>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-sm">{t("push-offer")}</p>
-        <Button onClick={turnOn} size="sm" variant="outline">
-          <HugeIcons icon={Notification01Icon} />
-          {t("push-on")}
-        </Button>
-      </div>
-    </FeedNotice>
+    <>
+      <p className="text-muted-foreground text-sm">{t("push-offer")}</p>
+      <Button className="shrink-0" onClick={turnOn}>
+        <HugeIcons icon={Notification01Icon} />
+        {t("push-on")}
+      </Button>
+    </>
   );
 }

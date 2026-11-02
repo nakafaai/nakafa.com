@@ -6,7 +6,6 @@ import {
   type InboxScope,
   useInbox,
 } from "@/components/notifications/inbox";
-import { PushOffer } from "@/components/notifications/push";
 import { NotificationRow } from "@/components/notifications/row";
 import { useInboxTopic } from "@/components/notifications/tabs";
 import { inTopic } from "@/components/notifications/topic";
@@ -59,7 +58,6 @@ export function NotificationsList({
         </div>
       ) : null}
       {loadMore && <Intersection onIntersect={loadMore} />}
-      <PushOffer />
     </div>
   );
 }

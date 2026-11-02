@@ -20,10 +20,13 @@ export function TablePages<Item, Failure>({
   children,
   pageSize,
   pagination,
+  waiting = false,
 }: {
   children: ReactNode;
   pageSize: number;
   pagination: PaginatedQueryResult.Variants<Item, Failure>;
+  /** Holds back the empty state until what it says has been read, so its action draws with it. */
+  waiting?: boolean;
 }) {
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (failed && Arr.isReadonlyArrayEmpty(pagination.results)) {
@@ -32,6 +35,7 @@ export function TablePages<Item, Failure>({
   return (
     <TableWaitingContext
       value={
+        waiting ||
         PaginatedQueryResult.isLoading(pagination) ||
         PaginatedQueryResult.isCanLoadMore(pagination)
       }
