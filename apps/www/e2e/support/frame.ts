@@ -213,6 +213,11 @@ export function readFrameProblems(page: Page) {
               "a pane does not run the window's full height",
             header.getBoundingClientRect().right > box.left + tolerance &&
               "the header runs under the pane",
+            Math.abs(
+              (pane.querySelector("[data-pane-header]")?.getBoundingClientRect()
+                .bottom ?? header.getBoundingClientRect().bottom) -
+                header.getBoundingClientRect().bottom
+            ) > tolerance && "the pane's header line does not join the page's",
           ].filter((problem) => typeof problem === "string");
         });
       return [...lists, ...panes];
