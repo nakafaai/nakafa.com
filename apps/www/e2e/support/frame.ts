@@ -179,14 +179,20 @@ export function readFrameProblems(page: Page) {
         : [];
     };
 
-    /** Two panes that stop short of the screen's bottom, or run past it and make the page scroll. */
+    /**
+     * Two panes that stop short of the screen's bottom, or run past it and make the page scroll. An
+     * open sheet scales the page behind it, so what stands behind one has no size of its own to read.
+     */
     const paneProblems = () =>
       Array.from(
         document.querySelectorAll(
           '[class*="100svh"][data-slot="resizable-panel-group"]'
         )
       )
-        .filter(isDrawn)
+        .filter(
+          (group) =>
+            isDrawn(group) && document.querySelector('[role="dialog"]') === null
+        )
         .map((group) => group.getBoundingClientRect().bottom + scrollY)
         .filter((bottom) => Math.abs(bottom - innerHeight) > tolerance)
         .map(
