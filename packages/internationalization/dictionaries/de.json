@@ -377,7 +377,7 @@
     "results-empty": "Ergebnisse erscheinen hier, sobald Lernende die Sitzung abgeben.",
     "results-unavailable": "Du kannst diese Ergebnisse nicht ansehen.",
     "results-share": "{share} % richtig",
-    "results-counted": "Grundlage sind {counted} Antworten.",
+    "results-counted": "{answered} von {counted} beantwortet.",
     "results-incomplete": "Nur die ersten {counted} Antworten werden gezählt.",
     "results-answers": "Antworten",
     "results-no-answers": "Bisher hat niemand diese Frage beantwortet.",
