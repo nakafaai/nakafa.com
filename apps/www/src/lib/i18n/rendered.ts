@@ -1,9 +1,7 @@
 import { getRouteMessages } from "@repo/internationalization/src/messages";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import {
-  type RouteMessagesInput,
-  readRouteMessages,
-} from "@/lib/i18n/messages.functions";
+import type { RouteMessagesInput } from "@/lib/i18n/messages";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 
 /**
  * The messages of a route that the Worker renders, such as the signed-in screens
