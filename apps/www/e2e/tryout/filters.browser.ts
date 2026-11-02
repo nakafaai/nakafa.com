@@ -42,8 +42,9 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
         await waitUntilTakenOver(
           table.getByRole("button", { name: headName(HEADS.name) })
         );
+        // Every head in `HEADS`, and the one over the row's menu.
         expect(await table.getByRole("columnheader").count()).toBe(
-          Arr.length(Rec.values(HEADS))
+          Arr.length(Rec.values(HEADS)) + 1
         );
         const total = await rows.count();
 
