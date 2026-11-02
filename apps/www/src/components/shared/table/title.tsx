@@ -8,12 +8,12 @@ import type { ComponentProps, ReactNode } from "react";
 /**
  * A name in a table: one line up to the width a usual name reads in, and more lines past that, so the longest name a
  * school holds reads whole and never widens its table. A short name keeps its line on a phone, where the table would
- * otherwise narrow it first.
+ * otherwise narrow it first, and even one long word stays inside the room the first column holds there (`headWidth`).
  */
 export function TableName({ children }: { children: ReactNode }) {
   return (
     <span
-      className="block max-w-52 min-w-36 font-medium wrap-break-word whitespace-normal sm:max-w-80"
+      className="block max-w-42 min-w-36 font-medium wrap-break-word whitespace-normal sm:max-w-80"
       dir="auto"
     >
       {children}

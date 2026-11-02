@@ -49,7 +49,7 @@ function NotificationsPage() {
       <LayoutMaterialContent>
         <NotificationsHeader>
           <ButtonGroup>
-            <MarkAllRead first={page} scope={ACCOUNT_INBOX} />
+            <MarkAllRead scope={ACCOUNT_INBOX} />
             <AccountPreferences />
           </ButtonGroup>
         </NotificationsHeader>

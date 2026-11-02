@@ -50,12 +50,14 @@ for (const viewport of [
     const sentBefore = changes.sent;
     await field.fill("Tugas bab 3 dikumpulkan hari Jumat.");
     await field.press("Enter");
+    // The rail's row quotes the chat's last message too, so a message is looked for in the chat itself.
+    const chat = page.getByTestId("forum-list");
     await expect(
-      page.getByText("Tugas bab 3 dikumpulkan hari Jumat.")
+      chat.getByText("Tugas bab 3 dikumpulkan hari Jumat.")
     ).toBeVisible();
     await expect(field).toHaveValue("");
     // The message keeps its row when the server answers, so its menu opens right away.
-    await page.getByRole("button", { name: "More actions" }).click();
+    await chat.getByRole("button", { name: "More actions" }).click();
     await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible();
     await page.keyboard.press("Escape");
 
@@ -63,35 +65,35 @@ for (const viewport of [
     // drops a message still on its way.
     await saved(changes, sentBefore);
     await page.reload();
-    const message = page.getByText("Tugas bab 3 dikumpulkan hari Jumat.");
+    const message = chat.getByText("Tugas bab 3 dikumpulkan hari Jumat.");
     await expect(message).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
 
     // The author edits the message in its place.
     await waitUntilTakenOver(
-      page.getByRole("button", { name: "More actions" })
+      chat.getByRole("button", { name: "More actions" })
     );
-    await page.getByRole("button", { name: "More actions" }).click();
+    await chat.getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Edit" }).click();
     const editor = page.getByRole("textbox", { name: "Edit" });
     await editor.fill("Tugas bab 3 dikumpulkan hari Sabtu.");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(
-      page.getByText("Tugas bab 3 dikumpulkan hari Sabtu.")
+      chat.getByText("Tugas bab 3 dikumpulkan hari Sabtu.")
     ).toBeVisible();
-    await expect(page.getByText("Edited")).toBeVisible();
+    await expect(chat.getByText("Edited")).toBeVisible();
 
     // A subject teacher hides a message for good: it keeps its place with no text.
-    await page.getByRole("button", { name: "More actions" }).click();
+    await chat.getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Hide" }).click();
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "Hide", exact: true })
       .click();
-    await expect(page.getByText("A teacher hid this message.")).toBeVisible();
+    await expect(chat.getByText("A teacher hid this message.")).toBeVisible();
     await expect(
-      page.getByText("Tugas bab 3 dikumpulkan hari Sabtu.")
+      chat.getByText("Tugas bab 3 dikumpulkan hari Sabtu.")
     ).toHaveCount(0);
     await context.close();
   });

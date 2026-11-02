@@ -34,12 +34,18 @@ const openOf = (page: Page, name: string) =>
 async function picture(page: Page, state: string) {
   for (const width of WIDTHS) {
     await page.setViewportSize({ height: 900, width });
-    const sideways = await page.evaluate(
-      () =>
-        document.documentElement.scrollWidth -
-        document.documentElement.clientWidth
-    );
-    expect(sideways, `${state} at ${width}`).toBe(0);
+    // The page reads as wide as it was until it has laid itself out at the new width.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              document.documentElement.scrollWidth -
+              document.documentElement.clientWidth
+          ),
+        { message: `${state} at ${width}` }
+      )
+      .toBe(0);
     await page.screenshot({
       fullPage: true,
       path: test.info().outputPath(`connectors-${state}-${width}.png`),
@@ -179,12 +185,19 @@ test("a connected school sees the check, finds its courses in the detail, and di
   await expect(detail.getByText("Connected", { exact: true })).toBeVisible();
   await expect(detail.getByText("This school")).toHaveCount(0);
   await picture(page, "import");
+  // The open pane takes its share of the page, so the card is measured beside it from here on.
+  const beside = await classroom.boundingBox();
 
   await detail.getByRole("button", { exact: true, name: "Disconnect" }).click();
   const dialog = page.getByRole("dialog", {
     name: "Disconnect Google Classroom",
   });
-  await picture(page, "disconnect");
+  await expect(dialog).toBeVisible();
+  // The pane becomes a sheet on a narrower page and takes its dialog with it, so this state is pictured as it stands.
+  await page.screenshot({
+    fullPage: true,
+    path: test.info().outputPath("connectors-disconnect-1440.png"),
+  });
   await dialog.getByRole("button", { name: "Disconnect" }).click();
   await expect(
     classroom.getByRole("button", { name: "Connect Google Classroom" })
@@ -192,7 +205,7 @@ test("a connected school sees the check, finds its courses in the detail, and di
   await expect(
     detail.getByRole("button", { exact: true, name: "Connect" })
   ).toBeVisible();
-  expect(await classroom.boundingBox()).toEqual(before);
+  expect(await classroom.boundingBox()).toEqual(beside);
   await context.close();
 });
 
@@ -240,25 +253,24 @@ test("a connection Google stopped accepting says so, and connects again with one
   await context.close();
 });
 
-test("a teacher without the school's permission sees why, and keeps their own services", async ({
+test("a teacher, who does not manage the school, does not open its connections", async ({
   baseURL,
   browser,
 }) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
   const context = await browser.newContext();
-  const { page } = await openDirectory(context, baseURL, signInClassTeacher);
-  const classroom = cardOf(page, "Google Classroom");
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+  const page = await context.newPage();
+  await page.goto(address("/settings/connections"));
 
-  await expect(
-    classroom.getByText("Only an Admin can connect this.")
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(
-    classroom.getByRole("button", { name: "Connect Google Classroom" })
-  ).toHaveCount(0);
-  await expect(
-    cardOf(page, "Google Drive").getByRole("button", {
-      name: "Connect Google Drive",
-    })
-  ).toBeVisible();
+  await expect(page.getByText("We can't find this page").first()).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(cards(page)).toHaveCount(0);
   await picture(page, "locked");
   await context.close();
 });
