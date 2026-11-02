@@ -150,13 +150,13 @@ test("a teacher adds questions and writes on at once, drags the first past the s
   await page.evaluate((html) => {
     const clipboardData = new DataTransfer();
     clipboardData.setData("text/html", html);
-    document.activeElement?.dispatchEvent(
-      new ClipboardEvent("paste", {
-        bubbles: true,
-        cancelable: true,
-        clipboardData,
-      })
-    );
+    // Firefox and WebKit drop `clipboardData` from the constructor, so the event carries it itself.
+    const paste = new ClipboardEvent("paste", {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.defineProperty(paste, "clipboardData", { value: clipboardData });
+    document.activeElement?.dispatchEvent(paste);
   }, WORD_LISTS);
   await expect(prompt.locator("ul li")).toHaveCount(2);
   await expect(prompt.locator("ol li")).toHaveCount(1);

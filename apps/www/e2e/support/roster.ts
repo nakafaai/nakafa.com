@@ -61,10 +61,14 @@ export async function openPeriodWithCohort(
   await page.getByRole("option", { exact: true, name: "7" }).click();
   const addedBefore = changes.sent;
   await cohortDialog.getByRole("button", { name: "Add cohort" }).click();
-  await expect(page.getByRole("link", { name: cohort })).toBeVisible();
+  await expect(
+    page.getByRole("link", { exact: true, name: cohort })
+  ).toBeVisible();
   await saved(changes, addedBefore);
   await page.reload();
-  await expect(page.getByRole("link", { name: cohort })).toBeVisible({
+  await expect(
+    page.getByRole("link", { exact: true, name: cohort })
+  ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
 }

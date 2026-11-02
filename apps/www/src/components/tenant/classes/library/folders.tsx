@@ -21,6 +21,7 @@ import { Effect, Schema, String as Str } from "effect";
 import { type FormEvent, type ReactNode, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { useDialogs } from "@/components/shared/dialogs";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import {
@@ -176,12 +177,10 @@ export function NewFolder() {
       >
         <HugeIcons
           aria-hidden="true"
-          className="@xs/header:hidden"
+          className="@2xl/header:hidden"
           icon={FolderAddIcon}
         />
-        <span className="@max-xs/header:sr-only">
-          {t("library-new-folder")}
-        </span>
+        <HeaderLabel>{t("library-new-folder")}</HeaderLabel>
       </Button>
       {opened === 0 ? null : (
         <FolderNameDialog

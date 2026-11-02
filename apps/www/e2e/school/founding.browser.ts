@@ -5,6 +5,9 @@ import { signInLearner } from "@/e2e/support/learner";
 import { finishSchoolStart } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** The page global that holds what the page was asked to copy. */
+const COPIED = "nakafaCopied";
+
 /** The address of the setup, where the new Owner lands. */
 const SETUP_ADDRESS = /\/setup$/u;
 
@@ -77,10 +80,15 @@ for (const viewport of VIEWPORTS) {
 test("the home page's school band copies the one link a new school opens from", async ({
   browser,
 }) => {
-  const context = await browser.newContext({
-    permissions: ["clipboard-read", "clipboard-write"],
-  });
+  const context = await browser.newContext();
   const page = await context.newPage();
+  // Firefox grants no page a read of the clipboard, so the page keeps what it was asked to copy.
+  await page.addInitScript((key) => {
+    Reflect.set(navigator.clipboard, "writeText", (text: string) => {
+      Reflect.set(window, key, text);
+      return Promise.resolve();
+    });
+  }, COPIED);
   await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto("/en");
   // A section under the first screen takes over only as the reader nears it.
@@ -89,7 +97,10 @@ test("the home page's school band copies the one link a new school opens from", 
   await waitUntilTakenOver(copy);
   await copy.click();
   await expect(page.getByRole("button", { name: "Link copied" })).toBeVisible();
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  const copied = await page.evaluate(
+    (key) => String(Reflect.get(window, key)),
+    COPIED
+  );
   expect(new URL(copied).pathname).toBe("/en/school/new");
   await context.close();
 });
