@@ -146,7 +146,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
           })}
         </HeaderLabel>
         <HugeIcons
-          className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
+          className="tryout-history-chevron ml-auto size-4 transition-transform ease-out @max-2xl/header:hidden"
           icon={ArrowDown01Icon}
         />
       </PopoverTrigger>
