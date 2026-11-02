@@ -66,7 +66,15 @@ function recordMoves({ key, watched }: { key: string; watched: string }) {
     const still = document.getAnimations().length === 0;
     for (const item of document.querySelectorAll(watched)) {
       const box = item.getBoundingClientRect();
-      if (box.height === 0 || box.top > window.innerHeight || box.bottom < 0) {
+      if (
+        box.height === 0 ||
+        box.top > window.innerHeight ||
+        box.bottom < 0 ||
+        !item.checkVisibility({
+          opacityProperty: true,
+          visibilityProperty: true,
+        })
+      ) {
         continue;
       }
       const before = places.get(item);
