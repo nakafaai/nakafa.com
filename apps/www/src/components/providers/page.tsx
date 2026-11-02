@@ -1,3 +1,4 @@
+import { useTimeout, useWindowEvent } from "@mantine/hooks";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Effect, Fiber, Option } from "effect";
 import { type ReactNode, Suspense, useEffect, useState } from "react";
@@ -16,9 +17,16 @@ import {
 import { NavigationWarmth } from "@/components/shared/warm";
 import { clientEnv } from "@/env.public";
 import { ConvexAuthContext } from "@/lib/auth/convex";
-import { createLiveSessionStore, startLiveSession } from "@/lib/auth/live";
+import {
+  createLiveSessionStore,
+  type LiveSessionStore,
+  startLiveSession,
+} from "@/lib/auth/live";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
+
+/** How long a released press keeps its element, so a click a touch screen sends late still finds it. */
+const RELEASE_ROOM_MILLISECONDS = 100;
 
 /** The Convex credentials load with the page's client, so a visitor's page never loads them. */
 const LiveCredentials = lazy(() =>
@@ -66,6 +74,29 @@ function PageRelease() {
 }
 
 /**
+ * Tells the store while a pointer is down, so no island swaps under a press. The
+ * press captures on the window, before React's own listener: a press on a part of
+ * the page that has not hydrated makes React hydrate it first, and an island there
+ * would swap, and lose the press, before any handler of the page ran.
+ */
+function usePointerState(store: LiveSessionStore) {
+  const room = useTimeout(
+    () => store.setState({ isPointerDown: false }),
+    RELEASE_ROOM_MILLISECONDS
+  );
+  useWindowEvent(
+    "pointerdown",
+    () => {
+      room.clear();
+      store.setState({ isPointerDown: true });
+    },
+    { capture: true }
+  );
+  useWindowEvent("pointerup", () => room.start());
+  useWindowEvent("pointercancel", () => room.start());
+}
+
+/**
  * Mounts the one live session of a route group that visitors and learners both
  * read: the marketing pages and the student shell. The store is created once and
  * its context value never changes. The page starts the session after hydration,
@@ -95,6 +126,7 @@ export function PageProviders({
     };
   }, [store]);
   useSignedInHint(store);
+  usePointerState(store);
 
   return (
     <LiveSessionContext value={store}>
