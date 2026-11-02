@@ -16,7 +16,7 @@ test("a student invites a parent from the Parents page, and the invited parent w
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
-  const learner = `raka-${testInfo.testId.slice(0, 6)}@example.com`;
+  const learner = `raka-${testInfo.testId.slice(-6)}@example.com`;
   const context = await browser.newContext();
   await Effect.runPromise(
     inviteLearner({
