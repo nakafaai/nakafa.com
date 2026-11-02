@@ -119,7 +119,7 @@ describe("Tailwind built-in class policy", () => {
   it("rejects each variant that styles an element from a :has() above it", () => {
     const classes = [
       "group-has-data-[slot=note]/item:self-start",
-      "pointer-coarse:peer-has-[a]/item:pe-8",
+      "peer-has-[a]/item:pe-8",
       "in-[tr:has(a):hover]:bg-muted",
       "has-[>[data-align=end]]:*:data-[slot=control]:pt-3",
       "[&_code:has(.focused)_.line]:blur-sm",
