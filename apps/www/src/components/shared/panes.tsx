@@ -232,46 +232,51 @@ export function SizedPane({
 /**
  * The group's height, and where its second pane steps aside. Panes always run to the screen's edge at
  * every width, so the second pane has the whole height and all the room to the right, as the memory
- * editor does, and what the first pane holds keeps its own frame. A list's panes run from under its
- * header to the bottom of the screen, and a page whose header is taller than the school header's
+ * editor does. What the first pane holds keeps the page's frame and starts on the header's first
+ * letter (`--pane-lead`) whether or not the second pane stands open, so a press moves nothing there.
+ * A list's panes run from under its header to the bottom of the screen, and a page whose header is taller than the school header's
  * 4rem sets `--panes-offset` to its height; the exam editor's panes fill the room its shell leaves.
  */
-const panesVariants = cva("min-h-0 w-full [--pane-end:1.5rem]", {
-  compoundVariants: [
-    {
-      className:
-        "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
-      keeps: "first",
-      wideFrom: "md",
+const panesVariants = cva(
+  "@container min-h-0 w-full [--pane-end:1.5rem] [--pane-lead:max(0px,calc((100cqw-var(--page-width))/2))]",
+  {
+    compoundVariants: [
+      {
+        className:
+          "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
+        keeps: "first",
+        wideFrom: "md",
+      },
+      {
+        className:
+          "max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!",
+        keeps: "first",
+        wideFrom: "lg",
+      },
+      {
+        className:
+          "max-lg:[&>[data-panel]:first-child]:hidden! max-lg:[&>[data-separator]]:hidden!",
+        keeps: "second",
+        wideFrom: "lg",
+      },
+      {
+        className:
+          "max-xl:[&>[data-panel]:first-child]:hidden! max-xl:[&>[data-separator]]:hidden!",
+        keeps: "second",
+        wideFrom: "xl",
+      },
+    ],
+    variants: {
+      fill: {
+        parent: "flex-1",
+        // The resizable group writes its own `height: 100%` on the element, so this height says important.
+        screen: "h-[calc(100svh-var(--panes-offset,4rem))]!",
+      },
+      keeps: { first: "", second: "" },
+      wideFrom: { lg: "", md: "", xl: "" },
     },
-    {
-      className:
-        "max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!",
-      keeps: "first",
-      wideFrom: "lg",
-    },
-    {
-      className:
-        "max-lg:[&>[data-panel]:first-child]:hidden! max-lg:[&>[data-separator]]:hidden!",
-      keeps: "second",
-      wideFrom: "lg",
-    },
-    {
-      className:
-        "max-xl:[&>[data-panel]:first-child]:hidden! max-xl:[&>[data-separator]]:hidden!",
-      keeps: "second",
-      wideFrom: "xl",
-    },
-  ],
-  variants: {
-    fill: {
-      parent: "flex-1",
-      screen: "h-[calc(100svh-var(--panes-offset,4rem))]",
-    },
-    keeps: { first: "", second: "" },
-    wideFrom: { lg: "", md: "", xl: "" },
-  },
-});
+  }
+);
 
 /**
  * The two panes: the first, then the second beside it, each scrolling on its own, with the
@@ -361,7 +366,7 @@ export function PanesList({
       {wide ? (
         children
       ) : (
-        <div className="mx-auto flex min-h-0 w-full max-w-(--page-width) flex-1 flex-col">
+        <div className="flex min-h-0 w-full max-w-[calc(var(--page-width)+var(--pane-lead))] flex-1 flex-col ps-(--pane-lead)">
           {children}
         </div>
       )}

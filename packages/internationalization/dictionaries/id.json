@@ -755,7 +755,7 @@
     "profile": "Profil",
     "periods": "Periode",
     "units": "Unit",
-    "roles": "Peran dan akses",
+    "roles": "Peran",
     "members": "Anggota",
     "invites": "Undangan",
     "students": "Akun siswa",
@@ -2804,7 +2804,7 @@
     },
     "school-refusal-address-member": {
       "title": "Orang ini sudah anggota sekolah ini.",
-      "description": "Ubah perannya di Peran dan akses."
+      "description": "Ubah perannya di Peran."
     },
     "school-refusal-already-placed": {
       "title": "Sudah masuk rombel periode ini.",

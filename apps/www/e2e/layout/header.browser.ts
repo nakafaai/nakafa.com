@@ -381,7 +381,8 @@ test("an exam's pages keep their headers to one row at every width, for its Owne
   baseURL,
   browser,
 }) => {
-  test.slow();
+  // An exam has the most pages, and each takes every group's controls through every state twice.
+  test.setTimeout(600_000);
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);

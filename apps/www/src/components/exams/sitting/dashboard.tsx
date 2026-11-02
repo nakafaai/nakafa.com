@@ -109,19 +109,22 @@ export function SittingDashboard({
           <SittingHeader examId={examId} />
           <SittingFilterRow />
           <SittingOfflineContext value={offline}>
-            <Panes id="sitting">
-              <PanesList>
-                <div
-                  className={cn(
-                    pageGutterVariants(),
-                    "grid min-w-0 content-start gap-4 py-4 md:py-6"
-                  )}
-                >
-                  <SittingSeats />
-                </div>
-              </PanesList>
-              <SittingPanel />
-            </Panes>
+            {/* The header and the filter row stand above the panes. */}
+            <div className="contents [--panes-offset:7rem]">
+              <Panes id="sitting">
+                <PanesList>
+                  <div
+                    className={cn(
+                      pageGutterVariants(),
+                      "grid min-w-0 content-start gap-4 py-4 md:py-6"
+                    )}
+                  >
+                    <SittingSeats />
+                  </div>
+                </PanesList>
+                <SittingPanel />
+              </Panes>
+            </div>
           </SittingOfflineContext>
         </PanesProvider>
       </SittingDataContext>

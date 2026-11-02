@@ -9,7 +9,18 @@ import type { Page } from "@playwright/test";
  * its class names: a text clipped by a scroller counts only as far as the scroller shows it.
  */
 export function readFrameProblems(page: Page) {
-  return page.evaluate(() => {
+  return page.evaluate(async () => {
+    // A change of width slides the underline to its tab, so it is read where it comes to rest.
+    await Promise.allSettled(
+      document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.effect instanceof KeyframeEffect &&
+            animation.effect.target?.matches('[data-slot="tab-indicator"]')
+        )
+        .map((animation) => animation.finished)
+    );
     const widest = 1280;
     const tolerance = 1;
     const desktop = 1024;
@@ -116,7 +127,7 @@ export function readFrameProblems(page: Page) {
           `the first tab stands at ${Math.round(left)}, the header's first letter at ${Math.round(line)}`,
         current &&
           off(underline) &&
-          "the underline stands off the header's first letter",
+          `the underline stands at ${Math.round(underline)}, the header's first letter at ${Math.round(line)}`,
       ].filter((problem) => typeof problem === "string");
     };
 
@@ -168,6 +179,27 @@ export function readFrameProblems(page: Page) {
         : [];
     };
 
+    /**
+     * Two panes that stop short of the screen's bottom, or run past it and make the page scroll. An
+     * open sheet scales the page behind it, so what stands behind one has no size of its own to read.
+     */
+    const paneProblems = () =>
+      Array.from(
+        document.querySelectorAll(
+          '[class*="100svh"][data-slot="resizable-panel-group"]'
+        )
+      )
+        .filter(
+          (group) =>
+            isDrawn(group) && document.querySelector('[role="dialog"]') === null
+        )
+        .map((group) => group.getBoundingClientRect().bottom + scrollY)
+        .filter((bottom) => Math.abs(bottom - innerHeight) > tolerance)
+        .map(
+          (bottom) =>
+            `two panes end at ${Math.round(bottom)}, the screen at ${innerHeight}`
+        );
+
     /** The crumbs of the header's path that its row cuts. */
     const pathProblems = (header: Element) =>
       Array.from(
@@ -209,6 +241,7 @@ export function readFrameProblems(page: Page) {
       ...edgeProblems(header, start, end),
       ...controlProblems(header),
       ...pathProblems(header),
+      ...paneProblems(),
     ];
   });
 }

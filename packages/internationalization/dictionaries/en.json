@@ -755,7 +755,7 @@
     "profile": "Profile",
     "periods": "Periods",
     "units": "Units",
-    "roles": "Roles and access",
+    "roles": "Roles",
     "members": "Members",
     "invites": "Invites",
     "students": "Student accounts",
@@ -2804,7 +2804,7 @@
     },
     "school-refusal-address-member": {
       "title": "They already belong to this school.",
-      "description": "Change their role under Roles and access."
+      "description": "Change their role under Roles."
     },
     "school-refusal-already-placed": {
       "title": "Already placed in this period.",
