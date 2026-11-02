@@ -196,6 +196,16 @@ test("every search placeholder shows whole in every language: a table page's box
   await page.goto(address("/settings/members"));
   const box = '[data-slot="input-group-control"][aria-label="Find a name"]';
   await expect(page.locator(box)).toBeVisible();
+  // Chrome keeps a fieldset's content at its own height unless the group allows less, which cuts every line in it.
+  expect(
+    await page.locator(box).evaluate((input) => {
+      const group = input.closest('[data-slot="input-group"]');
+      return group === null
+        ? 0
+        : group.clientHeight - input.getBoundingClientRect().height;
+    }),
+    "the search box fills its group"
+  ).toBe(0);
   expect(
     await Effect.runPromise(cutPlaceholders(page, box, tables)),
     "the header's search box at 1024px"
