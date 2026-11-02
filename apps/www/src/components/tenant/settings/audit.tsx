@@ -1,6 +1,5 @@
 import {
   type PaginatedQueryItem,
-  PaginatedQueryResult,
   QueryResult,
   usePaginatedQuery,
   useQuery,
@@ -32,7 +31,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TableNote } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import {
@@ -158,22 +157,8 @@ function SchoolAuditBody() {
         rowId={(entry) => entry.id}
         search="change"
       />
-      {PaginatedQueryResult.isExhausted(pagination) ? <AuditFooter /> : null}
+      <TableNote>{t("audit-footer")}</TableNote>
     </TablePages>
-  );
-}
-
-/**
- * The note at the foot of the trail: what it leaves out. It arrives with the answer that it closes, so neither the
- * first page nor a page that loads at the end of the table moves it.
- */
-function AuditFooter() {
-  const t = useTranslations("SchoolSettings");
-
-  return (
-    <p className="text-muted-foreground mt-auto border-t px-4 py-3 text-sm">
-      {t("audit-footer")}
-    </p>
   );
 }
 

@@ -46,7 +46,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {/* Mark all read stands before the filter from the first paint, ready and final. */}
         <ButtonGroup>
-          <MarkAllRead first={Option.none()} scope={scope} />
+          <MarkAllRead scope={scope} />
           <SchoolPreferences />
           <InboxFilter all={all} />
         </ButtonGroup>

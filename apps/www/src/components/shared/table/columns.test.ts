@@ -91,6 +91,16 @@ describe("the columns of a table", () => {
     });
   });
 
+  it("keeps the room a wide cell asks for in the column's meta", () => {
+    expect(
+      columns.number((row) => row.score, {
+        header: "Score",
+        id: "score",
+        wide: true,
+      })
+    ).toMatchObject({ meta: { wide: true } });
+  });
+
   it("leaves the row's menu the one column with nothing to filter by", () => {
     const cell = () => "menu";
 

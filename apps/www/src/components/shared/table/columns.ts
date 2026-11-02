@@ -40,6 +40,8 @@ interface ColumnSpec<TData extends RowData, TValue extends CellData> {
   >;
   readonly header: string;
   readonly id: string;
+  /** Whether the cell holds more than one value's width, such as a room's state beside its seats. */
+  readonly wide?: boolean;
 }
 
 /** A column that filters by its values: `options` hold every value its head offers. */
@@ -72,14 +74,19 @@ export type TableColumn<TData extends RowData> = AnyColumn<TData> & {
 /** The part every column of data shares: how it reads a row, draws its cell, and names its head. */
 function dataColumn<TData extends RowData, TValue extends CellData>(
   read: AccessorFn<TData, TValue>,
-  { align, cell, header, id }: ColumnSpec<TData, TValue>,
+  { align, cell, header, id, wide }: ColumnSpec<TData, TValue>,
   filter: HeadFilter
 ) {
   return {
     accessorFn: read,
     header,
     id,
-    meta: { filter, title: header, ...(align === undefined ? {} : { align }) },
+    meta: {
+      filter,
+      title: header,
+      ...(align === undefined ? {} : { align }),
+      ...(wide === undefined ? {} : { wide }),
+    },
     ...(cell === undefined ? {} : { cell }),
   };
 }

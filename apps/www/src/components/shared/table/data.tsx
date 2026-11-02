@@ -51,6 +51,7 @@ import {
   HeadText,
   useIsFiltered,
 } from "@/components/shared/table/panel";
+import { TableValue } from "@/components/shared/table/text";
 import {
   useNeedsEveryRow,
   useTableFilters,
@@ -160,7 +161,11 @@ export function DataTable<TData extends RowData>({
                         <table.FlexRender cell={cell} />
                       </RowMenu>
                     ) : (
-                      <table.FlexRender cell={cell} />
+                      <DataTableValue
+                        filter={cell.column.columnDef.meta?.filter}
+                      >
+                        <table.FlexRender cell={cell} />
+                      </DataTableValue>
                     )}
                   </TableCell>
                 ))}
@@ -228,6 +233,22 @@ function DataTableRow({
   );
 }
 
+/** What a cell holds, inside the width a column of known values keeps for it. */
+function DataTableValue({
+  children,
+  filter,
+}: {
+  children: ReactNode;
+  /** What the cell's column filters by. */
+  filter: HeadFilter | undefined;
+}) {
+  return filter?.kind === "choice" || filter?.kind === "values" ? (
+    <TableValue>{children}</TableValue>
+  ) : (
+    children
+  );
+}
+
 /**
  * A column's head, in its place in the line: the button that opens what filters the column, or nothing over the row's
  * menu, the one column with nothing to filter by.
@@ -242,7 +263,7 @@ function DataTableHead<TData extends RowData>({
   index: number;
 }) {
   const column = header.column;
-  const { align, filter, title = "" } = column.columnDef.meta ?? {};
+  const { align, filter, title = "", wide } = column.columnDef.meta ?? {};
   const place = placeOf(index, align);
 
   if (header.isPlaceholder || filter === undefined) {
@@ -262,7 +283,7 @@ function DataTableHead<TData extends RowData>({
       )}
       place={place}
       sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
-      width={filter.kind}
+      width={wide === true ? "wide" : filter.kind}
     >
       <HeadAlignContext value={headPlace[place]}>
         <HeadControl filter={filter} header={header} title={title}>

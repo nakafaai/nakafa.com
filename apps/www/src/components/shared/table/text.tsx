@@ -14,3 +14,18 @@ export function TableText({ children }: { children: ReactNode }) {
     </span>
   );
 }
+
+/**
+ * A known value in a table, such as a status, a role or a unit's name: its words wrap inside the width its column holds,
+ * a badge's too, so the longest one a school holds never moves the column heads when its rows arrive.
+ */
+export function TableValue({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="block whitespace-normal [&_[data-slot=badge]]:h-auto [&_[data-slot=badge]]:whitespace-normal"
+      dir="auto"
+    >
+      {children}
+    </span>
+  );
+}

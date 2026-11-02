@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   expectNoOverflow,
   readCumulativeLayoutShift,
@@ -56,9 +57,13 @@ test("the longest names in Indonesian, English, German and Arabic fit every peop
   });
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   await page.goto(address("/settings/invites"));
   for (const [key, name] of Rec.toEntries(NAMES)) {
+    const sentBefore = changes.sent;
     await invite(page, name, `${key}-${school.slug}@acceptance.example.test`);
+    // The row shows before the server has the invite, and the reload below drops one still on its way.
+    await saved(changes, sentBefore);
   }
 
   for (const locale of LOCALES) {

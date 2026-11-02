@@ -356,6 +356,7 @@ function RoomsTable({
             ),
             header: t("rooms-state"),
             id: "state",
+            wide: true,
             options: [
               { icon: Calendar03Icon, label: t("state-all"), value: "all" },
               ...Arr.map(ROOM_STATES, (state) => ({

@@ -29,7 +29,7 @@ const HEADER = '[data-slot="page-header"]';
 const OPEN_ROOM_ROW = /Lab 2/u;
 
 /** The tab row of a class. */
-const CLASS_TABS = 'nav[aria-label="Class"]';
+const CLASS_TABS = '[role="tablist"][aria-label="Class"]';
 
 /**
  * Records, before the page's scripts run, the controls of one part of the page as they stand the first time the part
@@ -97,6 +97,15 @@ const namesOf = (controls: unknown) =>
     (control) => control.name
   );
 
+/** A control as a record holds it, read for how far it acts. */
+const StatedControls = Schema.Array(
+  Schema.Struct({ disabled: Schema.Boolean, opacity: Schema.String })
+);
+
+/** How far each control acts, for a part that names a record it has yet to read. */
+const statesOf = (controls: unknown) =>
+  Schema.decodeUnknownSync(StatedControls)(controls);
+
 /** The part's controls as the first record holds them. */
 function readFirstControls(page: Page) {
   return page.evaluate((key) => Reflect.get(window, key), FIRST_CONTROLS);
@@ -105,13 +114,14 @@ function readFirstControls(page: Page) {
 /**
  * Opens a School page, waits until what shows its data has drawn, and checks that its header held the same controls
  * from its first paint, in the same order, each as enabled and as opaque as it ends, and that nothing on the page
- * moved while it loaded. A part that draws its controls before it can act is compared by `names` alone.
+ * moved while it loaded. A part that draws its controls before it can act is compared by `names` alone, and a path that
+ * names a record, whose words only the record's read holds, by `states` alone.
  */
 async function expectSteadyHeader(
   page: Page,
   address: string,
   drawn: Locator,
-  compared: "controls" | "names" = "controls"
+  compared: "controls" | "names" | "states" = "controls"
 ) {
   await page.addInitScript(recordFirstControls, {
     key: FIRST_CONTROLS,
@@ -126,6 +136,8 @@ async function expectSteadyHeader(
   ];
   if (compared === "names") {
     expect(namesOf(first)).toEqual(namesOf(now));
+  } else if (compared === "states") {
+    expect(statesOf(first)).toEqual(statesOf(now));
   } else {
     expect(first).toEqual(now);
   }
@@ -196,7 +208,8 @@ test("the cohorts, exams, notifications, rooms, exam editor, periods, profile an
   await expectSteadyHeader(
     rooms,
     address(`/exams/${sitting.examId}`),
-    rooms.getByRole("row", { name: OPEN_ROOM_ROW })
+    rooms.getByRole("row", { name: OPEN_ROOM_ROW }),
+    "states"
   );
   await rooms.close();
 
@@ -394,8 +407,8 @@ test("a class page keeps its tab row from the first paint, and nothing on it mov
   // Every tab stood from the first paint; a viewer who keeps the grades gets the Grades tab at the row's end.
   const first = namesOf(await readFirstControls(page));
   const now = namesOf(await readControls(page, CLASS_TABS));
-  expect(first).toEqual(["Home", "Forum", "Library", "Tasks"]);
-  expect(Arr.take(now, 4)).toEqual(first);
+  expect(first).toEqual(["Home", "Forum", "Library", "Tasks", "People"]);
+  expect(Arr.take(now, 5)).toEqual(first);
   expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
   await context.close();
 });

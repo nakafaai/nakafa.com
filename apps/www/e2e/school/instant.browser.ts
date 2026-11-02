@@ -160,18 +160,20 @@ test("every School sidebar item and every settings tab commits at once, and noth
     expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
   }
 
-  // The settings page replaces the sidebar's groups with the settings sections.
-  await sidebar.locator('a[href="/settings/profile"]').click();
-  await page.waitForURL((url) => url.pathname === "/settings/profile");
+  // The settings page replaces the sidebar's groups with the settings sections, and keeps the groups mounted but
+  // hidden, so the way back draws at once: only a link that shows is a section.
+  await expect(
+    sidebar.locator('a[href="/settings/units"]:visible')
+  ).toBeVisible();
   const tabs = await sidebar
-    .locator('a[href^="/settings/"]')
+    .locator('a[href^="/settings/"]:visible')
     .evaluateAll((links) =>
       links.map((link) => link.getAttribute("href") ?? "")
     );
   expect(tabs.length).toBeGreaterThan(1);
 
   for (const tab of tabs) {
-    await sidebar.locator(`a[href="${tab}"]`).click();
+    await sidebar.locator(`a[href="${tab}"]:visible`).click();
     await page.waitForURL((url) => url.pathname === tab);
     await page.waitForLoadState("networkidle");
     expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
