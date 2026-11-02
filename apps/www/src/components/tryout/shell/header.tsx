@@ -10,7 +10,6 @@ import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
-import { PageFrame } from "@/components/shared/content/frame";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
 
@@ -77,19 +76,16 @@ export function TryoutPageHeader({
 /**
  * Fills the screen below the app header, so the page body can stretch to the
  * screen edge. The header hides from the large breakpoint and while a section
- * runs, when the shell sets its offset to zero. A set or a section is a working surface, so its
- * header and body take the page's width from the first frame, whether or not an attempt arrives.
+ * runs, when the shell sets its offset to zero.
  */
 export function TryoutPage({ children }: { children: ReactNode }) {
   return (
-    <PageFrame width="page">
-      <div
-        className="flex min-h-[calc(100svh-var(--app-header-top))] flex-col lg:min-h-svh"
-        data-slot="tryout-page"
-      >
-        {children}
-      </div>
-    </PageFrame>
+    <div
+      className="flex min-h-[calc(100svh-var(--app-header-top))] flex-col lg:min-h-svh"
+      data-slot="tryout-page"
+    >
+      {children}
+    </div>
   );
 }
 
