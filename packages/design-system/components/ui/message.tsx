@@ -20,7 +20,7 @@ export function Message({
   return (
     <div
       className={cn(
-        "group/message text-chat relative flex w-full min-w-0 gap-2 data-[align=end]:flex-row-reverse",
+        "group/message text-chat relative flex w-full min-w-0 gap-2 has-data-[slot=message-footer]:[--message-avatar-y:--spacing(-8)] has-data-[variant=ghost]:[--message-header-x:0rem] data-[align=end]:flex-row-reverse",
         className
       )}
       data-align={align}
@@ -34,7 +34,7 @@ export function MessageAvatar({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "bg-muted flex w-fit min-w-8 shrink-0 items-center justify-center self-end overflow-hidden rounded-full group-has-data-[slot=message-footer]/message:-translate-y-8",
+        "bg-muted flex w-fit min-w-8 shrink-0 translate-y-(--message-avatar-y) items-center justify-center self-end overflow-hidden rounded-full",
         className
       )}
       data-slot="message-avatar"
@@ -60,7 +60,7 @@ export function MessageHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "text-muted-foreground flex max-w-full min-w-0 items-center px-3 text-xs font-medium group-has-data-[variant=ghost]/message:px-0",
+        "text-muted-foreground flex max-w-full min-w-0 items-center px-[var(--message-header-x,--spacing(3))] text-xs font-medium",
         className
       )}
       data-slot="message-header"

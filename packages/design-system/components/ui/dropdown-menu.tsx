@@ -59,7 +59,7 @@ function DropdownMenuContent({
       >
         <MenuPrimitive.Popup
           className={cn(
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] ease-out outline-none not-dark:bg-clip-padding data-closed:overflow-hidden dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] ease-out outline-none not-dark:bg-clip-padding data-closed:overflow-hidden dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([role^=menuitem]))]:[--dropdown-menu-nothing:block]",
             className
           )}
           data-slot="dropdown-menu-content"
@@ -81,7 +81,7 @@ function DropdownMenuNothing() {
   const t = useTranslations("Common");
 
   return (
-    <p className="text-muted-foreground hidden max-w-xs px-2 py-1.5 text-sm [[data-slot=dropdown-menu-content]:not(:has([role^=menuitem]))_&]:block">
+    <p className="text-muted-foreground [display:var(--dropdown-menu-nothing,none)] max-w-xs px-2 py-1.5 text-sm">
       {t("popup-empty")}
     </p>
   );

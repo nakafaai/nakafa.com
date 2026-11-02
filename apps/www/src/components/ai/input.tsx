@@ -194,7 +194,7 @@ export function NinaInput({
         />
         <InputGroupAddon
           align="block-end"
-          className="justify-between gap-2 group-has-[>[data-slot=input-group-control]]/input-group:pb-3"
+          className="justify-between gap-2 pb-3"
         >
           {attachments ? (
             <Suspense fallback={null}>

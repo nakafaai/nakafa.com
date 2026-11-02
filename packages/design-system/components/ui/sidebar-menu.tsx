@@ -29,7 +29,10 @@ export function SidebarMenu({ className, ...props }: ComponentProps<"ul">) {
 export function SidebarMenuItem({ className, ...props }: ComponentProps<"li">) {
   return (
     <li
-      className={cn("group/menu-item relative", className)}
+      className={cn(
+        "group/menu-item relative has-data-[sidebar=menu-action]:[--menu-button-end:--spacing(8)]",
+        className
+      )}
       data-sidebar="menu-item"
       data-slot="sidebar-menu-item"
       {...props}
@@ -72,7 +75,7 @@ export function SidebarMenuDescription(
 }
 
 const sidebarMenuButtonVariants = cva(
-  "pressable peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-popup-open:hover:bg-sidebar-accent data-popup-open:hover:text-sidebar-accent-foreground flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden transition-[width,height,padding,scale,color,background-color,box-shadow] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "pressable peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-popup-open:hover:bg-sidebar-accent data-popup-open:hover:text-sidebar-accent-foreground flex w-full items-center gap-2 overflow-hidden rounded-md p-2 pr-[var(--menu-button-end,--spacing(2))] text-left text-sm outline-hidden transition-[width,height,padding,scale,color,background-color,box-shadow] group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {

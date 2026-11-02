@@ -32,7 +32,7 @@ export function TabsList({
       <TabsPrimitive.List
         className={cn(
           // The underline waits for the page's scripts, so until it shows the current tab draws its own in the same place.
-          "[&:not(:has(>[data-slot=tab-indicator]:not([hidden])))>[data-active]]:border-foreground relative -mb-px flex h-12 w-full gap-6 overflow-x-auto",
+          "relative -mb-px flex h-12 w-full gap-6 overflow-x-auto [&:not(:has(>[data-slot=tab-indicator]:not([hidden])))]:[--tab-active-line:var(--foreground)]",
           className
         )}
         data-slot="tabs-list"
@@ -55,7 +55,7 @@ export function TabsTab({
   return (
     <TabsPrimitive.Tab
       className={cn(
-        "text-muted-foreground hover:text-foreground focus-visible:ring-ring data-active:text-foreground inline-flex shrink-0 items-center gap-1.5 border-b-2 border-transparent text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-inset disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4",
+        "text-muted-foreground hover:text-foreground focus-visible:ring-ring data-active:text-foreground inline-flex shrink-0 items-center gap-1.5 border-b-2 border-transparent text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-inset disabled:pointer-events-none disabled:opacity-50 data-active:border-[color:var(--tab-active-line,transparent)] [&_svg]:size-4",
         className
       )}
       data-slot="tabs-tab"

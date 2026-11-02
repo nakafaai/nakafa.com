@@ -116,6 +116,45 @@ describe("Tailwind built-in class policy", () => {
     ).toEqual([]);
   });
 
+  it("rejects each variant that styles an element from a state above it", () => {
+    const classes = [
+      "group-has-data-[slot=note]/item:self-start",
+      "peer-has-[a]/item:pe-8",
+      "in-[tr:has(a):hover]:bg-muted",
+      "has-[>[data-align=end]]:*:data-[slot=control]:pt-3",
+      "[&_code:has(.focused)_.line]:blur-sm",
+      "group-last/list:pb-6",
+      "group-first/bar:hidden",
+    ];
+
+    expect(inspect(Arr.join(classes, " "))).toEqual(
+      Arr.map(
+        classes,
+        (name) =>
+          `view.tsx:1: ${name} styles an element from a state above it; set a custom property on the element that holds the state, and read it here.`
+      )
+    );
+  });
+
+  it("allows a :has() on the element a rule styles", () => {
+    expect(
+      inspect(
+        Arr.join(
+          [
+            "has-data-[slot=note]:[--item-media-y:--spacing(0.5)]",
+            "has-[>textarea]:h-auto",
+            "[&:not(:has(>[data-slot=mark]:not([hidden])))]:[--line:var(--foreground)]",
+            "[&>[data-slot=control]:has(~[data-align=end])]:pt-3",
+            "[&_code:has(.focused)]:[--line-filter:blur(2px)]",
+            "last:[--row-bottom:var(--card-spacing)]",
+            "group-data-[state=open]/item:rotate-180",
+          ],
+          " "
+        )
+      )
+    ).toEqual([]);
+  });
+
   it("reports the line of each value and skips test modules", () => {
     const source = 'const a = "p-4";\nconst b = "size-[8px]";\n';
 

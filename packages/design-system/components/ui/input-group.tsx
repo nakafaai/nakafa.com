@@ -18,11 +18,13 @@ function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
         "group/input-group border-input relative flex w-full items-center rounded-md border shadow-xs transition-[color,box-shadow] ease-out outline-none",
         "h-9 min-w-0 has-[>textarea]:h-auto",
 
-        // Variants based on alignment.
-        "has-[>[data-align=inline-start]]:*:data-[slot=input-group-control]:pl-2",
-        "has-[>[data-align=inline-end]]:*:data-[slot=input-group-control]:pr-2",
-        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:*:data-[slot=input-group-control]:pb-3",
-        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:*:data-[slot=input-group-control]:pt-3",
+        // Variants based on alignment. A control finds its addon among its siblings, on either side: a rule whose
+        // subject sits under a :has() restyles the whole page on every element inserted (ADR 0039).
+        "[&>[data-align=inline-start]~[data-slot=input-group-control]]:pl-2 [&>[data-slot=input-group-control]:has(~[data-align=inline-start])]:pl-2",
+        "[&>[data-align=inline-end]~[data-slot=input-group-control]]:pr-2 [&>[data-slot=input-group-control]:has(~[data-align=inline-end])]:pr-2",
+        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col [&>[data-align=block-start]~[data-slot=input-group-control]]:pb-3 [&>[data-slot=input-group-control]:has(~[data-align=block-start])]:pb-3",
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col [&>[data-align=block-end]~[data-slot=input-group-control]]:pt-3 [&>[data-slot=input-group-control]:has(~[data-align=block-end])]:pt-3",
+        "has-[>[data-slot=input-group-control]]:[--input-group-addon-space:--spacing(2.5)]",
 
         // Focus state.
         "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot=input-group-control]:focus-visible]:ring-3",
@@ -48,9 +50,9 @@ const inputGroupAddonVariants = cva(
         "inline-end":
           "order-last pr-3 has-[>button]:mr-[-0.45rem] has-[>kbd]:mr-[-0.35rem]",
         "block-start":
-          "order-first w-full justify-start px-3 pt-3 group-has-[>[data-slot=input-group-control]]/input-group:pt-2.5 [.border-b]:pb-3",
+          "order-first w-full justify-start px-3 pt-[var(--input-group-addon-space,--spacing(3))] [.border-b]:pb-3",
         "block-end":
-          "order-last w-full justify-start px-3 pb-3 group-has-[>[data-slot=input-group-control]]/input-group:pb-2.5 [.border-t]:pt-3",
+          "order-last w-full justify-start px-3 pb-[var(--input-group-addon-space,--spacing(3))] [.border-t]:pt-3",
       },
     },
     defaultVariants: {

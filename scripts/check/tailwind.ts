@@ -26,6 +26,9 @@ const DEGREES_PATTERN = /^(?<degrees>\d+)deg$/u;
 const RATIO_PATTERN = /^(?<numerator>\d+)\/(?<denominator>\d+)$/u;
 const GRID_PATTERN = /^repeat\((?<columns>\d+),_?minmax\(0,_?1fr\)\)$/u;
 const BOUND_PREFIX_PATTERN = /^(?:min|max)-/u;
+// A variant that styles an element from a `:has()` or a child position above it, in each form Tailwind writes one.
+const ABOVE_PATTERN =
+  /(?<![\w-])(?:(?:group|peer)-(?:has|first|last|only|odd|even|nth)-?[^\s"'`]*|in-\[[^\s"'`]*:has\([^\s"'`]*|has-[^\s"'`]*?:\*:[^\s"'`]*|\[[^\s"'`]*:has\([^\s"'`]*\)[_>~+][^\s"'`]*\]:[^\s"'`]*)/gu;
 
 const REM_PIXELS = 16;
 const STEP_PIXELS = 4;
@@ -242,18 +245,34 @@ function builtInClass(negative: boolean, utility: string, value: string) {
   return flipped ? `-${name}` : name;
 }
 
-/** Reports each arbitrary value in one authored module that repeats a class. */
+/** Returns the line of one index in a module's text. */
+const lineOf = (sourceText: string, index: number) =>
+  sourceText.slice(0, index).split("\n").length;
+
+/**
+ * Reports each arbitrary value in one authored module that repeats a class, and each variant that styles an element
+ * from a `:has()` or a child position above it, which restyles the whole page on every element inserted (ADR 0039).
+ */
 export function inspectTailwindSource(file: string, sourceText: string) {
   if (TEST_MODULE_PATTERN.test(file)) {
     return [];
   }
-  return Arr.flatMap([...sourceText.matchAll(CANDIDATE_PATTERN)], (match) => {
-    const [candidate, negative, utility, value] = match;
-    const replacement = builtInClass(negative === "-", utility, value);
-    if (replacement === undefined) {
-      return [];
+  const repeats = Arr.flatMap(
+    [...sourceText.matchAll(CANDIDATE_PATTERN)],
+    (match) => {
+      const [candidate, negative, utility, value] = match;
+      const replacement = builtInClass(negative === "-", utility, value);
+      if (replacement === undefined) {
+        return [];
+      }
+      const line = lineOf(sourceText, match.index);
+      return [`${file}:${line}: use ${replacement} instead of ${candidate}.`];
     }
-    const line = sourceText.slice(0, match.index).split("\n").length;
-    return [`${file}:${line}: use ${replacement} instead of ${candidate}.`];
-  });
+  );
+  const above = Arr.map(
+    [...sourceText.matchAll(ABOVE_PATTERN)],
+    (match) =>
+      `${file}:${lineOf(sourceText, match.index)}: ${match[0]} styles an element from a state above it; set a custom property on the element that holds the state, and read it here.`
+  );
+  return [...repeats, ...above];
 }
