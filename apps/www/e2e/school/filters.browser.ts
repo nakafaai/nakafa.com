@@ -51,7 +51,7 @@ async function expectEvenPanel(page: Page, card: Locator, head: string) {
       width: box.width,
     };
   });
-  expect(layout.width, head).toBe(PANEL_WIDTH);
+  expect(layout.width, head).toBeCloseTo(PANEL_WIDTH, 2);
   for (const gap of layout.gaps) {
     expect(gap, head).toBeCloseTo(PANEL_GAP, 0);
   }

@@ -109,7 +109,13 @@ export function useServerSearch() {
  * button, which opens the box under it, so the page's name and its main action keep their room. Beside a second
  * outline action it joins that action in a `ButtonGroup`, so a header reads as two pills at most.
  */
-export function TableSearch({ placeholder }: { placeholder: string }) {
+export function TableSearch({
+  className,
+  placeholder,
+}: {
+  className?: string;
+  placeholder: string;
+}) {
   const search = useTableFilters((state) => state.search);
   const setSearch = useTableFilters((state) => state.setSearch);
 
