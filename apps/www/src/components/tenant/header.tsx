@@ -51,7 +51,7 @@ export function SchoolHeader({
 
   return (
     <header
-      className="bg-background @container/bar sticky top-0 z-10 flex min-h-16 shrink-0 items-center border-b"
+      className="bg-background @container/bar sticky top-0 z-20 flex min-h-16 shrink-0 items-center border-b"
       data-slot="page-header"
     >
       {/* Text at twice its size leaves one line no room, so the actions take a line of their own. */}

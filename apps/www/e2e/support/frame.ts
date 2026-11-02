@@ -200,6 +200,16 @@ export function readFrameProblems(page: Page) {
             `two panes end at ${Math.round(bottom)}, the screen at ${innerHeight}`
         );
 
+    /** What of the body stands on a layer at or above the sticky header, which shows over it on scroll. */
+    const layerProblems = (header: Element) => {
+      const level = Number(getComputedStyle(header).zIndex);
+      return Array.from(document.querySelectorAll('main [class*="z-"]'))
+        .filter((element) => !standsApart(element))
+        .filter((element) => Number(getComputedStyle(element).zIndex) >= level)
+        .slice(0, 2)
+        .map((element) => `${name(element)} stands over the header on scroll`);
+    };
+
     /** The crumbs of the header's path that its row cuts. */
     const pathProblems = (header: Element) =>
       Array.from(
@@ -242,6 +252,7 @@ export function readFrameProblems(page: Page) {
       ...controlProblems(header),
       ...pathProblems(header),
       ...paneProblems(),
+      ...layerProblems(header),
     ];
   });
 }

@@ -15,7 +15,6 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -186,7 +185,6 @@ function useEntryWords() {
  */
 function AuditEntryMenu({ entry }: { entry: EntryItem }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const words = useEntryWords();
   const [open, setOpen] = useState(false);
 
@@ -228,13 +226,7 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
             })}
           </dl>
           <SheetFooter>
-            <SheetClose
-              render={
-                <Button type="button" variant="outline">
-                  {common("close")}
-                </Button>
-              }
-            />
+            <p className="text-muted-foreground text-sm">{t("audit-footer")}</p>
           </SheetFooter>
         </SheetContent>
       </Sheet>

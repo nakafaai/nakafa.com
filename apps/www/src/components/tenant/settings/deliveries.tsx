@@ -16,7 +16,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -180,7 +179,6 @@ export function SchoolDeliverySheet({
   webhook: Webhook;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
@@ -195,13 +193,7 @@ export function SchoolDeliverySheet({
           <DeliveryList webhook={webhook} />
         </div>
         <SheetFooter>
-          <SheetClose
-            render={
-              <Button type="button" variant="outline">
-                {common("close")}
-              </Button>
-            }
-          />
+          <p className="text-muted-foreground text-sm">{t("deliveries-footer")}</p>
         </SheetFooter>
       </SheetContent>
     </Sheet>

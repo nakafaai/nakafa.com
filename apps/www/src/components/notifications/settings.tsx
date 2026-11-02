@@ -16,7 +16,6 @@ import { DropdownMenuCheckboxItem } from "@repo/design-system/components/ui/drop
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -30,6 +29,7 @@ import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { type ReactNode, use, useOptimistic, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { PushOffer } from "@/components/notifications/push";
 import { ChoiceContext } from "@/components/notifications/choice";
 import { preferenceChoicesOf } from "@/components/notifications/preferences";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
@@ -45,7 +45,6 @@ import { TableFiltersProvider } from "@/components/shared/table/toolbar";
  */
 export function NoticePreferences({ children }: { children: ReactNode }) {
   const t = useTranslations("Notifications");
-  const common = useTranslations("Common");
 
   return (
     <Sheet>
@@ -57,16 +56,14 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
           </Button>
         }
       />
-      <SheetContent className="sm:max-w-xl" keepMounted showCloseButton={false}>
+      <SheetContent className="sm:max-w-xl" keepMounted>
         <SheetHeader>
           <SheetTitle>{t("preferences")}</SheetTitle>
           <SheetDescription>{t("preferences-description")}</SheetDescription>
         </SheetHeader>
         <SheetPanel>{children}</SheetPanel>
-        <SheetFooter>
-          <SheetClose
-            render={<Button type="button">{common("close")}</Button>}
-          />
+        <SheetFooter className="flex-row items-center justify-between gap-4">
+          <PushOffer />
         </SheetFooter>
       </SheetContent>
     </Sheet>

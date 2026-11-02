@@ -43,7 +43,7 @@ export function HeaderContainer({ children }: { children: ReactNode }) {
     <LazyMotion features={domAnimation} strict>
       <m.header
         className={cn(
-          "bg-background sticky top-0 z-10 h-16 shrink-0 items-center gap-2",
+          "bg-background sticky top-0 z-20 h-16 shrink-0 items-center gap-2",
           isChatPage
             ? "hidden"
             : "[display:var(--app-shell-titled,flex)] lg:hidden"

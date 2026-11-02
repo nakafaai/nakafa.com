@@ -4,7 +4,6 @@ import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -12,6 +11,7 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { lazy } from "@repo/design-system/lib/lazy";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -34,7 +34,6 @@ const Receipts = lazy(() =>
  */
 export function UserSettingsPayments() {
   const t = useTranslations("Auth");
-  const common = useTranslations("Common");
   const [isActivated, setIsActivated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -43,7 +42,7 @@ export function UserSettingsPayments() {
       description={t("payments-card-description")}
       title={t("payments")}
     >
-      <CardSectionFooter hint={t("payments-footer")}>
+      <CardSectionFooter hint={t("payments-footer", { email: COMPANY_IDENTITY.email })}>
         <CardSectionActions>
           <Button
             onClick={() => {
@@ -71,13 +70,7 @@ export function UserSettingsPayments() {
             </Suspense>
           ) : null}
           <SheetFooter>
-            <SheetClose
-              render={
-                <Button type="button" variant="outline">
-                  {common("close")}
-                </Button>
-              }
-            />
+            <p className="text-muted-foreground text-sm">{t("payments-footer", { email: COMPANY_IDENTITY.email })}</p>
           </SheetFooter>
         </SheetContent>
       </Sheet>
