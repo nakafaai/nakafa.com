@@ -16,7 +16,8 @@ import {
  * reads as it is for a visitor, and under a signed-in hint (`globals.css`) it shows what this browser
  * last read for the page, or keeps the room of `name` with nothing in it on a first visit, until the
  * learner read answers: a running attempt never reads Start. A session that could not be read answers
- * nothing, so the name then shows.
+ * nothing, so the name then shows. Restart is the one name that folds to its icon in a narrow header:
+ * it stands beside the attempt picker, and the set's title needs the room.
  */
 export function TryoutActionName({
   name,
@@ -30,6 +31,7 @@ export function TryoutActionName({
   const failed = useLiveSession((state) => state.hasError);
   return (
     <span
+      className="@max-md/header:contents"
       data-learner-read={pending && !failed ? "pending" : undefined}
       data-slot="tryout-action-name"
     >
@@ -42,7 +44,10 @@ export function TryoutActionName({
       ) : null}
       {Arr.map(TryoutActionNameSchema.literals, (key) => (
         <span
-          className={cn(key !== name && "hidden")}
+          className={cn(
+            key !== name && "hidden",
+            key === "restart-cta" && "@max-md/header:sr-only"
+          )}
           data-name={key}
           key={key}
         >
