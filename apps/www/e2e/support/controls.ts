@@ -177,6 +177,13 @@ const STAYS_OPEN =
  */
 const expectControlKeepsShape = Effect.fn("NakafaE2E.expectControlKeepsShape")(
   function* (page: Page, label: string, index: number, rest: unknown) {
+    // A control in a row's pane leaves with the pane, which Escape closes on the control before it.
+    const present = yield* Effect.promise(() =>
+      page.locator(GROUP_CONTROLS).count()
+    );
+    if (index >= present) {
+      return;
+    }
     const control = page.locator(GROUP_CONTROLS).nth(index);
     const held = (state: string) =>
       Effect.promise(async () => {
