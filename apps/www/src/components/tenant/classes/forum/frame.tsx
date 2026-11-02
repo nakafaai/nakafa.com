@@ -32,6 +32,7 @@ export function ForumFrame({
     <Panes
       fill="parent"
       id="forum"
+      inRow
       keeps={shown === "rail" ? "first" : "second"}
       wideFrom={shown === "thread" ? "xl" : "lg"}
     >

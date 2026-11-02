@@ -1,4 +1,4 @@
-import { useLocalStorage, useMediaQuery, useWindowEvent } from "@mantine/hooks";
+import { useMediaQuery, useWindowEvent } from "@mantine/hooks";
 import {
   Drawer,
   DrawerContent,
@@ -6,20 +6,20 @@ import {
 import {
   ResizableHandle,
   ResizablePanel,
-  ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cva } from "class-variance-authority";
-import { Option, Record as Rec, Schema } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  use,
-  useState,
-} from "react";
+import { cn } from "cn";
+import { Option, Schema } from "effect";
+import { createContext, type ReactNode, use, useState } from "react";
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
+import {
+  PanesGroupContext,
+  PanesGroupProvider,
+  SizedPane,
+} from "@/components/shared/panes/row";
+import { PaneSide } from "@/components/shared/panes/side";
 import { PaneStartContext } from "@/components/shared/panes/start";
 import { isTyping } from "@/components/shared/typing";
 
@@ -29,15 +29,8 @@ const PanesWidth = Schema.Literals(["md", "lg", "xl"]);
 /** Which of the two panes keeps the row below `wideFrom`: the first, or the second once the page opens it. */
 const PanesKept = Schema.Literals(["first", "second"]);
 
-/** The share of a group's width each sized pane took when a person last moved its handle, by the pane's ID. */
-const PaneSizes = Schema.Record(Schema.String, Schema.Finite);
-
-const decodePaneSizes = Schema.decodeUnknownOption(
-  Schema.fromJsonString(PaneSizes)
-);
-
-/** Names the group of panes that the panes inside it keep their sizes under. */
-const PanesGroupContext = createContext("panes");
+/** Whether a page's pane stands at the screen's right, not in a row under the shell. */
+const PaneBesideContext = createContext(false);
 
 /** Which row of a page's list is open beside it, by its ID, and whether the phone's sheet shows it. */
 const PanesState = Schema.Struct({
@@ -82,7 +75,7 @@ const createPanes = (opened: Option.Option<string>) =>
 
 const PanesContext = createContext<StoreApi<PanesStore> | null>(null);
 
-const PanesWidthContext = createContext<typeof PanesWidth.Type>("md");
+const PanesWidthContext = createContext<typeof PanesWidth.Type>("lg");
 
 /**
  * Where a detail draws, and how its header closes it: beside the first pane, where a row's
@@ -113,7 +106,7 @@ export function usePaneMode() {
 export function PanesProvider({
   children,
   opened = Option.none(),
-  wideFrom = "md",
+  wideFrom = "lg",
 }: {
   children: ReactNode;
   opened?: Option.Option<string>;
@@ -158,137 +151,61 @@ function useWide() {
 }
 
 /**
- * The sizes a person gave a group's panes, kept in this browser. The first render reads them, so a pane opens at its
- * kept size in the frame the page first paints and nothing moves after it. A browser that keeps nothing starts from each
- * pane's own size.
+ * The height of a page's panes, and where the second pane of a row of panes steps aside. A page's list runs from
+ * under its header to the bottom of the screen, and a page with a row under its header sets `--panes-offset` to their
+ * height; the exam editor's and a forum's panes fill the room their shell leaves. A page's own pane stands at the
+ * screen's right (`PaneSide`), so what a list holds keeps the header's frame and a press moves nothing.
  */
-function useKeptSizes(group: string) {
-  return useLocalStorage<typeof PaneSizes.Type>({
-    defaultValue: {},
-    deserialize: (value) =>
-      Option.getOrElse(decodePaneSizes(value), () => ({})),
-    getInitialValueInEffect: false,
-    key: `nakafa-panes-${group}`,
-  });
-}
-
-/**
- * A row of panes whose sizes stay: what a person sets with a handle holds across a reload. Only a person's own move is
- * kept, so a window that narrows a pane for a moment leaves their size alone. Every two-pane layout of Nakafa is one of
- * these: `Panes` for a page's list and its detail, and the player for its questions and their navigator.
- */
-export function PanesGroupProvider({
-  children,
-  className,
-  id,
-}: {
-  children: ReactNode;
-  className: string;
-  /** Names the layout in this browser, so each page keeps its own sizes. */
-  id: string;
-}) {
-  const [, keepSizes] = useKeptSizes(id);
-
-  return (
-    <ResizablePanelGroup
-      className={className}
-      onLayoutChanged={(layout, { isUserInteraction, requestedLayout }) => {
-        if (isUserInteraction) {
-          keepSizes(requestedLayout ?? layout);
-        }
-      }}
-      orientation="horizontal"
-    >
-      <PanesGroupContext value={id}>{children}</PanesGroupContext>
-    </ResizablePanelGroup>
-  );
-}
-
-/**
- * A pane with its own size, which starts at the size a person kept for it, read once as it opens, or else at the size
- * of its `PaneStartContext`. The pane that takes the room the others leave is a plain `ResizablePanel`.
- */
-export function SizedPane({
-  id,
-  ...props
-}: Omit<ComponentProps<typeof ResizablePanel>, "defaultSize" | "id"> & {
-  id: string;
-}) {
-  const group = use(PanesGroupContext);
-  const fallback = use(PaneStartContext);
-  const [sizes] = useKeptSizes(group);
-  const [start] = useState(() =>
-    Option.match(Rec.get(sizes, `${group}-${id}`), {
-      onNone: () => fallback,
-      onSome: (kept) => `${kept}%`,
-    })
-  );
-
-  return (
-    <ResizablePanel defaultSize={start} id={`${group}-${id}`} {...props} />
-  );
-}
-
-/**
- * The group's height, and where its second pane steps aside. Panes always run to the screen's edge at
- * every width, so the second pane has the whole height and all the room to the right, as the memory
- * editor does. What the first pane holds keeps the page's frame and starts on the header's first
- * letter (`--pane-lead`) whether or not the second pane stands open, so a press moves nothing there.
- * A list's panes run from under its header to the bottom of the screen, and a page whose header is taller than the school header's
- * 4rem sets `--panes-offset` to its height; the exam editor's panes fill the room its shell leaves.
- */
-const panesVariants = cva(
-  "@container min-h-0 w-full [--pane-end:1.5rem] [--pane-lead:max(0px,calc((100cqw-var(--page-width))/2))]",
-  {
-    compoundVariants: [
-      {
-        className:
-          "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
-        keeps: "first",
-        wideFrom: "md",
-      },
-      {
-        className:
-          "max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!",
-        keeps: "first",
-        wideFrom: "lg",
-      },
-      {
-        className:
-          "max-lg:[&>[data-panel]:first-child]:hidden! max-lg:[&>[data-separator]]:hidden!",
-        keeps: "second",
-        wideFrom: "lg",
-      },
-      {
-        className:
-          "max-xl:[&>[data-panel]:first-child]:hidden! max-xl:[&>[data-separator]]:hidden!",
-        keeps: "second",
-        wideFrom: "xl",
-      },
-    ],
-    variants: {
-      fill: {
-        parent: "flex-1",
-        // The resizable group writes its own `height: 100%` on the element, so this height says important.
-        screen: "h-[calc(100svh-var(--panes-offset,4rem))]!",
-      },
-      keeps: { first: "", second: "" },
-      wideFrom: { lg: "", md: "", xl: "" },
+const panesVariants = cva("min-h-0 w-full [--pane-end:1.5rem]", {
+  compoundVariants: [
+    {
+      className:
+        "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
+      keeps: "first",
+      wideFrom: "md",
     },
-  }
-);
+    {
+      className:
+        "max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!",
+      keeps: "first",
+      wideFrom: "lg",
+    },
+    {
+      className:
+        "max-lg:[&>[data-panel]:first-child]:hidden! max-lg:[&>[data-separator]]:hidden!",
+      keeps: "second",
+      wideFrom: "lg",
+    },
+    {
+      className:
+        "max-xl:[&>[data-panel]:first-child]:hidden! max-xl:[&>[data-separator]]:hidden!",
+      keeps: "second",
+      wideFrom: "xl",
+    },
+  ],
+  variants: {
+    fill: {
+      parent: "flex-1",
+      screen: "h-[calc(100svh-var(--panes-offset,4rem))]",
+    },
+    keeps: { first: "", second: "" },
+    wideFrom: { lg: "", md: "", xl: "" },
+  },
+});
 
 /**
- * The two panes: the first, then the second beside it, each scrolling on its own, with the
- * handle between them that resizes both. The group keeps its sizes while rows open and close,
- * and across a reload under `id`. Below `wideFrom`, from its provider unless the page sets it,
- * the handle and one pane step aside: the second by default, so the first takes the row and the
- * second shows in a sheet, or the first when `keeps` names the second, as a chat does once it is open.
+ * A page's list and its pane. The pane stands at the screen's right from the window's top (`PaneSide`), and the page
+ * narrows beside it. Only the exam editor, a full-screen tool, and a forum's rail keep their panes in one row under
+ * their shell (`inRow`): the first, then the second beside it, with the handle between them that resizes both, whose
+ * sizes stay under `id`. Below `wideFrom`, from its provider unless the page sets it, the handle and one pane of a
+ * row step aside: the second by default, or the first when `keeps` names the second, as a chat does once it is open.
+ * A page's pane shows in a sheet there.
  */
 export function Panes({
   children,
   fill = "screen",
   id,
+  inRow = false,
   keeps = "first",
   wideFrom,
 }: {
@@ -296,10 +213,25 @@ export function Panes({
   fill?: "parent" | "screen";
   /** Names the layout in this browser, so each page keeps its own sizes. */
   id: string;
+  /** Whether the panes stand in one row under the shell, for the exam editor and a forum's rail alone. */
+  inRow?: boolean;
   keeps?: typeof PanesKept.Type;
   wideFrom?: typeof PanesWidth.Type;
 }) {
   const providedWidth = use(PanesWidthContext);
+
+  if (!inRow) {
+    return (
+      <div
+        className={cn("flex flex-col", panesVariants({ fill }))}
+        data-slot="panes"
+      >
+        <PanesGroupContext value={id}>
+          <PaneBesideContext value={true}>{children}</PaneBesideContext>
+        </PanesGroupContext>
+      </div>
+    );
+  }
 
   return (
     <PanesGroupProvider
@@ -356,6 +288,15 @@ export function PanesList({
   wide?: boolean;
 }) {
   const group = use(PanesGroupContext);
+  const besidePage = use(PaneBesideContext);
+
+  if (besidePage) {
+    return (
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+        <PaneFrame wide={wide}>{children}</PaneFrame>
+      </div>
+    );
+  }
 
   return (
     <ResizablePanel
@@ -363,54 +304,63 @@ export function PanesList({
       id={`${group}-list`}
       minSize="40%"
     >
-      {wide ? (
-        children
-      ) : (
-        <div className="flex min-h-0 w-full max-w-[calc(var(--page-width)+var(--pane-lead))] flex-1 flex-col ps-(--pane-lead)">
-          {children}
-        </div>
-      )}
+      <PaneFrame wide={wide}>{children}</PaneFrame>
     </ResizablePanel>
   );
 }
 
+/** The page's frame around what a list holds, which the exam editor's canvas goes without. */
+function PaneFrame({ children, wide }: { children: ReactNode; wide: boolean }) {
+  return wide ? (
+    children
+  ) : (
+    <div className="mx-auto flex min-h-0 w-full max-w-(--page-width) flex-1 flex-col">
+      {children}
+    </div>
+  );
+}
+
 /**
- * The second pane: the handle, then the detail beside the first pane, and the phone's sheet from
- * the bottom of the screen. A row's detail shows only while a row is open, so the first pane takes
- * the whole page until a press opens one, and it closes the row as its sheet closes. An `alwaysOn`
- * detail stands beside the first pane however the page reads, and its sheet opens by `showSheet`.
+ * The pane: the detail at the screen's right, or beside the first pane of a row, and the phone's
+ * sheet from the bottom of the screen. A row's detail shows only while a row is open, so the page
+ * has the whole width until a press opens one, and it closes the row as its sheet closes. An `alwaysOn`
+ * detail stands there however the page reads, and its sheet opens by `showSheet`.
  * A page whose own selection holds the open row passes `open` and `onClose`, and its detail closes
  * like a row's. The detail draws in one place at a time.
  */
 export function PanesDetail({
   alwaysOn = false,
   children,
-  defaultSize = "35%",
   label,
   onClose,
   open,
+  startWidth,
 }: {
   /** Whether the detail stands beside the first pane with no row open, as the exam editor's panel does. */
   alwaysOn?: boolean;
   /** The detail's header, body and footer. */
   children: ReactNode;
-  /** The share of the row the second pane starts at, for a detail that holds a table. */
-  defaultSize?: `${number}%`;
   /** The pane's name for a screen reader. */
   label: string;
   /** Closes a row that the page's own selection holds, in place of the panes' own. */
   onClose?: () => void;
   /** Whether a row that the page's own selection holds is open, in place of the panes' own. */
   open?: boolean;
+  /** How wide the pane starts, in pixels, for a detail that holds more. */
+  startWidth?: number;
 }) {
   const wide = useWide();
+  const group = use(PanesGroupContext);
+  const besidePage = use(PaneBesideContext);
   const rowOpen = usePanes((state) => Option.isSome(state.open));
   const sheetOpen = usePanes((state) => state.sheet);
   const closePanes = usePanes((state) => state.close);
   const isOpen = open ?? rowOpen;
   const sheet = open ?? sheetOpen;
   const close = onClose ?? closePanes;
-  const beside = alwaysOn || (wide && isOpen);
+  const beside = besidePage
+    ? wide && (alwaysOn || isOpen)
+    : alwaysOn || (wide && isOpen);
   const closes = beside && !alwaysOn;
 
   // Escape closes a row that stands open, unless a popup over it or a field in it took the key.
@@ -427,10 +377,24 @@ export function PanesDetail({
 
   return (
     <>
-      {beside ? (
+      {beside && besidePage ? (
+        <PaneSide
+          group={group}
+          label={label}
+          row={closes}
+          startWidth={startWidth}
+        >
+          <PaneModeContext
+            value={{ close: alwaysOn ? undefined : close, place: "aside" }}
+          >
+            {children}
+          </PaneModeContext>
+        </PaneSide>
+      ) : null}
+      {beside && !besidePage ? (
         <>
           <ResizableHandle />
-          <PaneStartContext value={defaultSize}>
+          <PaneStartContext value="35%">
             <SizedPane id="detail" maxSize="55%" minSize="25%">
               <aside
                 aria-label={label}

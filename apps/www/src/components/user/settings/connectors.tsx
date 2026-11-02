@@ -146,7 +146,7 @@ export function AccountDirectory({
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail defaultSize="50%" label={t("detail")}>
+        <PanesDetail label={t("detail")} startWidth={560}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
             <PaneFill>

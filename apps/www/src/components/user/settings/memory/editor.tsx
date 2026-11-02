@@ -1,6 +1,4 @@
 import { useMediaQuery } from "@mantine/hooks";
-import { ResizeGrip } from "@repo/design-system/components/ui/resizable";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -8,11 +6,11 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { elementById } from "@repo/design-system/lib/element";
-import { cn } from "cn";
 import { Function as Fn } from "effect";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
+import { PaneEdge } from "@/components/shared/panes/edge";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
 import {
   MEMORY_ADD_ID,
@@ -183,10 +181,9 @@ function MemoryEditorPanel({
   remember: Remember;
 }) {
   const t = useTranslations("Memory");
-  const ai = useTranslations("Ai");
   const panel = useSyncExternalStore(subscribeToPanel, readPanel, readNoPanel);
   const room = useSyncExternalStore(subscribeToRoom, readRoom, readNoRoom);
-  const { width, isResizing, resizerProps } = useResizable({
+  const { width, resizerProps } = useResizable({
     ...PANEL_WIDTH,
     // Never narrower than the smallest panel, whatever the room says.
     maxWidth: Math.max(
@@ -212,24 +209,7 @@ function MemoryEditorPanel({
         "--memory-list-room": `${LIST_ROOM}rem`,
       }}
     >
-      {/* The edge is a separator that takes the focus, as a window splitter
-          does, and it says the width the panel has and the widths it can have. */}
-      <Separator
-        aria-label={ai("resize")}
-        aria-valuemax={resizerProps["aria-valuemax"]}
-        aria-valuemin={resizerProps["aria-valuemin"]}
-        aria-valuenow={resizerProps["aria-valuenow"]}
-        className={cn(
-          "focus-visible:ring-ring bg-border absolute inset-y-0 start-0 z-10 flex w-px! cursor-col-resize items-center justify-center outline-none after:absolute after:inset-y-0 after:-start-1 after:w-2 focus-visible:ring-1",
-          !!isResizing && "w-0.5!"
-        )}
-        onKeyDown={resizerProps.onKeyDown}
-        onMouseDown={resizerProps.onMouseDown}
-        orientation={resizerProps["aria-orientation"]}
-        tabIndex={0}
-      >
-        <ResizeGrip />
-      </Separator>
+      <PaneEdge resizer={resizerProps} />
     </aside>,
     panel
   );
