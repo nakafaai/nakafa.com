@@ -122,7 +122,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
 
   return (
     <>
-      <header className="flex items-start gap-2 border-b p-4">
+      <header className="flex min-h-16 items-center gap-2 border-b px-4 py-2.5">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <input
             aria-label={t("title")}
@@ -214,7 +214,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           />
         </Suspense>
       </div>
-      <footer className="flex items-center justify-between gap-2 border-t p-4">
+      <footer className="flex min-h-16 items-center justify-between gap-2 border-t p-4">
         <p
           className="text-muted-foreground data-full:text-destructive text-sm tabular-nums"
           data-full={length >= MEMORY_TEXT_LIMIT ? "" : undefined}

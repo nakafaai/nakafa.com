@@ -229,7 +229,8 @@ export function SidebarInset({ className, ...props }: ComponentProps<"main">) {
   return (
     <main
       className={cn(
-        "bg-background relative flex w-full min-w-0 flex-1 flex-col",
+        // A page's pane stands at the screen's right, and the whole page narrows beside it.
+        "bg-background relative flex w-full min-w-0 flex-1 flex-col md:has-[[data-pane-side=md]]:pe-(--pane-width) lg:has-[[data-pane-side=lg]]:pe-(--pane-width) xl:has-[[data-pane-side=xl]]:pe-(--pane-width)",
         "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:peer-data-[sidebar-state=collapsed]:ml-2",
         className
       )}

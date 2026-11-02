@@ -86,7 +86,7 @@ export function PaneHeader({
 
   return (
     <header
-      className="flex min-h-14 shrink-0 items-center gap-2 border-b px-(--pane-end,1rem) py-2"
+      className="relative flex h-16 shrink-0 items-center border-b px-(--pane-end,1rem) has-[button]:pe-10"
       data-pane-header=""
       data-slot="pane-header"
     >
@@ -110,6 +110,7 @@ export function PaneHeader({
       {close === undefined ? null : (
         <Button
           aria-label={t("close")}
+          className="absolute end-2 top-2"
           onClick={close}
           size="icon-sm"
           type="button"
@@ -159,7 +160,7 @@ export function PaneFill({ children }: { children: ReactNode }) {
  */
 export function PaneFooter({ children }: { children: ReactNode }) {
   return (
-    <footer className="bg-muted/70 flex min-h-15.25 shrink-0 flex-wrap items-center justify-end gap-2 border-t px-(--pane-end,1rem) py-3">
+    <footer className="bg-muted/70 flex min-h-16 shrink-0 flex-wrap items-center justify-end gap-2 border-t px-(--pane-end,1rem) py-3">
       {children}
     </footer>
   );

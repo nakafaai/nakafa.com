@@ -58,7 +58,7 @@ import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 export function UserSettingsConnectors({ children }: { children: ReactNode }) {
   return (
     <TableFiltersProvider>
-      <PanesProvider wideFrom="lg">
+      <PanesProvider>
         <UserSettingsHeader>
           <LibraryControls>
             <ServiceFilter services={ACCOUNT_SERVICES} />
@@ -146,7 +146,7 @@ export function AccountDirectory({
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail defaultSize="50%" label={t("detail")}>
+        <PanesDetail label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
             <PaneFill>

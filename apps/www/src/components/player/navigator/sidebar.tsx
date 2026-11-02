@@ -4,6 +4,7 @@ import { useTranslations } from "use-intl";
 import { keepVisible } from "@/components/player/navigator/scroll";
 import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
 import { usePlayer } from "@/components/player/provider";
+import { PaneHeader } from "@/components/shared/pane";
 
 /**
  * The navigator in its pane beside the questions from the large breakpoint: the
@@ -32,20 +33,19 @@ export function PlayerSidebar({ children }: { children: ReactNode }) {
   }, [current]);
 
   return (
-    // The aside is the column that sticks under the header, since a scroll area's root is positioned to hold
-    // its bar. The column scrolls in the scroll area's viewport inside it, under an overlay bar that takes no
-    // room; the viewport is what keeps the current number in view.
-    <aside
-      aria-label={t("navigator")}
-      className="sticky top-16 hidden h-[calc(100svh-8rem-env(safe-area-inset-bottom,0px))] w-full min-w-0 lg:block"
+    // The pane holds the column. It scrolls in the scroll area's viewport, under an overlay bar that takes no room;
+    // the viewport is what keeps the current number in view.
+    <div
+      className="hidden h-full min-h-0 w-full min-w-0 flex-col lg:flex"
       data-player-sidebar=""
     >
+      <PaneHeader title={t("navigator")} />
       <ScrollArea viewportClassName="relative" viewportRef={column}>
         <div className="flex flex-col gap-4 px-6 py-4">
           {children}
           <PlayerShortcuts />
         </div>
       </ScrollArea>
-    </aside>
+    </div>
   );
 }
