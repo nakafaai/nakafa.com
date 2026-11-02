@@ -79,13 +79,13 @@ export function ExamTryPaper({
   const exam = kept.value;
   if (Arr.isReadonlyArrayEmpty(exam.questions)) {
     return (
-      <>
+      <PlayerProvider keys={[]} mode="list">
         <PaperBar
           back={<PaperBack examId={examId} />}
           title={exam.title || t("untitled")}
         />
         <ExamTryEmpty examId={examId} />
-      </>
+      </PlayerProvider>
     );
   }
   const gone = QueryResult.isFailure(result);
