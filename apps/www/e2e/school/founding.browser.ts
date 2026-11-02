@@ -3,7 +3,7 @@ import { Clock, Duration, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishSchoolStart } from "@/e2e/support/school";
-import { wheelTo } from "@/e2e/support/scroll";
+import { stepTo } from "@/e2e/support/scroll";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The page global that holds what the page was asked to copy. */
@@ -94,7 +94,7 @@ test("the home page's school band copies the one link a new school opens from", 
   await page.goto("/en");
   // A section under the first screen takes over only as the reader nears it.
   const copy = page.getByRole("button", { name: "Copy link" });
-  await Effect.runPromise(wheelTo(page, copy));
+  await Effect.runPromise(stepTo(page, copy));
   await waitUntilTakenOver(copy);
   await copy.click();
   await expect(page.getByRole("button", { name: "Link copied" })).toBeVisible();
