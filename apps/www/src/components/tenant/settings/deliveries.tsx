@@ -193,7 +193,9 @@ export function SchoolDeliverySheet({
           <DeliveryList webhook={webhook} />
         </div>
         <SheetFooter>
-          <p className="text-muted-foreground text-sm">{t("deliveries-footer")}</p>
+          <p className="text-muted-foreground text-sm">
+            {t("deliveries-footer")}
+          </p>
         </SheetFooter>
       </SheetContent>
     </Sheet>

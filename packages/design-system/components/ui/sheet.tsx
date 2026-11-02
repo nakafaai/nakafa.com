@@ -97,7 +97,10 @@ function SheetPopup({
       >
         {children}
         {!!showCloseButton && (
-          <SheetPrimitive.Close data-slot="sheet-close" className="pressable focus-visible:ring-ring focus-visible:ring-offset-background absolute inset-e-2 top-2 inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:transition-none pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+          <SheetPrimitive.Close
+            className="pressable focus-visible:ring-ring focus-visible:ring-offset-background absolute inset-e-2 top-2 inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:transition-none pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            data-slot="sheet-close"
+          >
             <HugeIcons icon={Cancel01Icon} />
             <span className="sr-only">{t("close")}</span>
           </SheetPrimitive.Close>

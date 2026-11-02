@@ -42,7 +42,9 @@ export function UserSettingsPayments() {
       description={t("payments-card-description")}
       title={t("payments")}
     >
-      <CardSectionFooter hint={t("payments-footer", { email: COMPANY_IDENTITY.email })}>
+      <CardSectionFooter
+        hint={t("payments-footer", { email: COMPANY_IDENTITY.email })}
+      >
         <CardSectionActions>
           <Button
             onClick={() => {
@@ -70,7 +72,9 @@ export function UserSettingsPayments() {
             </Suspense>
           ) : null}
           <SheetFooter>
-            <p className="text-muted-foreground text-sm">{t("payments-footer", { email: COMPANY_IDENTITY.email })}</p>
+            <p className="text-muted-foreground text-sm">
+              {t("payments-footer", { email: COMPANY_IDENTITY.email })}
+            </p>
           </SheetFooter>
         </SheetContent>
       </Sheet>
