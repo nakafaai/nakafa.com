@@ -79,8 +79,8 @@ function PageRelease() {
  * listener captures on the window, ahead of React's own: a press on a part of the
  * page that has not hydrated makes React hydrate it, and an island there would swap
  * before any handler of the page ran, and React stops an event on such a part from
- * bubbling, so a release would never reach the window. A press that started before
- * these listeners exist is one the head script marked on the document.
+ * bubbling, so a release would never reach the window. A press from before these
+ * listeners exist reaches the store as the session starts (`startLiveSession`).
  */
 function usePointerState(store: LiveSessionStore) {
   const room = useTimeout(
@@ -97,11 +97,6 @@ function usePointerState(store: LiveSessionStore) {
   );
   useWindowEvent("pointerup", () => room.start(), { capture: true });
   useWindowEvent("pointercancel", () => room.start(), { capture: true });
-  useEffect(() => {
-    if (document.documentElement.hasAttribute(POINTER_DOWN_ATTRIBUTE)) {
-      store.setState({ isPointerDown: true });
-    }
-  }, [store]);
 }
 
 /**
@@ -127,6 +122,9 @@ export function PageProviders({
       startLiveSession(store, {
         convexUrl: clientEnv.VITE_CONVEX_URL,
         cookie: document.cookie,
+        isPointerDown: document.documentElement.hasAttribute(
+          POINTER_DOWN_ATTRIBUTE
+        ),
       })
     );
     return () => {
