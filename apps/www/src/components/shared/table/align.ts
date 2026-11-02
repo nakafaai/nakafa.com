@@ -66,7 +66,7 @@ export const headWidth = cva("", {
   variants: {
     width: {
       choice: "w-36 min-w-36",
-      days: "w-48 min-w-48",
+      days: "w-52 min-w-52",
       menu: "min-w-12",
       number: "w-28 min-w-28",
       text: "min-w-60 not-first:w-72 sm:min-w-50 sm:not-first:min-w-64",

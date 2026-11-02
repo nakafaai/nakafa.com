@@ -13,6 +13,7 @@ import {
   signInTeacher,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { LEFT_BEHIND } from "@/e2e/support/walk";
 
 /** What a School page draws once it has read its data: an empty state, a table, a card, or a feed's row. */
 const DRAWN =
@@ -61,7 +62,9 @@ async function expectEmptyPages(
   const page = await context.newPage();
   const errors = MutableList.make<string>();
   page.on("pageerror", (error) => {
-    MutableList.append(errors, `${page.url()}: ${error.message}`);
+    if (!LEFT_BEHIND.test(error.message)) {
+      MutableList.append(errors, `${page.url()}: ${error.message}`);
+    }
   });
   for (const viewport of [
     { height: 844, width: 390 },

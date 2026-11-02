@@ -56,5 +56,9 @@ describe("editor/figure", () => {
     expect(schema.nodes.figure.spec.parseDOM?.[0].tag).toBe(
       'figure[data-type="figure"]'
     );
+    expect(schema.nodes.figure.spec.toDOM?.(figure)).toEqual([
+      "figure",
+      expect.objectContaining({ "data-type": "figure" }),
+    ]);
   });
 });

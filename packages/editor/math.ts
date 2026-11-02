@@ -208,7 +208,8 @@ const FormulaToggle = Extension.create<
           const formula = state.schema.node(type, {
             latex: selected === "" ? NEW_FORMULA : selected,
           });
-          tr.replaceSelectionWith(formula).scrollIntoView();
+          // A mark would copy the node, and the view knows the new formula by this very node.
+          tr.replaceSelectionWith(formula, false).scrollIntoView();
           this.storage.opening =
             selected === "" ? Option.some(formula) : Option.none();
           return true;

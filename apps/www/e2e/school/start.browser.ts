@@ -4,6 +4,7 @@ import { saved, trackChanges } from "@/e2e/support/changes";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishSchoolStart } from "@/e2e/support/school";
+import { stepTo } from "@/e2e/support/scroll";
 
 /** The address of the setup, where a new Owner lands. */
 const SETUP_ADDRESS = /\/setup$/u;
@@ -19,7 +20,7 @@ test("a new account opens its own school in five questions and lands in it as it
   await Effect.runPromise(signInLearner(context, String(baseURL)));
   const page = await context.newPage();
   const changes = await Effect.runPromise(trackChanges(page, []));
-  const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
+  const tag = `${testInfo.testId.slice(-6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
   const name = `Harapan ${tag}`;
   const slug = `harapan-${tag}`;
 
@@ -27,7 +28,9 @@ test("a new account opens its own school in five questions and lands in it as it
   // decided first, so it does not cover the band.
   await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto("/en");
-  await page.getByRole("link", { name: "Open a school" }).click();
+  const open = page.getByRole("link", { name: "Open a school" });
+  await Effect.runPromise(stepTo(page, open));
+  await open.click();
   await page.waitForURL("**/en/school/new");
   await expect(page.getByText("Question 1 of 5")).toBeVisible();
 
@@ -82,7 +85,7 @@ test("a founder types a school name a letter at a time, and the name, the addres
   await Effect.runPromise(signInLearner(context, String(baseURL)));
   const page = await context.newPage();
   const changes = await Effect.runPromise(trackChanges(page, []));
-  const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
+  const tag = `${testInfo.testId.slice(-6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
   const name = `Tunas ${tag}`;
   const slug = `tunas-${tag}`;
 
@@ -201,7 +204,7 @@ for (const words of LOCALES) {
     });
     await Effect.runPromise(signInLearner(context, String(baseURL)));
     const page = await context.newPage();
-    const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
+    const tag = `${testInfo.testId.slice(-6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
     const proceed = page.getByRole("button", { name: words.continue });
 
     await page.goto(`/${words.locale}/school/new`);

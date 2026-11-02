@@ -48,6 +48,13 @@ const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 // in the shared runtime: a school must work on every device its people bring.
 const SCHOOL_TESTS = "**/school/**/*.browser.ts";
 
+// What only Chromium can measure: its CPU throttle and layout shift entries, and its
+// test of whether a placeholder fits. Firefox and WebKit run the rest.
+const CHROMIUM_SCHOOL_TESTS = [
+  "**/school/placeholders.browser.ts",
+  "**/school/shift.browser.ts",
+];
+
 /**
  * How many workers run a suite whose tests measure no timing across tests: one,
  * unless PLAYWRIGHT_WORKERS names more. Every test of those suites seeds its own
@@ -119,11 +126,13 @@ const PROJECTS = {
     workers: 1,
   },
   "school-firefox": {
+    testIgnore: CHROMIUM_SCHOOL_TESTS,
     testMatch: SCHOOL_TESTS,
     use: devices["Desktop Firefox"],
     workers: WORKERS,
   },
   "school-safari": {
+    testIgnore: CHROMIUM_SCHOOL_TESTS,
     testMatch: SCHOOL_TESTS,
     use: devices["Desktop Safari"],
     workers: WORKERS,
@@ -134,6 +143,7 @@ const PROJECTS = {
     workers: WORKERS,
   },
   "school-iphone": {
+    testIgnore: CHROMIUM_SCHOOL_TESTS,
     testMatch: SCHOOL_TESTS,
     use: devices["iPhone 15"],
     workers: WORKERS,
