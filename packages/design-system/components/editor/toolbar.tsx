@@ -110,10 +110,10 @@ function BarGroup({
 }) {
   return (
     <div
-      className="group/bar contents *:data-wrapped:invisible"
+      className="contents first:[--bar-line:none] *:data-wrapped:invisible"
       data-group={name}
     >
-      <BarLine className="mx-0.5 group-first/bar:hidden" />
+      <BarLine className="mx-0.5 [display:var(--bar-line,block)]" />
       {children}
     </div>
   );

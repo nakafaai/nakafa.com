@@ -26,9 +26,9 @@ const DEGREES_PATTERN = /^(?<degrees>\d+)deg$/u;
 const RATIO_PATTERN = /^(?<numerator>\d+)\/(?<denominator>\d+)$/u;
 const GRID_PATTERN = /^repeat\((?<columns>\d+),_?minmax\(0,_?1fr\)\)$/u;
 const BOUND_PREFIX_PATTERN = /^(?:min|max)-/u;
-// A variant that styles an element from a `:has()` above it, in each form Tailwind writes one.
-const HAS_ABOVE_PATTERN =
-  /(?<![\w-])(?:(?:group|peer)-has-[^\s"'`]*|in-\[[^\s"'`]*:has\([^\s"'`]*|has-[^\s"'`]*?:\*:[^\s"'`]*|\[[^\s"'`]*:has\([^\s"'`]*\)[_>~+][^\s"'`]*\]:[^\s"'`]*)/gu;
+// A variant that styles an element from a `:has()` or a child position above it, in each form Tailwind writes one.
+const ABOVE_PATTERN =
+  /(?<![\w-])(?:(?:group|peer)-(?:has|first|last|only|odd|even|nth)-?[^\s"'`]*|in-\[[^\s"'`]*:has\([^\s"'`]*|has-[^\s"'`]*?:\*:[^\s"'`]*|\[[^\s"'`]*:has\([^\s"'`]*\)[_>~+][^\s"'`]*\]:[^\s"'`]*)/gu;
 
 const REM_PIXELS = 16;
 const STEP_PIXELS = 4;
@@ -251,7 +251,7 @@ const lineOf = (sourceText: string, index: number) =>
 
 /**
  * Reports each arbitrary value in one authored module that repeats a class, and each variant that styles an element
- * from a `:has()` above it, which restyles the whole page on every element inserted (ADR 0039).
+ * from a `:has()` or a child position above it, which restyles the whole page on every element inserted (ADR 0039).
  */
 export function inspectTailwindSource(file: string, sourceText: string) {
   if (TEST_MODULE_PATTERN.test(file)) {
@@ -269,10 +269,10 @@ export function inspectTailwindSource(file: string, sourceText: string) {
       return [`${file}:${line}: use ${replacement} instead of ${candidate}.`];
     }
   );
-  const hasAbove = Arr.map(
-    [...sourceText.matchAll(HAS_ABOVE_PATTERN)],
+  const above = Arr.map(
+    [...sourceText.matchAll(ABOVE_PATTERN)],
     (match) =>
-      `${file}:${lineOf(sourceText, match.index)}: ${match[0]} styles an element from a :has() above it; set a custom property on the element the :has() tests, and read it here.`
+      `${file}:${lineOf(sourceText, match.index)}: ${match[0]} styles an element from a state above it; set a custom property on the element that holds the state, and read it here.`
   );
-  return [...repeats, ...hasAbove];
+  return [...repeats, ...above];
 }

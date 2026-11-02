@@ -11,7 +11,7 @@ import { publicPathTarget } from "@/lib/routing/target";
  * list opens the card and on its last row. A linked row also lights up on hover.
  */
 const cardRow = cva(
-  "group flex w-full items-center gap-2 px-6 py-3 group-last/list:pb-(--card-spacing) in-[[data-slot=card]>ul:first-child]:group-first/list:pt-(--card-spacing)",
+  "group flex w-full items-center gap-2 px-6 pt-[var(--card-row-top,--spacing(3))] pb-[var(--card-row-bottom,--spacing(3))]",
   {
     variants: {
       linked: {
@@ -86,7 +86,7 @@ export function CardLinks({ children }: { children: ReactNode }) {
 export function CardLink({ arrow, children, ...link }: CardLinkProps) {
   const className = cardRow({ linked: true });
   return (
-    <li className="group/list">
+    <li className="last:[--card-row-bottom:var(--card-spacing)] in-[[data-slot=card]>ul:first-child]:first:[--card-row-top:var(--card-spacing)]">
       <TargetLink className={className} {...link}>
         {children}
         <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
