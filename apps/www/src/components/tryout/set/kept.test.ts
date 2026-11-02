@@ -3,9 +3,12 @@ import { Array as Arr, Effect, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import { keptStorage } from "@/components/player/storage";
 import {
+  KEPT_ATTEMPT_SCRIPT,
   KEPT_NAME_SCRIPT,
   keepActionName,
+  keepAttemptLabel,
   keepName,
+  readKeptAttempt,
   readKeptName,
   tryoutActionNameOf,
 } from "@/components/tryout/set/kept";
@@ -153,5 +156,116 @@ describe("KEPT_NAME_SCRIPT", () => {
   it("leaves the cell alone without storage or with storage it cannot read", () => {
     expect(runScript(null)).toStrictEqual({});
     expect(runScript("not json")).toStrictEqual({});
+  });
+});
+
+describe("keepAttemptLabel", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  it.effect("reads the label of a finished page, by its search too", () =>
+    Effect.gen(function* () {
+      yield* keepActionName(SET, "restart-cta");
+      yield* keepAttemptLabel(SET, "Attempt 2");
+      yield* keepAttemptLabel(`${SET}?attemptId=first`, "Attempt 1");
+
+      const read = (search: string) =>
+        readKeptAttempt(SET, search).pipe(Effect.provide(keptStorage));
+      expect(yield* read("")).toEqual(Option.some("Attempt 2"));
+      expect(yield* read("?attemptId=first")).toEqual(Option.some("Attempt 1"));
+      expect(yield* read("?attemptId=other")).toEqual(Option.none());
+    })
+  );
+
+  it.effect("reads no label for a page whose attempt runs again", () =>
+    Effect.gen(function* () {
+      yield* keepAttemptLabel(SET, "Attempt 2");
+      yield* keepActionName(SET, "continue-cta");
+
+      expect(
+        yield* readKeptAttempt(SET, "").pipe(Effect.provide(keptStorage))
+      ).toEqual(Option.none());
+    })
+  );
+
+  it.effect("reports a browser that refuses its storage and goes on", () =>
+    Effect.gen(function* () {
+      const refused = vi
+        .spyOn(Storage.prototype, "getItem")
+        .mockImplementation(() => {
+          throw new Error("refused");
+        });
+
+      yield* keepAttemptLabel(SET, "Attempt 2");
+
+      refused.mockRestore();
+      expect(mocks.report).toHaveBeenCalledOnce();
+    })
+  );
+});
+
+/** Runs the place's script, and returns the label it drew and whether the place still reads empty. */
+function runPlaceScript(
+  stored: { attempts?: string; names?: string; signedIn?: string } = {},
+  search = ""
+) {
+  const held: Record<string, string | undefined> = {
+    "nakafa-tryout-attempts": stored.attempts,
+    "nakafa-tryout-names": stored.names,
+  };
+  const place = {
+    empty: true,
+    label: "",
+    querySelector: () => ({
+      setAttribute: (_name: string, value: string) => {
+        place.label = value;
+      },
+    }),
+    removeAttribute: () => {
+      place.empty = false;
+    },
+  };
+  new Function("localStorage", "location", "document", KEPT_ATTEMPT_SCRIPT)(
+    { getItem: (key: string) => held[key] ?? null },
+    { pathname: SET, search },
+    {
+      currentScript: { parentElement: place },
+      documentElement: { getAttribute: () => stored.signedIn ?? "yes" },
+    }
+  );
+  return { empty: place.empty, label: place.label };
+}
+
+describe("KEPT_ATTEMPT_SCRIPT", () => {
+  const finished = {
+    attempts: `{"${SET}":"Attempt 2"}`,
+    names: `{"${SET}":"restart-cta"}`,
+  };
+
+  it("shows the place under the label this browser kept", () => {
+    expect(runPlaceScript(finished)).toStrictEqual({
+      empty: false,
+      label: "Attempt 2",
+    });
+  });
+
+  it("leaves the place empty for anyone but a finished page's learner", () => {
+    const empty = { empty: true, label: "" };
+    expect(runPlaceScript({ ...finished, signedIn: "no" })).toStrictEqual(
+      empty
+    );
+    expect(
+      runPlaceScript({ ...finished, names: `{"${SET}":"continue-cta"}` })
+    ).toStrictEqual(empty);
+    expect(runPlaceScript(finished, "?attemptId=other")).toStrictEqual(empty);
+    expect(runPlaceScript({ attempts: finished.attempts })).toStrictEqual(
+      empty
+    );
+    expect(runPlaceScript()).toStrictEqual(empty);
+    expect(runPlaceScript({ ...finished, attempts: "not json" })).toStrictEqual(
+      empty
+    );
   });
 });

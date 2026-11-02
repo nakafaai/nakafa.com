@@ -26,15 +26,23 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { rowLineVariants } from "@repo/design-system/lib/row";
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr, Option } from "effect";
-import { useState } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import { type ReactNode, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { keptStorage } from "@/components/player/storage";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
+import { useFactsWaiting } from "@/components/tryout/section/summary";
+import {
+  KEPT_ATTEMPT_SCRIPT,
+  readKeptAttempt,
+} from "@/components/tryout/set/kept";
 import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
+import { useKeepAttemptLabel } from "@/components/tryout/set/name";
+import { hasSignedInHint } from "@/lib/auth/hint";
 import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
@@ -83,6 +91,8 @@ function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
 /** Props of the attempt-history picker: `value` holds the scored attempts and the selection. */
 interface TryoutAttemptHistoryProps {
   value: {
+    /** The page's path and search, which its label is kept under. */
+    address: string;
     attempts: readonly (HistoryRow & {
       score: NonNullable<HistoryRow["score"]>;
     })[];
@@ -93,15 +103,93 @@ interface TryoutAttemptHistoryProps {
   };
 }
 
+/** What the picker shows, which its place at first paint draws too, so the two stand pixel for pixel. */
+function TryoutAttemptFace({ children }: { children?: ReactNode }) {
+  return (
+    <>
+      <HugeIcons icon={TransactionHistoryIcon} />
+      <HeaderLabel>{children}</HeaderLabel>
+      <HugeIcons
+        className="tryout-history-chevron ml-auto size-4 transition-transform ease-out @max-2xl/header:hidden"
+        icon={ArrowDown01Icon}
+      />
+    </>
+  );
+}
+
+/** Stands for nothing until something subscribes: what a browser kept does not change under a page. */
+function subscribeToNothing() {
+  return () => undefined;
+}
+
+/** The picker label this browser kept for the page it is on, for a page that navigates here. */
+function readPageAttempt() {
+  if (!hasSignedInHint(document.cookie)) {
+    return;
+  }
+  return Effect.runSync(
+    readKeptAttempt(window.location.pathname, window.location.search).pipe(
+      Effect.provide(keptStorage),
+      Effect.map(Option.getOrUndefined),
+      Effect.orElseSucceed(() => undefined)
+    )
+  );
+}
+
+/**
+ * The picker's place until a learner's read answers. A button that appears late is a flicker, so a set
+ * this browser saw tried more than once shows its picker from the first frame, and the live one
+ * replaces it where it stands. A first visit has nothing to draw, so its place stays empty.
+ */
+function TryoutAttemptPlace() {
+  const label = useSyncExternalStore(
+    subscribeToNothing,
+    readPageAttempt,
+    () => undefined
+  );
+  return (
+    <Button
+      className="data-empty:hidden"
+      data-empty={label === undefined ? "" : undefined}
+      inert
+      type="button"
+      variant="outline"
+    >
+      <TryoutAttemptFace>
+        <span
+          className="before:content-[attr(data-label)]"
+          data-label={label ?? ""}
+        />
+      </TryoutAttemptFace>
+      <script
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only
+        dangerouslySetInnerHTML={{ __html: KEPT_ATTEMPT_SCRIPT }}
+        suppressHydrationWarning
+      />
+    </Button>
+  );
+}
+
 /** Renders the prior production attempt-history picker styling. */
 function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   // Choosing an attempt opens its own page, so the picker closes with the choice.
   const [open, { close, set }] = useDisclosure(false);
   const tTryouts = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
-  const firstAttempt = Arr.head(value.attempts);
+  const label = Option.map(
+    Option.orElse(
+      Arr.findFirst(
+        value.attempts,
+        (attempt) => attempt.attemptId === value.selectedAttemptId
+      ),
+      () => Arr.head(value.attempts)
+    ),
+    (attempt) =>
+      tTryouts("attempt-select-label", { number: attempt.attemptNumber })
+  );
+  useKeepAttemptLabel(value.address, Option.getOrUndefined(label));
 
-  if (Option.isNone(firstAttempt)) {
+  if (Option.isNone(label)) {
     return null;
   }
 
@@ -130,25 +218,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
           />
         }
       >
-        <HugeIcons icon={TransactionHistoryIcon} />
-        <HeaderLabel>
-          {tTryouts("attempt-select-label", {
-            number: Option.match(
-              Arr.findFirst(
-                value.attempts,
-                (attempt) => attempt.attemptId === value.selectedAttemptId
-              ),
-              {
-                onNone: () => firstAttempt.value.attemptNumber,
-                onSome: (attempt) => attempt.attemptNumber,
-              }
-            ),
-          })}
-        </HeaderLabel>
-        <HugeIcons
-          className="tryout-history-chevron ml-auto size-4 transition-transform ease-out @max-2xl/header:hidden"
-          icon={ArrowDown01Icon}
-        />
+        <TryoutAttemptFace>{label.value}</TryoutAttemptFace>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 p-0">
         <Autocomplete
@@ -233,6 +303,10 @@ export function TryoutAttemptPicker({
   readonly locale: HistoryIdentity["locale"];
   readonly set: SetPage["set"];
 }) {
+  const waiting = useFactsWaiting(attempt === undefined);
+  if (waiting) {
+    return <TryoutAttemptPlace />;
+  }
   if (!attempt?.score) {
     return null;
   }
@@ -268,17 +342,22 @@ function TryoutAttemptChoice({
     isAuthenticated ? identity : "skip",
     { initialNumItems: 25 }
   );
+  const firstPage = PaginatedQueryResult.isLoadingFirstPage(history);
   const attempts = useKeptAttempts(
     Arr.filter(history.results, hasScore),
-    PaginatedQueryResult.isLoadingFirstPage(history)
+    firstPage
   );
+  const address = useLocation({
+    select: (location) => `${location.pathname}${location.searchStr}`,
+  });
 
   if (attempts.length < 2) {
-    return null;
+    return firstPage ? <TryoutAttemptPlace /> : null;
   }
   return (
     <TryoutAttemptHistory
       value={{
+        address,
         attempts,
         locale: identity.locale,
         onLoadMore: PaginatedQueryResult.isCanLoadMore(history)

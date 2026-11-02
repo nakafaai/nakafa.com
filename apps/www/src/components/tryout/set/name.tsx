@@ -6,6 +6,7 @@ import { useLiveSession } from "@/components/providers/live";
 import {
   KEPT_NAME_SCRIPT,
   keepActionName,
+  keepAttemptLabel,
   type TryoutActionNameKey,
   TryoutActionNameSchema,
 } from "@/components/tryout/set/kept";
@@ -68,4 +69,16 @@ export function useKeepActionName(
       Effect.runFork(keepActionName(address, name));
     }
   }, [address, name]);
+}
+
+/** Keeps the label a page's picker shows, once its attempts have answered. */
+export function useKeepAttemptLabel(
+  address: string,
+  label: string | undefined
+) {
+  useEffect(() => {
+    if (label !== undefined) {
+      Effect.runFork(keepAttemptLabel(address, label));
+    }
+  }, [address, label]);
 }

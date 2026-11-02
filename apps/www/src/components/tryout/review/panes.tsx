@@ -35,35 +35,21 @@ export function TryoutFinishedPanes({
   const t = useTranslations("Tryouts");
   return (
     <PanesProvider wideFrom="lg">
-      <TryoutFinishedHeight>
-        <Panes fill="parent" id="tryout-finished">
-          <PanesList>
-            <ScrollArea className="min-h-0 flex-1">
-              <div className={cn(pageRowVariants(), "space-y-6 py-6")}>
-                <TryoutFinishedOpen />
-                {children}
-              </div>
-            </ScrollArea>
-          </PanesList>
-          <PanesDetail alwaysOn label={t("finished-panel")}>
-            <PaneHeader title={t("finished-panel")} />
-            {panel}
-          </PanesDetail>
-        </Panes>
-      </TryoutFinishedHeight>
+      <Panes id="tryout-finished">
+        <PanesList>
+          <ScrollArea className="min-h-0 flex-1">
+            <div className={cn(pageRowVariants(), "space-y-6 py-6")}>
+              <TryoutFinishedOpen />
+              {children}
+            </div>
+          </ScrollArea>
+        </PanesList>
+        <PanesDetail alwaysOn label={t("finished-panel")}>
+          <PaneHeader title={t("finished-panel")} />
+          {panel}
+        </PanesDetail>
+      </Panes>
     </PanesProvider>
-  );
-}
-
-/**
- * The height the panes take under the page's header. The group takes its parent's height, and a
- * try-out page has only a minimum, so without this the panes would end with their questions.
- */
-function TryoutFinishedHeight({ children }: { children: ReactNode }) {
-  return (
-    <div className="h-[calc(100svh-var(--app-header-top)-4rem)] lg:h-[calc(100svh-4rem)]">
-      {children}
-    </div>
   );
 }
 

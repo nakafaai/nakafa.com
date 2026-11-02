@@ -1,9 +1,31 @@
 import type { ReactNode } from "react";
+import { KEPT_NAME_SCRIPT } from "@/components/tryout/set/kept";
 
-/** Renders the production summary card used by try-out section pages. */
-export function TryoutPartSummary({ children }: { children: ReactNode }) {
+/**
+ * Renders the production summary card used by try-out section pages. While `waiting` under a signed-in
+ * hint a page this browser last read as finished keeps its card from the first frame (`globals.css`),
+ * because the read will put two panes there, never a card.
+ */
+export function TryoutPartSummary({
+  children,
+  waiting,
+}: {
+  children: ReactNode;
+  /** The learner read that decides the page has not answered yet. */
+  waiting: boolean;
+}) {
   return (
-    <section className="bg-card space-y-4 rounded-xl border p-5 shadow-sm [--number-flow-mask-height:0.125em]">
+    <section
+      className="bg-card space-y-4 rounded-xl border p-5 shadow-sm [--number-flow-mask-height:0.125em]"
+      data-summary-read={waiting ? "pending" : undefined}
+    >
+      {waiting ? (
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only
+          dangerouslySetInnerHTML={{ __html: KEPT_NAME_SCRIPT }}
+          suppressHydrationWarning
+        />
+      ) : null}
       {children}
     </section>
   );

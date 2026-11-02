@@ -218,6 +218,15 @@
 }
 
 /*
+ * A page this browser last read as finished will hold two panes once its read
+ * answers, so its card never draws (`components/tryout/section/card.tsx`).
+ */
+:root[data-signed-in="yes"]
+  [data-summary-read="pending"][data-kept-name="restart-cta"] {
+  visibility: hidden;
+}
+
+/*
  * A try-out track's first rows are the ones every visitor reads, so they can hold
  * no learner's progress. Under a signed-in hint their progress marks keep their
  * room and stay hidden until the learner's own rows replace them.
