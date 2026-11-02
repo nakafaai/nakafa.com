@@ -30,6 +30,9 @@ const PRESS_MILLISECONDS = 620;
 /** How long a press waits for a control the page may have taken away. */
 const PRESS_TIMEOUT_MILLISECONDS = 2000;
 
+/** WebKit's words for a request the page left behind as it moved on, which fails nothing a reader sees. */
+export const LEFT_BEHIND = /due to access control checks/u;
+
 /** A Convex ID in an address, so a walk opens one page of each kind. */
 const DOCUMENT_ID = /^[0-9a-z]{31,37}$/u;
 
@@ -315,7 +318,9 @@ export const walkSchool = async (
   const page = await context.newPage();
   const errors = MutableList.make<string>();
   page.on("pageerror", (error) => {
-    MutableList.append(errors, `${page.url()}: ${error.message}`);
+    if (!LEFT_BEHIND.test(error.message)) {
+      MutableList.append(errors, `${page.url()}: ${error.message}`);
+    }
   });
   const opened = MutableHashSet.empty<string>();
   const pressed = MutableHashSet.empty<string>();
