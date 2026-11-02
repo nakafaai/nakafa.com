@@ -75,7 +75,7 @@ function TryoutFinishedOpen() {
   return (
     <Button
       aria-pressed={open}
-      className="lg:hidden"
+      className="w-full lg:hidden"
       onClick={showSheet}
       size="sm"
       type="button"

@@ -32,6 +32,7 @@ import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 import { formatMoment } from "@/lib/i18n/date";
@@ -130,18 +131,20 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
         }
       >
         <HugeIcons icon={TransactionHistoryIcon} />
-        {tTryouts("attempt-select-label", {
-          number: Option.match(
-            Arr.findFirst(
-              value.attempts,
-              (attempt) => attempt.attemptId === value.selectedAttemptId
+        <HeaderLabel>
+          {tTryouts("attempt-select-label", {
+            number: Option.match(
+              Arr.findFirst(
+                value.attempts,
+                (attempt) => attempt.attemptId === value.selectedAttemptId
+              ),
+              {
+                onNone: () => firstAttempt.value.attemptNumber,
+                onSome: (attempt) => attempt.attemptNumber,
+              }
             ),
-            {
-              onNone: () => firstAttempt.value.attemptNumber,
-              onSome: (attempt) => attempt.attemptNumber,
-            }
-          ),
-        })}
+          })}
+        </HeaderLabel>
         <HugeIcons
           className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
           icon={ArrowDown01Icon}
