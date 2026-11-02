@@ -89,14 +89,15 @@ function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
 /** Props of the attempt-history picker: `value` holds the scored attempts and the selection. */
 interface TryoutAttemptHistoryProps {
   value: {
-    /** The page's path and search, which its label is kept under. */
-    address: string;
     attempts: readonly (HistoryRow & {
       score: NonNullable<HistoryRow["score"]>;
     })[];
     locale: HistoryIdentity["locale"];
     onLoadMore: (() => void) | undefined;
     onChoose: (attemptId: HistoryRow["attemptId"]) => void;
+    /** The page's path and search, which a kept label is read by. */
+    pathname: string;
+    search: string;
     selectedAttemptId: HistoryRow["attemptId"];
   };
 }
@@ -152,18 +153,25 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   const [open, { close, set }] = useDisclosure(false);
   const tTryouts = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
-  const label = Option.map(
-    Option.orElse(
+  const labelOf = (attempt: ScoredHistoryRow) =>
+    tTryouts("attempt-select-label", { number: attempt.attemptNumber });
+  const latest = Option.map(Arr.head(value.attempts), labelOf);
+  const label = Option.orElse(
+    Option.map(
       Arr.findFirst(
         value.attempts,
         (attempt) => attempt.attemptId === value.selectedAttemptId
       ),
-      () => Arr.head(value.attempts)
+      labelOf
     ),
-    (attempt) =>
-      tTryouts("attempt-select-label", { number: attempt.attemptNumber })
+    () => latest
   );
-  useKeepAttemptLabel(value.address, Option.getOrUndefined(label));
+  // The set's own address opens the latest attempt, whichever attempt this page shows.
+  useKeepAttemptLabel(value.pathname, Option.getOrUndefined(latest));
+  useKeepAttemptLabel(
+    `${value.pathname}${value.search}`,
+    Option.getOrUndefined(label)
+  );
 
   if (Option.isNone(label)) {
     return null;
@@ -324,9 +332,7 @@ function TryoutAttemptChoice({
     Arr.filter(history.results, hasScore),
     firstPage
   );
-  const address = useLocation({
-    select: (location) => `${location.pathname}${location.searchStr}`,
-  });
+  const { pathname, searchStr } = useLocation();
 
   if (attempts.length < 2) {
     return firstPage ? <TryoutAttemptPlace /> : null;
@@ -334,7 +340,6 @@ function TryoutAttemptChoice({
   return (
     <TryoutAttemptHistory
       value={{
-        address,
         attempts,
         locale: identity.locale,
         onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
@@ -348,6 +353,8 @@ function TryoutAttemptChoice({
             href: `/${identity.locale}${getTryoutAttemptHref(publicPath, chosen, Option.none())}`,
           });
         },
+        pathname,
+        search: searchStr,
         selectedAttemptId: attemptId,
       }}
     />
