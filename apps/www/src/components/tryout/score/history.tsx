@@ -19,11 +19,6 @@ import {
   AutocompleteList,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
@@ -38,6 +33,8 @@ import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
+import { PaneFooter } from "@/components/shared/pane";
+import { TryoutFinishedBody } from "@/components/tryout/review/panes";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import { formatMoment } from "@/lib/i18n/date";
@@ -233,15 +230,20 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
 }
 
 /**
- * Renders the card of the page's finished attempt, first on its page: its metrics, then the metrics the caller
- * composed after them. The page already shows that the attempt is over, so the card says nothing about it. A set
- * tried more than once has the picker of its attempts in the footer. Choosing an attempt opens that attempt's own
- * page, so the score and the review always belong to one attempt.
+ * Renders the second pane of the page's finished attempt: its seats, its metrics, then the metrics
+ * composed after them, and for a set tried more than once the picker of its attempts in the footer.
+ * Choosing an attempt opens that attempt's page, so the score and the review always belong to one
+ * attempt.
  */
 export function TryoutAttemptResults({
   children,
+  seats,
   value,
-}: TryoutAttemptResultsProps & { children?: ReactNode }) {
+}: TryoutAttemptResultsProps & {
+  children?: ReactNode;
+  /** The number seats of a page that reviews questions. */
+  seats?: ReactNode;
+}) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const navigate = useNavigate();
   const history = usePaginatedQuery(
@@ -255,15 +257,16 @@ export function TryoutAttemptResults({
   );
 
   return (
-    <Card>
-      <CardContent className="[--number-flow-mask-height:0.125em]">
+    <>
+      <TryoutFinishedBody>
         {PaginatedQueryResult.isFailure(history) && <DataFailure />}
+        {seats}
         <TryoutScoreMetrics score={value.attempt.score}>
           {children}
         </TryoutScoreMetrics>
-      </CardContent>
+      </TryoutFinishedBody>
       {attempts.length > 1 ? (
-        <CardFooter>
+        <PaneFooter>
           <TryoutAttemptHistory
             value={{
               attempts,
@@ -282,9 +285,9 @@ export function TryoutAttemptResults({
               selectedAttemptId: value.attempt.attemptId,
             }}
           />
-        </CardFooter>
+        </PaneFooter>
       ) : null}
-    </Card>
+    </>
   );
 }
 

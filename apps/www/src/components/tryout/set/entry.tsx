@@ -6,6 +6,10 @@ import {
   TryoutPlayerOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
+import {
+  TryoutFinishedPanes,
+  TryoutReviewSeats,
+} from "@/components/tryout/review/panes";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
 import {
   isTryoutRuntimeRunning,
@@ -80,10 +84,15 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
       >
         <TryoutEntryAction value={value} />
       </TryoutSetPageHeader>
-      <TryoutPageBody>
-        <TryoutEntryResult value={value} />
-        {state.kind === "review" ? children : null}
-      </TryoutPageBody>
+      {value.actionAttempt?.score ? (
+        <TryoutFinishedPanes panel={<TryoutEntryResult value={value} />}>
+          {state.kind === "review" ? children : null}
+        </TryoutFinishedPanes>
+      ) : (
+        <TryoutPageBody>
+          <TryoutEntryResult value={value} />
+        </TryoutPageBody>
+      )}
     </TryoutPage>
   );
 }
@@ -112,6 +121,11 @@ function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
 
   return (
     <TryoutAttemptResults
+      seats={
+        value.runtimeState.kind === "review" ? (
+          <TryoutReviewSeats runtime={value.runtimeState.runtime} />
+        ) : null
+      }
       value={{
         attempt: {
           attemptId: attempt.attemptId,

@@ -1,3 +1,4 @@
+import { TryoutFinishedPanes } from "@/components/tryout/review/panes";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptResults } from "@/components/tryout/score/history";
 import { TryoutSetAction } from "@/components/tryout/set/action";
@@ -34,9 +35,8 @@ export interface TryoutSetOverviewProps {
 
 /**
  * Renders a set page that offers visible nested sections. A finished attempt's
- * card comes first, so the page opens on the result and its history, and the
- * running attempt's countdown and the section list follow. The server renders
- * the learner's attempt with the page, so nothing moves after the first paint.
+ * parts stand beside its result and history; a running attempt's countdown stands
+ * above its parts.
  */
 export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
   return (
@@ -60,20 +60,33 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
           }}
         />
       </TryoutSetPageHeader>
-      <TryoutPageBody>
-        <TryoutSetResult value={value} />
-        <TryoutSectionRows
-          {...(value.actionAttempt === undefined
-            ? {}
-            : { attempt: value.actionAttempt })}
-          sections={value.sectionRoutes}
-        />
-      </TryoutPageBody>
+      {value.actionAttempt?.score ? (
+        <TryoutFinishedPanes panel={<TryoutSetResult value={value} />}>
+          <TryoutSetParts value={value} />
+        </TryoutFinishedPanes>
+      ) : (
+        <TryoutPageBody>
+          <TryoutSetResult value={value} />
+          <TryoutSetParts value={value} />
+        </TryoutPageBody>
+      )}
     </TryoutPage>
   );
 }
 
-/** Composes the set action inside a score card only for terminal attempts. */
+/** The set's parts, with the attempt that marks them once it is known. */
+function TryoutSetParts({ value }: TryoutSetOverviewProps) {
+  return (
+    <TryoutSectionRows
+      {...(value.actionAttempt === undefined
+        ? {}
+        : { attempt: value.actionAttempt })}
+      sections={value.sectionRoutes}
+    />
+  );
+}
+
+/** The finished attempt's result, or the running attempt's countdown. */
 function TryoutSetResult({ value }: TryoutSetOverviewProps) {
   const attempt = value.actionAttempt;
 

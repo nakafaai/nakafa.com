@@ -19,6 +19,11 @@ import {
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
 import {
+  TryoutFinishedBody,
+  TryoutFinishedPanes,
+  TryoutReviewSeats,
+} from "@/components/tryout/review/panes";
+import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
   getTryoutPublicPathHref,
@@ -36,6 +41,7 @@ import {
   isTryoutStateLive,
   selectActionAttempt,
 } from "@/components/tryout/runtime/state";
+import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
@@ -272,16 +278,28 @@ function ResolvedTryoutSectionPage({
         binding={binding}
         sectionStatus={sectionStatus}
       />
-      <TryoutPageBody>
-        <TryoutSectionSummary
-          value={{
-            pending: actionAttempt === undefined,
-            score: actionAttempt?.section?.score ?? null,
-            section: page.section,
-          }}
-        />
-        {runtimeState.kind === "review" ? children : null}
-      </TryoutPageBody>
+      {runtimeState.kind === "review" && actionAttempt?.section?.score ? (
+        <TryoutFinishedPanes
+          panel={
+            <TryoutFinishedBody>
+              <TryoutReviewSeats runtime={runtimeState.runtime} />
+              <TryoutScoreMetrics score={actionAttempt.section.score} />
+            </TryoutFinishedBody>
+          }
+        >
+          {children}
+        </TryoutFinishedPanes>
+      ) : (
+        <TryoutPageBody>
+          <TryoutSectionSummary
+            value={{
+              pending: actionAttempt === undefined,
+              score: actionAttempt?.section?.score ?? null,
+              section: page.section,
+            }}
+          />
+        </TryoutPageBody>
+      )}
     </TryoutPage>
   );
 }
