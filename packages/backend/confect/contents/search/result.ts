@@ -29,11 +29,7 @@ export function buildContentSearchResult(
       excerpt: buildContentSearchExcerpt(
         {
           description: document.description,
-          text: textAfterHead(document.text, [
-            document.title,
-            document.description,
-            document.route,
-          ]),
+          text: textAfterHead(document.text, document),
         },
         queryTexts
       ),

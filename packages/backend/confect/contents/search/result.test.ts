@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
 import { buildContentSearchResult } from "@repo/backend/confect/contents/search/result";
 import { Array as Arr } from "effect";
@@ -38,7 +39,53 @@ function titlesOf(
   );
 }
 
+/** The document the search reads for one release row, which opens as `searchableText` writes it. */
+function createReleaseDocument() {
+  const title = "Classification";
+  const description = "Learn how classification organizes living things.";
+  const route = "subjects/biology/biodiversity/classification";
+  return buildContentSearchDocument({
+    alignmentId: "alignment",
+    assetId: "asset",
+    conceptId: "concept",
+    contentHash: "hash",
+    description,
+    hasMarkdownSource: true,
+    learningObjectId: "object",
+    lensId: "lens",
+    locale: "en",
+    route,
+    section: "material",
+    sourcePath: "source/classification",
+    syncedAt: 1,
+    text: Arr.join(
+      [title, description, route, "Grouping begins with a criterion."],
+      "\n"
+    ),
+    title,
+  });
+}
+
 describe("buildContentSearchResult", () => {
+  it("never shows a release row's path, and starts its excerpt where the lesson does", () => {
+    const excerptFor = (query: string) =>
+      Arr.map(
+        buildContentSearchResult(
+          { limit: 1, locale: "en", offset: 0 },
+          [createReleaseDocument()],
+          [query]
+        ).items,
+        (item) => item.excerpt
+      );
+
+    expect(excerptFor("biology")).toEqual([
+      "Learn how classification organizes living things.",
+    ]);
+    expect(excerptFor("criterion")).toEqual([
+      "Grouping begins with a criterion.",
+    ]);
+  });
+
   it("returns the window of whole offset and limit values", () => {
     expect(titlesOf({ limit: 2, offset: 1 }, RANKED)).toEqual(["b", "c"]);
   });
