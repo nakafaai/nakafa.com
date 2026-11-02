@@ -34,12 +34,14 @@ export function press(
   return hasTouch ? control.tap(options) : control.click(options);
 }
 
-/** Scrolls a control into view and activates it. */
+/**
+ * Activates a control. The press scrolls it into view and finds whichever element
+ * stands, because a page's live variant can replace the visitor's at any moment.
+ */
 export const activate = Effect.fn("NakafaE2E.activateControl")(function* (
   control: Locator,
   hasTouch: boolean
 ) {
-  yield* Effect.promise(() => control.scrollIntoViewIfNeeded());
   yield* Effect.promise(() => press(control, hasTouch, { noWaitAfter: true }));
 });
 
