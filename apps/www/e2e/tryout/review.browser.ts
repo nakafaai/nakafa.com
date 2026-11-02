@@ -24,6 +24,9 @@ const CORRECT = /Correct\s*$/u;
 /** The global that holds the fewest question articles the page showed while it watched. */
 const FEWEST = "__nakafaFewestReviewArticles";
 
+/** The global that holds what each frame of a hard load drew of a finished set. */
+const FRAMES = "__nakafaFinishedFrames";
+
 /** What Nina's start sends for an ask about one reviewed question. */
 const AskArguments = Schema.Tuple([
   Schema.Struct({
@@ -43,6 +46,36 @@ const AskArguments = Schema.Tuple([
 /** The attempt the address of the page names. */
 const attemptOfUrl = (page: Page) =>
   new URL(page.url()).searchParams.get("attemptId");
+
+/**
+ * Records, from the first frame that holds the page's action, whether the attempt picker beside it
+ * stands and whether a summary card shows. The script runs in the page, so it uses the browser's own API.
+ */
+const recordFinishedFrames = (page: Page) =>
+  Effect.promise(() =>
+    page.addInitScript((key) => {
+      const frames: { card: boolean; picker: boolean }[] = [];
+      Object.defineProperty(window, key, { value: frames });
+      const sample = () => {
+        const action = document
+          .querySelector("main [data-slot=tryout-action-name]")
+          ?.closest("a, button");
+        if (action) {
+          frames.push({
+            card: [...document.querySelectorAll("main section.bg-card")].some(
+              (card) => card.checkVisibility({ checkVisibilityCSS: true })
+            ),
+            picker:
+              action.previousElementSibling?.checkVisibility({
+                checkVisibilityCSS: true,
+              }) ?? false,
+          });
+        }
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    }, FRAMES)
+  );
 
 /**
  * Starts an attempt from the set page with its action and the dialog's
@@ -254,6 +287,50 @@ test.describe("The review of a finished try-out", () => {
               .locator(ARTICLES)
               .getByRole("button", { exact: true, name: "Ask Nina" })
           ).toHaveCount(0);
+        });
+      })
+    );
+  });
+
+  test("holds the picker and draws no card from a hard load's first frame once a set was tried twice", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        yield* openChatPage(page, origin);
+        yield* Effect.promise(() =>
+          page.goto(entrySetHref, { waitUntil: "commit" })
+        );
+        yield* takeAttempt(page, "Start", "Start free", false);
+        yield* takeAttempt(page, "Restart", "Start free", false);
+        const panel = page.getByRole("complementary", { name: "Your result" });
+        yield* Effect.promise(() =>
+          expect(page.getByRole("button", { name: "Attempt 2" })).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+
+        yield* recordFinishedFrames(page);
+        yield* Effect.promise(async () => {
+          await page.goto(entrySetHref, { waitUntil: "commit" });
+          await expect(panel).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(
+            page.getByRole("button", { name: "Attempt 2" })
+          ).toBeEnabled();
+        });
+        const frames = yield* Effect.promise(() =>
+          page.evaluate<readonly { card: boolean; picker: boolean }[], string>(
+            (key) => Reflect.get(window, key),
+            FRAMES
+          )
+        );
+        yield* Effect.sync(() => {
+          expect(frames.length).toBeGreaterThan(0);
+          expect(frames.filter((frame) => frame.card)).toEqual([]);
+          expect(frames.filter((frame) => !frame.picker)).toEqual([]);
         });
       })
     );
