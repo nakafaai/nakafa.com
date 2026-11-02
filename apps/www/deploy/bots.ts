@@ -6,8 +6,8 @@ import { Effect } from "effect";
  * search, user and training classes all allow at the edge, so answer services can
  * read and cite, and training is refused by robots.txt and one WAF rule, whose
  * expression `renderTrainingCrawlerExpression` writes. The deploy token holds no
- * Zone WAF Write, so that rule stands in Cloudflare outside this stack, and an
- * operator changes it there. Bot Preference Sync, Bot Fight Mode and AI Labyrinth stay off. Alchemy documents
+ * Zone WAF Write, so that rule stands in Cloudflare outside this stack, a free
+ * custom rule of the zone, and an operator's Cloudflare OAuth changes it. Bot Preference Sync, Bot Fight Mode and AI Labyrinth stay off. Alchemy documents
  * `fightMode` as the Free plan's field and the other fields set here as shared
  * across plans. Some accounts still reject a shared field, and then that field is
  * dropped from this resource.
