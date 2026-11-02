@@ -269,7 +269,8 @@ const panesVariants = cva(
     variants: {
       fill: {
         parent: "flex-1",
-        screen: "h-[calc(100svh-var(--panes-offset,4rem))]",
+        // The resizable group writes its own `height: 100%` on the element, so this height says important.
+        screen: "h-[calc(100svh-var(--panes-offset,4rem))]!",
       },
       keeps: { first: "", second: "" },
       wideFrom: { lg: "", md: "", xl: "" },

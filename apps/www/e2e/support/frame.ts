@@ -179,6 +179,21 @@ export function readFrameProblems(page: Page) {
         : [];
     };
 
+    /** Two panes that stop short of the screen's bottom, or run past it and make the page scroll. */
+    const paneProblems = () =>
+      Array.from(
+        document.querySelectorAll(
+          '[class*="100svh"][data-slot="resizable-panel-group"]'
+        )
+      )
+        .filter(isDrawn)
+        .map((group) => group.getBoundingClientRect().bottom + scrollY)
+        .filter((bottom) => Math.abs(bottom - innerHeight) > tolerance)
+        .map(
+          (bottom) =>
+            `two panes end at ${Math.round(bottom)}, the screen at ${innerHeight}`
+        );
+
     /** The crumbs of the header's path that its row cuts. */
     const pathProblems = (header: Element) =>
       Array.from(
@@ -220,6 +235,7 @@ export function readFrameProblems(page: Page) {
       ...edgeProblems(header, start, end),
       ...controlProblems(header),
       ...pathProblems(header),
+      ...paneProblems(),
     ];
   });
 }
