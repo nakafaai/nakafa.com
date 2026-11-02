@@ -15,7 +15,7 @@ const RAW_KEY = new RegExp(
 );
 
 /** Reads the raw keys in what the page shows, its document title included. */
-const readRawKeys = (page: Page) =>
+export const readRawKeys = (page: Page) =>
   Effect.promise(async () => {
     const text = await page.locator("body").ariaSnapshot();
     return Arr.map(
