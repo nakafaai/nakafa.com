@@ -222,15 +222,15 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);
-        // A bio over the limit says why in an alert under the field, and
-        // cannot be saved. The footer keeps its sentence about Save.
+        // A bio over the limit says why in the footer, in place of its sentence
+        // about Save, and cannot be saved.
         await bioField(page).fill("a".repeat(BIO_MAX_LENGTH + 1));
         await expect(bioTooLongAlert(page)).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
         await expect(
           form.getByText(app.Auth["bio-footer"], { exact: true })
-        ).toBeVisible();
+        ).toHaveCount(0);
         await expect(save).toBeDisabled();
 
         // A bio that fits takes the alert away.

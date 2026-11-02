@@ -17,6 +17,7 @@ import {
   scrollPageTo,
   shownQuestions,
   sidebarOf,
+  waitForRunningSection,
 } from "@/e2e/support/player";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import {
@@ -77,11 +78,7 @@ const shownAtOpen = Effect.fn("NakafaE2E.shownAtOpen")(function* (
   address: string
 ) {
   yield* Effect.promise(() => page.goto(address, { waitUntil: "commit" }));
-  yield* Effect.promise(() =>
-    expect(
-      page.getByRole("button", { exact: true, name: "Finish" })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-  );
+  yield* waitForRunningSection(page);
   return yield* Effect.promise(() => shownQuestions(page).count());
 });
 
@@ -130,8 +127,9 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   );
   // Late streamed content would still move the page, so let it settle.
   yield* Effect.sleep("750 millis");
-  const since = yield* readPageTime(page);
+  // The view's button grows with its name as the press answers, which the page may do.
   yield* chooseView(page, hasTouch, "One question");
+  const since = yield* readPageTime(page);
   yield* expectView(page, "One question");
   yield* expectRemembered(page, "single");
   yield* Effect.sleep("2 seconds");

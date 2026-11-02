@@ -333,7 +333,10 @@ const formatBehindMore = Effect.fn("NakafaE2E.formatBehindMore")(function* (
     const more = page
       .getByRole("toolbar")
       .getByRole("button", { exact: true, name: "More" });
-    const bold = page.getByRole("button", { exact: true, name: "Bold" });
+    const strike = page.getByRole("button", {
+      exact: true,
+      name: "Strikethrough",
+    });
     const link = page.getByRole("button", { exact: true, name: "Link" });
     const address = page.getByRole("textbox", { exact: true, name: "Link" });
 
@@ -368,10 +371,10 @@ const formatBehindMore = Effect.fn("NakafaE2E.formatBehindMore")(function* (
     // A control that acts at once closes the groups, and the caret is back in
     // the text.
     await more.click();
-    await bold.click();
-    await expect(bold).toHaveCount(0);
+    await strike.click();
+    await expect(strike).toHaveCount(0);
     await expect(editor).toBeFocused();
-    await expect(editor.locator("strong")).toHaveText(WRITTEN);
+    await expect(editor.locator("s")).toHaveText(WRITTEN);
   });
 });
 

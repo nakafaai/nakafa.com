@@ -1,7 +1,26 @@
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useLiveSession } from "@/components/providers/live";
+
+/**
+ * The page's client for an island that `isReady` for it, or none while the island
+ * keeps its variant. The two variants are different trees, so the swap replaces
+ * every element, and a browser sends no click when the element it pressed leaves
+ * the document before the release: a drawn variant stays while a pointer is down.
+ * An island that mounts once the client exists has no variant to replace, and
+ * starts live.
+ */
+function useIslandClient(isReady: boolean) {
+  const client = useLiveSession((state) => state.client);
+  const isPointerDown = useLiveSession((state) => state.isPointerDown);
+  const canSwap = isReady && Option.isSome(client);
+  const [isLive, setLive] = useState(canSwap);
+  if (canSwap && !isLive && !isPointerDown) {
+    setLive(true);
+  }
+  return isLive ? client : Option.none();
+}
 
 /**
  * Gives its children the page's one Convex client once the live session holds it,
@@ -21,7 +40,7 @@ export function ConvexIsland({
   fallback?: ReactNode;
   keepsPress?: boolean;
 }) {
-  const client = useLiveSession((state) => state.client);
+  const client = useIslandClient(true);
   const isSessionPending = useLiveSession((state) => state.isPending);
   if (Option.isNone(client)) {
     return (
@@ -46,8 +65,9 @@ export function SignedInIsland({
   fallback?: ReactNode;
 }) {
   const isSignedIn = useLiveSession((state) => state.sessionId !== null);
-  if (!isSignedIn) {
+  const client = useIslandClient(isSignedIn);
+  if (!isSignedIn || Option.isNone(client)) {
     return fallback;
   }
-  return <ConvexIsland fallback={fallback}>{children}</ConvexIsland>;
+  return <ConvexProvider client={client.value}>{children}</ConvexProvider>;
 }
