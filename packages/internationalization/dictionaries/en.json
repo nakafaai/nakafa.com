@@ -377,7 +377,7 @@
     "results-empty": "Results appear here once students finish the sitting.",
     "results-unavailable": "You cannot view these results.",
     "results-share": "{share}% correct",
-    "results-counted": "Based on {counted} answers.",
+    "results-counted": "{answered} of {counted} answered.",
     "results-incomplete": "Only the first {counted} answers are counted.",
     "results-answers": "Answers",
     "results-no-answers": "No student has answered this question yet.",

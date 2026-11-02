@@ -377,7 +377,7 @@
     "results-empty": "Hasil muncul di sini setelah siswa menyelesaikan sesi.",
     "results-unavailable": "Kamu tidak dapat melihat hasil ini.",
     "results-share": "{share}% benar",
-    "results-counted": "Berdasarkan {counted} jawaban.",
+    "results-counted": "{answered} dari {counted} menjawab.",
     "results-incomplete": "Hanya {counted} jawaban pertama yang dihitung.",
     "results-answers": "Jawaban",
     "results-no-answers": "Belum ada siswa yang menjawab soal ini.",

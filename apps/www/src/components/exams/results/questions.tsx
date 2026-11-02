@@ -194,7 +194,10 @@ function QuestionCounts({
           </p>
           <p className="text-muted-foreground">
             {stats.complete
-              ? t("results-counted", { counted: stats.counted })
+              ? t("results-counted", {
+                  answered: stats.answered,
+                  counted: stats.counted,
+                })
               : t("results-incomplete", { counted: stats.counted })}
           </p>
         </div>
