@@ -1,4 +1,3 @@
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import type { ReactNode } from "react";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerTimer } from "@/components/player/timer";
@@ -81,14 +80,12 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
         page={value.page}
         returnPath={value.returnPath}
       >
-        <ButtonGroup>
-          <TryoutAttemptPicker
-            attempt={value.actionAttempt}
-            locale={value.route.locale}
-            set={value.page.set}
-          />
-          <TryoutEntryAction value={value} />
-        </ButtonGroup>
+        <TryoutAttemptPicker
+          attempt={value.actionAttempt}
+          locale={value.route.locale}
+          set={value.page.set}
+        />
+        <TryoutEntryAction value={value} />
       </TryoutSetPageHeader>
       {value.actionAttempt?.score ? (
         <TryoutFinishedPanes

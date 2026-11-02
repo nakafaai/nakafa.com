@@ -1,4 +1,3 @@
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   TryoutFinishedFacts,
   TryoutFinishedPanel,
@@ -51,26 +50,24 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
         page={value.page}
         returnPath={value.returnPath}
       >
-        <ButtonGroup>
-          <TryoutAttemptPicker
-            attempt={value.actionAttempt}
-            locale={value.route.locale}
-            set={value.page.set}
-          />
-          <TryoutSetAction
-            value={{
-              activeAttempt: value.activeAttempt,
-              currentPath: value.currentPath,
-              ...(value.actionAttempt === undefined
-                ? {}
-                : { currentAttempt: value.actionAttempt }),
-              destination: value.start.destination,
-              entrySection: value.start.entrySection,
-              locale: value.route.locale,
-              set: value.start.set,
-            }}
-          />
-        </ButtonGroup>
+        <TryoutAttemptPicker
+          attempt={value.actionAttempt}
+          locale={value.route.locale}
+          set={value.page.set}
+        />
+        <TryoutSetAction
+          value={{
+            activeAttempt: value.activeAttempt,
+            currentPath: value.currentPath,
+            ...(value.actionAttempt === undefined
+              ? {}
+              : { currentAttempt: value.actionAttempt }),
+            destination: value.start.destination,
+            entrySection: value.start.entrySection,
+            locale: value.route.locale,
+            set: value.start.set,
+          }}
+        />
       </TryoutSetPageHeader>
       {value.actionAttempt?.score ? (
         <TryoutFinishedPanes
