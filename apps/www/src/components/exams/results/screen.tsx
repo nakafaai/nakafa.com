@@ -138,11 +138,7 @@ function SittingResultsContent({
               sittingId={scope.sittingId}
             >
               <ButtonGroup>
-                {/* A 320 px phone keeps the page's name: the Student column's head finds a student there. */}
-                <TableSearch
-                  className="@max-xs/header:hidden"
-                  placeholder={t("results-search")}
-                />
+                <TableSearch placeholder={t("results-search")} />
                 <QuestionsAction questions={questions} />
                 <IntegrityAction />
               </ButtonGroup>

@@ -12,7 +12,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { cn } from "cn";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
@@ -110,19 +109,13 @@ export function useServerSearch() {
  * button, which opens the box under it, so the page's name and its main action keep their room. Beside a second
  * outline action it joins that action in a `ButtonGroup`, so a header reads as two pills at most.
  */
-export function TableSearch({
-  className,
-  placeholder,
-}: {
-  className?: string;
-  placeholder: string;
-}) {
+export function TableSearch({ placeholder }: { placeholder: string }) {
   const search = useTableFilters((state) => state.search);
   const setSearch = useTableFilters((state) => state.setSearch);
 
   return (
     // One part of a button group, whichever form the width shows, so a hidden form never shapes the other.
-    <div className={cn("flex", className)}>
+    <div className="flex">
       <InputGroup className="hidden w-56 lg:flex xl:w-64">
         <InputGroupAddon>
           <HugeIcons icon={Search01Icon} />

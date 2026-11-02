@@ -87,7 +87,8 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
  * and shadcn's responsive breadcrumb fold a long path. From the small breakpoint up it
  * shows Home, a menu of the middle items, and the nearest `visibleItemCount` items. On a
  * phone a path of two items or more keeps its last item and, while the row has the room,
- * the parent before it, beside one menu that holds Home and every item before the last,
+ * the parent before it, beside one menu that holds Home and every item before the last and that a
+ * 320 px row folds too, so the page's name stands whole,
  * and a path of one item keeps Home beside it while the row has the room, so the page's
  * name stays whole next to the page's actions. A path that `unfolds` shows every item in a frame row of 42rem or wider, whose
  * `@container` the header sets, and only its last item truncates. CSS alone folds it, so
@@ -112,7 +113,7 @@ export function BreadcrumbHeaderPath({
       <BreadcrumbList className="flex-nowrap">
         {foldsOnPhone ? (
           <BreadcrumbMenu
-            className="sm:hidden"
+            className="sm:hidden @max-xs/header:hidden"
             items={[
               { label: homeLabel, target: home },
               ...Arr.dropRight(items, 1),
