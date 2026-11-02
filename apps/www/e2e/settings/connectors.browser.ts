@@ -4,9 +4,9 @@ import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-/** The connectors page after a connect that Google refused. */
-const REFUSED =
-  /\/en\/user\/settings\/connectors\?connect=refused&connector=calendar$/u;
+/** The connectors page after a connect whose code Google did not take. */
+const FAILED =
+  /\/en\/user\/settings\/connectors\?connect=failed&connector=calendar$/u;
 
 /** The connectors page after a connect the learner stopped on Google's screen. */
 const CANCELLED = /\?connect=cancelled&connector=calendar$/u;
@@ -18,7 +18,7 @@ for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`a learner starts a Calendar connect with PKCE, comes back to Connectors, and sees a refused connect named, at ${viewport.width} px`, async ({
+  test(`a learner starts a Calendar connect with PKCE, comes back to Connectors, and sees a failed connect named, at ${viewport.width} px`, async ({
     browser,
     baseURL,
   }) => {
@@ -63,11 +63,11 @@ for (const viewport of [
     await page.goto(
       `${site}/api/connectors/callback?state=${state}&code=not-a-code`
     );
-    await page.waitForURL(REFUSED, {
+    await page.waitForURL(FAILED, {
       timeout: readinessTimeoutMilliseconds,
     });
     await expect(page.getByRole("alert")).toContainText(
-      "Tick every box at Google."
+      "Connect failed, try again."
     );
     await expect(page.getByRole("alert")).toHaveCount(1);
 

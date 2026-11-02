@@ -175,7 +175,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     }
   });
 
-  // The public set URL of a running attempt shows that attempt in place,
+  // The public set URL of a running attempt moves to the attempt's address,
   // with its heading in every frame and one change to the locked shell.
   yield* Effect.promise(() => page.goto(setHref, { waitUntil: "commit" }));
   yield* Effect.promise(() =>
@@ -186,7 +186,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   yield* Effect.sleep("750 millis");
   const direct = yield* readShellObservation(page, 0);
   yield* Effect.sync(() => {
-    expect(new URL(page.url()).search).toBe("");
+    expect(new URL(page.url()).searchParams.has("attemptId")).toBe(true);
     expect(direct.headinglessFrames).toBe(0);
     expect(direct.shells).toBe(1);
     expect(direct.layoutShifts).toEqual([]);

@@ -35,10 +35,14 @@ export const intend = Effect.fn("NakafaE2E.intendTryoutLink")(function* (
   target: { hasTouch: boolean },
   calls: MutableList.MutableList<string>
 ) {
+  // A touch screen warms the links in view while the page is idle, so a touch
+  // finds their answers kept and asks for nothing.
+  if (target.hasTouch) {
+    yield* Effect.promise(() => link.dispatchEvent("touchstart"));
+    return;
+  }
   const callsBefore = calls.length;
-  yield* Effect.promise(() =>
-    target.hasTouch ? link.dispatchEvent("touchstart") : link.hover()
-  );
+  yield* Effect.promise(() => link.hover());
   yield* Effect.promise(() =>
     expect
       .poll(() => calls.length > callsBefore, {
