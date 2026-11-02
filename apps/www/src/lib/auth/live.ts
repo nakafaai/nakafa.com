@@ -16,14 +16,16 @@ function initialLiveSessionState(client: Option.Option<ConvexReactClient>) {
     ...previewAuthSession,
     client,
     confirmation: Option.none<ConvexAuthConfirmation>(),
+    isPointerDown: false,
   };
 }
 
 /**
  * The live session of one page: Better Auth's session as its readers see it,
- * Convex's answer for that session, and the page's one Convex client. The fields
- * are flat, so the store is also the session store and the Convex authentication
- * store that the shared readers select from, and one store serves every reader.
+ * Convex's answer for that session, the page's one Convex client, and whether a
+ * pointer is down, which holds an island's swap to that client. The fields are
+ * flat, so the store is also the session store and the Convex authentication store
+ * that the shared readers select from, and one store serves every reader.
  */
 export type LiveSessionState = ReturnType<typeof initialLiveSessionState>;
 
