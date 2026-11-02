@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   grantStudent,
@@ -27,6 +28,7 @@ test("a student invites a parent from the Parents page, and the invited parent w
   );
   await Effect.runPromise(grantStudent(school.slug, learner));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
 
   await page.goto(address("/family"));
   const invite = page
@@ -38,11 +40,13 @@ test("a student invites a parent from the Parents page, and the invited parent w
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Parent's name").fill("Ibu Siti");
   await dialog.getByLabel("Parent email").fill("ibu@example.com");
+  const sentBefore = changes.sent;
   await dialog.getByRole("button", { name: "Invite a parent" }).click();
 
   // The parent shows at once, and the school's answer keeps them.
   await expect(page.getByText("Ibu Siti")).toBeVisible();
   await expect(page.getByText("Pending")).toBeVisible();
+  await saved(changes, sentBefore);
   await page.reload();
   await expect(page.getByText("Ibu Siti")).toBeVisible();
   await context.close();

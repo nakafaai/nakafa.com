@@ -89,7 +89,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
     .locator("header")
     .getByRole("button", { name: "Add student" })
     .click();
-  const placing = owner.getByRole("dialog");
+  const placing = owner.getByRole("dialog", { name: "Add student" });
   await placing.getByRole("combobox", { name: "Student" }).click();
   await owner.getByRole("option", { name: LEARNER_NAME }).click();
   await placing.getByRole("button", { name: "Add student" }).click();
@@ -109,6 +109,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
   await student.goto(address(`/sittings/${sitting.sittingId}`));
   const enter = student.getByRole("button", { name: "Enter sitting" });
   await waitUntilTakenOver(enter);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await enter.click();
   await student
     .getByRole("radiogroup")
@@ -122,7 +123,9 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
     .getByRole("button", { name: "Finish", exact: true })
     .click();
 
-  await owner.goto(address(`/sittings/${sitting.sittingId}`));
+  await owner.goto(
+    address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
+  );
   await closeSitting(owner);
   await owner.getByRole("link", { name: "Results", exact: true }).click();
   const header = owner.locator("header");
@@ -153,7 +156,10 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(student.getByText("Gerak lurus")).toBeVisible();
-  await expect(student.getByText(LEARNER_NAME)).toHaveCount(0);
+  // Their name stands in the sidebar's account, and the page itself lists nobody.
+  await expect(student.getByRole("main").getByText(LEARNER_NAME)).toHaveCount(
+    0
+  );
 
   await ownerContext.close();
   await learnerContext.close();

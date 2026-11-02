@@ -1371,7 +1371,7 @@
     "no-unit-description": "Stelle zuerst eine Einheit wieder her oder lege eine an, denn Perioden und Kohorten gehören zu ihr.",
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
-    "student-login-rule": "3 bis 32 Buchstaben, Ziffern oder Striche.",
+    "student-login-rule": "3 bis 32 Zeichen, auch Punkt und Strich.",
     "policy-domains-invalid": "Prüfe {domains}, und schreibe jede Domain in eine eigene Zeile.",
     "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
     "device-title": "Gerät verbinden",

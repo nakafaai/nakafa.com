@@ -10,8 +10,8 @@ import {
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** The page's gutter around the card of a table page, the same as the header row's. */
-const GUTTER = 16;
+/** The body's padding under the card of a table page. */
+const BODY_PADDING = 16;
 
 /**
  * Reads where the card sits against the viewport and the header's page-width row, and whether the page scrolls
@@ -20,11 +20,13 @@ const GUTTER = 16;
 function readCard(card: Locator) {
   return card.evaluate((element) => {
     const box = element.getBoundingClientRect();
-    const row = document
-      .querySelector('[data-slot="page-header"] > div')
-      ?.getBoundingClientRect();
+    const header = document.querySelector('[data-slot="page-header"] > div');
+    const row = header?.getBoundingClientRect();
     return {
       bottom: box.bottom,
+      gutter: header
+        ? Number.parseFloat(getComputedStyle(header).paddingLeft)
+        : Number.NaN,
       left: box.left,
       rowLeft: row?.left ?? Number.NaN,
       rowWidth: row?.width ?? Number.NaN,
@@ -69,14 +71,14 @@ for (const viewport of [
       expect(placed.sideways).toBe(false);
       // The card's edges meet the header row's gutter, so it lines up with the path and the actions above it.
       expect(
-        Math.abs(placed.left - (placed.rowLeft + GUTTER))
+        Math.abs(placed.left - (placed.rowLeft + placed.gutter))
       ).toBeLessThanOrEqual(1);
       expect(
-        Math.abs(placed.width - (placed.rowWidth - 2 * GUTTER))
+        Math.abs(placed.width - (placed.rowWidth - 2 * placed.gutter))
       ).toBeLessThanOrEqual(1);
       // A short list still fills the body: the card reaches the gutter above the screen's bottom.
       expect(placed.bottom).toBeGreaterThanOrEqual(
-        placed.viewport - GUTTER - 1
+        placed.viewport - BODY_PADDING - 1
       );
 
       // The status filter sits in its column's head, not in the header, and each of its values draws an icon of its

@@ -30,7 +30,8 @@ function cursorMisses() {
     `${element.tagName.toLowerCase()}${element.hasAttribute("role") ? `[role=${element.getAttribute("role")}]` : ""} "${(element.textContent ?? "").trim().slice(0, 40)}" shows ${cursor}`;
   const misses: string[] = [];
   for (const element of document.querySelectorAll(pressable)) {
-    if (!shown(element)) {
+    // A question's grip takes a drag, not a press, so it shows the hand that says so.
+    if (!shown(element) || element.hasAttribute("data-grip")) {
       continue;
     }
     const cursor = getComputedStyle(element).cursor;

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -13,6 +14,7 @@ test("a member switches a notice's email off, and it stays off after a reload", 
   const context = await browser.newContext();
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
 
   await page.goto(address("/notifications"));
   const preferences = page
@@ -24,9 +26,12 @@ test("a member switches a notice's email off, and it stays off after a reload", 
     .getByRole("dialog")
     .getByRole("switch", { name: "Mentions in a class, Email" });
   await expect(mail).toBeChecked();
+  const sentBefore = changes.sent;
   await mail.click();
   await expect(mail).not.toBeChecked();
 
+  // The switch answers at once, and a reload would cancel a save still on its way.
+  await saved(changes, sentBefore);
   await page.reload();
   await waitUntilTakenOver(preferences);
   await preferences.click();

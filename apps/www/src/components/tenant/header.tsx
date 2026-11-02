@@ -50,10 +50,16 @@ export function SchoolHeader({
 
   return (
     <header
-      className="bg-background sticky top-0 z-10 h-16 shrink-0 border-b"
+      className="bg-background @container/bar sticky top-0 z-10 flex min-h-16 shrink-0 items-center border-b"
       data-slot="page-header"
     >
-      <div className={cn(pageHeaderRowVariants(), "h-full")}>
+      {/* Text at twice its size leaves one line no room, so the actions take a line of their own. */}
+      <div
+        className={cn(
+          pageHeaderRowVariants(),
+          "@max-3xs/bar:flex-wrap @max-3xs/bar:py-2"
+        )}
+      >
         {/* The exam editor draws no sidebar, so a page that shows in its place, such as its not-found page, has none to toggle. */}
         {hasSidebar ? (
           <SidebarTrigger
@@ -67,11 +73,14 @@ export function SchoolHeader({
             {title}
           </h1>
         )}
-        <SchoolPath
-          items={Arr.map(items, (item, index) =>
-            index === items.length - 1 ? { ...item, target: undefined } : item
-          )}
-        />
+        {/* Text at twice its size leaves the path no room, so it steps aside and takes the row's gap with it. */}
+        <div className="min-w-0 @max-3xs/header:hidden">
+          <SchoolPath
+            items={Arr.map(items, (item, index) =>
+              index === items.length - 1 ? { ...item, target: undefined } : item
+            )}
+          />
+        </div>
         {children === undefined ? null : (
           <div className="ms-auto flex shrink-0 items-center gap-2">
             {children}

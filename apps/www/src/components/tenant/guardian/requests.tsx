@@ -311,6 +311,16 @@ export function WaitingRequests({
     });
   }
 
+  const unanswered = Arr.filter(
+    requests,
+    (request) => !Arr.contains(answered, request.id)
+  );
+
+  // A school with no waiting request sees its links alone, with no empty table above them.
+  if (Arr.isReadonlyArrayEmpty(unanswered)) {
+    return null;
+  }
+
   return (
     <TableFiltersProvider>
       <TableFrame>
@@ -358,10 +368,7 @@ export function WaitingRequests({
               </RowItems>
             )),
           ]}
-          data={Arr.filter(
-            requests,
-            (request) => !Arr.contains(answered, request.id)
-          )}
+          data={unanswered}
           plain
           rowId={(request) => request.id}
         />

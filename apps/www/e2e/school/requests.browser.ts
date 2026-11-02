@@ -80,7 +80,8 @@ test("a verified parent asks the school office, Staff approves, and the parent r
   const waiting = settings
     .getByRole("row")
     .filter({ hasText: "Salinan rapor semester lalu." });
-  await waiting.getByRole("button", { name: "Approve" }).click();
+  await waiting.getByRole("button", { name: "More actions" }).click();
+  await settings.getByRole("menuitem", { name: "Approve" }).click();
   await expect(waiting).toHaveCount(0);
 
   await expect(asked).toContainText("Approved");

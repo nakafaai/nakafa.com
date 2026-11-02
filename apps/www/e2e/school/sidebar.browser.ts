@@ -135,7 +135,10 @@ test("no two entries of the settings sidebar draw the same icon", async ({
   await page.goto(address("/settings/profile"));
 
   const sidebar = page.locator('[data-slot="sidebar-content"]');
-  const entries = sidebar.locator('[data-sidebar="menu-button"]');
+  // The school's own groups stay mounted, hidden, behind the settings, so that coming back draws them at once.
+  const entries = sidebar
+    .locator('[data-sidebar="menu-button"]')
+    .filter({ visible: true });
   await expect(
     sidebar.getByRole("link", { name: "Audit trail", exact: true })
   ).toBeVisible();

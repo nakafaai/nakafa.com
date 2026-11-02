@@ -61,7 +61,7 @@ for (const width of [390, 1440]) {
   });
 }
 
-test("a role that may change nobody reads the members table with no empty menu column", async ({
+test("a role that may change nobody reads the members table with only Copy in a row's menu", async ({
   browser,
   baseURL,
 }) => {
@@ -91,11 +91,11 @@ test("a role that may change nobody reads the members table with no empty menu c
   await expect(
     table.getByRole("row").filter({ hasText: ADMIN_GRANT.person }).first()
   ).toBeVisible();
-  // The last column a reader sees has a heading, so no menu's empty frame stands on the edge.
-  await expect(table.getByRole("columnheader").last()).not.toHaveText("");
-  await expect(table.getByRole("button", { name: "More actions" })).toHaveCount(
-    0
-  );
+  // Every row has its one action, so a reader's menu offers the row's text to copy and no change.
+  await table.getByRole("button", { name: "More actions" }).first().click();
+  await expect(reader.getByRole("menu").getByRole("menuitem")).toHaveText([
+    "Copy",
+  ]);
 
   await ownerContext.close();
   await learnerContext.close();
