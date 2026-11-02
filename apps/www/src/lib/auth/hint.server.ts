@@ -1,11 +1,9 @@
-import { getRequest } from "@tanstack/react-start/server";
 import { parseSetCookieHeader } from "better-auth/cookies";
 import { Array as Arr, Config, Effect, Option, pipe, Schema } from "effect";
 import { SessionJson } from "@/lib/auth/answer";
 import { isSessionCookieName } from "@/lib/auth/cookie.server";
 import {
   expiredHintCookie,
-  hasSignedInHint,
   hintCookieFor,
   hintScopeFor,
   isHintCurrent,
@@ -16,21 +14,6 @@ import { ClientSession } from "@/lib/auth/visitor";
 
 /** The site's own address, whose host the hint cookie names. */
 const SITE_URL = Config.String("SITE_URL");
-
-/**
- * Whether this request's cookies carry the signed-in hint. The browser sends the
- * hint with every page, so the server knows the visitor's state before the first
- * HTML, without asking the auth service.
- */
-export function readRequestSignedInHint(): boolean {
-  return Option.match(
-    Option.fromNullishOr(getRequest().headers.get("cookie")),
-    {
-      onNone: () => false,
-      onSome: hasSignedInHint,
-    }
-  );
-}
 
 /** Whether an answer signs the browser in or out, by the session cookie it writes. */
 function readSessionWrite(response: Response) {

@@ -202,15 +202,12 @@ describe("immutable try-out application catalog", () => {
           viewerId: "viewer",
         };
         fetchQueryMock.mockReturnValue(Effect.succeed(page));
-        expect(
-          yield* readTryoutSetList(Option.some("technical-token"), args)
-        ).toBe(page);
+        expect(yield* readTryoutSetList(args)).toBe(page);
         expect(fetchQueryMock).toHaveBeenCalledWith(
           refs.public.tryouts.queries.sets.list,
           args
         );
         expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {
-          auth: "technical-token",
           fetch: expect.any(Function),
         });
         fetchQueryMock.mockReturnValue(
@@ -220,9 +217,7 @@ describe("immutable try-out application catalog", () => {
             })
           )
         );
-        expect(
-          yield* readTryoutSetList(Option.none(), args).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* readTryoutSetList(args).pipe(Effect.flip)).toMatchObject({
           _tag: "TryoutCatalogReadError",
           cause: {
             _tag: "HttpClientError",

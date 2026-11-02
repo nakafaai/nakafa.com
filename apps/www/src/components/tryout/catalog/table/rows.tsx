@@ -80,14 +80,16 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
           row={row}
         />
       </TableCell>
-      <TableCell className={columnAlign()}>
+      <TableCell className={columnAlign()} data-progress>
         <TryoutStatus status={row.attemptStatus} />
       </TableCell>
       <TableCell className={columnAlign()}>{row.questionCount}</TableCell>
       <TableCell className={columnAlign()}>
         <TryoutSetDuration seconds={row.durationSeconds} />
       </TableCell>
-      <TableCell className={columnAlign()}>{row.publishedScore}</TableCell>
+      <TableCell className={columnAlign()} data-progress>
+        {row.publishedScore}
+      </TableCell>
       <TableCell className={columnAlign({ align: "menu" })}>
         <RowMenu>
           <TryoutSetMenu />
@@ -133,6 +135,7 @@ function TryoutSetName({
             ? "bg-secondary text-secondary-foreground border-transparent"
             : "border-muted-foreground/40"
         )}
+        data-progress
       >
         {row.attemptStatus === "completed" && (
           <HugeIcons className="size-4" icon={CheckmarkCircle02Icon} />

@@ -5,7 +5,7 @@ import { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { QueryText } from "@/lib/routing/search";
 
-/** The keys of one track that its learner's set list is read for. */
+/** The keys of one track that its set list is read for. */
 const TrackKeysSchema = Schema.Struct({
   countryKey: Schema.String,
   examKey: Schema.String,

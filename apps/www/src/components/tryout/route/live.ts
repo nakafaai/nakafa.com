@@ -35,10 +35,10 @@ import type { SetPage } from "@/components/tryout/set/model";
 import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**
- * Where a learner's read of a try-out page stands. A visitor, with no session and no attempt in the
- * URL, sees the page as the Worker served it. A session or an attempt in the URL makes the page
- * pending until Convex answers; the answer is the learner's attempt, none, or an address that names
- * nothing of theirs.
+ * Where a learner's read of a try-out page stands. The hooks below run only under the page's Convex
+ * client, which a signed-in hint starts, so the page is pending until Convex answers; the answer is
+ * the learner's attempt, none, or an address that names nothing of theirs. A hint with no session
+ * reads as a visitor, who sees the page as the build wrote it.
  */
 type LearnerRead<Value> =
   | { readonly kind: "attempt"; readonly value: Value }
@@ -117,7 +117,6 @@ export function useAttemptSignIn(input: {
 function useLearnerGate(input: {
   readonly publicPath: string;
   readonly search: TryoutAttemptSearch;
-  readonly signedIn: boolean;
 }) {
   useAttemptSignIn(input);
   const locale = useLocale();
@@ -125,14 +124,12 @@ function useLearnerGate(input: {
   const isAuthenticated = useConvexAuth((state) => state.isAuthenticated);
   const intent = readAddressIntent(input.search);
   const attemptId = attemptOf(input.search);
-  const learner = input.signedIn || attemptId !== undefined;
 
   return {
     attemptId,
     intent,
-    learner,
     locale,
-    readable: learner && !isLoading && isAuthenticated,
+    readable: !isLoading && isAuthenticated,
     settledSignedOut: !(isLoading || isAuthenticated),
   };
 }
@@ -210,12 +207,10 @@ function answerOf<Answer, Failure>(
 export function useLearnerSet(input: {
   readonly page: SetPage;
   readonly search: TryoutAttemptSearch;
-  readonly signedIn: boolean;
 }) {
   const gate = useLearnerGate({
     publicPath: input.page.set.publicPath,
     search: input.search,
-    signedIn: input.signedIn,
   });
   const held = useHeldAnswer<typeof retainedSetResultValidator.Type>(
     `${gate.attemptId}:${input.page.set.publicPath}`
@@ -288,12 +283,10 @@ export function useLearnerSection(input: {
   readonly publicPath: string;
   readonly search: TryoutAttemptSearch;
   readonly setPath: string;
-  readonly signedIn: boolean;
 }) {
   const gate = useLearnerGate({
     publicPath: input.publicPath,
     search: input.search,
-    signedIn: input.signedIn,
   });
   const held = useHeldAnswer<typeof retainedSectionResultValidator.Type>(
     `${gate.attemptId}:${input.publicPath}`
@@ -400,9 +393,6 @@ function readOf<Value>(input: {
   const { gate } = input;
   if (Option.isNone(gate.intent)) {
     return { kind: "notFound" };
-  }
-  if (!gate.learner) {
-    return { kind: "visitor" };
   }
   if (input.projected !== undefined) {
     return { kind: "attempt", value: input.projected };

@@ -111,23 +111,13 @@ export const readTryoutTrackPage = Effect.fn(
   });
 });
 
-/** Reads the first personalized catalog result after the framework resolves the session. */
+/** Reads one window of a track's set list as a visitor, with no session. */
 export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
-  function* (
-    token: Option.Option<string>,
-    args: Ref.Args<typeof tryouts.queries.sets.list>
-  ) {
+  function* (args: Ref.Args<typeof tryouts.queries.sets.list>) {
     return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
       client.query(tryouts.queries.sets.list, args)
     ).pipe(
-      Effect.provide(
-        httpLayer(
-          Option.match(token, {
-            onNone: () => ({}),
-            onSome: (auth) => ({ auth }),
-          })
-        )
-      ),
+      Effect.provide(httpLayer({})),
       Effect.mapError(
         (cause) =>
           new TryoutCatalogReadError({

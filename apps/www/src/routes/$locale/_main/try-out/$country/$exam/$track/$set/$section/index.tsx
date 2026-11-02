@@ -93,15 +93,11 @@ function TryoutSectionVisitor() {
 function TryoutSectionLearner() {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
-  const signedIn = Route.useRouteContext({
-    select: (context) => context.signedIn,
-  });
   const learner = useLearnerSection({
     page: route.page,
     publicPath: route.sectionPath,
     search,
     setPath: route.setPath,
-    signedIn,
   });
   return (
     <>

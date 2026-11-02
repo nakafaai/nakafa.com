@@ -7,7 +7,7 @@ import { decodeTryoutBodies } from "@/components/tryout/content/body";
 import { selectTryoutSectionReturnPath } from "@/components/tryout/route/owner";
 
 /**
- * A learner's try-out page renders in the browser: the Worker serves the page every visitor sees, and
+ * A learner's try-out page renders in the browser: every reader gets the page the build wrote, and
  * the page reads the learner's own attempt from Convex once the session is known. These are the pure
  * parts of that read: the request a URL asks for, and what the answer projects into for the page.
  */
