@@ -200,11 +200,13 @@ export function readFrameProblems(page: Page) {
             `two panes end at ${Math.round(bottom)}, the screen at ${innerHeight}`
         );
 
-    /** A header on the page's own layer, where a tab's underline or a table's head shows over it on scroll. */
-    const layerProblems = (header: Element) =>
-      Number(getComputedStyle(header.closest("header") ?? header).zIndex) > 10
+    /** A sticky header on the page's own layer, where a tab's underline or a table's head shows over it on scroll. */
+    const layerProblems = (header: Element) => {
+      const bar = getComputedStyle(header.closest("header") ?? header);
+      return bar.position !== "sticky" || Number(bar.zIndex) > 10
         ? []
         : ["the header does not stand above the page's layers"];
+    };
 
     /** The crumbs of the header's path that its row cuts. */
     const pathProblems = (header: Element) =>
