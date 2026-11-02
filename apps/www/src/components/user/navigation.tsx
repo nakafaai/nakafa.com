@@ -22,7 +22,7 @@ interface Props {
  */
 export function SharedTabs({ tabs, value }: Props) {
   return (
-    <nav className="bg-background sticky top-[var(--app-header-top,4rem)] z-10 lg:top-0">
+    <nav className="bg-background sticky top-[var(--app-header-top,4rem)] z-20 lg:top-0">
       <Tabs className="contents" value={value}>
         <TabsList className="gap-0">
           {Arr.map(tabs, (tab) => (
