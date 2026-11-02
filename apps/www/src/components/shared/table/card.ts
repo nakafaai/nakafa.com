@@ -11,10 +11,16 @@ export const tableCardVariants = cva(
 
 /**
  * The box of a data table, whose cells keep their words on one line. It fills the card, except over a list's empty
- * state, which fills the card under the column heads instead. Nothing closes a table with no rows, so the card's line
- * goes with the room: left in place it would fall from the card's bottom edge to the heads as the list reads empty.
+ * state, which fills the card under the column heads instead. Only rows close a table, so a table with none draws no
+ * line: left in place it would move from the card's bottom edge as the rows read, to the heads for an empty list and
+ * past the screen for a long one.
  */
 export const tableBoxVariants = cva(
   "[&_[data-slot=table-cell]]:whitespace-nowrap",
-  { variants: { fills: { false: "h-auto after:hidden", true: "flex-1" } } }
+  {
+    variants: {
+      closes: { false: "after:hidden", true: "" },
+      fills: { false: "h-auto", true: "flex-1" },
+    },
+  }
 );

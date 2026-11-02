@@ -133,7 +133,10 @@ export function DataTable<TData extends RowData>({
     <>
       <Table
         aria-busy={waiting}
-        containerClassName={tableBoxVariants({ fills: !showsEmpty })}
+        containerClassName={tableBoxVariants({
+          closes: !isBare,
+          fills: !showsEmpty,
+        })}
       >
         <ColumnHeads>
           {Arr.map(table.getHeaderGroups(), (group) => (

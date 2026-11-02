@@ -157,7 +157,9 @@ function SchoolAuditBody() {
         rowId={(entry) => entry.id}
         search="change"
       />
-      <TableNote>{t("audit-footer")}</TableNote>
+      {isSettled && pagination._tag !== "LoadingFirstPage" ? (
+        <TableNote>{t("audit-footer")}</TableNote>
+      ) : null}
     </TablePages>
   );
 }
