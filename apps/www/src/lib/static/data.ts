@@ -1,4 +1,13 @@
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { Effect, Option } from "effect";
+
+/** Records a call for the build. The compiler drops this from the browser, so only a server reaches the module. */
+const recordCall = createIsomorphicFn().server(
+  async (url: string, data: unknown) => {
+    const { recordStaticCall } = await import("@/lib/static/record.server");
+    await Effect.runPromise(recordStaticCall(url, data));
+  }
+);
 
 /**
  * Reads one server function for a loader of a prerendered page. On the server the
@@ -24,8 +33,7 @@ export async function readStaticData<Input, Output>(
   data: Input
 ): Promise<Output> {
   if (import.meta.env.SSR) {
-    const { recordStaticCall } = await import("@/lib/static/record.server");
-    await Effect.runPromise(recordStaticCall(fn.url, data));
+    await recordCall(fn.url, data);
     return fn({ data });
   }
   const [{ readStaticAnswer }, { settleServerComponents }] = await Promise.all([

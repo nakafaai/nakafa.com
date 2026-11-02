@@ -8,17 +8,10 @@ const SearchRequest = Schema.Struct({
   query: Schema.String,
 });
 
-/** Answers one content search on the server, through the read every viewer shares. */
-export const searchHandler = async ({
-  data,
-}: {
-  readonly data: typeof SearchRequest.Type;
-}) => {
-  const { readSearchHandler } = await import("@/lib/search/search.server");
-  return readSearchHandler({ data });
-};
-
 /** The content search results of one query, read on the server for every viewer. */
 export const readSearchFn = createServerFn({ method: "POST" })
   .validator(Schema.toStandardSchemaV1(SearchRequest))
-  .handler(searchHandler);
+  .handler(async ({ data }) => {
+    const { readSearchHandler } = await import("@/lib/search/search.server");
+    return readSearchHandler({ data });
+  });
