@@ -1,5 +1,5 @@
 import { useTimeout, useWindowEvent } from "@mantine/hooks";
-import { ConvexProvider, type ConvexReactClient } from "convex/react";
+import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useLiveSession } from "@/components/providers/live";
@@ -10,7 +10,8 @@ const RELEASE_ROOM_MILLISECONDS = 100;
 /**
  * Whether a pointer holds this island's variant. A browser sends no click when the
  * element it pressed leaves the document before the release, so the page's client
- * arriving under a press would lose it.
+ * arriving under a press would lose it. An island's two variants are different
+ * trees, so its swap replaces every element, and it waits while this holds.
  */
 function usePointerHold() {
   const [isHeld, setHeld] = useState(false);
@@ -24,33 +25,6 @@ function usePointerHold() {
     },
     isHeld,
   };
-}
-
-/**
- * Renders `fallback` until `client` holds the page's client, then gives `children`
- * that client. The two are different trees, so the swap replaces every element of
- * the variant, and it waits for a pointer that holds one of them.
- */
-function Island({
-  children,
-  client,
-  fallback,
-  inert,
-}: {
-  children: ReactNode;
-  client: Option.Option<ConvexReactClient>;
-  fallback: ReactNode;
-  inert: boolean;
-}) {
-  const { hold, isHeld } = usePointerHold();
-  if (Option.isNone(client) || isHeld) {
-    return (
-      <div className="contents" inert={inert} onPointerDown={hold}>
-        {fallback}
-      </div>
-    );
-  }
-  return <ConvexProvider client={client.value}>{children}</ConvexProvider>;
 }
 
 /**
@@ -73,15 +47,19 @@ export function ConvexIsland({
 }) {
   const client = useLiveSession((state) => state.client);
   const isSessionPending = useLiveSession((state) => state.isPending);
-  return (
-    <Island
-      client={client}
-      fallback={fallback}
-      inert={isSessionPending && !keepsPress}
-    >
-      {children}
-    </Island>
-  );
+  const { hold, isHeld } = usePointerHold();
+  if (Option.isNone(client) || isHeld) {
+    return (
+      <div
+        className="contents"
+        inert={isSessionPending && !keepsPress}
+        onPointerDown={hold}
+      >
+        {fallback}
+      </div>
+    );
+  }
+  return <ConvexProvider client={client.value}>{children}</ConvexProvider>;
 }
 
 /**
@@ -98,13 +76,13 @@ export function SignedInIsland({
 }) {
   const client = useLiveSession((state) => state.client);
   const isSignedIn = useLiveSession((state) => state.sessionId !== null);
-  return (
-    <Island
-      client={isSignedIn ? client : Option.none()}
-      fallback={fallback}
-      inert={false}
-    >
-      {children}
-    </Island>
-  );
+  const { hold, isHeld } = usePointerHold();
+  if (!isSignedIn || Option.isNone(client) || isHeld) {
+    return (
+      <div className="contents" onPointerDown={hold}>
+        {fallback}
+      </div>
+    );
+  }
+  return <ConvexProvider client={client.value}>{children}</ConvexProvider>;
 }
