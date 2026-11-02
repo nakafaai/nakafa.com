@@ -118,8 +118,10 @@ export function readFrameProblems(page: Page) {
       const line = innerWidth >= desktop && letter !== null ? letter : start;
       const off = (x: number) => Math.abs(x - line) > tolerance;
       const indicator = tabs.querySelector('[data-slot="tab-indicator"]');
-      const left = first.getBoundingClientRect().left;
-      const underline = indicator?.getBoundingClientRect().left ?? line;
+      // A row wider than a phone scrolls, and the line it starts on is where it stands unscrolled.
+      const left = first.getBoundingClientRect().left + tabs.scrollLeft;
+      const underline =
+        (indicator?.getBoundingClientRect().left ?? line) + tabs.scrollLeft;
       const current = first.getAttribute("aria-selected") === "true";
       return [
         indicator === null && "the tab row has no underline that slides",
@@ -143,6 +145,10 @@ export function readFrameProblems(page: Page) {
       const line = innerWidth >= desktop && letter !== null ? letter : start;
       return Array.from(document.querySelectorAll(edges))
         .filter((element) => isDrawn(element) && !standsApart(element))
+        .filter(
+          (element) =>
+            (element.closest('[data-slot="tabs-list"]')?.scrollLeft ?? 0) === 0
+        )
         .map((element) => ({ element, reach: reachOf(element) }))
         .filter(({ reach }) => reach.right > reach.left)
         .flatMap(({ element, reach }) => {
@@ -200,6 +206,14 @@ export function readFrameProblems(page: Page) {
             `two panes end at ${Math.round(bottom)}, the screen at ${innerHeight}`
         );
 
+    /** A sticky header on the page's own layer, where a tab's underline or a table's head shows over it on scroll. */
+    const layerProblems = (header: Element) => {
+      const bar = getComputedStyle(header.closest("header") ?? header);
+      return bar.position !== "sticky" || Number(bar.zIndex) > 10
+        ? []
+        : ["the header does not stand above the page's layers"];
+    };
+
     /** The crumbs of the header's path that its row cuts. */
     const pathProblems = (header: Element) =>
       Array.from(
@@ -242,6 +256,7 @@ export function readFrameProblems(page: Page) {
       ...controlProblems(header),
       ...pathProblems(header),
       ...paneProblems(),
+      ...layerProblems(header),
     ];
   });
 }

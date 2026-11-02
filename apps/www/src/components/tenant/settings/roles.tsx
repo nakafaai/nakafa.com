@@ -6,7 +6,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -90,7 +89,6 @@ function SchoolRoleGuide({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
@@ -111,17 +109,10 @@ function SchoolRoleGuide({
             ))}
           </ul>
         </ScrollArea>
-        <SheetFooter className="flex-row items-center justify-between gap-4">
+        <SheetFooter>
           <p className="text-muted-foreground text-sm">
             {t("roles-overview-footer")}
           </p>
-          <SheetClose
-            render={
-              <Button className="shrink-0" type="button" variant="outline">
-                {common("close")}
-              </Button>
-            }
-          />
         </SheetFooter>
       </SheetContent>
     </Sheet>

@@ -16,7 +16,8 @@ function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
     <fieldset
       className={cn(
         "group/input-group border-input relative flex w-full items-center rounded-md border shadow-xs transition-[color,box-shadow] ease-out outline-none",
-        "h-9 min-w-0 has-[>textarea]:h-auto",
+        // Chrome lays a fieldset's content out at its own height, not the fieldset's, until its minimum block size is 0.
+        "h-9 min-h-0 min-w-0 has-[>textarea]:h-auto",
 
         // Variants based on alignment. A control finds its addon among its siblings, on either side: a rule whose
         // subject sits under a :has() restyles the whole page on every element inserted (ADR 0039).

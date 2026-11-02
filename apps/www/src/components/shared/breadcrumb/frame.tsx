@@ -36,7 +36,7 @@ export function BreadcrumbHeaderFrame({
   return (
     <header
       className={cn(
-        "bg-background sticky top-[var(--app-header-top,4rem)] z-10 flex min-h-16 w-full shrink-0 items-center border-b lg:top-0",
+        "bg-background sticky top-[var(--app-header-top,4rem)] z-20 flex min-h-16 w-full shrink-0 items-center border-b lg:top-0",
         className
       )}
       data-slot="page-header"

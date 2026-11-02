@@ -225,7 +225,7 @@ function ClassCohortSelect({
             params={{ slug }}
             to="/school/$slug/settings/cohorts"
           >
-            {t("cohorts")}
+            {t("class-cohort-add")}
           </Link>
         </FieldDescription>
       ) : null}

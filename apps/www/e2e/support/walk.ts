@@ -254,6 +254,7 @@ function readPopup(popups: string) {
       popup.querySelector(
         '[data-slot="dialog-footer"], [data-slot="sheet-footer"]'
       ) !== null,
+    closes: popup.querySelectorAll('[data-slot="sheet-close"]').length,
     inside:
       box.left >= -1 &&
       box.top >= -1 &&
@@ -282,6 +283,9 @@ const expectWhole = (
   expect.soft(popup.wide, `${label}: never scrolls sideways`).toBe(false);
   if (popup.slot === "dialog-content" || popup.slot === "sheet-popup") {
     expect.soft(popup.footer, `${label}: has a footer`).toBe(true);
+  }
+  if (popup.slot === "sheet-popup") {
+    expect.soft(popup.closes, `${label}: closes from its corner only`).toBe(1);
   }
   if (popup.slot === "select-content") {
     expect.soft(popup.items, `${label}: holds an item`).toBeGreaterThan(0);

@@ -1,5 +1,10 @@
 import type { Ref } from "@confect/core";
-import { QueryResult, usePaginatedQuery, useQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import {
   Archive02Icon,
   MortarboardIcon,
@@ -239,21 +244,10 @@ function SchoolClassesOfPeriod() {
 }
 
 /** The way on from an empty classrooms page whose period has no active cohort to place one in. */
-function ClassesCohortLink({ periodId }: { periodId: Period["id"] }) {
+function ClassesCohortLink() {
   const t = useTranslations("SchoolSettings");
   const { slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const cohorts = useQuery(
-    tenancy.cohorts.list,
-    isSettled ? { periodId, slug } : "skip"
-  );
 
-  if (
-    !QueryResult.isSuccess(cohorts) ||
-    Arr.some(cohorts.value, (cohort) => cohort.status === "active")
-  ) {
-    return null;
-  }
   return (
     <Link
       className={buttonVariants({ variant: "outline" })}
@@ -282,6 +276,13 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
   const classIds = Arr.filter(
     Arr.map(pagination.results, (row) => row.id),
     (id) => !isDraft(id)
+  );
+  const isEmpty =
+    !PaginatedQueryResult.isLoading(pagination) &&
+    Arr.isReadonlyArrayEmpty(pagination.results);
+  const placeable = useQuery(
+    tenancy.cohorts.list,
+    isSettled && isEmpty ? { periodId, slug } : "skip"
   );
   const cohorts = useQuery(
     tenancy.cohorts.overview,
@@ -388,14 +389,30 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
   ];
 
   return (
-    <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+    <TablePages
+      pageSize={PAGE_SIZE}
+      pagination={pagination}
+      waiting={
+        isEmpty &&
+        !QueryResult.isSuccess(placeable) &&
+        !QueryResult.isFailure(placeable)
+      }
+    >
       <DataTable
         columns={columns}
         data={pagination.results}
         empty={
           <TableEmpty
             act="writing"
-            action={<ClassesCohortLink periodId={periodId} />}
+            action={
+              QueryResult.isSuccess(placeable) &&
+              !Arr.some(
+                placeable.value,
+                (cohort) => cohort.status === "active"
+              ) ? (
+                <ClassesCohortLink />
+              ) : undefined
+            }
             description={t("classes-description")}
             title={t("classes-empty")}
           />
