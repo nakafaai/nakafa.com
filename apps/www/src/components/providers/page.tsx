@@ -74,10 +74,11 @@ function PageRelease() {
 }
 
 /**
- * Tells the store while a pointer is down, so no island swaps under a press. The
- * press captures on the window, before React's own listener: a press on a part of
- * the page that has not hydrated makes React hydrate it first, and an island there
- * would swap, and lose the press, before any handler of the page ran.
+ * Tells the store while a pointer is down, so no island swaps under a press. Every
+ * listener captures on the window, ahead of React's own: a press on a part of the
+ * page that has not hydrated makes React hydrate it, and an island there would swap
+ * before any handler of the page ran, and React stops an event on such a part from
+ * bubbling, so a release would never reach the window.
  */
 function usePointerState(store: LiveSessionStore) {
   const room = useTimeout(
@@ -92,8 +93,8 @@ function usePointerState(store: LiveSessionStore) {
     },
     { capture: true }
   );
-  useWindowEvent("pointerup", () => room.start());
-  useWindowEvent("pointercancel", () => room.start());
+  useWindowEvent("pointerup", () => room.start(), { capture: true });
+  useWindowEvent("pointercancel", () => room.start(), { capture: true });
 }
 
 /**

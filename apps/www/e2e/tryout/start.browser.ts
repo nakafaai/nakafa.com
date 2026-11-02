@@ -29,7 +29,7 @@ const SET_HREF = "/en/try-out/indonesia/snbt/2027/set-1";
 const ATTEMPT_ADDRESS = /attemptId=/u;
 
 /** The cell that holds a try-out action's names, whichever of them shows. */
-const ACTION_NAME = "main [data-slot=tryout-action-name]";
+const ACTION_NAME = "[data-slot=tryout-action-name]";
 
 /** A try-out action, found by its cell: a learner's has no name until their read answers. */
 const ACTION = `main :is(a, button):has(${ACTION_NAME})`;
