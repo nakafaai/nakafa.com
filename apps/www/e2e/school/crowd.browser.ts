@@ -8,7 +8,9 @@ import {
 } from "@/e2e/support/roster";
 import {
   createSchool,
+  grantStudent,
   hostAddress,
+  inviteLearner,
   recordTransfer,
   signInOwner,
 } from "@/e2e/support/school";
@@ -35,7 +37,10 @@ const CROWD_ROWS: (string | number | null)[][] = [
   ]),
 ];
 
-/** Pays the school's plan by transfer, because the free plan holds 100 students and refuses the rest of the crowd. */
+/**
+ * Pays the school's plan by transfer, because the free plan holds 100 students and refuses the rest of the crowd.
+ * A school upgrades once it enrolls a student, so the first one comes before the crowd.
+ */
 async function payForSchool(page: Page, address: (path: string) => string) {
   await page.goto(address("/settings/billing"));
   const upgrade = page.getByRole("button", { name: "Upgrade" });
@@ -65,6 +70,18 @@ for (const viewport of [
     const school = await Effect.runPromise(createSchool());
     const address = (path: string) =>
       hostAddress(baseURL, `${school.slug}.localhost`, path);
+    const first = `first-${viewport.width}-${school.slug}@acceptance.example.test`;
+    const firstContext = await browser.newContext({ viewport });
+    await Effect.runPromise(
+      inviteLearner({
+        address: first,
+        baseURL: address("/"),
+        context: firstContext,
+        slug: school.slug,
+      })
+    );
+    await Effect.runPromise(grantStudent(school.slug, first));
+    await firstContext.close();
     const context = await browser.newContext({ viewport });
     await Effect.runPromise(signInOwner(context, school.slug, address("/")));
     const page = await context.newPage();

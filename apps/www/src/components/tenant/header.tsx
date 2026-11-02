@@ -50,10 +50,16 @@ export function SchoolHeader({
 
   return (
     <header
-      className="bg-background sticky top-0 z-10 h-16 shrink-0 border-b"
+      className="bg-background @container/bar sticky top-0 z-10 shrink-0 border-b"
       data-slot="page-header"
     >
-      <div className={cn(pageHeaderRowVariants(), "h-full")}>
+      {/* Text at twice its size leaves one line no room, so the actions take a line of their own. */}
+      <div
+        className={cn(
+          pageHeaderRowVariants(),
+          "min-h-16 @max-3xs/bar:flex-wrap @max-3xs/bar:py-2"
+        )}
+      >
         {/* The exam editor draws no sidebar, so a page that shows in its place, such as its not-found page, has none to toggle. */}
         {hasSidebar ? (
           <SidebarTrigger

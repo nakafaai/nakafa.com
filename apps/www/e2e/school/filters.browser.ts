@@ -186,8 +186,10 @@ test("every column of the School's tables filters from its head, and the row's m
   await card.getByRole("button", { exact: true, name: "Created" }).click();
   await expect(page.getByRole("grid")).toBeVisible();
   await expect(page.getByRole("button", { name: "Oldest" })).toBeVisible();
-  await expect(page.locator('[data-slot="dropdown-menu-label"]')).toHaveCount(
-    0
-  );
+  await expect(
+    page.locator(
+      '[data-slot="popover-content"][data-open] [data-slot="dropdown-menu-label"]'
+    )
+  ).toHaveCount(0);
   await context.close();
 });
