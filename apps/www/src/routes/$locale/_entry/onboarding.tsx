@@ -5,7 +5,11 @@ import { Schema } from "effect";
 import { useEffect } from "react";
 import { createTranslator } from "use-intl/core";
 import { AuthLegal } from "@/components/auth/legal";
-import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
+import {
+  EntryShellBody,
+  EntryShellFooter,
+  EntryShellHeader,
+} from "@/components/entry/shell";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { readAuthLegalFn } from "@/lib/auth/legal.functions";
@@ -115,8 +119,10 @@ function OnboardingPage() {
           <Nina act="writing" label="" size={88} whole />
         </div>
         <OnboardingQuestionnaire initialProfile={profile} intent={intent} />
-        <AuthLegal links={legal} />
       </EntryShellBody>
+      <EntryShellFooter>
+        <AuthLegal links={legal} />
+      </EntryShellFooter>
     </>
   );
 }

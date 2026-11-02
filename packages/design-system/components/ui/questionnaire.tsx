@@ -215,7 +215,7 @@ function QuestionnaireError({
   ...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Error>) {
   return (
-    <div className="-mt-2 min-h-5" data-slot="questionnaire-error-line">
+    <div className="-mt-5 min-h-5" data-slot="questionnaire-error-line">
       <QuestionnairePrimitive.Error
         className={cn("text-destructive text-sm", className)}
         data-slot="questionnaire-error"
@@ -232,7 +232,7 @@ function QuestionnaireActions({
   return (
     <div
       className={cn(
-        "grid min-h-11 w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 sm:min-h-9",
+        "-mt-6 grid min-h-11 w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 sm:min-h-9",
         className
       )}
       data-slot="questionnaire-actions"

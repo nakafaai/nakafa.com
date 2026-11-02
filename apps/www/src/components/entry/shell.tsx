@@ -37,3 +37,8 @@ export function EntryShellBody({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+/** Closes the left panel with the line under the body, such as the privacy and terms sentence. */
+export function EntryShellFooter({ children }: { children: ReactNode }) {
+  return <div className="flex justify-center">{children}</div>;
+}

@@ -755,7 +755,7 @@
     "profile": "Profil",
     "periods": "Perioden",
     "units": "Einheiten",
-    "roles": "Rollen und Zugriff",
+    "roles": "Rollen",
     "members": "Mitglieder",
     "invites": "Einladungen",
     "students": "Schülerkonten",
@@ -2803,7 +2803,7 @@
     },
     "school-refusal-address-member": {
       "title": "Die Person gehört schon zur Schule.",
-      "description": "Ändere ihre Rolle unter Rollen und Zugriff."
+      "description": "Ändere ihre Rolle unter Rollen."
     },
     "school-refusal-already-placed": {
       "title": "Schon einer Klasse zugeordnet.",

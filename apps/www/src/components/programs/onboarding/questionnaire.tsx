@@ -231,7 +231,7 @@ export function OnboardingQuestionnaire({
 
   return (
     <Questionnaire
-      className="w-full max-w-md [&_[data-slot=questionnaire-item]]:min-h-88"
+      className="min-h-114 w-full max-w-md"
       item={activeItem}
       items={onboardingItems}
       onItemChange={handleItemChange}
