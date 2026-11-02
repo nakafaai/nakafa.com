@@ -12,6 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { cn } from "cn";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
@@ -121,7 +122,7 @@ export function TableSearch({
 
   return (
     // One part of a button group, whichever form the width shows, so a hidden form never shapes the other.
-    <div className="flex">
+    <div className={cn("flex", className)}>
       <InputGroup className="hidden w-56 lg:flex xl:w-64">
         <InputGroupAddon>
           <HugeIcons icon={Search01Icon} />

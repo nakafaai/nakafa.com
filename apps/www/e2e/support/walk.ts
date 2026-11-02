@@ -36,6 +36,9 @@ export const LEFT_BEHIND = /due to access control checks/u;
 /** A Convex ID in an address, so a walk opens one page of each kind. */
 const DOCUMENT_ID = /^[0-9a-z]{31,37}$/u;
 
+/** The space between two words of a label. */
+const WORD_BREAK = /\s+/u;
+
 /** The address of a page without its query, with each ID folded. */
 const shapeOf = (address: string) =>
   Arr.join(
@@ -177,7 +180,7 @@ function readPopup(popups: string) {
     ).flatMap((label) =>
       // The account menu's label is the account: its name and role beside its picture.
       label.querySelector('[data-slot="avatar"]') === null
-        ? [label.innerText.trim()]
+        ? [label.textContent.trim()]
         : ["Account"]
     ),
     slot: popup.getAttribute("data-slot") ?? "",
@@ -205,7 +208,7 @@ const expectWhole = (
   expect.soft(popup.labels, `${label}: has a label`).not.toEqual([]);
   for (const name of popup.labels) {
     expect
-      .soft(name.split(/\s+/u).length, `${label}: "${name}" is one word`)
+      .soft(name.split(WORD_BREAK).length, `${label}: "${name}" is one word`)
       .toBe(1);
   }
 };

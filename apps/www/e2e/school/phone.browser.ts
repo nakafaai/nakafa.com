@@ -10,6 +10,9 @@ import {
 } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** The footer's button that opens the navigator, which names the current question. */
+const OPEN_NAVIGATOR = /^Open the question navigator/u;
+
 /** The narrowest phones a school's students bring. */
 const WIDTHS = [320, 390] as const;
 
@@ -55,9 +58,7 @@ for (const width of WIDTHS) {
     await expect(first.getByRole("radio").first()).toBeChecked();
 
     // The navigator opens from the footer, and a number in it closes the drawer.
-    await student
-      .getByRole("button", { name: /^Open the question navigator/u })
-      .click();
+    await student.getByRole("button", { name: OPEN_NAVIGATOR }).click();
     const drawer = student.getByRole("dialog", { name: "Questions" });
     await drawer
       .getByRole("button", { exact: true, name: "Question 2, unanswered" })
