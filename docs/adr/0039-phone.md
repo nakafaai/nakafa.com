@@ -37,6 +37,8 @@ D5. A loop that runs by itself keeps to `createFramePace`: it rests seven times 
 
 D6. What the build can draw, the build draws. Lesson code is highlighted in `CodeBlockServer`, as the line cards draw their facts in `line.server.tsx`.
 
+D7. A rule's subject never sits under a `:has()`: no `group-has-*`, `peer-has-*`, `has-*:*:*`, or an arbitrary variant that goes on past its `:has()`. Chrome cannot tell which elements such a rule reaches, so every element inserted anywhere restyles the whole document. The element the `:has()` tests sets a custom property on itself, and the descendant reads it, or a sibling combinator says the same thing. On one lesson at 4x this took 39 whole-page style passes to 2. `scripts/check/tailwind.ts` rejects the variants.
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.

@@ -56,7 +56,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
 
 // The field is a fieldset, which keeps the browser's min-content floor; min-w-0 lets it narrow with its container.
 const fieldVariants = cva(
-  "group/field data-[invalid=true]:text-destructive flex w-full min-w-0 gap-2",
+  "group/field data-[invalid=true]:text-destructive flex w-full min-w-0 gap-2 has-data-[orientation=horizontal]:[--field-description-wrap:balance]",
   {
     variants: {
       orientation: {
@@ -64,12 +64,12 @@ const fieldVariants = cva(
         horizontal: [
           "flex-row items-center",
           "*:data-[slot=field-label]:flex-auto",
-          "has-[>[data-slot=field-content]]:items-start has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
+          "has-[>[data-slot=field-content]]:items-start [&>:is([role=checkbox],[role=radio]):has(~[data-slot=field-content])]:mt-px [&>[data-slot=field-content]~:is([role=checkbox],[role=radio])]:mt-px",
         ],
         responsive: [
           "flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto [&>.sr-only]:w-auto",
           "@md/field-group:*:data-[slot=field-label]:flex-auto",
-          "@md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
+          "@md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:[&>:is([role=checkbox],[role=radio]):has(~[data-slot=field-content])]:mt-px @md/field-group:[&>[data-slot=field-content]~:is([role=checkbox],[role=radio])]:mt-px",
         ],
       },
     },
@@ -147,7 +147,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       className={cn(
-        "text-muted-foreground text-sm leading-normal font-normal group-has-data-[orientation=horizontal]/field:text-balance",
+        "text-muted-foreground text-sm leading-normal font-normal [text-wrap:var(--field-description-wrap)]",
         "has-[+[data-slot=field-error]:not(:empty)]:hidden not-last:[[data-slot=field-label]+&]:-mt-1 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
         className

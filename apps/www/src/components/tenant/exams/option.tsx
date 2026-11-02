@@ -210,7 +210,7 @@ export function OptionRow({
   }, [saver]);
 
   return (
-    <div className="group/option relative">
+    <div className="group/option relative pointer-coarse:has-[[data-remove]]:[--option-end:--spacing(8)]">
       <ExamDocumentWiringProvider
         content={Node.fromJSON(assessmentSchema, label).toJSON()}
         extensions={OPTION_EXTENSIONS}

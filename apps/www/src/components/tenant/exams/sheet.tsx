@@ -117,11 +117,7 @@ export function PaperOption({
 
 /** The text of an option or a statement. A touch screen shows the remove control at all times, so the text stops short of it. */
 export function PaperPartText({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-w-0 flex-1 pointer-coarse:group-has-[[data-remove]]/option:pe-8">
-      {children}
-    </div>
-  );
+  return <div className="min-w-0 flex-1 pe-(--option-end)">{children}</div>;
 }
 
 /** The two columns of a matching, as the student's paper sets them. */

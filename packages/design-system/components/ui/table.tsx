@@ -85,7 +85,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "data-[state=selected]:bg-muted data-pressable:hover:bg-muted border-b transition-colors data-pressable:cursor-pointer",
+        "data-[state=selected]:bg-muted data-pressable:hover:bg-muted border-b transition-colors has-[td:first-child_a[href]]:hover:[--table-row-fill:var(--muted)] data-pressable:cursor-pointer",
         className
       )}
       data-pressable={props.onClick === undefined ? undefined : ""}

@@ -34,7 +34,8 @@ export const menuPlaceOf = (
  * at the end, so the table's text keeps one inset from both of its edges at every width. It and the row's menu stay at
  * the table's end edge on the row's background while a table wider than the phone scrolls under them, so the row's
  * amount and actions stay in reach: the card's, or the muted colour the base row draws while a pressable row is hovered
- * (`data-pressable`) or its row is open (`data-state="selected"`). A last column of figures before the row's menu keeps
+ * (`data-pressable`, or `--table-row-fill` from a row whose first column holds its link) or its row is open
+ * (`data-state="selected"`). A last column of figures before the row's menu keeps
  * its place beside the menu. The row's menu takes the width of its button and no more, so its line stands beside it and
  * the rest of the row's width goes to the data.
  */
@@ -43,10 +44,10 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
   variants: {
     align: {
       center: "px-2 text-center tabular-nums sm:px-4",
-      end: "bg-card in-[tr[data-pressable]:hover]:bg-muted in-[tr:has(td:first-child_a[href]):hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 ps-2 pe-4 text-end tabular-nums before:absolute before:inset-y-0 before:start-0 before:w-px sm:ps-4",
+      end: "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 bg-[var(--table-row-fill,var(--card))] ps-2 pe-4 text-end tabular-nums before:absolute before:inset-y-0 before:start-0 before:w-px sm:ps-4",
       figure:
-        "bg-card in-[tr[data-pressable]:hover]:bg-muted in-[tr:has(td:first-child_a[href]):hover]:bg-muted in-[tr[data-state=selected]]:bg-muted sticky end-12 px-2 text-end tabular-nums sm:px-4",
-      menu: "bg-card in-[tr[data-pressable]:hover]:bg-muted in-[tr:has(td:first-child_a[href]):hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 w-px px-2 py-0 text-end whitespace-nowrap before:absolute before:inset-y-0 before:start-0 before:w-px",
+        "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted sticky end-12 bg-[var(--table-row-fill,var(--card))] px-2 text-end tabular-nums sm:px-4",
+      menu: "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 w-px bg-[var(--table-row-fill,var(--card))] px-2 py-0 text-end whitespace-nowrap before:absolute before:inset-y-0 before:start-0 before:w-px",
       start: "ps-4 pe-2 sm:pe-4",
     },
   },
