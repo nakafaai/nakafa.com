@@ -29,3 +29,15 @@ export function TableValue({ children }: { children: ReactNode }) {
     </span>
   );
 }
+
+/**
+ * What the first column of text holds: it takes the width the column has and adds none, so the column keeps its floor
+ * and whatever the others leave, a long name wraps inside it, and the heads stand where the first frame drew them.
+ */
+export function TableLead({ children }: { children: ReactNode }) {
+  return (
+    <span className="block w-0 min-w-full wrap-break-word whitespace-normal">
+      {children}
+    </span>
+  );
+}
