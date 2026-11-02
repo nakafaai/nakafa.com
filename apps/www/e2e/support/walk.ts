@@ -277,6 +277,9 @@ const expectWhole = (
   }
   expect.soft(popup.items, `${label}: holds an item`).toBeGreaterThan(0);
   expect.soft(popup.labels, `${label}: has a label`).not.toEqual([]);
+  expect
+    .soft(Arr.dedupe(popup.labels), `${label}: reads no label twice`)
+    .toEqual(popup.labels);
   for (const name of popup.labels) {
     expect
       .soft(name.split(WORD_BREAK).length, `${label}: "${name}" is one word`)
