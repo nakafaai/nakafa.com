@@ -166,6 +166,9 @@ const GROUP_CONTROLS =
 const OPEN_OVERLAY =
   '[role="menu"]:visible, [role="dialog"]:visible, [data-slot="popover-content"]:visible';
 
+/** How long a page's groups must stand unchanged to count as at rest. */
+const SETTLED_MS = 500;
+
 /** What is open and not on its way out. */
 const STAYS_OPEN =
   '[role="menu"]:not([data-closed]):visible, [role="dialog"]:not([data-closed]):visible, [data-slot="popover-content"]:not([data-closed]):visible';
@@ -252,6 +255,14 @@ export const expectGroupsKeepShape = Effect.fn(
     (colorScheme) =>
       Effect.gen(function* () {
         yield* Effect.promise(() => page.emulateMedia({ colorScheme }));
+        // A pane's own controls arrive with its data, so the page's rest is what holds still.
+        yield* Effect.promise(() =>
+          expect(async () => {
+            const before = await readPartRadii(page);
+            await page.waitForTimeout(SETTLED_MS);
+            expect(await readPartRadii(page)).toEqual(before);
+          }).toPass()
+        );
         const rest = yield* Effect.promise(() => readPartRadii(page));
         const count = yield* Effect.promise(() =>
           page.locator(GROUP_CONTROLS).count()
