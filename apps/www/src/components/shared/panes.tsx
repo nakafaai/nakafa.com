@@ -342,7 +342,14 @@ export function PanesRail({
 }
 
 /** The pane that takes the width the other leaves: the page's list or canvas, or the open chat beside its rail. */
-export function PanesList({ children }: { children: ReactNode }) {
+export function PanesList({
+  children,
+  wide = false,
+}: {
+  children: ReactNode;
+  /** Whether what it holds takes the whole pane, as the exam editor's canvas does, not the page's frame. */
+  wide?: boolean;
+}) {
   const group = use(PanesGroupContext);
 
   return (
@@ -351,7 +358,13 @@ export function PanesList({ children }: { children: ReactNode }) {
       id={`${group}-list`}
       minSize="40%"
     >
-      {children}
+      {wide ? (
+        children
+      ) : (
+        <div className="mx-auto flex min-h-0 w-full max-w-(--page-width) flex-1 flex-col">
+          {children}
+        </div>
+      )}
     </ResizablePanel>
   );
 }

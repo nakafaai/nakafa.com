@@ -59,6 +59,8 @@ const WATCHED = Arr.join(
  * entries, so this is how a shift shows in them. The page serializes this function.
  */
 function recordMoves({ key, watched }: { key: string; watched: string }) {
+  // Under this a font's or a column's rounding shows: 1.5 to 4.6 px measured in WebKit and Firefox.
+  const NOTICED = 5;
   const moves: string[] = [];
   Reflect.set(window, key, moves);
   const places = new WeakMap<Element, { x: number; y: number }>();
@@ -77,11 +79,17 @@ function recordMoves({ key, watched }: { key: string; watched: string }) {
       ) {
         continue;
       }
+      // A table that scrolls moves its cells, which a press on a far column does and no reader calls a shift.
+      let scrolled = 0;
+      for (let node = item.parentElement; node; node = node.parentElement) {
+        scrolled += node.scrollLeft;
+      }
+      const x = box.x + scrolled;
       const before = places.get(item);
-      places.set(item, { x: box.x, y: box.y });
-      const across = Math.abs((before?.x ?? box.x) - box.x);
+      places.set(item, { x, y: box.y });
+      const across = Math.abs((before?.x ?? x) - x);
       const down = Math.abs((before?.y ?? box.y) - box.y);
-      if (still && Math.max(across, down) > 1) {
+      if (still && Math.max(across, down) > NOTICED) {
         moves.push(
           `"${item.textContent?.trim().slice(0, 24)}" ${across.toFixed(1)} across ${down.toFixed(1)} down`
         );
