@@ -192,7 +192,7 @@ function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex min-h-16 shrink-0 flex-col justify-center gap-0.5 border-b px-4 py-2.5 group-data-[swipe-axis=y]/drawer-popup:text-center last:border-b-0 has-[+[data-slot=drawer-footer]]:border-b-0 md:gap-1.5 md:text-left",
+        "flex shrink-0 flex-col gap-0.5 border-b p-4 group-data-[swipe-axis=y]/drawer-popup:text-center last:border-b-0 has-[+[data-slot=drawer-footer]]:border-b-0 md:gap-1.5 md:text-left",
         className
       )}
       data-slot="drawer-header"
@@ -228,7 +228,7 @@ function DrawerFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "bg-muted/70 mt-auto flex min-h-16 shrink-0 flex-col-reverse justify-center gap-2 border-t px-4 py-3 [&>[data-slot=button]]:w-full",
+        "bg-muted/70 mt-auto flex shrink-0 flex-col-reverse gap-2 border-t p-4 [&>[data-slot=button]]:w-full",
         className
       )}
       data-slot="drawer-footer"

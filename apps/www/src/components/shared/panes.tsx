@@ -75,7 +75,7 @@ const createPanes = (opened: Option.Option<string>) =>
 
 const PanesContext = createContext<StoreApi<PanesStore> | null>(null);
 
-const PanesWidthContext = createContext<typeof PanesWidth.Type>("lg");
+const PanesWidthContext = createContext<typeof PanesWidth.Type>("xl");
 
 /**
  * Where a detail draws, and how its header closes it: beside the first pane, where a row's
@@ -106,7 +106,7 @@ export function usePaneMode() {
 export function PanesProvider({
   children,
   opened = Option.none(),
-  wideFrom = "lg",
+  wideFrom = "xl",
 }: {
   children: ReactNode;
   opened?: Option.Option<string>;
@@ -349,6 +349,7 @@ export function PanesDetail({
   const wide = useWide();
   const group = use(PanesGroupContext);
   const besidePage = use(PaneBesideContext);
+  const from = use(PanesWidthContext);
   const rowOpen = usePanes((state) => Option.isSome(state.open));
   const sheetOpen = usePanes((state) => state.sheet);
   const closePanes = usePanes((state) => state.close);
@@ -375,7 +376,7 @@ export function PanesDetail({
   return (
     <>
       {beside && besidePage ? (
-        <PaneSide group={group} label={label} row={closes}>
+        <PaneSide from={from} group={group} label={label} row={closes}>
           <PaneModeContext
             value={{ close: alwaysOn ? undefined : close, place: "aside" }}
           >

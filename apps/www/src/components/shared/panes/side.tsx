@@ -1,4 +1,5 @@
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { cva } from "class-variance-authority";
 import { type ReactNode, useLayoutEffect, useSyncExternalStore } from "react";
 import { PaneEdge } from "@/components/shared/panes/edge";
 
@@ -25,6 +26,20 @@ function readNoRoom() {
   return Number.POSITIVE_INFINITY;
 }
 
+/** The pane at the screen's right, which steps aside below the width its page gives it. */
+const paneSideVariants = cva(
+  "bg-background fixed inset-y-0 end-0 z-30 flex w-(--pane-width) flex-col border-s",
+  {
+    variants: {
+      from: {
+        lg: "max-lg:hidden",
+        md: "max-md:hidden",
+        xl: "max-xl:hidden",
+      },
+    },
+  }
+);
+
 /**
  * The pane of a page: it stands at the screen's right from the window's top to its bottom, as settings memory
  * does, and the page's main element narrows beside it (`SidebarInset`), so the header, the tabs, the body and the
@@ -32,12 +47,15 @@ function readNoRoom() {
  */
 export function PaneSide({
   children,
+  from,
   group,
   label,
   row,
 }: {
   /** The pane's header, body and footer. */
   children: ReactNode;
+  /** From which width the pane stands beside the page: below it the page has the whole row. */
+  from: "lg" | "md" | "xl";
   /** Names the layout in this browser, so each page keeps its own width. */
   group: string;
   /** The pane's name for a screen reader. */
@@ -71,9 +89,9 @@ export function PaneSide({
   return (
     <aside
       aria-label={label}
-      className="bg-background fixed inset-y-0 end-0 z-30 flex w-(--pane-width) flex-col border-s max-lg:hidden"
+      className={paneSideVariants({ from })}
       data-pane-row={row ? "" : undefined}
-      data-pane-side=""
+      data-pane-side={from}
     >
       <PaneEdge resizer={resizerProps} />
       {children}

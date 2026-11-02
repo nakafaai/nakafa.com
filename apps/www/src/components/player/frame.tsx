@@ -35,7 +35,7 @@ export function PlayerMain({
         {children}
       </div>
       {navigator === null ? null : (
-        <PaneSide group="player" label={t("navigator")} row={false}>
+        <PaneSide from="lg" group="player" label={t("navigator")} row={false}>
           {navigator}
         </PaneSide>
       )}
