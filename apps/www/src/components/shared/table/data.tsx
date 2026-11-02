@@ -56,7 +56,11 @@ import {
   HeadText,
   useIsFiltered,
 } from "@/components/shared/table/panel";
-import { TableValue } from "@/components/shared/table/text";
+import {
+  TableLead,
+  TableText,
+  TableValue,
+} from "@/components/shared/table/text";
 import {
   useNeedsEveryRow,
   useTableFilters,
@@ -207,7 +211,9 @@ function DataTableCell<TData extends RowData>({
       {meta?.align === "menu" ? (
         <RowMenu inert={meta.inert?.(cell.row.original)}>{children}</RowMenu>
       ) : (
-        <DataTableValue filter={meta?.filter}>{children}</DataTableValue>
+        <DataTableValue filter={meta?.filter} first={index === 0}>
+          {children}
+        </DataTableValue>
       )}
     </TableCell>
   );
@@ -247,15 +253,28 @@ function DataTableRow({
   );
 }
 
-/** What a cell holds, inside the width a column of known values keeps for it. */
+/**
+ * What a cell holds, inside the width its column keeps, so no row can move a head: known values wrap in their column,
+ * a later column of text holds the longest value it reads, and the first column of text adds no width at all.
+ */
 function DataTableValue({
   children,
   filter,
+  first,
 }: {
   children: ReactNode;
   /** What the cell's column filters by. */
   filter: HeadFilter | undefined;
+  /** Whether the cell stands in the table's first column. */
+  first: boolean;
 }) {
+  if (filter?.kind === "text") {
+    return first ? (
+      <TableLead>{children}</TableLead>
+    ) : (
+      <TableText>{children}</TableText>
+    );
+  }
   return filter?.kind === "choice" || filter?.kind === "values" ? (
     <TableValue>{children}</TableValue>
   ) : (
