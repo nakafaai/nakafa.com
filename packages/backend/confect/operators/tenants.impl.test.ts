@@ -449,6 +449,23 @@ describe("operators/tenants list", () => {
       })
   );
 
+  it.effect(
+    "lists the newest school first, so a school just opened is on the first page",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const staff = yield* operatorAccount(fixture, "catalog");
+        yield* staff.client.mutation(
+          open,
+          openRequest("baru", "kepala@baru.example.test")
+        );
+        const page = yield* staff.client.query(listTenants, {
+          paginationOpts: { cursor: null, numItems: 1 },
+        });
+        expect(Arr.map(page.page, (row) => row.slug)).toEqual(["baru"]);
+      })
+  );
+
   it.effect("refuses the directory to a school's own Owner", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

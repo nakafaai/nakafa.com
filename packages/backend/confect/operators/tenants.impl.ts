@@ -169,7 +169,7 @@ const replaceOwner = FunctionImpl.make(
   })
 );
 
-/** Lists every school of this deployment, a page at a time, with the operator's open visit to each. */
+/** Lists every school of this deployment, newest first, a page at a time, with the operator's open visit to each. */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -178,7 +178,7 @@ const list = FunctionImpl.make(
     const operator = yield* callingOperator();
     const page = yield* (yield* DatabaseReader)
       .table("tenants")
-      .index("by_creation_time")
+      .index("by_creation_time", "desc")
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
     const rows = yield* Effect.forEach(
