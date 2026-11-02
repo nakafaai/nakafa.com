@@ -34,6 +34,7 @@ import {
   disconnectSchoolUpdate,
 } from "@/components/connectors/optimistic";
 import { connectedService } from "@/components/connectors/outcome";
+import { PageFrame } from "@/components/shared/content/frame";
 import { PaneFill, PaneFooter } from "@/components/shared/pane";
 import {
   Panes,
@@ -72,18 +73,20 @@ export function SchoolConnectionsSettings() {
   const tried = use(ConnectOutcomeContext);
 
   return (
-    <TableFiltersProvider>
-      <PanesProvider opened={connectedService(tried)} wideFrom="lg">
-        <SchoolSettingsHeader>
-          <LibraryControls>
-            <ServiceFilter services={DIRECTORY_SERVICES} />
-          </LibraryControls>
-        </SchoolSettingsHeader>
-        <div className="flex w-full min-w-0 flex-1 flex-col">
-          <SchoolDirectory />
-        </div>
-      </PanesProvider>
-    </TableFiltersProvider>
+    <PageFrame width="column">
+      <TableFiltersProvider>
+        <PanesProvider opened={connectedService(tried)}>
+          <SchoolSettingsHeader>
+            <LibraryControls>
+              <ServiceFilter services={DIRECTORY_SERVICES} />
+            </LibraryControls>
+          </SchoolSettingsHeader>
+          <div className="flex w-full min-w-0 flex-1 flex-col">
+            <SchoolDirectory />
+          </div>
+        </PanesProvider>
+      </TableFiltersProvider>
+    </PageFrame>
   );
 }
 
@@ -187,7 +190,7 @@ function SchoolDirectory() {
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail defaultSize="50%" label={t("detail")}>
+        <PanesDetail label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
             <CoursesProvider>

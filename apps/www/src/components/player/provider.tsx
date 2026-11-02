@@ -33,7 +33,7 @@ export function PlayerProvider({
 
   return (
     <StoreContext value={store}>
-      <PageFrame width="page">{children}</PageFrame>
+      <PageFrame width="column">{children}</PageFrame>
     </StoreContext>
   );
 }

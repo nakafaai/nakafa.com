@@ -186,25 +186,42 @@ export function readFrameProblems(page: Page) {
     };
 
     /**
-     * Two panes that stop short of the screen's bottom, or run past it and make the page scroll. An
-     * open sheet scales the page behind it, so what stands behind one has no size of its own to read.
+     * A list that stops short of the screen's bottom or runs past it and makes the page scroll, and a pane that does
+     * not stand at the screen's right from the window's top to its bottom, or that a header runs under. An open sheet
+     * scales the page behind it, so what stands behind one has no size of its own to read.
      */
-    const paneProblems = () =>
-      Array.from(
-        document.querySelectorAll(
-          '[class*="100svh"][data-slot="resizable-panel-group"]'
-        )
+    const paneProblems = (header: Element) => {
+      if (document.querySelector('[role="dialog"]') !== null) {
+        return [];
+      }
+      const lists = Array.from(
+        document.querySelectorAll('[data-slot="panes"][class*="100svh"]')
       )
-        .filter(
-          (group) =>
-            isDrawn(group) && document.querySelector('[role="dialog"]') === null
-        )
-        .map((group) => group.getBoundingClientRect().bottom + scrollY)
+        .filter(isDrawn)
+        .map((list) => list.getBoundingClientRect().bottom + scrollY)
         .filter((bottom) => Math.abs(bottom - innerHeight) > tolerance)
         .map(
           (bottom) =>
-            `two panes end at ${Math.round(bottom)}, the screen at ${innerHeight}`
+            `a list ends at ${Math.round(bottom)}, the screen at ${innerHeight}`
         );
+      const panes = Array.from(document.querySelectorAll("[data-pane-side]"))
+        .filter(isDrawn)
+        .flatMap((pane) => {
+          const box = pane.getBoundingClientRect();
+          return [
+            (box.top !== 0 || box.bottom !== innerHeight) &&
+              "a pane does not run the window's full height",
+            header.getBoundingClientRect().right > box.left + tolerance &&
+              "the header runs under the pane",
+            Math.abs(
+              (pane.querySelector("[data-pane-header]")?.getBoundingClientRect()
+                .bottom ?? header.getBoundingClientRect().bottom) -
+                header.getBoundingClientRect().bottom
+            ) > tolerance && "the pane's header line does not join the page's",
+          ].filter((problem) => typeof problem === "string");
+        });
+      return [...lists, ...panes];
+    };
 
     /** A sticky header on the page's own layer, where a tab's underline or a table's head shows over it on scroll. */
     const layerProblems = (header: Element) => {
@@ -255,7 +272,7 @@ export function readFrameProblems(page: Page) {
       ...edgeProblems(header, start, end),
       ...controlProblems(header),
       ...pathProblems(header),
-      ...paneProblems(),
+      ...paneProblems(header),
       ...layerProblems(header),
     ];
   });
