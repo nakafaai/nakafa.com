@@ -226,7 +226,9 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
             })}
           </dl>
           <SheetFooter>
-            <p className="text-muted-foreground text-sm">{t("audit-footer")}</p>
+            <p className="text-muted-foreground text-sm">
+              {t("audit-detail-footer")}
+            </p>
           </SheetFooter>
         </SheetContent>
       </Sheet>

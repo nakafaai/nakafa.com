@@ -202,9 +202,10 @@ export function readFrameProblems(page: Page) {
 
     /** What of the body stands on a layer at or above the sticky header, which shows over it on scroll. */
     const layerProblems = (header: Element) => {
-      const level = Number(getComputedStyle(header).zIndex);
+      const bar = header.closest("header") ?? header;
+      const level = Number(getComputedStyle(bar).zIndex);
       return Array.from(document.querySelectorAll('main [class*="z-"]'))
-        .filter((element) => !standsApart(element))
+        .filter((element) => !(bar.contains(element) || standsApart(element)))
         .filter((element) => Number(getComputedStyle(element).zIndex) >= level)
         .slice(0, 2)
         .map((element) => `${name(element)} stands over the header on scroll`);
