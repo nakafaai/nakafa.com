@@ -76,13 +76,15 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
             <col className="w-32" />
             <col className="w-28" />
             <col className="w-28" />
+            {/* The row's menu: its button and its cell's padding, or Chrome and Safari squeeze it. */}
+            <col className="w-13" />
           </colgroup>
           <TryoutTableHeader />
           <TableBody>
             <TryoutTableRows emptyLabel={emptyLabel} rows={rows} />
             {canLoadMore && (
               <TableRow aria-hidden="true" className="h-px">
-                <TableCell className="p-0" colSpan={5}>
+                <TableCell className="p-0" colSpan={6}>
                   <Intersection
                     className="h-px"
                     key={`${filter}:${sort.field}:${sort.direction}:${data.rows.length}`}
