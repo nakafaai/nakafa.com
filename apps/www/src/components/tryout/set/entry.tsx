@@ -102,6 +102,7 @@ function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
     return (
       <TryoutSectionSummary
         value={{
+          pending: attempt === undefined,
           score: null,
           section: value.entrySection,
         }}

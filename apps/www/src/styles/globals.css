@@ -196,9 +196,13 @@
  * room with no name on a first visit, until the learner read answers
  * (`components/tryout/set/name.tsx`).
  */
-:root[data-signed-in="yes"] [data-learner-read="pending"]:not([data-kept-name]),
-:root[data-signed-in="yes"] [data-learner-read="pending"][data-kept-name] > * {
+:root[data-signed-in="yes"]
+  [data-learner-read="pending"]:not([data-kept-name]) {
   visibility: hidden;
+}
+
+:root[data-signed-in="yes"] [data-learner-read="pending"][data-kept-name] > * {
+  display: none;
 }
 
 :root[data-signed-in="yes"]
@@ -210,7 +214,7 @@
 :root[data-signed-in="yes"]
   [data-learner-read="pending"][data-kept-name="restart-cta"]
   > [data-name="restart-cta"] {
-  visibility: visible;
+  display: inline;
 }
 
 /*

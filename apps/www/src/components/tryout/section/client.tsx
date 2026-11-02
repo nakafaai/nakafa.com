@@ -275,6 +275,7 @@ function ResolvedTryoutSectionPage({
       <TryoutPageBody>
         <TryoutSectionSummary
           value={{
+            pending: actionAttempt === undefined,
             score: actionAttempt?.section?.score ?? null,
             section: page.section,
           }}

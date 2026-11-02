@@ -11,12 +11,12 @@ import {
 } from "@/components/tryout/set/kept";
 
 /**
- * The name on a try-out action. Every name holds the same cell, so the button keeps the width of the
- * longest one and the header stays still when the name arrives. No first paint knows a learner's
- * attempt, and a static page paints the same HTML for everyone, so a name that is `pending` reads as
- * it is for a visitor, and under a signed-in hint (`globals.css`) it shows what this browser last read
- * for the page, or nothing on a first visit, until the learner read answers: a running attempt never
- * reads Start. A session that could not be read answers nothing, so the name then shows.
+ * The name on a try-out action. The button hugs the one name it shows. No first paint knows a
+ * learner's attempt, and a static page paints the same HTML for everyone, so a name that is `pending`
+ * reads as it is for a visitor, and under a signed-in hint (`globals.css`) it shows what this browser
+ * last read for the page, or keeps the room of `name` with nothing in it on a first visit, until the
+ * learner read answers: a running attempt never reads Start. A session that could not be read answers
+ * nothing, so the name then shows.
  */
 export function TryoutActionName({
   name,
@@ -30,7 +30,6 @@ export function TryoutActionName({
   const failed = useLiveSession((state) => state.hasError);
   return (
     <span
-      className="grid"
       data-learner-read={pending && !failed ? "pending" : undefined}
       data-slot="tryout-action-name"
     >
@@ -43,7 +42,7 @@ export function TryoutActionName({
       ) : null}
       {Arr.map(TryoutActionNameSchema.literals, (key) => (
         <span
-          className={cn("col-start-1 row-start-1", key !== name && "invisible")}
+          className={cn(key !== name && "hidden")}
           data-name={key}
           key={key}
         >
