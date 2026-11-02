@@ -69,7 +69,7 @@ export const headWidth = cva("", {
       days: "w-48 min-w-48",
       menu: "min-w-12",
       number: "w-28 min-w-28",
-      text: "min-w-48 not-first:w-72 not-first:min-w-60 sm:min-w-50 sm:not-first:min-w-64",
+      text: "min-w-60 not-first:w-72 sm:min-w-50 sm:not-first:min-w-64",
       values: "w-36 min-w-36",
       wide: "w-60 min-w-60",
     },
