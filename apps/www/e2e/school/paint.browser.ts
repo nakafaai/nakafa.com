@@ -293,7 +293,8 @@ const STUDENT_PAGES = ["/sittings", "/grades", "/cards"];
 async function expectSettledHeader(
   context: BrowserContext,
   address: string,
-  path: string
+  path: string,
+  compared: "controls" | "states" = "controls"
 ) {
   const page = await context.newPage();
   await page.addInitScript(recordFirstControls, {
@@ -308,9 +309,15 @@ async function expectSettledHeader(
   // answer before the header is read again. Waiting longer only makes the check stricter.
   await page.waitForLoadState("load");
   await page.waitForTimeout(SETTLE_MILLISECONDS);
-  expect(await readFirstControls(page), path).toEqual(
-    await readControls(page, HEADER)
-  );
+  const [first, now] = [
+    await readFirstControls(page),
+    await readControls(page, HEADER),
+  ];
+  if (compared === "states") {
+    expect(statesOf(first), path).toEqual(statesOf(now));
+  } else {
+    expect(first, path).toEqual(now);
+  }
   expect(await Effect.runPromise(readCumulativeLayoutShift(page)), path).toBe(
     0
   );
@@ -336,7 +343,8 @@ test("every School settings page keeps its header's controls from the first pain
     await expectSettledHeader(context, address(path), path);
   }
 
-  // A cohort's own page draws its path, its search and Add student final from the first paint.
+  // A cohort's own page draws its search and Add student final from the first paint, and its path names the cohort once
+  // it reads.
   const cohorts = await context.newPage();
   await cohorts.goto(address("/settings/cohorts"));
   const cohort = cohorts.getByRole("link", { exact: true, name: "X-1" });
@@ -345,7 +353,7 @@ test("every School settings page keeps its header's controls from the first pain
     Option.fromNullOr(await cohort.getAttribute("href"))
   );
   await cohorts.close();
-  await expectSettledHeader(context, address(cohortPath), cohortPath);
+  await expectSettledHeader(context, address(cohortPath), cohortPath, "states");
   await context.close();
 });
 

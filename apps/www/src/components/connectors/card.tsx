@@ -60,7 +60,7 @@ const makerVariants = cva("col-start-1 text-xs", {
  * One service of the directory on one surface: its logo in a tile, its name, one line, and a third
  * line that names its maker, or says a state that asks for the reader. A press on the card opens the
  * service's detail beside the list. The corner connects with one press, or marks where the service
- * stands, so a state that changes moves nothing.
+ * stands, and holds its width before the state is read, so a state that changes moves nothing.
  */
 export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
   const t = useTranslations("Connectors");
@@ -80,7 +80,7 @@ export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
             <CardDescription className="leading-snug">
               {t(`${entry.service.key}-line`)}
             </CardDescription>
-            <CardAction className="relative">
+            <CardAction className="relative min-w-8">
               <CornerAction />
             </CardAction>
             <ServiceMaker />
