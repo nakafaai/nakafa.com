@@ -30,6 +30,69 @@ const PRESS_MILLISECONDS = 620;
 /** How long a press waits for a control the page may have taken away. */
 const PRESS_TIMEOUT_MILLISECONDS = 2000;
 
+/** The page global that holds what moved since the walk last read it. */
+const MOVES = "nakafaMoves";
+
+/**
+ * What a reader's eye follows: a move of one of these is a shift, whatever the browser reports. A menu or
+ * a dialog stands in a portal, outside them, so a popup that opens moves none of them.
+ */
+const WATCHED = Arr.join(
+  [
+    '[data-slot="page-header"] a',
+    '[data-slot="page-header"] button',
+    '[data-slot="sidebar-content"] a',
+    "main h1",
+    "main h2",
+    "main th",
+    "main a",
+    "main button",
+    "main input",
+    "main p",
+  ],
+  ","
+);
+
+/**
+ * Records every frame, before the page's scripts run, each watched element that moved more than a
+ * pixel from the frame before with no animation running. Firefox and WebKit report no layout shift
+ * entries, so this is how a shift shows in them. The page serializes this function.
+ */
+function recordMoves({ key, watched }: { key: string; watched: string }) {
+  const moves: string[] = [];
+  Reflect.set(window, key, moves);
+  const places = new WeakMap<Element, { x: number; y: number }>();
+  const follow = () => {
+    const still = document.getAnimations().length === 0;
+    for (const item of document.querySelectorAll(watched)) {
+      const box = item.getBoundingClientRect();
+      if (box.height === 0 || box.top > window.innerHeight || box.bottom < 0) {
+        continue;
+      }
+      const before = places.get(item);
+      places.set(item, { x: box.x, y: box.y });
+      const across = Math.abs((before?.x ?? box.x) - box.x);
+      const down = Math.abs((before?.y ?? box.y) - box.y);
+      if (still && Math.max(across, down) > 1) {
+        moves.push(
+          `"${item.textContent?.trim().slice(0, 24)}" ${across.toFixed(1)} across ${down.toFixed(1)} down`
+        );
+      }
+    }
+    requestAnimationFrame(follow);
+  };
+  requestAnimationFrame(follow);
+}
+
+/** Takes what moved since the last read. */
+const takeMoves = (page: Page) =>
+  page.evaluate((key) => {
+    const moves = Reflect.get(window, key);
+    return Array.isArray(moves)
+      ? moves.splice(0).map((move) => String(move))
+      : [];
+  }, MOVES);
+
 /** WebKit's words for a request the page left behind as it moved on, which fails nothing a reader sees. */
 export const LEFT_BEHIND = /due to access control checks/u;
 
@@ -329,6 +392,7 @@ export const walkSchool = async (
   origin: string,
   seeds: readonly string[]
 ) => {
+  await context.addInitScript(recordMoves, { key: MOVES, watched: WATCHED });
   const page = await context.newPage();
   const errors = MutableList.make<string>();
   page.on("pageerror", (error) => {
@@ -363,6 +427,9 @@ export const walkSchool = async (
       .toEqual([]);
     expect.soft(facts.sideways, `${shape}: never scrolls sideways`).toBe(0);
     expect
+      .soft(await takeMoves(page), `${shape}: holds still as it loads`)
+      .toEqual([]);
+    expect
       .soft(
         await Effect.runPromise(readCumulativeLayoutShift(page)),
         `${shape}: moves nothing as it loads`
@@ -379,6 +446,9 @@ export const walkSchool = async (
       )
     );
     await pressTriggers(page, address, pressed);
+    expect
+      .soft(await takeMoves(page), `${shape}: holds still under its popups`)
+      .toEqual([]);
   }
   expect.soft(MutableList.toArray(errors), "no page error").toEqual([]);
   await page.close();
