@@ -112,6 +112,7 @@ describe("live session store", () => {
         yield* startLiveSession(store, {
           convexUrl: CONVEX_URL,
           cookie: VISITOR_COOKIE,
+          isPointerDown: false,
           modules,
         });
 
@@ -135,11 +136,14 @@ describe("live session store", () => {
               startLiveSession(store, {
                 convexUrl: CONVEX_URL,
                 cookie: SIGNED_IN_COOKIE,
+                isPointerDown: true,
                 modules,
               })
             );
             yield* Effect.yieldNow;
 
+            // A press from before the page's listeners holds the islands as the session starts.
+            expect(store.getState().isPointerDown).toBe(true);
             expect(loads).toHaveBeenCalledWith("auth");
             expect(loads).toHaveBeenCalledWith("convex");
             expect(Option.getOrUndefined(store.getState().client)).toBe(convex);
@@ -167,6 +171,7 @@ describe("live session store", () => {
             startLiveSession(store, {
               convexUrl: CONVEX_URL,
               cookie: SIGNED_IN_COOKIE,
+              isPointerDown: false,
             })
           );
           yield* Effect.promise(() =>
@@ -192,6 +197,7 @@ describe("live session store", () => {
       const start = startLiveSession(store, {
         convexUrl: CONVEX_URL,
         cookie: SIGNED_IN_COOKIE,
+        isPointerDown: false,
         modules,
       });
 
@@ -214,6 +220,7 @@ describe("live session store", () => {
         yield* startLiveSession(store, {
           convexUrl: CONVEX_URL,
           cookie: SIGNED_IN_COOKIE,
+          isPointerDown: false,
           modules: {
             auth: Effect.fail(failure),
             convex: Effect.fail(failure),

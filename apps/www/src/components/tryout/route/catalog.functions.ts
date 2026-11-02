@@ -69,7 +69,7 @@ export const readTryoutTrackFn = createServerFn({ method: "GET" })
     return readTryoutTrackHandler(options);
   });
 
-/** The learner's set list of one track, read on the server for a loader. */
+/** A further window of one track's set list, as every visitor reads it. */
 export const readTryoutTrackListFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(TrackListRequestSchema))
   .handler(async (options) => {

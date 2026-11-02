@@ -24,6 +24,7 @@ import {
 } from "@/lib/auth/live";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
+import { POINTER_DOWN_ATTRIBUTE } from "@/lib/press/prepaint";
 
 /** How long a released press keeps its element, so a click a touch screen sends late still finds it. */
 const RELEASE_ROOM_MILLISECONDS = 100;
@@ -78,7 +79,8 @@ function PageRelease() {
  * listener captures on the window, ahead of React's own: a press on a part of the
  * page that has not hydrated makes React hydrate it, and an island there would swap
  * before any handler of the page ran, and React stops an event on such a part from
- * bubbling, so a release would never reach the window.
+ * bubbling, so a release would never reach the window. A press from before these
+ * listeners exist reaches the store as the session starts (`startLiveSession`).
  */
 function usePointerState(store: LiveSessionStore) {
   const room = useTimeout(
@@ -120,6 +122,9 @@ export function PageProviders({
       startLiveSession(store, {
         convexUrl: clientEnv.VITE_CONVEX_URL,
         cookie: document.cookie,
+        isPointerDown: document.documentElement.hasAttribute(
+          POINTER_DOWN_ATTRIBUTE
+        ),
       })
     );
     return () => {

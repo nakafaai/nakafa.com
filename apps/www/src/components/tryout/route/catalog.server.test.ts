@@ -17,7 +17,6 @@ const catalog = vi.hoisted(() => ({
   buildTryoutExamOptions: vi.fn(),
   getAppSocialArtwork: vi.fn(),
   getOgUrl: vi.fn(),
-  readRequestToken: vi.fn(),
   readServerTranslator: vi.fn(),
   readTryoutCountryPage: vi.fn(),
   readTryoutExamPage: vi.fn(),
@@ -26,12 +25,10 @@ const catalog = vi.hoisted(() => ({
   readTryoutSetList: vi.fn(),
   readTryoutTrackPage: vi.fn(),
   resolveTryoutExamArtwork: vi.fn(),
-  setResponseHeader: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.com/en/try-out"),
-  setResponseHeader: catalog.setResponseHeader,
 }));
 vi.mock("@/components/tryout/catalog/options", () => ({
   buildTryoutCountryOptions: catalog.buildTryoutCountryOptions,
@@ -44,9 +41,6 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutMetadata: catalog.readTryoutMetadata,
   readTryoutSetList: catalog.readTryoutSetList,
   readTryoutTrackPage: catalog.readTryoutTrackPage,
-}));
-vi.mock("@/components/tryout/route/token.server", () => ({
-  readRequestToken: catalog.readRequestToken,
 }));
 vi.mock("@/lib/og/app", () => ({
   getAppSocialArtwork: catalog.getAppSocialArtwork,
@@ -116,7 +110,6 @@ beforeEach(() => {
       values?.name === undefined ? key : `${key} ${values.name}`
     )
   );
-  catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
   catalog.readTryoutSetList.mockReturnValue(
     Effect.succeed({ isDone: true, page: [] })
   );
@@ -326,7 +319,6 @@ describe("readTryoutTrackRoute", () => {
           page: trackPage,
         });
         expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
-          Option.none(),
           expect.objectContaining({
             countryKey: "id",
             examKey: "snbt",
@@ -345,56 +337,28 @@ describe("readTryoutTrackSetList", () => {
   } satisfies CatalogQuery;
   const track = { countryKey: "id", examKey: "snbt", trackKey: "2027" };
 
-  it.effect(
-    "reads the learner's set list with their token and marks the answer private",
-    () =>
-      Effect.gen(function* () {
-        catalog.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
-        catalog.readTryoutSetList.mockReturnValue(
-          Effect.succeed({ page: [], isDone: true })
-        );
+  it.effect("reads one window of the list with the query of the address", () =>
+    Effect.gen(function* () {
+      catalog.readTryoutSetList.mockReturnValue(
+        Effect.succeed({ page: [], isDone: true })
+      );
 
-        const list = yield* readTryoutTrackSetList({
+      const list = yield* readTryoutTrackSetList({
+        locale: "en",
+        search,
+        track,
+      });
+
+      expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          countryKey: "id",
+          examKey: "snbt",
           locale: "en",
-          search,
-          track,
-        });
-
-        expect(catalog.setResponseHeader).toHaveBeenCalledExactlyOnceWith(
-          "cache-control",
-          "private, no-store"
-        );
-        expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
-          Option.some("token-1"),
-          expect.objectContaining({
-            countryKey: "id",
-            examKey: "snbt",
-            locale: "en",
-            paginationOpts: { cursor: null, numItems: 25 },
-            trackKey: "2027",
-          })
-        );
-        expect(list.result).toEqual({ page: [], isDone: true });
-      })
-  );
-
-  it.effect(
-    "reads the list without a token for a visitor without a session",
-    () =>
-      Effect.gen(function* () {
-        catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
-        catalog.readTryoutSetList.mockReturnValue(Effect.succeed({ page: [] }));
-
-        yield* readTryoutTrackSetList({
-          locale: "en",
-          search: { direction: "asc", sort: "order", status: "all" },
-          track,
-        });
-
-        expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
-          Option.none(),
-          expect.any(Object)
-        );
-      })
+          paginationOpts: { cursor: null, numItems: 25 },
+          trackKey: "2027",
+        })
+      );
+      expect(list.result).toEqual({ page: [], isDone: true });
+    })
   );
 });

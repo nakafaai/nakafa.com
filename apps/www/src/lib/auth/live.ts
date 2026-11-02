@@ -123,10 +123,13 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
     {
       convexUrl,
       cookie,
+      isPointerDown,
       modules = liveSessionModules,
     }: {
       readonly convexUrl: string;
       readonly cookie: string;
+      /** Whether a press from before the page's listeners is still held. */
+      readonly isPointerDown: boolean;
       readonly modules?: LiveSessionModules;
     }
   ) {
@@ -136,6 +139,7 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
     store.setState({
       hasError: false,
       isPending: true,
+      isPointerDown,
       sessionId: null,
       userId: null,
     });

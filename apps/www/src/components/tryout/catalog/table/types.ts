@@ -37,5 +37,7 @@ export interface TryoutSetData {
   readonly loadMore: () => void;
   readonly offline: boolean;
   readonly rows: readonly TryoutSetRow[];
+  /** Whether the rows are the ones every visitor reads, which hold no one's progress. */
+  readonly shared: boolean;
   readonly snapshotId: string | undefined;
 }

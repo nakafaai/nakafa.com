@@ -159,19 +159,18 @@ beforeEach(() => {
 
 describe("decisions before the router", () => {
   it.effect(
-    "answers a visitor's try-out set with the page the build wrote, before any content read",
+    "answers a try-out set the release does not hold with the static page, not the router",
     () =>
       Effect.gen(function* () {
-        assets.fetch.mockResolvedValue(new Response("<html>set</html>"));
+        assets.fetch.mockResolvedValue(
+          new Response("missing", { status: 404 })
+        );
 
         const { handle, response } = yield* served(
           "/en/try-out/indonesia/snbt/2027/set-1"
         );
 
-        expect(yield* Effect.promise(() => response.text())).toBe(
-          "<html>set</html>"
-        );
-        expect(retired.read).not.toHaveBeenCalled();
+        expect(response.status).toBe(404);
         expect(handle).not.toHaveBeenCalled();
       })
   );

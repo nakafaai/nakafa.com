@@ -3,7 +3,10 @@ import {
   PRESS_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
 } from "@repo/design-system/hooks/use-press";
-import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
+import {
+  EARLY_PRESS_SCRIPT,
+  POINTER_DOWN_ATTRIBUTE,
+} from "@/lib/press/prepaint";
 
 // The page runs the script once, from its head, before any control exists.
 new Function(EARLY_PRESS_SCRIPT)();
@@ -22,6 +25,17 @@ function drawControl() {
 describe("EARLY_PRESS_SCRIPT", () => {
   afterEach(() => {
     document.body.replaceChildren();
+  });
+
+  it("marks the document only while a pointer is down", () => {
+    const root = document.documentElement;
+    window.dispatchEvent(new Event("pointerdown"));
+    expect(root.hasAttribute(POINTER_DOWN_ATTRIBUTE)).toBe(true);
+    window.dispatchEvent(new Event("pointerup"));
+    expect(root.hasAttribute(POINTER_DOWN_ATTRIBUTE)).toBe(false);
+    window.dispatchEvent(new Event("pointerdown"));
+    window.dispatchEvent(new Event("pointercancel"));
+    expect(root.hasAttribute(POINTER_DOWN_ATTRIBUTE)).toBe(false);
   });
 
   it("marks the control when its label takes the press", () => {

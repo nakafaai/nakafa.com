@@ -152,6 +152,7 @@ export function useTryoutSetData({
     error,
     offline,
     rows: current?.result.page ?? EMPTY_ROWS,
+    shared: current?.result.viewerId === null,
     snapshotId: current?.result.snapshotId,
     loadMore: window.extend,
   };

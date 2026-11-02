@@ -197,7 +197,8 @@ function LiveTryoutSectionPage({
  * rendered for a running attempt locks the app shell until the learner leaves
  * it, even once the attempt ends here, so the shell never changes under a page.
  * A running section is the player, a section the learner's press is opening is
- * the player's frame until it runs, and every other state is the section page.
+ * the player's frame until it runs and its bodies arrive, and every other state is
+ * the section page.
  */
 function ResolvedTryoutSectionPage({
   binding,
@@ -242,12 +243,14 @@ function ResolvedTryoutSectionPage({
     return (
       <TryoutPage>
         <SectionLock binding={binding} />
-        <TryoutRunningPlayer
-          finish={finish}
-          mode={binding.mode}
-          state={runtimeState}
-          title={page.section.title}
-        />
+        <TryoutSectionBodies>
+          <TryoutRunningPlayer
+            finish={finish}
+            mode={binding.mode}
+            state={runtimeState}
+            title={page.section.title}
+          />
+        </TryoutSectionBodies>
       </TryoutPage>
     );
   }
@@ -255,12 +258,7 @@ function ResolvedTryoutSectionPage({
     return (
       <TryoutPage>
         <SectionLock binding={binding} />
-        <TryoutPlayerOpening
-          questionCount={page.section.questionCount}
-          title={page.section.title}
-        >
-          <PlayerTimer seconds={page.section.timeLimitSeconds} />
-        </TryoutPlayerOpening>
+        <TryoutSectionOpening />
       </TryoutPage>
     );
   }
@@ -277,6 +275,7 @@ function ResolvedTryoutSectionPage({
       <TryoutPageBody>
         <TryoutSectionSummary
           value={{
+            pending: actionAttempt === undefined,
             score: actionAttempt?.section?.score ?? null,
             section: page.section,
           }}
@@ -284,6 +283,29 @@ function ResolvedTryoutSectionPage({
         {runtimeState.kind === "review" ? children : null}
       </TryoutPageBody>
     </TryoutPage>
+  );
+}
+
+/**
+ * Holds the player until the page's read has brought the section's bodies. The live state
+ * can say a section runs a commit before the read does, which lands before the browser
+ * paints, so the player waits in its frame instead of reading a section with no questions.
+ */
+function TryoutSectionBodies({ children }: { children: ReactNode }) {
+  const bodies = use(TryoutContentContext)?.bodies ?? null;
+  return bodies === null ? <TryoutSectionOpening /> : children;
+}
+
+/** The player's frame, while a section the learner's press opens gets ready. */
+function TryoutSectionOpening() {
+  const { page } = useTryoutSectionPage();
+  return (
+    <TryoutPlayerOpening
+      questionCount={page.section.questionCount}
+      title={page.section.title}
+    >
+      <PlayerTimer seconds={page.section.timeLimitSeconds} />
+    </TryoutPlayerOpening>
   );
 }
 
