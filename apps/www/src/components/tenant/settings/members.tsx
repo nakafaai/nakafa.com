@@ -36,7 +36,7 @@ import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
-import { TableName } from "@/components/shared/table/title";
+import { TableName, TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -152,7 +152,11 @@ function SchoolMembersBody() {
       : [];
   const columns = [
     memberColumns.text((member) => member.name, {
-      cell: (info) => <TableName>{info.getValue()}</TableName>,
+      cell: (info) => (
+        <TableTitle icon={UserCircleIcon}>
+          <TableName>{info.getValue()}</TableName>
+        </TableTitle>
+      ),
       header: t("member-name"),
       id: "name",
     }),

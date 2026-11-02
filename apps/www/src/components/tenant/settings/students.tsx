@@ -7,6 +7,7 @@ import {
 } from "@confect/react";
 import {
   AtIcon,
+  Key01Icon,
   PencilEdit02Icon,
   Refresh01Icon,
 } from "@hugeicons/core-free-icons";
@@ -43,6 +44,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
+import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -160,7 +162,9 @@ function SchoolLoginTable() {
 
   const columns = [
     loginColumns.text((login) => login.loginName, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <TableTitle icon={Key01Icon}>{info.getValue()}</TableTitle>
+      ),
       header: t("login-name"),
       id: "login",
     }),

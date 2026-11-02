@@ -2,6 +2,7 @@ import { useAction, useMutation } from "@confect/react";
 import {
   Mortarboard01Icon,
   Refresh03Icon,
+  Unlink01Icon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
@@ -291,10 +292,12 @@ function CourseClass({
             value={course.classId ?? UNLINKED}
           >
             <DropdownMenuRadioItem value={UNLINKED}>
+              <HugeIcons icon={Unlink01Icon} />
               {t("course-unlinked")}
             </DropdownMenuRadioItem>
             {Arr.map(preview.classes, (klass) => (
               <DropdownMenuRadioItem key={klass.id} value={klass.id}>
+                <HugeIcons icon={Mortarboard01Icon} />
                 {klass.name}
               </DropdownMenuRadioItem>
             ))}

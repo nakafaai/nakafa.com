@@ -1,4 +1,8 @@
-import { Cancel01Icon, FilterIcon } from "@hugeicons/core-free-icons";
+import {
+  Cancel01Icon,
+  FilterIcon,
+  InformationCircleIcon,
+} from "@hugeicons/core-free-icons";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -65,7 +69,10 @@ export function ColumnFilter({
           <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
           <DropdownMenuGroup>
             {Arr.isReadonlyArrayEmpty(options) ? (
-              <DropdownMenuItem disabled>{t("no-values")}</DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                <HugeIcons icon={InformationCircleIcon} />
+                {t("no-values")}
+              </DropdownMenuItem>
             ) : null}
             {Arr.map(options, (option) => (
               <DropdownMenuCheckboxItem

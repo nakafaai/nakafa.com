@@ -1,7 +1,9 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Effect } from "effect";
 import { useEffect } from "react";
@@ -18,18 +20,26 @@ import { saveKnownSchools } from "@/lib/identity/schools";
 /** How many schools the account menu loads at a time: the first page, then each page as the list reaches its end. */
 const SCHOOL_PAGE = 20;
 
+/** The one line the menu shows for a read that failed. */
+function MembershipsFailure() {
+  const t = useTranslations("Common");
+
+  return (
+    <DropdownMenuItem disabled>
+      <HugeIcons icon={AlertCircleIcon} />
+      {t("load-error")}
+    </DropdownMenuItem>
+  );
+}
+
 /**
  * The account's schools, read live. A read that fails shows one disabled line, so the group is never silently empty,
  * and a failure the server names no reason for stays here too: this menu stands in every page's frame, outside the
  * page's own recovery, so it would otherwise take the whole page with it.
  */
 export function SidebarMembershipItems() {
-  const t = useTranslations("Common");
-
   return (
-    <ErrorBoundary
-      fallback={<DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>}
-    >
+    <ErrorBoundary fallback={<MembershipsFailure />}>
       <SidebarMembershipRows />
     </ErrorBoundary>
   );
@@ -42,7 +52,6 @@ export function SidebarMembershipItems() {
  * comes into view.
  */
 function SidebarMembershipRows() {
-  const t = useTranslations("Common");
   const isAuthenticated = useConvexAuth(
     (auth) => auth.isAuthenticated && !auth.isLoading
   );
@@ -69,7 +78,7 @@ function SidebarMembershipRows() {
   }, [isAnswered, memberships.results, sessionId]);
 
   if (PaginatedQueryResult.isFailure(memberships)) {
-    return <DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>;
+    return <MembershipsFailure />;
   }
   if (PaginatedQueryResult.isLoadingFirstPage(memberships)) {
     return <SidebarKnownSchoolItems />;
