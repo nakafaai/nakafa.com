@@ -12,6 +12,9 @@ const DESKTOP = { height: 900, width: 1440 };
 /** How far a swipe drags the drawer down before letting go. */
 const SWIPE = 400;
 
+/** How long the drawer must hold its place to count as standing still. */
+const STEADY_MILLISECONDS = 100;
+
 /** The scale of the page behind the drawer, as its computed style reads it. */
 function stageScale(stage: Locator) {
   return stage.evaluate((element) => getComputedStyle(element).scale);
@@ -37,6 +40,21 @@ function scrollLocked(page: Page) {
     const overflow = getComputedStyle(scroller).overflowY;
     return overflow === "hidden" || overflow === "clip";
   });
+}
+
+/**
+ * Waits until the drawer stands still. It slides up as it opens, so a box read earlier names a place the handle
+ * has already left, and a press there lands on the drawer's text.
+ */
+async function settled(drawer: Locator) {
+  await expect
+    .poll(async () => {
+      const before = await drawer.boundingBox();
+      await drawer.page().waitForTimeout(STEADY_MILLISECONDS);
+      const after = await drawer.boundingBox();
+      return before?.y === after?.y;
+    })
+    .toBe(true);
 }
 
 test("a dialog opens as a drawer on a phone, scales the page back, keeps the focus, and closes on Escape and on a swipe down", async ({
@@ -86,6 +104,7 @@ test("a dialog opens as a drawer on a phone, scales the page back, keeps the foc
   // A swipe down on the drawer's handle closes it.
   await create.click();
   await expect(drawer).toBeVisible();
+  await settled(drawer);
   const handle = await drawer
     .locator('[data-slot="drawer-swipe-handle"]')
     .boundingBox();

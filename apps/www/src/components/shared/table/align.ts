@@ -55,20 +55,23 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
 
 /**
  * How wide a data table's column stands, by what it holds, so its head keeps its place when its rows arrive and when a
- * later page brings a longer value. A table sizes a column to its content, so without these the heads of a table with
- * no rows yet stand up to 46 px from where its rows put them. A column of dates, figures or known values holds a width
- * that fits them, a column of text takes what those leave, down to the room of a name, and a value wider than its
- * column still widens it.
+ * later page brings a longer value. A table sizes a column to its content and shares its spare width among the columns
+ * with no width by what they hold, so without these the heads of a table with no rows yet stand up to 50 px from where
+ * its rows put them. Only the first column of text has no width and takes what the others leave, down to the room of a
+ * name. Every other column holds its width as its floor too, so the heads also stand still in a table wider than its
+ * screen, a later column of text holds the room of the longest `TableText` and its cell padding, and a value wider than
+ * its column still widens it.
  */
 export const headWidth = cva("", {
   variants: {
     width: {
-      choice: "w-36",
-      days: "w-48",
+      choice: "w-36 min-w-36",
+      days: "w-48 min-w-48",
       menu: "min-w-12",
-      number: "w-28",
-      text: "min-w-48",
-      values: "w-36",
+      number: "w-28 min-w-28",
+      text: "min-w-48 not-first:w-72 not-first:min-w-60 sm:min-w-50 sm:not-first:min-w-64",
+      values: "w-36 min-w-36",
+      wide: "w-60 min-w-60",
     },
   },
 });

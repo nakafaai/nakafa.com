@@ -20,5 +20,7 @@ declare module "@tanstack/react-table" {
     readonly inert?: (row: TData) => boolean;
     /** The column's name, which its head says it filters by. */
     readonly title?: string;
+    /** Whether the column's cell holds more than one value's width. */
+    readonly wide?: boolean;
   }
 }

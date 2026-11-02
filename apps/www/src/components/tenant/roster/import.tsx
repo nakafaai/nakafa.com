@@ -233,9 +233,9 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
 }
 
 /**
- * The body of the import before a file is read, drawn from the first paint: what to do, or the
- * reason a file was refused. A unit that turns out to have no active period says the period comes
- * first instead.
+ * The body of the import before a file is read: what to do, or the reason a file was refused. A unit
+ * with no active period says the period comes first instead. Which of them is true waits on the read,
+ * so the body draws once it answers: one drawn before would be replaced where it stands.
  */
 function RosterImportEmpty({
   problem,
@@ -255,7 +255,11 @@ function RosterImportEmpty({
     throw active.error;
   }
 
-  if (QueryResult.isSuccess(active) && active.value === null) {
+  if (!QueryResult.isSuccess(active)) {
+    return null;
+  }
+
+  if (active.value === null) {
     return (
       <TableEmpty
         act="pointing"

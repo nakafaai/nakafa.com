@@ -124,7 +124,7 @@ test("an invited learner who claimed the invitation sees the school in the accou
   await context.close();
 });
 
-test("an empty inbox shows Nina asleep beside its sentence and offers no action", async ({
+test("an empty inbox shows Nina asleep beside its sentence, and Mark all read stays as the first paint drew it", async ({
   baseURL,
   page,
 }) => {
@@ -140,7 +140,7 @@ test("an empty inbox shows Nina asleep beside its sentence and offers no action"
         ).toBeVisible();
         await expect(
           page.getByRole("button", { name: "Mark all read" })
-        ).toBeDisabled();
+        ).toBeEnabled();
       });
     })
   );
