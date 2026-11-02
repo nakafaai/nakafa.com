@@ -161,7 +161,10 @@ test("an address that cannot name a row answers not found in the school's own sh
     "/reports/not-a-group",
   ]) {
     await page.goto(address(path));
-    await expect(page.getByText("We can't find this page"), path).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "We can't find this page" }),
+      path
+    ).toBeVisible();
     await expect(
       page.getByText("We could not load this data."),
       path

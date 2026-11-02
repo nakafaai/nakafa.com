@@ -64,6 +64,21 @@ describe("toggleFormula", () => {
     expect(selectedText(editor)).toBe("x^2");
   });
 
+  it("opens a formula inserted in bold text, which takes no mark, so its editor knows it", () => {
+    const editor = openEditor("<p><strong>Luas</strong> persegi</p>");
+    editor.commands.setTextSelection(1);
+    editor.commands.toggleFormula("mathInline");
+    const inserted = editor.state.doc.child(0).child(0);
+    expect(inserted.type.name).toBe("mathInline");
+    expect(inserted.marks).toEqual([]);
+    expect(
+      Option.exists(
+        editor.storage.formulaToggle.opening,
+        (opening) => opening === inserted
+      )
+    ).toBe(true);
+  });
+
   it("turns the selected text into block math, and the block back into a paragraph of its selected LaTeX", () => {
     const editor = openEditor("<p>a+b</p>");
     editor.commands.setTextSelection({ from: 1, to: 4 });

@@ -43,15 +43,6 @@ export function DocumentInsert({
     }),
   });
 
-  /**
-   * Inserts a formula, whose editor opens at once. The document takes the focus first, now:
-   * `chain().focus()` takes it a frame later, out of the new formula's popover, which shuts it.
-   */
-  const insertFormula = (type: "mathBlock" | "mathInline") => {
-    editor?.view.focus();
-    editor?.commands.toggleFormula(type);
-  };
-
   return (
     <>
       <EditorTools
@@ -75,14 +66,15 @@ export function DocumentInsert({
             icon: FunctionIcon,
             label: labels.formula,
             name: "formula",
-            run: () => insertFormula("mathInline"),
+            run: () =>
+              editor?.chain().focus().toggleFormula("mathInline").run(),
           },
           {
             active: state?.equation ?? false,
             icon: FunctionSquareIcon,
             label: labels.equation,
             name: "equation",
-            run: () => insertFormula("mathBlock"),
+            run: () => editor?.chain().focus().toggleFormula("mathBlock").run(),
           },
           {
             icon: ImageUploadIcon,
