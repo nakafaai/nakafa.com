@@ -89,7 +89,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
     .locator("header")
     .getByRole("button", { name: "Add student" })
     .click();
-  const placing = owner.getByRole("dialog");
+  const placing = owner.getByRole("dialog", { name: "Add student" });
   await placing.getByRole("combobox", { name: "Student" }).click();
   await owner.getByRole("option", { name: LEARNER_NAME }).click();
   await placing.getByRole("button", { name: "Add student" }).click();
@@ -109,6 +109,7 @@ test("a teacher walks Insight from no class to a real reading, and a student rea
   await student.goto(address(`/sittings/${sitting.sittingId}`));
   const enter = student.getByRole("button", { name: "Enter sitting" });
   await waitUntilTakenOver(enter);
+  await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await enter.click();
   await student
     .getByRole("radiogroup")

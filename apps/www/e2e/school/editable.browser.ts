@@ -62,6 +62,7 @@ for (const viewport of [
       0
     );
     await page.getByRole("option", { exact: true, name: "Counselor" }).click();
+    const beforeRole = changes.sent;
     await roleDialog.getByRole("button", { name: "Save" }).click();
     await expect(
       page
@@ -70,6 +71,8 @@ for (const viewport of [
         .getByRole("cell", { exact: true, name: "Counselor" })
     ).toBeVisible();
 
+    // A row shows its change at once, and leaving the page would cancel a save still on its way.
+    await saved(changes, beforeRole);
     await page.goto(address("/settings/invites"));
     const inviteAction = page
       .locator("header")
@@ -86,10 +89,12 @@ for (const viewport of [
     await page.getByRole("menuitem", { name: "Change email" }).click();
     const email = page.getByRole("dialog", { name: "Change email" });
     await email.getByLabel("Email").fill("guru@harapan.example.test");
+    const beforeEmail = changes.sent;
     await email.getByRole("button", { name: "Save" }).click();
     await expect(
       page.getByRole("row").filter({ hasText: "Guru Salah Ketik" })
     ).toContainText("guru@harapan.example.test");
+    await saved(changes, beforeEmail);
     await page.reload();
     await expect(
       page.getByRole("row").filter({ hasText: "Guru Salah Ketik" })
@@ -112,10 +117,12 @@ for (const viewport of [
     await page.getByRole("menuitem", { name: "Edit client" }).click();
     const client = page.getByRole("dialog", { name: "Edit client" });
     await client.getByRole("textbox", { name: "Name" }).fill("Sinkron Baru");
+    const beforeClient = changes.sent;
     await client.getByRole("button", { name: "Save" }).click();
     await expect(
       page.getByRole("row").filter({ hasText: "Sinkron Baru" })
     ).toBeVisible();
+    await saved(changes, beforeClient);
 
     await page.goto(address("/settings/profile"));
     const country = page.getByRole("combobox", { name: "Country" });

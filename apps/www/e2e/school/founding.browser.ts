@@ -3,6 +3,7 @@ import { Clock, Duration, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishSchoolStart } from "@/e2e/support/school";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of the setup, where the new Owner lands. */
 const SETUP_ADDRESS = /\/setup$/u;
@@ -30,9 +31,10 @@ for (const viewport of VIEWPORTS) {
     const context = await browser.newContext({ viewport });
     await Effect.runPromise(signInLearner(context, String(baseURL)));
     const page = await context.newPage();
-    const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
-    const name = `Harapan ${tag}`;
     const started = await Effect.runPromise(Clock.currentTimeMillis);
+    // The moment of the run, because a window keeps the address of every school an earlier run opened.
+    const tag = `${testInfo.testId.slice(0, 4)}${started.toString(36).slice(-6)}`;
+    const name = `Harapan ${tag}`;
 
     await page.goto("/en/school/new");
     await expect(page.getByText("Question 1 of 5")).toBeVisible();
@@ -81,7 +83,11 @@ test("the home page's school band copies the one link a new school opens from", 
   const page = await context.newPage();
   await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto("/en");
-  await page.getByRole("button", { name: "Copy link" }).click();
+  // A section under the first screen takes over only as the reader nears it.
+  const copy = page.getByRole("button", { name: "Copy link" });
+  await copy.scrollIntoViewIfNeeded();
+  await waitUntilTakenOver(copy);
+  await copy.click();
   await expect(page.getByRole("button", { name: "Link copied" })).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   expect(new URL(copied).pathname).toBe("/en/school/new");

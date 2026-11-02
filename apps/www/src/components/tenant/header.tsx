@@ -67,11 +67,14 @@ export function SchoolHeader({
             {title}
           </h1>
         )}
-        <SchoolPath
-          items={Arr.map(items, (item, index) =>
-            index === items.length - 1 ? { ...item, target: undefined } : item
-          )}
-        />
+        {/* Text at twice its size leaves the path no room, so it steps aside and takes the row's gap with it. */}
+        <div className="min-w-0 @max-3xs/header:hidden">
+          <SchoolPath
+            items={Arr.map(items, (item, index) =>
+              index === items.length - 1 ? { ...item, target: undefined } : item
+            )}
+          />
+        </div>
         {children === undefined ? null : (
           <div className="ms-auto flex shrink-0 items-center gap-2">
             {children}

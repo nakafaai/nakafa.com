@@ -65,12 +65,15 @@ for (const viewport of [
     await waitUntilTakenOver(more);
     await more.click();
     await owner.getByRole("menuitem", { name: "Send again" }).click();
-    // An expired invite is never sent again: the school invites the person anew, and the new one takes its row.
-    const rows = owner.getByRole("row").filter({ hasText: LEARNER_NAME });
-    await expect(rows.filter({ hasNotText: "Expired" })).toHaveCount(1, {
+    // An expired invite is never sent again: the school invites the person anew. This account already holds the
+    // address, so it claims the new invite at once, and the person leaves the invites for the members.
+    await expect(row).toHaveCount(0, {
       timeout: readinessTimeoutMilliseconds,
     });
-    await expect(rows).toHaveCount(1);
+    await owner.goto(address("/settings/members"));
+    await expect(
+      owner.getByRole("row").filter({ hasText: LEARNER_NAME })
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await test.info().attach(`owner-sent-${viewport.width}`, {
       body: await owner.screenshot(),
       contentType: "image/png",

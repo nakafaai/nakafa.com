@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -15,6 +16,7 @@ test("an owner reads each step of the setup, opens one, and finishing takes it o
   });
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
 
   await page.goto(address("/setup"));
   const finish = page
@@ -45,10 +47,19 @@ test("an owner reads each step of the setup, opens one, and finishing takes it o
     .getByRole("link", { name: "Set up school" });
   await expect(entry).toBeVisible();
 
+  const sentBefore = changes.sent;
   await finish.click();
   await expect(entry).toHaveCount(0);
+  // The entry leaves at once, and a reload would cancel a save still on its way.
+  await saved(changes, sentBefore);
+  // Finishing lands on the school's home, and the entry stays out of its sidebar after a reload.
+  await expect(page).toHaveURL(address("/exams"));
   await page.reload();
-  await waitUntilTakenOver(finish);
+  await waitUntilTakenOver(
+    page
+      .locator('[data-slot="sidebar"]')
+      .getByRole("link", { exact: true, name: "Settings" })
+  );
   await expect(entry).toHaveCount(0);
   await context.close();
 });

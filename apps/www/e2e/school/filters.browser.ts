@@ -27,8 +27,12 @@ const EDGE_SLACK = 1;
  */
 async function expectEvenPanel(page: Page, card: Locator, head: string) {
   await card.getByRole("button", { exact: true, name: head }).click();
-  const panel = page.locator('[data-slot="popover-content"]');
+  const panel = page.locator('[data-slot="popover-content"][data-open]');
   await expect(panel).toBeVisible();
+  // A panel opens with a small scale, so it is measured once it stands at its own size.
+  await panel.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished))
+  );
   const layout = await panel.evaluate((element) => {
     const box = element.getBoundingClientRect();
     const parts = Array.from(element.children, (part) =>
@@ -73,13 +77,12 @@ async function expectEveryHeadFilters(card: Locator) {
 
 /** The row's menu stands right beside its line, with no empty room in its cell. */
 async function expectNarrowMenu(card: Locator) {
-  const button = card.getByRole("button", { name: "More actions" }).first();
-  const cell = card
+  const row = card
     .getByRole("row")
-    .filter({ has: button })
-    .first()
-    .getByRole("cell")
-    .last();
+    .filter({ has: card.page().getByRole("button", { name: "More actions" }) })
+    .first();
+  const button = row.getByRole("button", { name: "More actions" });
+  const cell = row.getByRole("cell").last();
   const [buttonBox, cellBox] = await Promise.all([
     button.boundingBox(),
     cell.boundingBox(),
@@ -148,7 +151,7 @@ test("every column of the School's tables filters from its head, and the row's m
     page,
     card,
     "Name",
-    page.getByRole("textbox", { name: "Name" }),
+    page.getByRole("textbox", { exact: true, name: "Name" }),
     "no such name"
   );
 
@@ -160,9 +163,7 @@ test("every column of the School's tables filters from its head, and the row's m
   await expectNarrowMenu(card);
   // A title cell leads with what the row is, and pressing the row opens it, as its name does.
   const exam = card.getByRole("row").nth(1);
-  await expect(
-    exam.getByRole("cell").first().locator('[data-slot="badge"]')
-  ).toBeVisible();
+  await expect(exam.getByRole("cell").first().locator("svg")).toBeVisible();
   await expect(exam).toHaveCSS("cursor", "pointer");
   await exam.getByRole("cell").nth(2).click();
   await expect(page).toHaveURL(EXAM_EDITOR, {

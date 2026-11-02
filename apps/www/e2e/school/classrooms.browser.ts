@@ -65,7 +65,8 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   await page.getByRole("menuitem", { name: "Archive" }).click();
   await expect(page.getByText("Classroom archived.")).toBeVisible();
   await expect(renamed.getByText("Archived")).toBeVisible();
-  await renamed.getByRole("button", { name: "Restore" }).click();
+  await renamed.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Restore" }).click();
   await expect(renamed.getByText("Active")).toBeVisible();
 
   // A second classroom of the same subject in the cohort takes the seeded name, so the server refuses it and the

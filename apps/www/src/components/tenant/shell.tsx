@@ -57,10 +57,14 @@ import {
 import type { HomeAccess } from "@/components/tenant/home/access";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
-import { TenantSearch } from "@/components/tenant/search";
+import {
+  TenantSearchMenu,
+  TenantSearchPalette,
+} from "@/components/tenant/search";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
 import { Link, useRouteMatched } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
+import { SearchContextProvider } from "@/lib/search/context";
 
 import type { SchoolViewer } from "@/lib/tenant/frame";
 
@@ -262,27 +266,37 @@ function TenantFrame({ children }: { children: ReactNode }) {
   return (
     <CreatedExamsContext value={created}>
       <ShellLocksContext value={setLocks}>
-        <SidebarProvider data-locked={locked ? "" : undefined} locked={locked}>
-          {/* Hidden rather than unmounted, so the learner's open or closed choice returns with it. */}
-          <div className="contents group-data-locked/sidebar-wrapper:hidden">
-            <Sidebar collapsible="icon" label={tCommon("sidebar")} side={side}>
-              <SidebarHeader className="border-b">
-                <SidebarMenu>
-                  <TenantSwitcher />
-                </SidebarMenu>
-                <TenantSearch />
-              </SidebarHeader>
-              <SidebarContent>
-                <TenantNavigation />
-              </SidebarContent>
-              <SidebarToggle />
-              <TenantAccount />
-            </Sidebar>
-          </div>
-          <SidebarInset className="[--app-header-top:0rem]">
-            {children}
-          </SidebarInset>
-        </SidebarProvider>
+        <SearchContextProvider>
+          <SidebarProvider
+            data-locked={locked ? "" : undefined}
+            locked={locked}
+          >
+            <TenantSearchPalette />
+            {/* Hidden rather than unmounted, so the learner's open or closed choice returns with it. */}
+            <div className="contents group-data-locked/sidebar-wrapper:hidden">
+              <Sidebar
+                collapsible="icon"
+                label={tCommon("sidebar")}
+                side={side}
+              >
+                <SidebarHeader className="border-b">
+                  <SidebarMenu>
+                    <TenantSwitcher />
+                  </SidebarMenu>
+                  <TenantSearchMenu />
+                </SidebarHeader>
+                <SidebarContent>
+                  <TenantNavigation />
+                </SidebarContent>
+                <SidebarToggle />
+                <TenantAccount />
+              </Sidebar>
+            </div>
+            <SidebarInset className="[--app-header-top:0rem]">
+              {children}
+            </SidebarInset>
+          </SidebarProvider>
+        </SearchContextProvider>
       </ShellLocksContext>
     </CreatedExamsContext>
   );

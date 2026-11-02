@@ -31,7 +31,7 @@ import { Array as Arr } from "effect";
 import { type ReactNode, use, useOptimistic, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { ChoiceContext } from "@/components/notifications/choice";
-import { preferenceRowsOf } from "@/components/notifications/preferences";
+import { preferenceChoicesOf } from "@/components/notifications/preferences";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -74,7 +74,7 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
 }
 
 /** One kind of notice with the channels it uses. */
-type Row = ReturnType<typeof preferenceRowsOf>[number];
+type Row = ReturnType<typeof preferenceChoicesOf>[number];
 
 /** The columns of the switches. */
 const preferenceColumns = tableColumns<Row>();
@@ -90,15 +90,13 @@ export function PreferenceTable({
   relation: typeof Relation.Type;
 }) {
   const t = useTranslations("Notifications");
-  const isOn = (kind: Row["kind"], channel: typeof PreferenceChannel.Type) =>
-    !Arr.some(off, (row) => row.kind === kind && row.channel === channel);
   const channelColumn = (channel: typeof PreferenceChannel.Type) =>
     preferenceColumns.values(
-      ({ channels, kind }) => {
+      ({ channels, on }) => {
         if (!Arr.contains(channels, channel)) {
           return "unused";
         }
-        return isOn(kind, channel) ? "on" : "off";
+        return Arr.contains(on, channel) ? "on" : "off";
       },
       {
         cell: (info) =>
@@ -140,13 +138,13 @@ export function PreferenceTable({
                     channel={channel}
                     key={channel}
                     kind={original.kind}
-                    on={isOn(original.kind, channel)}
+                    on={Arr.contains(original.on, channel)}
                   />
                 ))}
               </RowItems>
             )),
           ]}
-          data={preferenceRowsOf(relation)}
+          data={preferenceChoicesOf(relation, off)}
           plain
           rowId={({ kind }) => kind}
         />

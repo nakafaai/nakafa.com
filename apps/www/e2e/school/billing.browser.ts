@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   grantStudent,
@@ -58,6 +59,7 @@ test("an owner upgrades a free school by invoice, and the school shows School on
   const context = await browser.newContext();
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
 
   await page.goto(address("/settings/billing"));
   const planTitle = page.locator('[data-slot="card-title"]').first();
@@ -113,8 +115,11 @@ test("an owner upgrades a free school by invoice, and the school shows School on
   await waitUntilTakenOver(cap);
   await expect(cap).toHaveText("50 credits");
   await cap.click();
+  const sentBefore = changes.sent;
   await page.getByRole("option", { name: "100 credits" }).click();
   await expect(cap).toHaveText("100 credits");
+  // The cap answers at once, and a reload would cancel a save still on its way.
+  await saved(changes, sentBefore);
   await page.reload();
   await expect(
     page.getByRole("combobox", { name: "Nina credits a day" })

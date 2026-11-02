@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, String as Str } from "effect";
 import { expectNoOverflow } from "@/e2e/support/layout";
 import {
@@ -6,12 +6,20 @@ import {
   openPeriodWithCohort,
   sheetFile,
 } from "@/e2e/support/roster";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import {
+  createSchool,
+  hostAddress,
+  recordTransfer,
+  signInOwner,
+} from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The students of one cohort: three of the import's batches of a hundred. */
 const CROWD = 300;
+
+/** The number Nakafa gives each invoice. */
+const INVOICE_NUMBER = /^NKF-\d{4}-\d{6}$/u;
 
 /** The class group every imported student joins. */
 const COHORT = "7A";
@@ -26,6 +34,24 @@ const CROWD_ROWS: (string | number | null)[][] = [
     COHORT,
   ]),
 ];
+
+/** Pays the school's plan by transfer, because the free plan holds 100 students and refuses the rest of the crowd. */
+async function payForSchool(page: Page, address: (path: string) => string) {
+  await page.goto(address("/settings/billing"));
+  const upgrade = page.getByRole("button", { name: "Upgrade" });
+  await waitUntilTakenOver(upgrade);
+  await upgrade.click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByText("This school year").click();
+  await dialog.getByRole("button", { name: "Issue invoice" }).click();
+  const invoice = page.getByRole("cell", { name: INVOICE_NUMBER });
+  await expect(invoice).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  const number = (await invoice.textContent()) ?? "";
+  await Effect.runPromise(recordTransfer(number, `BCA-${number}`));
+  await expect(page.getByRole("cell", { name: "Paid" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+}
 
 for (const viewport of [
   { height: 844, width: 390 },
@@ -42,6 +68,7 @@ for (const viewport of [
     const context = await browser.newContext({ viewport });
     await Effect.runPromise(signInOwner(context, school.slug, address("/")));
     const page = await context.newPage();
+    await payForSchool(page, address);
     await openPeriodWithCohort(page, address, COHORT);
 
     await page.goto(address("/settings/roster"));
@@ -49,12 +76,17 @@ for (const viewport of [
       page.locator("header").getByRole("button", { name: "Import" })
     );
     await chooseFile(page, await sheetFile("daftar_pd.xlsx", CROWD_ROWS));
-    await expect(
-      page
-        .getByRole("cell", { exact: true, name: `Siswa ${CROWD}` })
-        .filter({ visible: true })
-        .first()
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    const rows = page.locator('[data-slot="table-card"] tbody tr');
+    // The preview draws its rows a page at a time as the table's end comes into view.
+    await expect(async () => {
+      await rows.last().scrollIntoViewIfNeeded();
+      await expect(
+        page
+          .getByRole("cell", { exact: true, name: `Siswa ${CROWD}` })
+          .filter({ visible: true })
+          .first()
+      ).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: readinessTimeoutMilliseconds * 3 });
     await page
       .locator("header")
       .getByRole("button", { name: "Import students" })
@@ -65,7 +97,6 @@ for (const viewport of [
 
     await page.goto(address("/settings/cohorts"));
     await page.getByRole("link", { name: COHORT }).click();
-    const rows = page.locator('[data-slot="table-card"] tbody tr');
     // The cohort reads its students a page at a time as the table's end comes into view.
     await expect(async () => {
       await rows.last().scrollIntoViewIfNeeded();

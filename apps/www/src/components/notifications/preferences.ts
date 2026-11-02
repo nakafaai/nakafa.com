@@ -1,3 +1,4 @@
+import type { SwitchedOff } from "@repo/backend/confect/notifications/preference";
 import {
   canSwitchOff,
   NoticeKind,
@@ -27,6 +28,26 @@ export const preferenceRowsOf = (relation: typeof Relation.Type) =>
       ? Result.failVoid
       : Result.succeed({ channels, kind });
   });
+
+/**
+ * Each kind a relation receives, with the channels this reader keeps on. The choice lives in the row, because a table
+ * keeps the accessors of its first columns, so a column that asked `off` itself would show the first answer for good.
+ */
+export const preferenceChoicesOf = (
+  relation: typeof Relation.Type,
+  off: readonly (typeof SwitchedOff.Type)[]
+) =>
+  Arr.map(preferenceRowsOf(relation), (row) => ({
+    ...row,
+    on: Arr.filter(
+      row.channels,
+      (channel) =>
+        !Arr.some(
+          off,
+          (choice) => choice.kind === row.kind && choice.channel === channel
+        )
+    ),
+  }));
 
 /** The relation a School role reads its notices as. */
 export const relationOfRole = (role: string): typeof Relation.Type => {
