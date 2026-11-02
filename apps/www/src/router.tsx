@@ -17,8 +17,9 @@ function remountByParams({ params }: { readonly params: object }) {
 
 export function getRouter() {
   const router = createRouter({
-    defaultPendingMinMs: 300,
-    defaultPendingMs: 200,
+    // The page stands until the next one is ready, however long its loader takes: a pending
+    // state here blanks the whole page for at least its minimum, which is a full page flicker.
+    defaultPendingMs: Number.POSITIVE_INFINITY,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 30_000,
     defaultRemountDeps: remountByParams,

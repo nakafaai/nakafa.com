@@ -20,7 +20,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { pageBoxVariants } from "@/components/shared/content/width";
 import { PaneStartContext } from "@/components/shared/panes/start";
 import { isTyping } from "@/components/shared/typing";
 
@@ -231,13 +230,13 @@ export function SizedPane({
 }
 
 /**
- * The group's width, height, and where its second pane steps aside. A page's panes fill the page's frame
- * and no further; the exam editor's fill the screen's width, since its canvas is the surface its papers
- * lie on, edge to edge. A list's panes run from under its
+ * The group's height, and where its second pane steps aside. Panes always run to the screen's edge at
+ * every width, so the second pane has the whole height and all the room to the right, as the memory
+ * editor does, and what the first pane holds keeps its own frame. A list's panes run from under its
  * header to the bottom of the screen, and a page whose header is taller than the school header's
  * 4rem sets `--panes-offset` to its height; the exam editor's panes fill the room its shell leaves.
  */
-const panesVariants = cva("min-h-0", {
+const panesVariants = cva("min-h-0 w-full [--pane-end:1.5rem]", {
   compoundVariants: [
     {
       className:
@@ -271,11 +270,6 @@ const panesVariants = cva("min-h-0", {
     },
     keeps: { first: "", second: "" },
     wideFrom: { lg: "", md: "", xl: "" },
-    width: {
-      full: "w-full",
-      // A pane's lines run to the group's edge, and what it holds ends on the edge the header's row mirrors.
-      page: `${pageBoxVariants()} [--pane-end:1.5rem]`,
-    },
   },
 });
 
@@ -292,7 +286,6 @@ export function Panes({
   id,
   keeps = "first",
   wideFrom,
-  width = "page",
 }: {
   children: ReactNode;
   fill?: "parent" | "screen";
@@ -300,7 +293,6 @@ export function Panes({
   id: string;
   keeps?: typeof PanesKept.Type;
   wideFrom?: typeof PanesWidth.Type;
-  width?: "full" | "page";
 }) {
   const providedWidth = use(PanesWidthContext);
 
@@ -310,7 +302,6 @@ export function Panes({
         fill,
         keeps,
         wideFrom: wideFrom ?? providedWidth,
-        width,
       })}
       id={id}
     >
@@ -345,7 +336,7 @@ export function PanesRail({
           </aside>
         </SizedPane>
       </PaneStartContext>
-      <ResizableHandle withHandle />
+      <ResizableHandle />
     </>
   );
 }
@@ -420,7 +411,7 @@ export function PanesDetail({
     <>
       {beside ? (
         <>
-          <ResizableHandle withHandle />
+          <ResizableHandle />
           <PaneStartContext value={defaultSize}>
             <SizedPane id="detail" maxSize="55%" minSize="25%">
               <aside

@@ -55,10 +55,7 @@ export function PlayerMain({
       {navigator === null ? null : (
         <>
           {/* The footer covers the divider, so the footer stays one row from edge to edge. */}
-          <ResizableHandle
-            className="z-0 items-start [&>div]:sticky [&>div]:top-[50svh]"
-            withHandle
-          />
+          <ResizableHandle className="z-0 items-start [&>div]:sticky [&>div]:top-[50svh]" />
           <PaneStartContext value="25%">
             <SizedPane
               className="overflow-visible!"
