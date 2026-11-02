@@ -26,6 +26,8 @@ const WALKS = [
   { role: "student", width: 390 },
 ] as const;
 
+test.describe.configure({ mode: "parallel" });
+
 for (const { role, width } of WALKS) {
   test(`the ${role} of a school with records opens every page and popup at ${width}`, async ({
     baseURL,

@@ -213,19 +213,23 @@ const expectWhole = (
 /** The name of a control that opens something, with where it stands. */
 const nameOf = (trigger: Locator) =>
   trigger
-    .evaluate((control) => {
-      const side =
-        control.closest(
-          '[data-slot="sidebar-content"], [data-slot="sidebar"]'
-        ) === null
-          ? ""
-          : "sidebar ";
-      const words =
-        control.getAttribute("aria-label") ??
-        control.textContent?.trim().slice(0, 32) ??
-        "";
-      return `${side}${words}`;
-    })
+    .evaluate(
+      (control) => {
+        const side =
+          control.closest(
+            '[data-slot="sidebar-content"], [data-slot="sidebar"]'
+          ) === null
+            ? ""
+            : "sidebar ";
+        const words =
+          control.getAttribute("aria-label") ??
+          control.textContent?.trim().slice(0, 32) ??
+          "";
+        return `${side}${words}`;
+      },
+      undefined,
+      { timeout: PRESS_TIMEOUT_MILLISECONDS }
+    )
     .catch(() => "");
 
 /** Presses one control that opens something, reads what it opened, and closes it. */
@@ -288,11 +292,18 @@ const pressTriggers = async (
   const shape = shapeOf(address);
   const triggers = page.locator("[aria-haspopup]:visible");
   const onPage = MutableHashSet.empty<string>();
-  for (const index of Arr.range(0, (await triggers.count()) - 1)) {
+  const count = await triggers.count();
+  if (count === 0) {
+    return;
+  }
+  for (const index of Arr.range(0, count - 1)) {
     const trigger = triggers.nth(index);
     const name = await nameOf(trigger);
     const once = name.startsWith("sidebar ") ? pressed : onPage;
-    if (MutableHashSet.has(once, name) || (await trigger.isDisabled())) {
+    const disabled = await trigger
+      .isDisabled({ timeout: PRESS_TIMEOUT_MILLISECONDS })
+      .catch(() => true);
+    if (name === "" || disabled || MutableHashSet.has(once, name)) {
       continue;
     }
     MutableHashSet.add(once, name);
