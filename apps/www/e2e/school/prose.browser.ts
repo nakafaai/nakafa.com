@@ -81,8 +81,9 @@ const KINDS: Readonly<
     document: "blockquote",
     lesson: "blockquote",
   },
+  // The editor's wrapper in a live document, and the frame `frameTables` draws in a document without an editor.
   tableFrame: {
-    document: ".tableWrapper",
+    document: '.tableWrapper, [data-slot="table-frame"]',
     lesson: '[data-slot="table-container"]',
   },
   tableHead: {

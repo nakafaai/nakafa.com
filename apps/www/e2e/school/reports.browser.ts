@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Option, String as Str } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   grantStudent,
@@ -73,6 +74,7 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
 
   // The subject teacher releases the learner's grade, which the report shows.
   const page = await teacher.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   await page.goto(address("/classes/fisika-x-1/grades"));
   const gradeRow = page
     .getByRole("row")
@@ -83,9 +85,12 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await field.fill("82");
   await field.press("Enter");
   await expect(gradeRow).toContainText("Draft");
+  const sentBefore = changes.sent;
   await gradeRow.getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Release" }).click();
   await expect(gradeRow).toContainText("Released");
+  // The next page closes the connection and drops a change still on its way, so it waits for the server's answer.
+  await saved(changes, sentBefore);
 
   // The homeroom teacher opens the class group from the report cards and writes the note.
   await page.goto(address("/reports"));
@@ -155,12 +160,15 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await expect(own).toHaveURL(address("/cards"));
   const ownRow = own.getByRole("row").filter({ hasText: "X-1" });
   await expect(ownRow).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(ownRow.getByRole("link", { name: "Open PDF" })).toHaveAttribute(
+  const ownMenu = ownRow.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(ownMenu);
+  await ownMenu.click();
+  await expect(own.getByRole("menuitem", { name: "Open PDF" })).toHaveAttribute(
     "href",
     WEB_ADDRESS
   );
   await expect(
-    ownRow.getByRole("link", { name: "Open check page" })
+    own.getByRole("menuitem", { name: "Open check page" })
   ).toHaveAttribute("href", check ?? "");
   await learnerContext.close();
 

@@ -102,10 +102,8 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await expect(answers).toHaveCount(0);
   await header.getByRole("button", { name: "Questions" }).click();
   await expect(
-    proctor.getByRole("dialog", { name: "Questions" }).getByRole("button", {
-      name: "Question 1",
-    })
-  ).toBeVisible();
+    proctor.getByRole("dialog", { name: "Questions" }).getByRole("combobox")
+  ).toHaveText("Question 1");
   await proctor.keyboard.press("Escape");
   // Release results is the page's main action, in its header row; once released it says so.
   await header

@@ -239,11 +239,9 @@ test("an exam deleted in another tab keeps its editor, try and rooms on screen w
   await expect(trying.getByText(GONE)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  // The sitting bar names the exam for a screen reader and in its breadcrumb, which is the title on screen.
+  // The paper's bar names the exam in its heading, which is the title on screen.
   await expect(
-    trying
-      .getByRole("navigation", { name: "Breadcrumb" })
-      .getByText("Penghapusan")
+    trying.getByRole("heading", { level: 1, name: "Penghapusan" })
   ).toBeVisible();
   await expect(trying.getByText(PROMPTS[0])).toBeVisible();
   await expect(rooms.getByText(GONE)).toBeVisible({

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   hostAddress,
@@ -38,6 +39,7 @@ test("an admin moves a room that has not opened to a new name from its row, the 
   );
 
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   await page.goto(address(`/exams/${sitting.examId}`));
   const row = page.getByRole("row", { name: new RegExp(UPCOMING_ROOM, "u") });
   const menu = row.getByRole("button", { name: "More actions" });
@@ -52,6 +54,7 @@ test("an admin moves a room that has not opened to a new name from its row, the 
   await expect(name).toHaveValue(UPCOMING_ROOM);
   await expect(dialog.getByRole("button", { name: "Save" })).toBeDisabled();
   await name.fill("Aula");
+  const sentBefore = changes.sent;
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(
     page.getByRole("link", { exact: true, name: "Aula" })
@@ -60,6 +63,8 @@ test("an admin moves a room that has not opened to a new name from its row, the 
     page.getByRole("link", { exact: true, name: UPCOMING_ROOM })
   ).toHaveCount(0);
 
+  // A reload drops a change still on its way, so it waits for the server to answer the move.
+  await saved(changes, sentBefore);
   await page.reload();
   await expect(
     page.getByRole("link", { exact: true, name: "Aula" })
