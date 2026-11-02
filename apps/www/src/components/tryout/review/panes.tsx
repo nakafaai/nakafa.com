@@ -1,3 +1,4 @@
+import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
@@ -5,8 +6,9 @@ import { Array as Arr, Result } from "effect";
 import { type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
+import { splitTime } from "@/components/player/time";
 import { pageRowVariants } from "@/components/shared/content/width";
-import { PaneBody, PaneHeader } from "@/components/shared/pane";
+import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import {
   Panes,
   PanesDetail,
@@ -84,12 +86,89 @@ function TryoutFinishedOpen() {
   );
 }
 
-/** Lays out the second pane's body: the seats, when the page reviews questions, then the score. */
-export function TryoutFinishedBody({ children }: { children: ReactNode }) {
+/**
+ * The second pane of a finished attempt: the seats of what it reviews in its body and its numbers,
+ * the `children`, in the footer, or its numbers alone in the body of a set of parts, which has no
+ * paper of its own.
+ */
+export function TryoutFinishedPanel({
+  children,
+  runtime,
+}: {
+  children: ReactNode;
+  readonly runtime: TryoutSectionRuntime | null;
+}) {
+  if (runtime === null) {
+    return <PaneBody>{children}</PaneBody>;
+  }
   return (
-    <PaneBody>
-      <div className="flex flex-col gap-6">{children}</div>
-    </PaneBody>
+    <>
+      <PaneBody>
+        <TryoutReviewSeats runtime={runtime} />
+      </PaneBody>
+      <PaneFooter>{children}</PaneFooter>
+    </>
+  );
+}
+
+/**
+ * A finished attempt's numbers: equal rows of a label and its value, one line each at any width of
+ * the pane, so nothing wraps beside something that does not and no value is cut at the edge.
+ */
+export function TryoutFinishedFacts({
+  score,
+  seconds,
+}: {
+  readonly score: TryoutScoreResult;
+  /** The time limit, where a page shows one paper's. */
+  readonly seconds?: number;
+}) {
+  const t = useTranslations("Tryouts");
+  return (
+    <dl className="flex w-full flex-col gap-1.5 text-sm">
+      <TryoutFinishedFact
+        label={t(
+          score.scoreStatus === "provisional"
+            ? "score-label-estimated"
+            : "score-label-standard"
+        )}
+      >
+        {score.publishedScore}
+      </TryoutFinishedFact>
+      <TryoutFinishedFact label={t("correct-answers-label")}>
+        {score.totalCorrect} / {score.totalQuestions}
+      </TryoutFinishedFact>
+      {seconds === undefined ? null : (
+        <TryoutFinishedFact label={t("part-time-label")}>
+          {readClock(seconds)}
+        </TryoutFinishedFact>
+      )}
+    </dl>
+  );
+}
+
+/** One row of a finished attempt's numbers. */
+function TryoutFinishedFact({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 whitespace-nowrap">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium tabular-nums">{children}</dd>
+    </div>
+  );
+}
+
+/** A duration as a clock reads it, such as 01:15:00. */
+function readClock(seconds: number) {
+  const { hours, minutes, seconds: rest } = splitTime(seconds);
+  return Arr.join(
+    Arr.map([hours, minutes, rest], (part) => String(part).padStart(2, "0")),
+    ":"
   );
 }
 
@@ -97,7 +176,7 @@ export function TryoutFinishedBody({ children }: { children: ReactNode }) {
  * The number seats of a finished paper, as the exam's navigator draws them: a press goes to that
  * question. A question the free preview does not show has nowhere to go, so its seat takes no press.
  */
-export function TryoutReviewSeats({
+function TryoutReviewSeats({
   runtime,
 }: {
   readonly runtime: TryoutSectionRuntime;

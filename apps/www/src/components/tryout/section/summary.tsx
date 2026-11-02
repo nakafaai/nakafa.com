@@ -86,7 +86,7 @@ function TryoutSectionMetrics({
  * Renders a section's time limit as one summary metric, before a start and
  * beside a score, with the digits the caller composed.
  */
-export function TryoutTimeLimitStat({ children }: { children: ReactNode }) {
+function TryoutTimeLimitStat({ children }: { children: ReactNode }) {
   const tTryouts = useTranslations("Tryouts");
 
   return (

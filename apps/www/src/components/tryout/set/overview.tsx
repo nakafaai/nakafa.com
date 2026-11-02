@@ -1,6 +1,11 @@
-import { TryoutFinishedPanes } from "@/components/tryout/review/panes";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import {
+  TryoutFinishedFacts,
+  TryoutFinishedPanel,
+  TryoutFinishedPanes,
+} from "@/components/tryout/review/panes";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
-import { TryoutAttemptResults } from "@/components/tryout/score/history";
+import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { TryoutSetAction } from "@/components/tryout/set/action";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type {
@@ -46,27 +51,42 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
         page={value.page}
         returnPath={value.returnPath}
       >
-        <TryoutSetAction
-          value={{
-            activeAttempt: value.activeAttempt,
-            currentPath: value.currentPath,
-            ...(value.actionAttempt === undefined
-              ? {}
-              : { currentAttempt: value.actionAttempt }),
-            destination: value.start.destination,
-            entrySection: value.start.entrySection,
-            locale: value.route.locale,
-            set: value.start.set,
-          }}
-        />
+        <ButtonGroup>
+          <TryoutAttemptPicker
+            attempt={value.actionAttempt}
+            locale={value.route.locale}
+            set={value.page.set}
+          />
+          <TryoutSetAction
+            value={{
+              activeAttempt: value.activeAttempt,
+              currentPath: value.currentPath,
+              ...(value.actionAttempt === undefined
+                ? {}
+                : { currentAttempt: value.actionAttempt }),
+              destination: value.start.destination,
+              entrySection: value.start.entrySection,
+              locale: value.route.locale,
+              set: value.start.set,
+            }}
+          />
+        </ButtonGroup>
       </TryoutSetPageHeader>
       {value.actionAttempt?.score ? (
-        <TryoutFinishedPanes panel={<TryoutSetResult value={value} />}>
+        <TryoutFinishedPanes
+          panel={
+            <TryoutFinishedPanel runtime={null}>
+              <TryoutFinishedFacts score={value.actionAttempt.score} />
+            </TryoutFinishedPanel>
+          }
+        >
           <TryoutSetParts value={value} />
         </TryoutFinishedPanes>
       ) : (
         <TryoutPageBody>
-          <TryoutSetResult value={value} />
+          {value.activeAttempt ? (
+            <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
+          ) : null}
           <TryoutSetParts value={value} />
         </TryoutPageBody>
       )}
@@ -82,39 +102,6 @@ function TryoutSetParts({ value }: TryoutSetOverviewProps) {
         ? {}
         : { attempt: value.actionAttempt })}
       sections={value.sectionRoutes}
-    />
-  );
-}
-
-/** The finished attempt's result, or the running attempt's countdown. */
-function TryoutSetResult({ value }: TryoutSetOverviewProps) {
-  const attempt = value.actionAttempt;
-
-  if (!attempt?.score) {
-    return value.activeAttempt ? (
-      <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
-    ) : null;
-  }
-
-  return (
-    <TryoutAttemptResults
-      value={{
-        attempt: {
-          attemptId: attempt.attemptId,
-          attemptNumber: attempt.attemptNumber,
-          score: attempt.score,
-          startedAt: attempt.startedAt,
-          status: attempt.status,
-        },
-        identity: {
-          countryKey: value.page.set.countryKey,
-          examKey: value.page.set.examKey,
-          locale: value.route.locale,
-          setKey: value.page.set.setKey,
-          trackKey: value.page.set.trackKey,
-        },
-        publicPath: value.page.set.publicPath,
-      }}
     />
   );
 }

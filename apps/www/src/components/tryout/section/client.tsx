@@ -19,9 +19,9 @@ import {
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
 import {
-  TryoutFinishedBody,
+  TryoutFinishedFacts,
+  TryoutFinishedPanel,
   TryoutFinishedPanes,
-  TryoutReviewSeats,
 } from "@/components/tryout/review/panes";
 import {
   getTryoutAttemptLock,
@@ -41,7 +41,6 @@ import {
   isTryoutStateLive,
   selectActionAttempt,
 } from "@/components/tryout/runtime/state";
-import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
@@ -281,10 +280,12 @@ function ResolvedTryoutSectionPage({
       {runtimeState.kind === "review" && actionAttempt?.section?.score ? (
         <TryoutFinishedPanes
           panel={
-            <TryoutFinishedBody>
-              <TryoutReviewSeats runtime={runtimeState.runtime} />
-              <TryoutScoreMetrics score={actionAttempt.section.score} />
-            </TryoutFinishedBody>
+            <TryoutFinishedPanel runtime={runtimeState.runtime}>
+              <TryoutFinishedFacts
+                score={actionAttempt.section.score}
+                seconds={page.section.timeLimitSeconds}
+              />
+            </TryoutFinishedPanel>
           }
         >
           {children}

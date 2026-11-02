@@ -68,6 +68,7 @@ const learnerRoutes = [
   "/en/user/settings/memory",
   "/en/user/settings/subscriptions",
   "/en/notifications",
+  "/en/try-out/indonesia/tka/compulsory-mathematics/set-1",
 ];
 
 /** The pages of a school host that an Owner sees without an exam: the exams and every setting. */

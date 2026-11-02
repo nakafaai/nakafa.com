@@ -29,33 +29,17 @@ import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
-import { PaneFooter } from "@/components/shared/pane";
-import { TryoutFinishedBody } from "@/components/tryout/review/panes";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
-import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
+import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
 type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
 type ScoredHistoryRow = TryoutAttemptHistoryProps["value"]["attempts"][number];
-type ScoredAttempt = Pick<
-  ScoredHistoryRow,
-  "attemptId" | "attemptNumber" | "score" | "startedAt" | "status"
->;
-
-/** Props of the attempt results: `value` holds the scored attempt, its set identity, and the set's page. */
-interface TryoutAttemptResultsProps {
-  value: {
-    attempt: ScoredAttempt;
-    identity: HistoryIdentity;
-    publicPath: string;
-  };
-}
 
 /** Props of one attempt row: `value.attempt` is the option the picker lists. */
 interface TryoutAttemptHistoryItemProps {
@@ -230,25 +214,55 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
 }
 
 /**
- * Renders the second pane of the page's finished attempt: its seats, its metrics, then the metrics
- * composed after them, and for a set tried more than once the picker of its attempts in the footer.
+ * The picker of a set's attempts, for the page's header, once a set has been tried more than once.
  * Choosing an attempt opens that attempt's page, so the score and the review always belong to one
- * attempt.
+ * attempt. A page whose attempt has no score has nothing to pick from.
  */
-export function TryoutAttemptResults({
-  children,
-  seats,
-  value,
-}: TryoutAttemptResultsProps & {
-  children?: ReactNode;
-  /** The number seats of a page that reviews questions. */
-  seats?: ReactNode;
+export function TryoutAttemptPicker({
+  attempt,
+  locale,
+  set,
+}: {
+  readonly attempt:
+    | Pick<CurrentAttempt, "attemptId" | "score">
+    | null
+    | undefined;
+  readonly locale: HistoryIdentity["locale"];
+  readonly set: SetPage["set"];
+}) {
+  if (!attempt?.score) {
+    return null;
+  }
+  return (
+    <TryoutAttemptChoice
+      attemptId={attempt.attemptId}
+      identity={{
+        countryKey: set.countryKey,
+        examKey: set.examKey,
+        locale,
+        setKey: set.setKey,
+        trackKey: set.trackKey,
+      }}
+      publicPath={set.publicPath}
+    />
+  );
+}
+
+/** Reads a set's attempts for the picker, which waits until there is more than one to pick from. */
+function TryoutAttemptChoice({
+  attemptId,
+  identity,
+  publicPath,
+}: {
+  readonly attemptId: HistoryRow["attemptId"];
+  readonly identity: HistoryIdentity;
+  readonly publicPath: string;
 }) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const navigate = useNavigate();
   const history = usePaginatedQuery(
     tryouts.queries.history.bySet,
-    isAuthenticated ? value.identity : "skip",
+    isAuthenticated ? identity : "skip",
     { initialNumItems: 25 }
   );
   const attempts = useKeptAttempts(
@@ -256,38 +270,28 @@ export function TryoutAttemptResults({
     PaginatedQueryResult.isLoadingFirstPage(history)
   );
 
+  if (attempts.length < 2) {
+    return null;
+  }
   return (
-    <>
-      <TryoutFinishedBody>
-        {PaginatedQueryResult.isFailure(history) && <DataFailure />}
-        {seats}
-        <TryoutScoreMetrics score={value.attempt.score}>
-          {children}
-        </TryoutScoreMetrics>
-      </TryoutFinishedBody>
-      {attempts.length > 1 ? (
-        <PaneFooter>
-          <TryoutAttemptHistory
-            value={{
-              attempts,
-              locale: value.identity.locale,
-              onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
-                ? () => history.loadMore(25)
-                : undefined,
-              onChoose: (attemptId) => {
-                if (attemptId === value.attempt.attemptId) {
-                  return;
-                }
-                navigate({
-                  href: `/${value.identity.locale}${getTryoutAttemptHref(value.publicPath, attemptId)}`,
-                });
-              },
-              selectedAttemptId: value.attempt.attemptId,
-            }}
-          />
-        </PaneFooter>
-      ) : null}
-    </>
+    <TryoutAttemptHistory
+      value={{
+        attempts,
+        locale: identity.locale,
+        onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
+          ? () => history.loadMore(25)
+          : undefined,
+        onChoose: (chosen) => {
+          if (chosen === attemptId) {
+            return;
+          }
+          navigate({
+            href: `/${identity.locale}${getTryoutAttemptHref(publicPath, chosen, Option.none())}`,
+          });
+        },
+        selectedAttemptId: attemptId,
+      }}
+    />
   );
 }
 
