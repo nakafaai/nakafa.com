@@ -122,6 +122,7 @@ import learningViews from "./tables/learningViews";
 import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
+import ninaFiles from "./tables/ninaFiles";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
@@ -297,6 +298,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly loginCards: typeof loginCards;
   readonly materialBuckets: typeof materialBuckets;
   readonly materialCatalog: typeof materialCatalog;
+  readonly ninaFiles: typeof ninaFiles;
   readonly ninaMemories: typeof ninaMemories;
   readonly ninaMemoryKeys: typeof ninaMemoryKeys;
   readonly ninaMemoryPortraits: typeof ninaMemoryPortraits;
@@ -471,6 +473,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   loginCards,
   materialBuckets,
   materialCatalog,
+  ninaFiles,
   ninaMemories,
   ninaMemoryKeys,
   ninaMemoryPortraits,

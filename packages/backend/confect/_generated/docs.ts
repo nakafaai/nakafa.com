@@ -123,6 +123,7 @@ export type LearningViewsDoc = Document.Document<typeof schemaDefinition, "learn
 export type LoginCardsDoc = Document.Document<typeof schemaDefinition, "loginCards">;
 export type MaterialBucketsDoc = Document.Document<typeof schemaDefinition, "materialBuckets">;
 export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "materialCatalog">;
+export type NinaFilesDoc = Document.Document<typeof schemaDefinition, "ninaFiles">;
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
 export type NinaMemoryKeysDoc = Document.Document<typeof schemaDefinition, "ninaMemoryKeys">;
 export type NinaMemoryPortraitsDoc = Document.Document<typeof schemaDefinition, "ninaMemoryPortraits">;
@@ -298,6 +299,7 @@ export interface Docs {
   loginCards: LoginCardsDoc;
   materialBuckets: MaterialBucketsDoc;
   materialCatalog: MaterialCatalogDoc;
+  ninaFiles: NinaFilesDoc;
   ninaMemories: NinaMemoriesDoc;
   ninaMemoryKeys: NinaMemoryKeysDoc;
   ninaMemoryPortraits: NinaMemoryPortraitsDoc;
