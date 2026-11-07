@@ -18,7 +18,7 @@
 
 ### Major Changes
 
-- [#521](https://github.com/nakafaai/nakafa.com/pull/521) [`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Replace the API and MCP Next.js proxy applications with frameworkless Vercel routing into the Convex-owned runtimes. Remove the orphaned private API and website MCP proxy surfaces, publish one canonical MCP endpoint, and rename the Aksara publication credential to match its owner.
+- [#521](https://github.com/nakafaai/nakafa.com/pull/521) [`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Replace the API and MCP proxy applications with frameworkless routing into the Convex-owned runtimes. Remove the orphaned private API and website MCP proxy surfaces, publish one canonical MCP endpoint, and rename the Aksara publication credential to match its owner.
 
 ### Patch Changes
 
@@ -90,7 +90,7 @@
 
 ### Minor Changes
 
-- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Upgrade nextjs 16.1, update polar sdk to latest, introducing class materials features, adding schema to class and implementation to add materials
+- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Upgrade the web framework to 16.1, update polar sdk to latest, introducing class materials features, adding schema to class and implementation to add materials
 
 - [`8466034`](https://github.com/nakafaai/nakafa.com/commit/84660348bf5dcfcf048db3f57d47a05cc18cd868) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Convex now support betterAuth 1.4, all migrate to that
 
