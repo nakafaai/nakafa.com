@@ -94,13 +94,11 @@ export const batchRefusal = Effect.fn("editor.result.refusal")(function* (
     Effect.catchTags({
       DocumentInvalid: () => Effect.succeed(invalid),
       DocumentTooLarge: ({ bytes, limit }) =>
-        Effect.succeed(
-          Option.some<typeof SubmitReply.Type>({
-            _tag: "DocumentTooLarge",
-            bytes,
-            limit,
-          })
-        ),
+        Effect.succeedSome<typeof SubmitReply.Type>({
+          _tag: "DocumentTooLarge",
+          bytes,
+          limit,
+        }),
     })
   );
 });

@@ -143,6 +143,9 @@ export const push = Effect.fn("editor.sync.push")(function* (
       version: sendable.version,
     }),
   }));
+  // The document would break the contract with this batch, so the batch is not accepted
+  // (ADR 0028). The round halves it below and sends the first half.
+  const refused = () => Effect.succeed(false);
   // A failure of the call is not caught here: the batch stays unsent, and the round fails.
   const reply = yield* session.transport.submit(fitted.text);
   const sent = yield* Match.valueTags(reply, {
@@ -150,10 +153,8 @@ export const push = Effect.fn("editor.sync.push")(function* (
     // The batch missed the head: it waits for the server's steps, and the next round sends
     // nothing on this version.
     VersionStale: () => Effect.succeed(true),
-    // The document would break the contract with this batch, so the batch is not accepted
-    // (ADR 0028). The round halves it below and sends the first half.
-    DocumentInvalid: () => Effect.succeed(false),
-    DocumentTooLarge: () => Effect.succeed(false),
+    DocumentInvalid: refused,
+    DocumentTooLarge: refused,
     // The batch waits for a fold: the round fails with `SyncFolding`, and `tickThroughFold`
     // runs it again under the same batch id.
     FoldPending: () => Effect.fail(new SyncFolding()),

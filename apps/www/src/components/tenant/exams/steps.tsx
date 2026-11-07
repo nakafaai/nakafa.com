@@ -8,7 +8,8 @@ import type { PromptSync } from "@/components/tenant/exams/sync";
 
 /**
  * The server's steps of an open text, through a subscription, so the editor takes them without polling.
- * A `behind` reply makes the round reopen the document from its snapshot, so it starts one too.
+ * A `behind` reply makes the round reopen the document from its snapshot, so it starts one too. A gone
+ * exam takes no more steps, so its texts read none, and the deletion of their documents fails no read.
  */
 export function ExamSteps({
   documentId,
@@ -22,12 +23,12 @@ export function ExamSteps({
   /** The text's sync store, which names the session and the version it reads from. */
   sync: StoreApi<PromptSync>;
 }) {
-  const { slug } = useExam();
+  const { gone, slug } = useExam();
   const clientId = useStore(sync, (state) => state.clientId);
   const version = useStore(sync, (state) => state.version);
   const reply = useQuery(
     editors.steps.since,
-    clientId === null ? "skip" : { clientId, documentId, slug, version }
+    clientId === null || gone ? "skip" : { clientId, documentId, slug, version }
   );
   const takeSteps = useEffectEvent(onSteps);
 

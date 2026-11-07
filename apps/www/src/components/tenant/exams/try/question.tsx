@@ -11,7 +11,7 @@ import { paperAnswers } from "@repo/backend/confect/exams/parts";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { type ReactNode, Suspense, useMemo } from "react";
+import { type ReactNode, Suspense, use, useMemo } from "react";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { ReaderPrimer } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
@@ -43,7 +43,11 @@ import {
 } from "@/components/player/question";
 import { TryPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
-import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
+import {
+  TryGoneContext,
+  useExamTry,
+  useTrySlug,
+} from "@/components/tenant/exams/try/context";
 import { TryPictures } from "@/components/tenant/exams/try/pictures";
 import { useLastValue } from "@/lib/data/kept";
 
@@ -192,7 +196,7 @@ export function ExamTryQuestion({
  * The prompt of one question. The paper shows once its first screen can draw, as a sitting's paper does, so the
  * options below it do not move while the document opens and the reader loads. A prompt that does not open leaves no
  * space, and one whose exam goes while it is tried keeps the text it showed, as the paper keeps the exam's title and
- * questions.
+ * questions, and reads no more, so the deletion of its document fails no read.
  */
 function ExamTryPrompt({
   current,
@@ -203,10 +207,11 @@ function ExamTryPrompt({
   documentId: Question["prompt"];
 }) {
   const slug = useTrySlug();
+  const gone = use(TryGoneContext);
   const turn = usePaperTurn(documentId, current);
   const reply = useQuery(
     editors.documents.open,
-    turn ? { clientId: TRY_CLIENT, documentId, slug } : "skip"
+    turn && !gone ? { clientId: TRY_CLIENT, documentId, slug } : "skip"
   );
   const opened = useLastValue(reply);
   const drawable = usePaperDrawable();
