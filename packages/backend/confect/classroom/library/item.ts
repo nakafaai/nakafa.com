@@ -79,7 +79,7 @@ export const libraryValidator = Schema.Union([
 ]);
 
 /** What an item is as the library shows it: a link, a PDF, or an image. */
-export const LibraryKind = Schema.Literals(["link", "pdf", "image"]);
+const LibraryKind = Schema.Literals(["link", "pdf", "image"]);
 
 /**
  * One item as the library shows it: what it is, its title, its author, when it

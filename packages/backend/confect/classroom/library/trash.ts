@@ -34,7 +34,7 @@ import {
 } from "effect";
 
 /** How long an item or a folder waits in the trash before the daily sweep deletes it forever. */
-export const TRASH_AGE = Duration.days(30);
+const TRASH_AGE = Duration.days(30);
 
 /** The rows one pass of a deletion or of the sweep reads of each kind, so one transaction stays small. */
 const PURGE_BATCH = 64;
@@ -57,7 +57,7 @@ const removeLater = Effect.fn("classroom.library.removeLater")(function* (
  * Deletes items forever: their passages, the stars that name them, and their rows. A file's bytes leave the
  * school's use and the bucket's at once, and its object leaves the bucket right after.
  */
-export const purgeItems = Effect.fn("classroom.library.purgeItems")(function* (
+const purgeItems = Effect.fn("classroom.library.purgeItems")(function* (
   rows: readonly ClassroomLibraryDoc[]
 ) {
   const reader = yield* DatabaseReader;
@@ -99,66 +99,62 @@ export const purgeItems = Effect.fn("classroom.library.purgeItems")(function* (
  * Deletes some folders forever with their stars, and the items inside them a batch at a time: a folder whose items
  * fill a batch leaves the rest to a later pass, which reads them by the folder that no longer exists.
  */
-export const purgeFolders = Effect.fn("classroom.library.purgeFolders")(
-  function* (
-    classId: GenericId.GenericId<"classes">,
-    folderIds: readonly GenericId.GenericId<"classroomFolders">[]
-  ) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const items = yield* Effect.forEach(folderIds, (folderId) =>
-      reader
-        .table("classroomLibrary")
-        .index("by_classId_and_folderId_and_trashedAt", (query) =>
-          query.eq("classId", classId).eq("folderId", folderId)
-        )
-        .take(PURGE_BATCH)
-        .pipe(Effect.orDie)
-    );
-    yield* purgeItems(Arr.flatten(items));
-    yield* Effect.forEach(
-      folderIds,
-      (folderId) =>
-        Effect.gen(function* () {
-          const stars = yield* reader
-            .table("classroomStars")
-            .index("by_folderId", (query) => query.eq("folderId", folderId))
-            .collect()
-            .pipe(Effect.orDie);
-          yield* Effect.forEach(
-            stars,
-            (found) => writer.table("classroomStars").delete(found._id),
-            { discard: true }
-          ).pipe(Effect.orDie);
-          const folder = yield* reader
+const purgeFolders = Effect.fn("classroom.library.purgeFolders")(function* (
+  classId: GenericId.GenericId<"classes">,
+  folderIds: readonly GenericId.GenericId<"classroomFolders">[]
+) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const items = yield* Effect.forEach(folderIds, (folderId) =>
+    reader
+      .table("classroomLibrary")
+      .index("by_classId_and_folderId_and_trashedAt", (query) =>
+        query.eq("classId", classId).eq("folderId", folderId)
+      )
+      .take(PURGE_BATCH)
+      .pipe(Effect.orDie)
+  );
+  yield* purgeItems(Arr.flatten(items));
+  yield* Effect.forEach(
+    folderIds,
+    (folderId) =>
+      Effect.gen(function* () {
+        const stars = yield* reader
+          .table("classroomStars")
+          .index("by_folderId", (query) => query.eq("folderId", folderId))
+          .collect()
+          .pipe(Effect.orDie);
+        yield* Effect.forEach(
+          stars,
+          (found) => writer.table("classroomStars").delete(found._id),
+          { discard: true }
+        ).pipe(Effect.orDie);
+        const folder = yield* reader
+          .table("classroomFolders")
+          .get(folderId)
+          .pipe(Effect.option);
+        if (Option.isSome(folder)) {
+          yield* writer
             .table("classroomFolders")
-            .get(folderId)
-            .pipe(Effect.option);
-          if (Option.isSome(folder)) {
-            yield* writer
-              .table("classroomFolders")
-              .delete(folderId)
-              .pipe(Effect.orDie);
-          }
-        }),
-      { discard: true }
+            .delete(folderId)
+            .pipe(Effect.orDie);
+        }
+      }),
+    { discard: true }
+  );
+  const remaining = Arr.filterMap(
+    Arr.zip(folderIds, items),
+    ([folderId, found]) =>
+      found.length === PURGE_BATCH ? Result.succeed(folderId) : Result.failVoid
+  );
+  if (remaining.length > 0) {
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      classroomInternal.library.purgeRest,
+      { classId, folderIds: remaining }
     );
-    const remaining = Arr.filterMap(
-      Arr.zip(folderIds, items),
-      ([folderId, found]) =>
-        found.length === PURGE_BATCH
-          ? Result.succeed(folderId)
-          : Result.failVoid
-    );
-    if (remaining.length > 0) {
-      yield* (yield* Scheduler).runAfter(
-        Duration.zero,
-        classroomInternal.library.purgeRest,
-        { classId, folderIds: remaining }
-      );
-    }
   }
-);
+});
 
 /** One folder and every folder inside it, deleted forever with everything they hold. */
 export const purgeTree = Effect.fn("classroom.library.purgeTree")(function* (

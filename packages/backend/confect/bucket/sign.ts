@@ -22,7 +22,7 @@ export const ObjectMethod = Schema.Literals(["GET", "PUT", "HEAD", "DELETE"]);
  * Cloudflare R2 bucket at `https://{account}.r2.cloudflarestorage.com`; local acceptance reads its own stand-in.
  * The region of R2 is always `auto`.
  */
-export const bucketConfig = Config.all({
+const bucketConfig = Config.all({
   accessKeyId: Config.String("R2_ACCESS_KEY_ID"),
   bucket: Config.String("R2_BUCKET"),
   endpoint: Config.URL("R2_ENDPOINT"),
@@ -36,7 +36,7 @@ const TRAILING_SLASHES = /\/+$/u;
 const R2_REGION = "auto";
 
 /** What one presigned address names: its method, its object, how long it lives, and the headers and query it binds. */
-export const PresignRequest = Schema.Struct({
+const PresignRequest = Schema.Struct({
   accessKeyId: Schema.String,
   expiresSeconds: Schema.Int.check(
     Schema.isBetween({ maximum: 604_800, minimum: 1 })
@@ -161,7 +161,7 @@ export const presign = Effect.fn("bucket.presign")(
 );
 
 /** What an object address binds beyond its method and key: its lifetime, its signed headers, and its query. */
-export const ObjectAddress = Schema.Struct({
+const ObjectAddress = Schema.Struct({
   expiresSeconds: PresignRequest.fields.expiresSeconds,
   headers: Schema.optionalKey(PresignRequest.fields.headers),
   method: ObjectMethod,

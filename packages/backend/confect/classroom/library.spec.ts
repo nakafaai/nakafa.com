@@ -36,13 +36,13 @@ const folderArg = { folderId: Schema.NullOr(Id("classroomFolders")) };
 const itemArg = { itemId: Id("classroomLibrary") };
 
 /** The text a search looks for in the titles: one to 80 characters. */
-export const SearchText = Schema.String.check(
+const SearchText = Schema.String.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(80)
 );
 
 /** What a star names: one item or one folder of the class. */
-export const StarTarget = Schema.Union([
+const StarTarget = Schema.Union([
   Schema.Struct({
     itemId: Id("classroomLibrary"),
     kind: Schema.Literal("item"),

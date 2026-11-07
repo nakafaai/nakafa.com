@@ -1,7 +1,7 @@
 import { Record as Rec } from "effect";
 
 /** The endpoint the tests configure for R2, which no request ever leaves the process for. */
-export const BUCKET_ENDPOINT = "https://account.r2.test";
+const BUCKET_ENDPOINT = "https://account.r2.test";
 
 /** The bucket the tests configure. */
 const BUCKET = "files";

@@ -31,7 +31,7 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, Duration, Effect, Option, Schema } from "effect";
 
 /** How long an upload address lives: long enough for 20 MiB on a slow school connection. */
-export const UPLOAD_SECONDS = 900;
+const UPLOAD_SECONDS = 900;
 
 /** How long a reservation waits for its upload before the daily sweep frees its bytes. */
 export const RESERVATION_AGE = Duration.hours(2);
@@ -55,7 +55,7 @@ export const reservationValidator = Schema.Struct({
 });
 
 /** What one reservation asks for. */
-export const ReservationRequest = Schema.Struct({
+const ReservationRequest = Schema.Struct({
   authorId: Id("tenantPeople"),
   byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
   clientKey: ClientKey,
