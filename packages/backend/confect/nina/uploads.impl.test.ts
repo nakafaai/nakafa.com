@@ -216,8 +216,9 @@ describe("native Nina attachment ownership", () => {
   it("retires a failed upload reservation and bounds pending uploads per account", async () => {
     const { t, owner } = await uploadFixture();
     const logged = vi.spyOn(console, "error").mockImplementation(() => 0);
-    // R2 refuses every try, so the upload fails once its retries are spent, in real time.
-    vi.useRealTimers();
+    // R2 refuses every try. Only the date is faked meanwhile, so the retries sleep in real time.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(NOW);
     bucket.state.failing = true;
     await expect(owner.action(save, attachment)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_FAILED" },

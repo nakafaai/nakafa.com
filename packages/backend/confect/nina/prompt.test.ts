@@ -33,6 +33,9 @@ beforeEach(() => {
   stubBucket();
 });
 
+/** The signature of an address the server signed for the bucket. */
+const SIGNED = /X-Amz-Signature=/u;
+
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
@@ -174,10 +177,17 @@ describe("a retried Nina prompt", () => {
         identity.userId,
         second.promptMessageId
       );
+      // Each variant uploads its own file, so only its address differs: it is a signed address of the bucket.
       return {
         fileIds: retriedRow?.fileIds ?? [],
         order: second.order,
-        prompt: second.prompt,
+        prompt: {
+          ...second.prompt,
+          files: Arr.map(second.prompt.files, (file) => ({
+            ...file,
+            url: SIGNED.test(file.url) ? "signed" : file.url,
+          })),
+        },
       };
     };
     const written = await retried("written");

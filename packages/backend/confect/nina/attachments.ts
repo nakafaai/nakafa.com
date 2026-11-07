@@ -18,7 +18,7 @@ import { openFileName } from "@repo/backend/confect/nina/sealed/file";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { FilePart, ImagePart, ModelMessage } from "ai";
-import { Array as Arr, Clock, Effect, Option, String as Str } from "effect";
+import { Array as Arr, Clock, Effect, String as Str } from "effect";
 
 /** The keys of one learner, read by the caller once for a whole send (ADR 0024). */
 type ReadKeys = ReturnType<typeof readLearnerKeys>;
@@ -56,10 +56,7 @@ const readAttachment = Effect.fn("nina.attachments.read")(function* (
 ) {
   const entry = yield* readEntry(fileId);
   const address = yield* Effect.flatMap(fileAddress(fileId), (found) =>
-    Option.match(found, {
-      onNone: () => Effect.fail(readFailure()),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(found).pipe(Effect.mapError(readFailure))
   );
   const filename = yield* openFileName(readKeys, name).pipe(
     Effect.mapError(readFailure)

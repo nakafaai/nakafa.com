@@ -132,9 +132,10 @@ describe("Sealing a settled Nina turn", () => {
 
     const settled = await storedRowsIn(f.t, f.receipt.threadId);
     expect(plantedIn(settled)).toEqual([]);
-    expect(settled.files).toEqual([
-      expect.objectContaining({ mediaType: "image/png" }),
-    ]);
+    // The file the learner sent is the bucket's, so the component holds none.
+    expect(
+      await f.t.query((ctx) => ctx.db.get("bucketFiles", fileId))
+    ).toMatchObject({ contentType: "image/png", state: "stored" });
     const deltas = await f.t.query((ctx) =>
       ctx.runQuery(components.nina.streams.listDeltas, {
         cursors: Arr.map(streamIds, (streamId) => ({ cursor: 0, streamId })),
