@@ -299,6 +299,16 @@ export function followUpCalls(model: MockLanguageModelV4) {
   );
 }
 
+/** Answers the follow-up call of a test model with `followUps`, and every other call as the model already does. */
+export function answerFollowUps(
+  model: MockLanguageModelV4,
+  followUps: () => ReturnType<MockLanguageModelV4["doStream"]>
+) {
+  const answer = model.doStream;
+  model.doStream = (options) =>
+    options.responseFormat?.type === "json" ? followUps() : answer(options);
+}
+
 /** The follow-up the test model writes after an answer. */
 const NINA_SUGGESTIONS = ["How does this relate to continuity?"];
 

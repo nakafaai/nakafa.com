@@ -7,6 +7,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import {
+  answerFollowUps,
   createNinaTest,
   fireDueJobs,
   followUpCalls,
@@ -57,12 +58,8 @@ describe("Nina presentation after an answer", () => {
         failure === "provider"
           ? () => Promise.reject(new Error("Private provider diagnostic"))
           : () => Promise.resolve(providerStep([{ type: "text", text: "" }]));
-      const answer = model.doStream;
-      model.doStream = (options) => {
-        if (options.responseFormat?.type !== "json") {
-          return answer(options);
-        }
-        return failure === "provider"
+      answerFollowUps(model, () =>
+        failure === "provider"
           ? Promise.reject(new Error("Private provider diagnostic"))
           : Promise.resolve(
               ninaStream([
@@ -73,8 +70,8 @@ describe("Nina presentation after an answer", () => {
                   finishReason: { unified: "stop", raw: "stop" },
                 },
               ])
-            );
-      };
+            )
+      );
       provider.languageModel.mockReturnValue(model);
       await f.t.action(run, { turnId: f.turnId });
       await f.t.finishAllScheduledFunctions(fireDueJobs);
@@ -151,16 +148,14 @@ describe("Nina presentation after an answer", () => {
   it("saves every follow-up of a longer list once the model has written it", async () => {
     const f = await createNinaTest();
     const model = ninaModel();
-    const answer = model.doStream;
     const questions = [
       "What is a one-sided limit?",
       "How does this relate to continuity?",
       "When does a limit not exist?",
     ];
-    model.doStream = (options) =>
-      options.responseFormat?.type === "json"
-        ? Promise.resolve(ninaSuggestionStream(questions))
-        : answer(options);
+    answerFollowUps(model, () =>
+      Promise.resolve(ninaSuggestionStream(questions))
+    );
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
@@ -172,21 +167,16 @@ describe("Nina presentation after an answer", () => {
   it("saves each follow-up the model has finished while it writes the next one", async () => {
     const f = await createNinaTest();
     const model = ninaModel();
-    const answer = model.doStream;
     // The follow-up stream fails halfway through its second question, so only
     // a question saved while the stream ran can reach the turn.
-    model.doStream = (options) =>
-      options.responseFormat?.type === "json"
-        ? Promise.resolve(
-            ninaSuggestionStream(
-              [
-                "What is a one-sided limit?",
-                "How does this relate to continuity?",
-              ],
-              true
-            )
-          )
-        : answer(options);
+    answerFollowUps(model, () =>
+      Promise.resolve(
+        ninaSuggestionStream(
+          ["What is a one-sided limit?", "How does this relate to continuity?"],
+          true
+        )
+      )
+    );
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);

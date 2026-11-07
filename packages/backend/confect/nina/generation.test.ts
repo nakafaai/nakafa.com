@@ -259,12 +259,10 @@ describe("Nina generation through the real Agent component", () => {
     await f.t.finishAllScheduledFunctions(() => undefined);
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
-    expect(answerCalls(languageModel)).toHaveLength(2);
+    const calls = answerCalls(languageModel);
+    expect(calls).toHaveLength(2);
     expect(
-      Arr.filter(
-        answerCalls(languageModel)[1]?.prompt,
-        (message) => message.role === "tool"
-      )
+      Arr.filter(calls[1]?.prompt, (message) => message.role === "tool")
     ).toEqual([
       {
         role: "tool",
