@@ -41,9 +41,9 @@ export const archive = FunctionImpl.make(
   databaseSchema,
   spec,
   "archive",
-  Effect.fn("classroom.forum.threads.archive")(({ number }) =>
-    shelve(number, true)
-  )
+  Effect.fn("classroom.forum.threads.archive")(function* ({ number }) {
+    return yield* shelve(number, true);
+  })
 );
 
 /** Restores an archived discussion for whoever opened it or manages the forum. */
@@ -51,7 +51,7 @@ export const restore = FunctionImpl.make(
   databaseSchema,
   spec,
   "restore",
-  Effect.fn("classroom.forum.threads.restore")(({ number }) =>
-    shelve(number, false)
-  )
+  Effect.fn("classroom.forum.threads.restore")(function* ({ number }) {
+    return yield* shelve(number, false);
+  })
 );

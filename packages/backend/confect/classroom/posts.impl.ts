@@ -366,7 +366,9 @@ const archive = FunctionImpl.make(
   databaseSchema,
   spec,
   "archive",
-  Effect.fn("classroom.posts.archive")(({ postId }) => shelve(postId, true))
+  Effect.fn("classroom.posts.archive")(function* ({ postId }) {
+    return yield* shelve(postId, true);
+  })
 );
 
 /** Restores an archived announcement of its author. */
@@ -374,7 +376,9 @@ const restore = FunctionImpl.make(
   databaseSchema,
   spec,
   "restore",
-  Effect.fn("classroom.posts.restore")(({ postId }) => shelve(postId, false))
+  Effect.fn("classroom.posts.restore")(function* ({ postId }) {
+    return yield* shelve(postId, false);
+  })
 );
 
 const remove = FunctionImpl.make(
