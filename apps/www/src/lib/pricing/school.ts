@@ -1,32 +1,54 @@
-import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import { Function as Fn } from "effect";
+import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
+import { Array as Arr, Function as Fn, Option, Schema } from "effect";
 import { spaceLetterSymbol } from "@/lib/pricing/monthly";
+
+/** The locale that writes one currency and the fraction digits it shows. */
+const CurrencyFormat = Schema.Struct({
+  currency: BillingCurrency,
+  digits: Schema.Int,
+  locale: Schema.String,
+});
+type CurrencyFormat = typeof CurrencyFormat.Type;
 
 /**
  * How each currency is written: the locale that writes it, as the Pro prices are
- * written, so every page spells one price the same, and its minor-unit digits.
+ * written, so every page spells one price the same; its minor-unit digits; and
+ * the same format without fraction digits for a whole amount.
  */
 const CURRENCY_FORMATS = {
-  EUR: { currency: "EUR", digits: 2, locale: "de-DE" },
-  IDR: { currency: "IDR", digits: 0, locale: "id-ID" },
-  USD: { currency: "USD", digits: 2, locale: "en-US" },
+  EUR: {
+    exact: { currency: "EUR", digits: 2, locale: "de-DE" },
+    whole: { currency: "EUR", digits: 0, locale: "de-DE" },
+  },
+  IDR: {
+    exact: { currency: "IDR", digits: 0, locale: "id-ID" },
+    whole: { currency: "IDR", digits: 0, locale: "id-ID" },
+  },
+  USD: {
+    exact: { currency: "USD", digits: 2, locale: "en-US" },
+    whole: { currency: "USD", digits: 0, locale: "en-US" },
+  },
 } as const satisfies Record<
   BillingCurrency,
-  { currency: BillingCurrency; digits: number; locale: string }
+  Record<"exact" | "whole", CurrencyFormat>
 >;
 
-/** Builds the formatter of one currency, which loads its locale's data. */
-const buildFormatter = (format: (typeof CURRENCY_FORMATS)[BillingCurrency]) =>
+/** Builds the formatter of one currency format, which loads its locale's data. */
+const buildFormatter = (format: CurrencyFormat) =>
   new Intl.NumberFormat(format.locale, {
     currency: format.currency,
     maximumFractionDigits: format.digits,
     minimumFractionDigits: format.digits,
     style: "currency",
-    trailingZeroDisplay: "stripIfInteger",
   });
 
-/** The formatter of one currency, built at its first read. */
+/** The formatter of one currency format, built at its first read. */
 const formatterOf = Fn.memoize(buildFormatter);
+
+/** A School price in minor units as a number in major units, as structured data states a price. */
+export function toMajorUnits(currency: BillingCurrency, minor: number) {
+  return minor / 10 ** CURRENCY_FORMATS[currency].exact.digits;
+}
 
 /**
  * A School price in minor units, written in its currency's own locale: a whole
@@ -34,16 +56,13 @@ const formatterOf = Fn.memoize(buildFormatter);
  * $103.55. The rupiah's symbol takes the same no-break space in every browser.
  */
 export function formatSchoolPrice(currency: BillingCurrency, minor: number) {
+  const formats = CURRENCY_FORMATS[currency];
+  const whole = minor % 10 ** formats.exact.digits === 0;
   return spaceLetterSymbol(
-    formatterOf(CURRENCY_FORMATS[currency]).format(
+    formatterOf(whole ? formats.whole : formats.exact).format(
       toMajorUnits(currency, minor)
     )
   );
-}
-
-/** A School price in minor units as a number in major units, as structured data states a price. */
-export function toMajorUnits(currency: BillingCurrency, minor: number) {
-  return minor / 10 ** CURRENCY_FORMATS[currency].digits;
 }
 
 /** The units of Drive storage, each 1,000 times the one before. */
@@ -58,10 +77,20 @@ const STORAGE_UNITS = [
  * unit never part across a line.
  */
 export function formatStorage(megabytes: number, locale: string) {
-  const step = STORAGE_UNITS.find((unit) => megabytes >= unit.megabytes);
-  const amount = step === undefined ? megabytes : megabytes / step.megabytes;
+  const { amount, unit } = Arr.findFirst(
+    STORAGE_UNITS,
+    (step) => megabytes >= step.megabytes
+  ).pipe(
+    Option.match({
+      onNone: () => ({ amount: megabytes, unit: "MB" }),
+      onSome: (step) => ({
+        amount: megabytes / step.megabytes,
+        unit: step.unit,
+      }),
+    })
+  );
   const number = new Intl.NumberFormat(locale, {
     maximumFractionDigits: 1,
   }).format(amount);
-  return `${number} ${step?.unit ?? "MB"}`;
+  return `${number}\u00a0${unit}`;
 }

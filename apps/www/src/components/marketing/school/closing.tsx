@@ -11,7 +11,7 @@ export function SchoolClosing() {
   return (
     <MarketingSection id="start" labelledBy="school-closing-title">
       <div className="mx-auto grid w-full max-w-2xl justify-items-center gap-6 text-center">
-        <Nina act="waving" label="" size={120} />
+        <Nina act="waving" label="" size={120} whole />
         <h2
           className="text-3xl tracking-tight text-balance sm:text-4xl"
           id="school-closing-title"

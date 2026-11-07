@@ -114,9 +114,9 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
   return (
     <Card className={planCardVariants({ tier })} data-school-plan={tier}>
       <CardHeader>
-        <h3 className="text-xl font-medium tracking-tight">
+        <h2 className="text-xl font-medium tracking-tight">
           {t(`plan-${tier}`)}
-        </h3>
+        </h2>
         <p className="text-muted-foreground">{t(`plan-${tier}-description`)}</p>
       </CardHeader>
       <CardContent className="grid content-start gap-1">
