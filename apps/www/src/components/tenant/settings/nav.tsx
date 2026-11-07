@@ -55,16 +55,18 @@ export function SchoolSettingsNav() {
       <TenantSetupGroup />
       <TenantSidebarGroup>
         {Arr.map(
-          Arr.flatMap(
-            Arr.filter(groups, (group) => group.key === "school"),
-            (group) => group.sections
+          Arr.flatMap(groups, (group: SchoolSettingsGroup) =>
+            group.key === "school" ? group.sections : []
           ),
           (section) => (
             <SchoolSettingsNavItem key={section.target.to} section={section} />
           )
         )}
         {Arr.map(
-          Arr.filter(groups, (group) => group.key !== "school"),
+          Arr.filter(
+            groups,
+            (group: SchoolSettingsGroup) => group.key !== "school"
+          ),
           (group) => (
             <SchoolSettingsNavGroup group={group} key={group.key} />
           )

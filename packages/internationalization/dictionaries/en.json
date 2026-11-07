@@ -1334,7 +1334,7 @@
     "student-add-description": "The student gets a login name and a first login card, added together.",
     "student-add-name": "Name",
     "student-add-footer": "Print the card before you close it, because the code is shown once.",
-    "student-add-seats": "{count} of {limit} free students used.",
+    "student-add-seats": "{count} of {limit} accounts in use.",
     "student-add-submit": "Add student",
     "invites-empty": "No invite is waiting.",
     "invites-search": "Find a name or email",

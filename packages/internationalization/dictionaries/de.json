@@ -1334,7 +1334,7 @@
     "student-add-description": "Der Schüler erhält einen Anmeldenamen und eine erste Anmeldekarte, beides in einem Schritt.",
     "student-add-name": "Name",
     "student-add-footer": "Drucke die Karte, bevor du schließt, denn der Code wird nur einmal angezeigt.",
-    "student-add-seats": "{count} von {limit} kostenlosen Schülern belegt.",
+    "student-add-seats": "{count} von {limit} Konten belegt.",
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
     "invites-search": "Name oder E-Mail suchen",
