@@ -1,7 +1,17 @@
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  Globe02Icon,
+  SquareLock01Icon,
+} from "@hugeicons/core-free-icons";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Item,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
+} from "@repo/design-system/components/ui/item";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate, useRouter } from "@tanstack/react-router";
@@ -11,26 +21,17 @@ import { useTranslations } from "use-intl";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
 import { deleteOnPress } from "@/components/ai/chat/press";
 import { useChatStore } from "@/components/ai/chat/store";
+import { readChatTitle } from "@/components/ai/chat/title";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 import { ownChatsTarget } from "@/lib/profile/href";
 
 /**
- * Owns destructive confirmation and routes away only after confirmed deletion.
- * The press hides the chat from the page at once, because the server's delete
- * makes every read of it fail, and the page must not show that as an error.
- * A refused delete shows the chat again.
+ * The delete of the chat on screen, which routes away only after the delete is confirmed. The press hides the chat
+ * from the page at once, because the server's delete makes every read of it fail, and the page must not show that
+ * as an error. A refused delete shows the chat again.
  */
-export function ChatDeletion({
-  chat,
-  open,
-  onOpenChange,
-}: {
-  chat: ChatView;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const t = useTranslations("Ai");
+export function useChatPageDeletion(chat: ChatView, close: () => void) {
   const router = useRouter();
   const navigate = useNavigate();
   const user = useViewer((s) => s.account);
@@ -54,7 +55,7 @@ export function ChatDeletion({
     Effect.runFork(
       deleteOnPress({
         chatId: chat._id,
-        close: () => onOpenChange(false),
+        close,
         convex,
         deleteChat,
         deleted: () => navigate({ ...ownChatsTarget(username), replace: true }),
@@ -72,18 +73,63 @@ export function ChatDeletion({
       })
     );
   };
+  return handleDelete;
+}
+
+/**
+ * Asks before a chat is deleted: the chat it takes away in the body, and Cancel beside Delete in the footer, on the
+ * chat page and in the profile's list alike.
+ */
+export function ChatDeletionDialog({
+  chat,
+  onDelete,
+  open,
+  setOpen,
+}: {
+  chat: ChatView;
+  onDelete: () => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("Ai");
+  const common = useTranslations("Common");
+
   return (
     <ResponsiveDialog
       description={t("delete-chat-description")}
       footer={
-        <Button onClick={handleDelete} variant="destructive">
-          <HugeIcons icon={Delete02Icon} />
-          {t("confirm")}
-        </Button>
+        <>
+          <Button
+            onClick={() => setOpen(false)}
+            type="button"
+            variant="outline"
+          >
+            {common("cancel")}
+          </Button>
+          <Button onClick={onDelete} type="button" variant="destructive">
+            <HugeIcons icon={Delete02Icon} />
+            {common("delete")}
+          </Button>
+        </>
       }
       open={open}
-      setOpen={onOpenChange}
+      setOpen={setOpen}
       title={t("delete-chat")}
-    />
+    >
+      <Item size="sm" variant="outline">
+        <ItemMedia variant="icon">
+          <HugeIcons
+            icon={
+              chat.visibility === "private" ? SquareLock01Icon : Globe02Icon
+            }
+          />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle className="line-clamp-2">
+            {readChatTitle(chat.title, t("new-chat"))}
+          </ItemTitle>
+        </ItemContent>
+      </Item>
+    </ResponsiveDialog>
   );
 }
