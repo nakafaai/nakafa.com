@@ -384,10 +384,10 @@ export function QuestionsAction({
               <SheetFooter className="flex-row items-center gap-2">
                 <ButtonGroup className="min-w-0 flex-1">
                   <Button
-                    aria-label={common("previous")}
                     disabled={selected === 0}
                     onClick={() => move(selected - 1)}
                     size="icon"
+                    tooltip={common("previous")}
                     type="button"
                   >
                     <HugeIcons icon={ArrowLeft01Icon} />
@@ -421,10 +421,10 @@ export function QuestionsAction({
                     </SelectContent>
                   </Select>
                   <Button
-                    aria-label={common("next")}
                     disabled={selected === questions.length - 1}
                     onClick={() => move(selected + 1)}
                     size="icon"
+                    tooltip={common("next")}
                     type="button"
                   >
                     <HugeIcons icon={ArrowRight01Icon} />

@@ -143,8 +143,8 @@ export function OpenContent({
             <DropdownMenuTrigger
               render={
                 <Button
-                  aria-label={t("more-actions")}
                   size="icon"
+                  tooltip={t("more-actions")}
                   variant="outline"
                 />
               }

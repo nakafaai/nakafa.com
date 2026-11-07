@@ -65,9 +65,9 @@ export function RowMenu({
           ref={trigger}
           render={
             <Button
-              aria-label={common("more-actions")}
               inert={inert}
               size="icon-sm"
+              tooltip={common("more-actions")}
               variant="ghost"
             >
               <HugeIcons icon={MoreHorizontalIcon} />

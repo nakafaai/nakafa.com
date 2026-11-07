@@ -56,9 +56,10 @@ export function RefContent({ githubUrl, className }: Props) {
           {t("source-code")}
         </a>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button size="icon" />}>
+          <DropdownMenuTrigger
+            render={<Button size="icon" tooltip={t("more")} />}
+          >
             <HugeIcons icon={ArrowDown01Icon} />
-            <span className="sr-only">{t("more")}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" label={t("menu-sources")}>
             <DropdownMenuItem

@@ -347,10 +347,10 @@ function VisualCardFullscreen() {
         className="ms-auto shrink-0"
         onClick={(event) => toggle(event.currentTarget)}
         size="icon"
+        tooltip={t("fullscreen")}
         variant="secondary"
       >
         <HugeIcons icon={presented ? ArrowShrink02Icon : ArrowExpand01Icon} />
-        <span className="sr-only">{t("fullscreen")}</span>
       </Button>
       <span className="sr-only" role="status">
         {presented ? t("fullscreen-shown") : null}
@@ -373,9 +373,10 @@ function VisualCardMenu({ children }: { children: ReactNode }) {
       <VisualCardFullscreen />
       <ButtonGroupSeparator />
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button size="icon" />}>
+        <DropdownMenuTrigger
+          render={<Button size="icon" tooltip={t("more-actions")} />}
+        >
           <HugeIcons icon={MoreHorizontalIcon} />
-          <span className="sr-only">{t("more-actions")}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" label={t("menu-actions")}>
           {children}

@@ -70,10 +70,10 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
                 <Button
                   className={activeChatId ? undefined : "hidden sm:inline-flex"}
                   size="icon-sm"
+                  tooltip={t("Common.more-actions")}
                   variant="ghost"
                 >
                   <HugeIcons icon={MoreHorizontalIcon} />
-                  <span className="sr-only">{t("Common.more-actions")}</span>
                 </Button>
               }
             />
@@ -99,9 +99,13 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">
+          <Button
+            onClick={() => setOpen(false)}
+            size="icon-sm"
+            tooltip={t("Common.close")}
+            variant="ghost"
+          >
             <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">{t("Common.close")}</span>
           </Button>
         </div>
       </div>
@@ -139,10 +143,10 @@ function HistorySlot() {
                 onMouseEnter={() => setWarmed(true)}
                 onPointerDown={() => setWarmed(true)}
                 size="icon-sm"
+                tooltip={t("chat-history")}
                 variant="ghost"
               >
                 <HugeIcons icon={ChatSearch01Icon} />
-                <span className="sr-only">{t("chat-history")}</span>
               </Button>
             }
           />

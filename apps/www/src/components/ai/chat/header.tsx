@@ -113,13 +113,12 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
             <DropdownMenuTrigger
               render={
                 <Button
-                  aria-label={tCommon("more-actions")}
                   ref={moreActions}
                   size="icon"
+                  tooltip={tCommon("more-actions")}
                   variant="outline"
                 >
                   <HugeIcons icon={MoreHorizontalIcon} />
-                  <span className="sr-only">{tCommon("more-actions")}</span>
                 </Button>
               }
             />
@@ -177,16 +176,16 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
-                aria-label={tCommon("cancel")}
                 onClick={closeEditor}
-                size="icon-xs"
+                size="icon-sm"
+                tooltip={tCommon("cancel")}
               >
                 <HugeIcons icon={Cancel01Icon} />
               </InputGroupButton>
               <InputGroupButton
-                aria-label={t("confirm")}
                 onClick={handleSave}
-                size="icon-xs"
+                size="icon-sm"
+                tooltip={t("confirm")}
               >
                 <HugeIcons icon={Tick01Icon} />
               </InputGroupButton>

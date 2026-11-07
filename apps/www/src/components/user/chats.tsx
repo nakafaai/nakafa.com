@@ -276,11 +276,7 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button
-              aria-label={t("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
+            <Button size="icon-sm" tooltip={t("more-actions")} variant="ghost">
               <HugeIcons icon={MoreHorizontalIcon} />
             </Button>
           }
@@ -319,12 +315,7 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
 function ChatActionsFrame() {
   const t = useTranslations("Common");
   return (
-    <Button
-      aria-label={t("more-actions")}
-      disabled
-      size="icon-sm"
-      variant="ghost"
-    >
+    <Button disabled size="icon-sm" tooltip={t("more-actions")} variant="ghost">
       <HugeIcons icon={MoreHorizontalIcon} />
     </Button>
   );

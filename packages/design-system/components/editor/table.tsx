@@ -10,7 +10,6 @@ import {
   TableIcon,
   TablePropertiesIcon,
 } from "@hugeicons/core-free-icons";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -82,25 +81,23 @@ export function DocumentTable({
       />
       {inTable ? (
         <DropdownMenu>
-          <ToolHint label={labels.tableActions}>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  aria-label={labels.tableActions}
-                  className="gap-0.5 has-[>svg]:px-1.5"
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                />
-              }
-            >
-              <HugeIcons icon={TablePropertiesIcon} />
-              <HugeIcons
-                className="text-muted-foreground size-3"
-                icon={ArrowDown01Icon}
+          <DropdownMenuTrigger
+            render={
+              <Button
+                className="gap-0.5 has-[>svg]:px-1.5"
+                size="sm"
+                tooltip={labels.tableActions}
+                type="button"
+                variant="ghost"
               />
-            </DropdownMenuTrigger>
-          </ToolHint>
+            }
+          >
+            <HugeIcons icon={TablePropertiesIcon} />
+            <HugeIcons
+              className="text-muted-foreground size-3"
+              icon={ArrowDown01Icon}
+            />
+          </DropdownMenuTrigger>
           <DropdownMenuContent className="w-48" label={labels.tableMenu}>
             <TableAction
               icon={InsertRowUpIcon}

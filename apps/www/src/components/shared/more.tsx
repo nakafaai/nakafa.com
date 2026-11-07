@@ -57,13 +57,12 @@ export function MoreMenu({
         <DropdownMenuTrigger
           render={
             <Button
-              aria-label={t("more")}
               inert={inert}
               size="icon-sm"
+              tooltip={t("more")}
               variant="ghost"
             >
               <HugeIcons icon={MoreHorizontalIcon} />
-              <span className="sr-only">{t("more")}</span>
             </Button>
           }
         />

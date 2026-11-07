@@ -46,10 +46,10 @@ export function BacterialPlayback({
       <Button
         onClick={onTogglePlaying}
         size="icon"
+        tooltip={t(isPlaying ? "pause" : "play")}
         variant={isPlaying ? "outline" : "default"}
       >
         <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-        <span className="sr-only">{t(isPlaying ? "pause" : "play")}</span>
       </Button>
       <VisualCardMenu>
         <DropdownMenuItem icon={Clock04Icon} onClick={onReset}>

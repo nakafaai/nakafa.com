@@ -7,6 +7,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cva } from "class-variance-authority";
@@ -217,17 +222,25 @@ export function Footer({
           <div className="flex flex-col items-center gap-4 lg:flex-row">
             <div className="flex items-center gap-1">
               {Arr.map(socialMedia, (social) => (
-                <a
-                  aria-label={social.label}
-                  className={buttonVariants({ size: "icon", variant: "ghost" })}
-                  href={social.href}
-                  key={social.label}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <HugeIcons className="size-4" icon={social.icon} />
-                  <span className="sr-only">{social.label}</span>
-                </a>
+                <Tooltip key={social.label}>
+                  <TooltipTrigger
+                    render={
+                      <a
+                        aria-label={social.label}
+                        className={buttonVariants({
+                          size: "icon",
+                          variant: "ghost",
+                        })}
+                        href={social.href}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <HugeIcons className="size-4" icon={social.icon} />
+                      </a>
+                    }
+                  />
+                  <TooltipContent>{social.label}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
             <FooterAction />

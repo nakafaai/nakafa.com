@@ -70,8 +70,8 @@ export function StudentPanelActions({
         <DropdownMenuTrigger
           render={
             <Button
-              aria-label={t("student-more", { name })}
               size="icon-sm"
+              tooltip={t("student-more", { name })}
               type="button"
             />
           }

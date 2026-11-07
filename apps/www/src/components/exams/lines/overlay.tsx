@@ -139,7 +139,6 @@ function LineRemove({ pair }: { readonly pair: LinePair }) {
 
   return (
     <Button
-      aria-label={t("line-remove", { name: name.value })}
       className={lineRemove({ lit })}
       data-line-remove={pair.source}
       onBlur={() => store.getState().light(Option.none())}
@@ -152,6 +151,7 @@ function LineRemove({ pair }: { readonly pair: LinePair }) {
       onPointerLeave={() => store.getState().light(Option.none())}
       size="icon-sm"
       style={{ left: place.x, top: place.y }}
+      tooltip={t("line-remove", { name: name.value })}
       type="button"
       variant="ghost"
     >

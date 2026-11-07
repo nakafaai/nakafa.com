@@ -302,15 +302,12 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
       <VisualCardActions>
         <Button
-          aria-label={isEffectivelyPlaying ? labels.pause : labels.play}
           onClick={togglePlayPause}
           size="icon"
+          tooltip={isEffectivelyPlaying ? labels.pause : labels.play}
           variant={isEffectivelyPlaying ? "outline" : "default"}
         >
           <HugeIcons icon={isEffectivelyPlaying ? PauseIcon : PlayIcon} />
-          <span className="sr-only">
-            {isEffectivelyPlaying ? labels.pause : labels.play}
-          </span>
         </Button>
         <VisualCardMenu>
           <DropdownMenuItem icon={Clock04Icon} onClick={resetAnimation}>

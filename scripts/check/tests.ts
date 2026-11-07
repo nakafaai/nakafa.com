@@ -7,6 +7,7 @@ import {
   String as Str,
 } from "effect";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
+import { inspectButtonSource } from "#scripts/check/buttons";
 import { classFindings } from "#scripts/check/classes";
 import {
   inspectCompilerConfigs,
@@ -110,6 +111,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectMenuSource(file, sourceFile),
         inspectMenuOrder(file, sourceFile),
         inspectGroupSource(file, sourceFile),
+        inspectButtonSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),

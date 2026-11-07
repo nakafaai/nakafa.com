@@ -4,6 +4,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
+import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
@@ -33,20 +34,16 @@ function SchoolLinkCopy() {
 
   return (
     <>
-      <button
-        aria-label={label}
-        className={buttonVariants({
-          size: "icon",
-          variant: "inverse-outline",
-        })}
+      <Button
         onClick={() =>
           clipboard.copy(new URL(`/${locale}/school/new`, SITE_ORIGIN).href)
         }
-        title={label}
+        size="icon"
+        tooltip={label}
         type="button"
       >
         <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-      </button>
+      </Button>
       <span className="sr-only" role="status">
         {clipboard.copied ? label : ""}
       </span>

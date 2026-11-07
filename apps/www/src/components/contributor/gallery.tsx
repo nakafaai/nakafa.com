@@ -160,40 +160,58 @@ function ContributorLinks({
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
       {social.twitter && (
-        <a
-          className={buttonVariants({ size: "icon", variant: "outline" })}
-          href={social.twitter}
-          rel="noopener noreferrer"
-          target="_blank"
-          title="Twitter"
-        >
-          <HugeIcons className="size-4" icon={NewTwitterIcon} />
-          <span className="sr-only">Twitter</span>
-        </a>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <a
+                aria-label="Twitter"
+                className={buttonVariants({ size: "icon", variant: "outline" })}
+                href={social.twitter}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons className="size-4" icon={NewTwitterIcon} />
+              </a>
+            }
+          />
+          <TooltipContent>Twitter</TooltipContent>
+        </Tooltip>
       )}
       {social.github && (
-        <a
-          className={buttonVariants({ size: "icon", variant: "outline" })}
-          href={social.github}
-          rel="noopener noreferrer"
-          target="_blank"
-          title="GitHub"
-        >
-          <HugeIcons className="size-4" icon={GithubIcon} />
-          <span className="sr-only">GitHub</span>
-        </a>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <a
+                aria-label="GitHub"
+                className={buttonVariants({ size: "icon", variant: "outline" })}
+                href={social.github}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons className="size-4" icon={GithubIcon} />
+              </a>
+            }
+          />
+          <TooltipContent>GitHub</TooltipContent>
+        </Tooltip>
       )}
       {social.linkedin && (
-        <a
-          className={buttonVariants({ size: "icon", variant: "outline" })}
-          href={social.linkedin}
-          rel="noopener noreferrer"
-          target="_blank"
-          title="LinkedIn"
-        >
-          <HugeIcons className="size-4" icon={Linkedin02Icon} />
-          <span className="sr-only">LinkedIn</span>
-        </a>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <a
+                aria-label="LinkedIn"
+                className={buttonVariants({ size: "icon", variant: "outline" })}
+                href={social.linkedin}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons className="size-4" icon={Linkedin02Icon} />
+              </a>
+            }
+          />
+          <TooltipContent>LinkedIn</TooltipContent>
+        </Tooltip>
       )}
     </div>
   );

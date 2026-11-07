@@ -59,8 +59,8 @@ export function ServiceFilter({
       <DropdownMenuTrigger
         render={
           <Button
-            aria-label={t("filter")}
             size="icon"
+            tooltip={t("filter")}
             type="button"
             variant={Option.isSome(category) ? "secondary" : "outline"}
           >

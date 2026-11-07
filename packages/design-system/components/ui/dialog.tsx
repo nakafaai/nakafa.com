@@ -101,10 +101,11 @@ function DialogContent({
             {children}
             {showCloseButton && (
               <DialogPrimitive.Close
-                aria-label={t("close")}
                 className={cn("absolute top-2 right-2", closeClassName)}
                 data-slot="dialog-close"
-                render={<Button size="icon-sm" variant="ghost" />}
+                render={
+                  <Button size="icon-sm" tooltip={t("close")} variant="ghost" />
+                }
                 {...closeButtonProps}
               >
                 <HugeIcons data-icon="icon" icon={CancelIcon} />

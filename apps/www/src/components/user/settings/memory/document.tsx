@@ -155,9 +155,9 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           ) : null}
         </div>
         <Button
-          aria-label={common("close")}
           onClick={close}
           size="icon-sm"
+          tooltip={common("close")}
           variant="ghost"
         >
           <HugeIcons icon={Cancel01Icon} />

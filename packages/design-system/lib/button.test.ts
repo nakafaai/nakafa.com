@@ -12,7 +12,6 @@ const BUTTON_VARIANTS = [
   "secondary-outline",
   "inverse-outline",
   "ghost",
-  "link",
 ] as const;
 
 describe("buttonVariants", () => {

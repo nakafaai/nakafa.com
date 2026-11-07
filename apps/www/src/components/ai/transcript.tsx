@@ -69,7 +69,7 @@ export function NinaTranscript() {
             <AiChatError failed={hasFailedReply(messages, order)} />
           </MessageScrollerContent>
         </MessageScrollerViewport>
-        <MessageScrollerButton aria-label={t("scroll-to-latest")} />
+        <MessageScrollerButton label={t("scroll-to-latest")} />
       </MessageScroller>
     </Primitive.Provider>
   );

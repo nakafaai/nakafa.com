@@ -133,10 +133,10 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
         <PopoverTrigger
           render={
             <Button
-              aria-label={placeholder}
               aria-pressed={search !== ""}
               className="lg:hidden"
               size="icon"
+              tooltip={placeholder}
               type="button"
               variant="outline"
             >

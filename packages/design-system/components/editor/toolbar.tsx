@@ -17,7 +17,6 @@ import {
 import { DocumentInsert } from "@repo/design-system/components/editor/insert";
 import { RichEditorStyle } from "@repo/design-system/components/editor/style";
 import { DocumentTable } from "@repo/design-system/components/editor/table";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { RichEditorHistory } from "@repo/design-system/components/editor/tools";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -236,20 +235,18 @@ function EditorBar({
         <>
           <BarLine />
           <Popover onOpenChange={setOpen} open={open}>
-            <ToolHint label={more}>
-              <PopoverTrigger
-                render={
-                  <Button
-                    aria-label={more}
-                    size="icon-sm"
-                    type="button"
-                    variant="ghost"
-                  />
-                }
-              >
-                <HugeIcons icon={MoreVerticalIcon} />
-              </PopoverTrigger>
-            </ToolHint>
+            <PopoverTrigger
+              render={
+                <Button
+                  size="icon-sm"
+                  tooltip={more}
+                  type="button"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeIcons icon={MoreVerticalIcon} />
+            </PopoverTrigger>
             <PopoverContent
               align="end"
               className="flex w-auto flex-col gap-1 p-1.5"

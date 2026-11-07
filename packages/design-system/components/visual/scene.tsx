@@ -32,10 +32,10 @@ function VisualCardPlay() {
       aria-pressed={playing}
       onClick={togglePlaying}
       size="icon"
+      tooltip={t("play")}
       variant="secondary"
     >
       <HugeIcons icon={playing ? PauseIcon : PlayIcon} />
-      <span className="sr-only">{t("play")}</span>
     </Button>
   );
 }
