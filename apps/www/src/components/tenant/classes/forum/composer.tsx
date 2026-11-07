@@ -42,11 +42,19 @@ import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { runForumCall } from "@/components/tenant/classes/forum/call";
+import {
+  EmojiPanel,
+  useEmojiChooser,
+} from "@/components/tenant/classes/forum/chooser";
 import { useMentionPicker } from "@/components/tenant/classes/forum/picker";
 import { NewPoll } from "@/components/tenant/classes/forum/poll";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
-import { sendMessage, sendReply } from "@/components/tenant/classes/forum/send";
-import { EmojiGrid } from "@/components/tenant/classes/forum/tallies";
+import {
+  sendMessage,
+  sendReply,
+  viewerFace,
+} from "@/components/tenant/classes/forum/send";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 import {
   DOCUMENT_ACCEPT,
   UploadTray,
@@ -95,6 +103,7 @@ export function ForumComposer() {
   const documents = useRef<HTMLInputElement>(null);
   const picker = useMentionPicker(field, text, setText);
   const tray = useUploadTray();
+  const chooser = useEmojiChooser();
   const [polling, setPolling] = useState(false);
   const body = Str.trim(text);
   const placeholder = t(
@@ -116,8 +125,7 @@ export function ForumComposer() {
     if (viewer._tag !== "Success") {
       return;
     }
-    const { person } = viewer.value;
-    const author = { id: person.id, name: person.name, nina: false };
+    const author = viewerFace(viewer.value);
     const named = Arr.map(mentions, mentionArg);
     const shown = { attachments: carried.attachments, mentions };
     setText("");
@@ -191,10 +199,11 @@ export function ForumComposer() {
       () => undefined
     );
 
-  /** Puts an emoji where the caret stands. */
+  /** Puts an emoji where the caret stands, closes the chooser, and gives the field back its focus after the emoji. */
   const insertEmoji = (emoji: string) => {
     const at = field.current?.selectionStart ?? text.length;
     setText(`${text.slice(0, at)}${emoji}${text.slice(at)}`);
+    chooser.setOpen(false);
     field.current?.focus();
   };
 
@@ -251,19 +260,20 @@ export function ForumComposer() {
       <InputGroup className="bg-muted/50 text-chat rounded-3xl shadow-none">
         <InputGroupAddon align="inline-start" className="self-end pb-1.5">
           <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <InputGroupButton
-                  aria-label={t("attach-add")}
-                  className="rounded-full"
-                  size="icon"
-                  title={t("attach-add")}
-                  variant="ghost"
-                >
-                  <HugeIcons icon={Add01Icon} />
-                </InputGroupButton>
-              }
-            />
+            <IconTip label={t("attach-add")}>
+              <DropdownMenuTrigger
+                render={
+                  <InputGroupButton
+                    aria-label={t("attach-add")}
+                    className="rounded-full"
+                    size="icon"
+                    variant="ghost"
+                  />
+                }
+              >
+                <HugeIcons icon={Add01Icon} />
+              </DropdownMenuTrigger>
+            </IconTip>
             <DropdownMenuContent align="start" className="w-44">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>{common("menu-attach")}</DropdownMenuLabel>
@@ -329,34 +339,50 @@ export function ForumComposer() {
         />
         {/* The send button stands at the end of the field's last line, as the field grows. */}
         <InputGroupAddon align="inline-end" className="self-end pb-1.5">
-          <Popover>
-            <PopoverTrigger
-              render={
-                <InputGroupButton
-                  aria-label={t("emoji-open")}
-                  className="rounded-full"
-                  size="icon"
-                  title={t("emoji-open")}
-                  variant="ghost"
-                >
-                  <HugeIcons icon={SmileIcon} />
-                </InputGroupButton>
-              }
-            />
-            <PopoverContent align="end" className="w-auto p-2">
-              <EmojiGrid onPick={insertEmoji} />
+          <Popover onOpenChange={chooser.setOpen} open={chooser.open}>
+            <IconTip label={t("emoji-open")}>
+              <PopoverTrigger
+                onFocus={chooser.warm}
+                onPointerEnter={chooser.warm}
+                render={
+                  <InputGroupButton
+                    aria-label={t("emoji-open")}
+                    className="rounded-full"
+                    size="icon"
+                    variant="ghost"
+                  />
+                }
+              >
+                <HugeIcons icon={SmileIcon} />
+              </PopoverTrigger>
+            </IconTip>
+            <PopoverContent
+              align="end"
+              className="w-80 max-w-[calc(100vw-2rem)] gap-0 p-0"
+              initialFocus={chooser.initialFocus}
+              ref={chooser.popup}
+              side="top"
+            >
+              {Option.match(chooser.glyphs, {
+                onNone: () => null,
+                onSome: (glyphs) => (
+                  <EmojiPanel glyphs={glyphs} onPick={insertEmoji} />
+                ),
+              })}
             </PopoverContent>
           </Popover>
-          <InputGroupButton
-            aria-label={t("send-message")}
-            className="rounded-full"
-            disabled={!ready}
-            size="icon"
-            type="submit"
-            variant="default"
-          >
-            <HugeIcons icon={ArrowUp02Icon} />
-          </InputGroupButton>
+          <IconTip label={t("send-message")}>
+            <InputGroupButton
+              aria-label={t("send-message")}
+              className="rounded-full"
+              disabled={!ready}
+              size="icon"
+              type="submit"
+              variant="secondary"
+            >
+              <HugeIcons icon={ArrowUp02Icon} />
+            </InputGroupButton>
+          </IconTip>
         </InputGroupAddon>
       </InputGroup>
       {picker.popup}

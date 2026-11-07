@@ -48,6 +48,7 @@ import {
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { TalliesProvider } from "@/components/tenant/classes/forum/tallies";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** How long the reader's view stays still before the read mark moves to it. */
 const MARK_DELAY_MILLISECONDS = 600;
@@ -123,7 +124,7 @@ export function MessageStream({
               className={cn(
                 readingMeasureVariants(),
                 pageGutterVariants(),
-                "gap-4 py-4"
+                "gap-0.5 py-4"
               )}
             >
               {loadOlder === undefined && Option.isSome(opening) ? (
@@ -136,60 +137,64 @@ export function MessageStream({
                   <ForumMessageRow message={opening.value} opens />
                 </MessageScrollerItem>
               ) : null}
-              {Arr.map(messages, (message, index) => (
-                // The client key stays the same from the send to the server's answer, so the row
-                // and anything open in it outlive the placeholder ID.
-                <MessageScrollerItem
-                  className="data-[jumped=true]:bg-muted/60 rounded-xl transition-colors"
-                  data-jumped={
-                    Option.contains(jump, message.id) ? "true" : undefined
-                  }
-                  key={message.clientKey}
-                  messageId={message.clientKey}
-                  scrollAnchor={Option.contains(unread, message.clientKey)}
-                >
-                  {index === 0 && loadOlder ? (
-                    <Intersection onIntersect={loadOlder} />
-                  ) : null}
-                  {Option.match(
-                    opensDay(
-                      messages,
-                      index,
-                      loadOlder !== undefined,
-                      opening,
-                      dayOf
-                    ),
-                    {
+              {Arr.map(messages, (message, index) => {
+                const day = opensDay(
+                  messages,
+                  index,
+                  loadOlder !== undefined,
+                  opening,
+                  dayOf
+                );
+                return (
+                  // The client key stays the same from the send to the server's answer, so the row
+                  // and anything open in it outlive the placeholder ID.
+                  <MessageScrollerItem
+                    className="data-[jumped=true]:bg-muted/60 rounded-2xl transition-colors"
+                    data-jumped={
+                      Option.contains(jump, message.id) ? "true" : undefined
+                    }
+                    key={message.clientKey}
+                    messageId={message.clientKey}
+                    scrollAnchor={Option.contains(unread, message.clientKey)}
+                  >
+                    {index === 0 && loadOlder ? (
+                      <Intersection onIntersect={loadOlder} />
+                    ) : null}
+                    {Option.match(day, {
                       onNone: () => null,
-                      onSome: (day) => (
+                      onSome: (shown) => (
                         <Marker
                           className="mb-4"
                           role="separator"
                           variant="separator"
                         >
-                          <MarkerContent>{day}</MarkerContent>
+                          <MarkerContent>{shown}</MarkerContent>
                         </Marker>
                       ),
-                    }
-                  )}
-                  {Option.contains(divided, message.clientKey) ? (
-                    <Marker
-                      className="mb-4"
-                      role="separator"
-                      variant="separator"
-                    >
-                      <MarkerContent>{t("unread-divider")}</MarkerContent>
-                    </Marker>
-                  ) : null}
-                  <ForumMessageRow
-                    message={message}
-                    opens={opensRun(messages, index, kept)}
-                  />
-                </MessageScrollerItem>
-              ))}
+                    })}
+                    {Option.contains(divided, message.clientKey) ? (
+                      <Marker
+                        className="mb-4"
+                        role="separator"
+                        variant="separator"
+                      >
+                        <MarkerContent>{t("unread-divider")}</MarkerContent>
+                      </Marker>
+                    ) : null}
+                    <ForumMessageRow
+                      message={message}
+                      opens={
+                        Option.isSome(day) || opensRun(messages, index, kept)
+                      }
+                    />
+                  </MessageScrollerItem>
+                );
+              })}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <MessageScrollerButton aria-label={t("scroll-to-latest")} />
+          <IconTip label={t("scroll-to-latest")}>
+            <MessageScrollerButton aria-label={t("scroll-to-latest")} />
+          </IconTip>
         </MessageScroller>
         <ReadTracker at={at} messages={messages} />
         <JumpTo jump={jump} loadOlder={loadOlder} messages={messages} />

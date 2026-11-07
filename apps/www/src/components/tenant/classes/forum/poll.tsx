@@ -45,6 +45,7 @@ import {
   shareOf,
   voteUpdate,
 } from "@/components/tenant/classes/forum/tally";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** One choice while the poll is written: its text, and an ID that keeps its field as others leave. */
 const PollChoice = Schema.Struct({ id: Schema.Int, text: Schema.String });
@@ -279,20 +280,21 @@ export function NewPoll({
                 value={option.text}
               />
               {options.length > POLL_MIN_OPTIONS ? (
-                <Button
-                  aria-label={t("poll-remove-option", { number: index + 1 })}
-                  onClick={() =>
-                    setOptions(
-                      Arr.filter(options, (held) => held.id !== option.id)
-                    )
-                  }
-                  size="icon"
-                  title={t("poll-remove-option", { number: index + 1 })}
-                  type="button"
-                  variant="ghost"
-                >
-                  <HugeIcons icon={Cancel01Icon} />
-                </Button>
+                <IconTip label={t("poll-remove-option", { number: index + 1 })}>
+                  <Button
+                    aria-label={t("poll-remove-option", { number: index + 1 })}
+                    onClick={() =>
+                      setOptions(
+                        Arr.filter(options, (held) => held.id !== option.id)
+                      )
+                    }
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <HugeIcons icon={Cancel01Icon} />
+                  </Button>
+                </IconTip>
               ) : null}
             </div>
           ))}

@@ -306,6 +306,11 @@ describe("classroom/forum nina", () => {
         }
       );
       expect(seen.discussion.replies).toBe(2);
+      // Nina leads the thread's repliers, carried by the student who asked her.
+      expect(seen.discussion.repliers).toMatchObject([
+        { id: fixture.people.student.personId, name: "Nina", nina: true },
+        { id: fixture.people.student.personId, nina: false },
+      ]);
     })
   );
 

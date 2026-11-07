@@ -41,6 +41,7 @@ import {
 } from "@/components/tenant/classes/forum/call";
 import { markUpdate } from "@/components/tenant/classes/forum/optimistic";
 import { renameChannelUpdate } from "@/components/tenant/classes/forum/rename";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { LineDialog } from "@/components/tenant/line";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -80,19 +81,21 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            // With a mouse the menu shows on the row's hover or focus; a touch screen always shows it.
-            <Button
-              aria-label={common("more-actions")}
-              className="pointer-fine:opacity-0 pointer-fine:group-focus-within/chat:opacity-100 pointer-fine:group-hover/chat:opacity-100 pointer-fine:data-popup-open:opacity-100"
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
+        <IconTip label={common("more-actions")}>
+          <DropdownMenuTrigger
+            render={
+              // With a mouse the menu shows on the row's hover or focus; a touch screen always shows it.
+              <Button
+                aria-label={common("more-actions")}
+                className="pointer-fine:opacity-0 pointer-fine:group-focus-within/chat:opacity-100 pointer-fine:group-hover/chat:opacity-100 pointer-fine:data-popup-open:opacity-100"
+                size="icon-sm"
+                variant="ghost"
+              />
+            }
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+          </DropdownMenuTrigger>
+        </IconTip>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>

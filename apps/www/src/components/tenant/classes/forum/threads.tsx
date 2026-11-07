@@ -48,6 +48,7 @@ import {
   archiveThreadUpdate,
   restoreThreadUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TargetLink } from "@/lib/routing/link";
@@ -202,17 +203,19 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
   return (
     <ItemActions className="relative">
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
+        <IconTip label={common("more-actions")}>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label={common("more-actions")}
+                size="icon-sm"
+                variant="ghost"
+              />
+            }
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+          </DropdownMenuTrigger>
+        </IconTip>
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>

@@ -1,5 +1,18 @@
-import { Array as Arr, Option, Order } from "effect";
+import { threadTitle } from "@repo/backend/confect/classroom/forum/thread";
+import { Array as Arr, Duration, Option, Order, String as Str } from "effect";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
+
+/** How long after a message the same author's next one still joins its run, as Slack and Discord group a burst. */
+const RUN_GAP = Duration.minutes(5);
+
+/** The most emoji a message of emoji alone holds and still shows them large, as chat apps do. */
+const JUMBO_LIMIT = 3;
+
+/** One emoji: a pictograph or a flag's letters, with whatever joins or colours it. */
+const EMOJI_GRAPHEME = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+
+/** The whitespace between the emoji of a message. */
+const SPACES = /\s+/gu;
 
 /** Whether a message is only on the page while the server saves it: its ID is still its client key. */
 export const isPending = (message: ForumMessage) =>
@@ -70,8 +83,10 @@ export const headToKeep = (
     : Option.none();
 
 /**
- * Whether a message shows its author's line: the oldest loaded, one after
- * another author's, or one that once stood oldest and keeps its line.
+ * Whether a message opens a run, which shows its author's face and name: the
+ * oldest loaded, one after another author's, one written more than five minutes
+ * after the message before it, one that opens a discussion, or one that once stood
+ * oldest and keeps its line.
  */
 export const opensRun = (
   messages: readonly ForumMessage[],
@@ -86,9 +101,21 @@ export const opensRun = (
         (message) =>
           previous.author.id !== message.author.id ||
           previous.author.nina !== message.author.nina ||
+          previous.discussion !== null ||
+          message.createdAt - previous.createdAt > Duration.toMillis(RUN_GAP) ||
           Arr.contains(kept, message.clientKey)
       ),
   });
+
+/**
+ * Whether a message opens a discussion with a title of its own, as a teacher's
+ * question does, rather than a thread of the message whose first line is its
+ * title. Only a titled discussion shows its title above its message, which would
+ * otherwise repeat the message's own words.
+ */
+export const isTitled = (message: ForumMessage) =>
+  message.discussion !== null &&
+  message.discussion.title !== threadTitle(message);
 
 /**
  * The day a message opens, which a divider shows above it: the reader's day of the message
@@ -115,3 +142,28 @@ export const opensDay = (
           ? Option.none()
           : Option.some(day);
       });
+
+/**
+ * Whether a message holds one to three emoji and nothing else, which the chat shows large and without a bubble, as
+ * WhatsApp and Slack do. Each character a reader sees must be an emoji: digits, letters and marks keep the bubble.
+ */
+export const isJumbo = (text: string | null) => {
+  if (text === null) {
+    return false;
+  }
+  const graphemes = Arr.map(
+    Arr.fromIterable(
+      new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(
+        Str.replace(SPACES, "")(text)
+      )
+    ),
+    (part) => part.segment
+  );
+  return (
+    graphemes.length > 0 &&
+    graphemes.length <= JUMBO_LIMIT &&
+    Arr.every(graphemes, (grapheme) =>
+      Option.isSome(Str.match(EMOJI_GRAPHEME)(grapheme))
+    )
+  );
+};

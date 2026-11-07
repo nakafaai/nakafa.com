@@ -18,9 +18,14 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
-import { EMOJI, QUICK_EMOJI } from "@/components/tenant/classes/forum/emoji";
+import {
+  EmojiPanel,
+  useEmojiChooser,
+} from "@/components/tenant/classes/forum/chooser";
+import { QUICK_EMOJI } from "@/components/tenant/classes/forum/emoji";
 import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
+import { messageActionVariants } from "@/components/tenant/classes/forum/reveal";
 import {
   useChannelScope,
   useReadPlace,
@@ -29,6 +34,7 @@ import {
   type ForumTally,
   reactUpdate,
 } from "@/components/tenant/classes/forum/tally";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** The tallies of the messages a place has loaded. */
 const TalliesContext = createContext<readonly ForumTally[]>([]);
@@ -88,12 +94,12 @@ function useReact(messageId: ForumMessage["id"]) {
     );
 }
 
-/** One emoji of a message and its count, marked when the viewer gave it. */
+/** One emoji of a message and its count, on the secondary surface when the viewer gave it. */
 const reactionChip = cva("h-7 gap-1 rounded-full px-2 text-xs tabular-nums", {
   variants: {
     mine: {
       false: "bg-muted/60 border-transparent",
-      true: "border-primary bg-primary/10",
+      true: "bg-secondary text-secondary-foreground border-transparent",
     },
   },
 });
@@ -139,67 +145,51 @@ export function MessageReactions({ message }: { message: ForumMessage }) {
 }
 
 /**
- * The emoji of a chat in one grid, the first row the ones a press on a message reaches for most.
- * Choosing one runs `onPick`, and a phone keeps its own keyboard's emoji beside it.
- */
-export function EmojiGrid({ onPick }: { onPick: (emoji: string) => void }) {
-  return (
-    <div className="grid max-h-64 grid-cols-8 gap-0.5 overflow-y-auto">
-      {Arr.map(EMOJI, (emoji) => (
-        <Button
-          aria-label={emoji}
-          className="text-base"
-          key={emoji}
-          onClick={() => onPick(emoji)}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          {emoji}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-/**
- * Gives a message an emoji: the six a chat reaches for most, one press each, and the whole grid
- * under them. With a mouse it shows on the message's hover or focus; a touch screen always shows it.
- * A message the server is still saving takes no emoji yet, since it has no ID to give one to.
+ * Gives a message an emoji: the six a chat reaches for most, one press each, and the whole chooser under them. With a
+ * mouse it shows on the message's hover or focus; a touch screen always shows it. A message the server is still
+ * saving takes no emoji yet, since it has no ID to give one to.
  */
 export function ReactButton({ message }: { message: ForumMessage }) {
   const t = useTranslations("Classroom");
-  const [open, setOpen] = useState(false);
+  const chooser = useEmojiChooser();
   const press = useReact(message.id);
 
-  /** Gives the chosen emoji and closes the panel. */
+  /** Gives the chosen emoji and closes the popover. */
   const pick = (emoji: string) => {
-    setOpen(false);
+    chooser.setOpen(false);
     press(emoji);
   };
 
   return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
-        render={
-          <Button
-            aria-label={t("reaction-add")}
-            className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100 pointer-fine:data-popup-open:opacity-100"
-            disabled={isPending(message)}
-            size="icon-xs"
-            title={t("reaction-add")}
-            variant="ghost"
-          >
-            <HugeIcons icon={SmileIcon} />
-          </Button>
-        }
-      />
-      <PopoverContent align="end" className="w-auto gap-2 p-2">
-        <div className="flex justify-between gap-1 border-b pb-2">
+    <Popover onOpenChange={chooser.setOpen} open={chooser.open}>
+      <IconTip label={t("reaction-add")}>
+        <PopoverTrigger
+          onFocus={chooser.warm}
+          onPointerEnter={chooser.warm}
+          render={
+            <Button
+              aria-label={t("reaction-add")}
+              className={messageActionVariants()}
+              disabled={isPending(message)}
+              size="icon-xs"
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons icon={SmileIcon} />
+        </PopoverTrigger>
+      </IconTip>
+      <PopoverContent
+        align="end"
+        className="w-80 max-w-[calc(100vw-2rem)] gap-0 p-0"
+        initialFocus={chooser.initialFocus}
+        ref={chooser.popup}
+      >
+        <div className="grid grid-cols-6 gap-1 border-b p-2">
           {Arr.map(QUICK_EMOJI, (emoji) => (
             <Button
               aria-label={emoji}
-              className="text-lg"
+              className="w-full text-lg"
               key={emoji}
               onClick={() => pick(emoji)}
               size="icon-sm"
@@ -209,7 +199,10 @@ export function ReactButton({ message }: { message: ForumMessage }) {
             </Button>
           ))}
         </div>
-        <EmojiGrid onPick={pick} />
+        {Option.match(chooser.glyphs, {
+          onNone: () => null,
+          onSome: (glyphs) => <EmojiPanel glyphs={glyphs} onPick={pick} />,
+        })}
       </PopoverContent>
     </Popover>
   );

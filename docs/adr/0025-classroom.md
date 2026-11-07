@@ -142,8 +142,43 @@ WhatsApp do. These decisions hold it.
   between them. The list, the header and the tabs keep the page's width.
 - Any message of a channel starts a thread with one press, as in Slack and Discord,
   under the class's next number and titled by its first line, its poll's question,
-  or its first file's name. A titled discussion stays for a teacher who asks a
-  question on purpose. `studentThreads` rules both.
+  or its first file's name (`threadTitle` in `classroom/forum/thread.ts`, which the
+  server and the channel share). A titled discussion stays for a teacher who asks a
+  question on purpose, and only its title stands above its message: a thread of a
+  message would repeat the message's own words. `studentThreads` rules both.
+
+The owner reviewed the forum on production on 8 November 2026 and asked for a chat
+that reads as Slack, Discord and the shadcn Message and Bubble components do. These
+decisions hold it.
+
+- Every message shows its author's face (`PersonAvatar`, or Nina's head for her
+  replies) and name. A run of one author keeps one face and one name at its first
+  message, and a run ends at another author, a pause of more than five minutes, a new
+  day, or a message that opens a thread (`opensRun` in `forum/marks.ts`). The viewer's
+  own messages stand at the end of the row with their face there.
+- A message carries its author's face: `MessageView.author` is a `Face`
+  (`classroom/forum/face.ts`) with the Person's name, the animal of their account,
+  the photo the account shows, or the animal of the Person's own ID when no account
+  is left. A page reads each author, mentioned Person and replier once
+  (`readFaces`).
+- A thread shows a summary row under its message, as Slack's does: the faces of its
+  three newest repliers, how many replies it holds, when the newest came, and the
+  unread dot. The row opens the thread. The thread row keeps the three newest
+  repliers (`repliers`, absent until the first reply, like `lastReplyAt`), so the
+  channel draws them without reading a reply. A thread started from a message shows
+  the row from its first reply; a titled discussion shows it from the start.
+- The thread opens in the pane at the screen's right from 1280 px, beside the chat,
+  and as a sheet over the chat below it. One route (`forum/route.tsx`) draws the
+  class page for the channel list, a channel and a numbered discussion, so opening,
+  replying, changing, closing and going back never remount the chat: TanStack remounts
+  a route whose component or params change, and the old pair of routes remounted the
+  whole page on every move. The press keeps the opening message for the pane, which
+  draws it before the server answers. While a thread stands open its message keeps a
+  selected look.
+- The primary fill belongs to the page's one primary button, New discussion. The
+  viewer's bubbles use the secondary surface, another member's the muted one, and the
+  composer, its send button and a reaction the viewer gave stay neutral or secondary.
+- Every icon-only button of the forum has a tooltip.
 
 ### Files, polls and reactions
 
@@ -171,7 +206,13 @@ WhatsApp do. These decisions hold it.
   query of its own by the time of its oldest loaded message. A burst of forty votes
   would otherwise rerun forty readers' pages of thirty messages for each vote.
 - The emoji ship with the page. A picker's data on a third party's CDN would tell it
-  which school pages are open.
+  which school pages are open: reui's picker, which the owner pointed to on 8 November
+  2026, reads emojibase from cdn.jsdelivr.net in English only. The forum's chooser
+  (`forum/chooser.tsx`) works as a command palette: a search field that keeps the
+  focus, the categories as tabs with tooltips, a grid the arrow keys move through, and
+  a footer that names the active emoji. Its set (`forum/glyphs.ts`) holds the emoji a
+  class writes with, each named and found in Indonesian, English and German, and loads
+  on the first intent on an emoji button, so the popover opens only once it is in.
 
 ### The forum is built on the primitives of Nina
 
@@ -188,7 +229,8 @@ bespoke part is written.
 | `MessageScroller` and its parts | Live | The scroll of a channel and of a thread |
 | `Marker` | Planned, from the registry | Date separators and the divider before the first unread message |
 | `Item` | Planned, from the registry | The rows of the people, library, and task lists |
-| `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, from the registry | The author line, grouping, and reactions |
+| `MessageAvatar` and `MessageHeader` | Live | The author's face and name at the start of a run |
+| `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, from the registry | Grouping and reactions |
 
 `marker`, `item`, `message`, and `bubble` of the `base-vega` registry hold these
 parts (the registry files at `ui.shadcn.com/r/styles/base-vega`, read on 13
@@ -420,7 +462,8 @@ How the forum meets the table, decided with the first build (26 October 2026):
 | ADR 0005, and the glossary section `Forum Conversation` | Deleted by #1037 |
 | `Message`, `Bubble`, `Attachment`, and `MessageScroller` in `packages/design-system/components/ui` | Live |
 | `Marker` in `packages/design-system/components/ui/marker.tsx`, from the `base-vega` registry | Live: the unread divider |
-| `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, program wave B, from the registry |
+| `Item`, `MessageAvatar`, and `MessageHeader` | Live: the thread summary row and every message's face and name |
+| `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, from the registry |
 | Numbered discussions: `classroomThreads`, `confect/classroom/forum/threads` (`open`, `get`, `replies`, `reply`), the opening message and replies in `classroomMessages`, the address `/classes/<class>/forum/<number>` beside its channel on a wide screen and on its own on a phone | Live |
 | Read marks: `classroomReads`, `confect/classroom/forum/reads` (`get`, `mark`), unread dots on the channel list and on the opening message of a discussion, the unread divider | Live |
 | The channels and messages of the forum: `classroomChannels` and `classroomMessages`. A topic channel can be archived, which keeps it readable and refuses every new write, or removed, which deletes it at once and leaves a sweep to delete what it held | Live |

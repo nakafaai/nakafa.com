@@ -14,6 +14,10 @@ const DISCUSSION_PATH = /\/classes\/fisika-x-1\/forum\/1$/u;
 
 const TITLE = "Kenapa gaya gesek berlawanan arah gerak?";
 
+/** The thread row of a discussion with no reply yet, and with its first reply. */
+const NO_REPLY = /^No reply yet/u;
+const ONE_REPLY = /^1 reply/u;
+
 /** The close button of the discussion's pane, or of its sheet on a phone, which leads back to its channel. */
 const CLOSE = "Close";
 
@@ -54,14 +58,14 @@ for (const viewport of [
       .fill("Tuliskan contohnya di sini.");
     await dialog.getByRole("button", { name: "Start" }).click();
     await expect(dialog).toBeHidden();
-    const numbered = page.getByRole("link", { name: `#1 ${TITLE}` });
-    await expect(numbered).toBeVisible({
+    await expect(page.getByText(`#1 ${TITLE}`)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
 
-    // The discussion opens at its own address, with its title as its heading, and in the path beside it from tablet
-    // width; on a phone it is a modal sheet, which takes the page behind it, the header's path included, out of reach.
-    await page.getByRole("link", { name: "Reply", exact: true }).click();
+    // The discussion opens from the thread row under its message, at its own address, with its title as its
+    // heading, and in the path beside it from tablet width; on a phone it is a modal sheet, which takes the page
+    // behind it, the header's path included, out of reach.
+    await page.getByRole("link", { name: NO_REPLY }).click();
     await page.waitForURL(DISCUSSION_PATH);
     await expect(
       page.getByRole("heading", { name: `#1 ${TITLE}`, level: 2 })
@@ -96,8 +100,9 @@ for (const viewport of [
     // The channel stays beside the discussion from tablet width and under its sheet on a phone,
     // and it counts the reply; closing the discussion leaves the channel where it was.
     if (viewport.width >= 768) {
-      await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
-      // The handle between the channel and the discussion resizes them.
+      await expect(page.getByRole("link", { name: ONE_REPLY })).toBeVisible();
+      // The discussion stands in the pane at the screen's right, and the pane's own edge widens it
+      // as it is dragged toward the channel. The forum's rail keeps its own handle, which moves no pane.
       const panel = page.locator("[data-slot=discussion]");
       const narrow = Option.getOrThrow(
         Option.fromNullOr(await panel.boundingBox())
@@ -105,8 +110,8 @@ for (const viewport of [
       const handle = Option.getOrThrow(
         Option.fromNullOr(
           await page
-            .locator("[data-slot=resizable-handle]")
-            .last()
+            .locator("[data-pane-side]")
+            .getByRole("separator", { name: "Change width" })
             .boundingBox()
         )
       );
@@ -122,7 +127,7 @@ for (const viewport of [
     await page.getByRole("button", { name: CLOSE, exact: true }).click();
     await page.waitForURL(CHANNEL_PATH);
     await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
+    await expect(page.getByRole("link", { name: ONE_REPLY })).toBeVisible();
     await context.close();
   });
 }
