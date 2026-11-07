@@ -51,9 +51,11 @@ const reserve = FunctionImpl.make(
 const shownLogo = Effect.fn("tenancy.logo.shown")(function* (
   fileId: GenericId.GenericId<"bucketFiles">
 ) {
-  return LogoSet.make({
-    logo: Option.getOrElse(yield* fileAddress(fileId), () => ""),
-  });
+  // The caller stored the file in this transaction, so it has an address.
+  const logo = yield* Effect.fromOption(yield* fileAddress(fileId)).pipe(
+    Effect.orDie
+  );
+  return LogoSet.make({ logo });
 });
 
 /**

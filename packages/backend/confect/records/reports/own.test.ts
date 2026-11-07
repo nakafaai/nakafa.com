@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   classOf,
@@ -126,6 +130,23 @@ describe("records/reports own", () => {
         expect(
           yield* fixture.as("teacher").query(reports.own, { slug: nf })
         ).toEqual([]);
+        // A card whose PDF left the bucket still shows, without an address.
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const rows = yield* (yield* DatabaseReader)
+              .table("bucketFiles")
+              .index("by_creation_time")
+              .take(8);
+            const writer = yield* DatabaseWriter;
+            yield* Effect.forEach(rows, (row) =>
+              writer.table("bucketFiles").delete(row._id)
+            );
+          }).pipe(Effect.orDie)
+        );
+        const [gone] = yield* fixture
+          .as("student")
+          .query(reports.own, { slug: nf });
+        expect(gone?.file).toBe("");
       })
   );
 });

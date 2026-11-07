@@ -44,16 +44,14 @@ export const inspectFile = Effect.fn("bucket.file.inspect")(function* (
   return Option.some({ ...file, ...stored.value });
 }, Effect.provide(FetchClient));
 
-/** The whole bytes of one stored file, for the server's own reading of it. */
+/**
+ * The whole bytes of one stored file at the object key its facts name, for the server's own reading of it. A file
+ * whose bytes never arrived or are gone has none.
+ */
 export const readFile = Effect.fn("bucket.file.read")(function* (
-  fileId: GenericId.GenericId<"bucketFiles">
+  objectKey: string
 ) {
-  const { runQuery } = yield* QueryRunner;
-  const file = yield* runQuery(bucketInternal.file, { fileId });
-  if (file === null) {
-    return Option.none<Uint8Array>();
-  }
-  return yield* readObject(file.objectKey).pipe(
+  return yield* readObject(objectKey).pipe(
     Effect.retry(RETRY),
     Effect.orDie
   );

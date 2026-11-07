@@ -63,7 +63,7 @@ const storedImage = (fileId: GenericId.GenericId<"bucketFiles">) =>
     if (file === null || file.byteSize > IMAGE_BYTE_LIMIT) {
       return yield* new ImportPageRefused();
     }
-    const stored = yield* readFile(fileId);
+    const stored = yield* readFile(file.objectKey);
     if (Option.isNone(stored)) {
       return yield* new ImportPageRefused();
     }
