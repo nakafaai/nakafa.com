@@ -97,7 +97,8 @@ for (const viewport of [
     // and it counts the reply; closing the discussion leaves the channel where it was.
     if (viewport.width >= 768) {
       await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
-      // The handle between the channel and the discussion resizes them.
+      // The discussion stands in the pane at the screen's right, and the pane's own edge widens it
+      // as it is dragged toward the channel. The forum's rail keeps its own handle, which moves no pane.
       const panel = page.locator("[data-slot=discussion]");
       const narrow = Option.getOrThrow(
         Option.fromNullOr(await panel.boundingBox())
@@ -105,8 +106,8 @@ for (const viewport of [
       const handle = Option.getOrThrow(
         Option.fromNullOr(
           await page
-            .locator("[data-slot=resizable-handle]")
-            .last()
+            .locator("[data-pane-side]")
+            .getByRole("separator", { name: "Change width" })
             .boundingBox()
         )
       );
