@@ -34,6 +34,14 @@ const overflowingRows = (page: Page) =>
 /** The first row of the memory list. */
 export const firstRow = (page: Page) => page.locator("main ul > li").first();
 
+/**
+ * Gives a page its reader with a key that does nothing on its own. A visitor's
+ * static page starts its scripts at the reader's first gesture, or ten seconds
+ * after it loads (ADR 0039 D8), so a test that waits for React to take a control
+ * over arrives first, as a learner who moves or scrolls does.
+ */
+export const arriveAsReader = (page: Page) => page.keyboard.press("Shift");
+
 /** Whether React has hydrated an element, which attaches its fiber to the node. */
 const hasReactFiber = (element: Element) =>
   Object.keys(element).some((key) => key.startsWith("__reactFiber"));
@@ -68,10 +76,12 @@ export const isTakenOverNow = async (target: Locator) =>
  * natively and loads the page again. A form waits before the test fills it, so React holds what
  * the test types.
  */
-export const waitUntilTakenOver = (control: Locator) =>
-  expect
+export const waitUntilTakenOver = async (control: Locator) => {
+  await arriveAsReader(control.page());
+  await expect
     .poll(() => isTakenOver(control), { timeout: readinessTimeoutMilliseconds })
     .toBe(true);
+};
 
 /**
  * Loads the Memory page and notes where the newest row and the last row of the

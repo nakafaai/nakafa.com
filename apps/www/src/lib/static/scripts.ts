@@ -1,4 +1,9 @@
-import { Array as Arr, Result, Schema } from "effect";
+import {
+  READER_GESTURES,
+  UNTOUCHED_WAIT,
+} from "@repo/design-system/lib/settle";
+import { Array as Arr, Duration, Result, Schema } from "effect";
+import { SIGNED_IN_ATTRIBUTE } from "@/lib/auth/hint";
 
 /** Every link that preloads a JavaScript module. */
 export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;
@@ -44,22 +49,37 @@ class StaticScriptsUnreadable extends Schema.TaggedError<StaticScriptsUnreadable
   { reason: Schema.String }
 ) {}
 
+/** The reader's gestures, written as the array literal of the inline loader. */
+const READER_GESTURES_LITERAL = `[${Arr.join(
+  Arr.map(READER_GESTURES, (name) => `"${name}"`),
+  ", "
+)}]`;
+
 /**
- * Starts a static page's scripts once the browser has parsed and painted the page,
- * with the attributes the page gave them, in the page's order. A hidden page paints
- * nothing, so it starts after parsing alone, and a browser that never reports the
- * paint starts after three seconds. The script removes itself, as TanStack's own
- * inline scripts do, so hydration never meets it.
+ * Starts a static page's scripts. A signed-in learner's page starts once the browser
+ * has parsed and painted it, with the attributes the page gave its scripts, in the
+ * page's order: a hidden page paints nothing, so it starts after parsing alone, and a
+ * browser that never reports the paint starts after three seconds. A visitor's page
+ * holds its whole content in its HTML, so it starts at the reader's first gesture, or
+ * after the untouched wait once the page has loaded, as `untilPageRead` does for
+ * decoration (ADR 0039 D8): a phone spends its first seconds on the page, not on
+ * hydrating it, and a press in between keeps its control through `EARLY_PRESS_SCRIPT`.
+ * The script removes itself, as TanStack's own inline scripts do, so hydration never
+ * meets it.
  */
 const STATIC_SCRIPTS_LOADER = `(function (scripts) {
   var started = false;
   var parsed = document.readyState !== "loading";
   var painted = document.visibilityState !== "visible";
+  var gestures = ${READER_GESTURES_LITERAL};
   function start() {
     if (started) {
       return;
     }
     started = true;
+    for (var gesture = 0; gesture < gestures.length; gesture++) {
+      window.removeEventListener(gestures[gesture], start, true);
+    }
     var links = document.createDocumentFragment();
     for (var index = 0; index < scripts.preloads.length; index++) {
       var preload = scripts.preloads[index];
@@ -86,36 +106,50 @@ const STATIC_SCRIPTS_LOADER = `(function (scripts) {
       });
     }
   }
-  try {
-    new PerformanceObserver(function (list) {
-      var entries = list.getEntries();
-      for (var index = 0; index < entries.length; index++) {
-        if (entries[index].name === "first-contentful-paint") {
-          painted = true;
-          startAfterPaint();
-        }
-      }
-    }).observe({ type: "paint", buffered: true });
-  } catch (error) {
-    painted = true;
+  function startUntouched() {
+    setTimeout(start, ${Duration.toMillis(UNTOUCHED_WAIT)});
   }
-  document.addEventListener("DOMContentLoaded", function () {
-    parsed = true;
+  if (document.documentElement.getAttribute("${SIGNED_IN_ATTRIBUTE}") === "yes") {
+    try {
+      new PerformanceObserver(function (list) {
+        var entries = list.getEntries();
+        for (var index = 0; index < entries.length; index++) {
+          if (entries[index].name === "first-contentful-paint") {
+            painted = true;
+            startAfterPaint();
+          }
+        }
+      }).observe({ type: "paint", buffered: true });
+    } catch (error) {
+      painted = true;
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+      parsed = true;
+      startAfterPaint();
+    });
     startAfterPaint();
-  });
-  startAfterPaint();
-  setTimeout(start, 3000);
+    setTimeout(start, 3000);
+  } else {
+    for (var gesture = 0; gesture < gestures.length; gesture++) {
+      window.addEventListener(gestures[gesture], start, { capture: true, passive: true });
+    }
+    if (document.readyState === "complete") {
+      startUntouched();
+    } else {
+      window.addEventListener("load", startUntouched, { once: true });
+    }
+  }
   document.currentScript.remove();
 })`;
 
 /**
- * Defers the scripts of a prerendered page until the page has painted. A static page
- * holds its whole content in its HTML, so it needs no script to paint; but every
- * module preload in its head starts a download at once, and on a slow phone those
- * downloads and their compiles hold back the first paint. The page keeps its markup
- * and its inline scripts; its module preloads and its entry script move into one
- * inline loader at the end of the body, which starts them with the same attributes
- * after the first paint. A module that the page preloads twice keeps the attributes
+ * Defers the scripts of a prerendered page until the page has painted, and for a
+ * visitor until the page has its reader. A static page holds its whole content in its
+ * HTML, so it needs no script to paint; but every module preload in its head starts a
+ * download at once, and on a slow phone those downloads and their compiles hold back
+ * the first paint. The page keeps its markup and its inline scripts; its module
+ * preloads and its entry script move into one inline loader at the end of the body,
+ * which starts them with the same attributes when `STATIC_SCRIPTS_LOADER` says. A module that the page preloads twice keeps the attributes
  * of its first link, as the browser does. The router's dehydrated manifest stops
  * naming the preloads, so the head that React hydrates adds no second link for a
  * module that the loader has already started.

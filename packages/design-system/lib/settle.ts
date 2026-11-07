@@ -3,11 +3,14 @@ import { Array as Arr, Duration, Effect, MutableRef } from "effect";
 /** The longest a settled page waits for an idle moment after its load. */
 const SETTLE_TIMEOUT = Duration.seconds(1);
 
-/** How long a settled page that nobody touches holds its decoration back. */
-const UNTOUCHED_WAIT = Duration.seconds(10);
+/**
+ * How long a settled page that nobody touches holds its decoration back. A static
+ * page that a visitor reads starts its scripts after the same wait (ADR 0039 D8).
+ */
+export const UNTOUCHED_WAIT = Duration.seconds(10);
 
-/** The gestures that say a reader is on the page. */
-const READER_GESTURES = [
+/** The gestures that say a reader is on the page, which also start a visitor's static page (ADR 0039 D8). */
+export const READER_GESTURES = [
   "keydown",
   "pointerdown",
   "pointermove",

@@ -72,6 +72,21 @@ describe("lib/static/scripts", () => {
     });
   });
 
+  it("starts a visitor's page with its reader and a signed-in learner's page after its paint", () => {
+    const deferred = Result.getOrThrow(deferStaticScripts(PRERENDERED));
+
+    expect(deferred).toContain(
+      'var gestures = ["keydown", "pointerdown", "pointermove", "scroll", "touchstart"];'
+    );
+    expect(deferred).toContain("setTimeout(start, 10000);");
+    expect(deferred).toContain(
+      'if (document.documentElement.getAttribute("data-signed-in") === "yes") {'
+    );
+    expect(deferred).toContain(
+      'window.addEventListener("load", startUntouched, { once: true });'
+    );
+  });
+
   it("refuses a page without exactly one entry script", () => {
     const entry =
       '<script type="module" async="" src="/assets/index-c3.js"></script>';

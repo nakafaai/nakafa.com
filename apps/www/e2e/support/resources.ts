@@ -21,6 +21,7 @@ import {
   withRequestTracker,
 } from "@/e2e/support/requests";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { arriveAsReader } from "@/e2e/support/window";
 
 const JAVASCRIPT_RESOURCE_PATTERN = /^\/assets\/.+\.js$/u;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
@@ -325,6 +326,9 @@ export const measureRouteJavascript = Effect.fn(
                     status: response?.status(),
                   });
                 }
+                // A visitor's static page starts its scripts with its reader (ADR 0039 D8),
+                // and the budget measures what a page loads once it starts.
+                yield* Effect.promise(() => arriveAsReader(page));
 
                 const loaded = yield* readSettledJavascriptRun(
                   page,
