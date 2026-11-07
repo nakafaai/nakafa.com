@@ -17,7 +17,7 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 
 const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
 /** The configuration API that framework configuration imports: Vitest's. */

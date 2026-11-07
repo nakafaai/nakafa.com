@@ -1,5 +1,5 @@
-import type { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
-import type { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
+import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
@@ -13,11 +13,13 @@ import {
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { WithoutSystemFields } from "convex/server";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
-type SearchProjection =
-  | typeof ArticleProjectionSchema.Type
-  | typeof MaterialLessonProjectionSchema.Type;
+const SearchProjectionSchema = Schema.Union([
+  ArticleProjectionSchema,
+  MaterialLessonProjectionSchema,
+]);
+type SearchProjection = typeof SearchProjectionSchema.Type;
 
 /** Builds deterministic searchable text from authenticated public source data. */
 function searchableText(projection: SearchProjection, plainText: string) {

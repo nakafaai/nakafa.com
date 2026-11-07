@@ -24,18 +24,20 @@ import {
   isTypeOperatorNode,
   isTypeReferenceNode,
   isUnionTypeNode,
+  type MemberName,
   type SourceFile,
   SyntaxKind,
   type TypeElement,
   type TypeNode,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 
 /**
  * The modules whose types describe values that no Schema describes as data:
  * React and MDX values, the design system's Markdown types (each one names a
  * React or MDX type), the scene objects and math classes of three.js, and the
- * parser syntax-tree nodes of ESTree, its JSX extension, and TypeScript. The
- * AI SDK names only some of its types as values, listed below.
+ * parser syntax-tree nodes of ESTree, its JSX extension, and the TypeScript
+ * syntax tree of tsrs. The AI SDK names only some of its types as values,
+ * listed below.
  */
 const FRAMEWORK_TYPE_MODULES = HashSet.make(
   "@repo/design-system/types/markdown",
@@ -44,8 +46,7 @@ const FRAMEWORK_TYPE_MODULES = HashSet.make(
   "mdx/types",
   "react",
   "three",
-  "typescript",
-  "typescript/unstable/ast"
+  "tsrs/ast"
 );
 
 /**
@@ -178,7 +179,7 @@ function namespaceNames(
 }
 
 /** Returns the identifiers of a type name from left to right, such as `Whole`, `Effect`, and `Effect` in `Whole.Effect.Effect`. */
-function segmentsOf(name: EntityName): readonly Identifier[] {
+function segmentsOf(name: EntityName): readonly MemberName[] {
   return isQualifiedName(name)
     ? Arr.append(segmentsOf(name.left), name.right)
     : [name];

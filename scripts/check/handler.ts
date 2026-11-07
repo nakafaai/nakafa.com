@@ -11,7 +11,7 @@ import {
   type Node,
   type ObjectLiteralExpression,
   type PropertyName,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
 import { unwrapped } from "#scripts/check/wrapper";
 

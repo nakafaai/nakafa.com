@@ -152,6 +152,7 @@ describe("auth/deletion/readiness", () => {
         });
         const { layer, logged } = captureLogs();
         const test = createConvexTestWithBetterAuth();
+        const runtimeServices = yield* Effect.context<never>();
         yield* Effect.promise(() =>
           expect(
             test.action((ctx) =>
@@ -165,7 +166,7 @@ describe("auth/deletion/readiness", () => {
                     layer
                   )
                 ),
-                Effect.runPromise
+                Effect.runPromiseWith(runtimeServices)
               )
             )
           ).rejects.toMatchObject(deletionUnavailable)

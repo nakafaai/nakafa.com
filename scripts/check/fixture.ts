@@ -1,4 +1,4 @@
-import { Array as Arr, Effect, Record as Rec, Result } from "effect";
+import { Array as Arr, Effect, Record as Rec, Result, Schema } from "effect";
 import { isProjectConfig } from "#scripts/check/arrays";
 import { openCompiler, parseSources } from "#scripts/check/source";
 
@@ -25,6 +25,29 @@ const virtualFiles = (files: Readonly<Record<string, string>>) =>
     ])
   );
 
+/** The tsrs API methods whose reads the tests count or replace. */
+const SpiedMethod = Schema.Literals([
+  "close",
+  "getSourceFile",
+  "getSymbolAtLocation",
+  "isArrayLikeType",
+  "update",
+]);
+
+/**
+ * Views a tsrs API prototype through the methods the tests spy on. tsrs defines
+ * each method as a prototype getter that caches the method on its instance at
+ * the first read, so a test spies on that read with
+ * `vi.spyOn(apiMethods(X.prototype), method, "get")`, which this view types.
+ */
+export function apiMethods(
+  prototype: {
+    readonly [Name in typeof SpiedMethod.Type]?: unknown;
+  }
+) {
+  return prototype;
+}
+
 /**
  * Opens a scoped compiler over fixture files, and parses the modules among them
  * for the syntax rules. Configuration files name projects and are not parsed.
@@ -38,12 +61,12 @@ export const fixture = Effect.fn("ArrayTest.fixture")(function* (
       : Result.succeed({ file, sourceText })
   );
   const parsed = yield* parseSources(sources);
-  const api = yield* openCompiler(
+  const base = yield* openCompiler(
     virtualFiles(files),
     "Unable to start the array fixture compiler."
   );
   return {
-    api,
+    base,
     configs: Arr.filter(Rec.keys(files), isProjectConfig),
     modules: parsed.modules,
   };
@@ -56,16 +79,14 @@ export const fixture = Effect.fn("ArrayTest.fixture")(function* (
 export const typedProject = Effect.fn("ArrayTest.typedProject")(function* (
   files: Readonly<Record<string, string>>
 ) {
-  const api = yield* openCompiler(
+  const base = yield* openCompiler(
     virtualFiles(files),
     "Unable to start the array fixture compiler."
   );
   const configPath = `${ROOT}/${PROJECT_CONFIG}`;
   const snapshot = yield* Effect.acquireRelease(
-    Effect.sync(() =>
-      api.updateSnapshot({ openProjects: [configPath], closeProjects: [] })
-    ),
+    Effect.sync(() => base.update({ openProjects: [configPath] })),
     (resource) => Effect.sync(() => resource.dispose())
   );
-  return yield* Effect.fromNullishOr(snapshot.getProject(configPath));
+  return yield* Effect.fromNullishOr(snapshot.getConfiguredProject(configPath));
 });

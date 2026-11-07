@@ -37,7 +37,7 @@
     },
     "typescript-ls": {
       "binary": {
-        "path": "./node_modules/.bin/tsc",
+        "path": "./node_modules/.bin/tsrs",
         "arguments": ["--lsp", "--stdio"]
       },
       "settings": {

@@ -1,9 +1,5 @@
 import { Array as Arr } from "effect";
-import {
-  isSwitchStatement,
-  type Node,
-  type SourceFile,
-} from "typescript/unstable/ast";
+import { isSwitchStatement, type Node, type SourceFile } from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 
 /**
