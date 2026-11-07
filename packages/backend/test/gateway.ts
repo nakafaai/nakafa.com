@@ -2,6 +2,8 @@ import type { GatewayConfigurationError } from "@repo/backend/confect/gateway/fa
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
+import { Meter } from "@repo/backend/confect/spend/meter";
+import { recordingMeter } from "@repo/backend/test/spend";
 import {
   Experimental_DecisionMockModelV4 as DecisionMockModel,
   MockEmbeddingModelV4,
@@ -67,13 +69,25 @@ export const deployment = vi.fn<
 >(() => Effect.void);
 
 /**
- * The test adapter: production handles (defaults and deadlines) over
- * `provider`, behind the programmable deployment check. Confect functions under
+ * The test adapter: production handles (defaults, deadlines and the escrow of
+ * the action's `Meter`) over `provider`, behind the programmable deployment
+ * check. Confect functions under
  * test get it by mocking `confect/gateway/live` with it.
  */
 export const GatewayTest = Layer.effect(
   Gateway,
-  Effect.as(Effect.suspend(deployment), make(provider))
+  Effect.gen(function* () {
+    yield* Effect.suspend(deployment);
+    return make(provider, yield* Meter);
+  })
+);
+
+/**
+ * The test adapter with a recording meter of its own, for a program a test
+ * runs alone, outside the Confect action that would name who pays.
+ */
+export const GatewayIsolated = GatewayTest.pipe(
+  Layer.provide(recordingMeter().layer)
 );
 
 /** What a decision model receives for one request. */

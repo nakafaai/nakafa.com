@@ -6,23 +6,28 @@ import arabicRanges from "@fontsource-variable/noto-naskh-arabic/unicode.json" w
   type: "json",
 };
 import {
+  PAGE_SIDE,
+  PageFooter,
+  PageHeader,
+  PDF_FONT,
+  type PdfFrame,
+} from "@repo/backend/confect/pdf/frame";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
+import {
   Array as Arr,
   Effect,
   FileSystem,
   Option,
   Path,
   pipe,
+  Record,
   Schema,
   String as Str,
 } from "effect";
 import type { ReactElement } from "react";
+import { createElement } from "react";
 import { render } from "takumi-pdf";
-
-/** The family every document draws with. */
-export const PDF_FONT = "Inter";
-
-/** Who a document names as its author. */
-export const PDF_AUTHOR = "PT Nakafa Tekno Kreatif";
 
 /** The PDF could not be drawn. */
 export class PdfRenderError extends Schema.TaggedError<PdfRenderError>()(
@@ -33,11 +38,33 @@ export class PdfRenderError extends Schema.TaggedError<PdfRenderError>()(
   }
 ) {}
 
-/** The title a document carries in its properties, in the language it is written in. */
-const PdfDetails = Schema.Struct({
-  language: Schema.String,
-  title: Schema.String,
-});
+/**
+ * The design system's colors a document paints with, as the classes the app
+ * names them by. The renderer reads no CSS variable, so each token becomes one
+ * rule from the sRGB projection the theme contract keeps in step with the app.
+ */
+const TOKENS = {
+  border: { property: "border-color", token: "border" },
+  "bg-muted": { property: "background-color", token: "muted" },
+  "text-foreground": { property: "color", token: "foreground" },
+  "text-muted-foreground": { property: "color", token: "muted-foreground" },
+  "text-primary": { property: "color", token: "primary" },
+} as const;
+
+/**
+ * The document stylesheet: the tokens above, no browser margins around a
+ * paragraph or heading, and digits of one width, so columns of numbers align.
+ */
+const PDF_STYLES = pipe(
+  TOKENS,
+  Record.toEntries,
+  Arr.map(
+    ([name, rule]) =>
+      `.${name}{${rule.property}:${THEME_COMPATIBILITY_COLORS.light[rule.token]}}`
+  ),
+  Arr.appendAll(["p,h2{margin:0}", "main{font-variant-numeric:tabular-nums}"]),
+  Arr.join("")
+);
 
 /**
  * The subsets a document can draw: every Latin name, Vietnamese, and Arabic.
@@ -91,10 +118,14 @@ const readFace = Effect.fn("pdf.font")(function* (
   };
 });
 
-/** Draws one document as an A4 PDF, with the subsets it may need and its title in its properties. */
+/**
+ * Draws one document as an A4 PDF in the one Nakafa frame: the header with the
+ * mark, the title, and the identifier on every page, the body, and the footer
+ * with the issuer, the contact address, the identifier, and the page number.
+ */
 export const renderPdf = Effect.fn("pdf.render")(function* (
-  document: ReactElement,
-  details: typeof PdfDetails.Type
+  body: ReactElement,
+  frame: typeof PdfFrame.Type
 ) {
   // The fonts ship with the renderer, so a font that cannot be read is a broken deployment.
   const fonts = yield* Effect.forEach(FACES, readFace).pipe(
@@ -108,10 +139,14 @@ export const renderPdf = Effect.fn("pdf.render")(function* (
         message: String(cause),
       }),
     try: () =>
-      render(document, {
+      render(body, {
+        css: PDF_STYLES,
         fonts,
-        lang: details.language,
-        metadata: { authors: [PDF_AUTHOR], title: details.title },
+        footer: createElement(PageFooter, { frame }),
+        header: createElement(PageHeader, { frame }),
+        lang: frame.language,
+        margin: { left: PAGE_SIDE, right: PAGE_SIDE },
+        metadata: { authors: [COMPANY_IDENTITY.legalName], title: frame.name },
         size: "a4",
       }),
   });

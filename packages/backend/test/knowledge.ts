@@ -28,7 +28,7 @@ import {
 } from "@repo/backend/test/content/runtime";
 import {
   conceptEmbedder,
-  GatewayTest,
+  GatewayIsolated,
   provider,
 } from "@repo/backend/test/gateway";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
@@ -402,7 +402,7 @@ export function knowledgeBuild(
 ) {
   const layer = (ctx: ActionCtx) =>
     Layer.mergeAll(
-      GatewayTest,
+      GatewayIsolated,
       RegisteredFunction.actionLayer(
         confectSchema,
         observe === undefined ? ctx : measured(t, ctx, observe)

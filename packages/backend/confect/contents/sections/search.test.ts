@@ -14,7 +14,7 @@ import type {
   ActionCtx,
   MutationCtx,
 } from "@repo/backend/convex/_generated/server";
-import { GatewayTest, provider } from "@repo/backend/test/gateway";
+import { GatewayIsolated, provider } from "@repo/backend/test/gateway";
 import {
   embedWithKnowledge,
   knowledgeBuild,
@@ -44,7 +44,10 @@ async function indexed() {
 
 function setup(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
   const layer = (ctx: ActionCtx) =>
-    Layer.mergeAll(GatewayTest, RegisteredFunction.actionLayer(schema, ctx));
+    Layer.mergeAll(
+      GatewayIsolated,
+      RegisteredFunction.actionLayer(schema, ctx)
+    );
   const search = (input: Input) =>
     t.action((ctx) =>
       Effect.runPromise(searchSections(input).pipe(Effect.provide(layer(ctx))))

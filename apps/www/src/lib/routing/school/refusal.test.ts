@@ -152,6 +152,10 @@ describe("school page refusal", () => {
         serve({ refusal: silent });
 
         const fiber = yield* Effect.forkChild(answerAndCauses(SCHOOL_ROOT, {}));
+        // The read is sent before the clock passes its deadline, so the deadline cuts a request in flight.
+        yield* Effect.promise(() =>
+          vi.waitFor(() => expect(queriesOf()).toHaveLength(1))
+        );
         yield* TestClock.adjust(NETWORK_ATTEMPT_DEADLINE);
         const { answer, count, text } = yield* Fiber.join(fiber);
 

@@ -143,7 +143,20 @@ export class Sharding extends Context.Service<Sharding, {
       readonly concurrency?: number | "unbounded" | undefined
       readonly mailboxCapacity?: number | "unbounded" | undefined
       readonly mailboxMetrics?: boolean | undefined
+      /**
+       * When `true`, a handler defect fails only its request instead of
+       * restarting the entity and replaying its in-flight requests.
+       */
       readonly disableFatalDefects?: boolean | undefined
+      /**
+       * Schedule for restarting an entity after a defect and for retrying failed
+       * handler construction.
+       *
+       * Backoff is tracked per entity and resets once a request completes.
+       * When the policy ends, the default (500 ms growing by 1.5x, capped at 10
+       * seconds) continues, so restarts never stop; use `disableFatalDefects` to
+       * avoid them.
+       */
       readonly defectRetryPolicy?: Schedule.Schedule<any, unknown> | undefined
       readonly spanAttributes?: Record<string, string> | undefined
     }
@@ -1697,7 +1710,10 @@ const make = Effect.gen(function*() {
               }
               clientRequests.set(id, entry)
               respond = makeClientRespond(entry, client.write)
-              return sendOutgoing(message, false)
+              // A failed send leaves no reply or interrupt to release the entry.
+              // Only drop the local bookkeeping, as the request may have been
+              // persisted.
+              return Effect.tapError(sendOutgoing(message, false), () => Effect.sync(() => clientRequests.delete(id)))
             }
             case "Ack": {
               const requestId = Snowflake.Snowflake(options.message.requestId)

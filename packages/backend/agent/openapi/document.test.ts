@@ -173,7 +173,7 @@ describe("Nakafa OpenAPI document", () => {
   it("derives the canonical public examples", () => {
     expect(NAKAFA_OPENAPI_DOCUMENT.info).toMatchObject({
       contact: {
-        email: "nakafaai@gmail.com",
+        email: "info@nakafa.com",
         url: "https://nakafa.com/en/legal-notice",
       },
       version: "1.0.0",
