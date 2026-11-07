@@ -17,7 +17,7 @@ export const buttonVariants = cva(
         "success-outline":
           "border-success text-foreground border bg-[color-mix(in_oklch,var(--success)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))] hover:shadow-md",
         outline:
-          "border-border bg-background hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted border shadow-xs",
+          "border-border bg-background hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted aria-pressed:bg-muted border shadow-xs",
         secondary:
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":

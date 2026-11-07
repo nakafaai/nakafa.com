@@ -3,7 +3,6 @@ import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Effect } from "effect";
 import { useEffect } from "react";
@@ -25,8 +24,7 @@ function MembershipsFailure() {
   const t = useTranslations("Common");
 
   return (
-    <DropdownMenuItem disabled>
-      <HugeIcons icon={AlertCircleIcon} />
+    <DropdownMenuItem disabled icon={AlertCircleIcon}>
       {t("load-error")}
     </DropdownMenuItem>
   );

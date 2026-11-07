@@ -3,7 +3,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -46,10 +46,10 @@ export function ConfirmRowMenu({
         {children === undefined ? null : <DropdownMenuSeparator />}
         <DropdownMenuItem
           disabled={disabled}
+          icon={icon}
           onClick={() => setIsConfirming(true)}
           variant="destructive"
         >
-          <HugeIcons icon={icon} />
           {action}
         </DropdownMenuItem>
       </RowItems>

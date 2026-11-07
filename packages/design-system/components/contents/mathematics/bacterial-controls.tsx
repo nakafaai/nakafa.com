@@ -11,9 +11,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -54,8 +52,7 @@ export function BacterialPlayback({
         <span className="sr-only">{t(isPlaying ? "pause" : "play")}</span>
       </Button>
       <VisualCardMenu>
-        <DropdownMenuItem onClick={onReset}>
-          <HugeIcons icon={Clock04Icon} />
+        <DropdownMenuItem icon={Clock04Icon} onClick={onReset}>
           {t("reset")}
         </DropdownMenuItem>
       </VisualCardMenu>
@@ -97,15 +94,16 @@ export function BacterialSpeeds({
         />
         <SelectValue labels={Arr.map(items, (item) => item.label)} />
       </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectLabel>{t("speed")}</SelectLabel>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
+      <SelectContent label={t("menu-speed")}>
+        {Arr.map(items, (item) => (
+          <SelectItem
+            icon={DashboardSpeed01Icon}
+            key={item.value}
+            value={item.value}
+          >
+            {item.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
@@ -180,9 +178,9 @@ export function BacterialGenerations({
         <HugeIcons className="text-muted-foreground" icon={Time04Icon} />
         <SelectValue labels={Arr.map(items, (item) => item.label)} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent label={t("menu-time")}>
         {Arr.map(items, (item) => (
-          <SelectItem key={item.value} value={item.value}>
+          <SelectItem icon={Time04Icon} key={item.value} value={item.value}>
             {item.label}
           </SelectItem>
         ))}

@@ -22,8 +22,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -371,21 +369,16 @@ function VisualCardMenu({ children }: { children: ReactNode }) {
   const t = useTranslations("Common");
 
   return (
-    <ButtonGroup className="ms-auto">
+    <ButtonGroup className="ms-auto" variant="secondary">
       <VisualCardFullscreen />
       <ButtonGroupSeparator />
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button size="icon" variant="secondary" />}
-        >
+        <DropdownMenuTrigger render={<Button size="icon" />}>
           <HugeIcons icon={MoreHorizontalIcon} />
           <span className="sr-only">{t("more-actions")}</span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
-            {children}
-          </DropdownMenuGroup>
+        <DropdownMenuContent align="end" label={t("menu-actions")}>
+          {children}
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>

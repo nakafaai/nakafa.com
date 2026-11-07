@@ -10,9 +10,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
@@ -157,31 +155,31 @@ export function OpenContent({
         />
         <TooltipContent side="bottom">{t("more-actions")}</TooltipContent>
       </Tooltip>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
-          {children}
-          <DropdownMenuItem
-            disabled={isCopying || !(content || copySourceUrl)}
-            onClick={handleCopy}
-          >
-            <HugeIcons icon={Copy01Icon} />
-            {t("copy-content")}
-          </DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <HugeIcons icon={ArrowUpRight01Icon} />
-              {t("open-in")}
-            </DropdownMenuSubTrigger>
-            <OpenTargetContext value={{ slug, sourceUrl }}>
-              <Suspense fallback={null}>
-                <ClientOnly fallback={null}>
-                  <OpenInSubmenuContent />
-                </ClientOnly>
-              </Suspense>
-            </OpenTargetContext>
-          </DropdownMenuSub>
-        </DropdownMenuGroup>
+      <DropdownMenuContent
+        align="end"
+        className="w-48"
+        label={t("menu-actions")}
+      >
+        {children}
+        <DropdownMenuItem
+          disabled={isCopying || !(content || copySourceUrl)}
+          icon={Copy01Icon}
+          onClick={handleCopy}
+        >
+          {t("copy-content")}
+        </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger icon={ArrowUpRight01Icon}>
+            {t("open-in")}
+          </DropdownMenuSubTrigger>
+          <OpenTargetContext value={{ slug, sourceUrl }}>
+            <Suspense fallback={null}>
+              <ClientOnly fallback={null}>
+                <OpenInSubmenuContent />
+              </ClientOnly>
+            </Suspense>
+          </OpenTargetContext>
+        </DropdownMenuSub>
       </DropdownMenuContent>
     </DropdownMenu>
   );

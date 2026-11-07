@@ -11,9 +11,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -58,40 +56,35 @@ export function RefContent({ githubUrl, className }: Props) {
           {t("source-code")}
         </a>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button size="icon" variant="outline" />}
-          >
+          <DropdownMenuTrigger render={<Button size="icon" />}>
             <HugeIcons icon={ArrowDown01Icon} />
             <span className="sr-only">{t("more")}</span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{t("menu-sources")}</DropdownMenuLabel>
-              <DropdownMenuItem
-                render={
-                  <a
-                    href={COMPANY_SOCIAL_PROFILES.youtube}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <HugeIcons icon={YoutubeIcon} />
-                    {t("videos")}
-                  </a>
-                }
-              />
-              <DropdownMenuItem
-                render={
-                  <a
-                    href={COMPANY_SOCIAL_PROFILES.discord}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <HugeIcons icon={DiscordIcon} />
-                    {t("community")}
-                  </a>
-                }
-              />
-            </DropdownMenuGroup>
+          <DropdownMenuContent align="start" label={t("menu-sources")}>
+            <DropdownMenuItem
+              icon={YoutubeIcon}
+              render={
+                <a
+                  href={COMPANY_SOCIAL_PROFILES.youtube}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                />
+              }
+            >
+              {t("videos")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              icon={DiscordIcon}
+              render={
+                <a
+                  href={COMPANY_SOCIAL_PROFILES.discord}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                />
+              }
+            >
+              {t("community")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>

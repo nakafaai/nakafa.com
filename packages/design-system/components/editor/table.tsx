@@ -16,9 +16,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -36,8 +34,7 @@ function TableAction({
   onSelect: () => void;
 }) {
   return (
-    <DropdownMenuItem onClick={onSelect}>
-      <HugeIcons icon={icon} />
+    <DropdownMenuItem icon={icon} onClick={onSelect}>
       {label}
     </DropdownMenuItem>
   );
@@ -104,45 +101,42 @@ export function DocumentTable({
               />
             </DropdownMenuTrigger>
           </ToolHint>
-          <DropdownMenuContent className="w-48">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{labels.tableMenu}</DropdownMenuLabel>
-              <TableAction
-                icon={InsertRowUpIcon}
-                label={labels.rowBefore}
-                onSelect={() => editor?.chain().focus().addRowBefore().run()}
-              />
-              <TableAction
-                icon={InsertRowDownIcon}
-                label={labels.rowAfter}
-                onSelect={() => editor?.chain().focus().addRowAfter().run()}
-              />
-              <TableAction
-                icon={RowDeleteIcon}
-                label={labels.rowDelete}
-                onSelect={() => editor?.chain().focus().deleteRow().run()}
-              />
-              <TableAction
-                icon={InsertColumnLeftIcon}
-                label={labels.columnBefore}
-                onSelect={() => editor?.chain().focus().addColumnBefore().run()}
-              />
-              <TableAction
-                icon={InsertColumnRightIcon}
-                label={labels.columnAfter}
-                onSelect={() => editor?.chain().focus().addColumnAfter().run()}
-              />
-              <TableAction
-                icon={DeleteColumnIcon}
-                label={labels.columnDelete}
-                onSelect={() => editor?.chain().focus().deleteColumn().run()}
-              />
-              <TableAction
-                icon={DeleteIcon}
-                label={labels.tableDelete}
-                onSelect={() => editor?.chain().focus().deleteTable().run()}
-              />
-            </DropdownMenuGroup>
+          <DropdownMenuContent className="w-48" label={labels.tableMenu}>
+            <TableAction
+              icon={InsertRowUpIcon}
+              label={labels.rowBefore}
+              onSelect={() => editor?.chain().focus().addRowBefore().run()}
+            />
+            <TableAction
+              icon={InsertRowDownIcon}
+              label={labels.rowAfter}
+              onSelect={() => editor?.chain().focus().addRowAfter().run()}
+            />
+            <TableAction
+              icon={RowDeleteIcon}
+              label={labels.rowDelete}
+              onSelect={() => editor?.chain().focus().deleteRow().run()}
+            />
+            <TableAction
+              icon={InsertColumnLeftIcon}
+              label={labels.columnBefore}
+              onSelect={() => editor?.chain().focus().addColumnBefore().run()}
+            />
+            <TableAction
+              icon={InsertColumnRightIcon}
+              label={labels.columnAfter}
+              onSelect={() => editor?.chain().focus().addColumnAfter().run()}
+            />
+            <TableAction
+              icon={DeleteColumnIcon}
+              label={labels.columnDelete}
+              onSelect={() => editor?.chain().focus().deleteColumn().run()}
+            />
+            <TableAction
+              icon={DeleteIcon}
+              label={labels.tableDelete}
+              onSelect={() => editor?.chain().focus().deleteTable().run()}
+            />
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null}

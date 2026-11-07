@@ -13,9 +13,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -44,6 +42,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 
 const MAX_TABLES_MOBILE = 2;
 const MAX_TABLES_DESKTOP = 3;
@@ -81,6 +80,7 @@ interface TableChairsProps {
  * @see https://motion.dev/docs/react-layout-animations
  */
 export default function TableChairsAnimation({ labels }: TableChairsProps) {
+  const common = useTranslations("Common");
   const [tableCount, setTableCount] = useState(1);
   const [speed, setSpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -182,15 +182,16 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             />
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>{labels.setSpeed}</SelectLabel>
-              {Arr.map(speedItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+          <SelectContent label={common("menu-speed")}>
+            {Arr.map(speedItems, (item) => (
+              <SelectItem
+                icon={DashboardSpeed01Icon}
+                key={item.value}
+                value={item.value}
+              >
+                {item.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -208,9 +209,13 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             <HugeIcons className="text-muted-foreground" icon={Table01Icon} />
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={common("menu-count")}>
             {Arr.map(tableItems, (item) => (
-              <SelectItem key={item.value} value={item.value}>
+              <SelectItem
+                icon={Table01Icon}
+                key={item.value}
+                value={item.value}
+              >
                 {item.label}
               </SelectItem>
             ))}
@@ -308,8 +313,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
           </span>
         </Button>
         <VisualCardMenu>
-          <DropdownMenuItem onClick={resetAnimation}>
-            <HugeIcons icon={Clock04Icon} />
+          <DropdownMenuItem icon={Clock04Icon} onClick={resetAnimation}>
             {labels.reset}
           </DropdownMenuItem>
         </VisualCardMenu>

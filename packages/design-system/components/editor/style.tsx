@@ -10,7 +10,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -122,12 +121,15 @@ export function RichEditorStyle({
         finalFocus={(closed) =>
           closed === "keyboard" ? true : (editor?.view.dom ?? true)
         }
+        label={labels.styleMenu}
       >
         <DropdownMenuRadioGroup onValueChange={apply} value={used}>
-          <DropdownMenuLabel>{labels.styleMenu}</DropdownMenuLabel>
           {Arr.map(styles, (style) => (
-            <DropdownMenuRadioItem key={style.name} value={style.name}>
-              <HugeIcons icon={style.icon} />
+            <DropdownMenuRadioItem
+              icon={style.icon}
+              key={style.name}
+              value={style.name}
+            >
               {style.label}
             </DropdownMenuRadioItem>
           ))}

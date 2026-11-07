@@ -9,8 +9,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -70,30 +68,33 @@ export function ServiceFilter({
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="min-w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            onValueChange={(next) =>
-              choose(
-                CATEGORY_FILTER,
-                Schema.is(DirectoryCategory)(next) ? [next] : []
-              )
-            }
-            value={Option.getOrElse(category, () => ALL)}
-          >
-            <DropdownMenuRadioItem value={ALL}>
-              <HugeIcons icon={CATEGORY_ICONS[ALL]} />
-              {t("category-all")}
+      <DropdownMenuContent
+        align="end"
+        className="min-w-48"
+        label={common("menu-filter")}
+      >
+        <DropdownMenuRadioGroup
+          onValueChange={(next) =>
+            choose(
+              CATEGORY_FILTER,
+              Schema.is(DirectoryCategory)(next) ? [next] : []
+            )
+          }
+          value={Option.getOrElse(category, () => ALL)}
+        >
+          <DropdownMenuRadioItem icon={CATEGORY_ICONS[ALL]} value={ALL}>
+            {t("category-all")}
+          </DropdownMenuRadioItem>
+          {Arr.map(directoryCategories(services), (shown) => (
+            <DropdownMenuRadioItem
+              icon={CATEGORY_ICONS[shown]}
+              key={shown}
+              value={shown}
+            >
+              {t(`category-${shown}`)}
             </DropdownMenuRadioItem>
-            {Arr.map(directoryCategories(services), (shown) => (
-              <DropdownMenuRadioItem key={shown} value={shown}>
-                <HugeIcons icon={CATEGORY_ICONS[shown]} />
-                {t(`category-${shown}`)}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

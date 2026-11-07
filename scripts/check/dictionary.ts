@@ -10,6 +10,7 @@ import {
   isObjectLiteralExpression,
   isPropertyAssignment,
   isPropertyNameLiteral,
+  isStringLiteral,
   type Node,
   type ObjectLiteralExpression,
   type PropertyAssignment,
@@ -26,6 +27,13 @@ import {
 /** The dictionaries, standalone ones included: every JSON file below the internationalization dictionaries. */
 const DICTIONARY_FILE_PATTERN =
   /^packages\/internationalization\/dictionaries\/(?:.+\/)?[^/]+\.json$/u;
+
+/**
+ * A key that names a dropdown's label. Every dropdown and select opens with one word that names what is chosen, and
+ * the label reads one of these keys, so a key of this family holds one word in every language.
+ */
+const MENU_KEY_PATTERN = /^menu-/u;
+const ONE_WORD_PATTERN = /^\S+$/u;
 
 /** A key that an object names again after its first copy, with the key path to that object. */
 const RepeatedKey = Schema.Struct({
@@ -106,9 +114,44 @@ function repeatedKeys(
 }
 
 /**
+ * Collects the dropdown labels below `node` that hold more than one word, with the key path that leads to each.
+ */
+function wordyMenuLabels(
+  sourceFile: SourceFile,
+  node: Node,
+  path: readonly string[]
+): readonly (typeof RepeatedKey.Type)[] {
+  const named = isNamedProperty(node);
+  const valuePath = named ? Arr.append(path, node.name.text) : path;
+  const wordy =
+    named &&
+    MENU_KEY_PATTERN.test(node.name.text) &&
+    isStringLiteral(node.initializer) &&
+    !ONE_WORD_PATTERN.test(node.initializer.text)
+      ? [
+          {
+            keyPath: Arr.join(valuePath, "."),
+            line:
+              sourceFile.getLineAndCharacterOfPosition(
+                node.getStart(sourceFile)
+              ).line + 1,
+          },
+        ]
+      : [];
+  return Arr.appendAll(
+    wordy,
+    Arr.flatMap(children(node), (child) =>
+      wordyMenuLabels(sourceFile, child, valuePath)
+    )
+  );
+}
+
+/**
  * Reports each key that a dictionary object names more than once, at the line
  * of every copy after the first. A JSON reader keeps only the last copy, so a
  * merge that adds the same object twice would drop one of them with no error.
+ * It also reports a dropdown's label that holds more than one word: a label
+ * names what is chosen in one word, in every language.
  */
 export const dictionaryFindings = Effect.fn(
   "RepositoryPolicy.dictionaryFindings"
@@ -120,10 +163,17 @@ export const dictionaryFindings = Effect.fn(
     }))
   );
   return Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
-    Arr.map(
-      repeatedKeys(sourceFile, sourceFile, []),
-      ({ keyPath, line }) =>
-        `${file}:${line}: ${keyPath} is named more than once in one object, and a JSON reader keeps only the last copy: merge the copies into one.`
+    Arr.appendAll(
+      Arr.map(
+        repeatedKeys(sourceFile, sourceFile, []),
+        ({ keyPath, line }) =>
+          `${file}:${line}: ${keyPath} is named more than once in one object, and a JSON reader keeps only the last copy: merge the copies into one.`
+      ),
+      Arr.map(
+        wordyMenuLabels(sourceFile, sourceFile, []),
+        ({ keyPath, line }) =>
+          `${file}:${line}: ${keyPath} labels a dropdown, which names what is chosen in one word: shorten it to one word.`
+      )
     )
   );
 }, Effect.scoped);

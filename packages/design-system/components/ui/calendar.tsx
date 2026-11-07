@@ -2,6 +2,8 @@ import {
   ArrowDown01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
+  Calendar01Icon,
+  Calendar03Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -154,10 +156,11 @@ function CalendarCaption({
           <SelectTrigger aria-label={t("month")} size="sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={t("menu-month")}>
             {Arr.map(monthItems, (item) => (
               <SelectItem
                 disabled={item.disabled}
+                icon={Calendar01Icon}
                 key={item.value}
                 value={item.value}
               >
@@ -181,9 +184,13 @@ function CalendarCaption({
           <SelectTrigger aria-label={t("year")} size="sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={t("menu-year")}>
             {Arr.map(yearItems, (item) => (
-              <SelectItem key={item.value} value={item.value}>
+              <SelectItem
+                icon={Calendar03Icon}
+                key={item.value}
+                value={item.value}
+              >
                 {item.label}
               </SelectItem>
             ))}

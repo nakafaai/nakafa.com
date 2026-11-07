@@ -10,6 +10,7 @@ import {
   CancelCircleIcon,
   ChartHistogramIcon,
   CheckmarkCircle02Icon,
+  HelpCircleIcon,
   HourglassIcon,
   MinusSignCircleIcon,
   UserGroupIcon,
@@ -388,7 +389,6 @@ export function QuestionsAction({
                     onClick={() => move(selected - 1)}
                     size="icon"
                     type="button"
-                    variant="outline"
                   >
                     <HugeIcons icon={ArrowLeft01Icon} />
                   </Button>
@@ -408,9 +408,13 @@ export function QuestionsAction({
                     <SelectTrigger className="min-w-0 flex-1">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent label={common("menu-question")}>
                       {Arr.map(items, (item) => (
-                        <SelectItem key={item.value} value={item.value}>
+                        <SelectItem
+                          icon={HelpCircleIcon}
+                          key={item.value}
+                          value={item.value}
+                        >
                           {item.label}
                         </SelectItem>
                       ))}
@@ -422,7 +426,6 @@ export function QuestionsAction({
                     onClick={() => move(selected + 1)}
                     size="icon"
                     type="button"
-                    variant="outline"
                   >
                     <HugeIcons icon={ArrowRight01Icon} />
                   </Button>

@@ -3,9 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -49,24 +47,22 @@ export function Language({ compact = false }: { compact?: boolean }) {
       <DropdownMenuContent
         align="end"
         className="w-max max-w-[calc(100vw-2rem)]"
+        label={t("menu-language")}
       >
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
-          {Arr.map(languages, (language) => (
-            <DropdownMenuItem
-              disabled={isPending}
-              key={language.value}
-              onClick={(event) => {
-                event.stopPropagation();
-                handleChangeLocale(language.value);
-              }}
-            >
-              <CountryFlagIcon countryCode={language.countryCode} />
-              <span className="truncate">{language.label}</span>
-              <ActiveBadge isActive={currentLocale === language.value} />
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
+        {Arr.map(languages, (language) => (
+          <DropdownMenuItem
+            disabled={isPending}
+            icon={<CountryFlagIcon countryCode={language.countryCode} />}
+            key={language.value}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleChangeLocale(language.value);
+            }}
+          >
+            <span className="truncate">{language.label}</span>
+            <ActiveBadge isActive={currentLocale === language.value} />
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

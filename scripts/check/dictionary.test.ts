@@ -81,6 +81,22 @@ describe("dictionary key policy", () => {
   );
 
   it.effect(
+    "reports a dropdown label of more than one word and accepts one word",
+    () =>
+      Effect.gen(function* () {
+        const findings = yield* dictionaryFindings([
+          source(
+            EN,
+            '{\n  "Common": {\n    "menu-actions": "Actions",\n    "menu-class": "Your class",\n    "menu": "Main menu",\n    "menu-nested": { "label": "Two words" }\n  }\n}\n'
+          ),
+        ]);
+        assert.deepStrictEqual(findings, [
+          `${EN}:4: Common.menu-class labels a dropdown, which names what is chosen in one word: shorten it to one word.`,
+        ]);
+      })
+  );
+
+  it.effect(
     "the real repository's dictionaries name each key once",
     () =>
       Effect.gen(function* () {

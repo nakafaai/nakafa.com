@@ -11,9 +11,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -79,27 +77,26 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
                 </Button>
               }
             />
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>
-                  {t("Common.menu-actions")}
-                </DropdownMenuLabel>
-                <Activity mode={activeChatId ? "visible" : "hidden"}>
-                  <DropdownMenuItem onClick={() => setActiveChatId(null)}>
-                    <HugeIcons icon={Add01Icon} />
-                    {t("Ai.new-chat")}
-                  </DropdownMenuItem>
-                </Activity>
+            <DropdownMenuContent
+              align="end"
+              className="w-48"
+              label={t("Common.menu-actions")}
+            >
+              <Activity mode={activeChatId ? "visible" : "hidden"}>
                 <DropdownMenuItem
-                  className="hidden sm:flex"
-                  onClick={onResizeToggle}
+                  icon={Add01Icon}
+                  onClick={() => setActiveChatId(null)}
                 >
-                  <HugeIcons
-                    icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
-                  />
-                  {t(expanded ? "Ai.narrower" : "Ai.wider")}
+                  {t("Ai.new-chat")}
                 </DropdownMenuItem>
-              </DropdownMenuGroup>
+              </Activity>
+              <DropdownMenuItem
+                className="hidden sm:flex"
+                icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
+                onClick={onResizeToggle}
+              >
+                {t(expanded ? "Ai.narrower" : "Ai.wider")}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">

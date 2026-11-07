@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { Crown02Icon, School01Icon } from "@hugeicons/core-free-icons";
 import operators from "@repo/backend/confect/_generated/refs/operators";
 import { TenantKind, UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { StartCountry } from "@repo/backend/confect/tenancy/start";
@@ -13,7 +14,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -26,6 +26,8 @@ import {
   type OpenForm,
   openRequest,
 } from "@/components/operators/state";
+import { CountryFlagIcon } from "@/components/shared/flag";
+import { settingsSectionIcons } from "@/components/tenant/settings/icons";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { suggestSlug, typedSlug } from "@/components/tenant/start/state";
 
@@ -69,15 +71,28 @@ function OpenTextField({
   );
 }
 
+/** The icon of each kind of school, as the start questionnaire draws a foundation. */
+const kindIcons = {
+  foundation: Crown02Icon,
+  school: School01Icon,
+} as const;
+
 /** One labelled choice of the form, among `items`. */
 function OpenSelectField<const Value extends string>({
   items,
   label,
+  menu,
   onChange,
   value,
 }: {
-  items: readonly { readonly label: string; readonly value: Value }[];
+  items: readonly {
+    readonly icon: ComponentProps<typeof SelectItem>["icon"];
+    readonly label: string;
+    readonly value: Value;
+  }[];
   label: string;
+  /** The one word that names the choice above its list. */
+  menu: string;
   onChange: (value: Value) => void;
   value: Value;
 }) {
@@ -99,14 +114,12 @@ function OpenSelectField<const Value extends string>({
         <SelectTrigger className="w-full" id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={menu}>
+          {Arr.map(items, (item) => (
+            <SelectItem icon={item.icon} key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>
@@ -206,28 +219,34 @@ export function OpenSchoolDialog({
         </Field>
         <OpenSelectField
           items={Arr.map(TenantKind.literals, (value) => ({
+            icon: kindIcons[value],
             label: t(`kind.${value}`),
             value,
           }))}
           label={t("kind-label")}
+          menu={common("menu-type")}
           onChange={(kind) => set({ kind })}
           value={form.kind}
         />
         <OpenSelectField
           items={Arr.map(StartCountry.literals, (value) => ({
+            icon: <CountryFlagIcon countryCode={value} />,
             label: tStart(`country.${value}`),
             value,
           }))}
           label={t("country")}
+          menu={common("menu-country")}
           onChange={(country) => set({ country })}
           value={form.country}
         />
         <OpenSelectField
           items={Arr.map(UnitLevel.literals, (value) => ({
+            icon: settingsSectionIcons.units,
             label: tStart(`level.${value}.title`),
             value,
           }))}
           label={t("level")}
+          menu={common("menu-level")}
           onChange={(level) => set({ level })}
           value={form.level}
         />
@@ -248,10 +267,15 @@ export function OpenSchoolDialog({
         />
         <OpenSelectField
           items={[
-            { label: t("plan.tenant"), value: "tenant" },
-            { label: t("plan.unit"), value: "unit" },
+            { icon: School01Icon, label: t("plan.tenant"), value: "tenant" },
+            {
+              icon: settingsSectionIcons.units,
+              label: t("plan.unit"),
+              value: "unit",
+            },
           ]}
           label={t("plan-label")}
+          menu={common("menu-plan")}
           onChange={(plan) => set({ plan })}
           value={form.plan}
         />

@@ -1,3 +1,11 @@
+import {
+  Alert02Icon,
+  ComputerIcon,
+  FirstAidKitIcon,
+  FlashOffIcon,
+  MoreHorizontalIcon,
+  WifiDisconnected01Icon,
+} from "@hugeicons/core-free-icons";
 import { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -12,7 +20,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -77,6 +84,16 @@ export function ConfirmActions({
   );
 }
 
+/** The icon of each reason a proctor records. */
+const reasonIcons = {
+  "device-problem": ComputerIcon,
+  health: FirstAidKitIcon,
+  "network-problem": WifiDisconnected01Icon,
+  other: MoreHorizontalIcon,
+  "power-outage": FlashOffIcon,
+  "rule-break": Alert02Icon,
+} satisfies Record<typeof ReasonCode.Type, typeof ComputerIcon>;
+
 /** The reason of an action, chosen from the six codes that the journal holds. */
 function ReasonSelect({
   onValueChange,
@@ -86,6 +103,7 @@ function ReasonSelect({
   readonly value: Reason | null;
 }) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
   const id = useId();
   const items = Arr.map(ReasonCode.literals, (code) => ({
     label: t(`reason-${code}`),
@@ -107,14 +125,16 @@ function ReasonSelect({
         <SelectTrigger className="w-full" id={id}>
           <SelectValue placeholder={t("pair-choose")} />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-reason")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={reasonIcons[item.value]}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>

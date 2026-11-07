@@ -3,6 +3,7 @@ import { CancelIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
@@ -77,40 +78,42 @@ function DialogContent({
   const { className: closeClassName, ...closeButtonProps } = closeProps ?? {};
 
   return (
-    <DialogPortal {...portalProps}>
-      <DialogOverlay />
-      <DialogViewport
-        className={cn(
-          !bottomStickOnMobile && "max-sm:grid-rows-[1fr_auto_3fr] max-sm:p-4"
-        )}
-      >
-        <DialogPrimitive.Popup
+    <ButtonGroupVariant value={undefined}>
+      <DialogPortal {...portalProps}>
+        <DialogOverlay />
+        <DialogViewport
           className={cn(
-            "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 bg-popover text-popover-foreground duration-surface motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border text-sm shadow-lg/5 ease-out outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
-            size === "default" && "sm:max-w-md",
-            size === "wide" && "sm:max-w-7xl",
-            bottomStickOnMobile &&
-              "max-sm:data-closed:slide-out-to-bottom-4 max-sm:data-open:slide-in-from-bottom-4 max-sm:max-w-none max-sm:origin-bottom max-sm:rounded-t-xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0",
-            className
+            !bottomStickOnMobile && "max-sm:grid-rows-[1fr_auto_3fr] max-sm:p-4"
           )}
-          data-slot="dialog-content"
-          {...props}
         >
-          {children}
-          {showCloseButton && (
-            <DialogPrimitive.Close
-              aria-label={t("close")}
-              className={cn("absolute top-2 right-2", closeClassName)}
-              data-slot="dialog-close"
-              render={<Button size="icon-sm" variant="ghost" />}
-              {...closeButtonProps}
-            >
-              <HugeIcons data-icon="icon" icon={CancelIcon} />
-            </DialogPrimitive.Close>
-          )}
-        </DialogPrimitive.Popup>
-      </DialogViewport>
-    </DialogPortal>
+          <DialogPrimitive.Popup
+            className={cn(
+              "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 bg-popover text-popover-foreground duration-surface motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border text-sm shadow-lg/5 ease-out outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
+              size === "default" && "sm:max-w-md",
+              size === "wide" && "sm:max-w-7xl",
+              bottomStickOnMobile &&
+                "max-sm:data-closed:slide-out-to-bottom-4 max-sm:data-open:slide-in-from-bottom-4 max-sm:max-w-none max-sm:origin-bottom max-sm:rounded-t-xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0",
+              className
+            )}
+            data-slot="dialog-content"
+            {...props}
+          >
+            {children}
+            {showCloseButton && (
+              <DialogPrimitive.Close
+                aria-label={t("close")}
+                className={cn("absolute top-2 right-2", closeClassName)}
+                data-slot="dialog-close"
+                render={<Button size="icon-sm" variant="ghost" />}
+                {...closeButtonProps}
+              >
+                <HugeIcons data-icon="icon" icon={CancelIcon} />
+              </DialogPrimitive.Close>
+            )}
+          </DialogPrimitive.Popup>
+        </DialogViewport>
+      </DialogPortal>
+    </ButtonGroupVariant>
   );
 }
 

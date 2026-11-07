@@ -87,7 +87,10 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
                 <HugeIcons icon={School01Icon} />
                 {tCommon("open-school")}
               </Link>
-              <ButtonGroup aria-label={tStart("contact-label")}>
+              <ButtonGroup
+                aria-label={tStart("contact-label")}
+                variant="inverse-outline"
+              >
                 <a
                   className={buttonVariants({ variant: "inverse-outline" })}
                   href={`mailto:${COMPANY_IDENTITY.email}`}
