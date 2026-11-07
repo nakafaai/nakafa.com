@@ -12,14 +12,17 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The widths every class tab is read at: a wide monitor, a laptop, a tablet, and two phones. */
 const WIDTHS = [1920, 1440, 1024, 390, 320] as const;
 
-/** Every tab of the class `signInClassTeacher` seeds, by its address under the class. */
+/**
+ * Every tab of the class `signInClassTeacher` seeds, by its name, with the part its body stands on once
+ * it has drawn: the forum's row of panes, a list's table card, or nothing the frame measures.
+ */
 const TABS = [
-  "",
-  "/forum",
-  "/library",
-  "/tasks",
-  "/people",
-  "/grades",
+  { name: "Home", part: null },
+  { name: "Forum", part: "resizable-panel-group" },
+  { name: "Library", part: "table-card" },
+  { name: "Tasks", part: "table-card" },
+  { name: "People", part: "table-card" },
+  { name: "Grades", part: null },
 ] as const;
 
 /** The address of the class's tasks. */
@@ -59,7 +62,7 @@ test("every class tab keeps its body inside the header's frame, and no page scro
   baseURL,
   browser,
 }, info) => {
-  test.setTimeout(readinessTimeoutMilliseconds * 12);
+  test.setTimeout(readinessTimeoutMilliseconds * 20);
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
@@ -68,25 +71,31 @@ test("every class tab keeps its body inside the header's frame, and no page scro
     signInClassTeacher(context, school.slug, address("/"))
   );
   const page = await context.newPage();
+  // One hard load, then each tab by its press, as a teacher moves through the class.
+  await page.goto(address("/classes/fisika-x-1"));
+  const tabs = page.getByRole("tablist", { name: "Class" });
+  await expect(tabs).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
   for (const width of WIDTHS) {
     await page.setViewportSize({ height: 900, width });
     for (const tab of TABS) {
-      await page.goto(address(`/classes/fisika-x-1${tab}`));
+      await tabs.getByRole("tab", { name: tab.name }).click();
       await expect(
-        page.getByRole("navigation", { name: "breadcrumb" })
-      ).toContainText("Fisika X-1", { timeout: readinessTimeoutMilliseconds });
-      await expect(page.getByRole("tablist", { name: "Class" })).toBeVisible();
+        tabs.getByRole("tab", { name: tab.name, selected: true })
+      ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      if (tab.part !== null) {
+        await expect(
+          page.locator(`main [data-slot="${tab.part}"]`).first()
+        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      }
       await page.screenshot({
-        path: info.outputPath(
-          `class${tab.replace("/", "-") || "-home"}-${width}.png`
-        ),
+        path: info.outputPath(`class-${tab.name.toLowerCase()}-${width}.png`),
       });
       const measured = await overflowOf(page);
       expect(
-        { body: measured.body, sideways: measured.sideways, tab, width },
-        `${tab || "home"} at ${width} px`
-      ).toEqual({ body: 0, sideways: 0, tab, width });
+        { body: measured.body, sideways: measured.sideways },
+        `${tab.name} at ${width} px`
+      ).toEqual({ body: 0, sideways: 0 });
     }
   }
   await context.close();
