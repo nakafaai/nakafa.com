@@ -103,23 +103,6 @@ jobs:
           NAKAFA_BUILD_STORE_DIRECTORY: ${{ github.workspace }}/.cache/reads
         run: bun scripts/static/store.ts &
 
-      # Convex signs every file address with the stage bucket's own S3 credentials, which
-      # stacks/github.ts mints and writes to this environment. Setting a value Convex
-      # already holds changes nothing.
-      - name: Point Convex at the file bucket
-        working-directory: packages/backend
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_BUCKET: ${{ vars.R2_BUCKET }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: |
-          bunx --no-install convex env set R2_ACCESS_KEY_ID "$R2_ACCESS_KEY_ID"
-          bunx --no-install convex env set R2_SECRET_ACCESS_KEY "$R2_SECRET_ACCESS_KEY"
-          bunx --no-install convex env set R2_BUCKET "$R2_BUCKET"
-          bunx --no-install convex env set R2_ENDPOINT "https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com"
-
       - name: Deploy Convex
         working-directory: packages/backend
         env:

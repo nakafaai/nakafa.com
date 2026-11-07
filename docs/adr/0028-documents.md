@@ -381,14 +381,16 @@ library is the first owner on R2; the forum, the school logo, exam images and
 audio, record PDFs, imports, and Nina's attachments move in later changes, each
 in one step.
 
-- One private bucket per stage, `nakafa-files` in production, declared in
-  `apps/www/deploy/files.ts`. It has no public access and no custom domain. Its
-  CORS rule lets only the stage's own pages upload and read, and R2 aborts a
-  multipart upload left for a day.
-- Convex signs every address itself with SigV4 (`confect/bucket/sign.ts`), with a
-  bucket-scoped token that `apps/www/stacks/github.ts` mints and the deploy
-  workflow hands to the stage's deployment. Signing makes no request, so a
-  mutation signs. No byte passes through a Worker.
+- Two private buckets, `nakafa-files` for production and `nakafa-files-staging` for
+  the dev deployment that staging and local development share, declared in the
+  operator stack `apps/www/stacks/files.ts`. The deploy workflow's token holds no
+  R2 permission and no Worker binds a bucket. Neither bucket has public access or
+  a custom domain. Each CORS rule lets only its own site origins upload and read,
+  and R2 aborts a multipart upload left for a day.
+- Convex signs every address itself with SigV4 (`confect/bucket/sign.ts`) with a
+  token scoped to its bucket's objects, which the operator minted once and set on
+  each deployment without printing it. Signing makes no request, so a mutation
+  signs. No byte passes through a Worker.
 - An upload reserves its bytes first (`classroomLibraryUploads`): the school's
   limit and the bucket's are charged before the browser receives an address,
   which lives fifteen minutes and binds the exact length and type. `register`

@@ -10,10 +10,7 @@ import {
   Secret,
   Variable,
 } from "@alchemy.run/github";
-import { sha256Hex } from "@repo/utilities/digest";
-import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { Stack } from "alchemy";
-import { map as mapOutput, mapEffect as mapOutputEffect } from "alchemy/Output";
 import {
   Config,
   ConfigProvider,
@@ -29,7 +26,6 @@ import {
   isPublicName,
   setValues,
 } from "#www/deploy/environment";
-import { filesBucketName } from "#www/deploy/files";
 
 /**
  * The GitHub stack. The operator deploys it once from a local shell. It creates
@@ -63,11 +59,10 @@ const ACCESS_ZONE_PERMISSION = { id: "959972745952452f8be2452be8cbb9f2" };
 /**
  * The account permissions of the deploy token: Workers scripts and the account
  * settings for the Workers subdomain, Secrets Store for the Alchemy state login,
- * R2 for each stage's file bucket, and Access for the staging policy.
+ * and Access for the staging policy.
  */
 const ACCOUNT_PERMISSION_GROUPS = [
   "Workers Scripts Write",
-  "Workers R2 Storage Write",
   "Account Settings Read",
   "Secrets Store Read",
   "Secrets Store Write",
@@ -138,62 +133,6 @@ const writeEnvironmentValues = Effect.fn("GitHubStack.writeEnvironmentValues")(
   }
 );
 
-/**
- * The S3 credentials Convex signs file addresses with, for one stage's bucket alone: an account token that may read
- * and write that bucket's objects, whose ID is the access key and whose value's SHA-256 is the secret key
- * (https://developers.cloudflare.com/r2/api/tokens/). They are the environment's secrets, with the bucket's name as
- * its variable, and the deploy workflow gives all three to the stage's Convex deployment. The token can neither
- * list another bucket nor change any setting.
- */
-const writeFilesCredentials = Effect.fn("GitHubStack.writeFilesCredentials")(
-  function* (
-    key: string,
-    environment: Environment,
-    accountId: string,
-    stage: string
-  ) {
-    const bucket = filesBucketName(stage);
-    const token = yield* ApiToken.AccountApiToken(`${key}-FilesToken`, {
-      name: `nakafa-files-${stage}`,
-      policies: [
-        {
-          effect: "allow",
-          permissionGroups: [
-            "Workers R2 Storage Bucket Item Read",
-            "Workers R2 Storage Bucket Item Write",
-          ],
-          resources: {
-            [`com.cloudflare.edge.r2.bucket.${accountId}_default_${bucket}`]:
-              "*",
-          },
-        },
-      ],
-    });
-    yield* Secret(`${key}-R2_ACCESS_KEY_ID`, {
-      ...REPOSITORY,
-      environment,
-      name: "R2_ACCESS_KEY_ID",
-      value: token.tokenId.pipe(mapOutput(Redacted.make)),
-    });
-    yield* Secret(`${key}-R2_SECRET_ACCESS_KEY`, {
-      ...REPOSITORY,
-      environment,
-      name: "R2_SECRET_ACCESS_KEY",
-      value: token.value.pipe(
-        mapOutputEffect((value) =>
-          sha256Hex(Redacted.value(value)).pipe(Effect.map(Redacted.make))
-        )
-      ),
-    });
-    yield* Variable(`${key}-R2_BUCKET`, {
-      ...REPOSITORY,
-      environment,
-      name: "R2_BUCKET",
-      value: bucket,
-    });
-  }
-);
-
 export default Stack(
   "NakafaGitHub",
   {
@@ -240,18 +179,11 @@ export default Stack(
       deploymentBranchPolicy: { customBranchPolicies: ["main"] },
     });
     yield* writeEnvironmentValues("production", production, PRODUCTION_VALUES);
-    yield* writeFilesCredentials(
-      "production",
-      production,
-      accountId,
-      PRODUCTION_DEPLOY_STAGE
-    );
 
     const staging = yield* Environment("staging", {
       ...REPOSITORY,
       name: "staging",
     });
     yield* writeEnvironmentValues("staging", staging, STAGING_VALUES);
-    yield* writeFilesCredentials("staging", staging, accountId, "staging");
   })
 );
