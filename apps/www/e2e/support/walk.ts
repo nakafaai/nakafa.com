@@ -7,7 +7,7 @@ import {
 import { Array as Arr, Effect, MutableHashSet, MutableList } from "effect";
 import { readRawKeys } from "@/e2e/support/keys";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
-import { readTallRows } from "@/e2e/support/lines";
+import { readTallRows } from "@/e2e/support/wraps";
 
 /** Everything that opens over a page. */
 const POPUPS = Arr.join(
