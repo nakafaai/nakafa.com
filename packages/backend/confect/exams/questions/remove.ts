@@ -2,16 +2,15 @@ import type {
   ExamQuestionsDoc,
   ExamsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
 import {
   DatabaseReader,
   DatabaseWriter,
-  Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { dropDocument } from "@repo/backend/confect/editor/deletion";
 import { ExamEmpty } from "@repo/backend/confect/exams/errors";
-import { Array as Arr, Duration, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
-/** Deletes a reading once no question holds it. A reading stays while another question reads it. */
+/** Drops a reading once no question holds it (`dropDocument`). A reading stays while another question reads it. */
 export const dropReading = Effect.fn("exams.question.drop.reading")(function* (
   reading: ExamQuestionsDoc["reading"]
 ) {
@@ -24,18 +23,15 @@ export const dropReading = Effect.fn("exams.question.drop.reading")(function* (
     .first()
     .pipe(Effect.orDie);
   if (Option.isNone(holder)) {
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      editorInternal.deletion.document,
-      { documentId: reading }
-    );
+    yield* dropDocument(reading);
   }
 });
 
 /**
  * Deletes one question's row. Each document the question owns, its prompt, rubric, and
- * explanation, and its reading when no other question holds it (`dropReading`), is deleted by the one owner of document deletion, which works through the
- * document's rows in pages, each in a scheduled call of its own, so this transaction stays
+ * explanation, and its reading when no other question holds it (`dropReading`), is dropped
+ * (`dropDocument`): the one owner of document deletion deletes it after a grace that lets every
+ * editor still open on it let go first, in scheduled calls of its own, so this transaction stays
  * small whatever the documents' history (ADR 0028). The exam's order is the caller's to keep.
  */
 export const dropQuestion = Effect.fn("exams.question.drop")(function* (
@@ -49,13 +45,9 @@ export const dropQuestion = Effect.fn("exams.question.drop")(function* (
     .delete(question._id)
     .pipe(Effect.orDie);
   yield* dropReading(question.reading);
-  const scheduler = yield* Scheduler;
   yield* Effect.forEach(
     [question.prompt, question.rubric, question.explanation],
-    (documentId) =>
-      scheduler.runAfter(Duration.zero, editorInternal.deletion.document, {
-        documentId,
-      }),
+    dropDocument,
     { discard: true }
   );
 });
