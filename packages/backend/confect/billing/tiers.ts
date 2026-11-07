@@ -159,13 +159,13 @@ export function schoolPeriodTotal(monthly: number, period: SchoolPeriod) {
 }
 
 /** The input of one quote: a paid plan, the accounts added to it, a period and a currency. */
-export const SchoolQuoteInput = Schema.Struct({
+const SchoolQuoteInput = Schema.Struct({
   added: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
   currency: BillingCurrency,
   period: SchoolPeriod,
   tier: SchoolPaidTierKey,
 });
-export type SchoolQuoteInput = typeof SchoolQuoteInput.Type;
+type SchoolQuoteInput = typeof SchoolQuoteInput.Type;
 
 /**
  * What a paid plan with added accounts holds and costs for one period: its
