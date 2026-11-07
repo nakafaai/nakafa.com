@@ -4,17 +4,17 @@
 
 Accepted on 24 October 2026. It supersedes the hosting, delivery, and deployment
 decisions in ADR 0007, ADR 0008, ADR 0021 (the deployment policy), and ADR 0029
-(the edge Workers). Each of those ADRs carries a note that points here. The Vercel
-projects were deleted on 25 October 2026, when Nakafa moved to Cloudflare.
+(the edge Workers). Each of those ADRs carries a note that points here. The previous
+hosting projects were deleted on 25 October 2026, when Nakafa moved to Cloudflare.
 
 Amended on 30 October 2026: the account runs on Workers Paid, and every Worker
 declares a CPU cap (decision 10).
 
 ## Context
 
-Nakafa served its web app, public API, MCP endpoint, and CAS service from Vercel.
-Its usage charges grew with page views and ISR writes, while the same content is
-read by every visitor. Convex is the only database and stays the
+Nakafa served its web app, public API, MCP endpoint, and CAS service from a host
+that billed per use. Its usage charges grew with page views and page
+regeneration writes, while the same content is read by every visitor. Convex is the only database and stays the
 source of live data. The owner decided that the hosting must fit Cloudflare
 Workers Free at any traffic, with no paid compute, and that Alchemy describes the
 infrastructure as code.
