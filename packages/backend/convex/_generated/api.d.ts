@@ -20203,7 +20203,7 @@ export declare const internal: {
       complete: FunctionReference<
         "mutation",
         "internal",
-        { fileId: string; uploadId: Id<"ninaUploads"> },
+        { fileId: Id<"bucketFiles">; uploadId: Id<"ninaUploads"> },
         null
       >;
       discard: FunctionReference<
@@ -20216,7 +20216,7 @@ export declare const internal: {
         "mutation",
         "internal",
         { filename: string },
-        { storedFilename: string; uploadId: Id<"ninaUploads"> }
+        Id<"ninaUploads">
       >;
     };
     usage: {
@@ -20578,14 +20578,6 @@ export declare const internal: {
         null
       >;
     };
-  };
-  storage: {
-    sweep: FunctionReference<
-      "mutation",
-      "internal",
-      {},
-      { deleted: number; done: boolean; scanned: number }
-    >;
   };
   tenancy: {
     claims: {
