@@ -1,19 +1,13 @@
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
-  PaginatedQueryResult,
-  useMutation,
-  usePaginatedQuery,
-} from "@confect/react";
-import {
-  ArrowRight01Icon,
+  Archive02Icon,
   Award02Icon,
   Book02Icon,
   Bookmark01Icon,
   Calendar03Icon,
-  Delete02Icon,
   Flag01Icon,
   Folder01Icon,
   Note01Icon,
-  PencilEdit02Icon,
   Tag01Icon,
   Task01Icon,
   TaskDone01Icon,
@@ -26,25 +20,19 @@ import {
   TaskStanding as Standing,
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/task";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaneOpen } from "@/components/shared/pane";
-import {
-  Panes,
-  PanesDetail,
-  PanesList,
-  usePanes,
-} from "@/components/shared/panes";
+import { Panes, PanesDetail, PanesList } from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -52,20 +40,12 @@ import {
   TableSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
 import { TaskDetail } from "@/components/tenant/classes/tasks/detail";
-import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
-import {
-  type ClassTask,
-  removeUpdate,
-} from "@/components/tenant/classes/tasks/optimistic";
+import { TaskRowMenu } from "@/components/tenant/classes/tasks/menu";
+import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import { TaskStanding } from "@/components/tenant/classes/tasks/standing";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useClockZone } from "@/components/tenant/settings/time";
@@ -131,10 +111,17 @@ function TaskListBody() {
     chosenOne(chosen, "standing", Schema.is(StandingFilter)),
     (): StandingFilter => "all"
   );
+  // A teacher's Archived button reads the archived tasks in place of the live ones.
+  const [archived, setArchived] = useState(false);
   const pagination = usePaginatedQuery(
     classroom.tasks.list,
     isSettled
-      ? { classId, slug, ...(standing === "all" ? {} : { standing }) }
+      ? {
+          classId,
+          slug,
+          ...(standing === "all" ? {} : { standing }),
+          ...(archived ? { archived } : {}),
+        }
       : "skip",
     { initialNumItems: TASK_PAGE_SIZE }
   );
@@ -161,7 +148,21 @@ function TaskListBody() {
     <>
       <ClassHeader>
         <TableSearch placeholder={t("tasks-search")} />
-        {Arr.contains(can, "task.manage") ? <NewTask /> : null}
+        {Arr.contains(can, "task.manage") ? (
+          <ButtonGroup>
+            <Button
+              aria-pressed={archived}
+              onClick={() => setArchived((shown) => !shown)}
+              variant={archived ? "secondary" : "outline"}
+            >
+              <HugeIcons aria-hidden="true" icon={Archive02Icon} />
+              <span className="@max-sm/header:sr-only">
+                {t("task-archived")}
+              </span>
+            </Button>
+            <NewTask />
+          </ButtonGroup>
+        ) : null}
       </ClassHeader>
       {/* The header's 4rem and the tabs' 3rem stand above the list and its pane. */}
       <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
@@ -173,12 +174,8 @@ function TaskListBody() {
                   columns={columns}
                   data={Option.getOrElse(kept, Arr.empty)}
                   empty={
-                    standing === "all" ? (
-                      <TableEmpty
-                        act="writing"
-                        description={t("tasks-empty-description")}
-                        title={t("tasks-empty")}
-                      />
+                    archived || standing === "all" ? (
+                      <TaskEmpty archived={archived} />
                     ) : undefined
                   }
                   rowId={(task) => task.slug}
@@ -262,61 +259,6 @@ function useTaskColumns(categories: readonly string[]) {
 }
 
 /**
- * What a row of the task table can do: open the task in the pane, and for a teacher who keeps the class's tasks, edit
- * it, or delete it, which asks first, takes the row away at once, and brings it back with the School toast on a refusal.
- */
-function TaskRowMenu({ task }: { task: ClassTask }) {
-  const t = useTranslations("Classroom");
-  const { can, classId, slug } = useClassScope();
-  const [openings, setOpenings] = useState(0);
-  const remove = useMutation(classroom.tasks.remove);
-  const open = usePanes((state) => state.open);
-  const close = usePanes((state) => state.close);
-
-  if (!Arr.contains(can, "task.manage")) {
-    return (
-      <RowItems>
-        <RowOpen icon={ArrowRight01Icon} label={t("task-open")} />
-      </RowItems>
-    );
-  }
-
-  return (
-    <>
-      <ConfirmRowMenu
-        action={t("task-remove")}
-        confirm={t("task-remove")}
-        description={t("task-remove-description")}
-        icon={Delete02Icon}
-        onConfirm={() => {
-          if (Option.contains(open, task.slug)) {
-            close();
-          }
-          runForumCall(
-            forumCall(() =>
-              remove.withOptimisticUpdate(removeUpdate)({
-                classId,
-                slug,
-                task: task.slug,
-              })
-            ),
-            toastForumFailure
-          );
-        }}
-        title={t("task-remove-title")}
-      >
-        <RowOpen icon={ArrowRight01Icon} label={t("task-open")} />
-        <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
-          <HugeIcons icon={PencilEdit02Icon} />
-          {t("task-edit")}
-        </DropdownMenuItem>
-      </ConfirmRowMenu>
-      {openings === 0 ? null : <EditTaskDialog key={openings} task={task} />}
-    </>
-  );
-}
-
-/**
  * The values of a student's Status head, which chooses the tasks the server reads: every task, or only the tasks
  * where the student's work stands so. Each value carries the icon of its standing.
  */
@@ -349,5 +291,24 @@ function TaskTitle({ task }: { task: ClassTask }) {
     <TableTitle icon={TaskEdit01Icon}>
       <PaneOpen id={task.slug}>{task.title}</PaneOpen>
     </TableTitle>
+  );
+}
+
+/** The table once it is read without a row: a class with no task, or an empty shelf of archived tasks. */
+function TaskEmpty({ archived }: { archived: boolean }) {
+  const t = useTranslations("Classroom");
+
+  return archived ? (
+    <TableEmpty
+      act="reading"
+      description={t("tasks-archived-empty-description")}
+      title={t("tasks-archived-empty")}
+    />
+  ) : (
+    <TableEmpty
+      act="writing"
+      description={t("tasks-empty-description")}
+      title={t("tasks-empty")}
+    />
   );
 }

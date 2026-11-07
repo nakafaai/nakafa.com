@@ -55,7 +55,11 @@ export const taskForViewer = Effect.fn("classroom.tasks.forViewer")(function* (
 ) {
   const task = yield* classTask(slug, action);
   const { person } = yield* Member;
-  if (reaches(task, person._id) || !(yield* readsAsStudent())) {
+  if (!(yield* readsAsStudent())) {
+    return task;
+  }
+  // A student meets an archived task, or one for other students, as a missing one.
+  if (task.archivedAt === undefined && reaches(task, person._id)) {
     return task;
   }
   return yield* new AccessDenied({ action, reason: "resource" });
@@ -82,6 +86,7 @@ export const taskView = Effect.fn("classroom.tasks.view")(function* (
   const keys = yield* schoolKeys(task.tenantId);
   const mine = yield* ownSubmission(task);
   return {
+    archived: task.archivedAt !== undefined,
     category: task.category ?? null,
     deadline: task.deadline,
     exam: yield* taskExam(task),

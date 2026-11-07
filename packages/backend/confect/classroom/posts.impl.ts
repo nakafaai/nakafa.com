@@ -8,7 +8,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
-import { classAccess } from "@repo/backend/confect/classroom/authority";
+import {
+  classAccess,
+  classAuthority,
+} from "@repo/backend/confect/classroom/authority";
 import { PinLimit } from "@repo/backend/confect/classroom/errors";
 import { VoteRefused } from "@repo/backend/confect/classroom/forum/errors";
 import { castVote } from "@repo/backend/confect/classroom/forum/tally";
@@ -73,6 +76,7 @@ const postViews = Effect.fn("classroom.posts.views")(function* (
         Arr.findFirst(authors, (candidate) => candidate._id === post.authorId)
       );
       return {
+        archived: post.archivedAt !== undefined,
         author: { id: post.authorId, name: author.name },
         clientKey: post.clientKey,
         createdAt: post.createdAt,
@@ -97,14 +101,28 @@ const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("classroom.posts.list")(function* ({ paginationOpts }) {
+  Effect.fn("classroom.posts.list")(function* ({
+    archived = false,
+    paginationOpts,
+  }) {
     const row = yield* Class;
+    // Only whoever posts announcements reads the archived ones.
+    if (archived) {
+      yield* classAuthority.check("post.publish", row);
+    }
     const found = yield* (yield* DatabaseReader)
       .table("classroomPosts")
       .index("by_classId", (query) => query.eq("classId", row._id), "desc")
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    return Struct.assign(found, { page: yield* postViews(found.page) });
+    return Struct.assign(found, {
+      page: yield* postViews(
+        Arr.filter(
+          found.page,
+          (post) => (post.archivedAt !== undefined) === archived
+        )
+      ),
+    });
   })
 );
 
@@ -119,7 +137,10 @@ const pinnedPosts = Effect.fn("classroom.posts.pinnedPosts")(function* () {
       "desc"
     )
     .take(PIN_LIMIT)
-    .pipe(Effect.orDie);
+    .pipe(
+      Effect.orDie,
+      Effect.map(Arr.filter((post) => post.archivedAt === undefined))
+    );
 });
 
 /** What the class home keeps at its top. */
@@ -322,6 +343,44 @@ const edit = FunctionImpl.make(
 );
 
 /** Removes the teacher's own announcement for good, with the votes of its poll. */
+/**
+ * Archives an announcement of its author, or restores it: an archived announcement leaves the
+ * class home and its pins, and its author finds it under the archived announcements.
+ */
+const shelve = Effect.fn("classroom.posts.shelve")(function* (
+  postId: GenericId.GenericId<"classroomPosts">,
+  archived: boolean
+) {
+  const post = yield* ownPost(postId);
+  yield* (yield* DatabaseWriter)
+    .table("classroomPosts")
+    .patch(post._id, {
+      archivedAt: archived ? yield* Clock.currentTimeMillis : undefined,
+    })
+    .pipe(Effect.orDie);
+  return null;
+});
+
+/** Archives an announcement of its author. */
+const archive = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "archive",
+  Effect.fn("classroom.posts.archive")(function* ({ postId }) {
+    return yield* shelve(postId, true);
+  })
+);
+
+/** Restores an archived announcement of its author. */
+const restore = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "restore",
+  Effect.fn("classroom.posts.restore")(function* ({ postId }) {
+    return yield* shelve(postId, false);
+  })
+);
+
 const remove = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -349,6 +408,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(vote),
   Layer.provide(publish),
   Layer.provide(edit),
+  Layer.provide(archive),
+  Layer.provide(restore),
   Layer.provide(remove),
   Layer.provide(session),
   Layer.provide(member),
