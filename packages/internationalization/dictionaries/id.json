@@ -1736,8 +1736,6 @@
     "task-start": "Mulai",
     "task-questions": "Soal",
     "task-results": "Hasil",
-    "task-shelf": "Rak",
-    "task-live": "Aktif",
     "task-archived": "Diarsipkan",
     "task-archive": "Arsipkan",
     "task-restore": "Pulihkan",
@@ -1748,7 +1746,9 @@
     "posts-archived-empty-description": "Pengumuman yang kamu arsipkan menunggu di sini, dan Pulihkan mengembalikannya.",
     "threads-archived": "Diarsipkan",
     "discussion-archive": "Arsipkan",
-    "discussion-restore": "Pulihkan"
+    "discussion-restore": "Pulihkan",
+    "tasks-archived-empty": "Belum ada tugas yang diarsipkan",
+    "tasks-archived-empty-description": "Tugas yang kamu arsipkan menunggu di sini, dan Pulihkan mengembalikannya."
   },
   "SchoolGrades": {
     "email": "Email",

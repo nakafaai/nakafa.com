@@ -20,7 +20,11 @@ import {
   TaskStanding as Standing,
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/task";
+import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
+import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaneOpen } from "@/components/shared/pane";
@@ -74,9 +78,6 @@ const STANDING_ICONS = {
   scored: Award02Icon,
 } as const satisfies Record<typeof Standing.Type, IconSvgElement>;
 
-/** The shelf a teacher's list reads: the live tasks, or the archived ones. */
-const TaskShelf = Schema.Literals(["live", "archived"]);
-
 /** The standing that a student's list shows: every task, or only the tasks where the student's work stands so. */
 const StandingFilter = Schema.Union([Schema.Literal("all"), Standing]);
 type StandingFilter = typeof StandingFilter.Type;
@@ -110,11 +111,8 @@ function TaskListBody() {
     chosenOne(chosen, "standing", Schema.is(StandingFilter)),
     (): StandingFilter => "all"
   );
-  // A teacher's Shelf head reads the archived tasks in place of the live ones.
-  const archived = Option.contains(
-    chosenOne(chosen, "shelf", Schema.is(TaskShelf)),
-    "archived"
-  );
+  // A teacher's Archived button reads the archived tasks in place of the live ones.
+  const [archived, setArchived] = useState(false);
   const pagination = usePaginatedQuery(
     classroom.tasks.list,
     isSettled
@@ -150,7 +148,21 @@ function TaskListBody() {
     <>
       <ClassHeader>
         <TableSearch placeholder={t("tasks-search")} />
-        {Arr.contains(can, "task.manage") ? <NewTask /> : null}
+        {Arr.contains(can, "task.manage") ? (
+          <ButtonGroup>
+            <Button
+              aria-pressed={archived}
+              onClick={() => setArchived((shown) => !shown)}
+              variant={archived ? "secondary" : "outline"}
+            >
+              <HugeIcons aria-hidden="true" icon={Archive02Icon} />
+              <span className="@max-sm/header:sr-only">
+                {t("task-archived")}
+              </span>
+            </Button>
+            <NewTask />
+          </ButtonGroup>
+        ) : null}
       </ClassHeader>
       {/* The header's 4rem and the tabs' 3rem stand above the list and its pane. */}
       <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
@@ -162,12 +174,8 @@ function TaskListBody() {
                   columns={columns}
                   data={Option.getOrElse(kept, Arr.empty)}
                   empty={
-                    standing === "all" && !archived ? (
-                      <TableEmpty
-                        act="writing"
-                        description={t("tasks-empty-description")}
-                        title={t("tasks-empty")}
-                      />
+                    archived || standing === "all" ? (
+                      <TaskEmpty archived={archived} />
                     ) : undefined
                   }
                   rowId={(task) => task.slug}
@@ -246,32 +254,6 @@ function useTaskColumns(categories: readonly string[]) {
           header: t("task-status"),
           id: "handedIn",
         }),
-    ...(Arr.contains(can, "task.manage")
-      ? [
-          // A teacher's shelf, which the server filters by: the live tasks, or the archived ones.
-          taskColumns.choice((task) => (task.archived ? "archived" : "live"), {
-            cell: (info) => (
-              <span className="text-muted-foreground">
-                {t(info.row.original.archived ? "task-archived" : "task-live")}
-              </span>
-            ),
-            header: t("task-shelf"),
-            id: "shelf",
-            options: [
-              {
-                icon: Task01Icon,
-                label: t("task-live"),
-                value: "live" as const,
-              },
-              {
-                icon: Archive02Icon,
-                label: t("task-archived"),
-                value: "archived" as const,
-              },
-            ],
-          }),
-        ]
-      : []),
     taskColumns.menu((info) => <TaskRowMenu task={info.row.original} />),
   ];
 }
@@ -309,5 +291,24 @@ function TaskTitle({ task }: { task: ClassTask }) {
     <TableTitle icon={TaskEdit01Icon}>
       <PaneOpen id={task.slug}>{task.title}</PaneOpen>
     </TableTitle>
+  );
+}
+
+/** The table once it is read without a row: a class with no task, or an empty shelf of archived tasks. */
+function TaskEmpty({ archived }: { archived: boolean }) {
+  const t = useTranslations("Classroom");
+
+  return archived ? (
+    <TableEmpty
+      act="reading"
+      description={t("tasks-archived-empty-description")}
+      title={t("tasks-archived-empty")}
+    />
+  ) : (
+    <TableEmpty
+      act="writing"
+      description={t("tasks-empty-description")}
+      title={t("tasks-empty")}
+    />
   );
 }

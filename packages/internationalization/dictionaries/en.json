@@ -1736,8 +1736,6 @@
     "task-start": "Start",
     "task-questions": "Questions",
     "task-results": "Results",
-    "task-shelf": "Shelf",
-    "task-live": "Live",
     "task-archived": "Archived",
     "task-archive": "Archive",
     "task-restore": "Restore",
@@ -1748,7 +1746,9 @@
     "posts-archived-empty-description": "Announcements you archive wait here, and Restore brings them back.",
     "threads-archived": "Archived",
     "discussion-archive": "Archive",
-    "discussion-restore": "Restore"
+    "discussion-restore": "Restore",
+    "tasks-archived-empty": "No archived task",
+    "tasks-archived-empty-description": "Tasks you archive wait here, and Restore brings them back."
   },
   "SchoolGrades": {
     "email": "Email",

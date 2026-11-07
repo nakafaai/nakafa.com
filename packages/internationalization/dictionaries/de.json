@@ -1736,8 +1736,6 @@
     "task-start": "Starten",
     "task-questions": "Fragen",
     "task-results": "Ergebnisse",
-    "task-shelf": "Ablage",
-    "task-live": "Aktiv",
     "task-archived": "Archiviert",
     "task-archive": "Archivieren",
     "task-restore": "Wiederherstellen",
@@ -1748,7 +1746,9 @@
     "posts-archived-empty-description": "Archivierte Ankündigungen warten hier, und Wiederherstellen holt sie zurück.",
     "threads-archived": "Archiviert",
     "discussion-archive": "Archivieren",
-    "discussion-restore": "Wiederherstellen"
+    "discussion-restore": "Wiederherstellen",
+    "tasks-archived-empty": "Keine archivierte Aufgabe",
+    "tasks-archived-empty-description": "Archivierte Aufgaben warten hier, und Wiederherstellen holt sie zurück."
   },
   "SchoolGrades": {
     "email": "E-Mail",
