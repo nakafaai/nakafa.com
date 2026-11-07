@@ -84,9 +84,10 @@ const place = FunctionImpl.make(
 
 /**
  * Moves a placed Person to another cohort of the same period. The target cohort
- * is checked by its access middleware, and the cohort the Person leaves is
- * checked here, because the move rewrites that placement. An archived cohort at
- * either end refuses the move. A Person already in the target stays put.
+ * is checked by its access middleware, so an archived target takes no one new.
+ * The cohort the Person leaves needs only to be one the caller reads: an
+ * archived cohort lets its students move out, so no placement is stuck in a
+ * cohort no one can change. A Person already in the target stays put.
  */
 const move = FunctionImpl.make(
   databaseSchema,
@@ -107,7 +108,7 @@ const move = FunctionImpl.make(
     if (from === cohort._id) {
       return view(placement.value);
     }
-    yield* cohortAuthority.authorize("cohort.manage", from);
+    yield* cohortAuthority.authorize("cohort.view", from);
     yield* (yield* DatabaseWriter)
       .table("tenantCohortMembers")
       .replace(

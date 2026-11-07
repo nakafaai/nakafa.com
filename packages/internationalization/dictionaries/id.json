@@ -1306,6 +1306,7 @@
     "person-search": "Cari orang",
     "student-picker-empty": "Tambahkan siswa di Akun siswa dulu.",
     "teacher-picker-empty": "Undang guru di Undangan dulu.",
+    "cohort-picker-empty": "Tidak ada siswa tanpa rombel di periode ini. Tambahkan di Akun siswa, atau pindahkan dari rombelnya.",
     "roles-grants-description": "Setiap peran yang dimiliki orang di sekolah ini, dan wilayah yang dicakupnya.",
     "grant-role": "Peran",
     "grant-scope": "Berlaku untuk",

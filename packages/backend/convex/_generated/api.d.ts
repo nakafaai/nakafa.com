@@ -13076,6 +13076,36 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      unplaced: FunctionReference<
+        "query",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          search?: string;
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            account: "claimed" | "unclaimed";
+            id: Id<"tenantPeople">;
+            kind: "member" | "operator";
+            name: string;
+            status: "active" | "suspended" | "removed";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
     };
     periods: {
       archive: FunctionReference<

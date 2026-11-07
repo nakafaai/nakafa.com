@@ -24,8 +24,9 @@ const PlacementView = Schema.Struct({
 /**
  * Places a student in a cohort, or moves them to another cohort of the same
  * period. Both need the Admin's `cohort.manage` on the target cohort, a move
- * also needs it on the cohort the Person leaves, and the Person must hold a
- * student grant over the cohort's unit or the whole school.
+ * also needs `cohort.view` on the cohort the Person leaves, so an archived
+ * cohort lets its students out, and the Person must hold a student grant over
+ * the cohort's unit or the whole school.
  */
 export default GroupSpec.make()
   .middleware(Session)

@@ -31,17 +31,16 @@ const memberColumns = tableColumns<MemberItem>();
 /**
  * Renders the students placed in one cohort in a data table that finds a name, with each
  * student's row menu. The table loads more students as its end comes into view, waits for
- * its first page, and shows an empty state while the cohort holds no student. An archived
- * cohort, or one with no other active cohort to move to, shows no row menu.
+ * its first page, and shows an empty state while the cohort holds no student. A student moves to
+ * another active cohort of the period, out of an archived cohort too, so no one is stuck in it;
+ * a cohort with no other active cohort to move to shows no row menu.
  */
 export function SchoolCohortMembers({
   cohortId,
-  isArchived,
   periodId,
   slug,
 }: {
   cohortId: Cohort["id"];
-  isArchived: boolean;
   periodId: Period["id"];
   slug: TenantSlug;
 }) {
@@ -63,7 +62,7 @@ export function SchoolCohortMembers({
         (cohort) => cohort.id !== cohortId && cohort.status === "active"
       )
     : [];
-  const canMove = !isArchived && Arr.isReadonlyArrayNonEmpty(targets);
+  const canMove = Arr.isReadonlyArrayNonEmpty(targets);
   const columns = [
     memberColumns.text((member) => member.name, {
       cell: (info) => <TableName>{info.getValue()}</TableName>,

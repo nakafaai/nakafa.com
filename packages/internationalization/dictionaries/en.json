@@ -1306,6 +1306,7 @@
     "person-search": "Find a person",
     "student-picker-empty": "Add a student in Student accounts first.",
     "teacher-picker-empty": "Invite a teacher in Invites first.",
+    "cohort-picker-empty": "No student is free this period. Add one in Student accounts, or move one from their cohort.",
     "roles-grants-description": "Every role that a person of this school holds, and what it covers.",
     "grant-role": "Role",
     "grant-scope": "Covers",

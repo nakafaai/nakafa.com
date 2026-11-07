@@ -130,6 +130,7 @@ export function SchoolPlacementAdd({
               {t("placement-student")}
             </FieldLabel>
             <SchoolStudentPicker
+              cohortId={status === "active" ? cohortId : undefined}
               id={`${id}-student`}
               onChoose={setPersonId}
               personId={personId}
