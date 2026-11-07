@@ -83,7 +83,7 @@ export const COMPANY_IDENTITY = Schema.decodeSync(CompanyIdentitySchema)({
     country: "Indonesia",
     countryCode: "ID",
   },
-  email: "nakafaai@gmail.com",
+  email: "info@nakafa.com",
   phone: "+62 811-8992-531",
   url: SITE_ORIGIN,
   logoUrl: `${SITE_ORIGIN}/logo.svg`,

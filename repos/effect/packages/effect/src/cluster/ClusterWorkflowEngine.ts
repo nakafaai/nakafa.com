@@ -267,7 +267,11 @@ export const make = Effect.gen(function*() {
         id: activityPrimaryKey(options.activity.name, options.attempt)
       })
       if (Option.isNone(requestId)) return
-      yield* sharding.reset(requestId.value)
+      // Reset only the Suspended reply this runner saw. If another runner has
+      // stored a newer reply, storage skips the reset and the caller reads it.
+      const reply = yield* replyForRequestId(requestId.value)
+      if (Option.isNone(reply) || !isSuspendedReply(reply.value)) return
+      yield* sharding.reset(requestId.value, { expectedReplyId: Snowflake.Snowflake(reply.value.id) })
     },
     Effect.retry({
       times: 3,
@@ -344,7 +348,7 @@ export const make = Effect.gen(function*() {
     }
     const reply = yield* replyForRequestId(requestId.value)
     if (Option.isNone(reply)) return
-    yield* sharding.reset(requestId.value)
+    yield* sharding.reset(requestId.value, { expectedReplyId: Snowflake.Snowflake(reply.value.id) })
   }, Effect.scoped)
 
   // Subscribe to the run's next reply before reading storage, so a reply
@@ -535,14 +539,15 @@ export const make = Effect.gen(function*() {
                     if (instance.abandoned) {
                       instance.suspended = false
                     }
+                    // Abandoned runs never wake the parent; another owner replays them.
+                    const resumeParent = parent && !parent.detached && !instance.abandoned
+                      ? ensureSuccess(sendResumeParent(parent, executionId))
+                      : Effect.void
                     if (
                       !instance.suspended &&
                       !instance.abandoned &&
                       !(suspendOnFailure && exit._tag === "Failure")
                     ) {
-                      const resumeParent = parent && !parent.detached
-                        ? ensureSuccess(sendResumeParent(parent, executionId))
-                        : Effect.void
                       if (exit._tag === "Success" || !Cause.hasInterruptsOnly(exit.cause)) {
                         return resumeParent
                       }
@@ -568,9 +573,13 @@ export const make = Effect.gen(function*() {
                         }
                         instance.suspended = false
                         instance.interrupted = true
-                        return Effect.andThen(
-                          Effect.ignore(clearClock({ workflow, executionId })),
-                          Effect.withFiber<void>((fiber) => Effect.interruptible(Fiber.interrupt(fiber)))
+                        // The interrupt completes the run, so wake the parent
+                        // to observe it.
+                        return Effect.ignore(clearClock({ workflow, executionId })).pipe(
+                          Effect.andThen(resumeParent),
+                          Effect.andThen(
+                            Effect.withFiber<void>((fiber) => Effect.interruptible(Fiber.interrupt(fiber)))
+                          )
                         )
                       }),
                       Effect.orDie
@@ -760,7 +769,7 @@ export const make = Effect.gen(function*() {
         // A pending interrupt replays only to rebuild compensations, so it must
         // not run new activities. Finalizers run once `interrupted` is set.
         if (!instance.interrupted && (yield* interruptPending(instance))) {
-          const reply = yield* Effect.orDie(requestReply({
+          const reply = yield* retryPersistence(requestReply({
             workflow: instance.workflow,
             entityType: `Workflow/${instance.workflow._tag}`,
             executionId: instance.executionId,
@@ -777,7 +786,7 @@ export const make = Effect.gen(function*() {
           if (!activities.has(activityId)) {
             activities.set(activityId, { activity, context: services })
           }
-          const result = yield* Effect.orDie(
+          const result = yield* retryPersistence(
             client.activity({
               name: activity.name,
               attempt,
@@ -860,7 +869,7 @@ export const make = Effect.gen(function*() {
         }
         const workflow = workflows.get(workflowName)
         if (workflow) {
-          return yield* Effect.orDie(sendDiscard({
+          return yield* retryPersistence(sendDiscard({
             rpc: DeferredRpc,
             address: entityAddressFor({
               workflow,
@@ -874,7 +883,7 @@ export const make = Effect.gen(function*() {
           }))
         }
         const client = yield* RcMap.get(clientsPartial, workflowName)
-        return yield* Effect.orDie(
+        return yield* retryPersistence(
           client(executionId).deferred({
             name: deferredName,
             exit
@@ -885,27 +894,24 @@ export const make = Effect.gen(function*() {
     ),
 
     scheduleClock(workflow, options) {
-      return DateTime.now.pipe(
-        Effect.flatMap((now) =>
-          sendDiscard({
-            rpc: ClockRpc,
-            address: entityAddressFor({
-              workflow,
-              entityType: ClockEntity.type,
-              executionId: options.executionId
-            }),
-            payload: {
-              name: options.clock.name,
-              workflowName: workflow._tag,
-              wakeUp: DateTime.mapEpochMillis(
-                DateTime.addDuration(now, options.clock.duration),
-                Math.ceil
-              )
-            }
-          })
-        ),
-        Effect.orDie
-      )
+      // Compute the deadline once, so a retried save keeps the original wake-up.
+      return Effect.flatMap(DateTime.now, (now) =>
+        retryPersistence(sendDiscard({
+          rpc: ClockRpc,
+          address: entityAddressFor({
+            workflow,
+            entityType: ClockEntity.type,
+            executionId: options.executionId
+          }),
+          payload: {
+            name: options.clock.name,
+            workflowName: workflow._tag,
+            wakeUp: DateTime.mapEpochMillis(
+              DateTime.addDuration(now, options.clock.duration),
+              Math.ceil
+            )
+          }
+        })))
     }
   })
 
@@ -916,6 +922,15 @@ const retryPolicy = Schedule.min([
   Schedule.exponential(200, 1.5),
   Schedule.spaced("1 minute")
 ])
+
+// A transient storage failure must not become the workflow result. Activity,
+// clock and deferred requests are saved under a primary key, so a retry after
+// a lost acknowledgement is deduplicated instead of stored twice.
+const retryPersistence = <A, E extends { readonly _tag: string }, R>(effect: Effect.Effect<A, E, R>) =>
+  effect.pipe(
+    Effect.retry({ schedule: retryPolicy, while: (e) => e._tag === "PersistenceError" }),
+    Effect.orDie
+  )
 
 // A cluster abandonment means this owner can no longer complete the effect, so
 // retrying it would only wait on a retired run. Re-raise it as an annotated
