@@ -8,6 +8,7 @@ import { turnHalted } from "@repo/backend/confect/nina/halt";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
+  answerCalls,
   createNinaTest,
   fireDueJobs,
   ninaModel,
@@ -260,8 +261,8 @@ describe("The Nina response run and the memory tool", () => {
     // seal) at zero delay. The test runs it here, so none of it is still pending when
     // the next test advances the clock and finds it.
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    expect(model.doStreamCalls).toHaveLength(1);
-    return Arr.map(model.doStreamCalls[0]?.tools ?? [], (tool) => tool.name);
+    expect(answerCalls(model)).toHaveLength(1);
+    return Arr.map(answerCalls(model)[0]?.tools ?? [], (tool) => tool.name);
   }
 
   it("offers the model the memory tool with the others", async () => {

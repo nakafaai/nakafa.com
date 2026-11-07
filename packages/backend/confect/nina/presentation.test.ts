@@ -9,6 +9,7 @@ import { deployment, provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
   fireDueJobs,
+  followUpCalls,
   ninaModel,
   ninaStream,
   ninaSuggestionStream,
@@ -39,14 +40,6 @@ const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 const rename = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatTitle
 );
-
-/** The model calls that wrote follow-ups: they ask for JSON and stream. */
-function followUpCalls(model: ReturnType<typeof ninaModel>) {
-  return Arr.filter(
-    model.doStreamCalls,
-    (call) => call.responseFormat?.type === "json"
-  );
-}
 
 /** The title the owner reads for the chat, opened the way every reader opens it. */
 async function readTitle(f: Awaited<ReturnType<typeof createNinaTest>>) {

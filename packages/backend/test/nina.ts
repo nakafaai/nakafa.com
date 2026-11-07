@@ -440,6 +440,22 @@ export function ninaRecallModel(query: string, answers: number) {
   });
 }
 
+/** The calls of a test model that wrote answers, without the follow-ups that stream after them. */
+export function answerCalls(model: MockLanguageModelV4) {
+  return Arr.filter(
+    model.doStreamCalls,
+    (call) => call.responseFormat?.type !== "json"
+  );
+}
+
+/** The calls of a test model that wrote follow-ups: they ask for JSON and stream. */
+export function followUpCalls(model: MockLanguageModelV4) {
+  return Arr.filter(
+    model.doStreamCalls,
+    (call) => call.responseFormat?.type === "json"
+  );
+}
+
 /** The follow-up the test model writes after an answer. */
 export const NINA_SUGGESTIONS = ["How does this relate to continuity?"];
 
