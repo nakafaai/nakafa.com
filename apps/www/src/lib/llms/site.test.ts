@@ -1,9 +1,6 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import en from "@repo/internationalization/dictionaries/en.json" with {
-  type: "json",
-};
 import { Effect } from "effect";
 import { buildSiteLlmsEntries } from "@/lib/llms/entries";
 import { readSiteLlmsEntries } from "@/lib/llms/site";
@@ -38,16 +35,6 @@ describe("site llms entries", () => {
                 "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online try outs.",
               route: "/pricing",
               title: "Pricing",
-            },
-            {
-              description: en.SchoolSite["metadata-description"],
-              route: "/school",
-              title: en.SchoolSite["metadata-title"],
-            },
-            {
-              description: en.SchoolSite["pricing-metadata-description"],
-              route: "/school/pricing",
-              title: en.SchoolSite["pricing-metadata-title"],
             },
           ]
         )

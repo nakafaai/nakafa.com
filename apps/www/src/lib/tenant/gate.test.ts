@@ -21,8 +21,6 @@ describe("isSchoolTreePath", () => {
     "/school/harapan",
     "/school/harapan/exams/abc",
     "/school/new/extra",
-    "/school/pricing",
-    "/id/school/pricing/extra",
     "/id/school/harapan",
     "/%73chool/harapan",
   ])("names a school tree page at %s", (path) => {
@@ -36,8 +34,6 @@ describe("isSchoolTreePath", () => {
     "/school/new",
     "/id/school/new",
     "/id/school",
-    "/id/school/pricing",
-    "/en/school/enter",
     "/school%E0%A4%A",
   ])("does not name a school tree page at %s", (path) => {
     expect(isSchoolTreePath(path)).toBe(false);
