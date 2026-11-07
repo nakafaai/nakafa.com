@@ -8,6 +8,7 @@ import {
   sanitizeAcceptanceCommandError,
 } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import { resolveConvexNodeBin } from "@repo/backend/scripts/content/acceptance/node";
 import { Config, Effect, FileSystem, Schedule, Schema, Stream } from "effect";
 import { HttpClient } from "effect/http";
 import { ChildProcess } from "effect/process";
@@ -153,10 +154,17 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
     const home = yield* Config.schema(Schema.NonEmptyString, "HOME").pipe(
       Effect.orDie
     );
+    const path = yield* Config.schema(Schema.NonEmptyString, "PATH").pipe(
+      Effect.orDie
+    );
+    // The backend runs "use node" actions with the first `node` on its PATH, which
+    // must be the major that convex.json names, whatever Node this shell runs.
+    const nodeBin = yield* resolveConvexNodeBin(runtime.backend);
     const environment = {
       ...localConvexEnvironment,
       ...localBackendEnvironment,
       ...concurrency,
+      PATH: `${nodeBin}:${path}`,
       AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
       AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
       TMPDIR: yield* makeConvexTemporaryRoot(),
