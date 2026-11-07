@@ -15,6 +15,9 @@ const EXAM_EDITOR = /\/exams\/[^/]+\/edit$/u;
 /** The most a row's menu may stand from its line: the cell's padding on both sides. */
 const MENU_PADDING = 16;
 
+/** The name a screen reader reads on the head of the row's menu, Common `menu-actions` in English. */
+const MENU_HEAD = "Actions";
+
 /** The width every column's panel keeps, the gap between its parts, and what a sub-pixel may move an edge. */
 const PANEL_WIDTH = 288;
 const PANEL_GAP = 8;
@@ -62,13 +65,19 @@ async function expectEvenPanel(page: Page, card: Locator, head: string) {
   await page.keyboard.press("Escape");
 }
 
-/** Every column head with a name holds the button that filters it; only the row's menu has none. */
+/**
+ * Every column head holds the button that filters it. Only the row's menu has none, and its head still has a name that a
+ * screen reader reads.
+ */
 async function expectEveryHeadFilters(card: Locator) {
+  const menu = card.getByRole("columnheader", { exact: true, name: MENU_HEAD });
+  await expect(menu).toHaveCount(1);
+  await expect(menu.getByRole("button")).toHaveCount(0);
   const heads = await card.getByRole("columnheader").all();
   expect(heads.length).toBeGreaterThan(1);
   for (const head of heads) {
     const name = await head.textContent();
-    if (name === "") {
+    if (name === MENU_HEAD) {
       continue;
     }
     await expect(head.getByRole("button"), name ?? "").toHaveCount(1);
