@@ -4,7 +4,9 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { schoolAccount } from "@repo/backend/confect/billing/tiers";
 import { MAX_READ_BYTES } from "@repo/backend/confect/classroom/passages";
+import { MAX_CREDITS_PER_RESPONSE } from "@repo/backend/confect/credits/constants";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   forumClass,
@@ -33,6 +35,11 @@ const { setPolicy } = refs.public.tenancy.settings;
 const fetcher = vi.fn<typeof fetch>();
 vi.stubGlobal("fetch", fetcher);
 const bucket = makeBucket();
+
+/** The accounts whose monthly pool credits hold 101 reads at the most one response may cost. */
+const POOL_SEATS = Math.ceil(
+  (101 * MAX_CREDITS_PER_RESPONSE) / schoolAccount.credits
+);
 
 /** Turns Nina on for the school. */
 const ninaOn = (fixture: Fixture) =>
@@ -214,7 +221,7 @@ describe("classroom/passages", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* keyedFixture;
-        // The school's plan pays for its 101 files read at once: 20 students'
+        // The school's plan pays for its 101 files read at once: its accounts'
         // pool credits hold every read's ceiling together.
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
@@ -222,8 +229,8 @@ describe("classroom/passages", () => {
               product: "school",
               tenantId: fixture.tenants.nf,
               scope: { kind: "tenant" },
-              seats: 20,
-              ninaSeats: 20,
+              seats: POOL_SEATS,
+              ninaSeats: POOL_SEATS,
               source: { kind: "contract", contractId: "passages-pool" },
               validFrom: TENANCY_NOW - 1000,
               validTo: TENANCY_NOW + 365 * 24 * 60 * 60 * 1000,

@@ -1,11 +1,30 @@
-import { useMutation } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  useMutation,
+  usePaginatedQuery,
+} from "@confect/react";
+import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Effect, Option } from "effect";
-import { useState } from "react";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import {
   forumCall,
   runForumCall,
@@ -20,10 +39,20 @@ import { TaskFields } from "@/components/tenant/classes/tasks/fields";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { useClockZone } from "@/components/tenant/settings/time";
 
+/** How many of the school's exams the picker offers. */
+const EXAM_PAGE_SIZE = 50;
+
+/** The value of the picker's first choice: a task the students answer in writing. */
+const WRITTEN = "written";
+
+const decodeExamId = Schema.decodeUnknownOption(Id("exams"));
+
 /**
  * Publishes a task to the class: its title, what it asks, its deadline in the browser's own time,
- * its points, and what late work gets. The dialog closes on submit and the task joins the list once
- * the server holds it under its address; a refusal brings the dialog back with what was written.
+ * its points, what late work gets, and its questions: a written answer, or an exam the teacher built
+ * in the exam editor, which the class then does in the exam player. The dialog closes on submit and
+ * the task joins the list once the server holds it under its address; a refusal brings the dialog
+ * back with what was written.
  */
 export function NewTask() {
   const t = useTranslations("Classroom");
@@ -32,6 +61,7 @@ export function NewTask() {
   const publish = useMutation(classroom.tasks.publish);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
+  const [exam, setExam] = useState(WRITTEN);
   const checked = checkedDraft(draft, useClockZone());
 
   const submit = () => {
@@ -41,8 +71,23 @@ export function NewTask() {
     setOpen(false);
     runForumCall(
       Effect.flatMap(randomUuid, (clientKey) =>
-        forumCall(() => publish({ ...checked.value, classId, clientKey, slug }))
-      ).pipe(Effect.tap(() => Effect.sync(() => setDraft(EMPTY_DRAFT)))),
+        forumCall(() =>
+          publish({
+            ...checked.value,
+            classId,
+            clientKey,
+            examId: Option.getOrNull(decodeExamId(exam)),
+            slug,
+          })
+        )
+      ).pipe(
+        Effect.tap(() =>
+          Effect.sync(() => {
+            setDraft(EMPTY_DRAFT);
+            setExam(WRITTEN);
+          })
+        )
+      ),
       () => {
         setOpen(true);
         toastForumFailure();
@@ -70,7 +115,66 @@ export function NewTask() {
         title={t("task-new")}
       >
         <TaskFields draft={draft} onChange={setDraft} pointsFixed={false} />
+        <TaskExamField exam={exam} onExam={setExam} />
       </ResponsiveDialog>
     </>
+  );
+}
+
+/**
+ * The task's questions: a written answer, or one of the school's exams that the teacher may edit and
+ * that holds questions, built in the exam editor. The exams load once the session settles.
+ */
+function TaskExamField({
+  exam,
+  onExam,
+}: {
+  exam: string;
+  onExam: (exam: string) => void;
+}) {
+  const t = useTranslations("Classroom");
+  const { slug } = useClassScope();
+  const id = useId();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const pagination = usePaginatedQuery(
+    exams.exams.list,
+    isSettled ? { slug } : "skip",
+    { initialNumItems: EXAM_PAGE_SIZE }
+  );
+  const offered = PaginatedQueryResult.isFailure(pagination)
+    ? []
+    : Arr.filter(
+        pagination.results,
+        (listed) => listed.canEdit && listed.questionCount > 0
+      );
+  const items = [
+    { label: t("task-exam-none"), value: WRITTEN },
+    ...Arr.map(offered, (listed) => ({
+      label: listed.title,
+      value: listed.id,
+    })),
+  ];
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={`${id}-exam`}>{t("task-exam")}</FieldLabel>
+      <Select
+        items={items}
+        onValueChange={(value) => onExam(String(value ?? WRITTEN))}
+        value={exam}
+      >
+        <SelectTrigger className="w-full" id={`${id}-exam`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Arr.map(items, (item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FieldDescription>{t("task-exam-description")}</FieldDescription>
+    </Field>
   );
 }

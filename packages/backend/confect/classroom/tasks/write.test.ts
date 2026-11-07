@@ -50,6 +50,7 @@ const taught = Effect.gen(function* () {
   };
   const teacher = fixture.as("teacher");
   const whole = yield* teacher.mutation(publish, {
+    examId: null,
     ...draft,
     clientKey: "whole-class",
     targets: null,
@@ -75,6 +76,7 @@ describe("classroom/tasks write", () => {
         const student = fixture.as("student");
         const self = fixture.people.student.personId;
         const named = yield* teacher.mutation(publish, {
+          examId: null,
           ...draft,
           clientKey: "for-the-student",
           targets: [self],
@@ -143,6 +145,7 @@ describe("classroom/tasks write", () => {
       expect(
         yield* teacher
           .mutation(publish, {
+            examId: null,
             ...draft,
             classId: other.classId,
             clientKey: "wrong-students",
@@ -161,6 +164,7 @@ describe("classroom/tasks write", () => {
       const before = yield* fixture.run(noticesOf(student));
       // Settling runs the clock up to the last deadline, so each task is due after the one before it.
       yield* teacher.mutation(publish, {
+        examId: null,
         ...draft,
         clientKey: "for-a-teacher",
         deadline: TENANCY_NOW + 30 * 86_400_000,
@@ -169,6 +173,7 @@ describe("classroom/tasks write", () => {
       yield* settle;
       expect(yield* fixture.run(noticesOf(student))).toBe(before);
       yield* teacher.mutation(publish, {
+        examId: null,
         ...draft,
         clientKey: "for-the-student",
         deadline: TENANCY_NOW + 60 * 86_400_000,
@@ -186,6 +191,7 @@ describe("classroom/tasks write", () => {
       const student = fixture.people.student.personId;
       const before = yield* fixture.run(noticesOf(student));
       yield* teacher.mutation(publish, {
+        examId: null,
         ...draft,
         clientKey: "last-term",
         deadline: TENANCY_NOW - 1,
@@ -200,6 +206,7 @@ describe("classroom/tasks write", () => {
     Effect.gen(function* () {
       const { draft, scope, teacher } = yield* taught;
       const filed = yield* teacher.mutation(publish, {
+        examId: null,
         ...draft,
         category: "Remedial",
         clientKey: "filed-task",

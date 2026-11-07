@@ -40,6 +40,7 @@ describe("classroom/tasks", () => {
         const teacher = fixture.as("teacher");
         const publish = (clientKey: string, title: string, deadline: number) =>
           teacher.mutation(tasks.publish, {
+            examId: null,
             targets: null,
             classId: forum.classId,
             clientKey,
@@ -125,6 +126,7 @@ describe("classroom/tasks", () => {
         const teacher = fixture.as("teacher");
         const student = fixture.as("student");
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: forum.classId,
           clientKey: "open-task",
@@ -137,6 +139,7 @@ describe("classroom/tasks", () => {
           title: "Ringkasan",
         });
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: forum.classId,
           clientKey: "closed-task",
@@ -272,6 +275,7 @@ describe("classroom/tasks", () => {
         const other = yield* forumClass(fixture, term.id, "X-4", false);
         const teacher = fixture.as("teacher");
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: other.classId,
           clientKey: "other-task",
@@ -287,6 +291,7 @@ describe("classroom/tasks", () => {
           fixture
             .as("student")
             .mutation(tasks.publish, {
+              examId: null,
               targets: null,
               classId: forum.classId,
               clientKey: "student-task",
@@ -322,6 +327,7 @@ describe("classroom/tasks", () => {
         ]);
         // Work of one class is refused under another class the teacher also teaches.
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: forum.classId,
           clientKey: "own-task",
@@ -369,6 +375,7 @@ describe("classroom/tasks", () => {
         const args = { classId: forum.classId, slug: nf };
         const owner = fixture.as("owner");
         const task = yield* owner.mutation(tasks.publish, {
+          examId: null,
           ...args,
           category: null,
           clientKey: "owner-task",

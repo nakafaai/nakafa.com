@@ -42,6 +42,7 @@ describe("notifications/detail", () => {
           text: "Ulangan hari Senin.",
         });
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: forum.classId,
           clientKey: "detail-task",

@@ -1773,6 +1773,11 @@ export declare const api: {
         {
           category: string | null;
           deadline: number;
+          exam: {
+            examId: Id<"exams">;
+            sittingId: Id<"examSittings">;
+            token: string;
+          } | null;
           handedIn: number;
           id: Id<"classroomTasks">;
           latePolicy: "accept" | "close";
@@ -1796,6 +1801,11 @@ export declare const api: {
         {
           category: string | null;
           deadline: number;
+          exam: {
+            examId: Id<"exams">;
+            sittingId: Id<"examSittings">;
+            token: string;
+          } | null;
           handedIn: number;
           id: Id<"classroomTasks">;
           latePolicy: "accept" | "close";
@@ -1834,6 +1844,11 @@ export declare const api: {
           page: Array<{
             category: string | null;
             deadline: number;
+            exam: {
+              examId: Id<"exams">;
+              sittingId: Id<"examSittings">;
+              token: string;
+            } | null;
             handedIn: number;
             id: Id<"classroomTasks">;
             latePolicy: "accept" | "close";
@@ -1885,6 +1900,7 @@ export declare const api: {
           classId: Id<"classes">;
           clientKey: string;
           deadline: number;
+          examId: Id<"exams"> | null;
           latePolicy: "accept" | "close";
           points: number;
           slug: string;
@@ -1895,6 +1911,11 @@ export declare const api: {
         {
           category: string | null;
           deadline: number;
+          exam: {
+            examId: Id<"exams">;
+            sittingId: Id<"examSittings">;
+            token: string;
+          } | null;
           handedIn: number;
           id: Id<"classroomTasks">;
           latePolicy: "accept" | "close";
@@ -1974,6 +1995,11 @@ export declare const api: {
         {
           category: string | null;
           deadline: number;
+          exam: {
+            examId: Id<"exams">;
+            sittingId: Id<"examSittings">;
+            token: string;
+          } | null;
           handedIn: number;
           id: Id<"classroomTasks">;
           latePolicy: "accept" | "close";

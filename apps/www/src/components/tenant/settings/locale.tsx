@@ -14,15 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { countries } from "country-flag-icons";
-import {
-  Array as Arr,
-  Option,
-  Number as Ord,
-  Order,
-  Result,
-  Schema,
-} from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
@@ -30,35 +22,12 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { countryChoices } from "@/components/tenant/settings/choices";
 import { setLocaleChange } from "@/components/tenant/settings/edits";
 import { RegionPicker } from "@/components/tenant/settings/picker";
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/locale";
-
-/**
- * Every country a school may name: each code the flag package draws that the platform
- * names, so every country in the world shows with its flag, sorted by its name in the
- * viewer's language.
- */
-function countryChoices(locale: string) {
-  const names = new Intl.DisplayNames([locale], {
-    fallback: "none",
-    type: "region",
-  });
-  const collator = new Intl.Collator(locale);
-  return Arr.sort(
-    Arr.filterMap(countries, (code) =>
-      Option.match(Option.fromNullishOr(names.of(code)), {
-        onNone: () => Result.failVoid,
-        onSome: (label) => Result.succeed({ label, value: code }),
-      })
-    ),
-    Order.make((a: { readonly label: string }, b) =>
-      Ord.sign(collator.compare(a.label, b.label))
-    )
-  );
-}
 
 /** The symbol a currency writes in one locale, such as Rp for the rupiah or € for the euro. */
 function currencySymbol(code: string, locale: string) {

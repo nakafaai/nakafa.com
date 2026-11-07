@@ -53,9 +53,23 @@ const COMMON_ERRORS = {
 };
 const RATE_LIMIT_RESPONSE = {
   ...problemResponse(
-    "The client exceeded the bounded application quota. Honor Retry-After and retry with backoff."
+    "The client exceeded the bounded application quota. Honor Retry-After and retry with backoff. Every metered answer, this one included, carries the IETF RateLimit and RateLimit-Policy fields."
   ),
   headers: {
+    RateLimit: {
+      description:
+        'The reads left to this client and the seconds until its quota is full again, such as `"public-read";r=0;t=15`.',
+      schema: {
+        type: "string",
+      },
+    },
+    "RateLimit-Policy": {
+      description:
+        'The quota policy: how many reads the client holds and the seconds it takes to refill, such as `"public-read";q=30;w=15`.',
+      schema: {
+        type: "string",
+      },
+    },
     "Retry-After": {
       description: "Required retry delay in seconds.",
       schema: {
@@ -158,7 +172,7 @@ export const OPENAPI_PATHS = {
       operationId: "getNakafaApiIndex",
       responses: {
         "200": successResponse("API service index.", "ApiIndex"),
-        ...COMMON_ERRORS,
+        ...METERED_RESPONSES,
       },
       summary: "Read the API index",
     }),

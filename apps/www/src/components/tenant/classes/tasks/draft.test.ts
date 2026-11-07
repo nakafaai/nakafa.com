@@ -16,6 +16,7 @@ const ZONE = "Asia/Jakarta";
 const task: ClassTask = {
   category: "Latihan",
   deadline: Option.getOrThrow(deadlineOf("2026-11-02T23:59", ZONE)),
+  exam: null,
   handedIn: 0,
   id: Schema.decodeUnknownSync(Id("classroomTasks"))("task-1"),
   latePolicy: "close",

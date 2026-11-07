@@ -2,6 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { objectAddress, presign } from "@repo/backend/confect/bucket/sign";
 import { ConfigProvider, Effect, Redacted } from "effect";
 
+/** A presigned DELETE address of the example object, up to its credential scope. */
+const SIGNED_DELETE_ADDRESS =
+  /^https:\/\/account\.r2\.cloudflarestorage\.com\/nakafa-files\/library\/school\/file\?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F\d{8}%2Fauto%2Fs3%2Faws4_request&/u;
+
 /** The credentials of the presigned example in the S3 documentation. */
 const EXAMPLE = {
   accessKeyId: "AKIAIOSFODNN7EXAMPLE",
@@ -74,9 +78,7 @@ describe("bucket.objectAddress", () => {
         expiresSeconds: 300,
         method: "DELETE",
       }).pipe(Effect.provide(configured));
-      expect(address).toMatch(
-        /^https:\/\/account\.r2\.cloudflarestorage\.com\/nakafa-files\/library\/school\/file\?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F\d{8}%2Fauto%2Fs3%2Faws4_request&/u
-      );
+      expect(address).toMatch(SIGNED_DELETE_ADDRESS);
     })
   );
 });
