@@ -370,7 +370,7 @@ Drive copies come through the Drive connector (ADR 0015).
   (K10). The images that a question keeps stay with it. Any other school file
   stays until its owner deletes it, until its class is deleted, or until the
   school leaves.
-- `expire` owns expiry. The daily `internal.storage.sweep` and any expiry of
+- `expire` owns expiry. The daily bucket sweep (`internal.bucket.sweep`) and any expiry of
   school files sit in this module.
 - A model or a person reads a file only after it has been scanned.
 
@@ -381,7 +381,12 @@ The owner chose Cloudflare R2 for the bytes and Convex for everything else
 a file for half of Convex's price and serves it with no egress charge. The class
 library moved first; the forum's files, the school logo, exam images and audio,
 the page images of an import, and the record PDFs followed in one step. Nina's
-attachments stay in the Agent component's storage until their own change.
+attachments followed last: a learner's upload is stored in the bucket for the
+learner's account, the chat keeps the files its messages sent in `ninaFiles`
+until the chat is deleted, and a turn signs each file's address again when it
+reads its history (`confect/nina/files.ts`), so no expiring address is the only
+way to a file. The Agent component keeps no file, and `internal.storage.sweep`
+is gone.
 
 - Two private buckets, `nakafa-files` for production and `nakafa-files-staging` for
   the dev deployment that staging and local development share, declared in the

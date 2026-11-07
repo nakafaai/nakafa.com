@@ -6,6 +6,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { deleteFile } from "@repo/backend/confect/bucket/file";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import spec from "@repo/backend/confect/triggers/chats/cleanup.spec";
 import { Duration, Effect, Layer } from "effect";
@@ -39,7 +40,22 @@ const cleanupDeletedChat = FunctionImpl.make(
     for (const turn of turns) {
       yield* writer.table("ninaTurns").delete(turn._id).pipe(Effect.orDie);
     }
-    if (turns.length < 20) {
+    // The files the learner sent leave the bucket with the chat (ADR 0028).
+    const files = yield* reader
+      .table("ninaFiles")
+      .index("by_chatId", (index) => index.eq("chatId", args.chatId))
+      .take(20)
+      .pipe(Effect.orDie);
+    yield* Effect.forEach(
+      files,
+      (file) =>
+        Effect.andThen(
+          writer.table("ninaFiles").delete(file._id).pipe(Effect.orDie),
+          deleteFile(file.fileId)
+        ),
+      { discard: true }
+    );
+    if (turns.length < 20 && files.length < 20) {
       return null;
     }
     const scheduler = yield* Scheduler;
