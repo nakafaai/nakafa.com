@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { editTask } from "@repo/backend/confect/classroom/tasks/edit";
+import { removeTask } from "@repo/backend/confect/classroom/tasks/remove";
 import {
   standingOf,
   submissionField,
@@ -109,6 +110,17 @@ const edit = FunctionImpl.make(
     return yield* taskView(
       yield* editTask(Struct.omit(args, ["classId", "slug"]))
     );
+  })
+);
+
+/** Deletes a task of the class, the work handed in for it, and its pending deadline notices. */
+const remove = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "remove",
+  Effect.fn("classroom.tasks.remove.function")(function* ({ task }) {
+    yield* removeTask(task);
+    return null;
   })
 );
 
@@ -328,6 +340,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(get),
   Layer.provide(publish),
   Layer.provide(edit),
+  Layer.provide(remove),
   Layer.provide(submit),
   Layer.provide(submissions),
   Layer.provide(missing),

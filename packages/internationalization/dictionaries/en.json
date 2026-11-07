@@ -1670,7 +1670,13 @@
     "library-folder-remove-title": "Delete this folder",
     "library-folder-remove-description": "Its files stay in the library.",
     "library-folder-empty-description": "This folder's files and links show here, the newest first.",
-    "library-kind-folder": "Folder"
+    "library-kind-folder": "Folder",
+    "task-detail": "Task",
+    "task-submissions": "Handed in",
+    "task-read": "Read work",
+    "task-remove": "Delete task",
+    "task-remove-title": "Delete this task",
+    "task-remove-description": "Its work handed in goes with it, and this cannot be undone."
   },
   "SchoolGrades": {
     "email": "Email",

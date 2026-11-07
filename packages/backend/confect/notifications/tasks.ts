@@ -67,11 +67,15 @@ export const scheduleTaskNotices = Effect.fn("notifications.tasks.schedule")(
   }
 );
 
+/** Cancels the pending runs of a task's deadline notices, as a task that moves or goes needs. */
+export const cancelTaskNotices = (task: Pick<ClassroomTasksDoc, "jobs">) =>
+  Effect.forEach(task.jobs ?? [], cancelPending, { discard: true });
+
 /** Replaces the pending runs of a task whose deadline moved, and answers the new jobs. */
 export const moveTaskNotices = Effect.fn("notifications.tasks.move")(function* (
   task: Pick<ClassroomTasksDoc, "_id" | "deadline" | "jobs">,
   unitId: ClassesDoc["unitId"]
 ) {
-  yield* Effect.forEach(task.jobs ?? [], cancelPending, { discard: true });
+  yield* cancelTaskNotices(task);
   return yield* scheduleTaskNotices(task, unitId);
 });

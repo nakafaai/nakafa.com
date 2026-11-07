@@ -1670,7 +1670,13 @@
     "library-folder-remove-title": "Diesen Ordner löschen",
     "library-folder-remove-description": "Seine Dateien bleiben in der Bibliothek.",
     "library-folder-empty-description": "Die Dateien und Links dieses Ordners erscheinen hier, die neuesten zuerst.",
-    "library-kind-folder": "Ordner"
+    "library-kind-folder": "Ordner",
+    "task-detail": "Aufgabe",
+    "task-submissions": "Abgegeben",
+    "task-read": "Arbeit lesen",
+    "task-remove": "Aufgabe löschen",
+    "task-remove-title": "Diese Aufgabe löschen",
+    "task-remove-description": "Die abgegebenen Arbeiten werden mit gelöscht, und das lässt sich nicht rückgängig machen."
   },
   "SchoolGrades": {
     "email": "E-Mail",

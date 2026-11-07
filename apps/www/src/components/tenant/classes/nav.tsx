@@ -1,4 +1,4 @@
-import type { Ref } from "@confect/core";
+import type { GenericId, Ref } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
@@ -18,6 +18,7 @@ import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { TenantClassLinks } from "@/components/tenant/classes/links";
 import { markOf, withMarks } from "@/components/tenant/classes/marks";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
@@ -71,6 +72,7 @@ function TenantClassesRows() {
         <TenantSidebarGroup label={t("classes")}>
           {Arr.map(withMarks(rows), (klass) => (
             <TenantClassItem
+              cohortId={klass.cohortId}
               key={klass.id}
               mascot={klass.mascot}
               name={klass.name}
@@ -153,6 +155,7 @@ function TenantUnitClasses({
     <TenantSidebarGroup label={unit.name}>
       {Arr.map(rows, (klass) => (
         <TenantClassItem
+          cohortId={klass.cohortId}
           key={klass.id}
           mascot={markOf(klass.id)}
           name={klass.name}
@@ -169,13 +172,15 @@ function TenantUnitClasses({
 /**
  * One class of the school sidebar, linking to the class page on the school host, marked
  * with its animal as the school switcher marks a school. Its entry is the current page on
- * the class page and on its tabs.
+ * the class page and on its tabs, and the open class shows its places under it.
  */
 function TenantClassItem({
+  cohortId,
   mascot,
   name,
   slug,
 }: {
+  cohortId: GenericId.GenericId<"tenantCohorts">;
   mascot: typeof Mascot.Type;
   name: string;
   slug: string;
@@ -202,6 +207,9 @@ function TenantClassItem({
           {name}
         </span>
       </SidebarMenuButton>
+      {isActive ? (
+        <TenantClassLinks classSlug={slug} cohortId={cohortId} />
+      ) : null}
     </SidebarMenuItem>
   );
 }

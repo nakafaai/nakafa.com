@@ -1,10 +1,15 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  useMutation,
+  usePaginatedQuery,
+} from "@confect/react";
 import {
   ArrowRight01Icon,
   Award02Icon,
   Book02Icon,
   Bookmark01Icon,
   Calendar03Icon,
+  Delete02Icon,
   Flag01Icon,
   Folder01Icon,
   Note01Icon,
@@ -27,11 +32,19 @@ import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PaneOpen } from "@/components/shared/pane";
+import {
+  Panes,
+  PanesDetail,
+  PanesList,
+  usePanes,
+} from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { RowItems } from "@/components/shared/table/menu";
+import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -39,16 +52,24 @@ import {
   TableSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import {
+  forumCall,
+  runForumCall,
+  toastForumFailure,
+} from "@/components/tenant/classes/forum/call";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
+import { TaskDetail } from "@/components/tenant/classes/tasks/detail";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
-import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
+import {
+  type ClassTask,
+  removeUpdate,
+} from "@/components/tenant/classes/tasks/optimistic";
+import { TaskStanding } from "@/components/tenant/classes/tasks/standing";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useClockZone } from "@/components/tenant/settings/time";
 import { useKeptRows } from "@/lib/data/kept";
-import { TargetLink } from "@/lib/routing/link";
-import { schoolClassTaskTarget } from "@/lib/routing/school/target";
 
 /** How many tasks the list reads each time its end comes into view. */
 const TASK_PAGE_SIZE = 20;
@@ -83,12 +104,14 @@ type StandingFilter = typeof StandingFilter.Type;
 
 /**
  * The tasks of a class: the class header with the search over the tasks' titles and New task for
- * its teachers, and the tasks by deadline, the soonest first, in the page's one table card. A
- * student's Status head chooses the tasks where the student's work stands so, which the server
- * reads, and the tasks already shown stay while a new standing's first page loads. The next page
- * loads when the end comes into view, and nothing stands in the card while the first page loads. A
- * class with no task shows the empty state without a search, a failed read its sentence and Try
- * again, and a viewer who lost the school's access is sent to the refused page.
+ * its teachers, the tasks by deadline, the soonest first, in the page's one table card, and the
+ * open task in the pane at the screen's right, with its work handed in for its teacher and the
+ * hand-in for a student. A press on a row opens it, and the page's `PanesProvider` names the task
+ * that a task's own address opens. A student's Status head chooses the tasks where the student's work stands so,
+ * which the server reads, and the tasks already shown stay while a new standing's first page
+ * loads. The next page loads when the end comes into view, and nothing stands in the card while
+ * the first page loads. A class with no task shows the empty state without a search, a failed read
+ * its sentence and Try again, and a viewer who lost the school's access is sent to the refused page.
  */
 export function TaskList() {
   return (
@@ -140,25 +163,35 @@ function TaskListBody() {
         <TableSearch placeholder={t("tasks-search")} />
         {Arr.contains(can, "task.manage") ? <NewTask /> : null}
       </ClassHeader>
-      <TablePageBody>
-        <TablePages pageSize={TASK_PAGE_SIZE} pagination={pagination}>
-          <DataTable
-            columns={columns}
-            data={Option.getOrElse(kept, Arr.empty)}
-            empty={
-              standing === "all" ? (
-                <TableEmpty
-                  act="writing"
-                  description={t("tasks-empty-description")}
-                  title={t("tasks-empty")}
+      {/* The header's 4rem and the tabs' 3rem stand above the list and its pane. */}
+      <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
+        <Panes id="tasks">
+          <PanesList>
+            <TablePageBody>
+              <TablePages pageSize={TASK_PAGE_SIZE} pagination={pagination}>
+                <DataTable
+                  columns={columns}
+                  data={Option.getOrElse(kept, Arr.empty)}
+                  empty={
+                    standing === "all" ? (
+                      <TableEmpty
+                        act="writing"
+                        description={t("tasks-empty-description")}
+                        title={t("tasks-empty")}
+                      />
+                    ) : undefined
+                  }
+                  rowId={(task) => task.slug}
+                  search="title"
                 />
-              ) : undefined
-            }
-            rowId={(task) => task.id}
-            search="title"
-          />
-        </TablePages>
-      </TablePageBody>
+              </TablePages>
+            </TablePageBody>
+          </PanesList>
+          <PanesDetail label={t("task-detail")}>
+            <TaskDetail rows={Option.getOrElse(kept, Arr.empty)} />
+          </PanesDetail>
+        </Panes>
+      </div>
     </>
   );
 }
@@ -228,32 +261,56 @@ function useTaskColumns(categories: readonly string[]) {
   ];
 }
 
-/** What a row of the task table can do: open the task, and edit it for a teacher who keeps the class's tasks. */
+/**
+ * What a row of the task table can do: open the task in the pane, and for a teacher who keeps the class's tasks, edit
+ * it, or delete it, which asks first, takes the row away at once, and brings it back with the School toast on a refusal.
+ */
 function TaskRowMenu({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
-  const { can, classSlug, slug } = useClassScope();
+  const { can, classId, slug } = useClassScope();
   const [openings, setOpenings] = useState(0);
+  const remove = useMutation(classroom.tasks.remove);
+  const open = usePanes((state) => state.open);
+  const close = usePanes((state) => state.close);
+
+  if (!Arr.contains(can, "task.manage")) {
+    return (
+      <RowItems>
+        <RowOpen icon={ArrowRight01Icon} label={t("task-open")} />
+      </RowItems>
+    );
+  }
 
   return (
     <>
-      <RowItems>
-        <DropdownMenuItem
-          render={
-            <TargetLink
-              target={schoolClassTaskTarget(slug, classSlug, task.slug)}
-            >
-              <HugeIcons icon={ArrowRight01Icon} />
-              {t("task-open")}
-            </TargetLink>
+      <ConfirmRowMenu
+        action={t("task-remove")}
+        confirm={t("task-remove")}
+        description={t("task-remove-description")}
+        icon={Delete02Icon}
+        onConfirm={() => {
+          if (Option.contains(open, task.slug)) {
+            close();
           }
-        />
-        {Arr.contains(can, "task.manage") ? (
-          <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("task-edit")}
-          </DropdownMenuItem>
-        ) : null}
-      </RowItems>
+          runForumCall(
+            forumCall(() =>
+              remove.withOptimisticUpdate(removeUpdate)({
+                classId,
+                slug,
+                task: task.slug,
+              })
+            ),
+            toastForumFailure
+          );
+        }}
+        title={t("task-remove-title")}
+      >
+        <RowOpen icon={ArrowRight01Icon} label={t("task-open")} />
+        <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("task-edit")}
+        </DropdownMenuItem>
+      </ConfirmRowMenu>
       {openings === 0 ? null : <EditTaskDialog key={openings} task={task} />}
     </>
   );
@@ -286,36 +343,11 @@ function useStandingChoices() {
   ];
 }
 
-/** A task's title, which opens the task. */
+/** A task's title, which opens the task in the pane. */
 function TaskTitle({ task }: { task: ClassTask }) {
-  const { classSlug, slug } = useClassScope();
-
   return (
     <TableTitle icon={TaskEdit01Icon}>
-      <TargetLink
-        className="underline-offset-4 hover:underline"
-        dir="auto"
-        target={schoolClassTaskTarget(slug, classSlug, task.slug)}
-      >
-        {task.title}
-      </TargetLink>
+      <PaneOpen id={task.slug}>{task.title}</PaneOpen>
     </TableTitle>
   );
-}
-
-/** Where a task stands: the viewer's own work for a student of the class, and how many handed work in for anyone else. */
-export function TaskStanding({ task }: { task: ClassTask }) {
-  const t = useTranslations("Classroom");
-  const { can } = useClassScope();
-  if (!Arr.contains(can, "task.submit")) {
-    return t("task-handed-in-count", { count: task.handedIn });
-  }
-  if (task.mine !== null && task.mine.score !== null) {
-    return t("task-scored", { points: task.points, score: task.mine.score });
-  }
-  const standing = standingOf(task.mine);
-  if (standing === "open") {
-    return t("task-not-handed-in");
-  }
-  return standing === "late" ? t("task-handed-in-late") : t("task-handed-in");
 }
