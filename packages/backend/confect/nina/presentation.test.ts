@@ -148,6 +148,27 @@ describe("Nina presentation after an answer", () => {
     ).toEqual(["How does this relate to continuity?"]);
   });
 
+  it("saves every follow-up of a longer list once the model has written it", async () => {
+    const f = await createNinaTest();
+    const model = ninaModel();
+    const answer = model.doStream;
+    const questions = [
+      "What is a one-sided limit?",
+      "How does this relate to continuity?",
+      "When does a limit not exist?",
+    ];
+    model.doStream = (options) =>
+      options.responseFormat?.type === "json"
+        ? Promise.resolve(ninaSuggestionStream(questions))
+        : answer(options);
+    provider.languageModel.mockReturnValue(model);
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
+    expect(
+      (await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId)))?.suggestions
+    ).toEqual(questions);
+  });
+
   it("saves each follow-up the model has finished while it writes the next one", async () => {
     const f = await createNinaTest();
     const model = ninaModel();

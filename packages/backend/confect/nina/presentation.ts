@@ -40,6 +40,10 @@ class NinaPresentationError extends Schema.TaggedError<NinaPresentationError>()(
   { operation: Schema.Literals(["suggestions", "title"]) }
 ) {}
 
+/** The failure of the follow-ups, which the turn logs and goes on without. */
+const suggestionsUnavailable = () =>
+  new NinaPresentationError({ operation: "suggestions" });
+
 /** The follow-ups the model returns, as one object so the output can be parsed while it streams. */
 const suggestionsOutput = createEffectSchema(
   Schema.Struct({ suggestions: NinaSuggestions })
@@ -87,9 +91,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
       recentMessages: SUGGESTION_MESSAGES,
       threadId: turn.threadId,
     }).pipe(
-      Effect.mapError(
-        () => new NinaPresentationError({ operation: "suggestions" })
-      ),
+      Effect.mapError(suggestionsUnavailable),
       Effect.flatMap((context) =>
         Effect.gen(function* () {
           // A provider that refuses the call closes the partial stream and
@@ -135,15 +137,14 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
                 },
                 options
               ),
-            catch: () =>
-              new NinaPresentationError({ operation: "suggestions" }),
+            catch: suggestionsUnavailable,
           });
           // Each follow-up is saved once the model has moved on to the next
           // one, so the learner reads them arrive one by one through the turn's
           // own query; the last one is whole only when the model has finished.
           yield* Stream.fromAsyncIterable(
             result.partialOutputStream,
-            () => new NinaPresentationError({ operation: "suggestions" })
+            suggestionsUnavailable
           ).pipe(
             Stream.map(readWrittenSuggestions),
             Stream.filter(Option.isSome),
@@ -159,14 +160,11 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
             )
           );
           if (failed) {
-            return yield* new NinaPresentationError({
-              operation: "suggestions",
-            });
+            return yield* suggestionsUnavailable();
           }
           return yield* Effect.tryPromise({
             try: () => result.output,
-            catch: () =>
-              new NinaPresentationError({ operation: "suggestions" }),
+            catch: suggestionsUnavailable,
           });
         })
       ),
