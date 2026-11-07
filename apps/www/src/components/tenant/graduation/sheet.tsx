@@ -89,7 +89,7 @@ const lineColumns = tableColumns<GraduationLine>();
 
 /**
  * The graduation of one class group (ADR 0033, S6): each placed student with their transcript
- * average, whether a NISN is on file, their SKL, and what keeps them from it, beside the student
+ * average, their SKL, and what keeps them from it, a missing NISN included, beside the student
  * a press opens on a wide screen and in a sheet on a phone. The header holds the search, the
  * decision on graduation and the issue of the letters for the principal, and the e-Ijazah export.
  * A class group outside its unit's last grade says so in the list's card, with the way back to
@@ -159,16 +159,6 @@ function GraduationStudents() {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
       header: t("email"),
       id: "email",
-    }),
-    lineColumns.values((line) => (line.hasNisn ? "yes" : "no"), {
-      cell: (info) => t(`nisn-${info.getValue()}`),
-      header: t("nisn"),
-      id: "nisn",
-      options: Arr.map(["yes", "no"] as const, (value) => ({
-        icon: value === "yes" ? UserCheck01Icon : IdentityCardIcon,
-        label: t(`nisn-${value}`),
-        value,
-      })),
     }),
     lineColumns.number(averageOf, {
       cell: (info) =>

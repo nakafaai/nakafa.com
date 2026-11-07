@@ -124,9 +124,7 @@ function GuardianChildren() {
   const columns = [
     childColumns.text((child) => child.student.name, {
       cell: (info) => (
-        <PaneOpen id={info.row.original.linkId}>
-          <TableText>{info.getValue()}</TableText>
-        </PaneOpen>
+        <PaneOpen id={info.row.original.linkId}>{info.getValue()}</PaneOpen>
       ),
       header: t("child"),
       id: "child",
