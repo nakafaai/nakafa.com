@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { LIBRARY_BYTE_LIMIT } from "@repo/backend/confect/classroom/library/file";
-import { Effect, Option, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableRef,
+  Option,
+  Result,
+  Schema,
+} from "effect";
 import {
   FileTooLarge,
   fitted,
@@ -135,12 +142,17 @@ describe("shrinkPhoto", () => {
 describe("uploadAttachment", () => {
   /** Each reservation answers the next file of the bucket at its own address. */
   const reserveFiles = (...ids: string[]) => {
-    const queue = [...ids];
+    const next = MutableRef.make(0);
     return vi.fn((bytes: Blob) =>
       Promise.resolve(
         Result.succeed({
           address: `https://r2.test/${bytes.size}`,
-          fileId: bucketFile(queue.shift() ?? "file-x"),
+          fileId: bucketFile(
+            Option.getOrElse(
+              Arr.get(ids, MutableRef.getAndIncrement(next)),
+              () => "file-x"
+            )
+          ),
         })
       )
     );
