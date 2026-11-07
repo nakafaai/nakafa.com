@@ -27,7 +27,7 @@ function readNoRoom() {
 }
 
 /** The pane at the screen's right, which steps aside below the width its page gives it. */
-const paneSideVariants = cva(
+export const paneSideVariants = cva(
   "bg-background fixed inset-y-0 end-0 z-30 flex w-(--pane-width) flex-col border-s",
   {
     variants: {

@@ -2,6 +2,7 @@ import {
   TryoutFinishedFacts,
   TryoutFinishedPanel,
   TryoutFinishedPanes,
+  TryoutFinishedPlace,
 } from "@/components/tryout/review/panes";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
@@ -85,6 +86,7 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
             <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
           ) : null}
           <TryoutSetParts value={value} />
+          <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
         </TryoutPageBody>
       )}
     </TryoutPage>

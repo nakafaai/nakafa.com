@@ -22,6 +22,7 @@ import {
   TryoutFinishedFacts,
   TryoutFinishedPanel,
   TryoutFinishedPanes,
+  TryoutFinishedPlace,
 } from "@/components/tryout/review/panes";
 import {
   getTryoutAttemptLock,
@@ -299,6 +300,7 @@ function ResolvedTryoutSectionPage({
               section: page.section,
             }}
           />
+          <TryoutFinishedPlace pending={actionAttempt === undefined} />
         </TryoutPageBody>
       )}
     </TryoutPage>

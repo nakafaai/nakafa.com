@@ -5,6 +5,7 @@ import { keptStorage } from "@/components/player/storage";
 import {
   KEPT_ATTEMPT_SCRIPT,
   KEPT_NAME_SCRIPT,
+  KEPT_PANE_SCRIPT,
   keepActionName,
   keepAttemptLabel,
   keepName,
@@ -267,5 +268,47 @@ describe("KEPT_ATTEMPT_SCRIPT", () => {
     expect(runPlaceScript({ ...finished, attempts: "not json" })).toStrictEqual(
       empty
     );
+  });
+});
+
+/** Runs the pane place's script, and returns the attributes it set and whether it still reads empty. */
+function runPaneScript(names: string | null, signedIn = "yes") {
+  const place = {
+    empty: true,
+    side: "",
+    removeAttribute: () => {
+      place.empty = false;
+    },
+    setAttribute: (_name: string, value: string) => {
+      place.side = value;
+    },
+  };
+  new Function("localStorage", "location", "document", KEPT_PANE_SCRIPT)(
+    { getItem: () => names },
+    { pathname: SET },
+    {
+      currentScript: { parentElement: place },
+      documentElement: { getAttribute: () => signedIn },
+    }
+  );
+  return { empty: place.empty, side: place.side };
+}
+
+describe("KEPT_PANE_SCRIPT", () => {
+  it("stands the place beside a page this browser last read as finished", () => {
+    expect(runPaneScript(`{"${SET}":"restart-cta"}`)).toStrictEqual({
+      empty: false,
+      side: "lg",
+    });
+  });
+
+  it("leaves the place empty for any other page or reader", () => {
+    const empty = { empty: true, side: "" };
+    expect(runPaneScript(`{"${SET}":"continue-cta"}`)).toStrictEqual(empty);
+    expect(runPaneScript(`{"${SET}":"restart-cta"}`, "no")).toStrictEqual(
+      empty
+    );
+    expect(runPaneScript(null)).toStrictEqual(empty);
+    expect(runPaneScript("not json")).toStrictEqual(empty);
   });
 });

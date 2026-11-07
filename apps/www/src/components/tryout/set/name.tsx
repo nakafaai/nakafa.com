@@ -135,3 +135,17 @@ export function useKeptPageAttempt() {
     () => undefined
   );
 }
+
+/**
+ * Whether this browser last read the page it is on as finished, for a signed-in reader only: such a page
+ * holds its result pane once its read answers.
+ */
+export function useKeptFinished() {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () =>
+      hasSignedInHint(document.cookie) &&
+      readKept(readKeptName(window.location.pathname)) === "restart-cta",
+    () => false
+  );
+}

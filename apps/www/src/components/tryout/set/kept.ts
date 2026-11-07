@@ -192,3 +192,25 @@ export const KEPT_ATTEMPT_SCRIPT = Arr.join(
   ],
   "\n"
 );
+
+/**
+ * The inline script, the last child of a finished page's pane place, that stands the place at the screen's
+ * right before the first paint. A page this browser last read as finished will hold its result pane once its
+ * read answers, and the page narrows beside a pane, so the place narrows it from the first frame and nothing
+ * moves when the pane arrives. The read still decides.
+ */
+export const KEPT_PANE_SCRIPT = Arr.join(
+  [
+    "(function () {",
+    "  try {",
+    `    if (document.documentElement.getAttribute('${SIGNED_IN_ATTRIBUTE}') !== 'yes') return;`,
+    `    var names = JSON.parse(localStorage.getItem('${KEPT_NAMES_KEY}') || 'null');`,
+    "    if (!names || names[location.pathname] !== 'restart-cta') return;",
+    "    var place = document.currentScript.parentElement;",
+    "    place.setAttribute('data-pane-side', 'lg');",
+    "    place.removeAttribute('data-empty');",
+    "  } catch (error) {}",
+    "})();",
+  ],
+  "\n"
+);

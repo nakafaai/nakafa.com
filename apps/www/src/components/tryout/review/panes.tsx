@@ -1,14 +1,13 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import { Array as Arr, Result } from "effect";
-import { type ReactNode, use } from "react";
+import { type ComponentProps, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
 import { splitTime } from "@/components/player/time";
 import { pageRowVariants } from "@/components/shared/content/width";
-import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
+import { PaneBody, PaneHeader } from "@/components/shared/pane";
 import {
   Panes,
   PanesDetail,
@@ -16,13 +15,18 @@ import {
   PanesProvider,
   usePanes,
 } from "@/components/shared/panes";
+import { PaneEdge } from "@/components/shared/panes/edge";
+import { paneSideVariants } from "@/components/shared/panes/side";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import { useFactsWaiting } from "@/components/tryout/section/summary";
+import { KEPT_PANE_SCRIPT } from "@/components/tryout/set/kept";
+import { useKeptFinished } from "@/components/tryout/set/name";
 
 /**
- * A finished attempt's page: what it reviews in the first pane, and its result in the second,
- * which runs to the screen's edge at full height. On a phone the result opens in a sheet.
+ * A finished attempt's page: what it reviews in the page's frame, and its result in the pane at the
+ * screen's right, from the window's top to its bottom. On a phone the result opens in a sheet.
  */
 export function TryoutFinishedPanes({
   children,
@@ -37,12 +41,10 @@ export function TryoutFinishedPanes({
     <PanesProvider wideFrom="lg">
       <Panes id="tryout-finished">
         <PanesList>
-          <ScrollArea className="min-h-0 flex-1">
-            <div className={cn(pageRowVariants(), "space-y-6 py-6")}>
-              <TryoutFinishedOpen />
-              {children}
-            </div>
-          </ScrollArea>
+          <div className={cn(pageRowVariants(), "space-y-6 py-6")}>
+            <TryoutFinishedOpen />
+            {children}
+          </div>
         </PanesList>
         <PanesDetail alwaysOn label={t("finished-panel")}>
           <PaneHeader title={t("finished-panel")} />
@@ -73,9 +75,9 @@ function TryoutFinishedOpen() {
 }
 
 /**
- * The second pane of a finished attempt: the seats of what it reviews in its body and its numbers,
- * the `children`, in the footer, or its numbers alone in the body of a set of parts, which has no
- * paper of its own.
+ * The result pane of a finished attempt: its numbers, the `children`, then the seats of the paper it
+ * reviews. A set of parts has no paper of its own, so its pane holds the numbers alone. The numbers stand
+ * in the body, not the footer: three labelled values cannot share one 64px row at the pane's narrowest.
  */
 export function TryoutFinishedPanel({
   children,
@@ -84,18 +86,56 @@ export function TryoutFinishedPanel({
   children: ReactNode;
   readonly runtime: TryoutSectionRuntime | null;
 }) {
-  if (runtime === null) {
-    return <PaneBody>{children}</PaneBody>;
-  }
   return (
-    <>
-      <PaneBody>
-        <TryoutReviewSeats runtime={runtime} />
-      </PaneBody>
-      <PaneFooter>{children}</PaneFooter>
-    </>
+    <PaneBody>
+      <div className="space-y-6">
+        {children}
+        {runtime === null ? null : <TryoutReviewSeats runtime={runtime} />}
+      </div>
+    </PaneBody>
   );
 }
+
+/**
+ * The result pane's place while a learner's read has not answered. The page narrows beside a pane, so a
+ * page this browser last read as finished stands an empty pane there from the first frame, under the
+ * title the pane will carry, and nothing moves when the pane arrives. A first visit has nothing to draw.
+ */
+export function TryoutFinishedPlace({ pending }: { pending: boolean }) {
+  const t = useTranslations("Tryouts");
+  const waiting = useFactsWaiting(pending);
+  const finished = useKeptFinished();
+  if (!waiting) {
+    return null;
+  }
+  return (
+    <aside
+      aria-hidden
+      className={cn(paneSideVariants({ from: "lg" }), "data-empty:hidden")}
+      data-empty={finished ? undefined : ""}
+      data-pane-side={finished ? "lg" : undefined}
+      inert
+    >
+      <PaneEdge resizer={STILL_EDGE} />
+      <PaneHeader title={t("finished-panel")} />
+      <script
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only
+        dangerouslySetInnerHTML={{ __html: KEPT_PANE_SCRIPT }}
+        suppressHydrationWarning
+      />
+    </aside>
+  );
+}
+
+/** The edge a place draws, which no press moves: the pane that replaces it carries the live one. */
+const STILL_EDGE: ComponentProps<typeof PaneEdge>["resizer"] = {
+  "aria-orientation": "vertical",
+  "aria-valuemax": 768,
+  "aria-valuemin": 320,
+  "aria-valuenow": 420,
+  onKeyDown: () => undefined,
+  onMouseDown: () => undefined,
+};
 
 /**
  * A finished attempt's numbers: equal rows of a label and its value, one line each at any width of

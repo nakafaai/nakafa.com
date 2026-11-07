@@ -48,13 +48,13 @@ const attemptOfUrl = (page: Page) =>
   new URL(page.url()).searchParams.get("attemptId");
 
 /**
- * Records, from the first frame that holds the page's action, whether its attempt picker stands and
- * whether a summary card shows. The script runs in the page, so it uses the browser's own API.
+ * Records, from the first frame that holds the page's action, whether its attempt picker stands,
+ * whether a summary card shows, and where the page's title stands, which moves if the page narrows late. The script runs in the page, so it uses the browser's own API.
  */
 const recordFinishedFrames = (page: Page) =>
   Effect.promise(() =>
     page.addInitScript((key) => {
-      const frames: { card: boolean; picker: boolean }[] = [];
+      const frames: { card: boolean; picker: boolean; title: number }[] = [];
       Object.defineProperty(window, key, { value: frames });
       const sample = () => {
         const name = document.querySelector(
@@ -69,6 +69,11 @@ const recordFinishedFrames = (page: Page) =>
               document
                 .querySelector("main [data-attempt-picker]")
                 ?.checkVisibility({ checkVisibilityCSS: true }) ?? false,
+            title: Math.round(
+              document
+                .querySelector("[data-slot=tryout-page] h1")
+                ?.getBoundingClientRect().left ?? -1
+            ),
           });
         }
         requestAnimationFrame(sample);
@@ -322,15 +327,18 @@ test.describe("The review of a finished try-out", () => {
           ).toBeEnabled();
         });
         const frames = yield* Effect.promise(() =>
-          page.evaluate<readonly { card: boolean; picker: boolean }[], string>(
-            (key) => Reflect.get(window, key),
-            FRAMES
-          )
+          page.evaluate<
+            readonly { card: boolean; picker: boolean; title: number }[],
+            string
+          >((key) => Reflect.get(window, key), FRAMES)
         );
         yield* Effect.sync(() => {
           expect(frames.length).toBeGreaterThan(0);
           expect(Arr.filter(frames, (frame) => frame.card)).toEqual([]);
           expect(Arr.filter(frames, (frame) => !frame.picker)).toEqual([]);
+          expect(
+            Arr.dedupe(Arr.map(frames, (frame) => frame.title))
+          ).toHaveLength(1);
         });
       })
     );

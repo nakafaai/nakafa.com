@@ -10,6 +10,7 @@ import {
   TryoutFinishedFacts,
   TryoutFinishedPanel,
   TryoutFinishedPanes,
+  TryoutFinishedPlace,
 } from "@/components/tryout/review/panes";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
 import {
@@ -111,6 +112,7 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
               section: value.entrySection,
             }}
           />
+          <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
         </TryoutPageBody>
       )}
     </TryoutPage>
