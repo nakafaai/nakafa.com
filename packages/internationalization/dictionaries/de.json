@@ -3551,7 +3551,83 @@
     },
     "library-storage-full": {
       "title": "Die Datei wurde nicht hinzugefügt.",
-      "description": "Der Speicher der Schule ist voll. Lösche Dateien endgültig, um Platz zu schaffen."
+      "description": "Der Schulspeicher ist voll. Lösche Dateien endgültig."
+    },
+    "classroom-refusal-task-closed": {
+      "title": "Diese Aufgabe ist geschlossen.",
+      "description": "Die Frist ist vorbei."
+    },
+    "classroom-refusal-points-fixed": {
+      "title": "Die Punkte stehen fest.",
+      "description": "Es wurde schon Arbeit abgegeben."
+    },
+    "classroom-refusal-score-range": {
+      "title": "Punkte außerhalb des Bereichs.",
+      "description": "Vergib null bis zur Punktzahl."
+    },
+    "classroom-refusal-questions-unready": {
+      "title": "Die Fragen sind nicht fertig.",
+      "description": "Vervollständige sie im Prüfungseditor."
+    },
+    "classroom-refusal-pin-limit": {
+      "title": "Keine Anheftung mehr frei.",
+      "description": "Löse zuerst eine Ankündigung."
+    },
+    "classroom-refusal-scheduled-limit": {
+      "title": "Keine Ankündigung mehr in Warte.",
+      "description": "Veröffentliche oder lösche eine."
+    },
+    "classroom-refusal-scheduled-past": {
+      "title": "Diese Zeit ist vorbei.",
+      "description": "Wähle eine spätere Zeit."
+    },
+    "classroom-refusal-channel-limit": {
+      "title": "Kein Kanal mehr frei.",
+      "description": "Archiviere zuerst einen Kanal."
+    },
+    "classroom-refusal-channel-archived": {
+      "title": "Dieser Kanal ist archiviert.",
+      "description": "Hole ihn zurück, um zu schreiben."
+    },
+    "classroom-refusal-discussions-closed": {
+      "title": "Nur Lehrkräfte starten Diskussionen.",
+      "description": "Schreibe stattdessen im Kanal."
+    },
+    "classroom-refusal-mention": {
+      "title": "Jemand ist nicht erwähnbar.",
+      "description": "Erwähne nur Personen dieser Klasse."
+    },
+    "classroom-refusal-message-empty": {
+      "title": "Die Nachricht ist leer.",
+      "description": "Schreibe etwas oder füge eine Datei an."
+    },
+    "classroom-refusal-message-hidden": {
+      "title": "Nachricht ausgeblendet.",
+      "description": "Sie lässt sich nicht mehr ändern."
+    },
+    "classroom-refusal-attachment": {
+      "title": "Datei nicht hinzugefügt.",
+      "description": "Lade sie erneut hoch und sende dann."
+    },
+    "classroom-refusal-reaction-limit": {
+      "title": "Keine Reaktion mehr frei.",
+      "description": "Nutze eine vorhandene."
+    },
+    "classroom-refusal-vote": {
+      "title": "Stimme nicht gezählt.",
+      "description": "Die Umfrage ist zu oder die Wahl gehört nicht dazu."
+    },
+    "classroom-refusal-folder-limit": {
+      "title": "Kein Ordner mehr frei.",
+      "description": "Lösche zuerst einen Ordner."
+    },
+    "classroom-refusal-folder-cycle": {
+      "title": "Ein Ordner hält sich nicht selbst.",
+      "description": "Wähle einen anderen Ordner."
+    },
+    "classroom-refusal-file-size": {
+      "title": "Die Datei ist zu groß.",
+      "description": "Wähle eine kleinere Datei."
     }
   },
   "Ai": {

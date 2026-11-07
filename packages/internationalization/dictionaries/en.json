@@ -3552,6 +3552,82 @@
     "library-storage-full": {
       "title": "The file was not added.",
       "description": "The school storage is full. Delete files forever to make room."
+    },
+    "classroom-refusal-task-closed": {
+      "title": "This task closed at its deadline.",
+      "description": "It takes no more work."
+    },
+    "classroom-refusal-points-fixed": {
+      "title": "The points are fixed.",
+      "description": "Work has been handed in, so the points stay as they are."
+    },
+    "classroom-refusal-score-range": {
+      "title": "These points are out of range.",
+      "description": "Give from zero up to the task's points."
+    },
+    "classroom-refusal-questions-unready": {
+      "title": "The exam's questions are not ready.",
+      "description": "Finish them in the exam editor first."
+    },
+    "classroom-refusal-pin-limit": {
+      "title": "No more pins fit.",
+      "description": "Unpin an announcement first."
+    },
+    "classroom-refusal-scheduled-limit": {
+      "title": "No more posts can wait.",
+      "description": "Post or delete a waiting one first."
+    },
+    "classroom-refusal-scheduled-past": {
+      "title": "This time has passed.",
+      "description": "Choose a time that has not passed yet."
+    },
+    "classroom-refusal-channel-limit": {
+      "title": "No more channels fit.",
+      "description": "Archive a channel first."
+    },
+    "classroom-refusal-channel-archived": {
+      "title": "This channel is archived.",
+      "description": "Bring it back to write in it."
+    },
+    "classroom-refusal-discussions-closed": {
+      "title": "Only teachers open discussions.",
+      "description": "Write in the channel instead."
+    },
+    "classroom-refusal-mention": {
+      "title": "Someone cannot be mentioned.",
+      "description": "Mention only people of this class."
+    },
+    "classroom-refusal-message-empty": {
+      "title": "The message is empty.",
+      "description": "Write something, or add a file or a poll."
+    },
+    "classroom-refusal-message-hidden": {
+      "title": "This message was hidden.",
+      "description": "It takes no more changes."
+    },
+    "classroom-refusal-attachment": {
+      "title": "The file was not added.",
+      "description": "Upload it again, then send."
+    },
+    "classroom-refusal-reaction-limit": {
+      "title": "No more reactions fit.",
+      "description": "Use one that is already there."
+    },
+    "classroom-refusal-vote": {
+      "title": "This vote was not counted.",
+      "description": "The poll is closed, or this choice is not one of its options."
+    },
+    "classroom-refusal-folder-limit": {
+      "title": "No more folders fit.",
+      "description": "Delete a folder first."
+    },
+    "classroom-refusal-folder-cycle": {
+      "title": "A folder cannot hold itself.",
+      "description": "Choose another folder."
+    },
+    "classroom-refusal-file-size": {
+      "title": "The file is too large.",
+      "description": "Choose a smaller file."
     }
   },
   "Ai": {
