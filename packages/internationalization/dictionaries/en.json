@@ -4281,7 +4281,6 @@
     "value-unit": "a month each",
     "value-trial": "{days} days",
     "value-ongoing": "Ongoing",
-    "value-periods-free": "None",
     "value-periods-paid": "1, 3, 6 or 12 months",
     "value-payment-free": "No payment",
     "value-payment-paid": "Every method of the payment provider",
@@ -4304,6 +4303,13 @@
     "faq-credits-question": "What are AI credits?",
     "faq-credits-answer": "Nina, Nakafa's AI, spends credits on each answer. The whole school shares one pool, and a pack of 1,000 more lasts 12 months.",
     "faq-change-question": "Can we change plans later?",
-    "faq-change-answer": "Yes. Move between Pro and Max or add accounts at any time, and the change applies from the next paid invoice."
+    "faq-change-answer": "Yes. Move between Pro and Max or add accounts at any time, and the change applies from the next paid invoice.",
+    "compare-accounts": "{count, number} accounts",
+    "compare-pick": "Plan to compare",
+    "group-capacity-text": "What each plan holds for the whole school.",
+    "group-classroom-text": "Where each class talks, shares files and hands in work.",
+    "group-assessment-text": "Exams, try-outs and report cards on one engine.",
+    "group-school-text": "Insight, graduation, parents and Nina for every class.",
+    "group-billing-text": "How a plan is paid and renewed."
   }
 }

@@ -1,13 +1,18 @@
-import { Tick02Icon } from "@hugeicons/core-free-icons";
+import { MinusSignIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import {
   SCHOOL_TRIAL_DAYS,
-  type SchoolTierKey,
-  SchoolTierKey as SchoolTierKeySchema,
+  SchoolTierKey,
   schoolAccount,
   schoolTiers,
 } from "@repo/backend/confect/billing/tiers";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Match } from "effect";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
+import { cva } from "class-variance-authority";
+import { Array as Arr, Match, Option } from "effect";
+import { useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { SchoolAmount } from "@/components/marketing/school/price";
 import { formatStorage } from "@/lib/pricing/school";
@@ -29,7 +34,28 @@ const COMPARE_GROUPS = [
 
 type CompareRow = (typeof COMPARE_GROUPS)[number]["rows"][number];
 
-/** The mark of a feature every plan holds, named for a screen reader. */
+/** The plan a phone shows beside each feature until the reader picks another: the plan most schools fit. */
+const PHONE_PLAN: SchoolTierKey = "pro";
+
+/**
+ * One plan's cell. From `md` every plan has its column; on a phone only the
+ * plan the reader picked shows, beside the feature, so its value has half the
+ * width instead of a third. The table's `data-plan` names that plan.
+ */
+const planCellVariants = cva(
+  "py-3.5 text-sm text-pretty tabular-nums max-md:text-right md:px-3 md:text-center md:text-base",
+  {
+    variants: {
+      tier: {
+        free: "max-md:group-data-[plan=max]/compare:hidden max-md:group-data-[plan=pro]/compare:hidden",
+        max: "max-md:group-data-[plan=free]/compare:hidden max-md:group-data-[plan=pro]/compare:hidden",
+        pro: "max-md:group-data-[plan=free]/compare:hidden max-md:group-data-[plan=max]/compare:hidden",
+      },
+    },
+  }
+);
+
+/** The mark of a feature a plan holds, named for a screen reader. */
 function Included() {
   const t = useTranslations("SchoolSite");
 
@@ -37,10 +63,26 @@ function Included() {
     <>
       <HugeIcons
         aria-hidden="true"
-        className="text-primary mx-auto size-5"
+        className="text-primary inline size-5"
         icon={Tick02Icon}
       />
       <span className="sr-only">{t("value-included")}</span>
+    </>
+  );
+}
+
+/** The mark of a feature a plan does not hold: a quiet dash, named for a screen reader. */
+function Unavailable() {
+  const t = useTranslations("SchoolSite");
+
+  return (
+    <>
+      <HugeIcons
+        aria-hidden="true"
+        className="text-muted-foreground inline size-4"
+        icon={MinusSignIcon}
+      />
+      <span className="sr-only">{t("value-unavailable")}</span>
     </>
   );
 }
@@ -63,7 +105,7 @@ function CompareValue({ row, tier }: { row: CompareRow; tier: SchoolTierKey }) {
     Match.when("storage", () => formatStorage(plan.storageMegabytes, locale)),
     Match.when("added", () =>
       free ? (
-        t("value-unavailable")
+        <Unavailable />
       ) : (
         <>
           <SchoolAmount amounts={schoolAccount.monthly} /> {t("value-unit")}
@@ -74,7 +116,7 @@ function CompareValue({ row, tier }: { row: CompareRow; tier: SchoolTierKey }) {
       free ? t("value-trial", { days: SCHOOL_TRIAL_DAYS }) : t("value-ongoing")
     ),
     Match.when("periods", () =>
-      t(free ? "value-periods-free" : "value-periods-paid")
+      free ? <Unavailable /> : t("value-periods-paid")
     ),
     Match.when("payment", () =>
       t(free ? "value-payment-free" : "value-payment-paid")
@@ -83,28 +125,20 @@ function CompareValue({ row, tier }: { row: CompareRow; tier: SchoolTierKey }) {
   );
 }
 
-/**
- * One row: the feature's name, then what each plan holds. From `sm` it is a
- * table row of four cells; on a phone the row becomes a three-column grid, the
- * name on its own line above the three values, so each value has a third of the
- * width and no cell scrolls sideways.
- */
+/** One row: the feature's name, then what each plan holds, on one hairline. */
 function CompareLine({ row }: { row: CompareRow }) {
   const t = useTranslations("SchoolSite");
 
   return (
-    <tr className="border-b max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-2 max-sm:py-3">
+    <tr className="border-b">
       <th
-        className="text-left text-base font-normal max-sm:col-span-3 max-sm:pb-2 max-sm:text-sm max-sm:font-medium sm:py-3 sm:pr-4"
+        className="py-3.5 pr-4 text-left text-sm font-normal text-pretty md:text-base"
         scope="row"
       >
         {t(`row-${row}`)}
       </th>
-      {Arr.map(SchoolTierKeySchema.literals, (tier) => (
-        <td
-          className="text-muted-foreground text-center text-sm text-pretty tabular-nums sm:px-2 sm:py-3 sm:text-base"
-          key={tier}
-        >
+      {Arr.map(SchoolTierKey.literals, (tier) => (
+        <td className={planCellVariants({ tier })} key={tier}>
           <CompareValue row={row} tier={tier} />
         </td>
       ))}
@@ -112,19 +146,24 @@ function CompareLine({ row }: { row: CompareRow }) {
   );
 }
 
-/** One group of rows under its name, which spans the table. */
+/** One group of rows under its name and the one sentence that says what it covers. */
 function CompareGroup({ group }: { group: (typeof COMPARE_GROUPS)[number] }) {
   const t = useTranslations("SchoolSite");
 
   return (
-    <tbody className="max-sm:block">
-      <tr className="max-sm:block">
+    <tbody>
+      <tr className="border-b">
         <th
-          className="pt-10 pb-2 text-left text-lg font-medium tracking-tight max-sm:block"
+          className="pt-12 pb-3 text-left font-normal"
           colSpan={4}
           scope="rowgroup"
         >
-          {t(`group-${group.group}`)}
+          <span className="block text-lg font-medium tracking-tight">
+            {t(`group-${group.group}`)}
+          </span>
+          <span className="text-muted-foreground block text-sm text-pretty">
+            {t(`group-${group.group}-text`)}
+          </span>
         </th>
       </tr>
       {Arr.map(group.rows, (row) => (
@@ -134,14 +173,37 @@ function CompareGroup({ group }: { group: (typeof COMPARE_GROUPS)[number] }) {
   );
 }
 
+/** One plan's head in the pinned row: its name and how many accounts it holds. */
+function PlanHead({ tier }: { tier: SchoolTierKey }) {
+  const t = useTranslations("SchoolSite");
+
+  return (
+    <th className="px-3 py-3 text-center font-normal" scope="col">
+      <span className="block text-base font-medium tracking-tight">
+        {t(`plan-${tier}`)}
+      </span>
+      <span className="text-muted-foreground block text-sm tabular-nums">
+        {t("compare-accounts", { count: schoolTiers[tier].accounts })}
+      </span>
+    </th>
+  );
+}
+
+/** Reads a toggle's value back as a plan, or none for an emptied group. */
+function readTier(value: string) {
+  return Arr.findFirst(SchoolTierKey.literals, (tier) => tier === value);
+}
+
 /**
- * The comparison of every plan as one table: grouped rows, one line per row,
- * and the plan names held under the site header while the reader scrolls. On a
- * phone each row folds the feature's name into a line above its values instead
- * of scrolling sideways.
+ * The comparison of every plan as one table: groups that say what they cover,
+ * one hairline per row, a check for what a plan holds and a dash for what it
+ * does not. While the reader scrolls, the plan names stay pinned under the site
+ * header. A phone has no room for three columns, so a pinned switch picks the
+ * plan that shows beside each feature, and every value keeps half the width.
  */
 export function SchoolCompare() {
   const t = useTranslations("SchoolSite");
+  const [plan, setPlan] = useState(PHONE_PLAN);
 
   return (
     <section
@@ -156,30 +218,41 @@ export function SchoolCompare() {
         >
           {t("compare-title")}
         </h2>
-        <table
-          aria-labelledby="school-compare-title"
-          className="w-full border-collapse max-sm:block sm:table-fixed"
-        >
-          <thead className="bg-background sticky top-16 z-10 max-sm:block">
-            <tr className="border-b max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-2">
-              <th className="py-3 text-left max-sm:hidden sm:w-2/5" scope="col">
-                <span className="sr-only">{t("compare-feature")}</span>
-              </th>
-              {Arr.map(SchoolTierKeySchema.literals, (tier) => (
-                <th
-                  className="py-3 text-center text-base font-medium tracking-tight sm:px-2 sm:text-lg"
-                  key={tier}
-                  scope="col"
-                >
+        <div>
+          <div className="bg-background sticky top-16 z-10 border-b py-3 md:hidden">
+            <ToggleGroup
+              aria-label={t("compare-pick")}
+              className="w-full"
+              onValueChange={(value) => Option.map(readTier(value), setPlan)}
+              value={plan}
+            >
+              {Arr.map(SchoolTierKey.literals, (tier) => (
+                <ToggleGroupItem key={tier} value={tier}>
                   {t(`plan-${tier}`)}
-                </th>
+                </ToggleGroupItem>
               ))}
-            </tr>
-          </thead>
-          {Arr.map(COMPARE_GROUPS, (group) => (
-            <CompareGroup group={group} key={group.group} />
-          ))}
-        </table>
+            </ToggleGroup>
+          </div>
+          <table
+            aria-labelledby="school-compare-title"
+            className="group/compare w-full border-collapse md:table-fixed"
+            data-plan={plan}
+          >
+            <thead className="bg-background sticky top-16 z-10 max-md:sr-only">
+              <tr className="border-b">
+                <th className="py-3 text-left md:w-2/5" scope="col">
+                  <span className="sr-only">{t("compare-feature")}</span>
+                </th>
+                {Arr.map(SchoolTierKey.literals, (tier) => (
+                  <PlanHead key={tier} tier={tier} />
+                ))}
+              </tr>
+            </thead>
+            {Arr.map(COMPARE_GROUPS, (group) => (
+              <CompareGroup group={group} key={group.group} />
+            ))}
+          </table>
+        </div>
       </div>
     </section>
   );

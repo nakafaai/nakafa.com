@@ -4281,7 +4281,6 @@
     "value-unit": "per akun per bulan",
     "value-trial": "{days} hari",
     "value-ongoing": "Berlanjut",
-    "value-periods-free": "Tidak ada",
     "value-periods-paid": "1, 3, 6, atau 12 bulan",
     "value-payment-free": "Tanpa pembayaran",
     "value-payment-paid": "Semua metode penyedia pembayaran",
@@ -4304,6 +4303,13 @@
     "faq-credits-question": "Apa itu kredit AI?",
     "faq-credits-answer": "Nina, AI Nakafa, memakai kredit untuk setiap jawaban. Seluruh sekolah berbagi satu kuota, dan paket 1.000 kredit tambahan berlaku 12 bulan.",
     "faq-change-question": "Bisakah ganti paket nanti?",
-    "faq-change-answer": "Bisa. Pindah antara Pro dan Max atau tambah akun kapan saja, dan perubahannya berlaku mulai tagihan berikutnya yang dibayar."
+    "faq-change-answer": "Bisa. Pindah antara Pro dan Max atau tambah akun kapan saja, dan perubahannya berlaku mulai tagihan berikutnya yang dibayar.",
+    "compare-accounts": "{count, number} akun",
+    "compare-pick": "Paket yang dibandingkan",
+    "group-capacity-text": "Yang dimuat setiap paket untuk seluruh sekolah.",
+    "group-classroom-text": "Tempat setiap kelas berdiskusi, berbagi file, dan mengumpulkan tugas.",
+    "group-assessment-text": "Ujian, try-out, dan rapor di satu mesin.",
+    "group-school-text": "Insight, kelulusan, orang tua, dan Nina untuk setiap kelas.",
+    "group-billing-text": "Cara paket dibayar dan diperpanjang."
   }
 }

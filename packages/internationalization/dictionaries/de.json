@@ -4281,7 +4281,6 @@
     "value-unit": "pro Konto im Monat",
     "value-trial": "{days} Tage",
     "value-ongoing": "Fortlaufend",
-    "value-periods-free": "Keine",
     "value-periods-paid": "1, 3, 6 oder 12 Monate",
     "value-payment-free": "Keine Zahlung",
     "value-payment-paid": "Jede Methode des Zahlungsanbieters",
@@ -4304,6 +4303,13 @@
     "faq-credits-question": "Was sind KI-Credits?",
     "faq-credits-answer": "Nina, die KI von Nakafa, verbraucht für jede Antwort Credits. Die ganze Schule teilt einen Vorrat, und ein Paket mit 1.000 weiteren hält 12 Monate.",
     "faq-change-question": "Können wir den Tarif später wechseln?",
-    "faq-change-answer": "Ja. Wechsle zwischen Pro und Max oder füge jederzeit Konten hinzu, und die Änderung gilt ab der nächsten bezahlten Rechnung."
+    "faq-change-answer": "Ja. Wechsle zwischen Pro und Max oder füge jederzeit Konten hinzu, und die Änderung gilt ab der nächsten bezahlten Rechnung.",
+    "compare-accounts": "{count, number} Konten",
+    "compare-pick": "Verglichener Tarif",
+    "group-capacity-text": "Was jeder Tarif für die ganze Schule enthält.",
+    "group-classroom-text": "Wo jede Klasse spricht, Dateien teilt und Aufgaben abgibt.",
+    "group-assessment-text": "Prüfungen, Probeprüfungen und Zeugnisse auf einer Engine.",
+    "group-school-text": "Einblicke, Abschluss, Eltern und Nina für jede Klasse.",
+    "group-billing-text": "Wie ein Tarif bezahlt und verlängert wird."
   }
 }
