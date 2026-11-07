@@ -78,7 +78,7 @@ decides each one, in the same way in both repositories.
 replaces the TypeScript package. It deprecates `preferSchemaOverJson`, whose
 listing alone fails the typecheck, so `globalJsonInEffect` takes its place.
 `packages/typescript-config/base.json` decides each one, in the same way in both
-repositories. Sites were measured with every rule set to error on all 21
+repositories. Sites were measured with every rule set to error on all 20
 typecheck targets on 7 November 2026.
 
 | Rule | Decision | Owner, or the reason it stays off |
