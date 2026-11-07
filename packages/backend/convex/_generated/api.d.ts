@@ -661,6 +661,7 @@ export declare const api: {
           classId: Id<"classes">;
           clientKey: string;
           name: string;
+          parentId: Id<"classroomFolders"> | null;
           slug: string;
         },
         {
@@ -669,6 +670,9 @@ export declare const api: {
           createdAt: number;
           id: Id<"classroomFolders">;
           name: string;
+          parentId: Id<"classroomFolders"> | null;
+          starred: boolean;
+          trashedAt: number | null;
         }
       >;
       list: FunctionReference<
@@ -681,9 +685,23 @@ export declare const api: {
           createdAt: number;
           id: Id<"classroomFolders">;
           name: string;
+          parentId: Id<"classroomFolders"> | null;
+          starred: boolean;
+          trashedAt: number | null;
         }>
       >;
-      remove: FunctionReference<
+      move: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          parentId: Id<"classroomFolders"> | null;
+          slug: string;
+        },
+        null
+      >;
+      purge: FunctionReference<
         "mutation",
         "public",
         {
@@ -700,6 +718,26 @@ export declare const api: {
           classId: Id<"classes">;
           folderId: Id<"classroomFolders">;
           name: string;
+          slug: string;
+        },
+        null
+      >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          slug: string;
+        },
+        null
+      >;
+      trash: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
           slug: string;
         },
         null
@@ -807,11 +845,11 @@ export declare const api: {
           "public",
           {
             classId: Id<"classes">;
+            fileId: Id<"bucketFiles">;
             height: number | null;
             name: string;
             slug: string;
-            storageId: Id<"_storage">;
-            thumbnailId: Id<"_storage"> | null;
+            thumbnailId: Id<"bucketFiles"> | null;
             width: number | null;
           },
           {
@@ -820,11 +858,16 @@ export declare const api: {
             kind: "document" | "image";
           }
         >;
-        uploadUrl: FunctionReference<
+        reserve: FunctionReference<
           "mutation",
           "public",
-          { classId: Id<"classes">; slug: string },
-          string
+          {
+            byteSize: number;
+            classId: Id<"classes">;
+            contentType: string;
+            slug: string;
+          },
+          { address: string; fileId: Id<"bucketFiles"> }
         >;
         withdraw: FunctionReference<
           "mutation",
@@ -1420,7 +1463,9 @@ export declare const api: {
           folderId: Id<"classroomFolders"> | null;
           id: Id<"classroomLibrary">;
           kind: "link" | "pdf" | "image";
+          starred: boolean;
           title: string;
+          trashedAt: number | null;
         }
       >;
       canAdd: FunctionReference<
@@ -1483,26 +1528,37 @@ export declare const api: {
             folderId: Id<"classroomFolders"> | null;
             id: Id<"classroomLibrary">;
             kind: "link" | "pdf" | "image";
+            starred: boolean;
             title: string;
+            trashedAt: number | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
       >;
-      register: FunctionReference<
-        "action",
+      move: FunctionReference<
+        "mutation",
         "public",
         {
           classId: Id<"classes">;
-          clientKey: string;
           folderId: Id<"classroomFolders"> | null;
+          itemId: Id<"classroomLibrary">;
           slug: string;
-          storageId: Id<"_storage">;
-          title: string;
         },
-        { id: Id<"classroomLibrary"> }
+        null
       >;
-      remove: FunctionReference<
+      open: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          download: boolean;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        string
+      >;
+      purge: FunctionReference<
         "mutation",
         "public",
         {
@@ -1512,11 +1568,138 @@ export declare const api: {
         },
         null
       >;
-      uploadUrl: FunctionReference<
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          classId: Id<"classes">;
+          slug: string;
+          uploadId: Id<"classroomLibraryUploads">;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+      reserve: FunctionReference<
         "mutation",
         "public",
+        {
+          byteSize: number;
+          classId: Id<"classes">;
+          clientKey: string;
+          contentType:
+            | "image/png"
+            | "image/jpeg"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf";
+          folderId: Id<"classroomFolders"> | null;
+          slug: string;
+          title: string;
+        },
+        { address: string; uploadId: Id<"classroomLibraryUploads"> }
+      >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        null
+      >;
+      search: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string; text: string },
+        Array<{
+          address: string | null;
+          author: string;
+          byteSize: number | null;
+          clientKey: string;
+          createdAt: number;
+          folderId: Id<"classroomFolders"> | null;
+          id: Id<"classroomLibrary">;
+          kind: "link" | "pdf" | "image";
+          starred: boolean;
+          title: string;
+          trashedAt: number | null;
+        }>
+      >;
+      star: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          slug: string;
+          starred: boolean;
+          target:
+            | { itemId: Id<"classroomLibrary">; kind: "item" }
+            | { folderId: Id<"classroomFolders">; kind: "folder" };
+        },
+        null
+      >;
+      starred: FunctionReference<
+        "query",
+        "public",
         { classId: Id<"classes">; slug: string },
-        string
+        Array<{
+          address: string | null;
+          author: string;
+          byteSize: number | null;
+          clientKey: string;
+          createdAt: number;
+          folderId: Id<"classroomFolders"> | null;
+          id: Id<"classroomLibrary">;
+          kind: "link" | "pdf" | "image";
+          starred: boolean;
+          title: string;
+          trashedAt: number | null;
+        }>
+      >;
+      trash: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        null
+      >;
+      trashed: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            address: string | null;
+            author: string;
+            byteSize: number | null;
+            clientKey: string;
+            createdAt: number;
+            folderId: Id<"classroomFolders"> | null;
+            id: Id<"classroomLibrary">;
+            kind: "link" | "pdf" | "image";
+            starred: boolean;
+            title: string;
+            trashedAt: number | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
     };
     people: {
@@ -4180,9 +4363,9 @@ export declare const api: {
         "public",
         {
           examId: Id<"exams">;
+          fileId: Id<"bucketFiles">;
           height: number;
           slug: string;
-          storageId: Id<"_storage">;
           width: number;
         },
         { id: Id<"examAssets"> }
@@ -4190,14 +4373,20 @@ export declare const api: {
       registerAudio: FunctionReference<
         "action",
         "public",
-        { examId: Id<"exams">; slug: string; storageId: Id<"_storage"> },
+        { examId: Id<"exams">; fileId: Id<"bucketFiles">; slug: string },
         { id: Id<"examAudio"> }
       >;
-      uploadUrl: FunctionReference<
+      reserve: FunctionReference<
         "mutation",
         "public",
-        { examId: Id<"exams">; slug: string },
-        string
+        {
+          byteSize: number;
+          contentType: string;
+          examId: Id<"exams">;
+          kind: "image" | "audio";
+          slug: string;
+        },
+        { address: string; fileId: Id<"bucketFiles"> }
       >;
       urls: FunctionReference<
         "query",
@@ -7692,7 +7881,7 @@ export declare const api: {
           source:
             | {
                 kind: "pages";
-                pages: Array<{ image: Id<"_storage">; text: string }>;
+                pages: Array<{ image: Id<"bucketFiles">; text: string }>;
               }
             | { images: Array<Id<"examAssets">>; kind: "text"; text: string };
         },
@@ -12627,22 +12816,23 @@ export declare const api: {
     };
     logo: {
       remove: FunctionReference<"mutation", "public", { slug: string }, {}>;
-      set: FunctionReference<
+      reserve: FunctionReference<
         "mutation",
         "public",
         {
+          byteSize: number;
           contentType: "image/png" | "image/svg+xml";
           slug: string;
-          storageId: Id<"_storage">;
         },
-        | { _tag: "LogoSet"; logo: string }
-        | { _tag: "LogoRefused"; reason: "size" }
+        | { _tag: "LogoReserved"; address: string; fileId: Id<"bucketFiles"> }
+        | { _tag: "LogoRefused"; reason: "size" | "file" }
       >;
-      uploadUrl: FunctionReference<
+      set: FunctionReference<
         "mutation",
         "public",
-        { slug: string },
-        string
+        { fileId: Id<"bucketFiles">; slug: string },
+        | { _tag: "LogoSet"; logo: string }
+        | { _tag: "LogoRefused"; reason: "size" | "file" }
       >;
     };
     memberships: {
@@ -16059,6 +16249,44 @@ export declare const internal: {
       };
     };
   };
+  bucket: {
+    discard: FunctionReference<
+      "mutation",
+      "internal",
+      { fileId: Id<"bucketFiles"> },
+      null
+    >;
+    file: FunctionReference<
+      "query",
+      "internal",
+      { fileId: Id<"bucketFiles"> },
+      {
+        byteSize: number;
+        contentType: string;
+        objectKey: string;
+        tenantId: Id<"tenants"> | null;
+      } | null
+    >;
+    markStored: FunctionReference<
+      "mutation",
+      "internal",
+      { fileId: Id<"bucketFiles"> },
+      null
+    >;
+    removeObjects: FunctionReference<
+      "action",
+      "internal",
+      { keys: Array<string> },
+      null
+    >;
+    reserveStored: FunctionReference<
+      "mutation",
+      "internal",
+      { byteSize: number; contentType: string; tenantId: Id<"tenants"> | null },
+      { fileId: Id<"bucketFiles">; objectKey: string }
+    >;
+    sweep: FunctionReference<"mutation", "internal", {}, null>;
+  };
   classroom: {
     forum: {
       channels: {
@@ -16078,18 +16306,18 @@ export declare const internal: {
             byteSize: number;
             classId: Id<"classes">;
             contentType: string;
+            fileId: Id<"bucketFiles">;
             height: number | null;
             kind: "document" | "image";
             name: string;
-            storageId: Id<"_storage">;
-            thumbnailId: Id<"_storage"> | null;
+            thumbnailId: Id<"bucketFiles"> | null;
             width: number | null;
           },
           {
             byteSize: number;
             id: Id<"classroomUploads">;
             kind: "document" | "image";
-          } | null
+          }
         >;
         sweep: FunctionReference<
           "mutation",
@@ -16105,10 +16333,10 @@ export declare const internal: {
           { messageId: Id<"classroomMessages"> },
           {
             claim:
-            | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
-            | { kind: "school"; tenantId: Id<"tenants"> }
-            | { kind: "learner"; userId: Id<"users"> }
-            | { kind: "nakafa" };
+              | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
+              | { kind: "school"; tenantId: Id<"tenants"> }
+              | { kind: "learner"; userId: Id<"users"> }
+              | { kind: "nakafa" };
             classId: Id<"classes">;
             className: string;
             history: Array<{ author: string; text: string }>;
@@ -16146,6 +16374,30 @@ export declare const internal: {
       commit: FunctionReference<
         "mutation",
         "internal",
+        { uploadId: Id<"classroomLibraryUploads"> },
+        { id: Id<"classroomLibrary"> }
+      >;
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { uploadId: Id<"classroomLibraryUploads"> },
+        null
+      >;
+      purgeRest: FunctionReference<
+        "mutation",
+        "internal",
+        { classId: Id<"classes">; folderIds: Array<Id<"classroomFolders">> },
+        null
+      >;
+      removeObjects: FunctionReference<
+        "action",
+        "internal",
+        { keys: Array<string> },
+        null
+      >;
+      reserveImport: FunctionReference<
+        "mutation",
+        "internal",
         {
           authorId: Id<"tenantPeople">;
           byteSize: number;
@@ -16158,10 +16410,26 @@ export declare const internal: {
             | "image/gif"
             | "application/pdf";
           folderId: Id<"classroomFolders"> | null;
-          storageId: Id<"_storage">;
           title: string;
         },
-        { id: Id<"classroomLibrary"> }
+        { objectKey: string; uploadId: Id<"classroomLibraryUploads"> }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+      upload: FunctionReference<
+        "query",
+        "internal",
+        { classId: Id<"classes">; uploadId: Id<"classroomLibraryUploads"> },
+        {
+          byteSize: number;
+          classId: Id<"classes">;
+          contentType:
+            | "image/png"
+            | "image/jpeg"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf";
+          objectKey: string;
+        } | null
       >;
     };
     passages: {
@@ -16200,7 +16468,7 @@ export declare const internal: {
             | { kind: "learner"; userId: Id<"users"> }
             | { kind: "nakafa" };
           contentType: string;
-          storageId: Id<"_storage">;
+          objectKey: string;
         } | null
       >;
       store: FunctionReference<
@@ -18491,8 +18759,8 @@ export declare const internal: {
           byteSize: number;
           contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
           examId: Id<"exams">;
+          fileId: Id<"bucketFiles">;
           height: number;
-          storageId: Id<"_storage">;
           userId: Id<"users">;
           width: number;
         },
@@ -18505,22 +18773,10 @@ export declare const internal: {
           byteSize: number;
           contentType: "audio/mp4" | "audio/mpeg" | "audio/ogg" | "audio/wav";
           examId: Id<"exams">;
-          storageId: Id<"_storage">;
+          fileId: Id<"bucketFiles">;
           userId: Id<"users">;
         },
         { id: Id<"examAudio"> }
-      >;
-      discard: FunctionReference<
-        "mutation",
-        "internal",
-        { storageId: Id<"_storage"> },
-        {}
-      >;
-      stored: FunctionReference<
-        "query",
-        "internal",
-        { storageId: Id<"_storage"> },
-        { size: number }
       >;
       sweep: FunctionReference<
         "mutation",
@@ -18533,14 +18789,14 @@ export declare const internal: {
       discard: FunctionReference<
         "mutation",
         "internal",
-        { images: Array<Id<"_storage">> },
+        { images: Array<Id<"bucketFiles">> },
         {}
       >;
       pictures: FunctionReference<
         "query",
         "internal",
         { assets: Array<Id<"examAssets">>; examId: Id<"exams"> },
-        Array<{ storageId: Id<"_storage"> }>
+        Array<{ fileId: Id<"bucketFiles"> }>
       >;
     };
     seed: {
@@ -20128,7 +20384,7 @@ export declare const internal: {
       lock: FunctionReference<
         "mutation",
         "internal",
-        { letterId: Id<"graduationLetters">; storageId: Id<"_storage"> },
+        { fileId: Id<"bucketFiles">; letterId: Id<"graduationLetters"> },
         null
       >;
       printable: FunctionReference<
@@ -20160,7 +20416,7 @@ export declare const internal: {
       lock: FunctionReference<
         "mutation",
         "internal",
-        { reportId: Id<"reportCards">; storageId: Id<"_storage"> },
+        { fileId: Id<"bucketFiles">; reportId: Id<"reportCards"> },
         null
       >;
       printable: FunctionReference<

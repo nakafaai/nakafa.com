@@ -93,7 +93,7 @@ const refuse = (fileId: FileId) =>
 /** The teacher's right to add a file to the exam, asked of the exam's own check; one who is no member is refused. */
 const mayAdd = Effect.fn("exams.assets.mayAdd")(function* (
   examId: GenericId.GenericId<"exams">,
-  slug: typeof TenantSlug.Type
+  slug: TenantSlug
 ) {
   const { runQuery } = yield* QueryRunner;
   yield* runQuery(examsPublic.assets.canAdd, { examId, slug }).pipe(

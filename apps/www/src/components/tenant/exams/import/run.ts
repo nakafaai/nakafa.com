@@ -34,6 +34,7 @@ import {
   wordReads,
 } from "@/components/tenant/exams/import/reads";
 import { readWord } from "@/components/tenant/exams/import/word";
+import type { putFile } from "@/lib/files/put";
 
 /**
  * How far one import has come: the parts read and the parts in the file, the questions placed,
@@ -103,7 +104,7 @@ interface PartValue {
 /** Why a part of a PDF could not be made ready: a page that does not draw, or a page image that does not upload. */
 type PartError<ReserveError> =
   | Effect.Error<ReturnType<typeof renderPage>>
-  | Effect.Error<ReturnType<typeof sendFile>>
+  | Effect.Error<ReturnType<typeof putFile>>
   | Cause.UnknownError
   | ReserveError;
 
