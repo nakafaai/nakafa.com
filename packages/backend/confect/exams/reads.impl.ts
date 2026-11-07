@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import bucketInternal from "@repo/backend/confect/_generated/refs/bucket.server";
 import examsPublic from "@repo/backend/confect/_generated/refs/exams";
 import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
@@ -7,11 +8,11 @@ import {
   DatabaseReader,
   MutationRunner,
   QueryRunner,
-  StorageActionWriter,
-  StorageWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { deleteFile } from "@repo/backend/confect/bucket/file";
+import { readFile } from "@repo/backend/confect/bucket/stored";
 import { examAccess } from "@repo/backend/confect/exams/authority";
 import { imageTypeOf } from "@repo/backend/confect/exams/image";
 import {
@@ -55,21 +56,18 @@ const canRead = FunctionImpl.make(
  * The bytes and the type of one stored image. An image over the size limit, or one whose
  * leading bytes name no image, is refused before Nina sees it.
  */
-const storedImage = (storageId: GenericId.GenericId<"_storage">) =>
+const storedImage = (fileId: GenericId.GenericId<"bucketFiles">) =>
   Effect.gen(function* () {
     const { runQuery } = yield* QueryRunner;
-    const { size } = yield* runQuery(examsInternal.assets.stored, {
-      storageId,
-    }).pipe(Effect.orDie);
-    if (size > IMAGE_BYTE_LIMIT) {
+    const file = yield* runQuery(bucketInternal.file, { fileId });
+    if (file === null || file.byteSize > IMAGE_BYTE_LIMIT) {
       return yield* new ImportPageRefused();
     }
-    const blob = yield* (yield* StorageActionWriter)
-      .get(storageId)
-      .pipe(Effect.orDie);
-    const data = new Uint8Array(
-      yield* Effect.promise(() => blob.arrayBuffer())
-    );
+    const stored = yield* readFile(fileId);
+    if (Option.isNone(stored)) {
+      return yield* new ImportPageRefused();
+    }
+    const data = stored.value;
     const mediaType = yield* Effect.fromOption(
       imageTypeOf(data.slice(0, HEAD_BYTES))
     ).pipe(Effect.mapError(() => new ImportPageRefused()));
@@ -93,7 +91,7 @@ const sourceContent = (
         examId,
       });
       const images = yield* Effect.forEach(pictures, (picture, index) =>
-        Effect.map(storedImage(picture.storageId), (image) => [
+        Effect.map(storedImage(picture.fileId), (image) => [
           { text: `Image ${index + 1}:`, type: "text" as const },
           image,
         ])
@@ -202,7 +200,7 @@ const pictures = FunctionImpl.make(
             reason: "resource",
           });
         }
-        return { storageId: asset.value.storageId };
+        return { fileId: asset.value.fileId };
       })
     );
   })
@@ -214,10 +212,7 @@ const discard = FunctionImpl.make(
   spec,
   "discard",
   Effect.fn("exams.reads.discard")(function* ({ images }) {
-    const storage = yield* StorageWriter;
-    yield* Effect.forEach(images, (storageId) =>
-      storage.delete(storageId).pipe(Effect.orDie)
-    );
+    yield* Effect.forEach(images, deleteFile);
     return {};
   })
 );

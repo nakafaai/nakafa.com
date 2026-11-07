@@ -42,7 +42,7 @@ export const examAudioValidator = Schema.Struct({
   createdAt: Schema.Finite,
   createdBy: Id("users"),
   examId: Id("exams"),
-  storageId: Id("_storage"),
+  fileId: Id("bucketFiles"),
   tenantId: Id("tenants"),
 });
 

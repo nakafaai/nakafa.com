@@ -6,10 +6,8 @@ import type {
   TenantCohortsDoc,
   TenantUnitsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import {
-  DatabaseReader,
-  StorageReader,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { fileAddress } from "@repo/backend/confect/bucket/file";
 import { reportOf } from "@repo/backend/confect/records/card";
 import { GraduationNotFinal } from "@repo/backend/confect/records/errors";
 import type { GraduationView } from "@repo/backend/confect/records/graduation";
@@ -81,14 +79,11 @@ const letterOf = Effect.fn("records.graduations.letterOf")(function* (
 const letterView = Effect.fn("records.graduations.letterView")(function* (
   letter: GraduationLettersDoc
 ) {
-  // A locked letter always holds its file, so a missing one is a defect.
+  // A locked letter holds its file; the address is signed for the hour.
   const file =
-    letter.storageId === undefined
+    letter.fileId === undefined
       ? null
-      : yield* (yield* StorageReader).getUrl(letter.storageId).pipe(
-          Effect.map((url) => url.href),
-          Effect.orDie
-        );
+      : Option.getOrNull(yield* fileAddress(letter.fileId));
   const view: typeof LetterView.Type = {
     file,
     hash: letter.hash,

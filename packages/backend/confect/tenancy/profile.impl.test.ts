@@ -1,14 +1,29 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
-import { storageUrl, storeFile } from "@repo/backend/test/logo";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect, Option } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 const profile = refs.public.tenancy.profile.get;
 
 describe("tenancy/profile", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it.effect(
     "shows a school's public identity and its animal to anyone, signed in or not",
     () =>
@@ -31,18 +46,30 @@ describe("tenancy/profile", () => {
   );
 
   it.effect(
-    "shows the address of the logo that a school holds, beside its animal",
+    "shows the signed R2 address of the logo that a school holds, beside its animal",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const logo = yield* storeFile(
-          fixture.convex,
-          new Blob(["logo"], { type: "image/png" })
-        );
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
-            writer.table("tenants").patch(fixture.tenants.other, { logo })
-          )
+            writer
+              .table("bucketFiles")
+              .insert({
+                byteSize: 4,
+                contentType: "image/png",
+                createdAt: 0,
+                objectKey: "files/other/logo",
+                state: "stored",
+                tenantId: fixture.tenants.other,
+              })
+              .pipe(
+                Effect.tap((fileId) =>
+                  writer
+                    .table("tenants")
+                    .patch(fixture.tenants.other, { logo: fileId })
+                )
+              )
+          ).pipe(Effect.orDie)
         );
         const shown = yield* fixture.anonymous.query(profile, {
           slug: slugOf("other"),
@@ -50,7 +77,7 @@ describe("tenancy/profile", () => {
         expect(shown).toEqual(
           Option.some({
             kind: "school",
-            logo: yield* storageUrl(fixture.convex, logo),
+            logo: expect.stringContaining("/files/files/other/logo?"),
             mascot: schoolMascot("other"),
             name: "Sekolah Lain",
             slug: "other",

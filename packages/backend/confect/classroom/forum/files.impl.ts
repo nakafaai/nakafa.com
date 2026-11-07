@@ -1,20 +1,20 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassroomUploadsDoc } from "@repo/backend/confect/_generated/docs";
+import bucketInternal from "@repo/backend/confect/_generated/refs/bucket.server";
 import classroomPublic from "@repo/backend/confect/_generated/refs/classroom";
 import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
-import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
   MutationRunner,
   QueryRunner,
-  StorageActionWriter,
-  StorageWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { deleteFile, reserveUpload } from "@repo/backend/confect/bucket/file";
+import { inspectFile } from "@repo/backend/confect/bucket/stored";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { classAccess } from "@repo/backend/confect/classroom/authority";
 import { FileSizeRefused } from "@repo/backend/confect/classroom/errors";
@@ -23,16 +23,9 @@ import {
   attachmentTypeOf,
   THUMBNAIL_BYTE_LIMIT,
 } from "@repo/backend/confect/classroom/forum/attachment";
-import {
-  AttachmentRefused,
-  FileQuotaReached,
-} from "@repo/backend/confect/classroom/forum/errors";
+import { AttachmentRefused } from "@repo/backend/confect/classroom/forum/errors";
 import spec from "@repo/backend/confect/classroom/forum/files.spec";
 import { missing } from "@repo/backend/confect/classroom/forum/lookup";
-import {
-  chargeBytes,
-  refundBytes,
-} from "@repo/backend/confect/classroom/forum/use";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import {
   HEAD_BYTES,
@@ -46,8 +39,8 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Duration, Effect, Layer, Option } from "effect";
 
-/** An uploaded file's ID in Convex storage. */
-type StorageId = GenericId.GenericId<"_storage">;
+/** A file of the bucket that a chat upload names. */
+type FileId = GenericId.GenericId<"bucketFiles">;
 
 /** How long an upload may wait for its message, which covers a teacher who leaves a draft overnight. */
 const UNSENT_LIFETIME = Duration.days(1);
@@ -55,13 +48,28 @@ const UNSENT_LIFETIME = Duration.days(1);
 /** How many unsent files one daily sweep deletes. What stays waits for the next day, so a sweep's size stays bounded. */
 const SWEEP_BATCH = 256;
 
-/** The address that a file of a chat is uploaded to. The upload answers with the storage ID that `register` names. */
-const uploadUrl = FunctionImpl.make(
+/**
+ * Reserves one file of a chat, or a photo's small copy, before any byte moves: a file over the library's limit is
+ * refused, and any other charges the school's bytes and answers the R2 address it is uploaded to, which binds its
+ * length and type.
+ */
+const reserve = FunctionImpl.make(
   databaseSchema,
   spec,
-  "uploadUrl",
-  Effect.fn("classroom.forum.files.uploadUrl")(function* () {
-    return yield* (yield* StorageWriter).generateUploadUrl;
+  "reserve",
+  Effect.fn("classroom.forum.files.reserve")(function* ({
+    byteSize,
+    contentType,
+  }) {
+    const row = yield* Class;
+    if (byteSize > LIBRARY_BYTE_LIMIT) {
+      return yield* new FileSizeRefused();
+    }
+    return yield* reserveUpload({
+      byteSize,
+      contentType,
+      tenantId: row.tenantId,
+    });
   })
 );
 
@@ -93,36 +101,16 @@ const attacher = Effect.fn("classroom.forum.files.attacher")(function* (
 });
 
 /** Deletes the files of a refused upload, so a refused file is never stored. */
-const discardAll = (files: readonly StorageId[]) =>
+const discardAll = (files: readonly FileId[]) =>
   Effect.gen(function* () {
     const { runMutation } = yield* MutationRunner;
-    yield* Effect.forEach(files, (storageId) =>
-      runMutation(examsInternal.assets.discard, { storageId })
+    yield* Effect.forEach(files, (fileId) =>
+      runMutation(bucketInternal.discard, { fileId })
     );
   });
 
-/** The leading bytes of a stored file, which name its type. */
-const headOf = Effect.fn("classroom.forum.files.head")(function* (
-  storageId: StorageId
-) {
-  const blob = yield* (yield* StorageActionWriter)
-    .get(storageId)
-    .pipe(Effect.orDie);
-  return new Uint8Array(
-    yield* Effect.promise(() => blob.slice(0, HEAD_BYTES).arrayBuffer())
-  );
-});
-
-/** The size of a stored file. */
-const sizeOf = Effect.fn("classroom.forum.files.size")(function* (
-  storageId: StorageId
-) {
-  const { runQuery } = yield* QueryRunner;
-  const { size } = yield* runQuery(examsInternal.assets.stored, {
-    storageId,
-  }).pipe(Effect.orDie);
-  return size;
-});
+/** What R2 holds of an uploaded file: its size and leading bytes, or nothing when its bytes never arrived. */
+const storedOf = (fileId: FileId) => inspectFile(fileId, HEAD_BYTES);
 
 /**
  * Registers an uploaded file as one its author may send. The right to write in the
@@ -136,53 +124,57 @@ const register = FunctionImpl.make(
   spec,
   "register",
   Effect.fn("classroom.forum.files.register")(
-    function* ({ classId, height, name, slug, storageId, thumbnailId, width }) {
+    function* ({ classId, fileId, height, name, slug, thumbnailId, width }) {
       yield* requireAuth();
       const { authorId } = yield* attacher(classId, slug);
       const files = Arr.appendAll(
-        [storageId],
+        [fileId],
         thumbnailId === null ? [] : [thumbnailId]
       );
-      const byteSize = yield* sizeOf(storageId);
-      const small = thumbnailId === null ? 0 : yield* sizeOf(thumbnailId);
-      if (byteSize > LIBRARY_BYTE_LIMIT || small > THUMBNAIL_BYTE_LIMIT) {
+      const stored = yield* storedOf(fileId);
+      const small =
+        thumbnailId === null ? Option.none() : yield* storedOf(thumbnailId);
+      if (
+        Option.isNone(stored) ||
+        (thumbnailId !== null && Option.isNone(small))
+      ) {
+        yield* discardAll(files);
+        return yield* new AttachmentRefused();
+      }
+      const { byteSize, head } = stored.value;
+      if (
+        Option.exists(small, (copy) => copy.byteSize > THUMBNAIL_BYTE_LIMIT)
+      ) {
         yield* discardAll(files);
         return yield* new FileSizeRefused();
       }
-      const contentType = attachmentTypeOf(yield* headOf(storageId), name);
-      const smallIsImage =
-        thumbnailId === null ||
-        Option.isSome(imageTypeOf(yield* headOf(thumbnailId)));
+      const contentType = attachmentTypeOf(head, name);
+      const smallIsImage = !Option.exists(small, (copy) =>
+        Option.isNone(imageTypeOf(copy.head))
+      );
       if (Option.isNone(contentType) || !smallIsImage) {
         yield* discardAll(files);
         return yield* new AttachmentRefused();
       }
       const { runMutation } = yield* MutationRunner;
-      const upload = yield* runMutation(classroomInternal.forum.files.commit, {
+      return yield* runMutation(classroomInternal.forum.files.commit, {
         authorId,
         byteSize,
         classId,
         contentType: contentType.value,
+        fileId,
         height,
-        kind: Option.isSome(imageTypeOf(yield* headOf(storageId)))
-          ? "image"
-          : "document",
+        kind: Option.isSome(imageTypeOf(head)) ? "image" : "document",
         name,
-        storageId,
         thumbnailId,
         width,
       });
-      if (upload === null) {
-        yield* discardAll(files);
-        return yield* new FileQuotaReached();
-      }
-      return upload;
     },
     Effect.catchTag("SchemaError", Effect.die)
   )
 );
 
-/** Stores a registered upload in the class's school, its name sealed with the school key, unless the school is full. */
+/** Stores a registered upload in the class's school, its name sealed with the school key. Its bytes were charged at its reservation. */
 const commit = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -194,8 +186,8 @@ const commit = FunctionImpl.make(
     contentType,
     height,
     kind,
+    fileId,
     name,
-    storageId,
     thumbnailId,
     width,
   }) {
@@ -203,9 +195,6 @@ const commit = FunctionImpl.make(
       .table("classes")
       .get(classId)
       .pipe(Effect.orDie);
-    if (!(yield* chargeBytes(row.tenantId, byteSize))) {
-      return null;
-    }
     const id = yield* (yield* DatabaseWriter)
       .table("classroomUploads")
       .insert({
@@ -217,10 +206,10 @@ const commit = FunctionImpl.make(
         kind,
         sealedName: yield* sealText(
           yield* schoolKeys(row.tenantId),
-          attachmentField({ classId, storageId }),
+          attachmentField({ classId, fileId }),
           name
         ).pipe(Effect.orDie),
-        storageId,
+        fileId,
         tenantId: row.tenantId,
         ...(height === null ? {} : { height }),
         ...(thumbnailId === null ? {} : { thumbnailId }),
@@ -231,19 +220,17 @@ const commit = FunctionImpl.make(
   })
 );
 
-/** Deletes one unsent upload with its files, and gives its bytes back to its school. */
+/** Deletes one unsent upload with its files, whose bytes go back to its school. */
 const dropUpload = Effect.fn("classroom.forum.files.drop")(function* (
   upload: ClassroomUploadsDoc
 ) {
-  const storage = yield* StorageWriter;
   yield* Effect.forEach(
     Arr.appendAll(
-      [upload.storageId],
+      [upload.fileId],
       upload.thumbnailId === undefined ? [] : [upload.thumbnailId]
     ),
-    (storageId) => storage.delete(storageId).pipe(Effect.orDie)
+    deleteFile
   );
-  yield* refundBytes(upload.tenantId, upload.byteSize);
   yield* (yield* DatabaseWriter)
     .table("classroomUploads")
     .delete(upload._id)
@@ -294,7 +281,7 @@ const sweep = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(uploadUrl),
+  Layer.provide(reserve),
   Layer.provide(canAttach),
   Layer.provide(register),
   Layer.provide(commit),

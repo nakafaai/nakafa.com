@@ -67,6 +67,10 @@ describe("bucket.presign", () => {
   );
 });
 
+/** The start of a path-style address of the test object, signed for the configured key. */
+const PATH_STYLE =
+  /^https:\/\/account\.r2\.cloudflarestorage\.com\/nakafa-files\/library\/school\/file\?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F\d{8}%2Fauto%2Fs3%2Faws4_request&/u;
+
 describe("bucket.objectAddress", () => {
   it.effect("addresses the object path style under the configured bucket", () =>
     Effect.gen(function* () {
@@ -74,9 +78,7 @@ describe("bucket.objectAddress", () => {
         expiresSeconds: 300,
         method: "DELETE",
       }).pipe(Effect.provide(configured));
-      expect(address).toMatch(
-        /^https:\/\/account\.r2\.cloudflarestorage\.com\/nakafa-files\/library\/school\/file\?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F\d{8}%2Fauto%2Fs3%2Faws4_request&/u
-      );
+      expect(address).toMatch(PATH_STYLE);
     })
   );
 });

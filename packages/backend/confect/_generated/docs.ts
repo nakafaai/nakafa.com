@@ -19,6 +19,7 @@ export type BillingGrantsDoc = Document.Document<typeof schemaDefinition, "billi
 export type BillingInvoicesDoc = Document.Document<typeof schemaDefinition, "billingInvoices">;
 export type BillingPaymentsDoc = Document.Document<typeof schemaDefinition, "billingPayments">;
 export type BillingSubscriptionsDoc = Document.Document<typeof schemaDefinition, "billingSubscriptions">;
+export type BucketFilesDoc = Document.Document<typeof schemaDefinition, "bucketFiles">;
 export type BucketUseDoc = Document.Document<typeof schemaDefinition, "bucketUse">;
 export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShares">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
@@ -193,6 +194,7 @@ export interface Docs {
   billingInvoices: BillingInvoicesDoc;
   billingPayments: BillingPaymentsDoc;
   billingSubscriptions: BillingSubscriptionsDoc;
+  bucketFiles: BucketFilesDoc;
   bucketUse: BucketUseDoc;
   chatShares: ChatSharesDoc;
   chats: ChatsDoc;
