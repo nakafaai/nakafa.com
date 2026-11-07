@@ -18,6 +18,7 @@ import {
 } from "@repo/backend/test/nina/capability";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { specialistRequest } from "@repo/backend/test/nina/specialist";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect, type Layer, MutableHashMap, MutableRef, Option } from "effect";
@@ -69,6 +70,7 @@ async function search(
       }).pipe(
         Effect.provide([
           GatewayIsolated,
+          recordingMeter().layer,
           RegisteredFunction.actionLayer(schema, ctx),
         ])
       )
