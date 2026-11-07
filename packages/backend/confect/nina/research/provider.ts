@@ -2,6 +2,8 @@ import {
   ResearchScrapeError,
   ResearchSearchError,
 } from "@repo/backend/confect/nina/research/schema";
+import { metered } from "@repo/backend/confect/spend/meter";
+import { scrapeCost, searchCost } from "@repo/backend/confect/spend/rates";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
@@ -47,6 +49,13 @@ const SEARCH_MINIMUM_MS = 1;
  * 2026).
  */
 const SCRAPE_MINIMUM_MS = 1000;
+
+/** What a learner is told when their month's AI budget cannot hold one more web call. */
+const BUDGET_SPENT = "This month's AI budget is spent.";
+/** The sources one search asks, whose results the provider bills together. */
+const SEARCH_SOURCES = ["web", "news"];
+/** The asks one request may make: its first and the new asks after a bad gateway. */
+const ASKS = BAD_GATEWAY_RETRIES + 1;
 
 /** What a learner is told when the deployment has no provider key. */
 const NOT_CONFIGURED = "Web research is not configured.";
@@ -259,25 +268,36 @@ export const requestSearch = Effect.fn("research.requestSearch")(
     if (search.timeoutMs < SEARCH_MINIMUM_MS) {
       return yield* searchFailure();
     }
-    const answer = yield* post({
-      body: {
-        query: search.query,
-        sources: ["web", "news"],
-        ...(Arr.isReadonlyArrayNonEmpty(search.sites)
-          ? { includeDomains: search.sites }
-          : {}),
-        limit: search.limit,
-      },
-      key,
-      path: "/v2/search",
-      schema: SearchAnswerSchema,
-      timeoutMs: search.timeoutMs,
-    }).pipe(
-      Effect.mapError((failure) => searchFailure(failure.status)),
-      Effect.timeoutOrElse({
-        duration: search.deadline,
-        orElse: () => Effect.fail(searchFailure()),
-      })
+    // Each ask of the search may be billed, a bad gateway's new asks included,
+    // and an answered search bills its one ask.
+    const answer = yield* metered(
+      "search",
+      searchCost(search.limit * SEARCH_SOURCES.length) * ASKS,
+      post({
+        body: {
+          query: search.query,
+          sources: SEARCH_SOURCES,
+          ...(Arr.isReadonlyArrayNonEmpty(search.sites)
+            ? { includeDomains: search.sites }
+            : {}),
+          limit: search.limit,
+        },
+        key,
+        path: "/v2/search",
+        schema: SearchAnswerSchema,
+        timeoutMs: search.timeoutMs,
+      }).pipe(
+        Effect.mapError((failure) => searchFailure(failure.status)),
+        Effect.timeoutOrElse({
+          duration: search.deadline,
+          orElse: () => Effect.fail(searchFailure()),
+        })
+      ),
+      () => searchCost(search.limit * SEARCH_SOURCES.length)
+    ).pipe(
+      Effect.catchTag("SpendRefused", () =>
+        Effect.fail(new ResearchSearchError({ message: BUDGET_SPENT }))
+      )
     );
     return answer.data;
   }
@@ -306,18 +326,29 @@ export const requestScrape = Effect.fn("research.requestScrape")(
     if (page.timeoutMs < SCRAPE_MINIMUM_MS) {
       return yield* scrapeFailure();
     }
-    const answer = yield* post({
-      body: { url: page.url, formats: ["markdown"] },
-      key,
-      path: "/v2/scrape",
-      schema: ScrapeAnswerSchema,
-      timeoutMs: page.timeoutMs,
-    }).pipe(
-      Effect.mapError(scrapeFailure),
-      Effect.timeoutOrElse({
-        duration: page.deadline,
-        orElse: () => Effect.fail(scrapeFailure()),
-      })
+    // Each ask of the read may be billed, a bad gateway's new asks included,
+    // and a page that was read bills its one ask.
+    const answer = yield* metered(
+      "scrape",
+      scrapeCost() * ASKS,
+      post({
+        body: { url: page.url, formats: ["markdown"] },
+        key,
+        path: "/v2/scrape",
+        schema: ScrapeAnswerSchema,
+        timeoutMs: page.timeoutMs,
+      }).pipe(
+        Effect.mapError(scrapeFailure),
+        Effect.timeoutOrElse({
+          duration: page.deadline,
+          orElse: () => Effect.fail(scrapeFailure()),
+        })
+      ),
+      scrapeCost
+    ).pipe(
+      Effect.catchTag("SpendRefused", () =>
+        Effect.fail(new ResearchScrapeError({ message: BUDGET_SPENT }))
+      )
     );
     return answer.data;
   }

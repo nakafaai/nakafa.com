@@ -214,6 +214,22 @@ describe("classroom/passages", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* keyedFixture;
+        // The school's plan pays for its 101 files read at once: 20 students'
+        // pool credits hold every read's ceiling together.
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("billingGrants").insert({
+              product: "school",
+              tenantId: fixture.tenants.nf,
+              scope: { kind: "tenant" },
+              seats: 20,
+              ninaSeats: 20,
+              source: { kind: "contract", contractId: "passages-pool" },
+              validFrom: TENANCY_NOW - 1000,
+              validTo: TENANCY_NOW + 365 * 24 * 60 * 60 * 1000,
+            })
+          ).pipe(Effect.orDie)
+        );
         yield* ninaOn(fixture);
         modelReads("Hukum Newton.");
         const { itemId } = yield* published(fixture);

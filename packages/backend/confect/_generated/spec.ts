@@ -224,6 +224,7 @@ import roster_entries from "../roster/entries.spec";
 import roster_exports from "../roster/exports.spec";
 import roster_imports from "../roster/imports.spec";
 import routes_agent_quota from "../routes/agent/quota.spec";
+import spend_escrow from "../spend/escrow.spec";
 import storage from "../storage.spec";
 import tenancy_assignments from "../tenancy/assignments.spec";
 import tenancy_claims from "../tenancy/claims.spec";
@@ -299,6 +300,7 @@ const spec: Spec.Spec<{
   readonly records: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "records", never, GroupSpec.NamedAt<typeof records_checks, "checks"> | GroupSpec.NamedAt<typeof records_draw, "draw"> | GroupSpec.NamedAt<typeof records_exports, "exports"> | GroupSpec.NamedAt<typeof records_grades, "grades"> | GroupSpec.NamedAt<typeof records_graduations, "graduations"> | GroupSpec.NamedAt<typeof records_letters, "letters"> | GroupSpec.NamedAt<typeof records_prints, "prints"> | GroupSpec.NamedAt<typeof records_reports, "reports"> | GroupSpec.NamedAt<typeof records_schemes, "schemes"> | GroupSpec.NamedAt<typeof records_seed, "seed">>, "records">;
   readonly roster: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "roster", never, GroupSpec.NamedAt<typeof roster_entries, "entries"> | GroupSpec.NamedAt<typeof roster_exports, "exports"> | GroupSpec.NamedAt<typeof roster_imports, "imports">>, "roster">;
   readonly routes: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "routes", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "agent", never, GroupSpec.NamedAt<typeof routes_agent_quota, "quota">>, "agent">>, "routes">;
+  readonly spend: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "spend", never, GroupSpec.NamedAt<typeof spend_escrow, "escrow">>, "spend">;
   readonly storage: GroupSpec.NamedAt<typeof storage, "storage">;
   readonly tenancy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tenancy", never, GroupSpec.NamedAt<typeof tenancy_assignments, "assignments"> | GroupSpec.NamedAt<typeof tenancy_claims, "claims"> | GroupSpec.NamedAt<typeof tenancy_cohorts, "cohorts"> | GroupSpec.NamedAt<typeof tenancy_expiry, "expiry"> | GroupSpec.NamedAt<typeof tenancy_holders, "holders"> | GroupSpec.NamedAt<typeof tenancy_invites, "invites"> | GroupSpec.NamedAt<typeof tenancy_logo, "logo"> | GroupSpec.NamedAt<typeof tenancy_memberships, "memberships"> | GroupSpec.NamedAt<typeof tenancy_people, "people"> | GroupSpec.NamedAt<typeof tenancy_periods, "periods"> | GroupSpec.NamedAt<typeof tenancy_placements, "placements"> | GroupSpec.NamedAt<typeof tenancy_profile, "profile"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "promotion", never, GroupSpec.NamedAt<typeof tenancy_promotion_apply, "apply"> | GroupSpec.NamedAt<typeof tenancy_promotion_draft, "draft"> | GroupSpec.NamedAt<typeof tenancy_promotion_moves, "moves"> | GroupSpec.NamedAt<typeof tenancy_promotion_review, "review"> | GroupSpec.NamedAt<typeof tenancy_promotion_run, "run"> | GroupSpec.NamedAt<typeof tenancy_promotion_undo, "undo">>, "promotion"> | GroupSpec.NamedAt<typeof tenancy_provision, "provision"> | GroupSpec.NamedAt<typeof tenancy_roster, "roster"> | GroupSpec.NamedAt<typeof tenancy_seed, "seed"> | GroupSpec.NamedAt<typeof tenancy_settings, "settings"> | GroupSpec.NamedAt<typeof tenancy_setup, "setup"> | GroupSpec.NamedAt<typeof tenancy_start, "start"> | GroupSpec.NamedAt<typeof tenancy_units, "units"> | GroupSpec.NamedAt<typeof tenancy_viewer, "viewer">>, "tenancy">;
   readonly triggers: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "triggers", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof triggers_chats_cleanup, "cleanup">>, "chats"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof triggers_comments_cleanup, "cleanup">>, "comments">>, "triggers">;
@@ -633,6 +635,9 @@ const spec: Spec.Spec<{
     ["agent"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["quota"]: routes_agent_quota,
     }),
+  }),
+  ["spend"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["escrow"]: spend_escrow,
   }),
   ["storage"]: storage,
   ["tenancy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {

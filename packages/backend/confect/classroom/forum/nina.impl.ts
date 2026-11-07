@@ -36,6 +36,7 @@ import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { findContent } from "@repo/backend/confect/nina/nakafa/find";
 import { queueMail } from "@repo/backend/confect/notifications/mail";
 import { schedulePush } from "@repo/backend/confect/notifications/schedule";
+import { meterOf } from "@repo/backend/confect/spend/meter";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { generateText, Output } from "ai";
 import {
@@ -209,6 +210,11 @@ const begin = FunctionImpl.make(
       .pipe(Effect.orDie);
     const keys = yield* schoolKeys(question.tenantId);
     return {
+      claim: {
+        kind: "member",
+        tenantId: question.tenantId,
+        userId: hold.value.userId,
+      },
       classId: klass._id,
       className: klass.name,
       history: yield* historyOf(question),
@@ -305,7 +311,7 @@ const answerOf = (ask: typeof NinaAsk.Type, sources: string) =>
     );
     return output.unsure ? null : output.text;
   }).pipe(
-    Effect.provide(GatewayLive),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(ask.claim))),
     Effect.orElseSucceed(() => null)
   );
 
@@ -326,7 +332,7 @@ const libraryOf = (ask: typeof NinaAsk.Type) =>
       ids: Arr.map(Arr.flatten(found), ({ _id }) => _id),
     });
   }).pipe(
-    Effect.provide(GatewayLive),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(ask.claim))),
     Effect.orElseSucceed(() => [])
   );
 
@@ -349,7 +355,7 @@ const reply = FunctionImpl.make(
       offset: 0,
       queries: [ask.question],
     }).pipe(
-      Effect.provide(GatewayLive),
+      Effect.provide(Layer.provideMerge(GatewayLive, meterOf(ask.claim))),
       Effect.map((found) => found.text),
       Effect.orElseSucceed(() => "")
     );

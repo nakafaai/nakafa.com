@@ -57,5 +57,5 @@ export const decideWith = Effect.fn("gateway.decide")(function* <
       orElse: () => Effect.fail(new GatewayFailure({ reason: "timeout" })),
     })
   );
-  return result.answers;
+  return { answers: result.answers, input: result.usage.inputTokens };
 });

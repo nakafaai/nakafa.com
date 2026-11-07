@@ -170,6 +170,8 @@ import tryoutSetProgress from "./tables/tryoutSetProgress";
 import userLearningRecents from "./tables/userLearningRecents";
 import users from "./tables/users";
 import vaultKeys from "./tables/vaultKeys";
+import vendorEscrows from "./tables/vendorEscrows";
+import vendorSpend from "./tables/vendorSpend";
 import welcomeEmailIntents from "./tables/welcomeEmailIntents";
 
 export default $defineSchema({
@@ -342,5 +344,7 @@ export default $defineSchema({
   userLearningRecents: $Table.tableDefinition(userLearningRecents),
   users: $Table.tableDefinition(users),
   vaultKeys: $Table.tableDefinition(vaultKeys),
+  vendorEscrows: $Table.tableDefinition(vendorEscrows),
+  vendorSpend: $Table.tableDefinition(vendorSpend),
   welcomeEmailIntents: $Table.tableDefinition(welcomeEmailIntents),
 });

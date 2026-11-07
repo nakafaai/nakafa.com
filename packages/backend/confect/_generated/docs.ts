@@ -170,6 +170,8 @@ export type TryoutSetProgressDoc = Document.Document<typeof schemaDefinition, "t
 export type UserLearningRecentsDoc = Document.Document<typeof schemaDefinition, "userLearningRecents">;
 export type UsersDoc = Document.Document<typeof schemaDefinition, "users">;
 export type VaultKeysDoc = Document.Document<typeof schemaDefinition, "vaultKeys">;
+export type VendorEscrowsDoc = Document.Document<typeof schemaDefinition, "vendorEscrows">;
+export type VendorSpendDoc = Document.Document<typeof schemaDefinition, "vendorSpend">;
 export type WelcomeEmailIntentsDoc = Document.Document<typeof schemaDefinition, "welcomeEmailIntents">;
 
 export interface Docs {
@@ -342,5 +344,7 @@ export interface Docs {
   userLearningRecents: UserLearningRecentsDoc;
   users: UsersDoc;
   vaultKeys: VaultKeysDoc;
+  vendorEscrows: VendorEscrowsDoc;
+  vendorSpend: VendorSpendDoc;
   welcomeEmailIntents: WelcomeEmailIntentsDoc;
 }

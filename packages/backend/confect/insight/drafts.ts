@@ -1,5 +1,6 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { SkillView } from "@repo/backend/confect/insight/schema";
+import { Claim } from "@repo/backend/confect/spend/schema";
 import { Array as Arr, Schema } from "effect";
 
 /** The credits one draft draws from the school's pool, as one reply of Nina does (ADR 0025). */
@@ -7,6 +8,8 @@ export const DRAFT_CREDITS = 5;
 
 /** What one draft gives Nina: the numbers of one student, with no name, and the school's language. */
 export const DraftSource = Schema.Struct({
+  /** Who the draft's model call is held against: the teacher who asked, in their school. */
+  claim: Claim,
   kktp: Schema.Finite,
   locale: AppLocaleCodeSchema,
   skills: Schema.Array(SkillView),

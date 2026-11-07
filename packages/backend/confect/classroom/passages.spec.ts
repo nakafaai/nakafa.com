@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { PassageView } from "@repo/backend/confect/classroom/passages";
+import { Claim } from "@repo/backend/confect/spend/schema";
 import { Schema } from "effect";
 
 /**
@@ -15,6 +16,7 @@ export default GroupSpec.make()
       returns: () =>
         Schema.NullOr(
           Schema.Struct({
+            claim: Claim,
             contentType: Schema.String,
             objectKey: Schema.String,
           })
