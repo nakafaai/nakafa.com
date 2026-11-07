@@ -3,7 +3,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { schoolPlans } from "@repo/backend/confect/billing/tier";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import type { SittingFixture } from "@repo/backend/test/sittings";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
@@ -79,7 +79,7 @@ export const fillSeats = (fixture: SittingFixture) =>
   fixture.run(
     Effect.gen(function* () {
       const writer = yield* DatabaseWriter;
-      yield* Effect.forEach(Arr.range(1, schoolPlans.trial.accounts), (n) =>
+      yield* Effect.forEach(Arr.range(1, schoolTiers.free.accounts), (n) =>
         writer
           .table("tenantPeople")
           .insert({

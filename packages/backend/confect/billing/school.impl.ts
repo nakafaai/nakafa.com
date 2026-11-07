@@ -23,9 +23,9 @@ import {
 } from "@repo/backend/confect/billing/seats";
 import {
   SCHOOL_TRIAL_DAYS,
-  schoolAccountGrant,
-  schoolPlans,
-} from "@repo/backend/confect/billing/tier";
+  schoolAccount,
+  schoolTiers,
+} from "@repo/backend/confect/billing/tiers";
 import { schoolPoolMonthOf } from "@repo/backend/confect/credits/pool";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -40,6 +40,9 @@ import {
   Option,
   Order,
 } from "effect";
+
+/** Bytes in a number of megabytes, 1 GB being 1,000 MB as the plans count Drive. */
+const megabytes = (count: number) => count * 1_000_000;
 
 /** The most invoices the billing page lists. A school is issued a few a year. */
 const INVOICE_LIST_LIMIT = 48;
@@ -102,7 +105,7 @@ const overview = FunctionImpl.make(
                 tenant._creationTime +
                 Duration.toMillis(Duration.days(SCHOOL_TRIAL_DAYS)),
             },
-            driveBytes: schoolPlans.trial.driveBytes,
+            driveBytes: megabytes(schoolTiers.free.storageMegabytes),
           }),
           onSome: (latest) => ({
             plan: {
@@ -111,11 +114,11 @@ const overview = FunctionImpl.make(
               credits,
             },
             // A contract sets its seats, and each holds the Drive of one added account.
-            driveBytes: limit * schoolAccountGrant.driveBytes,
+            driveBytes: megabytes(limit * schoolAccount.storageMegabytes),
           }),
         }),
       onSome: (running) => {
-        const added = Math.max(limit - schoolPlans[running.plan].accounts, 0);
+        const added = Math.max(limit - schoolTiers[running.plan].accounts, 0);
         return {
           plan: {
             kind: running.plan,
@@ -123,9 +126,10 @@ const overview = FunctionImpl.make(
             added,
             credits,
           },
-          driveBytes:
-            schoolPlans[running.plan].driveBytes +
-            added * schoolAccountGrant.driveBytes,
+          driveBytes: megabytes(
+            schoolTiers[running.plan].storageMegabytes +
+              added * schoolAccount.storageMegabytes
+          ),
         };
       },
     });

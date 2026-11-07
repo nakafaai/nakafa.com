@@ -1,7 +1,7 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import { SchoolLineKey } from "@repo/backend/confect/billing/tier";
+import { SchoolLineKey } from "@repo/backend/confect/billing/quote";
 import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
 import { Array as Arr, Schema } from "effect";
 

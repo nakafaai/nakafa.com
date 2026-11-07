@@ -12,6 +12,8 @@ import { issueInvoice } from "@repo/backend/confect/billing/invoices";
 import { recordPayment } from "@repo/backend/confect/billing/payments";
 import {
   accountsQuote,
+  lineAccounts,
+  linePlan,
   periodMonths,
   planQuote,
   SchoolOrder,
@@ -27,7 +29,6 @@ import {
   SchoolPlanMissing,
   schoolPlanMissingCode,
 } from "@repo/backend/confect/billing/spec";
-import { lineAccounts, linePlan } from "@repo/backend/confect/billing/tier";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Clock, Duration, Effect, Option, Result } from "effect";

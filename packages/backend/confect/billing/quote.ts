@@ -1,48 +1,90 @@
 /**
- * The price math of a School invoice: a paid plan with the accounts a school
- * adds to it for a period, or accounts added to the plan that runs, for the share
- * of its days still to run. Every amount is exact until one rounding per line,
- * half away from zero to the currency's minor unit, so a foreign price loses at
- * most one cent on the invoice total. The School billing page quotes with the
- * same functions the server issues the invoice with, so both show one number.
+ * The invoice math of School: a paid plan with the accounts a school adds to it
+ * for a period, or accounts added to the plan that runs, for the share of its days
+ * still to run. Every price comes from `billing/tiers.ts`. Every amount is exact
+ * until one rounding per line, half away from zero to the currency's minor unit,
+ * so a foreign price loses at most one cent on the invoice total. The School
+ * billing page quotes with the same functions the server issues the invoice with,
+ * so both show one number. Browser code imports this module.
  */
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import {
-  PaidSchoolPlan,
-  SCHOOL_ACCOUNT_LIMIT,
-  type SchoolMonths,
-  SchoolMonths as SchoolMonthsSchema,
-  schoolDiscounts,
-  schoolMonthlyPrices,
-  schoolPlanLines,
-} from "@repo/backend/confect/billing/tier";
+  SchoolPaidTierKey,
+  SchoolPeriod,
+  schoolAccount,
+  schoolPeriodDiscounts,
+  schoolTiers,
+} from "@repo/backend/confect/billing/tiers";
 import { Array as Arr, BigDecimal, DateTime, Duration, Schema } from "effect";
 
 const DAY_MS = Duration.toMillis(Duration.days(1));
 
-/** The basis points a discount is written in. */
-const BASIS = 10_000;
+/** The presets the account field offers. A school may add any whole number of accounts from one. */
+export const SCHOOL_ACCOUNT_PRESETS = [1, 10, 50, 100] as const;
+
+/** The most accounts a school adds in one invoice. A larger school signs a contract. */
+export const SCHOOL_ACCOUNT_LIMIT = 100_000;
+
+/** The key an invoice line names: a paid plan, or the accounts added to one. */
+export const SchoolLineKey = Schema.Literals([
+  "school.pro",
+  "school.max",
+  "school.accounts",
+]);
+export type SchoolLineKey = typeof SchoolLineKey.Type;
+
+/** The line key of each paid plan. */
+export const schoolPlanLines = {
+  pro: "school.pro",
+  max: "school.max",
+} as const satisfies Record<SchoolPaidTierKey, SchoolLineKey>;
+
+/** The accounts each kind of line pays for, per unit of its quantity. */
+const LINE_ACCOUNTS = {
+  "school.pro": schoolTiers.pro.accounts,
+  "school.max": schoolTiers.max.accounts,
+  "school.accounts": 1,
+} as const satisfies Record<SchoolLineKey, number>;
+
+const isSchoolLine = Schema.is(SchoolLineKey);
+
+/**
+ * The accounts one invoice line pays for: the accounts of its plan for a plan
+ * line, and one for each unit of an added accounts line or of a line an operator
+ * wrote, which bills the seats of an Enterprise contract.
+ */
+export function lineAccounts(description: string, quantity: number) {
+  return isSchoolLine(description)
+    ? LINE_ACCOUNTS[description] * quantity
+    : quantity;
+}
+
+/** The paid plan an invoice line sells, when it sells one. */
+export function linePlan(description: string) {
+  return Arr.findFirst(
+    SchoolPaidTierKey.literals,
+    (plan) => schoolPlanLines[plan] === description
+  );
+}
 
 /** One period of a plan: when it starts, when it ends, and the months it runs. */
-export const SchoolPeriod = Schema.Struct({
+export const PlanPeriod = Schema.Struct({
   end: Schema.Finite,
-  months: SchoolMonthsSchema,
+  months: SchoolPeriod,
   start: Schema.Finite,
 });
-type SchoolPeriod = typeof SchoolPeriod.Type;
+type PlanPeriod = typeof PlanPeriod.Type;
 
 /** The share of a period an amount pays for: `left` of its `days`. */
 const Share = Schema.Struct({ days: Schema.Int, left: Schema.Int });
 type Share = typeof Share.Type;
 
-/** What one priced item costs a month: a paid plan, or one added account. */
-type PricedItem = keyof typeof schoolMonthlyPrices;
+/** What a school pays a monthly price for: a paid plan, or one added account. */
+const PricedItem = Schema.Literals(["pro", "max", "account"]);
+type PricedItem = typeof PricedItem.Type;
 
 /** The period of `months` months that starts at `start`, by the calendar in UTC. */
-export function schoolPeriod(
-  start: number,
-  months: SchoolMonths
-): SchoolPeriod {
+export function schoolPeriod(start: number, months: SchoolPeriod): PlanPeriod {
   const end = DateTime.toEpochMillis(
     DateTime.add(DateTime.makeUnsafe(start), { months })
   );
@@ -52,10 +94,17 @@ export function schoolPeriod(
 /** The months a period runs, when it is one a school can pay for. */
 export function periodMonths(start: number, end: number) {
   return Arr.findFirst(
-    SchoolMonthsSchema.literals,
+    SchoolPeriod.literals,
     (months) => schoolPeriod(start, months).end === end
   );
 }
+
+/** The monthly price of each priced item in each currency. */
+const MONTHLY = {
+  account: schoolAccount.monthly,
+  max: schoolTiers.max.monthly,
+  pro: schoolTiers.pro.monthly,
+} as const satisfies Record<PricedItem, unknown>;
 
 /**
  * What `quantity` of one item costs for `months` months after the period's
@@ -64,16 +113,16 @@ export function periodMonths(start: number, end: number) {
 function amountOf(
   item: PricedItem,
   currency: BillingCurrency,
-  months: SchoolMonths,
+  months: SchoolPeriod,
   quantity: number,
   share: Share
 ) {
   const exact = BigDecimal.divideUnsafe(
     BigDecimal.multiplyAll([
       BigDecimal.fromBigInt(
-        BigInt(schoolMonthlyPrices[item][currency] * months * quantity)
+        BigInt(MONTHLY[item][currency] * months * quantity)
       ),
-      BigDecimal.make(BigInt(BASIS - schoolDiscounts[months]), 4),
+      BigDecimal.make(BigInt(100 - schoolPeriodDiscounts[months]), 2),
       BigDecimal.fromBigInt(BigInt(share.left)),
     ]),
     BigDecimal.fromBigInt(BigInt(share.days))
@@ -81,30 +130,30 @@ function amountOf(
   return BigDecimal.toNumberUnsafe(BigDecimal.round(exact));
 }
 
-/** The accounts a school adds in one order: none, or any whole number up to the limit. */
+/** The accounts a school adds with a plan: none, or any whole number up to the limit. */
 export const AddedAccounts = Schema.Int.check(
   Schema.isBetween({ minimum: 0, maximum: SCHOOL_ACCOUNT_LIMIT })
 );
-
-/** A paid plan with the accounts added to it, for a whole period, in one currency. */
-export const PlanOrder = Schema.Struct({
-  accounts: AddedAccounts,
-  currency: BillingCurrency,
-  months: SchoolMonthsSchema,
-  plan: PaidSchoolPlan,
-});
 
 /** The accounts a school adds to the plan that runs: any whole number from one up to the limit. */
 export const MoreAccounts = Schema.Int.check(
   Schema.isBetween({ minimum: 1, maximum: SCHOOL_ACCOUNT_LIMIT })
 );
 
+/** A paid plan with the accounts added to it, for a whole period, in one currency. */
+export const PlanOrder = Schema.Struct({
+  accounts: AddedAccounts,
+  currency: BillingCurrency,
+  months: SchoolPeriod,
+  plan: SchoolPaidTierKey,
+});
+
 /** Accounts added to the plan that runs over `period`, from `from` to its end, in one currency. */
 export const AccountsOrder = Schema.Struct({
   accounts: MoreAccounts,
   currency: BillingCurrency,
   from: Schema.Finite,
-  period: SchoolPeriod,
+  period: PlanPeriod,
 });
 
 /**
@@ -117,8 +166,8 @@ export const SchoolOrder = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("plan"),
     accounts: AddedAccounts,
-    months: SchoolMonthsSchema,
-    plan: PaidSchoolPlan,
+    months: SchoolPeriod,
+    plan: SchoolPaidTierKey,
   }),
   Schema.Struct({ kind: Schema.Literal("accounts"), accounts: MoreAccounts }),
 ]).pipe(Schema.toTaggedUnion("kind"));
@@ -130,7 +179,7 @@ const WHOLE: Share = { days: 1, left: 1 };
 /** What one item costs for a period after its discount: the price a pricing table shows. */
 export function schoolPeriodPrice(
   item: PricedItem,
-  months: SchoolMonths,
+  months: SchoolPeriod,
   currency: BillingCurrency
 ) {
   return amountOf(item, currency, months, 1, WHOLE);
@@ -140,7 +189,7 @@ export function schoolPeriodPrice(
  * The whole days of a period still to run from `from`, over its whole days. A
  * moment at or before the start leaves the whole period.
  */
-export function remainingShare(period: SchoolPeriod, from: number) {
+export function remainingShare(period: PlanPeriod, from: number) {
   return {
     days: Math.ceil((period.end - period.start) / DAY_MS),
     left: Math.ceil((period.end - Math.max(from, period.start)) / DAY_MS),
@@ -168,7 +217,7 @@ function quoteOf(lines: Arr.NonEmptyReadonlyArray<ReturnType<typeof lineOf>>) {
 /** The line of `accounts` added accounts for a share of a period of `months` months. */
 function accountsLine(
   currency: BillingCurrency,
-  months: SchoolMonths,
+  months: SchoolPeriod,
   accounts: number,
   share: Share
 ) {

@@ -4,7 +4,7 @@ import {
   TeacherIcon,
   UserSettings01Icon,
 } from "@hugeicons/core-free-icons";
-import { schoolPlans } from "@repo/backend/confect/billing/tier";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { DPA_VERSION } from "@repo/backend/confect/tenancy/contract";
 import {
   SchoolSize,
@@ -174,7 +174,7 @@ function StartSizeOption({ size }: { size: typeof SchoolSize.Type }) {
     <StartOption
       description={
         size === "s"
-          ? t("plan-free", { limit: schoolPlans.trial.accounts })
+          ? t("plan-free", { limit: schoolTiers.free.accounts })
           : t(PAID_PLANS[size])
       }
       title={t(`size.${size}`)}

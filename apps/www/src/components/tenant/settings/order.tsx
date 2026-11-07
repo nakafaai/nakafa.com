@@ -2,21 +2,20 @@ import { useMutation } from "@confect/react";
 import { Invoice01Icon } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import {
+  type PlanPeriod,
   remainingShare,
-  type SchoolOrder,
-  type SchoolPeriod,
-} from "@repo/backend/confect/billing/quote";
-import {
-  PaidSchoolPlan,
   SCHOOL_ACCOUNT_LIMIT,
   SCHOOL_ACCOUNT_PRESETS,
   SchoolLineKey,
-  SchoolMonths,
-  schoolAccountGrant,
-  schoolDiscounts,
-  schoolMonthlyPrices,
-  schoolPlans,
-} from "@repo/backend/confect/billing/tier";
+  type SchoolOrder,
+} from "@repo/backend/confect/billing/quote";
+import {
+  SchoolPaidTierKey,
+  SchoolPeriod,
+  schoolAccount,
+  schoolPeriodDiscounts,
+  schoolTiers,
+} from "@repo/backend/confect/billing/tiers";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -56,7 +55,7 @@ import {
 
 const SOURCE = "components/tenant/settings/order";
 
-const isMonths = Schema.is(SchoolMonths);
+const isMonths = Schema.is(SchoolPeriod);
 
 /**
  * Orders a plan or more accounts and issues its invoice. A plan order chooses Pro or
@@ -81,8 +80,8 @@ export function SchoolOrderDialog({
   const id = useId();
   const { slug } = useTenant();
   const current = overview.plan.kind === "max" ? "max" : "pro";
-  const [plan, setPlan] = useState<PaidSchoolPlan>(current);
-  const [months, setMonths] = useState<SchoolMonths>(12);
+  const [plan, setPlan] = useState<SchoolPaidTierKey>(current);
+  const [months, setMonths] = useState<SchoolPeriod>(12);
   const [accounts, setAccounts] = useState(kind === "plan" ? 0 : 1);
   const [isPending, startPaying] = useTransition();
   const pay = useMutation(billing.school.pay).withOptimisticUpdate(
@@ -106,8 +105,8 @@ export function SchoolOrderDialog({
         kind === "plan"
           ? t("billing-order-description")
           : t("billing-more-description", {
-              credits: schoolAccountGrant.credits,
-              drive: schoolAccountGrant.driveBytes / 1_000_000,
+              credits: schoolAccount.credits,
+              drive: schoolAccount.storageMegabytes,
             })
       }
       footer={
@@ -140,13 +139,13 @@ export function SchoolOrderDialog({
             <RadioGroup
               aria-label={t("billing-order-plan")}
               onValueChange={(value) => {
-                if (Schema.is(PaidSchoolPlan)(value)) {
+                if (Schema.is(SchoolPaidTierKey)(value)) {
                   setPlan(value);
                 }
               }}
               value={plan}
             >
-              {Arr.map(PaidSchoolPlan.literals, (each) => (
+              {Arr.map(SchoolPaidTierKey.literals, (each) => (
                 <SchoolPlanOption
                   currency={overview.currency}
                   key={each}
@@ -158,9 +157,9 @@ export function SchoolOrderDialog({
         ) : null}
         {kind === "plan" ? (
           <SelectField
-            items={Arr.map(SchoolMonths.literals, (each) => ({
+            items={Arr.map(SchoolPeriod.literals, (each) => ({
               label: t("billing-months", {
-                discount: schoolDiscounts[each] / 100,
+                discount: schoolPeriodDiscounts[each],
                 months: each,
               }),
               value: String(each),
@@ -238,7 +237,7 @@ function SchoolPlanOption({
   plan,
 }: {
   currency: SchoolBilling["currency"];
-  plan: PaidSchoolPlan;
+  plan: SchoolPaidTierKey;
 }) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
@@ -252,7 +251,7 @@ function SchoolPlanOption({
           <span className="whitespace-nowrap tabular-nums">
             {t("billing-per-month", {
               price: formatMinorAmount(
-                schoolMonthlyPrices[plan][currency],
+                schoolTiers[plan].monthly[currency],
                 currency
               ),
             })}
@@ -260,9 +259,9 @@ function SchoolPlanOption({
         </span>
         <span className="text-muted-foreground text-sm text-pretty">
           {t("billing-plan-holds", {
-            accounts: formatCount(schoolPlans[plan].accounts, locale),
-            credits: formatCount(schoolPlans[plan].credits, locale),
-            drive: schoolPlans[plan].driveBytes / 1_000_000_000,
+            accounts: formatCount(schoolTiers[plan].accounts, locale),
+            credits: formatCount(schoolTiers[plan].credits, locale),
+            drive: schoolTiers[plan].storageMegabytes / 1000,
           })}
         </span>
       </span>
@@ -288,7 +287,7 @@ function SchoolOrderSummary({
 }: {
   currency: SchoolBilling["currency"];
   kind: SchoolOrder["kind"];
-  period: typeof SchoolPeriod.Type;
+  period: typeof PlanPeriod.Type;
   quote: Option.Option.Value<ReturnType<typeof orderQuote>>["quote"];
 }) {
   const t = useTranslations("SchoolSettings");

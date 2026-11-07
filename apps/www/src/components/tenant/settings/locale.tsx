@@ -60,12 +60,10 @@ function countryChoices(locale: string) {
   );
 }
 
-/** Every currency the platform knows, with its name and the symbol it writes in the viewer's language, by code. */
-function currencyChoices(locale: string) {
-  const names = new Intl.DisplayNames([locale], { type: "currency" });
-  return Arr.map(Intl.supportedValuesOf("currency"), (code) => ({
-    label: `${names.of(code) ?? code}`,
-    symbol: Arr.map(
+/** The symbol a currency writes in one locale, such as Rp for the rupiah or € for the euro. */
+function currencySymbol(code: string, locale: string) {
+  return Arr.join(
+    Arr.map(
       Arr.filter(
         new Intl.NumberFormat(locale, {
           currency: code,
@@ -75,7 +73,17 @@ function currencyChoices(locale: string) {
         (part) => part.type === "currency"
       ),
       (part) => part.value
-    ).join(""),
+    ),
+    ""
+  );
+}
+
+/** Every currency the platform knows, with its name and the symbol it writes in the viewer's language, by code. */
+function currencyChoices(locale: string) {
+  const names = new Intl.DisplayNames([locale], { type: "currency" });
+  return Arr.map(Intl.supportedValuesOf("currency"), (code) => ({
+    label: names.of(code) ?? code,
+    symbol: currencySymbol(code, locale),
     value: code,
   }));
 }

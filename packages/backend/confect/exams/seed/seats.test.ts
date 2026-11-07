@@ -5,7 +5,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { schoolPlans } from "@repo/backend/confect/billing/tier";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { nf } from "@repo/backend/test/editor";
 import { keyedSchool } from "@repo/backend/test/sittings";
@@ -59,7 +59,7 @@ describe("exams seed seats", () => {
                 Effect.orDie
               );
             yield* Effect.forEach(
-              Arr.makeBy(schoolPlans.trial.accounts, (index) => index),
+              Arr.makeBy(schoolTiers.free.accounts, (index) => index),
               (index) =>
                 writer
                   .table("tenantPeople")

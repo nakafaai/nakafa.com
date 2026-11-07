@@ -4,13 +4,13 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import { SchoolOrder, SchoolPeriod } from "@repo/backend/confect/billing/quote";
+import { PlanPeriod, SchoolOrder } from "@repo/backend/confect/billing/quote";
 import {
   BillingRail,
   billingInvoiceValidator,
 } from "@repo/backend/confect/billing/schema";
 import { SchoolPlanMissingWire } from "@repo/backend/confect/billing/spec";
-import { PaidSchoolPlan } from "@repo/backend/confect/billing/tier";
+import { SchoolPaidTierKey } from "@repo/backend/confect/billing/tiers";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
@@ -53,8 +53,8 @@ const SchoolPlanState = Schema.Union([
     endsAt: Schema.Finite,
   }),
   Schema.Struct({
-    kind: PaidSchoolPlan,
-    period: SchoolPeriod,
+    kind: SchoolPaidTierKey,
+    period: PlanPeriod,
     added: Schema.Int,
     credits: SchoolCredits,
   }),

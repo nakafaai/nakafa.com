@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
 import { runningSchoolGrants } from "@repo/backend/confect/billing/school";
-import { schoolAccountGrant } from "@repo/backend/confect/billing/tier";
+import { schoolAccount } from "@repo/backend/confect/billing/tiers";
 import { MAX_CREDITS_PER_RESPONSE } from "@repo/backend/confect/credits/constants";
 import type { CreditPoolDraw } from "@repo/backend/confect/credits/schema";
 import { DEFAULT_NINA_DAILY_CREDITS } from "@repo/backend/confect/tenancy/policy";
@@ -15,7 +15,7 @@ import { Array as Arr, Clock, DateTime, Effect, Option } from "effect";
  * Credits each account a School grant covers adds to the school's shared Nina pool every month: Pro's 600 for 100
  * accounts, Max's 3,000 for 500, and the same for each added account.
  */
-const POOL_CREDITS_PER_SEAT = schoolAccountGrant.credits;
+const POOL_CREDITS_PER_SEAT = schoolAccount.credits;
 
 /** The most school memberships one member is read through when their pool is found. */
 const MAX_MEMBERSHIPS = 50;

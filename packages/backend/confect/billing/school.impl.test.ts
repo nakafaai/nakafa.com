@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { schoolPeriod } from "@repo/backend/confect/billing/quote";
-import { schoolPlans } from "@repo/backend/confect/billing/tier";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import {
   scheduledJobs,
   slugOf,
@@ -13,7 +13,7 @@ import { Array as Arr, DateTime, Duration, Effect } from "effect";
 
 const nf = slugOf("nf");
 const other = slugOf("other");
-const { overview, pay } = refs.public.billing.school;
+const { invoice, overview, pay } = refs.public.billing.school;
 
 // Fake timers hold every scheduled job, so the Xendit session a payment asks for is only listed.
 beforeEach(() => {
@@ -33,9 +33,9 @@ describe("billing/school", () => {
         const fixture = yield* tenancyFixture;
         const read = yield* fixture.as("admin").query(overview, { slug: nf });
         expect(read).toMatchObject({
-          accounts: { limit: schoolPlans.trial.accounts },
+          accounts: { limit: schoolTiers.free.accounts },
           currency: "IDR",
-          driveBytes: schoolPlans.trial.driveBytes,
+          driveBytes: schoolTiers.free.storageMegabytes * 1_000_000,
           invoices: [],
           plan: { kind: "trial" },
           rail: "xendit",
@@ -112,7 +112,7 @@ describe("billing/school", () => {
         const paid = yield* owner.query(overview, { slug: nf });
         expect(paid).toMatchObject({
           accounts: { limit: 120 },
-          driveBytes: schoolPlans.pro.driveBytes + 20 * 200_000_000,
+          driveBytes: (schoolTiers.pro.storageMegabytes + 20 * 200) * 1_000_000,
           invoices: [{ number: issued.number, status: "paid" }],
           plan: {
             added: 20,
@@ -203,6 +203,36 @@ describe("billing/school", () => {
             kind: "contract",
             validTo,
           },
+        });
+      })
+  );
+
+  it.effect(
+    "hands a school the PDF copy of its own invoice, and nothing for an unknown number or another school's",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const owner = fixture.as("owner");
+        const otherOwner = fixture.as("otherOwner");
+        const issued = yield* owner.mutation(pay, {
+          order: { kind: "plan", accounts: 0, months: 1, plan: "pro" },
+          slug: nf,
+        });
+        const read = (viewer: typeof owner, slug: typeof nf, number: string) =>
+          viewer.query(invoice, { locale: "en", number, slug });
+        const noAccount = yield* read(otherOwner, other, issued.number);
+        yield* otherOwner.mutation(pay, {
+          order: { kind: "plan", accounts: 0, months: 1, plan: "max" },
+          slug: other,
+        });
+        const notTheirs = yield* read(otherOwner, other, issued.number);
+        const unknown = yield* read(owner, nf, "NKF-2099-000001");
+        const own = yield* read(owner, nf, issued.number);
+        expect([noAccount, notTheirs, unknown]).toEqual([null, null, null]);
+        expect(own).toMatchObject({
+          lines: [{ description: "Nakafa School Pro" }],
+          number: issued.number,
+          status: "open",
         });
       })
   );

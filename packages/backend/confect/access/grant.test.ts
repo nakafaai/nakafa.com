@@ -16,7 +16,7 @@ import type {
   BuiltinRole,
   GrantScope,
 } from "@repo/backend/confect/access/schema";
-import { schoolPlans } from "@repo/backend/confect/billing/tier";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -112,8 +112,8 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
       product: "school",
       tenantId,
       scope: { kind: "tenant" },
-      seats: schoolPlans.pro.accounts,
-      ninaSeats: schoolPlans.pro.accounts,
+      seats: schoolTiers.pro.accounts,
+      ninaSeats: schoolTiers.pro.accounts,
       source: { kind: "contract", contractId: "contract-grant-test" },
       validFrom: 0,
       validTo: Date.UTC(2099, 0, 1),
@@ -205,7 +205,7 @@ describe("access/grant account seats", () => {
             const { grant, paid, person, unit } = yield* tenant();
             const near = yield* unit();
             const students = yield* Effect.forEach(
-              Arr.range(1, schoolPlans.trial.accounts),
+              Arr.range(1, schoolTiers.free.accounts),
               () => person(false, "active")
             );
             yield* Effect.forEach(students, (student) =>

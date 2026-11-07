@@ -3,11 +3,11 @@ import type { OptimisticUpdate } from "@confect/react";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import {
   accountsQuote,
+  lineAccounts,
   planQuote,
   SchoolOrder,
   schoolPeriod,
 } from "@repo/backend/confect/billing/quote";
-import { lineAccounts } from "@repo/backend/confect/billing/tier";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, DateTime, Duration, Option } from "effect";
 

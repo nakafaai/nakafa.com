@@ -2,7 +2,7 @@ import type { GenericId } from "@confect/core";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { GrantRejected } from "@repo/backend/confect/access/errors";
 import { runningSchoolGrants } from "@repo/backend/confect/billing/school";
-import { schoolPlans } from "@repo/backend/confect/billing/tier";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { Array as Arr, Clock, Effect, HashSet, Result } from "effect";
 
 /**
@@ -49,7 +49,7 @@ export const accountLimit = Effect.fn("billing.seats.accountLimit")(function* (
   const grants = yield* runningSchoolGrants(tenantId, now);
   return Arr.isReadonlyArrayNonEmpty(grants)
     ? Arr.reduce(grants, 0, (total, grant) => total + grant.seats)
-    : schoolPlans.trial.accounts;
+    : schoolTiers.free.accounts;
 });
 
 /**

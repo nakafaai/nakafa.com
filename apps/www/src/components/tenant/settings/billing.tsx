@@ -6,7 +6,7 @@ import {
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
-import { schoolPlans } from "@repo/backend/confect/billing/tier";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
@@ -113,7 +113,7 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
           <dd>
             {plan.kind === "trial"
               ? t("billing-credits-trial", {
-                  total: formatCount(schoolPlans.trial.credits, locale),
+                  total: formatCount(schoolTiers.free.credits, locale),
                 })
               : t("billing-credits-used", {
                   total: formatCount(plan.credits.capacity, locale),
@@ -182,13 +182,22 @@ function SchoolPayButton({
   return link === null ? (
     <Button
       disabled={number === ""}
-      render={<a href={transferMailto(number)} />}
+      render={<a href={transferMailto(number)} title={t("invoice-transfer")} />}
     >
       <HugeIcons icon={Mail01Icon} />
       {t("invoice-transfer")}
     </Button>
   ) : (
-    <Button render={<a href={link} rel="noopener" target="_blank" />}>
+    <Button
+      render={
+        <a
+          href={link}
+          rel="noopener"
+          target="_blank"
+          title={t("invoice-pay")}
+        />
+      }
+    >
       <HugeIcons icon={CreditCardIcon} />
       {t("invoice-pay")}
     </Button>
@@ -230,7 +239,7 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
           Option.isSome(running)
             ? t("billing-accounts-footer")
             : t("billing-accounts-trial", {
-                limit: formatCount(schoolPlans.trial.accounts, locale),
+                limit: formatCount(schoolTiers.free.accounts, locale),
               })
         }
       >

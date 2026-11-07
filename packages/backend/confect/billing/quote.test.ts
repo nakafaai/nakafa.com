@@ -1,13 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   accountsQuote,
+  lineAccounts,
+  linePlan,
   periodMonths,
   planQuote,
   remainingShare,
   schoolPeriod,
   schoolPeriodPrice,
 } from "@repo/backend/confect/billing/quote";
-import { SchoolMonths } from "@repo/backend/confect/billing/tier";
+import { SchoolPeriod } from "@repo/backend/confect/billing/tiers";
 import { Array as Arr, Option } from "effect";
 
 const START = Date.UTC(2026, 10, 7);
@@ -15,7 +17,7 @@ const START = Date.UTC(2026, 10, 7);
 describe("billing/quote", () => {
   it("prices every period of each plan and account at the owner's rupiah table", () => {
     expect(
-      Arr.map(SchoolMonths.literals, (months) => [
+      Arr.map(SchoolPeriod.literals, (months) => [
         schoolPeriodPrice("pro", months, "IDR"),
         schoolPeriodPrice("max", months, "IDR"),
         schoolPeriodPrice("account", months, "IDR"),
@@ -135,5 +137,19 @@ describe("billing/quote", () => {
       Option.some(1)
     );
     expect(periodMonths(START, START + 1000)).toStrictEqual(Option.none());
+  });
+
+  it("counts the accounts each invoice line pays for, an Enterprise line by its seats", () => {
+    expect(lineAccounts("school.pro", 1)).toBe(100);
+    expect(lineAccounts("school.max", 1)).toBe(500);
+    expect(lineAccounts("school.accounts", 37)).toBe(37);
+    expect(lineAccounts("Kontrak Enterprise 2026/2027", 300)).toBe(300);
+  });
+
+  it("reads the paid plan a line sells, and none for accounts or an operator's line", () => {
+    expect(linePlan("school.pro")).toStrictEqual(Option.some("pro"));
+    expect(linePlan("school.max")).toStrictEqual(Option.some("max"));
+    expect(linePlan("school.accounts")).toStrictEqual(Option.none());
+    expect(linePlan("Pelatihan guru")).toStrictEqual(Option.none());
   });
 });
