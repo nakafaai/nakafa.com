@@ -123,7 +123,8 @@ export const upload = FunctionImpl.make(
 
 /**
  * Turns a reservation into an item of the library at its folder, its sealed title copied unchanged, and schedules
- * the passages of the file. Its bytes stay charged, now as the item's. A reservation the sweep already freed is
+ * the passages of the file. Its bytes stay charged, now as the item's. A repeat of a client key of the class keeps
+ * the item it made, frees the repeat's bytes and removes its object. A reservation the sweep already freed is
  * refused as an upload that did not arrive.
  */
 export const commit = FunctionImpl.make(
@@ -140,6 +141,25 @@ export const commit = FunctionImpl.make(
       return yield* new UploadMissing();
     }
     const reservation = found.value;
+    const scheduler = yield* Scheduler;
+    const sent = yield* reader
+      .table("classroomLibrary")
+      .index("by_classId_and_clientKey", (query) =>
+        query
+          .eq("classId", reservation.classId)
+          .eq("clientKey", reservation.clientKey)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isSome(sent)) {
+      yield* releaseUpload(uploadId, reservation);
+      yield* scheduler.runAfter(
+        Duration.zero,
+        classroomInternal.library.removeObjects,
+        { keys: [reservation.objectKey] }
+      );
+      return { id: sent.value._id };
+    }
     const writer = yield* DatabaseWriter;
     const id = yield* writer
       .table("classroomLibrary")
@@ -164,11 +184,9 @@ export const commit = FunctionImpl.make(
       .table("classroomLibraryUploads")
       .delete(uploadId)
       .pipe(Effect.orDie);
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      classroomInternal.passages.build,
-      { itemId: id }
-    );
+    yield* scheduler.runAfter(Duration.zero, classroomInternal.passages.build, {
+      itemId: id,
+    });
     return { id };
   })
 );
@@ -246,10 +264,8 @@ export const register = FunctionImpl.make(
     function* ({ classId, slug, uploadId }) {
       yield* requireAuth();
       yield* libraryAuthor(classId, slug);
-      const { runMutation, runQuery } = {
-        ...(yield* MutationRunner),
-        ...(yield* QueryRunner),
-      };
+      const { runMutation } = yield* MutationRunner;
+      const { runQuery } = yield* QueryRunner;
       const reservation = yield* runQuery(classroomInternal.library.upload, {
         uploadId,
       });

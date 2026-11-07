@@ -465,6 +465,7 @@ describe("classroom/library", () => {
         const imported = yield* importDrive("drive-module");
         expect((yield* importDrive("drive-module")).id).toBe(imported.id);
         expect(driveReads()).toHaveLength(4);
+        yield* fixture.finishScheduled();
         expect(Rec.values(bucket.state.objects)).toHaveLength(1);
         const listed = yield* fixture.as("student").query(library.list, {
           folderId: null,

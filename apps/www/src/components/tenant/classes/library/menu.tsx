@@ -1,4 +1,5 @@
-import { useMutation } from "@confect/react";
+import type { Ref } from "@confect/core";
+import { type OptimisticUpdate, useMutation } from "@confect/react";
 import {
   ArrowRight01Icon,
   Delete02Icon,
@@ -70,9 +71,9 @@ export function useStar() {
   const star = useMutation(classroom.library.star);
 
   return (
-    target: Parameters<typeof star>[0]["target"],
+    target: Ref.Args<typeof classroom.library.star>["target"],
     starred: boolean,
-    update: Parameters<typeof star.withOptimisticUpdate>[0]
+    update: OptimisticUpdate<typeof classroom.library.star>
   ) =>
     runForumCall(
       forumCall(() =>
