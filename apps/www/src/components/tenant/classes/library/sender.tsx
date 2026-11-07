@@ -41,6 +41,12 @@ const refuseFullStorage = Effect.sync(() =>
   })
 );
 
+/** What a refused file tells the teacher, by the refusal the server answered. */
+export const fileRefusals = {
+  FileSizeRefused: () => refuseLargeFile,
+  FileTypeRefused: () => refuseOtherFile,
+};
+
 /**
  * Sends files of the device to the library at the page's folder: each one's row shows at once with its progress,
  * reserves its bytes, goes straight to R2, and registers. A file of another type is refused before anything moves,

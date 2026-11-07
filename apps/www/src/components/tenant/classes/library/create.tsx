@@ -47,8 +47,7 @@ import {
   useLibraryUploads,
 } from "@/components/tenant/classes/library/scope";
 import {
-  refuseLargeFile,
-  refuseOtherFile,
+  fileRefusals,
   useFileSender,
 } from "@/components/tenant/classes/library/sender";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -158,10 +157,7 @@ export function AddToLibrary() {
               title: heading,
             })
           )
-      ).pipe(
-        Effect.catchTag("FileSizeRefused", () => refuseLargeFile),
-        Effect.catchTag("FileTypeRefused", () => refuseOtherFile)
-      ),
+      ).pipe(Effect.catchTags(fileRefusals)),
       toastForumFailure
     );
   };
