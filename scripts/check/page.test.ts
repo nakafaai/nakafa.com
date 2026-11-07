@@ -5,7 +5,7 @@ import {
   isIdentifier,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { effectFindings } from "#scripts/check/effect";
 import { outsidePage, pageFunctionKeys } from "#scripts/check/page";
 import {

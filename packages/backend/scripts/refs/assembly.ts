@@ -16,9 +16,9 @@ import {
   type ObjectLiteralElementLike,
   type ObjectLiteralExpression,
   type SourceFile,
-} from "typescript/unstable/ast";
-import { createVirtualFileSystem } from "typescript/unstable/fs";
-import { API } from "typescript/unstable/sync";
+} from "tsrs/ast";
+import { createFileSystem } from "tsrs/fs";
+import { API } from "tsrs/sync";
 
 const SOURCE_ROOT = "/refs-assembly";
 const SPEC_FILE = `${SOURCE_ROOT}/spec.ts`;
@@ -116,26 +116,23 @@ const openSourceFile = Effect.fn("RefsAssembly.openSourceFile")(function* (
     files: [SPEC_FILE],
   }).pipe(Effect.orDie);
   const api = yield* Effect.acquireRelease(
-    Effect.sync(
-      () =>
-        new API({
-          cwd: "/",
-          fs: createVirtualFileSystem({
-            [SPEC_FILE]: sourceText,
-            [PROJECT_FILE]: config,
-          }),
-        })
-    ),
+    Effect.sync(() => new API({ cwd: "/" })),
     (api) => Effect.sync(() => api.close())
   );
   const snapshot = yield* Effect.acquireRelease(
     Effect.sync(() =>
-      api.updateSnapshot({ openProjects: [PROJECT_FILE], closeProjects: [] })
+      api.createSnapshot({
+        fileSystem: createFileSystem([
+          [SPEC_FILE, sourceText],
+          [PROJECT_FILE, config],
+        ]),
+        openProjects: [PROJECT_FILE],
+      })
     ),
     (snapshot) => Effect.sync(() => snapshot.dispose())
   );
   const project = yield* Effect.fromNullishOr(
-    snapshot.getProject(PROJECT_FILE)
+    snapshot.getConfiguredProject(PROJECT_FILE)
   ).pipe(Effect.orDie);
   return yield* Effect.fromNullishOr(
     project.program.getSourceFile(SPEC_FILE)

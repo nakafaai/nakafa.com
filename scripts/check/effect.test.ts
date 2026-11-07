@@ -1,7 +1,8 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
-import { API, Checker, Snapshot } from "typescript/unstable/sync";
+import { API, Checker, Snapshot } from "tsrs/sync";
 import { effectFindings, effectTestViolations } from "#scripts/check/effect";
+import { apiMethods } from "#scripts/check/fixture";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
 const FILE = "packages/example/src/program.test.ts";
@@ -21,7 +22,7 @@ afterEach(() => vi.restoreAllMocks());
 describe("Effect test policy", () => {
   it.effect("closes the compiler after an isolated batch", () =>
     Effect.gen(function* () {
-      const close = vi.spyOn(API.prototype, "close");
+      const close = vi.spyOn(apiMethods(API.prototype), "close", "get");
       const violations = yield* effectTestViolations([
         { file: FILE, sourceText: "const Effect = client;" },
         {
@@ -78,12 +79,14 @@ describe("Effect test policy", () => {
   it.effect("closes the compiler and preserves native failures", () =>
     Effect.gen(function* () {
       const cause = new Error("native compiler disconnected");
-      const close = vi.spyOn(API.prototype, "close");
-      vi.spyOn(Checker.prototype, "getSymbolAtLocation").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      const close = vi.spyOn(apiMethods(API.prototype), "close", "get");
+      vi.spyOn(
+        apiMethods(Checker.prototype),
+        "getSymbolAtLocation",
+        "get"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* effectTestViolations([
         {
           file: FILE,
@@ -99,7 +102,9 @@ describe("Effect test policy", () => {
 
   it.effect("fails when the native compiler omits the test project", () =>
     Effect.gen(function* () {
-      vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(undefined);
+      vi.spyOn(Snapshot.prototype, "getConfiguredProject").mockReturnValueOnce(
+        undefined
+      );
       const failure = yield* effectTestViolations([
         { file: FILE, sourceText: "export {};" },
       ]).pipe(Effect.flip);
@@ -117,7 +122,7 @@ describe("native compiler startup", () => {
       Effect.gen(function* () {
         const cause = new Error("native compiler unavailable");
         vi.resetModules();
-        vi.doMock("typescript/unstable/sync", () => ({
+        vi.doMock("tsrs/sync", () => ({
           API: class {
             constructor() {
               throw cause;
@@ -141,7 +146,7 @@ describe("native compiler startup", () => {
       }).pipe(
         Effect.ensuring(
           Effect.sync(() => {
-            vi.doUnmock("typescript/unstable/sync");
+            vi.doUnmock("tsrs/sync");
             vi.resetModules();
           })
         )

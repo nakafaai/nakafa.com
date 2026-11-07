@@ -16,7 +16,7 @@ import {
   type PropertyAssignment,
   type PropertyNameLiteral,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { RepositoryReadError } from "#scripts/check/files";
 import {
   children,

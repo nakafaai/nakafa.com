@@ -8,8 +8,8 @@ import {
   Result,
   String as Str,
 } from "effect";
-import type { SourceFile } from "typescript/unstable/ast";
-import type { API, Checker, Project } from "typescript/unstable/sync";
+import type { SourceFile } from "tsrs/ast";
+import type { Checker, Project, Snapshot } from "tsrs/sync";
 import { ARRAY_RULES, arrayCall } from "#scripts/check/calls";
 import { outsidePage, pageKeysOf } from "#scripts/check/page";
 import { receiverVerdicts } from "#scripts/check/receivers";
@@ -129,11 +129,10 @@ const judgeModule = Effect.fnUntraced(function* (
  * the next project opens. Returns the findings, and the files the project does not contain.
  */
 const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
-  api: API,
+  base: Snapshot,
   root: string,
   pageKeys: HashSet.HashSet<string>,
   config: string,
-  previous: Option.Option<string>,
   files: readonly string[]
 ) {
   const path = yield* Path.Path;
@@ -141,20 +140,13 @@ const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
     new TestCompilerError({ cause, message: `Unable to open ${config}.` });
   const snapshot = yield* Effect.acquireRelease(
     Effect.try({
-      try: () =>
-        api.updateSnapshot({
-          openProjects: [path.join(root, config)],
-          closeProjects: Option.match(previous, {
-            onNone: () => [],
-            onSome: (project) => [path.join(root, project)],
-          }),
-        }),
+      try: () => base.update({ openProjects: [path.join(root, config)] }),
       catch: openFailure,
     }),
     (resource) => Effect.sync(() => resource.dispose())
   );
   const project = yield* Effect.try({
-    try: () => snapshot.getProject(path.join(root, config)),
+    try: () => snapshot.getConfiguredProject(path.join(root, config)),
     catch: openFailure,
   });
   if (project === undefined) {
@@ -174,12 +166,12 @@ const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
  * Reports the array method calls whose receiver the compiler types as an array.
  * Each covered module is judged by the nearest project up its folder tree that
  * contains it. Projects open one at a time, deepest first, so each opens once and
- * closes the one before it. A covered module that no project contains fails the
+ * closes before the next opens. A covered module that no project contains fails the
  * check, and the failure names every project tried, so none is skipped.
  */
 export const arrayFindings = Effect.fn("RepositoryPolicy.arrayFindings")(
   function* (
-    api: API,
+    base: Snapshot,
     root: string,
     configs: readonly string[],
     modules: readonly ParsedModule[]
@@ -217,7 +209,6 @@ export const arrayFindings = Effect.fn("RepositoryPolicy.arrayFindings")(
       ordered,
       () => ({
         findings: Arr.empty<ArrayFinding>(),
-        opened: Option.none<string>(),
         pending: located,
       }),
       (state, config) => {
@@ -233,16 +224,14 @@ export const arrayFindings = Effect.fn("RepositoryPolicy.arrayFindings")(
         );
         return Effect.map(
           inspectProject(
-            api,
+            base,
             root,
             pageKeys,
             config,
-            state.opened,
             Arr.map(batch, ({ file }) => file)
           ),
           ({ findings, missing }) => ({
             findings: Arr.appendAll(state.findings, findings),
-            opened: Option.some(config),
             pending: Arr.appendAll(
               rest,
               Arr.filter(batch, ({ file }) => Arr.contains(missing, file))

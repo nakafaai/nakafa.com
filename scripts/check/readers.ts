@@ -20,7 +20,7 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 
 /**
  * The stem of a module specifier that the program computes, such as the path of

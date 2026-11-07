@@ -41,6 +41,18 @@ describe("compiler plugin rules", () => {
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
+  it.effect("asks no decision for a rule the plugin deprecates", () =>
+    Effect.gen(function* () {
+      const root = yield* rootWithSchema(
+        '{"definitions":{"effectLanguageServicePluginDiagnosticSeverityDefinition":{"properties":{"globalJsonInEffect":{"description":"Warns when using JSON.parse inside Effect generators"},"preferSchemaOverJson":{"description":"Deprecated: use globalJsonInEffect and globalJson instead."}}}}}'
+      );
+
+      assert.deepStrictEqual(yield* pluginRuleNames(root), [
+        "globalJsonInEffect",
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
   it.effect("fails with a typed error when the plugin is not installed", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;

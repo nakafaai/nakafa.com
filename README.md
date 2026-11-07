@@ -24,7 +24,7 @@ authored content source or publication path.
 - Bun 1.4.4
 - Turborepo
 - TanStack Start and React 19
-- Native TypeScript 7
+- tsrs, the Rust port of the TypeScript 7.1 compiler
 - Convex
 - Vitest
 - Biome through Ultracite
