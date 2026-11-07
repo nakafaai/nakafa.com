@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import {
   readTryoutCountryRoute,
