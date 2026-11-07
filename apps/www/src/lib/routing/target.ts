@@ -280,6 +280,12 @@ export const PRICING_TARGET = {
   to: "/$locale/pricing",
 } satisfies LinkTarget;
 
+/** The Nakafa School landing of the locale, which the footer links to. */
+export const SCHOOL_TARGET = {
+  from: LOCALE_ROUTE,
+  to: "/$locale/school",
+} satisfies LinkTarget;
+
 /** The contributor page of the locale, which the footer links to. */
 export const CONTRIBUTOR_TARGET = {
   from: LOCALE_ROUTE,

@@ -314,6 +314,8 @@ describe("public HTML route rejection", () => {
         "/de/faecher/mathematik/algebra",
         "/de/try-out/indonesien/snbt",
         "/en/pricing",
+        "/de/school",
+        "/de/school/pricing",
       ];
 
       for (const pathname of paths) {
