@@ -17,10 +17,11 @@ interface Props {
 }
 
 /**
- * The follow-up questions after an answer. Follow-ups that arrive while the
- * reader watches write out letter by letter, each laid out whole from the first
- * frame so no row moves while it is written; follow-ups that were there when
- * the chat opened show at once.
+ * The follow-up questions after an answer. The server saves each question once
+ * Nina has finished it, so they arrive one by one. Questions that arrive while
+ * the reader watches write out letter by letter, each laid out whole from the
+ * first frame so no row moves while it is written; questions that were there
+ * when the chat opened show at once.
  */
 export function SuggestionsPart({ live, suggestions }: Props) {
   const t = useTranslations("Ai");

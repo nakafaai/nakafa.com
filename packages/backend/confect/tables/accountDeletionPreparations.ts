@@ -5,7 +5,6 @@ export default Table.make(() =>
   Schema.Struct({
     attemptId: Schema.optionalKey(Schema.String),
     authId: Schema.String,
-    cancellationStartedAt: Schema.optionalKey(Schema.Finite),
     deletionStartedAt: Schema.optionalKey(Schema.Finite),
     finalizedAt: Schema.optionalKey(Schema.Finite),
     readyAt: Schema.optionalKey(Schema.Finite),

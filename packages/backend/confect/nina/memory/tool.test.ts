@@ -21,6 +21,7 @@ import {
 } from "@repo/backend/confect/nina/memory/tool";
 import { provider } from "@repo/backend/test/gateway";
 import {
+  answerCalls,
   appendNinaTurn,
   type createNinaTest,
   ninaRecallModel,
@@ -301,7 +302,7 @@ describe("a turn in which Nina searches what the learner told her", () => {
     await f.seed({ confirmedAt: 3, text: "Tinggal di Bandung." });
     await f.seed({ confirmedAt: 4, text: "Kelas 12 IPA." });
     await f.t.action(run, { turnId: f.turnId });
-    const [first, second] = Arr.map(languageModel.doStreamCalls, (call) =>
+    const [first, second] = Arr.map(answerCalls(languageModel), (call) =>
       encodeJsonText(call.prompt)
     );
     expect(first).not.toContain(words);
@@ -352,7 +353,7 @@ describe("a turn in which Nina searches what the learner told her", () => {
     await f.owner.mutation(remove, { id: exam });
     const next = await appendNinaTurn(f, { prompt: "When is my exam?" });
     await f.t.action(run, { turnId: next.turnId });
-    const later = encodeJsonText(languageModel.doStreamCalls[2]?.prompt);
+    const later = encodeJsonText(answerCalls(languageModel)[2]?.prompt);
     expect(later).toContain("recall-1");
     expect(later).not.toContain(words);
   });

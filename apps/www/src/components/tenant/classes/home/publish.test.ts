@@ -22,6 +22,7 @@ const args = {
 
 /** The announcement the server answers with, under the ID it gave. */
 const stored: ClassPost = {
+  archived: false,
   author,
   clientKey: args.clientKey,
   createdAt: 1000,

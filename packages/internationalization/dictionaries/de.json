@@ -1735,7 +1735,20 @@
     "task-exam-description": "Wähle eine Prüfung aus dem Prüfungseditor, und die Klasse bearbeitet sie im Prüfungsplayer.",
     "task-start": "Starten",
     "task-questions": "Fragen",
-    "task-results": "Ergebnisse"
+    "task-results": "Ergebnisse",
+    "task-archived": "Archiviert",
+    "task-archive": "Archivieren",
+    "task-restore": "Wiederherstellen",
+    "post-archive": "Archivieren",
+    "post-restore": "Wiederherstellen",
+    "posts-archived": "Archiviert",
+    "posts-archived-empty": "Keine archivierte Ankündigung",
+    "posts-archived-empty-description": "Archivierte Ankündigungen warten hier, und Wiederherstellen holt sie zurück.",
+    "threads-archived": "Archiviert",
+    "discussion-archive": "Archivieren",
+    "discussion-restore": "Wiederherstellen",
+    "tasks-archived-empty": "Keine archivierte Aufgabe",
+    "tasks-archived-empty-description": "Archivierte Aufgaben warten hier, und Wiederherstellen holt sie zurück."
   },
   "SchoolGrades": {
     "email": "E-Mail",

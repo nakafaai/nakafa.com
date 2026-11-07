@@ -30,6 +30,7 @@ import {
   managesForum,
   opensDiscussions,
 } from "@repo/backend/confect/classroom/forum/policy";
+import { archive, restore } from "@repo/backend/confect/classroom/forum/shelf";
 import { start } from "@repo/backend/confect/classroom/forum/start";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
@@ -75,7 +76,10 @@ const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("classroom.forum.threads.list")(function* ({ paginationOpts }) {
+  Effect.fn("classroom.forum.threads.list")(function* ({
+    archived = false,
+    paginationOpts,
+  }) {
     const row = yield* Class;
     const found = yield* (yield* DatabaseReader)
       .table("classroomThreads")
@@ -86,9 +90,14 @@ const list = FunctionImpl.make(
       )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
+    const shelf = Arr.filter(
+      found.page,
+      (thread) => (thread.archivedAt !== undefined) === archived
+    );
     return Struct.assign(found, {
-      page: yield* Effect.forEach(found.page, (thread) =>
+      page: yield* Effect.forEach(shelf, (thread) =>
         Effect.map(discussionView(thread), (discussion) => ({
+          archived: thread.archivedAt !== undefined,
           channelId: thread.channelId,
           discussion,
         }))
@@ -351,6 +360,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(start),
   Layer.provide(open),
+  Layer.provide(archive),
+  Layer.provide(restore),
   Layer.provide(rename),
   Layer.provide(get),
   Layer.provide(replies),

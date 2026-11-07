@@ -1163,6 +1163,12 @@ export declare const api: {
         >;
       };
       threads: {
+        archive: FunctionReference<
+          "mutation",
+          "public",
+          { classId: Id<"classes">; number: number; slug: string },
+          null
+        >;
         get: FunctionReference<
           "query",
           "public",
@@ -1218,6 +1224,7 @@ export declare const api: {
           "query",
           "public",
           {
+            archived?: boolean;
             classId: Id<"classes">;
             paginationOpts: {
               cursor: string | null;
@@ -1233,6 +1240,7 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
+              archived: boolean;
               channelId: Id<"classroomChannels">;
               discussion: {
                 lastReplyAt: number | null;
@@ -1429,6 +1437,12 @@ export declare const api: {
             } | null;
             text: string | null;
           }
+        >;
+        restore: FunctionReference<
+          "mutation",
+          "public",
+          { classId: Id<"classes">; number: number; slug: string },
+          null
         >;
         start: FunctionReference<
           "mutation",
@@ -1717,6 +1731,12 @@ export declare const api: {
       >;
     };
     posts: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
+        null
+      >;
       edit: FunctionReference<
         "mutation",
         "public",
@@ -1727,6 +1747,7 @@ export declare const api: {
           text: string;
         },
         {
+          archived: boolean;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1747,6 +1768,7 @@ export declare const api: {
         "query",
         "public",
         {
+          archived?: boolean;
           classId: Id<"classes">;
           paginationOpts: {
             cursor: string | null;
@@ -1762,6 +1784,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            archived: boolean;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -1797,6 +1820,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string },
         Array<{
+          archived: boolean;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1829,6 +1853,7 @@ export declare const api: {
           text: string;
         },
         {
+          archived: boolean;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1846,6 +1871,12 @@ export declare const api: {
         }
       >;
       remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
+        null
+      >;
+      restore: FunctionReference<
         "mutation",
         "public",
         { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
@@ -1938,6 +1969,12 @@ export declare const api: {
       >;
     };
     tasks: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string },
+        null
+      >;
       edit: FunctionReference<
         "mutation",
         "public",
@@ -1954,6 +1991,7 @@ export declare const api: {
           title: string;
         },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {
@@ -1982,6 +2020,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {
@@ -2009,6 +2048,7 @@ export declare const api: {
         "query",
         "public",
         {
+          archived?: boolean;
           classId: Id<"classes">;
           paginationOpts: {
             cursor: string | null;
@@ -2025,6 +2065,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            archived: boolean;
             category: string | null;
             deadline: number;
             exam: {
@@ -2092,6 +2133,7 @@ export declare const api: {
           title: string;
         },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {
@@ -2116,6 +2158,12 @@ export declare const api: {
         }
       >;
       remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string },
+        null
+      >;
+      restore: FunctionReference<
         "mutation",
         "public",
         { classId: Id<"classes">; slug: string; task: string },
@@ -2176,6 +2224,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string; text: string },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {

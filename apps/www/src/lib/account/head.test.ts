@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { privateHead, profileHead, signedInHead } from "@/lib/account/head";
+import {
+  privateHead,
+  profileHead,
+  searchHead,
+  signedInHead,
+} from "@/lib/account/head";
 
 const profileTab = {
   canonicalPath: "/en/@nabil/chat",
@@ -82,5 +87,40 @@ describe("privateHead", () => {
       { content: "noindex,nofollow", name: "robots" },
       { content: "noindex,nofollow,noimageindex", name: "googlebot" },
     ]);
+  });
+});
+
+describe("searchHead", () => {
+  const search = {
+    canonicalPath: "/en/search",
+    description: "Search Nakafa",
+    indexable: true,
+    locale: "en",
+    title: "Search",
+  } as const;
+
+  it("lets engines index the bare search page", () => {
+    expect(searchHead(search, "").meta).toContainEqual({
+      content: "index,follow,max-snippet:-1,max-image-preview:large",
+      name: "robots",
+    });
+  });
+
+  it("keeps a page with a query out of indexes while its links are followed", () => {
+    const head = searchHead(search, "fraction");
+    expect(head.meta).toContainEqual({
+      content: "noindex,follow",
+      name: "robots",
+    });
+    expect(head.meta).toContainEqual({
+      content: "noindex,follow",
+      name: "googlebot",
+    });
+    expect(head.meta).toContainEqual(
+      expect.objectContaining({ name: "description" })
+    );
+    expect(head.links).toContainEqual(
+      expect.objectContaining({ rel: "canonical" })
+    );
   });
 });
