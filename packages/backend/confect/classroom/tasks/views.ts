@@ -4,6 +4,7 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { mayIn } from "@repo/backend/confect/classroom/roster";
+import { taskExam } from "@repo/backend/confect/classroom/tasks/exam";
 import {
   submissionField,
   taskField,
@@ -83,6 +84,7 @@ export const taskView = Effect.fn("classroom.tasks.view")(function* (
   return {
     category: task.category ?? null,
     deadline: task.deadline,
+    exam: yield* taskExam(task),
     handedIn: task.handedIn,
     id: task._id,
     latePolicy: task.latePolicy,

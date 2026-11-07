@@ -22,6 +22,7 @@ const personId = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 const task = (address: string, mine: ClassTask["mine"]): ClassTask => ({
   category: null,
   deadline: 100,
+  exam: null,
   handedIn: 3,
   id: taskOf(address),
   latePolicy: "accept",

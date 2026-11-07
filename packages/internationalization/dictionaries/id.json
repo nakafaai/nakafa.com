@@ -1729,7 +1729,13 @@
     "library-purge-title": "Hapus ini selamanya",
     "library-purge-description": "Penyimpanan sekolah kembali kosong dan ini tidak bisa kembali.",
     "library-restore": "Pulihkan",
-    "library-path": "Jalur folder"
+    "library-path": "Jalur folder",
+    "task-exam": "Soal",
+    "task-exam-none": "Jawaban tertulis",
+    "task-exam-description": "Pilih ujian yang dibuat di editor ujian, lalu kelas mengerjakannya di pemutar ujian.",
+    "task-start": "Mulai",
+    "task-questions": "Soal",
+    "task-results": "Hasil"
   },
   "SchoolGrades": {
     "email": "Email",

@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { editTask } from "@repo/backend/confect/classroom/tasks/edit";
+import { runTaskExam } from "@repo/backend/confect/classroom/tasks/exam";
 import { removeTask } from "@repo/backend/confect/classroom/tasks/remove";
 import {
   standingOf,
@@ -82,8 +83,10 @@ const get = FunctionImpl.make(
 );
 
 /**
- * Publishes a task to the class for the teacher (`writeTask`). A repeat of a
- * client key of the class answers that task and writes nothing.
+ * Publishes a task to the class for the teacher (`writeTask`). A task built from an exam
+ * document runs that exam for the class (`runTaskExam`) in the same transaction, so a refused
+ * schedule publishes nothing. A repeat of a client key of the class answers that task and writes
+ * nothing.
  */
 const publish = FunctionImpl.make(
   databaseSchema,
@@ -91,13 +94,17 @@ const publish = FunctionImpl.make(
   "publish",
   Effect.fn("classroom.tasks.publish")(function* (args) {
     const { person } = yield* Member;
-    return yield* taskView(
-      yield* writeTask(
-        person,
-        Struct.omit(args, ["classId", "slug", "targets"]),
-        yield* classTargets(args.targets)
-      )
+    const written = yield* writeTask(
+      person,
+      Struct.omit(args, ["classId", "examId", "slug", "targets"]),
+      yield* classTargets(args.targets)
     );
+    // A repeat of the client key answers the task as it stands, and runs its exam no second time.
+    const task =
+      args.examId === null || written.sittingId !== undefined
+        ? written
+        : yield* runTaskExam(written, args.examId);
+    return yield* taskView(task);
   })
 );
 
