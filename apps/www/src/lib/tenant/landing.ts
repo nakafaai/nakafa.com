@@ -9,7 +9,7 @@ import { canOpenReports } from "@/components/tenant/reports/access";
 import { canManageSchool, roleOf, type SchoolViewer } from "@/lib/tenant/frame";
 
 /**
- * The page a member's school opens on, by the member's main work there, as Vercel opens on a team's projects: the
+ * The page a member's school opens on, by the member's main work there: the
  * exams for staff who may open them, the student's own exams for a student and for a member with no grant, then the
  * settings for a manager, the report cards for a teacher who keeps them, a parent's children, and the notifications
  * otherwise.

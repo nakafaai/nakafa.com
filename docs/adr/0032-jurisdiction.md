@@ -69,7 +69,7 @@ The Saudi Arabia column is an example of the design only. No Saudi profile exist
 and Arabic is not an active interface language.
 
 The interface language is stored as the app's locale code, which is also the
-value of the `NEXT_LOCALE` cookie. The app's codes are `en`, `id`, and `de`
+value of the `NAKAFA_LOCALE` cookie. The app's codes are `en`, `id`, and `de`
 (`AppLocaleCodeSchema` in `packages/contracts/src/locale.ts` of the Aksara
 repository), and `packages/internationalization/src/routing.ts` routes the active
 ones. So the interface language is `id` or `de`, never `id-ID` or `de-DE`, which
@@ -77,7 +77,7 @@ the app does not route.
 
 The organisation holds the country profile and the billing currency of its
 contract. Each school holds its time zone and its content language. A person's
-interface language comes from the `NEXT_LOCALE` cookie (ADR 0026). The fields
+interface language comes from the `NAKAFA_LOCALE` cookie (ADR 0026). The fields
 are stored: an Owner or an Admin changes them through `tenancy/settings` and
 `tenancy/units`, and a time zone or a currency must be one that the platform
 lists.
@@ -145,6 +145,6 @@ The first rule is live. The other two are targets.
 | `confect/jurisdiction` | Planned, program wave A |
 | Self-serve founding defaults (K42) | Interim. `countryDefaults` in `packages/backend/confect/tenancy/start.ts` names the five countries a founder can pick, with each one's currency, content language, school-year start and time zones. The country profile replaces it, and the questionnaire then reads the countries from the profile |
 | Signed Aksara profile for Indonesia | Planned, program wave A |
-| The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NEXT_LOCALE` cookie |
+| The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NAKAFA_LOCALE` cookie |
 | Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` gives the direction. The root layout, `apps/www/src/[locale]/layout.tsx`, sets `dir` on `<html>` and passes it to `DesignSystemProvider`, which renders the `DirectionProvider` of Base UI |
 | School time through one formatter | Built. `formatSchoolTime` in `packages/internationalization/src/school/time.ts`. No screen uses it yet |

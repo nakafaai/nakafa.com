@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#662](https://github.com/nakafaai/nakafa.com/pull/662) [`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Classify the traffic behind server exceptions. Server captures carried no user agent, so PostHog filed every one under automated traffic and hid real visitor faults during triage. `captureServerException` now accepts the requesting user agent and sends it as `$raw_user_agent`. The request-scoped capture seam reads the user agent once through `next/headers`, so every route handler, metadata, and scheduled capture classifies without extra plumbing; the Next.js request-error hook and the chat stream error reporter pass the user agent from their own request headers. The redacted exception payload stays unchanged.
+- [#662](https://github.com/nakafaai/nakafa.com/pull/662) [`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Classify the traffic behind server exceptions. Server captures carried no user agent, so PostHog filed every one under automated traffic and hid real visitor faults during triage. `captureServerException` now accepts the requesting user agent and sends it as `$raw_user_agent`. The request-scoped capture seam reads the user agent once through the framework request headers, so every route handler, metadata, and scheduled capture classifies without extra plumbing; the framework request-error hook and the chat stream error reporter pass the user agent from their own request headers. The redacted exception payload stays unchanged.
 
 ## 0.1.1
 
@@ -32,7 +32,7 @@
 
 ### Patch Changes
 
-- [`2d694d8`](https://github.com/nakafaai/nakafa.com/commit/2d694d81af7285defab038f2518f2f5279dfafab) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Avoid vercel build for changeset merge
+- [`2d694d8`](https://github.com/nakafaai/nakafa.com/commit/2d694d81af7285defab038f2518f2f5279dfafab) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Skip the hosted build for changeset merge
 
 - [`03373ce`](https://github.com/nakafaai/nakafa.com/commit/03373ceada6429e75e94a81b2d655f6e20f999f2) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Update release workflow
 
