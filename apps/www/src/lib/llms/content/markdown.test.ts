@@ -261,16 +261,6 @@ describe("llms markdown content resolver", () => {
     })
   );
 
-  it.effect("reads the application-owned School pricing document", () =>
-    Effect.gen(function* () {
-      const text = yield* readMarkdown("school/pricing");
-
-      expect(text).toContain("# Nakafa School pricing: Gratis, Pro and Max");
-      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
-      expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
-    })
-  );
-
   it.effect("does not invent markdown for curriculum context routes", () =>
     expectNoPublishedMarkdown(
       "curriculum/merdeka/class-12/mathematics/integral"

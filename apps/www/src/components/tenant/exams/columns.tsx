@@ -11,29 +11,16 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
+import { LinesColumn, LinesItem } from "@/components/exams/lines/board";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
-import {
-  keyPairs,
-  keyWithoutPart,
-  type MatchSide,
-  pairsKey,
-  withPartAdded,
-  withPartLabel,
-  withPartRemoved,
-} from "@/components/tenant/exams/match";
+import { type MatchSide, withPartLabel } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { ExamDocument } from "@/components/tenant/exams/rich";
-import {
-  PaperPairSelect,
-  PaperPart,
-  PaperParts,
-  PaperPartText,
-} from "@/components/tenant/exams/sheet";
+import { PaperPartText } from "@/components/tenant/exams/sheet";
 import type { Unstored } from "@/components/tenant/exams/writer";
 
 /** One part of a match or a table: its ID and its rich text. */
@@ -97,10 +84,9 @@ interface PartColumnProps {
 }
 
 /**
- * One column of parts on a question's paper, as the student's paper sets it: each part with its letter or
- * number and its rich text, and each statement with the select the student pairs it by. The teacher's control
- * removes a part, and the action below adds one. The paper sets two columns side by side on a wide paper and
- * one above the other on a narrow one, as the student's paper does.
+ * One column of parts on a question's paper, as the student's paper sets it: each part with its letter or number,
+ * its rich text, and the dot its line starts or ends at. The teacher's control removes a part, and the action below
+ * adds one.
  */
 function PartColumn({
   add,
@@ -119,53 +105,56 @@ function PartColumn({
   const script = letterScript(Arr.map(parts, (part) => part.label));
 
   return (
-    <div className="grid content-start gap-2">
-      <PaperParts>
-        {Arr.map(parts, (part, index) => {
-          const name =
-            kind === "statements"
-              ? String(index + 1)
-              : optionLetter(index, script);
-          return (
-            <PaperPart
-              below={kind === "statements" ? <PaperPairSelect /> : null}
-              key={part.id}
-              name={name}
+    <LinesColumn
+      footer={
+        add === null || frozen ? null : (
+          <div className={chosen ? undefined : "invisible"}>
+            <Button onClick={add.run} size="sm" type="button" variant="outline">
+              <HugeIcons aria-hidden="true" icon={add.icon} />
+              {add.label}
+            </Button>
+          </div>
+        )
+      }
+      side={kind === "statements" ? "sources" : "targets"}
+    >
+      {Arr.map(parts, (part, index) => {
+        const name =
+          kind === "statements"
+            ? String(index + 1)
+            : optionLetter(index, script);
+        return (
+          <LinesItem
+            id={part.id}
+            key={part.id}
+            name={name}
+            side={kind === "statements" ? "sources" : "targets"}
+          >
+            <OptionRow
+              // The editor starts from the label the server holds, or the label on screen for a new part.
+              label={Option.match(
+                Arr.findFirst(saved, (item) => item.id === part.id),
+                { onNone: () => part.label, onSome: (item) => item.label }
+              )}
+              locked={frozen}
+              onRemove={onRemove === null ? null : () => onRemove(part.id)}
+              onSave={(label: OptionLabel, unstored: Unstored) =>
+                onLabel(part.id, label, unstored)
+              }
+              removeName={t(words.remove, { name, number })}
             >
-              <OptionRow
-                // The editor starts from the label the server holds, or the label on screen for a new part.
-                label={Option.match(
-                  Arr.findFirst(saved, (item) => item.id === part.id),
-                  { onNone: () => part.label, onSome: (item) => item.label }
-                )}
-                locked={frozen}
-                onRemove={onRemove === null ? null : () => onRemove(part.id)}
-                onSave={(label: OptionLabel, unstored: Unstored) =>
-                  onLabel(part.id, label, unstored)
-                }
-                removeName={t(words.remove, { name, number })}
-              >
-                <PaperPartText>
-                  <ExamDocument
-                    label={t(words.editor, { name, number })}
-                    placeholder={t(words.placeholder)}
-                    size="line"
-                  />
-                </PaperPartText>
-              </OptionRow>
-            </PaperPart>
-          );
-        })}
-      </PaperParts>
-      {add === null || frozen ? null : (
-        <div className={chosen ? undefined : "invisible"}>
-          <Button onClick={add.run} size="sm" type="button" variant="outline">
-            <HugeIcons aria-hidden="true" icon={add.icon} />
-            {add.label}
-          </Button>
-        </div>
-      )}
-    </div>
+              <PaperPartText>
+                <ExamDocument
+                  label={t(words.editor, { name, number })}
+                  placeholder={t(words.placeholder)}
+                  size="line"
+                />
+              </PaperPartText>
+            </OptionRow>
+          </LinesItem>
+        );
+      })}
+    </LinesColumn>
   );
 }
 
@@ -183,9 +172,8 @@ interface SideProps {
 }
 
 /**
- * One side of a matching question's paper: its statements, numbered, or its answers, lettered. A side
- * holds two to five parts. A part that leaves takes its pairs out of the key, and the key waits for the
- * teacher to pair every statement again (`keyWithoutPart`).
+ * One side of a matching question's paper: its statements, numbered, or its answers, lettered. A side holds two to
+ * five parts. A part that leaves takes its line with it, and the other lines wait for every statement to be paired.
  */
 export function MatchColumn({
   match,
@@ -206,17 +194,7 @@ export function MatchColumn({
           ? {
               icon: statements ? ListPlusIcon : AddToListIcon,
               label: t(statements ? "statement-add" : "match-answer-add"),
-              run: () => {
-                const unique = Effect.runSync(randomUuid);
-                props.editing.saveAnswers((draft) => {
-                  const answers = withPartAdded(draft.answers, side, unique);
-                  return {
-                    ...draft,
-                    answers,
-                    key: pairsKey(answers, keyPairs(draft.key)),
-                  };
-                });
-              },
+              run: () => props.editing.addPart(side),
             }
           : null
       }
@@ -234,17 +212,7 @@ export function MatchColumn({
         )
       }
       onRemove={
-        parts.length > CHOICE_OPTIONS_MIN
-          ? (partId) =>
-              props.editing.saveAnswers((draft) => {
-                const answers = withPartRemoved(draft.answers, partId);
-                return {
-                  ...draft,
-                  answers,
-                  key: keyWithoutPart(answers, draft.key, partId),
-                };
-              })
-          : null
+        parts.length > CHOICE_OPTIONS_MIN ? props.editing.removePart : null
       }
       parts={parts}
       saved={Arr.flatMap(props.question.answers, (answer) =>

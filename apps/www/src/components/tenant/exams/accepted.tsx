@@ -94,7 +94,7 @@ function AcceptedRow({
             aria-label={removeLabel}
             disabled={!editable}
             onClick={onRemove}
-            size="icon-xs"
+            size="icon-sm"
           >
             <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
           </InputGroupButton>

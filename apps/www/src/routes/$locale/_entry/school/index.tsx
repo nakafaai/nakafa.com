@@ -4,11 +4,10 @@ import { ThemePicker } from "@/components/shared/theme/picker";
 import { SchoolEntry } from "@/components/tenant/start/entry";
 
 /**
- * Where School leads from the home page, beside the public School landing at
- * `/<locale>/school`. It renders only in the browser and asks the
+ * Where School leads from the home page. It renders only in the browser and asks the
  * server nothing, because it knows the account from Convex and the kept schools.
  */
-export const Route = createFileRoute("/$locale/_entry/school/enter")({
+export const Route = createFileRoute("/$locale/_entry/school/")({
   ssr: false,
   head: () => ({ meta: [{ content: "noindex", name: "robots" }] }),
   component: SchoolEntryPage,

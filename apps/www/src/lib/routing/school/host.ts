@@ -61,20 +61,6 @@ export function isRefusedSchoolHost(hostname: string) {
   );
 }
 
-/** The label of the host that names Nakafa School itself, such as `school.nakafa.com`. */
-const SCHOOL_PRODUCT_LABEL = "school";
-
-/**
- * Whether a host names Nakafa School itself, such as `school.nakafa.com`: a
- * reserved label, so no school takes it, whose home is the School landing.
- */
-export function isSchoolProductHost(hostname: string) {
-  return Arr.some(
-    Rec.values(SCHOOL_CELL_DOMAINS),
-    (domain) => hostname === `${SCHOOL_PRODUCT_LABEL}.${domain}`
-  );
-}
-
 /**
  * The host that the visitor asked for, with its port when the `host` header names
  * one, such as `harapan.localhost:3000`. The value must name a host (see

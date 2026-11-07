@@ -2,35 +2,17 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
-import {
-  HeaderCta,
-  LogoCta,
-  SchoolCta,
-} from "@/components/marketing/shared/header/cta";
+import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
+import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
+import { scrollToLessonSection } from "@/components/marketing/shared/header/features";
 import { Language } from "@/components/marketing/shared/language";
 import { Link, useCurrentLocale } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
- * Whether the page belongs to Nakafa School, the product for a whole school, and
- * not to the learner's Nakafa. Its pages are the School landing and its pricing.
- */
-function useSchoolPage() {
-  const locale = useCurrentLocale();
-  const matchRoute = useMatchRoute();
-  return (
-    matchRoute({ fuzzy: true, params: { locale }, to: "/$locale/school" }) !==
-    false
-  );
-}
-
-/**
  * The marketing header in three parts, as the identity's Header card draws it:
  * the name with its links on the left, Nina in the middle, the language and
- * one action on the right. The site sells two products, so the links name both,
- * the learner's Nakafa and Nakafa School, and then the pricing of the product the
- * reader is on. The action follows the product too: a learner tries Nakafa, and a
- * school starts its free trial. The two outer columns share the rest of the
+ * the sign-up action on the right. The two outer columns share the rest of the
  * width equally, so Nina stands in the middle of the page, not of the gap
  * between the groups. The line under the header is always drawn, and Nina
  * stands on it, so it is the line that cuts her body. The links are ghost
@@ -41,7 +23,9 @@ function useSchoolPage() {
  */
 export function Header() {
   const t = useTranslations("Marketing");
-  const school = useSchoolPage();
+  const locale = useCurrentLocale();
+  const matchRoute = useMatchRoute();
+  const onHome = matchRoute({ params: { locale }, to: "/$locale" }) !== false;
 
   return (
     <header className="bg-background sticky top-0 z-20 h-16 shrink-0 border-b">
@@ -55,19 +39,27 @@ export function Header() {
               className={buttonVariants({ variant: "ghost" })}
               to="/$locale"
             >
-              {t("learn")}
+              {t("about")}
             </Link>
+            {/* On the home page the lesson section is already on screen, so the link scrolls to it itself; from another page the router scrolls to it. */}
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
               className={buttonVariants({ variant: "ghost" })}
-              to="/$locale/school"
+              hash={LESSON_SECTION_ID}
+              onClick={() => {
+                if (onHome) {
+                  scrollToLessonSection();
+                }
+              }}
+              resetScroll={!onHome}
+              to="/$locale"
             >
-              {t("school")}
+              {t("features")}
             </Link>
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
               className={buttonVariants({ variant: "ghost" })}
-              to={school ? "/$locale/school/pricing" : "/$locale/pricing"}
+              to="/$locale/pricing"
             >
               {t("pricing")}
             </Link>
@@ -86,7 +78,7 @@ export function Header() {
           <span className="max-[440px]:hidden">
             <Language compact />
           </span>
-          {school ? <SchoolCta /> : <HeaderCta />}
+          <HeaderCta />
         </div>
       </div>
     </header>
