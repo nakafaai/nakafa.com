@@ -14,7 +14,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { GatewayIsolated } from "@repo/backend/test/gateway";
 import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
-import { type EarlierTurn, filler } from "@repo/backend/test/nina";
+import { type EarlierTurn, filler } from "@repo/backend/test/nina/history";
 import {
   copyOf,
   type Replacement,

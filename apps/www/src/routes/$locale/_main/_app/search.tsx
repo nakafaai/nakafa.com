@@ -6,7 +6,7 @@ import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back";
 import { pageRowVariants } from "@/components/shared/content/width";
-import { signedInHead } from "@/lib/account/head";
+import { searchHead } from "@/lib/account/head";
 import { searchScreenFn } from "@/lib/account/home.functions";
 import { SearchInput } from "@/lib/search/input";
 
@@ -14,8 +14,8 @@ export const Route = createFileRoute("/$locale/_main/_app/search")({
   validateSearch: Schema.toStandardSchemaV1(SearchInput),
   search: { middlewares: [stripSearchParams({ q: "" })] },
   loader: ({ params }) => searchScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) =>
-    loaderData === undefined ? {} : signedInHead(loaderData.seo),
+  head: ({ loaderData, match }) =>
+    loaderData === undefined ? {} : searchHead(loaderData.seo, match.search.q),
   component: SearchScreen,
 });
 

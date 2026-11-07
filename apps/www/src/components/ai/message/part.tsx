@@ -128,11 +128,14 @@ function useWrittenText(text: string, streaming: boolean) {
 }
 
 /**
- * Writes streamed answer text as it arrives (`useWrittenText`), so neither a
- * burst of deltas nor a short answer appears at once. Finished parts render at
- * once, and a formula appears once its source is complete. The parts after the
- * answer, such as its sources, appear once the text is written, so its last
- * lines never push them down.
+ * Writes answer text as it arrives (`useWrittenText`), so neither a burst of
+ * deltas nor a short answer appears at once. A short answer can reach the
+ * browser in one delta that already ends its text, so an answer is written out
+ * whenever it appears while its turn is still running, not only while its part
+ * streams. An answer of a turn that had ended when it mounted, as in a chat
+ * opened later, renders at once, and a formula appears once its source is
+ * complete. The parts after the answer, such as its sources, appear once the
+ * text is written, so its last lines never push them down.
  */
 export function AiMessageAnswer({
   children,
@@ -146,7 +149,18 @@ export function AiMessageAnswer({
   // The message key, unlike its id, survives the handoff from stream to saved.
   const messageKey = useMessage((state) => state.message.key);
   const streaming = part.state === "streaming";
-  const { text, writing } = useWrittenText(part.text, streaming);
+  const running = useMessage((state) => {
+    const status = state.turn?.state.status;
+    return (
+      status !== undefined &&
+      status !== "complete" &&
+      status !== "failed" &&
+      status !== "cancelled"
+    );
+  });
+  // Whether the answer arrived while the learner watched, read once when it mounts.
+  const [live] = useState(() => streaming || running);
+  const { text, writing } = useWrittenText(part.text, live);
   const pacing = streaming || writing;
   return (
     <>
