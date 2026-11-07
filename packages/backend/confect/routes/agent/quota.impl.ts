@@ -13,6 +13,17 @@ import spec from "@repo/backend/confect/routes/agent/quota.spec";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect, Layer } from "effect";
 
+/**
+ * One bucket per client address, unsharded, on purpose. A bucket is one row, so
+ * reads from one client in the same instant retry against each other: Convex
+ * Insights on 7 Nov 2026 showed all 29 OCC retries of `consume` in 72 hours on a
+ * single row, at the minutes of three is-agentic scans (10:21, 14:26 and 17:13
+ * UTC), which is one scanner bursting its own quota. Every retry succeeded.
+ * Sharding the bucket would only add reads: the remaining count that the
+ * RateLimit fields carry is read with `getValue`, which samples a shard other
+ * than the one `limit` wrote, and then conflicts with that shard's writers. Two
+ * different clients never share a row, so this contention cannot spread.
+ */
 const limiter = new RateLimiter(components.agentRateLimiter, {
   publicRead: {
     capacity: PUBLIC_READ_QUOTA.capacity,
