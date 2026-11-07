@@ -37,8 +37,10 @@ async function expectOneRemove(page: Page, canvas: Locator) {
     await expect(remove).toHaveCSS("opacity", "1");
     const box = await remove.boundingBox();
     const rowBox = await row.boundingBox();
+    expect(box).not.toBeNull();
+    expect(rowBox).not.toBeNull();
     if (box === null || rowBox === null) {
-      throw new Error("A remove control or its row is not on the screen");
+      return;
     }
     expect(box.width).toBeGreaterThanOrEqual(HIT_MIN);
     expect(box.height).toBeGreaterThanOrEqual(HIT_MIN);
@@ -106,8 +108,10 @@ test("every answer type removes a part with one control, centered on its row, at
   await expect(line).toHaveCSS("opacity", "1");
   const lineBox = await line.boundingBox();
   const dotBox = await statement.boundingBox();
+  expect(lineBox).not.toBeNull();
+  expect(dotBox).not.toBeNull();
   if (lineBox === null || dotBox === null) {
-    throw new Error("A line's remove control or its dot is not on the screen");
+    return;
   }
   expect(lineBox.width).toBeGreaterThanOrEqual(HIT_MIN);
   expect(

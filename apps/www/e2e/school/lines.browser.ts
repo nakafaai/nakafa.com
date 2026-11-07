@@ -60,8 +60,10 @@ function lineGap(board: Element) {
 async function pull(page: Page, from: Locator, to: Locator) {
   const start = await from.boundingBox();
   const end = await to.boundingBox();
+  expect(start).not.toBeNull();
+  expect(end).not.toBeNull();
   if (start === null || end === null) {
-    throw new Error("A dot to pull between is not on the screen");
+    return;
   }
   await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
   await page.mouse.down();
