@@ -11,7 +11,7 @@ import {
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Clock, Effect } from "effect";
+import { Effect } from "effect";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { RowItems } from "@/components/shared/table/menu";
@@ -243,6 +243,3 @@ export function ManagerItemMenu({ item }: { item: LibraryItem }) {
     </>
   );
 }
-
-/** The time a trash takes, read once at the press, for the optimistic row. */
-export const pressedAt = () => Effect.runSync(Clock.currentTimeMillis);

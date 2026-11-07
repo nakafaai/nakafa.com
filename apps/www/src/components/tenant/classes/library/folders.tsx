@@ -13,7 +13,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Effect, Schema, String as Str } from "effect";
+import { Clock, Effect, Schema, String as Str } from "effect";
 import { type FormEvent, type ReactNode, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
@@ -34,7 +34,6 @@ import {
 } from "@/components/tenant/classes/library/folder";
 import {
   MoveAndTrash,
-  pressedAt,
   StarItem,
   useStar,
 } from "@/components/tenant/classes/library/menu";
@@ -232,7 +231,9 @@ export function FolderRowMenu({
           onTrash={() =>
             runForumCall(
               forumCall(() =>
-                trash.withOptimisticUpdate(trashFolderUpdate(pressedAt()))({
+                trash.withOptimisticUpdate(
+                  trashFolderUpdate(Effect.runSync(Clock.currentTimeMillis))
+                )({
                   classId,
                   folderId: folder.id,
                   slug,

@@ -13,7 +13,7 @@ import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
 
 /** What the library shows: the folder of the page, what the reader starred, or the trash. */
-export const LibraryMode = Schema.Literals(["files", "starred", "trash"]);
+const LibraryMode = Schema.Literals(["files", "starred", "trash"]);
 
 /** One view of the library. */
 export type LibraryMode = typeof LibraryMode.Type;

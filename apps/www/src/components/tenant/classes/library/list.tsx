@@ -122,7 +122,8 @@ function useFileDrop(enabled: boolean, onFiles: (files: FileList) => void) {
     event.preventDefault();
     onFiles(files);
   });
-  return { dropping, ref: useMergedRef(over, leave, drop) };
+  const dropRef = useMergedRef(over, leave, drop);
+  return [dropping, dropRef] as const;
 }
 
 /** The folder the page shows: its path, its folders and items, and the files dropped on it. */
@@ -151,7 +152,7 @@ function LibraryFiles() {
     throw pagination.error;
   }
 
-  const dropZone = useFileDrop(manages, (files) => {
+  const [dropping, dropRef] = useFileDrop(manages, (files) => {
     if (viewer._tag !== "Success") {
       return;
     }
@@ -163,8 +164,8 @@ function LibraryFiles() {
   return (
     <div
       className="data-[dropping=true]:outline-primary flex min-w-0 flex-col gap-3 rounded-xl data-[dropping=true]:outline-2 data-[dropping=true]:outline-dashed"
-      data-dropping={dropZone.dropping}
-      ref={dropZone.ref}
+      data-dropping={dropping}
+      ref={dropRef}
     >
       <LibraryPath folders={folderPath(folders, folderId)} />
       <TablePages pageSize={LIBRARY_PAGE_SIZE} pagination={pagination}>
