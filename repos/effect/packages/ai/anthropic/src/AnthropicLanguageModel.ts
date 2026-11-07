@@ -34,7 +34,7 @@ import type { Span } from "effect/Tracer"
 import type { Mutable, Simplify } from "effect/Types"
 import { AnthropicClient, type MessageStreamEvent } from "./AnthropicClient.ts"
 import { addGenAIAnnotations } from "./AnthropicTelemetry.ts"
-import type { AnthropicTool } from "./AnthropicTool.ts"
+import * as AnthropicTool from "./AnthropicTool.ts"
 import type * as Generated from "./Generated.ts"
 import * as InternalUtilities from "./internal/utilities.ts"
 
@@ -1218,7 +1218,9 @@ const prepareMessages = Effect.fnUntraced(
                     content.push({
                       type: "tool_search_tool_result",
                       tool_use_id: part.id,
-                      content: part.result as any
+                      content: Array.isArray(part.result)
+                        ? { type: "tool_search_tool_search_result", tool_references: part.result }
+                        : part.result as any
                     })
                     break
                   }
@@ -1439,17 +1441,18 @@ const prepareTools = Effect.fnUntraced(
     for (const tool of options.tools) {
       if (Tool.isUserDefined(tool) || Tool.isDynamic(tool)) {
         const description = Tool.getDescription(tool)
-        const input_schema = yield* tryToolJsonSchema(tool, "prepareTools")
         const toolStrict = Tool.getStrictMode(tool)
         const strict = capabilities.supportsStructuredOutput
           ? (toolStrict ?? config.strictJsonSchema ?? true)
           : undefined
+        const input_schema = yield* tryToolJsonSchema(tool, strict === true, "prepareTools")
 
         userTools.push({
           name: tool.name,
           input_schema: input_schema as any,
           ...(Predicate.isNotUndefined(description) ? { description } : undefined),
-          ...(Predicate.isNotUndefined(strict) ? { strict } : undefined)
+          ...(Predicate.isNotUndefined(strict) ? { strict } : undefined),
+          ...(Context.get(tool.annotations, AnthropicTool.DeferLoading) ? { defer_loading: true } : undefined)
         })
 
         if (capabilities.supportsStructuredOutput === true) {
@@ -1458,7 +1461,7 @@ const prepareTools = Effect.fnUntraced(
       }
 
       if (Tool.isProviderDefined(tool)) {
-        const providerTool = tool as AnthropicTool
+        const providerTool = tool as AnthropicTool.AnthropicTool
         switch (providerTool.id) {
           case "anthropic.bash_20241022": {
             betas.add("computer-use-2024-10-22")
@@ -1956,7 +1959,8 @@ const makeResponse = Effect.fnUntraced(
               id: part.tool_use_id,
               name: toolName,
               isFailure: false,
-              result: part.content.tool_references
+              result: part.content.tool_references,
+              providerExecuted: true
             })
           } else {
             parts.push({
@@ -1964,7 +1968,8 @@ const makeResponse = Effect.fnUntraced(
               id: part.tool_use_id,
               name: toolName,
               isFailure: true,
-              result: part.content
+              result: part.content,
+              providerExecuted: true
             })
           }
 
@@ -2009,7 +2014,8 @@ const makeResponse = Effect.fnUntraced(
               id: part.tool_use_id,
               name: toolName,
               isFailure: true,
-              result: part.content
+              result: part.content,
+              providerExecuted: true
             })
           } else {
             const idGenerator = yield* IdGenerator.IdGenerator
@@ -2019,7 +2025,8 @@ const makeResponse = Effect.fnUntraced(
               id: part.tool_use_id,
               name: toolName,
               isFailure: false,
-              result: part.content
+              result: part.content,
+              providerExecuted: true
             })
 
             const content = part.content as ReadonlyArray<Generated.BetaResponseWebSearchResultBlock>
@@ -2484,7 +2491,8 @@ const makeStreamResponse = Effect.fnUntraced(
                     id: part.tool_use_id,
                     name: toolName,
                     isFailure: true,
-                    result: part.content
+                    result: part.content,
+                    providerExecuted: true
                   })
                 } else {
                   const idGenerator = yield* IdGenerator.IdGenerator
@@ -2494,7 +2502,8 @@ const makeStreamResponse = Effect.fnUntraced(
                     id: part.tool_use_id,
                     name: toolName,
                     isFailure: false,
-                    result: part.content
+                    result: part.content,
+                    providerExecuted: true
                   })
 
                   const content = part.content as ReadonlyArray<Generated.BetaResponseWebSearchResultBlock>
@@ -2590,7 +2599,8 @@ const makeStreamResponse = Effect.fnUntraced(
                     id: part.tool_use_id,
                     name: toolName,
                     isFailure: false,
-                    result: part.content.tool_references
+                    result: part.content.tool_references,
+                    providerExecuted: true
                   })
                 } else {
                   parts.push({
@@ -2598,7 +2608,8 @@ const makeStreamResponse = Effect.fnUntraced(
                     id: part.tool_use_id,
                     name: toolName,
                     isFailure: true,
-                    result: part.content
+                    result: part.content,
+                    providerExecuted: true
                   })
                 }
                 break
@@ -3263,12 +3274,6 @@ const unsupportedSchemaError = (error: unknown, method: string): AiError.AiError
     })
   })
 
-const tryCodecTransform = <S extends Schema.Constraint>(schema: S, method: string) =>
-  Effect.try({
-    try: () => toCodecAnthropic(schema),
-    catch: (error) => unsupportedSchemaError(error, method)
-  })
-
 const tryJsonSchema = <S extends Schema.Constraint>(schema: S, method: string) =>
   Effect.try({
     try: () => Tool.getJsonSchemaFromSchema(schema, { transformer: toCodecAnthropic }),
@@ -3282,9 +3287,21 @@ const toolParametersError = (tool: Tool.Any, error: unknown, method: string): Ai
     method
   )
 
-const tryToolJsonSchema = <T extends Tool.Any | Tool.AnyDynamic>(tool: T, method: string) =>
+const getToolJsonSchema = (tool: Tool.Any | Tool.AnyDynamic, strict: boolean) => {
+  try {
+    return Tool.getJsonSchema(tool, { transformer: toCodecAnthropic })
+  } catch (error) {
+    if (strict) {
+      throw error
+    }
+    // Anthropic's schema restrictions (e.g. no recursion) only apply to strict tools
+    return Tool.getJsonSchema(tool, { transformer: LanguageModel.defaultCodecTransformer })
+  }
+}
+
+const tryToolJsonSchema = <T extends Tool.Any | Tool.AnyDynamic>(tool: T, strict: boolean, method: string) =>
   Effect.try({
-    try: () => Tool.getJsonSchema(tool, { transformer: toCodecAnthropic }),
+    try: () => getToolJsonSchema(tool, strict),
     catch: (error) => toolParametersError(tool, error, method)
   }).pipe(Effect.filterOrFail(
     // A raw JSON Schema given to a dynamic tool is sent unchanged
@@ -3311,6 +3328,16 @@ const getOutputFormat = Effect.fnUntraced(function*({ capabilities, options }: {
   return undefined
 })
 
+const getToolParamsCodec = <S extends Schema.Constraint>(schema: S) => {
+  try {
+    return toCodecAnthropic(schema).codec
+  } catch {
+    // The request used the plain JSON Schema (non-strict tools only), which
+    // describes the JSON codec of the parameters
+    return Schema.toCodecJson(schema)
+  }
+}
+
 const transformToolCallParams = Effect.fnUntraced(function*(
   options: LanguageModel.ProviderOptions,
   toolName: string,
@@ -3332,7 +3359,7 @@ const transformToolCallParams = Effect.fnUntraced(function*(
     })
   }
 
-  const { codec } = yield* tryCodecTransform(tool.parametersSchema, "makeResponse")
+  const codec = getToolParamsCodec(tool.parametersSchema)
 
   // Normalize valid parameters; leave invalid ones for Toolkit.
   return yield* (

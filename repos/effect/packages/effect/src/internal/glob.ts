@@ -1,5 +1,7 @@
 import * as Arr from "../Array.ts"
+import * as Deferred from "../Deferred.ts"
 import * as Effect from "../Effect.ts"
+import * as Fiber from "../Fiber.ts"
 import type * as FileSystem from "../FileSystem.ts"
 import * as Order from "../Order.ts"
 import type { PlatformError } from "../PlatformError.ts"
@@ -7,7 +9,7 @@ import * as Predicate from "../Predicate.ts"
 
 /** @internal */
 export type Token =
-  | { readonly _tag: "Char"; readonly value: string }
+  | { readonly _tag: "Char"; readonly code: number }
   | { readonly _tag: "Any" }
   | { readonly _tag: "Star" }
   /** `ranges` holds inclusive code point pairs: `[from0, to0, from1, to1, ...]`. */
@@ -17,7 +19,13 @@ export type Token =
 export type Node =
   | { readonly _tag: "Globstar" }
   | { readonly _tag: "Literal"; readonly value: string }
-  | { readonly _tag: "Wildcard"; readonly tokens: ReadonlyArray<Token>; readonly leadingDot: boolean }
+  | {
+    readonly _tag: "Wildcard"
+    readonly tokens: ReadonlyArray<Token>
+    readonly leadingDot: boolean
+    /** Set when the segment is `prefix*suffix`, which needs no backtracking. */
+    readonly affixes: { readonly prefix: string; readonly suffix: string } | undefined
+  }
   /** Ends one expanded pattern. */
   | { readonly _tag: "End"; readonly directoryOnly: boolean }
 
@@ -33,6 +41,21 @@ export interface Compiled {
   readonly nodes: ReadonlyArray<Node>
   readonly initial: States
   readonly dot: boolean
+  /** The same automaton as bitmasks for `match`, when `nodes` fits in 32 bits. */
+  readonly masks: Masks | undefined
+}
+
+/**
+ * Node sets where bit `i` stands for `nodes[i]`.
+ *
+ * @internal
+ */
+export interface Masks {
+  readonly initial: number
+  readonly globstar: number
+  readonly end: number
+  /** `End` nodes that also accept files. */
+  readonly endFile: number
 }
 
 // -----------------------------------------------------------------------------
@@ -56,7 +79,31 @@ export const compile = (patterns: ReadonlyArray<string>, dot: boolean): Compiled
       }
     }
   }
-  return { nodes, initial: closure(nodes, starts), dot }
+  const initial = closure(nodes, starts)
+  return { nodes, initial, dot, masks: nodes.length <= 32 ? compileMasks(nodes, initial) : undefined }
+}
+
+const compileMasks = (nodes: ReadonlyArray<Node>, initial: States): Masks => {
+  let start = 0
+  for (const state of initial) {
+    start |= 1 << state
+  }
+  let globstar = 0
+  let end = 0
+  let endFile = 0
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]
+    const bit = 1 << i
+    if (node._tag === "Globstar") {
+      globstar |= bit
+    } else if (node._tag === "End") {
+      end |= bit
+      if (!node.directoryOnly) {
+        endFile |= bit
+      }
+    }
+  }
+  return { initial: start, globstar, end, endFile }
 }
 
 // Reject UNC paths rather than collapsing them into local absolute paths.
@@ -150,7 +197,7 @@ const compileSegment = (chars: ReadonlyArray<string>): Node => {
     const char = chars[i]
     if (char === "\\" && i + 1 < chars.length) {
       literal += chars[++i]
-      tokens.push({ _tag: "Char", value: chars[i] })
+      tokens.push({ _tag: "Char", code: chars[i].codePointAt(0)! })
     } else if (char === "*") {
       magic = true
       if (tokens[tokens.length - 1]?._tag !== "Star") {
@@ -164,7 +211,7 @@ const compileSegment = (chars: ReadonlyArray<string>): Node => {
       if (parsed === undefined) {
         classes = false
         literal += char
-        tokens.push({ _tag: "Char", value: char })
+        tokens.push({ _tag: "Char", code: char.codePointAt(0)! })
       } else {
         magic = true
         tokens.push(parsed.token)
@@ -172,14 +219,43 @@ const compileSegment = (chars: ReadonlyArray<string>): Node => {
       }
     } else {
       literal += char
-      tokens.push({ _tag: "Char", value: char })
+      tokens.push({ _tag: "Char", code: char.codePointAt(0)! })
     }
   }
   if (!magic) {
     return { _tag: "Literal", value: literal }
   }
   const first = tokens[0]
-  return { _tag: "Wildcard", tokens, leadingDot: first._tag === "Char" && first.value === "." }
+  return {
+    _tag: "Wildcard",
+    tokens,
+    leadingDot: first._tag === "Char" && first.code === 0x2e,
+    affixes: compileAffixes(tokens)
+  }
+}
+
+// Lone surrogates stay on the token path: `startsWith` would match them
+// against half of a surrogate pair.
+const compileAffixes = (
+  tokens: ReadonlyArray<Token>
+): { readonly prefix: string; readonly suffix: string } | undefined => {
+  let prefix = ""
+  let suffix: string | undefined
+  for (const token of tokens) {
+    if (token._tag === "Star" && suffix === undefined) {
+      suffix = ""
+    } else if (token._tag === "Char" && (token.code < 0xd800 || token.code > 0xdfff)) {
+      const char = String.fromCodePoint(token.code)
+      if (suffix === undefined) {
+        prefix += char
+      } else {
+        suffix += char
+      }
+    } else {
+      return undefined
+    }
+  }
+  return suffix === undefined ? undefined : { prefix, suffix }
 }
 
 const range = (from: string, to: string): Array<number> => [from.codePointAt(0)!, to.codePointAt(0)!]
@@ -392,16 +468,15 @@ const expandSequence = (sequence: BraceSequence): Array<string> => {
 // matching
 // -----------------------------------------------------------------------------
 
-const matchToken = (token: Token, char: string): boolean => {
+const matchToken = (token: Token, code: number): boolean => {
   switch (token._tag) {
     case "Char":
-      return token.value === char
+      return token.code === code
     case "Any":
       return true
     case "Star":
       return false
     case "Class": {
-      const code = char.codePointAt(0)!
       let found = false
       for (let i = 0; i < token.ranges.length && !found; i += 2) {
         found = code >= token.ranges[i] && code <= token.ranges[i + 1]
@@ -411,31 +486,41 @@ const matchToken = (token: Token, char: string): boolean => {
   }
 }
 
+// UTF-16 length of the code point
+const width = (code: number): number => code > 0xffff ? 2 : 1
+
 // Backtrack only to the last `*`, bounding retries by tokens × characters.
 const matchWildcard = (
   node: Extract<Node, { _tag: "Wildcard" }>,
   name: string,
-  chars: ReadonlyArray<string>,
   dot: boolean
 ): boolean => {
   if (name === "." || name === ".." || (name.startsWith(".") && !dot && !node.leadingDot)) {
     return false
+  }
+  if (node.affixes !== undefined) {
+    const { prefix, suffix } = node.affixes
+    return name.length >= prefix.length + suffix.length && name.startsWith(prefix) && name.endsWith(suffix)
   }
   const { tokens } = node
   let t = 0
   let c = 0
   let star = -1
   let resume = 0
-  while (c < chars.length) {
+  while (c < name.length) {
     if (tokens[t]?._tag === "Star") {
       star = t++
       resume = c
-    } else if (t < tokens.length && matchToken(tokens[t], chars[c])) {
+      continue
+    }
+    const code = name.codePointAt(c)!
+    if (t < tokens.length && matchToken(tokens[t], code)) {
       t++
-      c++
+      c += width(code)
     } else if (star !== -1) {
       t = star + 1
-      c = ++resume
+      resume += width(name.codePointAt(resume)!)
+      c = resume
     } else {
       return false
     }
@@ -468,7 +553,6 @@ const step = (compiled: Compiled, states: States, name: string): Step => {
   const viaGlobstar = new Set<number>()
   // only a literal segment can name the root of an absolute path
   const root = isRoot(name)
-  let chars: ReadonlyArray<string> | undefined
   for (const state of states) {
     const node = compiled.nodes[state]
     switch (node._tag) {
@@ -485,7 +569,7 @@ const step = (compiled: Compiled, states: States, name: string): Step => {
         break
       }
       case "Wildcard": {
-        if (!root && matchWildcard(node, name, chars ??= Array.from(name), compiled.dot)) {
+        if (!root && matchWildcard(node, name, compiled.dot)) {
           explicit.add(state + 1)
         }
         break
@@ -535,20 +619,78 @@ const needsDirectory = (compiled: Compiled, states: States): boolean => {
   return false
 }
 
+// `step` and `union` over bitmasks; a `**` node's successor is the next bit
+const stepMasks = (compiled: Compiled, masks: Masks, states: number, name: string, root: boolean): number => {
+  let next = !root && name !== "." && name !== ".." && (compiled.dot || !name.startsWith("."))
+    ? states & masks.globstar
+    : 0
+  // the remaining states are `Literal` and `Wildcard` nodes
+  let segments = states & ~(masks.globstar | masks.end)
+  while (segments !== 0) {
+    const bit = segments & -segments
+    segments ^= bit
+    const node = compiled.nodes[31 - Math.clz32(bit)]
+    if (
+      node._tag === "Literal"
+        ? node.value === name
+        : node._tag === "Wildcard" && !root && matchWildcard(node, name, compiled.dot)
+    ) {
+      next |= bit << 1
+    }
+  }
+  return next | ((next & masks.globstar) << 1)
+}
+
 /** @internal */
 export const match = (compiled: Compiled, path: string): boolean => {
   if (path === "" || isUnc(path)) {
     return false
   }
-  const { directory, segments } = normalize(path.split("/"))
-  let states = compiled.initial
-  for (const name of segments) {
-    states = union(step(compiled, states, name))
-    if (states.size === 0) {
-      return false
+  const { masks } = compiled
+  if (masks === undefined) {
+    const { directory, segments } = normalize(path.split("/"))
+    let states = compiled.initial
+    for (const name of segments) {
+      states = union(step(compiled, states, name))
+      if (states.size === 0) {
+        return false
+      }
     }
+    return accepts(compiled, states, directory)
   }
-  return accepts(compiled, states, directory)
+  // The same segments as `normalize(path.split("/"))`, without the arrays
+  let states = masks.initial
+  let stepped = false
+  let start = 0
+  let end = path.indexOf("/")
+  if (end === 0 || (end === 2 && drive.test(path))) {
+    states = stepMasks(compiled, masks, states, path.slice(0, end === 0 ? 0 : 3), true)
+    stepped = true
+    start = end + 1
+    end = path.indexOf("/", start)
+  }
+  let directory = false
+  let dotted = false
+  while (states !== 0) {
+    const name = end === -1 ? path.slice(start) : path.slice(start, end)
+    if (name === "" || name === ".") {
+      dotted ||= name === "."
+      directory = end === -1 && stepped
+    } else {
+      states = stepMasks(compiled, masks, states, name, false)
+      stepped = true
+      directory = false
+    }
+    if (end === -1) {
+      break
+    }
+    start = end + 1
+    end = path.indexOf("/", start)
+  }
+  if (!stepped && dotted) {
+    states = stepMasks(compiled, masks, states, ".", false)
+  }
+  return (states & (directory ? masks.end : masks.endFile)) !== 0
 }
 
 // -----------------------------------------------------------------------------
@@ -569,6 +711,8 @@ const isIgnorable = (error: PlatformError): boolean => isMissing(error) || error
 
 // Node and Deno report `readLink` on a path that is not a link as "Unknown"
 const isNotLink = (error: PlatformError): boolean => isIgnorable(error) || error.reason._tag === "Unknown"
+
+const DIRECTORY_CONCURRENCY = 16
 
 const byName = Order.mapInput(Order.String, (entry: FileSystem.DirectoryEntry) => entry.name)
 
@@ -660,12 +804,13 @@ const walk = Effect.fnUntraced(function*(
     readonly next: States | undefined
   }
 
-  const visit = Effect.fnUntraced(function*(
+  // Synchronous unless the entry type must be resolved through `stat` / `readLink`
+  const visit = (
     { name, type }: FileSystem.DirectoryEntry,
     parent: string,
     states: States,
     excluded: States
-  ): Effect.fn.Return<Child | undefined, PlatformError> {
+  ): Child | undefined | Effect.Effect<Child | undefined, PlatformError> => {
     const result = step(compiled, states, name)
     const next = union(result)
     if (next.size === 0) {
@@ -674,49 +819,110 @@ const walk = Effect.fnUntraced(function*(
     const relative = join(parent, name)
     const nextExcluded = union(step(excludes, excluded, name))
     const descend = canDescend(compiled, next)
-    const isDirectory = !descend && !needsDirectory(compiled, next) && !excludeNeedsDirectory
-      ? false
-      : type !== "Unknown" && type !== "SymbolicLink"
-      ? type === "Directory"
-      : yield* fs.stat(toFsPath(relative)).pipe(
-        Effect.map((info) => info.type === "Directory"),
-        Effect.catchIf(isIgnorable, () => Effect.succeed(false))
-      )
-    const accepted = accepts(compiled, next, isDirectory)
-    if ((!accepted && (!isDirectory || !descend)) || accepts(excludes, nextExcluded, isDirectory)) {
-      return undefined
+    const child = (isDirectory: boolean, link: boolean): Child | undefined => {
+      const accepted = accepts(compiled, next, isDirectory)
+      if ((!accepted && (!isDirectory || !descend)) || accepts(excludes, nextExcluded, isDirectory)) {
+        return undefined
+      }
+      return {
+        relative,
+        accepted,
+        excluded: nextExcluded,
+        next: !isDirectory || !descend
+          ? undefined
+          : !link || result.globstar.size === 0
+          ? next
+          // Follow symlinks only through explicit segments, not `**`.
+          : canDescend(compiled, result.explicit)
+          ? result.explicit
+          : undefined
+      }
     }
-    const child = (next: States | undefined): Child => ({ relative, accepted, excluded: nextExcluded, next })
-    if (!isDirectory || !descend) {
-      return child(undefined)
+    if (!descend && !needsDirectory(compiled, next) && !excludeNeedsDirectory) {
+      return child(false, false)
     }
-    if (result.globstar.size === 0) {
-      return child(next)
+    if (type !== "Unknown" && type !== "SymbolicLink") {
+      return child(type === "Directory", false)
     }
-    // Follow symlinks only through explicit segments, not `**`.
-    const followed = canDescend(compiled, result.explicit) ? result.explicit : undefined
-    if (type !== "Unknown") {
-      return child(type === "SymbolicLink" ? followed : next)
-    }
-    return yield* fs.readLink(toFsPath(relative)).pipe(
-      Effect.as(child(followed)),
-      Effect.catchIf(isNotLink, () => Effect.succeed(child(next)))
+    const path = toFsPath(relative)
+    return fs.stat(path).pipe(
+      Effect.map((info) => info.type === "Directory"),
+      Effect.catchIf(isIgnorable, () => Effect.succeed(false)),
+      Effect.flatMap((isDirectory) => {
+        const resolved = child(isDirectory, type === "SymbolicLink")
+        if (type === "SymbolicLink" || resolved?.next === undefined || result.globstar.size === 0) {
+          return Effect.succeed(resolved)
+        }
+        return fs.readLink(path).pipe(
+          Effect.as(child(isDirectory, true)),
+          Effect.catchIf(isNotLink, () => Effect.succeed(resolved))
+        )
+      })
     )
-  })
+  }
+
+  // Walk subdirectories in forked fibers while slots are free and inline
+  // otherwise, bounding directory reads in flight across the whole walk. A
+  // forked walk reports its failure through `failed` so the whole walk ends
+  // promptly even while its parent is walking another subdirectory inline.
+  // Once the root walk is finishing, forked walks only exit because it
+  // interrupts them.
+  let slots = DIRECTORY_CONCURRENCY
+  let finishing = false
+  const failed = Deferred.makeUnsafe<never, PlatformError>()
+  const fork = (walk: Effect.Effect<Array<string>, PlatformError>) =>
+    walk.pipe(
+      Effect.onError((cause) =>
+        Effect.sync(() => {
+          if (!finishing) {
+            Deferred.doneUnsafe(failed, Effect.failCause(cause))
+          }
+        })
+      ),
+      Effect.ensuring(Effect.sync(() => {
+        slots++
+      })),
+      Effect.forkChild
+    )
 
   const directory = Effect.fnUntraced(function*(
     relative: string,
     states: States,
     excluded: States,
-    named: boolean,
-    out: Array<string>
-  ): Effect.fn.Return<void, PlatformError> {
+    named: boolean
+  ): Effect.fn.Return<Array<string>, PlatformError> {
     const listing = yield* entries(relative, states, named)
-    const children = yield* Effect.forEach(
-      listing.entries,
-      (entry) => visit(entry, relative, states, excluded),
-      { concurrency: 16 }
-    )
+    const children: Array<Child | undefined> = []
+    const pending: Array<Effect.Effect<void, PlatformError>> = []
+    for (const entry of listing.entries) {
+      const child = visit(entry, relative, states, excluded)
+      if (Effect.isEffect(child)) {
+        const index = children.push(undefined) - 1
+        pending.push(Effect.map(child, (child) => {
+          children[index] = child
+        }))
+      } else {
+        children.push(child)
+      }
+    }
+    if (pending.length > 0) {
+      yield* Effect.all(pending, { concurrency: 16, discard: true })
+    }
+    const subtrees: Array<Effect.Effect<Array<string>, PlatformError>> = []
+    for (const child of children) {
+      if (child?.next !== undefined) {
+        const walk = directory(child.relative, child.next, child.excluded, listing.named)
+        if (slots > 0) {
+          slots--
+          subtrees.push(Fiber.join(yield* fork(walk)))
+        } else {
+          subtrees.push(Effect.succeed(yield* walk))
+        }
+      }
+    }
+    // Splice subtrees back in listing order
+    const out: Array<string> = []
+    let index = 0
     for (const child of children) {
       if (child === undefined) {
         continue
@@ -725,12 +931,22 @@ const walk = Effect.fnUntraced(function*(
         out.push(child.relative)
       }
       if (child.next !== undefined) {
-        yield* directory(child.relative, child.next, child.excluded, listing.named, out)
+        for (const path of yield* subtrees[index++]) {
+          out.push(path)
+        }
       }
     }
+    return out
   })
 
-  const out: Array<string> = []
-  yield* directory("", compiled.initial, excludes.initial, true, out)
-  return out
+  // The losing walk is interrupted along with every fiber it forked
+  return yield* Effect.raceFirst(
+    Effect.ensuring(
+      directory("", compiled.initial, excludes.initial, true),
+      Effect.sync(() => {
+        finishing = true
+      })
+    ),
+    Deferred.await(failed)
+  )
 })
