@@ -1404,7 +1404,6 @@
     "billing-plan-trial": "Test",
     "billing-plan-pro": "Pro",
     "billing-plan-max": "Max",
-    "billing-plan-contract": "Vertrag",
     "billing-trial-description": "Alle Funktionen mit echten Daten bis {date}.",
     "billing-paid-description": "Dein Tarif läuft bis {date}.",
     "billing-credits": "KI-Credits",
@@ -1449,7 +1448,15 @@
     "academic": "Unterricht",
     "locale-country-search": "Land suchen",
     "locale-currency-search": "Währung suchen",
-    "locale-empty": "Nichts gefunden."
+    "locale-empty": "Nichts gefunden.",
+    "billing-plan-school": "School",
+    "billing-seats-buy": "Plätze kaufen",
+    "billing-seats-title": "Plätze bei Polar kaufen",
+    "billing-seats-description": "Ein Platz für jedes der {seats} Konten, die noch kein Tarif bezahlt, verlängert bis zur Kündigung.",
+    "billing-seats-month": "Jeden Monat",
+    "billing-seats-year": "Jedes Jahr",
+    "billing-seats-each": "{price} pro Platz",
+    "billing-checkout": "Weiter"
   },
   "Classroom": {
     "tabs-home": "Start",

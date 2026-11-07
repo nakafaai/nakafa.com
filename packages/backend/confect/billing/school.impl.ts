@@ -109,11 +109,11 @@ const overview = FunctionImpl.make(
           }),
           onSome: (latest) => ({
             plan: {
-              kind: "contract" as const,
+              kind: "school" as const,
               validTo: latest.validTo,
               credits,
             },
-            // A contract sets its seats, and each holds the Drive of one added account.
+            // A contract or Polar seats set the accounts, and each holds the Drive of one added account.
             driveBytes: megabytes(limit * schoolAccount.storageMegabytes),
           }),
         }),

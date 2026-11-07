@@ -167,7 +167,7 @@ describe("billing/school", () => {
   );
 
   it.effect(
-    "shows a contract school's shared AI credits: what its grants hold this month and what its members drew",
+    "shows a school on contract seats its shared AI credits: what its grants hold this month and what its members drew",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -200,7 +200,7 @@ describe("billing/school", () => {
           driveBytes: 300 * 200_000_000,
           plan: {
             credits: { capacity: 1800, used: 120 },
-            kind: "contract",
+            kind: "school",
             validTo,
           },
         });

@@ -1404,7 +1404,6 @@
     "billing-plan-trial": "Trial",
     "billing-plan-pro": "Pro",
     "billing-plan-max": "Max",
-    "billing-plan-contract": "Contract",
     "billing-trial-description": "Every feature with your real data until {date}.",
     "billing-paid-description": "Your plan runs until {date}.",
     "billing-credits": "AI credits",
@@ -1449,7 +1448,15 @@
     "academic": "Academics",
     "locale-country-search": "Search a country",
     "locale-currency-search": "Search a currency",
-    "locale-empty": "Nothing matches."
+    "locale-empty": "Nothing matches.",
+    "billing-plan-school": "School",
+    "billing-seats-buy": "Buy seats",
+    "billing-seats-title": "Buy seats on Polar",
+    "billing-seats-description": "One seat for each of the {seats} accounts no plan pays for yet, renewed until you cancel.",
+    "billing-seats-month": "Every month",
+    "billing-seats-year": "Every year",
+    "billing-seats-each": "{price} for each seat",
+    "billing-checkout": "Continue"
   },
   "Classroom": {
     "tabs-home": "Home",

@@ -11,6 +11,7 @@ import {
   openInvoice,
   orderQuote,
   paidPlan,
+  planActionKey,
   type SchoolBilling,
   schoolPayChange,
   transferMailto,
@@ -94,6 +95,16 @@ describe("school billing copy", () => {
     ).toEqual(Option.none());
     expect(paidPlan(overview())).toEqual(Option.none());
     expect(Option.isSome(paidPlan(onMax()))).toBe(true);
+  });
+});
+
+describe("school billing action", () => {
+  it("buys Polar seats outside Indonesia, and chooses or renews a plan in Indonesia", () => {
+    expect(planActionKey(overview({ rail: "polar", currency: "EUR" }))).toBe(
+      "billing-seats-buy"
+    );
+    expect(planActionKey(overview())).toBe("billing-choose");
+    expect(planActionKey(onMax())).toBe("billing-renew");
   });
 });
 

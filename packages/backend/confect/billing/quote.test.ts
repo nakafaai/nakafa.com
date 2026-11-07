@@ -8,6 +8,7 @@ import {
   remainingShare,
   schoolPeriod,
   schoolPeriodPrice,
+  unpaidAccounts,
 } from "@repo/backend/confect/billing/quote";
 import { SchoolPeriod } from "@repo/backend/confect/billing/tiers";
 import { Array as Arr, Option } from "effect";
@@ -151,5 +152,26 @@ describe("billing/quote", () => {
     expect(linePlan("school.max")).toStrictEqual(Option.some("max"));
     expect(linePlan("school.accounts")).toStrictEqual(Option.none());
     expect(linePlan("Pelatihan guru")).toStrictEqual(Option.none());
+  });
+
+  it("counts every account on the trial as unpaid, and only those past the paid limit otherwise", () => {
+    expect(
+      unpaidAccounts({
+        accounts: { limit: 20, used: 12 },
+        plan: { kind: "trial" },
+      })
+    ).toBe(12);
+    expect(
+      unpaidAccounts({
+        accounts: { limit: 100, used: 130 },
+        plan: { kind: "school" },
+      })
+    ).toBe(30);
+    expect(
+      unpaidAccounts({
+        accounts: { limit: 100, used: 80 },
+        plan: { kind: "pro" },
+      })
+    ).toBe(0);
   });
 });

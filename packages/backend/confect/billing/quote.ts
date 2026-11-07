@@ -67,6 +67,22 @@ export function linePlan(description: string) {
   );
 }
 
+/** What a school's billing says of its accounts: the plan it is on, and the accounts it holds against its limit. */
+const AccountState = Schema.Struct({
+  accounts: Schema.Struct({ limit: Schema.Int, used: Schema.Int }),
+  plan: Schema.Struct({ kind: Schema.String }),
+});
+
+/**
+ * The accounts a school holds that nothing pays for yet: every account on the
+ * trial, and those past what its running grants pay for otherwise. A school
+ * outside Indonesia buys one Polar seat for each.
+ */
+export function unpaidAccounts(billing: typeof AccountState.Type) {
+  const paid = billing.plan.kind === "trial" ? 0 : billing.accounts.limit;
+  return Math.max(billing.accounts.used - paid, 0);
+}
+
 /** One period of a plan: when it starts, when it ends, and the months it runs. */
 export const PlanPeriod = Schema.Struct({
   end: Schema.Finite,

@@ -190,6 +190,20 @@ export declare const api: {
     };
   };
   billing: {
+    polar: {
+      school: {
+        checkout: FunctionReference<
+          "action",
+          "public",
+          {
+            locale: "en" | "id" | "de";
+            offer: "school.seat.month" | "school.seat.year";
+            slug: string;
+          },
+          { url: string }
+        >;
+      };
+    };
     queries: {
       overview: FunctionReference<
         "query",
@@ -316,7 +330,7 @@ export declare const api: {
               }
             | {
                 credits: { capacity: number; used: number };
-                kind: "contract";
+                kind: "school";
                 validTo: number;
               };
           rail: "polar" | "xendit";

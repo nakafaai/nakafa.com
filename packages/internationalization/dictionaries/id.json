@@ -1404,7 +1404,6 @@
     "billing-plan-trial": "Uji coba",
     "billing-plan-pro": "Pro",
     "billing-plan-max": "Max",
-    "billing-plan-contract": "Kontrak",
     "billing-trial-description": "Semua fitur dengan data asli sampai {date}.",
     "billing-paid-description": "Paket berlaku sampai {date}.",
     "billing-credits": "Kredit AI",
@@ -1449,7 +1448,15 @@
     "academic": "Akademik",
     "locale-country-search": "Cari negara",
     "locale-currency-search": "Cari mata uang",
-    "locale-empty": "Tidak ada yang cocok."
+    "locale-empty": "Tidak ada yang cocok.",
+    "billing-plan-school": "School",
+    "billing-seats-buy": "Beli kursi",
+    "billing-seats-title": "Beli kursi di Polar",
+    "billing-seats-description": "Satu kursi untuk setiap {seats} akun yang belum dibayar, diperpanjang sampai dibatalkan.",
+    "billing-seats-month": "Setiap bulan",
+    "billing-seats-year": "Setiap tahun",
+    "billing-seats-each": "{price} per kursi",
+    "billing-checkout": "Lanjutkan"
   },
   "Classroom": {
     "tabs-home": "Beranda",

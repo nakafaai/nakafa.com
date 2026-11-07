@@ -24,11 +24,13 @@ import {
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolInvoicesCard } from "@/components/tenant/settings/invoices";
 import { SchoolOrderDialog } from "@/components/tenant/settings/order";
+import { SchoolSeatsDialog } from "@/components/tenant/settings/seats";
 import { SettingsPage } from "@/components/tenant/settings/section";
 import { formatBillingDate, formatCount } from "@/lib/billing/plan";
 import {
   openInvoice,
   paidPlan,
+  planActionKey,
   type SchoolBilling,
   transferMailto,
 } from "@/lib/billing/school";
@@ -100,7 +102,7 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
             })
           : t("billing-paid-description", {
               date: formatBillingDate(
-                (plan.kind === "contract" ? plan.validTo : plan.period.end) - 1,
+                (plan.kind === "school" ? plan.validTo : plan.period.end) - 1,
                 locale
               ),
             })
@@ -147,7 +149,7 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
                 variant={plan.kind === "trial" ? "default" : "outline"}
               >
                 <HugeIcons icon={Diamond02Icon} />
-                {t(plan.kind === "trial" ? "billing-choose" : "billing-renew")}
+                {t(planActionKey(overview))}
               </Button>
             ),
             onSome: (invoice) => (
@@ -159,12 +161,20 @@ function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
           })}
         </CardSectionActions>
       </CardSectionFooter>
-      <SchoolOrderDialog
-        billing={overview}
-        kind="plan"
-        open={isOrdering}
-        setOpen={setIsOrdering}
-      />
+      {overview.rail === "polar" ? (
+        <SchoolSeatsDialog
+          billing={overview}
+          open={isOrdering}
+          setOpen={setIsOrdering}
+        />
+      ) : (
+        <SchoolOrderDialog
+          billing={overview}
+          kind="plan"
+          open={isOrdering}
+          setOpen={setIsOrdering}
+        />
+      )}
     </CardSection>
   );
 }
@@ -254,12 +264,20 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
           </Button>
         </CardSectionActions>
       </CardSectionFooter>
-      <SchoolOrderDialog
-        billing={overview}
-        kind={kind}
-        open={isAdding}
-        setOpen={setIsAdding}
-      />
+      {overview.rail === "polar" ? (
+        <SchoolSeatsDialog
+          billing={overview}
+          open={isAdding}
+          setOpen={setIsAdding}
+        />
+      ) : (
+        <SchoolOrderDialog
+          billing={overview}
+          kind={kind}
+          open={isAdding}
+          setOpen={setIsAdding}
+        />
+      )}
     </CardSection>
   );
 }

@@ -44,8 +44,8 @@ const SchoolCredits = Schema.Struct({
 
 /**
  * The plan a school is on: the trial until the day it ends; Pro or Max over its
- * period, with the accounts it added and its shared AI credits; or an Enterprise
- * contract until the day it ends.
+ * period, with the accounts it added and its shared AI credits; or School seats,
+ * from an Enterprise contract or a Polar subscription, until the day they end.
  */
 const SchoolPlanState = Schema.Union([
   Schema.Struct({
@@ -59,7 +59,7 @@ const SchoolPlanState = Schema.Union([
     credits: SchoolCredits,
   }),
   Schema.Struct({
-    kind: Schema.Literal("contract"),
+    kind: Schema.Literal("school"),
     validTo: Schema.Finite,
     credits: SchoolCredits,
   }),

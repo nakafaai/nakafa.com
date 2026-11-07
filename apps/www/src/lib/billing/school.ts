@@ -46,6 +46,19 @@ export function openInvoice(overview: SchoolBilling, now: number) {
   );
 }
 
+/**
+ * The words of the plan card's action: a school outside Indonesia buys Polar seats,
+ * and any other school chooses its first plan on the trial or renews the one it holds.
+ */
+export function planActionKey(overview: SchoolBilling) {
+  if (overview.rail === "polar") {
+    return "billing-seats-buy" as const;
+  }
+  return overview.plan.kind === "trial"
+    ? ("billing-choose" as const)
+    : ("billing-renew" as const);
+}
+
 /** The paid plan that runs, with its period, while one runs. */
 export function paidPlan(overview: SchoolBilling) {
   const { plan } = overview;
