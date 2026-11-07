@@ -20587,12 +20587,12 @@ export declare const internal: {
         "mutation",
         "internal",
         {
+          ceiling: number;
           claim:
             | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
             | { kind: "school"; tenantId: Id<"tenants"> }
             | { kind: "learner"; userId: Id<"users"> }
             | { kind: "nakafa" };
-          held: number;
           work:
             | "chat"
             | "specialist"
