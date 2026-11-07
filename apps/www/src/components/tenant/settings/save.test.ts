@@ -91,14 +91,14 @@ describe("saveSchool", () => {
     expect(error.mock.calls).toEqual([
       [
         {
-          description: "school-refusal-cohort-in-use.members.description",
-          title: "school-refusal-cohort-in-use.members.title",
+          description: "school-refusal-cohort-in-use-members.description",
+          title: "school-refusal-cohort-in-use-members.title",
         },
       ],
       [
         {
-          description: "school-refusal-period-in-use.active.description",
-          title: "school-refusal-period-in-use.active.title",
+          description: "school-refusal-period-in-use-active.description",
+          title: "school-refusal-period-in-use-active.title",
         },
       ],
     ]);

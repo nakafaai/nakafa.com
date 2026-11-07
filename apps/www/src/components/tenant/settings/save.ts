@@ -335,56 +335,56 @@ const GRANT_REFUSAL_COPY: Readonly<Record<GrantCode, ToastCopy>> = {
  */
 const COHORT_HOLD_COPY: Readonly<Record<typeof CohortHold.Type, ToastCopy>> = {
   classes: {
-    description: "school-refusal-cohort-in-use.classes.description",
-    title: "school-refusal-cohort-in-use.classes.title",
+    description: "school-refusal-cohort-in-use-classes.description",
+    title: "school-refusal-cohort-in-use-classes.title",
   },
   homeroom: {
-    description: "school-refusal-cohort-in-use.homeroom.description",
-    title: "school-refusal-cohort-in-use.homeroom.title",
+    description: "school-refusal-cohort-in-use-homeroom.description",
+    title: "school-refusal-cohort-in-use-homeroom.title",
   },
   letters: {
-    description: "school-refusal-cohort-in-use.letters.description",
-    title: "school-refusal-cohort-in-use.letters.title",
+    description: "school-refusal-cohort-in-use-letters.description",
+    title: "school-refusal-cohort-in-use-letters.title",
   },
   members: {
-    description: "school-refusal-cohort-in-use.members.description",
-    title: "school-refusal-cohort-in-use.members.title",
+    description: "school-refusal-cohort-in-use-members.description",
+    title: "school-refusal-cohort-in-use-members.title",
   },
   reports: {
-    description: "school-refusal-cohort-in-use.reports.description",
-    title: "school-refusal-cohort-in-use.reports.title",
+    description: "school-refusal-cohort-in-use-reports.description",
+    title: "school-refusal-cohort-in-use-reports.title",
   },
   sittings: {
-    description: "school-refusal-cohort-in-use.sittings.description",
-    title: "school-refusal-cohort-in-use.sittings.title",
+    description: "school-refusal-cohort-in-use-sittings.description",
+    title: "school-refusal-cohort-in-use-sittings.title",
   },
 };
 
 /** The copy of each reason a period cannot be deleted, by what the refusal says holds it. */
 const PERIOD_HOLD_COPY: Readonly<Record<typeof PeriodHold.Type, ToastCopy>> = {
   active: {
-    description: "school-refusal-period-in-use.active.description",
-    title: "school-refusal-period-in-use.active.title",
+    description: "school-refusal-period-in-use-active.description",
+    title: "school-refusal-period-in-use-active.title",
   },
   classes: {
-    description: "school-refusal-period-in-use.classes.description",
-    title: "school-refusal-period-in-use.classes.title",
+    description: "school-refusal-period-in-use-classes.description",
+    title: "school-refusal-period-in-use-classes.title",
   },
   cohorts: {
-    description: "school-refusal-period-in-use.cohorts.description",
-    title: "school-refusal-period-in-use.cohorts.title",
+    description: "school-refusal-period-in-use-cohorts.description",
+    title: "school-refusal-period-in-use-cohorts.title",
   },
   grades: {
-    description: "school-refusal-period-in-use.grades.description",
-    title: "school-refusal-period-in-use.grades.title",
+    description: "school-refusal-period-in-use-grades.description",
+    title: "school-refusal-period-in-use-grades.title",
   },
   graduations: {
-    description: "school-refusal-period-in-use.graduations.description",
-    title: "school-refusal-period-in-use.graduations.title",
+    description: "school-refusal-period-in-use-graduations.description",
+    title: "school-refusal-period-in-use-graduations.title",
   },
   promotions: {
-    description: "school-refusal-period-in-use.promotions.description",
-    title: "school-refusal-period-in-use.promotions.title",
+    description: "school-refusal-period-in-use-promotions.description",
+    title: "school-refusal-period-in-use-promotions.title",
   },
 };
 

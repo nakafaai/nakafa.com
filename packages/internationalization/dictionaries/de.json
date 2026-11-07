@@ -3144,31 +3144,29 @@
       "title": "Diese Periode ist nicht aktiv.",
       "description": "Nur eine aktive Periode kann archiviert werden."
     },
-    "school-refusal-period-in-use": {
-      "active": {
-        "title": "Diese Periode ist aktiv.",
-        "description": "Archiviere die Periode zuerst, oder behalte sie."
-      },
-      "cohorts": {
-        "title": "Diese Periode hat noch Klassen.",
-        "description": "Archiviere die Periode, damit Klassen und Noten bleiben."
-      },
-      "grades": {
-        "title": "Diese Periode hat noch Noten.",
-        "description": "Archiviere die Periode, damit ihre Noten bleiben."
-      },
-      "graduations": {
-        "title": "Diese Periode hat einen Abschluss.",
-        "description": "Archiviere die Periode, damit ihr Abschluss bleibt."
-      },
-      "classes": {
-        "title": "Diese Periode hat noch Kurse.",
-        "description": "Archiviere die Periode, damit Kurse und Noten bleiben."
-      },
-      "promotions": {
-        "title": "Eine Versetzung nutzt diese Periode.",
-        "description": "Archiviere die Periode, damit die Versetzung bleibt."
-      }
+    "school-refusal-period-in-use-active": {
+      "title": "Diese Periode ist aktiv.",
+      "description": "Archiviere die Periode zuerst, oder behalte sie."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "Diese Periode hat noch Klassen.",
+      "description": "Archiviere die Periode, damit Klassen und Noten bleiben."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "Diese Periode hat noch Noten.",
+      "description": "Archiviere die Periode, damit ihre Noten bleiben."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "Diese Periode hat einen Abschluss.",
+      "description": "Archiviere die Periode, damit ihr Abschluss bleibt."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "Diese Periode hat noch Kurse.",
+      "description": "Archiviere die Periode, damit Kurse und Noten bleiben."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "Eine Versetzung nutzt diese Periode.",
+      "description": "Archiviere die Periode, damit die Versetzung bleibt."
     },
     "school-refusal-cohort-name-taken": {
       "title": "Diesen Namen gibt es schon.",
@@ -3178,31 +3176,29 @@
       "title": "Diese Periode ist voll.",
       "description": "Lege die Kohorte stattdessen in einer anderen Periode an."
     },
-    "school-refusal-cohort-in-use": {
-      "members": {
-        "title": "Diese Klasse hat noch Lernende.",
-        "description": "Verschiebe zuerst die Lernenden, oder archiviere die Klasse."
-      },
-      "homeroom": {
-        "title": "Diese Klasse hat noch eine Klassenleitung.",
-        "description": "Entferne zuerst die Lehrkraft, oder archiviere die Klasse."
-      },
-      "classes": {
-        "title": "Diese Klasse hat noch Kurse.",
-        "description": "Archiviere die Klasse, damit Kurse und Noten bleiben."
-      },
-      "sittings": {
-        "title": "Diese Klasse hat Prüfungstermine.",
-        "description": "Archiviere die Klasse, damit Termine und Ergebnisse bleiben."
-      },
-      "reports": {
-        "title": "Diese Klasse hat Zeugnisse.",
-        "description": "Archiviere die Klasse, damit ihre Zeugnisse bleiben."
-      },
-      "letters": {
-        "title": "Diese Klasse hat Abschlussbriefe.",
-        "description": "Archiviere die Klasse, damit ihre Briefe bleiben."
-      }
+    "school-refusal-cohort-in-use-members": {
+      "title": "Diese Klasse hat noch Lernende.",
+      "description": "Verschiebe zuerst die Lernenden, oder archiviere die Klasse."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "Diese Klasse hat noch eine Klassenleitung.",
+      "description": "Entferne zuerst die Lehrkraft, oder archiviere die Klasse."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "Diese Klasse hat noch Kurse.",
+      "description": "Archiviere die Klasse, damit Kurse und Noten bleiben."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "Diese Klasse hat Prüfungstermine.",
+      "description": "Archiviere die Klasse, damit Termine und Ergebnisse bleiben."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "Diese Klasse hat Zeugnisse.",
+      "description": "Archiviere die Klasse, damit ihre Zeugnisse bleiben."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "Diese Klasse hat Abschlussbriefe.",
+      "description": "Archiviere die Klasse, damit ihre Briefe bleiben."
     },
     "school-refusal-address-invited": {
       "title": "Diese Adresse ist schon eingeladen.",

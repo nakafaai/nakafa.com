@@ -3144,31 +3144,29 @@
       "title": "This period is not active.",
       "description": "Only an active period can be archived."
     },
-    "school-refusal-period-in-use": {
-      "active": {
-        "title": "This period is active.",
-        "description": "Archive the period first, or keep it."
-      },
-      "cohorts": {
-        "title": "This period still holds cohorts.",
-        "description": "Archive the period to keep its cohorts and grades."
-      },
-      "grades": {
-        "title": "This period still holds grades.",
-        "description": "Archive the period to keep its grades."
-      },
-      "graduations": {
-        "title": "This period has a graduation.",
-        "description": "Archive the period to keep its graduation."
-      },
-      "classes": {
-        "title": "This period still holds classes.",
-        "description": "Archive the period to keep its classes and grades."
-      },
-      "promotions": {
-        "title": "A promotion uses this period.",
-        "description": "Archive the period to keep its promotion."
-      }
+    "school-refusal-period-in-use-active": {
+      "title": "This period is active.",
+      "description": "Archive the period first, or keep it."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "This period still holds cohorts.",
+      "description": "Archive the period to keep its cohorts and grades."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "This period still holds grades.",
+      "description": "Archive the period to keep its grades."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "This period has a graduation.",
+      "description": "Archive the period to keep its graduation."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "This period still holds classes.",
+      "description": "Archive the period to keep its classes and grades."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "A promotion uses this period.",
+      "description": "Archive the period to keep its promotion."
     },
     "school-refusal-cohort-name-taken": {
       "title": "This cohort name is already used.",
@@ -3178,31 +3176,29 @@
       "title": "No more cohorts fit this period.",
       "description": "Add the cohort to another period instead."
     },
-    "school-refusal-cohort-in-use": {
-      "members": {
-        "title": "This cohort still holds students.",
-        "description": "Move its students out first, or archive the cohort."
-      },
-      "homeroom": {
-        "title": "This cohort still has a homeroom teacher.",
-        "description": "Remove the teacher first, or archive the cohort."
-      },
-      "classes": {
-        "title": "This cohort still holds classes.",
-        "description": "Archive the cohort to keep its classes and grades."
-      },
-      "sittings": {
-        "title": "This cohort has exam sittings.",
-        "description": "Archive the cohort to keep its sittings and results."
-      },
-      "reports": {
-        "title": "This cohort has report cards.",
-        "description": "Archive the cohort to keep its report cards."
-      },
-      "letters": {
-        "title": "This cohort has graduation letters.",
-        "description": "Archive the cohort to keep its letters."
-      }
+    "school-refusal-cohort-in-use-members": {
+      "title": "This cohort still holds students.",
+      "description": "Move its students out first, or archive the cohort."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "This cohort still has a homeroom teacher.",
+      "description": "Remove the teacher first, or archive the cohort."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "This cohort still holds classes.",
+      "description": "Archive the cohort to keep its classes and grades."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "This cohort has exam sittings.",
+      "description": "Archive the cohort to keep its sittings and results."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "This cohort has report cards.",
+      "description": "Archive the cohort to keep its report cards."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "This cohort has graduation letters.",
+      "description": "Archive the cohort to keep its letters."
     },
     "school-refusal-address-invited": {
       "title": "This address already has an invite.",
