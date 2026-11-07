@@ -34,7 +34,7 @@ export const SchoolLineKey = Schema.Literals([
 export type SchoolLineKey = typeof SchoolLineKey.Type;
 
 /** The line key of each paid plan. */
-export const schoolPlanLines = {
+const schoolPlanLines = {
   pro: "school.pro",
   max: "school.max",
 } as const satisfies Record<SchoolPaidTierKey, SchoolLineKey>;
@@ -147,17 +147,17 @@ function amountOf(
 }
 
 /** The accounts a school adds with a plan: none, or any whole number up to the limit. */
-export const AddedAccounts = Schema.Int.check(
+const AddedAccounts = Schema.Int.check(
   Schema.isBetween({ minimum: 0, maximum: SCHOOL_ACCOUNT_LIMIT })
 );
 
 /** The accounts a school adds to the plan that runs: any whole number from one up to the limit. */
-export const MoreAccounts = Schema.Int.check(
+const MoreAccounts = Schema.Int.check(
   Schema.isBetween({ minimum: 1, maximum: SCHOOL_ACCOUNT_LIMIT })
 );
 
 /** A paid plan with the accounts added to it, for a whole period, in one currency. */
-export const PlanOrder = Schema.Struct({
+const PlanOrder = Schema.Struct({
   accounts: AddedAccounts,
   currency: BillingCurrency,
   months: SchoolPeriod,
@@ -165,7 +165,7 @@ export const PlanOrder = Schema.Struct({
 });
 
 /** Accounts added to the plan that runs over `period`, from `from` to its end, in one currency. */
-export const AccountsOrder = Schema.Struct({
+const AccountsOrder = Schema.Struct({
   accounts: MoreAccounts,
   currency: BillingCurrency,
   from: Schema.Finite,
