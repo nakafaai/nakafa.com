@@ -1,4 +1,4 @@
-import type { GenericId, Ref } from "@confect/core";
+import type { Ref } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
@@ -16,6 +16,7 @@ import {
 import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { TenantClassLinks } from "@/components/tenant/classes/links";
@@ -72,12 +73,16 @@ function TenantClassesRows() {
         <TenantSidebarGroup label={t("classes")}>
           {Arr.map(withMarks(rows), (klass) => (
             <TenantClassItem
-              cohortId={klass.cohortId}
               key={klass.id}
               mascot={klass.mascot}
               name={klass.name}
               slug={klass.slug}
-            />
+            >
+              <TenantClassLinks
+                classSlug={klass.slug}
+                cohortId={klass.cohortId}
+              />
+            </TenantClassItem>
           ))}
         </TenantSidebarGroup>
       ) : null}
@@ -155,12 +160,13 @@ function TenantUnitClasses({
     <TenantSidebarGroup label={unit.name}>
       {Arr.map(rows, (klass) => (
         <TenantClassItem
-          cohortId={klass.cohortId}
           key={klass.id}
           mascot={markOf(klass.id)}
           name={klass.name}
           slug={klass.slug}
-        />
+        >
+          <TenantClassLinks classSlug={klass.slug} cohortId={klass.cohortId} />
+        </TenantClassItem>
       ))}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -175,12 +181,13 @@ function TenantUnitClasses({
  * the class page and on its tabs, and the open class shows its places under it.
  */
 function TenantClassItem({
-  cohortId,
+  children,
   mascot,
   name,
   slug,
 }: {
-  cohortId: GenericId.GenericId<"tenantCohorts">;
+  /** The class's places, which show under its entry while the class is open. */
+  children: ReactNode;
   mascot: typeof Mascot.Type;
   name: string;
   slug: string;
@@ -207,9 +214,7 @@ function TenantClassItem({
           {name}
         </span>
       </SidebarMenuButton>
-      {isActive ? (
-        <TenantClassLinks classSlug={slug} cohortId={cohortId} />
-      ) : null}
+      {isActive ? children : null}
     </SidebarMenuItem>
   );
 }
