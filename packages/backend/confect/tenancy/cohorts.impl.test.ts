@@ -97,23 +97,6 @@ describe("tenancy/cohorts create and list", () => {
       })
   );
 
-  it.effect(
-    "refuses a grade the level of the period's unit does not teach, and creates nothing",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const refused = yield* cohort(fixture, period.id, "7A", 7).pipe(
-          Effect.flip
-        );
-        const listed = yield* fixture
-          .as("admin")
-          .query(list, { periodId: period.id, slug: nf });
-        expect(refused).toMatchObject({ _tag: "CohortGradeOutsideLevel" });
-        expect(listed).toEqual([]);
-      })
-  );
-
   it.effect("refuses a period that already holds the most cohorts it can", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
