@@ -93,6 +93,20 @@ describe("classroom/forum mentions", () => {
         ]);
         expect(yield* inboxOf(fixture, "teacher")).toEqual([]);
 
+        // A student's mention of the teacher reaches the teacher, as a teacher's mail does.
+        yield* fixture.as("student").mutation(send, {
+          attachments: [],
+          poll: null,
+          ...forum,
+          clientKey: "student-mention",
+          mentions: [{ _tag: "person", id: fixture.people.teacher.personId }],
+          slug: nf,
+          text: "@Teacher saya sudah kumpulkan.",
+        });
+        expect(
+          Arr.map(yield* inboxOf(fixture, "teacher"), (row) => row.changeType)
+        ).toEqual(["forum.mentioned"]);
+
         // A mention in a reply opens its discussion.
         yield* teacher.mutation(open, {
           ...forum,
