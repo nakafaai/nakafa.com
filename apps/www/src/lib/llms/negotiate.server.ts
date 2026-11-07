@@ -107,6 +107,7 @@ export const answerNotFoundDocument = Effect.fn("www.llms.notFoundDocument")(
     yield* Effect.promise(() => response.body?.cancel() ?? Promise.resolve());
     const headers = withAcceptVary(new Headers(response.headers));
     headers.delete("content-length");
+    headers.delete("etag");
     headers.set("cache-control", "no-store");
     headers.set("content-type", LLMS_MARKDOWN_MEDIA_TYPE);
     return new Response(NOT_FOUND_MARKDOWN, { headers, status: 404 });

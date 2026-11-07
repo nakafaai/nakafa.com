@@ -45,6 +45,7 @@ function htmlNotFound() {
     headers: {
       "content-length": "24",
       "content-type": "text/html; charset=utf-8",
+      etag: '"html-page"',
     },
     status: 404,
   });
@@ -133,6 +134,7 @@ describe("not-found document", () => {
           expect(response.headers.get("content-type")).toBe(MARKDOWN);
           expect(response.headers.get("cache-control")).toBe("no-store");
           expect(response.headers.get("content-length")).toBeNull();
+          expect(response.headers.get("etag")).toBeNull();
           expect(response.headers.get("vary")).toBe("Accept");
           if (method === "GET") {
             expect(body).toContain("# Page not found");
