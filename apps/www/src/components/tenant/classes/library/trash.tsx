@@ -21,6 +21,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import {
@@ -42,6 +43,7 @@ import {
 import { useFolderList } from "@/components/tenant/classes/library/tree";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { PERSON_ICONS } from "@/components/tenant/settings/choices";
 
 /** How many trashed items the trash reads each time its end comes into view. */
 const TRASH_PAGE_SIZE = 20;
@@ -70,12 +72,14 @@ type TrashRow = ReturnType<typeof folderRow> | ReturnType<typeof itemRow>;
 const shownOf = (row: TrashRow) =>
   Match.valueTags(row, {
     folder: ({ folder }) => ({
+      author: folder.author,
       id: folder.id,
       kind: "folder" as const,
       title: folder.name,
       trashedAt: folder.trashedAt ?? 0,
     }),
     item: ({ item }) => ({
+      author: item.author,
       id: item.id,
       kind: item.kind,
       title: item.title,
@@ -138,6 +142,33 @@ export function LibraryTrash() {
       ),
       header: t("library-title"),
       id: "title",
+    }),
+    trashColumns.values((row) => shownOf(row).kind, {
+      cell: (info) => (
+        <span className="text-muted-foreground">
+          {t(`library-kind-${info.getValue()}`)}
+        </span>
+      ),
+      header: t("library-type"),
+      id: "kind",
+      options: Arr.map(["folder", "pdf", "image", "link"] as const, (kind) => ({
+        icon: KIND_ICONS[kind],
+        label: t(`library-kind-${kind}`),
+        value: kind,
+      })),
+    }),
+    trashColumns.values((row) => shownOf(row).author, {
+      cell: (info) => (
+        <span className="text-muted-foreground" dir="auto">
+          {info.getValue()}
+        </span>
+      ),
+      header: t("library-added-by"),
+      id: "author",
+      options: namedOptions(
+        Arr.dedupe(Arr.map(rows, (row) => shownOf(row).author)),
+        PERSON_ICONS
+      ),
     }),
     trashColumns.days((row) => shownOf(row).trashedAt, {
       cell: (info) => (
