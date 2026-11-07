@@ -35,6 +35,7 @@ import {
   CONTRIBUTOR_TARGET,
   LANDING_TARGET,
   PRICING_TARGET,
+  SCHOOL_TARGET,
 } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
@@ -131,6 +132,12 @@ export function Footer({
                   <FooterLink
                     label={tMarketing("pricing")}
                     target={PRICING_TARGET}
+                  />
+                </li>
+                <li>
+                  <FooterLink
+                    label={tMarketing("school")}
+                    target={SCHOOL_TARGET}
                   />
                 </li>
                 <li>

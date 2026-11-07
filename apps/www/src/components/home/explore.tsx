@@ -160,7 +160,7 @@ export function HomeExplore() {
           </ExploreCard>
         ))}
         <ExploreCard
-          target={{ from: LOCALE_ROUTE, to: "/$locale/school" }}
+          target={{ from: LOCALE_ROUTE, to: "/$locale/school/enter" }}
           title={tCommon("school")}
         >
           <SchoolIcon />
