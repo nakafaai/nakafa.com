@@ -49,6 +49,7 @@ import records from "@repo/backend/confect/_generated/refs/records";
 import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import routesInternal from "@repo/backend/confect/_generated/refs/routes.server";
+import spendInternal from "@repo/backend/confect/_generated/refs/spend.server";
 import storageInternal from "@repo/backend/confect/_generated/refs/storage.server";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
@@ -180,6 +181,7 @@ const internalModules = {
   privacy: privacyInternal,
   records: recordsInternal,
   routes: routesInternal,
+  spend: spendInternal,
   storage: storageInternal,
   tenancy: tenancyInternal,
   triggers: triggersInternal,

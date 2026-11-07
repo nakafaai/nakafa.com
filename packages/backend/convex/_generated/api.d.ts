@@ -7673,7 +7673,7 @@ export declare const api: {
         "query",
         "public",
         { examId: Id<"exams">; slug: string },
-        {}
+        { tenantId: Id<"tenants"> }
       >;
       read: FunctionReference<
         "action",
@@ -16100,6 +16100,11 @@ export declare const internal: {
           "internal",
           { messageId: Id<"classroomMessages"> },
           {
+            claim:
+            | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
+            | { kind: "school"; tenantId: Id<"tenants"> }
+            | { kind: "learner"; userId: Id<"users"> }
+            | { kind: "nakafa" };
             classId: Id<"classes">;
             className: string;
             history: Array<{ author: string; text: string }>;
@@ -16184,7 +16189,15 @@ export declare const internal: {
         "query",
         "internal",
         { itemId: Id<"classroomLibrary"> },
-        { contentType: string; storageId: Id<"_storage"> } | null
+        {
+          claim:
+            | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
+            | { kind: "school"; tenantId: Id<"tenants"> }
+            | { kind: "learner"; userId: Id<"users"> }
+            | { kind: "nakafa" };
+          contentType: string;
+          storageId: Id<"_storage">;
+        } | null
       >;
       store: FunctionReference<
         "mutation",
@@ -18693,6 +18706,11 @@ export declare const internal: {
         "internal",
         { draftId: Id<"insightDrafts"> },
         {
+          claim:
+            | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
+            | { kind: "school"; tenantId: Id<"tenants"> }
+            | { kind: "learner"; userId: Id<"users"> }
+            | { kind: "nakafa" };
           kktp: number;
           locale: "en" | "id" | "de";
           skills: Array<{
@@ -20184,6 +20202,40 @@ export declare const internal: {
           null
         >;
       };
+    };
+  };
+  spend: {
+    escrow: {
+      hold: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          claim:
+            | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
+            | { kind: "school"; tenantId: Id<"tenants"> }
+            | { kind: "learner"; userId: Id<"users"> }
+            | { kind: "nakafa" };
+          held: number;
+          work:
+            | "chat"
+            | "specialist"
+            | "background"
+            | "suggestion"
+            | "presentation"
+            | "import"
+            | "decision"
+            | "embedding"
+            | "search"
+            | "scrape";
+        },
+        { escrowId: Id<"vendorEscrows">; held: number }
+      >;
+      settle: FunctionReference<
+        "mutation",
+        "internal",
+        { escrowId: Id<"vendorEscrows">; spent: number },
+        null
+      >;
     };
   };
   storage: {

@@ -7,7 +7,7 @@ import {
   askedOf,
   decidesLast,
   decidesSlowly,
-  GatewayTest,
+  GatewayIsolated,
   provider,
   textOf,
 } from "@repo/backend/test/gateway";
@@ -70,14 +70,14 @@ describe("measuring the judgments", () => {
         for (const request of requests) {
           expect(askedOf(request)).toEqual(["ownNote", "private"]);
         }
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect("asks nothing about no text", () =>
     Effect.gen(function* () {
       expect(yield* measureTexts(["lasting"], [])).toEqual([]);
       expect(provider.decisionModel).not.toHaveBeenCalled();
-    }).pipe(Effect.provide(GatewayTest))
+    }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -89,7 +89,7 @@ describe("measuring the judgments", () => {
         const rows = yield* measureTexts(["lasting"], texts);
         expect(Arr.length(rows)).toBe(Arr.length(texts));
         expect(MutableRef.get(mostOpen)).toBe(REQUESTS_IN_FLIGHT);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -124,7 +124,7 @@ describe("measuring the judgments", () => {
             },
           },
         ]);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -142,7 +142,7 @@ describe("measuring the judgments", () => {
         expect(yield* measureTexts(["lasting"], ["Kelas 12"])).toEqual([
           { failure: { reason: "network" } },
         ]);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect("fails one text and measures the others", () =>
@@ -175,6 +175,6 @@ describe("measuring the judgments", () => {
         { failure: { reason: "unavailable", status: 503 } },
         { probabilities: { lasting: 0.7 } },
       ]);
-    }).pipe(Effect.provide(GatewayTest))
+    }).pipe(Effect.provide(GatewayIsolated))
   );
 });

@@ -12,7 +12,7 @@ import {
 } from "@repo/backend/confect/nina/portrait/store";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
-import { GatewayTest, provider } from "@repo/backend/test/gateway";
+import { GatewayIsolated, provider } from "@repo/backend/test/gateway";
 import type { createNinaTest } from "@repo/backend/test/nina";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { providerStep } from "@repo/backend/test/nina/specialist";
@@ -179,7 +179,7 @@ export async function createPortraitTest() {
       Effect.runPromise(
         buildPortrait(userId).pipe(
           Effect.provide([
-            GatewayTest,
+            GatewayIsolated,
             RegisteredFunction.actionLayer(schema, ctx),
             Logger.layer([
               Logger.formatStructured.pipe(
