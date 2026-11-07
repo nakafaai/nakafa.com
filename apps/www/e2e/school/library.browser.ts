@@ -177,14 +177,17 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
   await page.waitForURL(FOLDER_ADDRESS);
   await addFolder(page, "Gerak lurus");
   await page.getByRole("link", { exact: true, name: "Gerak lurus" }).click();
-  // The header's path runs through every folder above the open one, so the body holds no path of its own.
+  // The header's path runs through every folder above the open one, so the body holds no path of its own; a long
+  // path folds the class and the library into its menu, and the class's Library tab leads back to the top.
   const path = page.locator('header[data-slot="page-header"] nav');
   await expect(
     page.getByRole("navigation", { name: "Folder path" })
   ).toHaveCount(0);
-  await expect(path).toContainText("Library");
   await expect(path).toContainText("Bab 1");
   await expect(path).toContainText("Gerak lurus");
+  const top = page
+    .getByRole("tablist", { name: "Class" })
+    .getByRole("tab", { name: "Library" });
 
   // A file added in the deepest folder uploads into it.
   await page.getByRole("button", { name: "Add to library" }).click();
@@ -206,7 +209,7 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
   await dialog.getByRole("button", { name: "Move", exact: true }).click();
   await expect(page.getByRole("button", { name: "Modul GLB" })).toBeHidden();
 
-  await path.getByRole("link", { name: "Library" }).click();
+  await top.click();
   await expect(page.getByRole("button", { name: "Modul GLB" })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
@@ -221,14 +224,14 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
   await expect(
     page.getByRole("link", { exact: true, name: "Gerak lurus" })
   ).toBeHidden();
-  await path.getByRole("link", { name: "Library" }).click();
+  await top.click();
   await page.getByRole("link", { exact: true, name: "Gerak lurus" }).click();
   await expect(page.getByRole("button", { name: "Simulasi" })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
 
   // The trash keeps the file until it is restored, then deletes it forever.
-  await path.getByRole("link", { name: "Library" }).click();
+  await top.click();
   await openMenu(page, "Modul GLB");
   await page.getByRole("menuitem", { name: "Move to trash" }).click();
   await expect(page.getByRole("button", { name: "Modul GLB" })).toBeHidden();
