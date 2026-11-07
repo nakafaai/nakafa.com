@@ -2850,6 +2850,10 @@
       "title": "We could not complete this action.",
       "description": "Please try again."
     },
+    "exam-in-use": {
+      "title": "This exam has a sitting.",
+      "description": "Its sittings keep their results, so make a copy to change it."
+    },
     "copy-error": {
       "title": "Couldn't copy"
     },
@@ -3148,6 +3152,14 @@
       "cohorts": {
         "title": "This period still holds cohorts.",
         "description": "Archive the period to keep its cohorts and grades."
+      },
+      "grades": {
+        "title": "This period still holds grades.",
+        "description": "Archive the period to keep its grades."
+      },
+      "graduations": {
+        "title": "This period has a graduation.",
+        "description": "Archive the period to keep its graduation."
       },
       "classes": {
         "title": "This period still holds classes.",

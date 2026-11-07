@@ -345,11 +345,16 @@ export class NpsnTaken extends Schema.TaggedError<NpsnTaken>()(
   refusal("NPSN_TAKEN", "Another unit of this school has this number.")
 ) {}
 
-/** What keeps a period in use: being the active period, or a cohort, a class, or a promotion that points at it. */
+/**
+ * What keeps a period in use: being the active period, or a cohort, a class, a class grade, a graduation decision, or a
+ * promotion that points at it.
+ */
 export const PeriodHold = Schema.Literals([
   "active",
   "classes",
   "cohorts",
+  "grades",
+  "graduations",
   "promotions",
 ]);
 
@@ -359,7 +364,7 @@ export class PeriodInUse extends Schema.TaggedError<PeriodInUse>()(
   {
     ...refusal(
       "PERIOD_IN_USE",
-      "This period is active or still holds cohorts, classes or a promotion. Archive it instead."
+      "This period is active or still holds cohorts, classes, grades, a graduation or a promotion. Archive it instead."
     ),
     holds: PeriodHold,
   }

@@ -81,8 +81,8 @@ export const cohortHold = Effect.fn("tenancy.write.holds.cohort")(function* (
 
 /**
  * The first reason a period stays in use, or none for a period that may be deleted: being the active period, or a
- * cohort, a class, or a promotion from or into it. A class and a promotion point at a period beside its cohorts, so
- * each is read on its own. Each kind is one indexed read of its first row.
+ * cohort, a class, a class grade, a graduation decision, or a promotion from or into it. Each of them points at the
+ * period beside its cohorts, so each is read on its own, one indexed read of its first row.
  */
 export const periodHold = Effect.fn("tenancy.write.holds.period")(function* (
   period: Pick<TenantPeriodsDoc, "_id" | "status">
@@ -112,6 +112,24 @@ export const periodHold = Effect.fn("tenancy.write.holds.period")(function* (
         .pipe(
           Effect.orDie,
           Effect.map(Option.as<typeof PeriodHold.Type>("classes"))
+        ),
+      reader
+        .table("classGrades")
+        .index("by_periodId_and_state", (query) =>
+          query.eq("periodId", period._id)
+        )
+        .first()
+        .pipe(
+          Effect.orDie,
+          Effect.map(Option.as<typeof PeriodHold.Type>("grades"))
+        ),
+      reader
+        .table("graduations")
+        .index("by_periodId", (query) => query.eq("periodId", period._id))
+        .first()
+        .pipe(
+          Effect.orDie,
+          Effect.map(Option.as<typeof PeriodHold.Type>("graduations"))
         ),
       reader
         .table("tenantPromotions")

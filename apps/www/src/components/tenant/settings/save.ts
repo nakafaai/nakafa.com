@@ -374,6 +374,14 @@ const PERIOD_HOLD_COPY: Readonly<Record<typeof PeriodHold.Type, ToastCopy>> = {
     description: "school-refusal-period-in-use.cohorts.description",
     title: "school-refusal-period-in-use.cohorts.title",
   },
+  grades: {
+    description: "school-refusal-period-in-use.grades.description",
+    title: "school-refusal-period-in-use.grades.title",
+  },
+  graduations: {
+    description: "school-refusal-period-in-use.graduations.description",
+    title: "school-refusal-period-in-use.graduations.title",
+  },
   promotions: {
     description: "school-refusal-period-in-use.promotions.description",
     title: "school-refusal-period-in-use.promotions.title",

@@ -2850,6 +2850,10 @@
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."
     },
+    "exam-in-use": {
+      "title": "Ujian ini sudah punya jadwal.",
+      "description": "Hasil jadwalnya tetap disimpan, jadi buat salinan untuk mengubahnya."
+    },
     "copy-error": {
       "title": "Gagal nyalin nih"
     },
@@ -3148,6 +3152,14 @@
       "cohorts": {
         "title": "Periode ini masih punya rombel.",
         "description": "Arsipkan periode ini agar rombel dan nilainya tetap ada."
+      },
+      "grades": {
+        "title": "Periode ini masih punya nilai.",
+        "description": "Arsipkan periode ini agar nilainya tetap ada."
+      },
+      "graduations": {
+        "title": "Periode ini punya kelulusan.",
+        "description": "Arsipkan periode ini agar kelulusannya tetap ada."
       },
       "classes": {
         "title": "Periode ini masih punya kelas.",

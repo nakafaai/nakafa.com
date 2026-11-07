@@ -1,11 +1,24 @@
-import { toast } from "@repo/design-system/lib/toast/notify";
-import { Data, Effect, type Result } from "effect";
+import { ExamInUse } from "@repo/backend/confect/exams/errors";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import { Data, Effect, type Result, Schema } from "effect";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** A call that did not complete at all: the network failed, or the call was rejected before the server answered. */
 class ExamCallFailed extends Data.TaggedError("ExamCallFailed")<{
   readonly cause: unknown;
 }> {}
+
+/** The toast of a failed action: an exam that a sitting holds says so and what to do, and every other failure is the action error. */
+const failureCopyOf = (error: unknown): ToastCopy =>
+  Schema.is(ExamInUse)(error)
+    ? {
+        description: "exam-in-use.description",
+        title: "exam-in-use.title",
+      }
+    : {
+        description: "action-error.description",
+        title: "action-error.title",
+      };
 
 /** What a call does with its answer: the value of a success, or the failure. */
 interface Settle<A, E> {
@@ -26,7 +39,8 @@ export const sentAction = <A, E>(send: () => Promise<Result.Result<A, E>>) =>
 
 /**
  * Runs one exam action from a browser event, and settles it. A success hands its value to
- * `onSuccess`. A failure is reported, `onFailure` takes it, and the action-error toast shows.
+ * `onSuccess`. A failure is reported, `onFailure` takes it, and its toast shows: why a sitting
+ * keeps an exam, or the action error.
  * Convex removes the optimistic change of a failed call by itself, so `onFailure` only
  * restores what the page keeps outside the Convex store. No failure is left unhandled.
  */
@@ -44,10 +58,7 @@ export const runExamAction = <A, E>(
             Effect.andThen(
               Effect.sync(() => {
                 settle.onFailure(error);
-                toast.error({
-                  description: "action-error.description",
-                  title: "action-error.title",
-                });
+                toast.error(failureCopyOf(error));
               })
             )
           ),

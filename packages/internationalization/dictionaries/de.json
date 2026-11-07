@@ -2850,6 +2850,10 @@
       "title": "Aktion nicht abgeschlossen.",
       "description": "Bitte versuche es erneut."
     },
+    "exam-in-use": {
+      "title": "Diese Prüfung hat einen Termin.",
+      "description": "Ihre Termine behalten ihre Ergebnisse, also ändere eine Kopie."
+    },
     "copy-error": {
       "title": "Kopieren nicht möglich"
     },
@@ -3148,6 +3152,14 @@
       "cohorts": {
         "title": "Diese Periode hat noch Klassen.",
         "description": "Archiviere die Periode, damit Klassen und Noten bleiben."
+      },
+      "grades": {
+        "title": "Diese Periode hat noch Noten.",
+        "description": "Archiviere die Periode, damit ihre Noten bleiben."
+      },
+      "graduations": {
+        "title": "Diese Periode hat einen Abschluss.",
+        "description": "Archiviere die Periode, damit ihr Abschluss bleibt."
       },
       "classes": {
         "title": "Diese Periode hat noch Kurse.",
