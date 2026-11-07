@@ -1,5 +1,4 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { storeFile } from "@convex-dev/agent";
 import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import {
   NINA_FILE_COUNT,
@@ -13,7 +12,6 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
-  ActionCtx,
   DatabaseReader,
   DatabaseWriter,
   MutationCtx,
@@ -21,6 +19,8 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { deleteFile } from "@repo/backend/confect/bucket/file";
+import { storeFile } from "@repo/backend/confect/bucket/stored";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { sealFileName } from "@repo/backend/confect/nina/sealed/file";
 import spec from "@repo/backend/confect/nina/uploads.spec";
@@ -61,6 +61,19 @@ const readUpload = Effect.fn("nina.uploads.read")(function* (
     );
 });
 
+/** Deletes an upload that no message took, with the file its bytes are in. */
+const dropUpload = Effect.fn("nina.uploads.drop")(function* (
+  upload: Docs["ninaUploads"]
+) {
+  yield* (yield* DatabaseWriter)
+    .table("ninaUploads")
+    .delete(upload._id)
+    .pipe(Effect.orDie);
+  if (upload.state.status === "ready") {
+    yield* deleteFile(upload.state.fileId);
+  }
+});
+
 const save = FunctionImpl.make(
   schema,
   spec,
@@ -78,26 +91,31 @@ const save = FunctionImpl.make(
         });
       }
       const { runMutation: mutate } = yield* MutationRunner;
-      // The reservation seals the name first, so the component never stores the plain name.
-      const { storedFilename, uploadId } = yield* mutate(
-        ninaInternal.uploads.reserve,
-        { filename: args.filename }
-      );
-      const ctx = yield* ActionCtx;
+      // The reservation seals the name first, so no plain name is stored.
+      const uploadId = yield* mutate(ninaInternal.uploads.reserve, {
+        filename: args.filename,
+      });
       yield* Effect.gen(function* () {
-        // The Agent SDK owns storage, hashing, deduplication and file references.
-        const { file } = yield* Effect.promise(() =>
-          storeFile(
-            ctx,
-            components.nina,
-            new Blob([args.bytes], { type: args.mediaType }),
-            { filename: storedFilename }
+        // The bytes go to the private bucket (ADR 0028), charged to the learner's account, not to a school.
+        const fileId = yield* storeFile(
+          {
+            byteSize: args.bytes.byteLength,
+            contentType: args.mediaType,
+            tenantId: null,
+          },
+          new Uint8Array(args.bytes)
+        ).pipe(
+          Effect.catchTag("StorageFull", () =>
+            Effect.fail(
+              new NinaUploadError({
+                code: "NINA_UPLOAD_LIMIT",
+                message:
+                  "Nakafa cannot keep more files today. Try again tomorrow.",
+              })
+            )
           )
         );
-        yield* mutate(ninaInternal.uploads.complete, {
-          uploadId,
-          fileId: file.fileId,
-        });
+        yield* mutate(ninaInternal.uploads.complete, { uploadId, fileId });
       }).pipe(
         Effect.onExit((exit) =>
           Exit.isFailure(exit)
@@ -146,15 +164,13 @@ const reserve = FunctionImpl.make(
       });
     }
     const keys = yield* ensureLearnerKeys(appUser._id).pipe(Effect.orDie);
-    const storedFilename = yield* sealFileName(keys, args.filename).pipe(
-      Effect.orDie
-    );
+    const name = yield* sealFileName(keys, args.filename).pipe(Effect.orDie);
     const uploadId = yield* (yield* DatabaseWriter)
       .table("ninaUploads")
       .insert({
         userId: appUser._id,
         expiresAt: now + Duration.toMillis(NINA_UPLOAD_LIFETIME),
-        nameSealed: true,
+        name,
         state: { status: "uploading" },
       })
       .pipe(Effect.orDie);
@@ -163,7 +179,7 @@ const reserve = FunctionImpl.make(
       ninaInternal.uploads.discard,
       { uploadId }
     );
-    return { storedFilename, uploadId };
+    return uploadId;
   }, Effect.catchDefect(uploadDefect))
 );
 
@@ -203,12 +219,8 @@ const discard = FunctionImpl.make(
   Effect.fn("nina.uploads.discard")(function* (args) {
     const upload = yield* readUpload(args.uploadId);
     if (upload) {
-      yield* (yield* DatabaseWriter)
-        .table("ninaUploads")
-        .delete(upload._id)
-        .pipe(Effect.orDie);
+      yield* dropUpload(upload);
     }
-    // Unused component files remain under the SDK's 24-hour ownership grace.
     return null;
   })
 );
@@ -217,8 +229,8 @@ const discard = FunctionImpl.make(
  * Gives back the place of an upload the learner will not send, so it stops
  * counting toward the pending limit. Only the learner's own upload is
  * released. A message that was sent took its upload, so none is left to
- * release: that call is refused and the message keeps its file. The file
- * itself stays under the SDK's 24-hour ownership grace, as for `discard`.
+ * release: that call is refused and the message keeps its file. The file an
+ * unsent upload holds is deleted with it, as `discard` deletes it.
  */
 const release = FunctionImpl.make(
   schema,
@@ -233,10 +245,7 @@ const release = FunctionImpl.make(
         message: "This attachment is no longer available.",
       });
     }
-    yield* (yield* DatabaseWriter)
-      .table("ninaUploads")
-      .delete(upload._id)
-      .pipe(Effect.orDie);
+    yield* dropUpload(upload);
     return null;
   }, Effect.catchDefect(uploadDefect))
 );

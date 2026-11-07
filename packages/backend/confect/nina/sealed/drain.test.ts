@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/confect/nina/sealed/drain";
 import { SEAL_BYTES_PER_SWEEP } from "@repo/backend/confect/nina/sweep";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { createNinaTest } from "@repo/backend/test/nina";
 import {
   drainIn,
@@ -25,6 +26,16 @@ import { storedRowsIn } from "@repo/backend/test/nina/stored";
 import { TEST_ROOT_KEYS } from "@repo/backend/test/vault";
 import { Array as Arr, Effect, MutableRef } from "effect";
 import { Base64 } from "effect/encoding";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
 
 vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
@@ -193,7 +204,7 @@ describe("Nina drain seals settled turns within a byte budget", () => {
 describe("Nina drain keeps a broken turn from holding the turns behind it", () => {
   it("counts a failed seal on its turn and logs it, and seals the turns behind it", async () => {
     const f = await createNinaTest({ history: 3, now: NOW });
-    const before = await storedRowsIn(f.t, f.threadId, []);
+    const before = await storedRowsIn(f.t, f.threadId);
     await failSealsAt([0]);
 
     await drainIn(f, UNLIMITED);
@@ -208,7 +219,7 @@ describe("Nina drain keeps a broken turn from holding the turns behind it", () =
     ]);
     expect(turns[0]).toMatchObject({ hold: undefined, sealFailedAt: NOW });
     // The failed seal rolled back whole, so the broken turn keeps its plain rows.
-    const after = await storedRowsIn(f.t, f.threadId, []);
+    const after = await storedRowsIn(f.t, f.threadId);
     const rowsOf = (rows: typeof after.messages.page) =>
       Arr.map(
         Arr.filter(rows, (row) => row.order === 0),

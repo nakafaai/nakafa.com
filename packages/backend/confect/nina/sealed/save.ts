@@ -41,14 +41,14 @@ const nextOrder = Effect.fn("nina.sealed.save.order")(function* (
  * Saves a learner's message sealed for the learner who owns its thread, as the first
  * step of a new order, and returns the stored message opened (ADR 0024). The content
  * is sealed before the component stores it, so no plain copy of the message rests in
- * the component. The file ids stay in the clear, as the row keeps them. The caller
+ * the component. The files it carries are the bucket's (ADR 0028), recorded by the
+ * caller in `ninaFiles`, so the component holds no file of its own. The caller
  * passes the learner's keys, so one read serves the whole admission.
  */
 export const savePrompt = Effect.fn("nina.sealed.save.prompt")(function* (
   ctx: MutationCtx,
   keys: LearnerKeys,
   prompt: {
-    readonly fileIds: readonly string[];
     readonly message: ModelMessage;
     readonly threadId: string;
   }
@@ -61,7 +61,6 @@ export const savePrompt = Effect.fn("nina.sealed.save.prompt")(function* (
   const order = yield* nextOrder(ctx, prompt.threadId);
   const identity = { order, stepOrder: 0, threadId: prompt.threadId };
   const sealed = yield* sealMessage(keys, identity, {
-    fileIds: [...prompt.fileIds],
     message,
     status: "success",
   }).pipe(Effect.orDie);

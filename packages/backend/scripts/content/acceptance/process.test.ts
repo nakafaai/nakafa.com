@@ -8,7 +8,12 @@ import {
   withLocalBackend,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
-import { isPortOccupied, occupyPort } from "@repo/backend/test/acceptance";
+import {
+  brewPrefixAnswer,
+  installConvexNode,
+  isPortOccupied,
+  occupyPort,
+} from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
@@ -20,6 +25,7 @@ import {
   Layer,
   Logger,
   MutableList,
+  MutableRef,
   Path,
   Predicate,
   Schema,
@@ -48,6 +54,8 @@ const LOCAL_DEPLOYMENT = {
   ports: { cloud: 43_310, site: 43_311 },
 };
 
+/** The prefix of the Node 24 that the fixture installs, which the fake `brew --prefix` answers. */
+const nodePrefix = MutableRef.make("");
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({
@@ -55,6 +63,7 @@ const fixture = Effect.gen(function* () {
   });
   const state = `${directory}/.convex/local/default`;
   yield* fs.makeDirectory(state, { recursive: true });
+  MutableRef.set(nodePrefix, yield* installConvexNode(directory));
   yield* fs.writeFileString(
     `${state}/config.json`,
     yield* Schema.encodeEffect(LocalDeploymentJson)(LOCAL_DEPLOYMENT)
@@ -93,6 +102,9 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
   const temporaryRoots = MutableList.make<string>();
   const service = ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
+      if (command._tag === "StandardCommand" && command.command === "brew") {
+        return brewPrefixAnswer(MutableRef.get(nodePrefix));
+      }
       MutableList.append(commands, command);
       const tmpdir =
         command._tag === "StandardCommand"
@@ -178,6 +190,7 @@ describe("application process ownership", () => {
           DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
           FUNRUN_ISOLATE_ACTIVE_THREADS: String(navigator.hardwareConcurrency),
           ISOLATE_ANALYZE_USER_TIMEOUT_SECONDS: "30",
+          PATH: expect.stringMatching(`^${MutableRef.get(nodePrefix)}/bin:`),
           TMPDIR: expect.stringContaining(
             `${path.dirname(runtime.directory)}/convex-`
           ),

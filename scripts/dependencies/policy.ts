@@ -242,11 +242,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "1.6.33",
+    approved: "1.6.34",
     dependency: "better-auth",
     minimumDeclarations: 1,
   },
-  { approved: "1.6.33", dependency: "auth", minimumDeclarations: 1 },
+  { approved: "1.6.34", dependency: "auth", minimumDeclarations: 1 },
   {
     approved: "0.12.6",
     dependency: "@convex-dev/better-auth",

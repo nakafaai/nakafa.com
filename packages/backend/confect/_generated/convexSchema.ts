@@ -123,6 +123,7 @@ import learningViews from "./tables/learningViews";
 import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
+import ninaFiles from "./tables/ninaFiles";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
@@ -298,6 +299,7 @@ export default $defineSchema({
   loginCards: $Table.tableDefinition(loginCards),
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
+  ninaFiles: $Table.tableDefinition(ninaFiles),
   ninaMemories: $Table.tableDefinition(ninaMemories),
   ninaMemoryKeys: $Table.tableDefinition(ninaMemoryKeys),
   ninaMemoryPortraits: $Table.tableDefinition(ninaMemoryPortraits),

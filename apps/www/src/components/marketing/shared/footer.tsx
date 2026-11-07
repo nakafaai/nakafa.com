@@ -35,6 +35,7 @@ import {
   CONTRIBUTOR_TARGET,
   LANDING_TARGET,
   PRICING_TARGET,
+  SCHOOL_TARGET,
 } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
@@ -131,6 +132,12 @@ export function Footer({
                   <FooterLink
                     label={tMarketing("pricing")}
                     target={PRICING_TARGET}
+                  />
+                </li>
+                <li>
+                  <FooterLink
+                    label={tMarketing("school")}
+                    target={SCHOOL_TARGET}
                   />
                 </li>
                 <li>
@@ -233,9 +240,13 @@ export function Footer({
   );
 }
 
-/** The text treatment that every footer destination shares. */
+/**
+ * The text treatment that every footer destination shares. Each link is at least
+ * 24 px tall, so a finger meets one target at a time in a stacked column (WCAG
+ * 2.5.8).
+ */
 const linkItemVariants = cva(
-  "hover:text-primary text-sm transition-colors ease-out"
+  "hover:text-primary inline-flex min-h-6 items-center text-sm transition-colors ease-out"
 );
 
 /** One footer link of the app, at a route target that the app chose. */

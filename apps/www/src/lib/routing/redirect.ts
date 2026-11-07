@@ -18,6 +18,7 @@ import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 import {
   isRefusedSchoolHost,
+  isSchoolProductHost,
   readRequestHostname,
   readSchoolSlug,
 } from "@/lib/routing/school/host";
@@ -64,7 +65,8 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
  * slashes stays on the main site. A shared path, such as the robots file, answers
  * on every host, so the refused host serves it itself. The deployment's own host
  * is its main site and never moves: staging serves `staging.nakafa.com`, whose
- * label no school may take.
+ * label no school may take. The home of `school.nakafa.com` opens the School
+ * landing in the negotiated locale, so the product's own host lands on it.
  */
 export function readMainSiteRedirect(
   request: Request
@@ -82,8 +84,17 @@ export function readMainSiteRedirect(
     return Option.none();
   }
   const target = new URL(SITE_ORIGIN);
-  target.pathname = url.pathname;
   target.search = url.search;
+  if (url.pathname === "/" && isSchoolProductHost(hostname.value)) {
+    target.pathname = `/${negotiateLocale(request.headers)}/school`;
+    return Option.some(
+      new Response(null, {
+        headers: { location: target.href, vary: LOCALE_VARY },
+        status: 307,
+      })
+    );
+  }
+  target.pathname = url.pathname;
   return Option.some(
     new Response(null, {
       headers: { location: target.href },

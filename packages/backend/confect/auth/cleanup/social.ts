@@ -7,6 +7,7 @@ import {
   cleanupComments,
 } from "@repo/backend/confect/auth/cleanup/comments";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
+import { deleteFile } from "@repo/backend/confect/bucket/file";
 import { dropRestores } from "@repo/backend/confect/nina/memory/restore/store";
 import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
 import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
@@ -87,7 +88,7 @@ const cleanupChats = Effect.fn("auth.cleanup.cleanupChats")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
-/** Retires this account's upload grants; Agent retains file-reference ownership. */
+/** Retires this account's unsent uploads, each with the file its bytes are in (ADR 0028). */
 const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
   function* (userId: Id<"users">) {
     const reader = yield* DatabaseReader;
@@ -99,6 +100,9 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
       .pipe(Effect.orDie);
     for (const upload of uploads) {
       yield* writer.table("ninaUploads").delete(upload._id).pipe(Effect.orDie);
+      if (upload.state.status === "ready") {
+        yield* deleteFile(upload.state.fileId);
+      }
     }
     return uploads.length > 0;
   },

@@ -12,14 +12,19 @@ import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
   cohortAccess,
   personAccess,
+  placementOf,
 } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
-import { studentsOf, teachersOf } from "@repo/backend/confect/tenancy/grantees";
+import {
+  studentsOf,
+  teachersOf,
+  unitStudentsOf,
+} from "@repo/backend/confect/tenancy/grantees";
 import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { removePerson } from "@repo/backend/confect/tenancy/remove";
 import { renamePerson } from "@repo/backend/confect/tenancy/rename";
-import { Array as Arr, Effect, Layer, Struct } from "effect";
+import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /** One Person as the school's list shows them. */
 const view = (person: TenantPeopleDoc) => ({
@@ -115,6 +120,34 @@ const teachers = FunctionImpl.make(
   })
 );
 
+/**
+ * The students of the cohort's unit who hold no placement in its period, a page at a time: the
+ * people the cohort's Add student offers, so a student placed elsewhere is moved from that cohort
+ * instead. A page can hold fewer students than it read.
+ */
+const unplaced = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "unplaced",
+  Effect.fn("tenancy.people.unplaced")(function* ({ paginationOpts, search }) {
+    const { tenant } = yield* Member;
+    const cohort = yield* Cohort;
+    const page = yield* unitStudentsOf(
+      tenant._id,
+      cohort.unitId,
+      paginationOpts,
+      search
+    );
+    const free = yield* Effect.filter(
+      page.page,
+      (person) =>
+        Effect.map(placementOf(cohort.periodId, person._id), Option.isNone),
+      { concurrency: "unbounded" }
+    );
+    return Struct.assign(page, { page: Arr.map(free, view) });
+  })
+);
+
 /** Creates an unclaimed active member Person. An account claims it later, through an invite. */
 const create = FunctionImpl.make(
   databaseSchema,
@@ -162,6 +195,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(students),
   Layer.provide(teachers),
+  Layer.provide(unplaced),
   Layer.provide(create),
   Layer.provide(rename),
   Layer.provide(remove),
