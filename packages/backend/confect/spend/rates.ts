@@ -55,8 +55,9 @@ const BUFFER_BASIS_POINTS = 12_500;
  *   write per million tokens for prompts up to 100,000 tokens, and five times
  *   each rate above. The Convex AI gateway charges the provider's rate with no
  *   markup (https://news.convex.dev/introducing-convex-ai-gateway/).
- * - Jev 1.13, https://openrouter.ai/compare/typesafe/jev-1.13: $0.042 input and
- *   $0 output per million tokens.
+ * - Jev 1.13: $0.042 input and $0 output per million tokens, as the Convex AI
+ *   gateway itself reported it: `usage.cost` of 0.0000164 US dollars for a
+ *   decision of about 390 input tokens, measured on 12 October 2026 (ADR 0019).
  * - Gemini Embedding 2, https://aistudio.google.com/docs/pricing: $0.20 per
  *   million text input tokens on the paid tier.
  * - Firecrawl, https://www.firecrawl.dev/pricing and

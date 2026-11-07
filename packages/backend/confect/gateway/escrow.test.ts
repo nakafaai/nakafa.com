@@ -177,6 +177,43 @@ describe("gateway/escrow", () => {
     expect(meter.calls()).toEqual([`hold chat ${CHAT}`, `settle ${CHAT}`]);
   });
 
+  it("settles a stream that fails part way to its whole hold and passes its error on", async () => {
+    const failure = new Error("stream broke");
+    const { meter, model } = meteredModel({
+      doStream: {
+        stream: new ReadableStream({
+          pull: (controller) => controller.error(failure),
+        }),
+      },
+    });
+    const { stream } = await model.doStream({ prompt });
+    await expect(drain(stream)).rejects.toBe(failure);
+    expect(meter.calls()).toEqual([`hold chat ${CHAT}`, `settle ${CHAT}`]);
+  });
+
+  it("asks the provider for a part only when its reader asks for one", async () => {
+    const pulls = vi.fn<() => void>();
+    const { model } = meteredModel({
+      doStream: {
+        stream: new ReadableStream(
+          {
+            pull: (controller) => {
+              pulls();
+              controller.enqueue({ type: "text-start", id: "1" });
+            },
+          },
+          { highWaterMark: 0 }
+        ),
+      },
+    });
+    const { stream } = await model.doStream({ prompt });
+    expect(pulls).not.toHaveBeenCalled();
+    const reader = stream.getReader();
+    await reader.read();
+    expect(pulls).toHaveBeenCalledTimes(1);
+    await reader.cancel();
+  });
+
   it("settles a stream that never opened to its whole hold and passes its error on", async () => {
     const failure = new Error("no stream");
     const { meter, model } = meteredModel({

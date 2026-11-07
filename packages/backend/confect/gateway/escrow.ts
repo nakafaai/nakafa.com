@@ -60,22 +60,53 @@ export function callCost(
 }
 
 /**
- * Passes a stream on unchanged and settles its escrow when it ends: to the
+ * Passes a stream on unchanged and settles its escrow before it ends: to the
  * cost its finish part reports, or to the whole hold when the stream ends
- * without one or is cancelled.
+ * without one, fails, or is cancelled. It reads the provider's stream only when
+ * its reader asks for a part, so the provider is asked for each part exactly
+ * when it would be without the escrow, and the AI SDK's chunk and step timers
+ * see the same stream.
  */
-function settling(meter: Meters, escrow: Escrow) {
+function settling(meter: Meters, escrow: Escrow, source: Streamed["stream"]) {
+  const reader = source.getReader();
   let spent = escrow.held;
-  return new TransformStream<StreamPart, StreamPart>({
-    transform: (part, controller) => {
-      if (part.type === "finish") {
-        spent = callCost(part.usage, part.providerMetadata, escrow.held);
-      }
-      controller.enqueue(part);
+  return new ReadableStream<StreamPart>(
+    {
+      pull: (controller) =>
+        Effect.runPromise(
+          Effect.tryPromise({
+            try: () => reader.read(),
+            catch: Fn.identity,
+          }).pipe(
+            Effect.tapError(() => meter.settle(escrow, escrow.held)),
+            Effect.flatMap((read) => {
+              if (read.done) {
+                return Effect.andThen(
+                  meter.settle(escrow, spent),
+                  Effect.sync(() => controller.close())
+                );
+              }
+              if (read.value.type === "finish") {
+                spent = callCost(
+                  read.value.usage,
+                  read.value.providerMetadata,
+                  escrow.held
+                );
+              }
+              return Effect.sync(() => controller.enqueue(read.value));
+            })
+          )
+        ),
+      cancel: (reason) =>
+        Effect.runPromise(
+          Effect.andThen(
+            meter.settle(escrow, escrow.held),
+            Effect.promise(() => reader.cancel(reason))
+          )
+        ),
     },
-    flush: () => Effect.runPromise(meter.settle(escrow, spent)),
-    cancel: () => Effect.runPromise(meter.settle(escrow, escrow.held)),
-  });
+    { highWaterMark: 0 }
+  );
 }
 
 /**
@@ -114,7 +145,7 @@ export function escrowed(
           );
           return {
             ...result,
-            stream: result.stream.pipeThrough(settling(meter, escrow)),
+            stream: settling(meter, escrow, result.stream),
           };
         })
       ),
