@@ -18,7 +18,7 @@ import {
 import { useClassScope } from "@/components/tenant/classes/scope";
 
 /** Tells the teacher that a file larger than the library keeps was not added. */
-export const refuseLargeFile = Effect.sync(() =>
+const refuseLargeFile = Effect.sync(() =>
   toast.error({
     description: "library-file-size.description",
     title: "library-file-size.title",
@@ -26,7 +26,7 @@ export const refuseLargeFile = Effect.sync(() =>
 );
 
 /** Tells the teacher that a file whose bytes name no PDF or image was not added. */
-export const refuseOtherFile = Effect.sync(() =>
+const refuseOtherFile = Effect.sync(() =>
   toast.error({
     description: "library-file-type.description",
     title: "library-file-type.title",
