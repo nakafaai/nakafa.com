@@ -51,7 +51,6 @@ import recordsInternal from "@repo/backend/confect/_generated/refs/records.serve
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import routesInternal from "@repo/backend/confect/_generated/refs/routes.server";
 import spendInternal from "@repo/backend/confect/_generated/refs/spend.server";
-import storageInternal from "@repo/backend/confect/_generated/refs/storage.server";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import triggersInternal from "@repo/backend/confect/_generated/refs/triggers.server";
@@ -184,7 +183,6 @@ const internalModules = {
   records: recordsInternal,
   routes: routesInternal,
   spend: spendInternal,
-  storage: storageInternal,
   tenancy: tenancyInternal,
   triggers: triggersInternal,
   tryouts: tryoutsInternal,
@@ -233,8 +231,8 @@ describe("generateRefs", () => {
 
         expect(expected).toContain("access.ts");
         expect(expected).not.toContain("access.server.ts");
-        expect(expected).toContain("storage.server.ts");
-        expect(expected).not.toContain("storage.ts");
+        expect(expected).toContain("bucket.server.ts");
+        expect(expected).not.toContain("bucket.ts");
         expect(
           Arr.sort(yield* fs.readDirectory(outputDirectory), Order.String)
         ).toEqual(Arr.sort(expected, Order.String));

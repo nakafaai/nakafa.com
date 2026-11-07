@@ -1,4 +1,5 @@
 import { toModelMessage } from "@convex-dev/agent";
+import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -19,7 +20,7 @@ import {
 } from "@repo/backend/confect/nina/turns.spec";
 import { cleanSlug } from "@repo/utilities/slug";
 import type { ModelMessage } from "ai";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const retryUnavailable = () =>
   new NinaTurnError({
@@ -54,7 +55,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     );
     return {
       ...context,
-      fileIds: attachments.fileIds,
+      newFiles: attachments.fileIds,
       message: {
         role: "user",
         content: [
@@ -101,8 +102,15 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     try: () => toModelMessage(originalMessage),
     catch: retryUnavailable,
   });
-  const fileIds = stored.fileIds ?? [];
-  yield* requireStoredDocumentLimit(fileIds);
+  const sent = yield* (yield* DatabaseReader)
+    .table("ninaFiles")
+    .index("by_messageId", (query) =>
+      query.eq("messageId", original.promptMessageId)
+    )
+    .take(NINA_FILE_COUNT)
+    .pipe(Effect.orDie);
+  const newFiles = Arr.map(sent, (file) => file.fileId);
+  yield* requireStoredDocumentLimit(newFiles);
   // A message stored before the limit existed can cost more than a turn carries.
   yield* requirePromptLimit(message);
   const retryOf = original.retryOf ?? original.order;
@@ -111,15 +119,15 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
       ? { page: original.page, user: original.user }
       : undefined;
   if (asked && (!input.page || isAskedPage(asked.page, input.page))) {
-    return { ...asked, fileIds, message, retryOf };
+    return { ...asked, message, newFiles, retryOf };
   }
   if (!input.page) {
     return yield* retryUnavailable();
   }
   return {
     ...(yield* resolveNinaContext(input.page, user, chat._id)),
-    fileIds,
     message,
+    newFiles,
     retryOf,
   };
 });

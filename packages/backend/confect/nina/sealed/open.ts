@@ -1,5 +1,6 @@
 import type { MessageDoc } from "@convex-dev/agent/validators";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { freshRow } from "@repo/backend/confect/nina/files";
 import {
   identityOf,
   isSealed,
@@ -13,17 +14,18 @@ type LearnerId = Docs["users"]["_id"];
 /**
  * Opens one row of a read for the learner who owns its thread. A plain row is
  * returned as it is and reads no key. A sealed row reads the owner's key and
- * opens under its own place (ADR 0024).
+ * opens under its own place (ADR 0024). Either way its files read at a fresh
+ * address (ADR 0028).
  */
 export const openRow = Effect.fn("nina.sealed.row")(function* (
   owner: LearnerId,
   row: MessageDoc
 ) {
   if (!isSealed(row)) {
-    return row;
+    return yield* freshRow(row);
   }
   const keys = yield* readLearnerKeys(owner);
-  return yield* openMessage(keys, identityOf(row), row);
+  return yield* freshRow(yield* openMessage(keys, identityOf(row), row));
 });
 
 /**
@@ -37,10 +39,10 @@ export const openRows = Effect.fn("nina.sealed.rows")(function* (
   rows: MessageDoc[]
 ) {
   if (!Arr.some(rows, isSealed)) {
-    return rows;
+    return yield* Effect.forEach(rows, freshRow);
   }
   const keys = yield* readLearnerKeys(owner);
   return yield* Effect.forEach(rows, (row) =>
-    openMessage(keys, identityOf(row), row)
+    Effect.flatMap(openMessage(keys, identityOf(row), row), freshRow)
   );
 });

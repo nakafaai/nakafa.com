@@ -124,7 +124,6 @@ const rewriteThreadRows = Effect.fn("test.nina.seal.rewrite")(function* (
         Effect.orDie
       );
       const saved = yield* savePrompt(ctx, keys, {
-        fileIds: row.fileIds ?? [],
         message: toModelMessage(message),
         threadId,
       });

@@ -1,11 +1,12 @@
 import { createThread } from "@convex-dev/agent";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import { isSealed } from "@repo/backend/confect/nina/sealed";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   learnerWithKeyIn,
   messageFailureIn,
@@ -17,6 +18,16 @@ import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import { createThreadTest } from "@repo/backend/test/nina/thread";
 import { Array as Arr } from "effect";
 
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
+
 const NOW = Date.UTC(2026, 8, 27, 12);
 /** A string the tests plant in a learner's message, so one search finds any copy of it. */
 const PLANT = "PLANT-SAVED-MESSAGE";
@@ -26,7 +37,6 @@ describe("saving a learner's message sealed", () => {
     const f = await createThreadTest();
     const other = await learnerWithKeyIn(f.t, "other");
     const saved = await savePromptIn(f.t, f.identity.userId, {
-      fileIds: [],
       message: { content: [{ text: PLANT, type: "text" }], role: "user" },
       threadId: f.identity.threadId,
     });
@@ -38,7 +48,7 @@ describe("saving a learner's message sealed", () => {
       tool: false,
     });
 
-    const rows = await storedRowsIn(f.t, f.identity.threadId, []);
+    const rows = await storedRowsIn(f.t, f.identity.threadId);
     const [stored] = Arr.filter(
       rows.messages.page,
       (row) => row._id === saved.messageId
@@ -66,7 +76,6 @@ describe("saving a learner's message sealed", () => {
     });
 
     const saved = await savePromptIn(t, userId, {
-      fileIds: [],
       message: { content: "Halo.", role: "user" },
       threadId,
     });
@@ -80,10 +89,9 @@ describe("saving a learner's message sealed", () => {
 
   it("refuses a message whose inline bytes only an action can store, and stores nothing", async () => {
     const f = await createThreadTest();
-    const before = await storedRowsIn(f.t, f.identity.threadId, []);
+    const before = await storedRowsIn(f.t, f.identity.threadId);
     // The Agent stores an inline part above 64 KiB as a file, which needs an action.
     const failure = await savePromptFailureIn(f.t, f.identity.userId, {
-      fileIds: [],
       message: {
         content: [
           {
@@ -98,7 +106,7 @@ describe("saving a learner's message sealed", () => {
     });
 
     expect(failure).toBe("SealedWriteError");
-    const after = await storedRowsIn(f.t, f.identity.threadId, []);
+    const after = await storedRowsIn(f.t, f.identity.threadId);
     expect(after.messages.page).toHaveLength(before.messages.page.length);
   });
 });

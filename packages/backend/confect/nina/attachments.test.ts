@@ -1,19 +1,15 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { storeFile } from "@convex-dev/agent";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { NINA_DOCUMENT_SIZE } from "@repo/backend/client/nina/uploads";
-import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   consumeAttachments,
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { stubBucket } from "@repo/backend/test/bucket";
 import {
   learnerWithKeyIn,
   sealedFileNameIn,
@@ -42,40 +38,45 @@ type TestTransaction = ReturnType<typeof createConvexTestWithBetterAuth>;
 type UploadId = Docs["ninaUploads"]["_id"];
 type UploadOwner = Docs["users"]["_id"];
 
-/**
- * Stores each file in the Agent component from an action, as production does,
- * then grants it to one user as a ready upload.
- */
-async function seedUploads(t: TestTransaction, files: readonly StoredFile[]) {
-  let fileIds: readonly string[] = [];
-  const rows = Arr.map(files, (file, index) => ({ file, index }));
-  for (const { file, index } of rows) {
-    const fileId = await t.action(
-      async (ctx) =>
-        (
-          await storeFile(
-            ctx,
-            components.nina,
-            new Blob([new Uint8Array(file.size)], { type: file.mediaType }),
-            { filename: `attachment-${index}` }
-          )
-        ).file.fileId
-    );
-    fileIds = Arr.append(fileIds, fileId);
-  }
+/** Stores one file in the bucket's rows and grants it to `userId` as a ready upload under a sealed `name`. */
+async function grantIn(
+  t: TestTransaction,
+  userId: UploadOwner,
+  file: StoredFile,
+  name: string
+) {
+  const sealed = await sealedFileNameIn(t, userId, name);
   return await t.run(async (ctx) => {
-    const { userId } = await seedAuthenticatedUser(ctx, { now: NOW });
-    const uploadIds = await Promise.all(
-      Arr.map(fileIds, (fileId) =>
-        ctx.db.insert("ninaUploads", {
-          userId,
-          expiresAt: EXPIRES_AT,
-          state: { status: "ready", fileId },
-        })
-      )
-    );
-    return { userId, uploadIds };
+    const fileId = await ctx.db.insert("bucketFiles", {
+      byteSize: file.size,
+      contentType: file.mediaType,
+      createdAt: NOW,
+      objectKey: `files/accounts/${name}`,
+      state: "stored",
+    });
+    return await ctx.db.insert("ninaUploads", {
+      userId,
+      expiresAt: EXPIRES_AT,
+      name: sealed,
+      state: { status: "ready", fileId },
+    });
   });
+}
+
+/** Grants one learner a ready upload of each file, as production stores them. */
+async function seedUploads(t: TestTransaction, files: readonly StoredFile[]) {
+  const userId = await learnerWithKeyIn(t, "owner");
+  let uploadIds: readonly UploadId[] = [];
+  for (const { file, index } of Arr.map(files, (file, index) => ({
+    file,
+    index,
+  }))) {
+    uploadIds = Arr.append(
+      uploadIds,
+      await grantIn(t, userId, file, `attachment-${index}`)
+    );
+  }
+  return { userId, uploadIds: [...uploadIds] };
 }
 
 /** Reports, for each upload, whether its grant still exists. */
@@ -103,7 +104,10 @@ function storedFileIds(t: TestTransaction, uploadIds: UploadId[]) {
 }
 
 /** Applies the limit to the stored files and reports the refusal, if any. */
-function checkStored(t: TestTransaction, fileIds: readonly string[]) {
+function checkStored(
+  t: TestTransaction,
+  fileIds: readonly Docs["bucketFiles"]["_id"][]
+) {
   return t.run((ctx) =>
     Effect.runPromise(
       requireStoredDocumentLimit(fileIds).pipe(
@@ -116,6 +120,10 @@ function checkStored(t: TestTransaction, fileIds: readonly string[]) {
     )
   );
 }
+
+beforeEach(() => {
+  stubBucket();
+});
 
 describe("Nina attachment document limit", () => {
   it("accepts documents that total exactly the limit and consumes every grant", async () => {
@@ -237,41 +245,6 @@ describe("Nina attachment document limit", () => {
   });
 });
 
-/** Stores one file under `filename` from an action, as an upload does, and returns its id. */
-function storeNamedFile(t: TestTransaction, filename: string) {
-  return t.action(
-    async (ctx) =>
-      (
-        await storeFile(
-          ctx,
-          components.nina,
-          new Blob(["Soal"], { type: "application/pdf" }),
-          { filename }
-        )
-      ).file.fileId
-  );
-}
-
-/**
- * Grants `userId` a ready upload of `fileId`. `nameSealed` is set only as the
- * reservation sets it, so an upload from before sealing has no such field.
- */
-function grantIn(
-  t: TestTransaction,
-  userId: UploadOwner,
-  fileId: string,
-  nameSealed: boolean
-) {
-  return t.run((ctx) =>
-    ctx.db.insert("ninaUploads", {
-      userId,
-      expiresAt: EXPIRES_AT,
-      ...(nameSealed ? { nameSealed: true } : {}),
-      state: { status: "ready", fileId },
-    })
-  );
-}
-
 /**
  * Sends the uploads as one message, and reports the file name that the model reads
  * for each, or the code of the refusal.
@@ -301,32 +274,15 @@ function sendIn(
 }
 
 describe("Nina attachment names", () => {
-  it("retries a stored message whose file has a name from before sealing, even one that begins with the prefix", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fileId = await storeNamedFile(t, "nakafa.sealed.v1:abcd");
-
-    expect(await checkStored(t, [fileId])).toBe("accepted");
-  });
-
-  it("sends a pending upload from before sealing with its name as it is, even one that begins with the prefix", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const owner = await learnerWithKeyIn(t, "owner");
-    const fileId = await storeNamedFile(t, "nakafa.sealed.v1:abcd");
-    const uploadId = await grantIn(t, owner, fileId, false);
-
-    expect(await sendIn(t, owner, [uploadId], "Read this.")).toEqual([
-      "nakafa.sealed.v1:abcd",
-    ]);
-  });
-
   it("sends the sealed names of a message with one read of the learner's keys", async () => {
     const t = createConvexTestWithBetterAuth();
     const owner = await learnerWithKeyIn(t, "owner");
     let uploadIds: readonly UploadId[] = [];
     for (const name of ["Soal-1.pdf", "Soal-2.pdf", "Soal-3.pdf"]) {
-      const sealedName = await sealedFileNameIn(t, owner, name);
-      const fileId = await storeNamedFile(t, sealedName);
-      uploadIds = Arr.append(uploadIds, await grantIn(t, owner, fileId, true));
+      uploadIds = Arr.append(
+        uploadIds,
+        await grantIn(t, owner, { mediaType: "application/pdf", size: 4 }, name)
+      );
     }
     vi.mocked(readLearnerKeys).mockClear();
 
