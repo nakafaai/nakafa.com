@@ -17,7 +17,7 @@ export default GroupSpec.make()
       name: "lock",
       args: () => ({
         letterId: Id("graduationLetters"),
-        storageId: Id("_storage"),
+        fileId: Id("bucketFiles"),
       }),
       returns: () => Schema.Null,
     })

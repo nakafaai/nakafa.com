@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { nf } from "@repo/backend/test/editor";
-import { storeFile } from "@repo/backend/test/logo";
+import { examFile, PNG } from "@repo/backend/test/exams";
 import {
   deviceOf,
   enterOk,
@@ -13,16 +14,14 @@ import {
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
 const { create } = refs.public.exams.exams;
 const { register } = refs.public.exams.assets;
 const { images } = refs.public.exams.sittings;
-
-/** The leading bytes of a PNG file, which the server reads as an image. */
-const PNG_HEAD = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-
-/** A PNG file of a few bytes, which the server accepts as an image. */
-const png = () =>
-  new Blob([Uint8Array.from([...PNG_HEAD, 0, 0, 0, 0])], { type: "image/png" });
 
 /** The exam that a sitting sits for, read from the sitting row. */
 const examOf = (fixture: SittingFixture, sittingId: ExamSittingsDoc["_id"]) =>
@@ -40,6 +39,16 @@ const examOf = (fixture: SittingFixture, sittingId: ExamSittingsDoc["_id"]) =>
 
 describe("exams/sittings images", () => {
   beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
   });
@@ -51,13 +60,12 @@ describe("exams/sittings images", () => {
         const fixture = yield* tenancyFixture;
         const made = yield* openedSitting(fixture, "PTS");
         const teacher = fixture.as("teacher");
-        const storageId = yield* storeFile(fixture.convex, png());
         const examId = yield* examOf(fixture, made.id);
         const image = yield* teacher.action(register, {
           examId,
+          fileId: yield* examFile(bucket, fixture, examId, PNG),
           height: 1,
           slug: nf,
-          storageId,
           width: 1,
         });
         yield* enterOk(fixture, {
@@ -89,12 +97,11 @@ describe("exams/sittings images", () => {
           slug: nf,
           title: "PTS Biologi",
         });
-        const storageId = yield* storeFile(fixture.convex, png());
         const foreign = yield* teacher.action(register, {
           examId: other.id,
+          fileId: yield* examFile(bucket, fixture, other.id, PNG),
           height: 1,
           slug: nf,
-          storageId,
           width: 1,
         });
         yield* enterOk(fixture, {

@@ -8,4 +8,4 @@ import { examAssetValidator } from "@repo/backend/confect/exams/asset";
  */
 export default Table.make(() => examAssetValidator)
   .index("by_examId", ["examId"])
-  .index("by_storageId", ["storageId"]);
+  .index("by_fileId", ["fileId"]);

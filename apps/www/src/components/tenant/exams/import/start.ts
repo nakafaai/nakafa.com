@@ -96,14 +96,20 @@ export function importIntoExam<
   ReadError,
   PlaceError,
   KeysError,
-  UrlError,
+  ReserveError,
   RegisterError,
 >({
   examId,
   ...calls
 }: Omit<
   Parameters<
-    typeof runImport<ReadError, PlaceError, KeysError, UrlError, RegisterError>
+    typeof runImport<
+      ReadError,
+      PlaceError,
+      KeysError,
+      ReserveError,
+      RegisterError
+    >
   >[0],
   "onProgress"
 > & { examId: string }) {

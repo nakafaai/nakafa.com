@@ -18,6 +18,7 @@ import billingGrants from "./tables/billingGrants";
 import billingInvoices from "./tables/billingInvoices";
 import billingPayments from "./tables/billingPayments";
 import billingSubscriptions from "./tables/billingSubscriptions";
+import bucketFiles from "./tables/bucketFiles";
 import bucketUse from "./tables/bucketUse";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
@@ -192,6 +193,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly billingInvoices: typeof billingInvoices;
   readonly billingPayments: typeof billingPayments;
   readonly billingSubscriptions: typeof billingSubscriptions;
+  readonly bucketFiles: typeof bucketFiles;
   readonly bucketUse: typeof bucketUse;
   readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
@@ -365,6 +367,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   billingInvoices,
   billingPayments,
   billingSubscriptions,
+  bucketFiles,
   bucketUse,
   chatShares,
   chats,

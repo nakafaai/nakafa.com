@@ -169,6 +169,7 @@ const ObjectAddress = Schema.Struct({
   headers: Schema.optionalKey(PresignRequest.fields.headers),
   method: ObjectMethod,
   query: Schema.optionalKey(PresignRequest.fields.query),
+  signedAt: Schema.optionalKey(Schema.Finite),
 });
 
 /**
@@ -198,7 +199,7 @@ export const objectAddress = Effect.fn("bucket.objectAddress")(function* (
     query: address.query ?? {},
     region: R2_REGION,
     secretAccessKey: config.secretAccessKey,
-    signedAt: yield* Clock.currentTimeMillis,
+    signedAt: address.signedAt ?? (yield* Clock.currentTimeMillis),
     url,
   });
 });

@@ -1,9 +1,7 @@
 import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  StorageReader,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { fileAddress } from "@repo/backend/confect/bucket/file";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Report } from "@repo/backend/confect/records/access";
 import { reportAuthority } from "@repo/backend/confect/records/authority";
@@ -157,14 +155,11 @@ export const get = FunctionImpl.make(
       report.subjects === undefined
         ? yield* releasedSubjects(report)
         : report.subjects;
-    // A locked report always holds its file, so a missing one is a defect.
+    // A locked report holds its file; the address is signed for the hour.
     const file =
-      report.storageId === undefined
+      report.fileId === undefined
         ? null
-        : yield* (yield* StorageReader).getUrl(report.storageId).pipe(
-            Effect.map((url) => url.href),
-            Effect.orDie
-          );
+        : Option.getOrNull(yield* fileAddress(report.fileId));
     const detail: typeof ReportDetail.Type = {
       ...reportView(report),
       file,

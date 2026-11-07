@@ -7,4 +7,4 @@ import { examAudioValidator } from "@repo/backend/confect/exams/media";
  */
 export default Table.make(() => examAudioValidator)
   .index("by_examId", ["examId"])
-  .index("by_storageId", ["storageId"]);
+  .index("by_fileId", ["fileId"]);
