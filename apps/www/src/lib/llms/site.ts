@@ -19,6 +19,16 @@ export const readSiteLlmsEntries = Effect.fn("www.llms.site.entries")(
         route: "/pricing",
         title: messages.PricingPage.breadcrumb,
       },
+      {
+        description: messages.SchoolSite["metadata-description"],
+        route: "/school",
+        title: messages.SchoolSite["metadata-title"],
+      },
+      {
+        description: messages.SchoolSite["pricing-metadata-description"],
+        route: "/school/pricing",
+        title: messages.SchoolSite["pricing-metadata-title"],
+      },
     ]);
   }
 );

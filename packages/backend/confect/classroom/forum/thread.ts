@@ -30,6 +30,7 @@ export const DiscussionTitle = Schema.String.check(
  * `lastReplyAt` is the time of the newest one.
  */
 export const threadValidator = Schema.Struct({
+  archivedAt: Schema.optionalKey(Schema.Finite),
   authorId: Id("tenantPeople"),
   channelId: Id("classroomChannels"),
   classId: Id("classes"),
@@ -52,6 +53,7 @@ export const ThreadView = Schema.Struct({
 
 /** One discussion as a class's list of threads shows it, with the channel it stands in. */
 export const ThreadRow = Schema.Struct({
+  archived: Schema.Boolean,
   channelId: Id("classroomChannels"),
   discussion: DiscussionView,
 });

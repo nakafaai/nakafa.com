@@ -1,7 +1,16 @@
 import { NodeSocketServer } from "@effect/platform-node";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { Array as Arr, Effect, Fiber, FileSystem, MutableList } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Fiber,
+  FileSystem,
+  MutableList,
+  Sink,
+  Stream,
+} from "effect";
 import { HttpServer } from "effect/http";
+import { ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
 
 /**
@@ -117,3 +126,38 @@ export const ticking = Effect.fn("AcceptanceTest.ticking")(function* <A, E, R>(
   );
   return yield* operation.pipe(Effect.ensuring(Fiber.interrupt(ticker)));
 });
+
+/**
+ * Writes a backend directory's `convex.json` naming Node 24 and a Homebrew-style
+ * prefix that holds that Node, as `resolveConvexNodeBin` reads them. It returns
+ * the prefix, which `brewPrefixAnswer` gives back for `brew --prefix node@24`.
+ */
+export const installConvexNode = Effect.fn("AcceptanceTest.installConvexNode")(
+  function* (directory: string) {
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs.writeFileString(
+      `${directory}/convex.json`,
+      '{"node":{"nodeVersion":"24"}}'
+    );
+    const prefix = `${directory}/homebrew/node@24`;
+    yield* fs.makeDirectory(`${prefix}/bin`, { recursive: true });
+    yield* fs.writeFileString(`${prefix}/bin/node`, "");
+    return prefix;
+  }
+);
+
+/** The handle of a `brew --prefix` that prints one prefix and exits with status 0. */
+export const brewPrefixAnswer = (prefix: string) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.empty,
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(2),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.succeed(new TextEncoder().encode(`${prefix}\n`)),
+    unref: Effect.succeed(Effect.void),
+  });

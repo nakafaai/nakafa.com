@@ -34,16 +34,12 @@ export function storedTextOf(value: unknown): string {
 }
 
 /**
- * The rows that the Agent component holds for one thread and the given files, as the
- * component stores them: the thread, its messages with every status and tool flag,
- * its streams and their deltas, and the files. A planted string that is in none of
- * them is in no table the component keeps for the thread (ADR 0024).
+ * The rows that the Agent component holds for one thread, as the component stores
+ * them: the thread, its messages with every status and tool flag, and its streams
+ * and their deltas. A planted string that is in none of them is in no table the
+ * component keeps for the thread (ADR 0024).
  */
-export function storedRowsIn(
-  t: Deployment,
-  threadId: string,
-  fileIds: readonly string[]
-) {
+export function storedRowsIn(t: Deployment, threadId: string) {
   return t.query(async (ctx) => {
     const streams = await ctx.runQuery(components.nina.streams.list, {
       statuses: ["streaming", "finished", "aborted"],
@@ -57,11 +53,6 @@ export function storedRowsIn(
         })),
         threadId,
       }),
-      files: await Promise.all(
-        Arr.map(fileIds, (fileId) =>
-          ctx.runQuery(components.nina.files.get, { fileId })
-        )
-      ),
       messages: await ctx.runQuery(
         components.nina.messages.listMessagesByThreadId,
         {

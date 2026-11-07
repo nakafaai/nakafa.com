@@ -16,6 +16,15 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The Admin grant that the Owner gives an invited learner. */
 const ADMIN_GRANT = { person: "Acceptance Learner", role: "Admin" } as const;
 
+/** A PNG of one pixel, which the school takes as its logo. */
+const LOGO = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "base64"
+);
+
+/** The signature of an address the server signed for the bucket. */
+const SIGNED = /X-Amz-Signature=/u;
+
 /** The Owner value of the Filter menu's Role group. */
 const OWNER_OPTION = /^Owner/u;
 
@@ -34,6 +43,20 @@ test("an admin opens the profile and the periods of a school", async ({
   await expect(page).toHaveURL(address("/settings/profile"));
   // The profile shows two cards: the school logo, and the address with its copy action.
   await expect(page.getByText("School logo", { exact: true })).toBeVisible();
+  // A logo goes straight to the bucket: once it is saved, the card shows it at its signed address and offers to
+  // remove it.
+  const logoCard = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("School logo", { exact: true }) });
+  await logoCard.locator('input[type="file"]').setInputFiles({
+    buffer: LOGO,
+    mimeType: "image/png",
+    name: "logo.png",
+  });
+  await expect(
+    logoCard.getByRole("button", { name: "Remove logo" })
+  ).toBeVisible();
+  await expect(logoCard.locator("img")).toHaveAttribute("src", SIGNED);
   await expect(
     page.getByRole("textbox", { name: "School address" })
   ).toHaveValue(`${school.slug}.nakafa.com`);

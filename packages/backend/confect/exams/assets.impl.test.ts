@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -6,27 +6,27 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { MAX_ASSET_READS } from "@repo/backend/confect/exams/asset";
 import { AUDIO_BYTE_LIMIT } from "@repo/backend/confect/exams/media";
+import { fileRows, makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
-import { png } from "@repo/backend/test/exams";
-import { storageUrl, storeFile } from "@repo/backend/test/logo";
+import { examFile, PNG } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
-import { Array as Arr, Effect, Exit } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-const { create, duplicate, open } = refs.public.exams.exams;
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+const { create, duplicate } = refs.public.exams.exams;
 const questions = refs.public.exams.questions;
-const { canAdd, media, register, registerAudio, uploadUrl, urls } =
+const { canAdd, register, registerAudio, reserve, urls } =
   refs.public.exams.assets;
-const { discard, stored, sweep } = refs.internal.exams.assets;
+const { sweep } = refs.internal.exams.assets;
 
 /** A clip whose leading bytes name an MP3 file. */
 const mp3 = (bytes = 8) =>
-  new Blob(
-    [Uint8Array.from([0x49, 0x44, 0x33, ...Arr.makeBy(bytes, () => 0)])],
-    {
-      type: "audio/mpeg",
-    }
-  );
+  Uint8Array.from([0x49, 0x44, 0x33, ...Arr.makeBy(bytes, () => 0)]);
 
 /** Every row of the clips, so a test reads what the server stored. */
 const audioRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -48,27 +48,64 @@ const newExam = (fixture: Effect.Success<typeof tenancyFixture>) =>
 
 describe("exams/assets", () => {
   beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
   });
 
   it.effect(
-    "gives a teacher who may edit an exam an address to upload to, and refuses a student",
+    "reserves a file at an R2 address for a teacher who may edit an exam, refuses one over its kind's limit, and refuses a student",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* newExam(fixture);
-        const url = yield* teacher.mutation(uploadUrl, {
+        const args = {
+          contentType: "image/png",
           examId: made.id,
           slug: nf,
+        };
+        const reserved = yield* teacher.mutation(reserve, {
+          ...args,
+          byteSize: 8,
+          kind: "image",
         });
-        expect(url.href.startsWith("http")).toBe(true);
-        const refused = yield* fixture
-          .as("student")
-          .mutation(uploadUrl, { examId: made.id, slug: nf })
-          .pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "AccessDenied" });
+        expect(reserved.address).toContain("X-Amz-Signature=");
+        const refusals = yield* Effect.all([
+          teacher
+            .mutation(reserve, {
+              ...args,
+              byteSize: IMAGE_BYTE_LIMIT + 1,
+              kind: "image",
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(reserve, {
+              ...args,
+              byteSize: AUDIO_BYTE_LIMIT + 1,
+              kind: "audio",
+            })
+            .pipe(Effect.flip),
+          fixture
+            .as("student")
+            .mutation(reserve, { ...args, byteSize: 8, kind: "image" })
+            .pipe(Effect.flip),
+        ]);
+        expect(refusals).toMatchObject([
+          { _tag: "AssetSizeRefused" },
+          { _tag: "AudioSizeRefused" },
+          { _tag: "AccessDenied" },
+        ]);
+        expect(yield* fixture.run(fileRows)).toHaveLength(1);
       })
   );
 
@@ -79,12 +116,11 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* newExam(fixture);
-        const storageId = yield* storeFile(fixture.convex, png());
         const registered = yield* teacher.action(register, {
           examId: made.id,
+          fileId: yield* examFile(bucket, fixture, made.id, PNG),
           height: 1,
           slug: nf,
-          storageId,
           width: 1,
         });
         const read = yield* teacher.query(urls, {
@@ -105,49 +141,93 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* newExam(fixture);
-        const storageId = yield* storeFile(
-          fixture.convex,
-          new Blob(["%PDF-1.7 not an image"], { type: "image/png" })
+        const fileId = yield* examFile(
+          bucket,
+          fixture,
+          made.id,
+          new TextEncoder().encode("%PDF-1.7 not an image")
         );
         const refused = yield* teacher
           .action(register, {
             examId: made.id,
             height: 1,
             slug: nf,
-            storageId,
+            fileId,
             width: 1,
           })
           .pipe(Effect.flip);
         expect(refused).toMatchObject({ _tag: "AssetTypeRefused" });
         expect(yield* fixture.run(assetRows)).toHaveLength(0);
+        expect(yield* fixture.run(fileRows)).toEqual([]);
       })
   );
 
   it.effect(
-    "refuses a file over the byte limit before it reads the file's type",
+    "refuses a file whose bytes are over the image limit before it reads the file's type",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* newExam(fixture);
-        const storageId = yield* storeFile(
-          fixture.convex,
-          new Blob([new Uint8Array(IMAGE_BYTE_LIMIT + 1)], {
-            type: "image/png",
-          })
+        const fileId = yield* examFile(
+          bucket,
+          fixture,
+          made.id,
+          new Uint8Array(IMAGE_BYTE_LIMIT + 1),
+          "audio"
         );
         const refused = yield* teacher
           .action(register, {
             examId: made.id,
             height: 1,
             slug: nf,
-            storageId,
+            fileId,
             width: 1,
           })
           .pipe(Effect.flip);
         expect(refused).toMatchObject({ _tag: "AssetSizeRefused" });
         expect(yield* fixture.run(assetRows)).toHaveLength(0);
       })
+  );
+
+  it.effect("refuses an image and a clip whose bytes never arrived", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const teacher = fixture.as("teacher");
+      const made = yield* newExam(fixture);
+      const reserved = (kind: "audio" | "image") =>
+        teacher.mutation(reserve, {
+          byteSize: 8,
+          contentType: kind === "image" ? "image/png" : "audio/mpeg",
+          examId: made.id,
+          kind,
+          slug: nf,
+        });
+      const image = yield* reserved("image");
+      const clip = yield* reserved("audio");
+      const refusals = yield* Effect.all([
+        teacher
+          .action(register, {
+            examId: made.id,
+            fileId: image.fileId,
+            height: 1,
+            slug: nf,
+            width: 1,
+          })
+          .pipe(Effect.flip),
+        teacher
+          .action(registerAudio, {
+            examId: made.id,
+            fileId: clip.fileId,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+      ]);
+      expect(refusals).toMatchObject([
+        { _tag: "AssetTypeRefused" },
+        { _tag: "AudioTypeRefused" },
+      ]);
+    })
   );
 
   it.effect(
@@ -157,14 +237,14 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* newExam(fixture);
-        const storageId = yield* storeFile(fixture.convex, png());
+        const fileId = yield* examFile(bucket, fixture, made.id, PNG);
         const byStudent = yield* fixture
           .as("student")
           .action(register, {
             examId: made.id,
             height: 1,
             slug: nf,
-            storageId,
+            fileId,
             width: 1,
           })
           .pipe(Effect.flip);
@@ -175,7 +255,7 @@ describe("exams/assets", () => {
             examId: made.id,
             height: 1,
             slug: nf,
-            storageId,
+            fileId,
             width: 1,
           })
           .pipe(Effect.flip);
@@ -205,15 +285,15 @@ describe("exams/assets", () => {
         });
         const registerIn = (examId: typeof second.id) =>
           Effect.gen(function* () {
-            const storageId = yield* storeFile(fixture.convex, png());
+            const fileId = yield* examFile(bucket, fixture, examId, PNG);
             const registered = yield* teacher.action(register, {
               examId,
+              fileId,
               height: 1,
               slug: nf,
-              storageId,
               width: 1,
             });
-            return { id: registered.id, storageId };
+            return { fileId, id: registered.id };
           });
         const gone = yield* registerIn(second.id);
         const rowGone = yield* registerIn(second.id);
@@ -230,8 +310,10 @@ describe("exams/assets", () => {
             slug: nf,
           })
         ).toHaveLength(3);
-        yield* Effect.promise(() =>
-          fixture.convex.run((ctx) => ctx.storage.delete(gone.storageId))
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("bucketFiles").delete(gone.fileId)
+          ).pipe(Effect.orDie)
         );
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
@@ -248,39 +330,6 @@ describe("exams/assets", () => {
   );
 
   it.effect(
-    "reads the size of a stored file, and fails as a defect for a file the storage no longer holds",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const storageId = yield* storeFile(fixture.convex, png());
-        expect(yield* fixture.internal.query(stored, { storageId })).toEqual({
-          size: png().size,
-        });
-        yield* Effect.promise(() =>
-          fixture.convex.run((ctx) => ctx.storage.delete(storageId))
-        );
-        const exit = yield* fixture.internal
-          .query(stored, { storageId })
-          .pipe(Effect.exit);
-        expect(Exit.isFailure(exit)).toBe(true);
-      })
-  );
-
-  it.effect(
-    "discards a stored file, so no file of a refused image is kept",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const storageId = yield* storeFile(fixture.convex, png());
-        yield* fixture.internal.mutation(discard, { storageId });
-        const address = yield* Effect.promise(() =>
-          fixture.convex.run((ctx) => ctx.storage.getUrl(storageId))
-        );
-        expect(address).toBeNull();
-      })
-  );
-
-  it.effect(
     "sweeps the images of a deleted exam a page at a time, each file with its row",
     () =>
       Effect.gen(function* () {
@@ -290,10 +339,6 @@ describe("exams/assets", () => {
           slug: nf,
           title: "PTS Matematika",
         });
-        const storageIds = yield* Effect.forEach(
-          Arr.makeBy(MAX_ASSET_READS + 1, () => png()),
-          (file) => storeFile(fixture.convex, file)
-        );
         yield* fixture.run(
           Effect.gen(function* () {
             const exam = yield* (yield* DatabaseReader)
@@ -301,21 +346,35 @@ describe("exams/assets", () => {
               .get(made.id)
               .pipe(Effect.orDie);
             const writer = yield* DatabaseWriter;
-            yield* Effect.forEach(storageIds, (storageId) =>
-              writer
-                .table("examAssets")
-                .insert({
-                  byteSize: png().size,
-                  contentType: "image/png",
-                  createdAt: TENANCY_NOW,
-                  createdBy: exam.createdBy,
-                  examId: made.id,
-                  height: 30,
-                  storageId,
-                  tenantId: exam.tenantId,
-                  width: 40,
-                })
-                .pipe(Effect.orDie)
+            yield* Effect.forEach(
+              Arr.makeBy(MAX_ASSET_READS + 1, (index) => index),
+              (index) =>
+                writer
+                  .table("bucketFiles")
+                  .insert({
+                    byteSize: PNG.byteLength,
+                    contentType: "image/png",
+                    createdAt: TENANCY_NOW,
+                    objectKey: `files/nf/${index}`,
+                    state: "stored",
+                    tenantId: exam.tenantId,
+                  })
+                  .pipe(
+                    Effect.flatMap((fileId) =>
+                      writer.table("examAssets").insert({
+                        byteSize: PNG.byteLength,
+                        contentType: "image/png",
+                        createdAt: TENANCY_NOW,
+                        createdBy: exam.createdBy,
+                        examId: made.id,
+                        fileId,
+                        height: 30,
+                        tenantId: exam.tenantId,
+                        width: 40,
+                      })
+                    ),
+                    Effect.orDie
+                  )
             );
           })
         );
@@ -325,115 +384,8 @@ describe("exams/assets", () => {
         expect(yield* fixture.run(assetRows)).toHaveLength(1);
         yield* fixture.finishScheduled();
         expect(yield* fixture.run(assetRows)).toEqual([]);
-        expect(yield* storageUrl(fixture.convex, storageIds[0])).toBeNull();
+        expect(yield* fixture.run(fileRows)).toEqual([]);
       })
-  );
-
-  it.effect(
-    "registers an MP3 clip, plays it on its question, and sweeps it with its exam",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "Listening",
-        });
-        const storageId = yield* storeFile(fixture.convex, mp3());
-        const clip = yield* teacher.action(registerAudio, {
-          examId: made.id,
-          slug: nf,
-          storageId,
-        });
-        const exam = yield* teacher.query(open, { examId: made.id, slug: nf });
-        const questionId = exam.questions[0].id;
-        yield* teacher.mutation(questions.media, {
-          examId: made.id,
-          media: [{ alt: "Percakapan", asset: clip.id, kind: "audio" }],
-          questionId,
-          slug: nf,
-        });
-        const played = yield* teacher.query(media, {
-          examId: made.id,
-          questionId,
-          slug: nf,
-        });
-        expect(played).toMatchObject([{ alt: "Percakapan", kind: "audio" }]);
-
-        yield* fixture.internal.mutation(sweep, { examId: made.id });
-        expect(yield* fixture.run(audioRows)).toHaveLength(0);
-        const gone = yield* teacher.query(media, {
-          examId: made.id,
-          questionId,
-          slug: nf,
-        });
-        expect(gone).toEqual([]);
-      })
-  );
-
-  it.effect(
-    "refuses a file that is no clip and a clip over its limit, keeps nothing, and refuses a student",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "Listening",
-        });
-        const ids = { examId: made.id, slug: nf };
-        const notAudio = yield* storeFile(fixture.convex, png());
-        const wrong = yield* teacher
-          .action(registerAudio, { ...ids, storageId: notAudio })
-          .pipe(Effect.flip);
-        expect(wrong).toMatchObject({ _tag: "AudioTypeRefused" });
-        const large = yield* storeFile(fixture.convex, mp3(AUDIO_BYTE_LIMIT));
-        const tooLarge = yield* teacher
-          .action(registerAudio, { ...ids, storageId: large })
-          .pipe(Effect.flip);
-        expect(tooLarge).toMatchObject({ _tag: "AudioSizeRefused" });
-        expect(yield* fixture.run(audioRows)).toHaveLength(0);
-        const own = yield* storeFile(fixture.convex, mp3());
-        const refused = yield* fixture
-          .as("student")
-          .action(registerAudio, { ...ids, storageId: own })
-          .pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "AccessDenied" });
-      })
-  );
-
-  it.effect("refuses a clip of another exam on a question", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const teacher = fixture.as("teacher");
-      const first = yield* teacher.mutation(create, {
-        scope: { kind: "unit", unitId: fixture.units.smp },
-        slug: nf,
-        title: "Satu",
-      });
-      const second = yield* teacher.mutation(create, {
-        scope: { kind: "unit", unitId: fixture.units.smp },
-        slug: nf,
-        title: "Dua",
-      });
-      const clip = yield* teacher.action(registerAudio, {
-        examId: first.id,
-        slug: nf,
-        storageId: yield* storeFile(fixture.convex, mp3()),
-      });
-      const exam = yield* teacher.query(open, { examId: second.id, slug: nf });
-      const refused = yield* teacher
-        .mutation(questions.media, {
-          examId: second.id,
-          media: [{ alt: "Percakapan", asset: clip.id, kind: "audio" }],
-          questionId: exam.questions[0].id,
-          slug: nf,
-        })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject({ _tag: "AccessDenied" });
-    })
   );
 
   it.effect(
@@ -443,19 +395,17 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* newExam(fixture);
-        const picture = yield* storeFile(fixture.convex, png());
-        const clip = yield* storeFile(fixture.convex, mp3());
         yield* teacher.action(register, {
           examId: made.id,
+          fileId: yield* examFile(bucket, fixture, made.id, PNG),
           height: 1,
           slug: nf,
-          storageId: picture,
           width: 1,
         });
         const { id } = yield* teacher.action(registerAudio, {
           examId: made.id,
+          fileId: yield* examFile(bucket, fixture, made.id, mp3(), "audio"),
           slug: nf,
-          storageId: clip,
         });
         const [question] = made.questions;
         yield* teacher.mutation(questions.media, {
@@ -485,8 +435,7 @@ describe("exams/assets", () => {
         yield* fixture.internal.mutation(sweep, { examId: copied.id });
         expect(yield* fixture.run(assetRows)).toHaveLength(1);
         expect(yield* fixture.run(audioRows)).toHaveLength(1);
-        expect(yield* storageUrl(fixture.convex, picture)).not.toBeNull();
-        expect(yield* storageUrl(fixture.convex, clip)).not.toBeNull();
+        expect(yield* fixture.run(fileRows)).toHaveLength(2);
       })
   );
 });

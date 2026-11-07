@@ -199,9 +199,13 @@ because a count would read every placement of the period.
 A placement is one Person in one cohort of one period: the `cohortMember`
 relation of ADR 0012. The Person must be a student: an active Student grant over
 the cohort's unit or over the whole school. A Person holds at most one placement
-per period, and a move keeps them in the same period. A move checks the cohort it
-leaves as well as the one it enters, so an archived cohort at either end refuses
-it as `condition`, and the placement stays where it was. The placement opens
+per period, and a move keeps them in the same period. The cohort a move enters
+needs `cohort.manage`, so an archived cohort takes no one new and refuses it as
+`condition`. The cohort it leaves needs only `cohort.view`, so a student moves
+out of an archived cohort and no placement is stuck where no one can change it;
+`person.moved` keeps both cohorts in the journal. The Add student picker of a
+cohort offers only the students of its unit who hold no placement in its period,
+so a student placed elsewhere is moved from that cohort. The placement opens
 `cohort.view` of its cohort to the Person, through the relation and nothing
 else; the relation is
 read from the placement table for each request and never copied onto the

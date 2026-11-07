@@ -278,6 +278,18 @@ export const recordTransfer = Effect.fn("NakafaE2E.recordTransfer")(function* (
   yield* runAcceptanceCommand("transfer", number, reference);
 });
 
+/**
+ * Takes a school invoice through Xendit's hosted payment in the running local acceptance runtime:
+ * `open` records the session Xendit answers with, so the billing page shows Pay, and `paid` applies
+ * the webhook Xendit posts once the school paid on that page.
+ */
+export const payInvoice = Effect.fn("NakafaE2E.payInvoice")(function* (
+  number: string,
+  step: "open" | "paid"
+) {
+  yield* runAcceptanceCommand("invoice", number, step);
+});
+
 /** The address of a path on a host under the same server as the test's base address. */
 export function hostAddress(
   baseURL: string | undefined,

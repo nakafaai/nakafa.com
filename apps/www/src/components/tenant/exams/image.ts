@@ -1,15 +1,17 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, type Result, Schema } from "effect";
-import {
-  HttpBody,
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse,
-} from "effect/http";
 
-/** The answer of an upload address: the storage ID that Convex gave the file. */
-const StoredFile = Schema.Struct({ storageId: Id("_storage") });
+/** What the server answers for a reserved file: the R2 address its bytes go to, and the file's ID. */
+const Reserved = Schema.Struct({
+  address: Schema.String,
+  fileId: Id("bucketFiles"),
+});
+
+/** The size and type a file is reserved with, as the browser reads them from the file. */
+const FileSize = Schema.Struct({
+  byteSize: Schema.Int,
+  contentType: Schema.String,
+});
 
 /** The size of an image in pixels, as the browser decodes the file. */
 const Size = Schema.Struct({
@@ -47,58 +49,56 @@ const sizeOf = Effect.fn("exams.image.size")(function* (file: File) {
 });
 
 /**
- * Sends one file to the upload address that `exams.assets.uploadUrl` answered, and returns the
- * storage ID the file received: an image of the exam, or a page image of an import.
+ * Reserves one file of the exam, sends its bytes straight to the R2 address the reservation answered, and answers
+ * the file's ID: an image of the exam, or a page image of an import. A refusal of the reservation fails with its
+ * typed error, and a refused upload with its HTTP error.
  */
-export const sendStorageFile = Effect.fn("exams.image.send")(
-  function* (url: URL, file: Blob) {
-    const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
-    const request = HttpClientRequest.post(url, {
-      body: HttpBody.raw(file, {
-        contentLength: file.size,
-        contentType: file.type,
-      }),
-    });
-    const response = yield* client
-      .execute(request)
-      .pipe(Effect.flatMap(HttpClientResponse.filterStatusOk));
-    const stored =
-      yield* HttpClientResponse.schemaBodyJson(StoredFile)(response);
-    return stored.storageId;
-  },
-  Effect.scoped,
-  Effect.provide(FetchClient)
-);
+export function sendFile<ReserveError>(
+  reserve: (
+    size: typeof FileSize.Type
+  ) => Promise<Result.Result<typeof Reserved.Type, ReserveError>>,
+  file: Blob
+) {
+  return Effect.gen(function* () {
+    const reserved = yield* awaited(() =>
+      reserve({ byteSize: file.size, contentType: file.type })
+    );
+    const { putFile } = yield* Effect.promise(() => import("@/lib/files/put"));
+    yield* putFile(reserved.address, file);
+    return reserved.fileId;
+  });
+}
 
 /**
  * Stores one image of an exam. The browser reads the file's size first, so a file that does not
- * decode never reaches the server. Then it asks for an upload address, sends the file to it, and
+ * decode never reaches the server. Then it reserves the file, sends its bytes to R2, and
  * registers the stored file, which the server checks before it keeps the image. The effect
  * answers the image's ID with its size. A refusal of the server fails with its typed error, and
  * the document keeps what it held.
  */
 export function storeExamImage<
-  UrlError,
+  ReserveError,
   RegisterError,
   Registered extends { readonly id: typeof AssetId.Type },
 >({
   file,
   register,
-  requestUrl,
+  reserve,
 }: {
   file: File;
   register: (args: {
+    readonly fileId: typeof Reserved.Type.fileId;
     readonly height: number;
-    readonly storageId: typeof StoredFile.Type.storageId;
     readonly width: number;
   }) => Promise<Result.Result<Registered, RegisterError>>;
-  requestUrl: () => Promise<Result.Result<URL, UrlError>>;
+  reserve: (
+    size: typeof FileSize.Type
+  ) => Promise<Result.Result<typeof Reserved.Type, ReserveError>>;
 }) {
   return Effect.gen(function* () {
     const size = yield* sizeOf(file);
-    const url = yield* awaited(requestUrl);
-    const storageId = yield* sendStorageFile(url, file);
-    const registered = yield* awaited(() => register({ ...size, storageId }));
+    const fileId = yield* sendFile(reserve, file);
+    const registered = yield* awaited(() => register({ ...size, fileId }));
     return { id: registered.id, ...size };
   });
 }

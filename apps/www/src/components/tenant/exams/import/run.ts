@@ -14,10 +14,7 @@ import {
   type Result,
   Schema,
 } from "effect";
-import {
-  sendStorageFile,
-  storeExamImage,
-} from "@/components/tenant/exams/image";
+import { sendFile, storeExamImage } from "@/components/tenant/exams/image";
 import {
   alignFigures,
   cropFigure,
@@ -37,6 +34,7 @@ import {
   wordReads,
 } from "@/components/tenant/exams/import/reads";
 import { readWord } from "@/components/tenant/exams/import/word";
+import type { putFile } from "@/lib/files/put";
 
 /**
  * How far one import has come: the parts read and the parts in the file, the questions placed,
@@ -65,7 +63,7 @@ interface ImportCalls<
   ReadError,
   PlaceError,
   KeysError,
-  UrlError,
+  ReserveError,
   RegisterError,
 > {
   keys: (
@@ -78,13 +76,21 @@ interface ImportCalls<
     source: typeof ImportSource.Type
   ) => Promise<Result.Result<typeof ImportedRead.Type, ReadError>>;
   register: (args: {
+    readonly fileId: Id<"bucketFiles">;
     readonly height: number;
-    readonly storageId: Id<"_storage">;
     readonly width: number;
   }) => Promise<
     Result.Result<{ readonly id: Id<"examAssets"> }, RegisterError>
   >;
-  requestUrl: () => Promise<Result.Result<URL, UrlError>>;
+  reserve: (size: {
+    readonly byteSize: number;
+    readonly contentType: string;
+  }) => Promise<
+    Result.Result<
+      { readonly address: string; readonly fileId: Id<"bucketFiles"> },
+      ReserveError
+    >
+  >;
 }
 
 /** One part of a file once it is ready: what Nina reads, and how one of her figures becomes an image of the exam. */
@@ -96,11 +102,11 @@ interface PartValue {
 }
 
 /** Why a part of a PDF could not be made ready: a page that does not draw, or a page image that does not upload. */
-type PartError<UrlError> =
+type PartError<ReserveError> =
   | Effect.Error<ReturnType<typeof renderPage>>
-  | Effect.Error<ReturnType<typeof sendStorageFile>>
+  | Effect.Error<ReturnType<typeof putFile>>
   | Cause.UnknownError
-  | UrlError;
+  | ReserveError;
 
 /**
  * Imports a teacher's file into an exam, one part at a time and in order, so the questions land
@@ -117,13 +123,19 @@ export function runImport<
   ReadError,
   PlaceError,
   KeysError,
-  UrlError,
+  ReserveError,
   RegisterError,
 >({
   file,
   onProgress,
   ...calls
-}: ImportCalls<ReadError, PlaceError, KeysError, UrlError, RegisterError> & {
+}: ImportCalls<
+  ReadError,
+  PlaceError,
+  KeysError,
+  ReserveError,
+  RegisterError
+> & {
   file: Blob;
   onProgress: (progress: ImportProgress) => void;
 }) {
@@ -132,7 +144,7 @@ export function runImport<
     storeExamImage({
       file: image,
       register: calls.register,
-      requestUrl: calls.requestUrl,
+      reserve: calls.reserve,
     }).pipe(
       Effect.map((stored) => stored.id),
       Effect.option
@@ -154,15 +166,13 @@ export function runImport<
             mathType: 0,
             parts: Arr.map(
               pageGroups(pdf.numPages),
-              (group): Effect.Effect<PartValue, PartError<UrlError>> =>
+              (group): Effect.Effect<PartValue, PartError<ReserveError>> =>
                 Effect.gen(function* () {
                   const pages = yield* Effect.forEach(group, (number) =>
                     renderPage(pdf, number)
                   );
                   const images = yield* Effect.forEach(pages, (page) =>
-                    Effect.flatMap(awaited(calls.requestUrl), (url) =>
-                      sendStorageFile(url, page.image)
-                    )
+                    sendFile(calls.reserve, page.image)
                   );
                   return {
                     figure: (figure: ImportedQuestion["figures"][number]) =>
@@ -212,7 +222,7 @@ export function runImport<
               mathType: word.mathType,
               parts: Arr.map(
                 wordReads(word.lines),
-                (text): Effect.Effect<PartValue, PartError<UrlError>> => {
+                (text): Effect.Effect<PartValue, PartError<ReserveError>> => {
                   const read = readPictures(text, assets);
                   return Effect.succeed({
                     figure: (figure: ImportedQuestion["figures"][number]) =>

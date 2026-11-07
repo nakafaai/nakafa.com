@@ -41,7 +41,7 @@ export const ReportSubject = Schema.Struct({
  * One student's report card for one cohort of one period. `subjects` is the copy of
  * the released grades taken at approval, so a locked report keeps its values when the
  * grade rows go with the period. `hash` is the SHA-256 of the report's content, which
- * its PDF and the PDF's QR code carry, and `storageId` holds the PDF.
+ * its PDF and the PDF's QR code carry, and `fileId` holds the PDF.
  */
 export const reportCardValidator = Schema.Struct({
   approvedAt: Schema.optionalKey(Schema.Finite),
@@ -55,7 +55,7 @@ export const reportCardValidator = Schema.Struct({
   periodId: Id("tenantPeriods"),
   personId: Id("tenantPeople"),
   state: ReportState,
-  storageId: Schema.optionalKey(Id("_storage")),
+  fileId: Schema.optionalKey(Id("bucketFiles")),
   subjects: Schema.optionalKey(Schema.Array(ReportSubject)),
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,

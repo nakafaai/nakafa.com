@@ -90,7 +90,7 @@ function SchoolProfileCard({
   const fileInput = useRef<HTMLInputElement>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(undefined);
-  const requestUrl = useMutation(tenancy.logo.uploadUrl);
+  const reserveLogo = useMutation(tenancy.logo.reserve);
   const setLogo = useMutation(tenancy.logo.set);
   const removeLogo = useMutation(tenancy.logo.remove).withOptimisticUpdate(
     removeLogoChange
@@ -117,8 +117,9 @@ function SchoolProfileCard({
         () =>
           storeSchoolLogo({
             file,
-            requestUrl: () => requestUrl({ slug }),
-            save: (storageId) => setLogo({ contentType, slug, storageId }),
+            reserve: () =>
+              reserveLogo({ byteSize: file.size, contentType, slug }),
+            save: (fileId) => setLogo({ fileId, slug }),
           }),
         SOURCE
       );

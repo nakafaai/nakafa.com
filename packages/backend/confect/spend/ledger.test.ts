@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { schoolAccount } from "@repo/backend/confect/billing/tiers";
 import {
+  BUDGET_PER_CREDIT,
   holdSpend,
   monthOf,
   settleSpend,
 } from "@repo/backend/confect/spend/ledger";
+import { languageCeiling } from "@repo/backend/confect/spend/rates";
 import type { Claim } from "@repo/backend/confect/spend/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -20,6 +23,8 @@ import { Array as Arr, Cause, Exit } from "effect";
 
 const NOW = Date.UTC(2026, 10, 7, 10);
 const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
+/** The micro-dollars one student's credits give a school's month. */
+const SEAT_BUDGET = schoolAccount.credits * BUDGET_PER_CREDIT;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -89,7 +94,11 @@ describe("spend/ledger", () => {
       const userId = await insertLearner(ctx, "free");
       const claim: Claim = { kind: "learner", userId };
       // Free: 10 credits a day over 31 days, at $0.0025 a credit with the reserve.
-      const first = await runInMutation(ctx, holdSpend(claim, "chat", 500_000));
+      // The first call leaves less than one credit of the month.
+      const first = await runInMutation(
+        ctx,
+        holdSpend(claim, "chat", 775_000 - BUDGET_PER_CREDIT + 1)
+      );
       const refused = await exitInMutation(
         ctx,
         holdSpend(claim, "search", 300_000)
@@ -98,7 +107,7 @@ describe("spend/ledger", () => {
         _tag: "SpendRefused",
         budget: 775_000,
         held: 300_000,
-        used: 500_000,
+        used: 775_000 - BUDGET_PER_CREDIT + 1,
         vendor: "firecrawl",
       });
       await runInMutation(ctx, settleSpend(first.escrowId, 100_000));
@@ -182,17 +191,14 @@ describe("spend/ledger", () => {
       await insertMember(ctx, tenantId, userId);
       await insertPoolGrant(ctx, tenantId, 3);
       const claim: Claim = { kind: "member", tenantId, userId };
-      // Three students' 100 credits a month: 300 credits at $0.0025.
-      await runInMutation(ctx, holdSpend(claim, "import", 700_000));
-      const refused = await exitInMutation(
-        ctx,
-        holdSpend(claim, "import", 50_001)
-      );
-      expect(refusalOf(refused)).toMatchObject({ budget: 750_000 });
+      // Three students' credits a month, at $0.0025 a credit with the reserve.
+      await runInMutation(ctx, holdSpend(claim, "import", 3 * SEAT_BUDGET));
+      const refused = await exitInMutation(ctx, holdSpend(claim, "import", 1));
+      expect(refusalOf(refused)).toMatchObject({ budget: 3 * SEAT_BUDGET });
       expect(await rowsOf(ctx)).toEqual([
         {
           calls: 1,
-          held: 700_000,
+          held: 3 * SEAT_BUDGET,
           month: "2026-11",
           payer: { kind: "school", tenantId },
           spent: 0,
@@ -242,13 +248,62 @@ describe("spend/ledger", () => {
       await insertPoolGrant(ctx, tenantId, 1);
       await runInMutation(
         ctx,
-        holdSpend({ kind: "school", tenantId }, "embedding", 250_000)
+        holdSpend({ kind: "school", tenantId }, "embedding", SEAT_BUDGET)
       );
       const refused = await exitInMutation(
         ctx,
         holdSpend({ kind: "school", tenantId }, "embedding", 1)
       );
-      expect(refusalOf(refused)).toMatchObject({ budget: 250_000 });
+      expect(refusalOf(refused)).toMatchObject({ budget: SEAT_BUDGET });
+    });
+  });
+
+  it("starts a chat call in a pool smaller than its ceiling, holding the whole pool", async () => {
+    const t = createBillingTestConvex();
+    await t.run(async (ctx) => {
+      const tenantId = await insertSchool(ctx);
+      await insertPoolGrant(ctx, tenantId, 1);
+      expect(SEAT_BUDGET).toBeLessThan(languageCeiling("chat"));
+      const claim: Claim = { kind: "school", tenantId };
+      const escrow = await runInMutation(
+        ctx,
+        holdSpend(claim, "chat", languageCeiling("chat"))
+      );
+      expect(escrow.held).toBe(SEAT_BUDGET);
+      // The open call holds the rest of the month, so the next one waits for it to settle.
+      const refused = await exitInMutation(
+        ctx,
+        holdSpend(claim, "chat", languageCeiling("chat"))
+      );
+      expect(refusalOf(refused)).toMatchObject({ used: SEAT_BUDGET });
+      await runInMutation(ctx, settleSpend(escrow.escrowId, 300));
+      const next = await runInMutation(
+        ctx,
+        holdSpend(claim, "chat", languageCeiling("chat"))
+      );
+      expect(next.held).toBe(SEAT_BUDGET - 300);
+    });
+  });
+
+  it("runs a call that fits under one credit, and refuses one that does not fit", async () => {
+    const t = createBillingTestConvex();
+    await t.run(async (ctx) => {
+      const userId = await insertLearner(ctx, "free");
+      const claim: Claim = { kind: "learner", userId };
+      await runInMutation(
+        ctx,
+        holdSpend(claim, "chat", 775_000 - BUDGET_PER_CREDIT + 100)
+      );
+      const fits = await runInMutation(ctx, holdSpend(claim, "embedding", 100));
+      expect(fits.held).toBe(100);
+      const refused = await exitInMutation(
+        ctx,
+        holdSpend(claim, "embedding", BUDGET_PER_CREDIT)
+      );
+      expect(refusalOf(refused)).toMatchObject({
+        held: BUDGET_PER_CREDIT,
+        used: 775_000 - BUDGET_PER_CREDIT + 200,
+      });
     });
   });
 

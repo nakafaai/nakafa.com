@@ -17,7 +17,10 @@ import {
   schoolClassLibraryTarget,
 } from "@/lib/routing/school/target";
 
-/** The path from the top of the library to the folder the page shows, each step a link but the last. */
+/**
+ * The path from the top of the library to the folder the page shows, each step a link but the last. It stands inside
+ * the table card above the rows, with the inset of the table's first column, so the card's rounded edge cuts no letter.
+ */
 export function LibraryPath({
   folders,
 }: {
@@ -27,7 +30,7 @@ export function LibraryPath({
   const { classSlug, slug } = useClassScope();
 
   return (
-    <Breadcrumb aria-label={t("library-path")}>
+    <Breadcrumb aria-label={t("library-path")} className="px-4 pt-3">
       <BreadcrumbList>
         <BreadcrumbItem>
           {Arr.isReadonlyArrayEmpty(folders) ? (

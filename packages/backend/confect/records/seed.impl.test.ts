@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { Email, Npsn } from "@repo/backend/confect/tenancy/schema";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   firstPage,
   keyedFixture,
@@ -14,6 +15,11 @@ import {
 } from "@repo/backend/test/classroom";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Effect, Schema } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 const seed = refs.internal.records.seed.graduation;
 
@@ -43,6 +49,16 @@ const openSma = Effect.fn("test.records.seed.openSma")(function* (
 });
 
 describe("records seed graduation", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);

@@ -62,8 +62,9 @@ type Reserved = Ref.Returns<typeof classroom.library.reserve>;
 /**
  * Adds one file to the library: it reserves the file's bytes, which the server charges to the school before any
  * byte moves, sends the file straight to R2 at the address it answers, reporting progress, and registers the
- * upload, which the server checks before it keeps it. The module that sends the file loads only now, so the page's
- * first JavaScript does not carry it.
+ * upload, which the server checks before it keeps it. A send that R2 or the browser refuses still frees the reserved
+ * bytes at once and fails with its error. The module that sends the file loads only now, so the page's first
+ * JavaScript does not carry it.
  */
 export const uploadLibraryFile = Effect.fn("classroom.library.upload")(
   function* <ReserveError, RegisterError, Registered>(
@@ -78,7 +79,12 @@ export const uploadLibraryFile = Effect.fn("classroom.library.upload")(
     const { putLibraryFile } = yield* Effect.tryPromise(
       () => import("@/components/tenant/classes/library/send")
     );
-    yield* putLibraryFile(reserved.address, file, onProgress);
+    // A send that fails registers the reservation anyway: the server finds no bytes, frees them, and refuses it.
+    yield* putLibraryFile(reserved.address, file, onProgress).pipe(
+      Effect.tapError(() =>
+        Effect.ignore(forumCall(() => register(reserved.uploadId)))
+      )
+    );
     return yield* forumCall(() => register(reserved.uploadId));
   }
 );

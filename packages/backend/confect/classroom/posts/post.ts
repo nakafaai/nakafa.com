@@ -28,6 +28,7 @@ export const PostText = Schema.String.check(
  * home. `poll` makes it a question its readers vote on, whose text is the poll's question. `tenantId` is copied from the class for the tenant check of every read.
  */
 export const postValidator = Schema.Struct({
+  archivedAt: Schema.optionalKey(Schema.Finite),
   authorId: Id("tenantPeople"),
   classId: Id("classes"),
   clientKey: ClientKey,
@@ -46,6 +47,7 @@ export const postValidator = Schema.Struct({
  * poll, and whether the viewer wrote it.
  */
 export const PostView = Schema.Struct({
+  archived: Schema.Boolean,
   author: Schema.Struct({ id: Id("tenantPeople"), name: Schema.String }),
   clientKey: ClientKey,
   createdAt: Schema.Finite,

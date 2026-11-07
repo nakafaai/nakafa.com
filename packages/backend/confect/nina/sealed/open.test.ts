@@ -5,6 +5,7 @@ import {
   ensureLearnerKeys,
   readLearnerKeys,
 } from "@repo/backend/confect/vault/keys";
+import { stubBucket } from "@repo/backend/test/bucket";
 import {
   answer,
   MESSAGE_IDENTITY,
@@ -25,6 +26,7 @@ const LATER = { ...IDENTITY, stepOrder: 3 };
 
 describe("opening a read of rows", () => {
   beforeEach(() => {
+    stubBucket();
     vi.mocked(readLearnerKeys).mockClear();
   });
 

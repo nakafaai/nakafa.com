@@ -2,15 +2,13 @@ import { FunctionImpl } from "@confect/server";
 import type { ReportCardsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  StorageReader,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { fileAddress } from "@repo/backend/confect/bucket/file";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { ReportHash } from "@repo/backend/confect/records/hash";
 import type { OwnReport } from "@repo/backend/confect/records/report";
 import spec from "@repo/backend/confect/records/reports.spec";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** The most report cards of one student a read takes: two a year for twelve years, with room. */
 const REPORT_LIMIT = 50;
@@ -20,7 +18,7 @@ const LockedCard = Schema.Struct({
   approvedAt: Schema.Finite,
   hash: ReportHash,
   state: Schema.Literal("locked"),
-  storageId: Id("_storage"),
+  fileId: Id("bucketFiles"),
 });
 
 /** Whether a report card is locked, so the student may read it with its PDF. */
@@ -40,7 +38,6 @@ export const own = FunctionImpl.make(
   Effect.fn("records.reports.own")(function* () {
     const { person } = yield* Member;
     const reader = yield* DatabaseReader;
-    const storage = yield* StorageReader;
     const rows = yield* reader
       .table("reportCards")
       .index(
@@ -55,9 +52,8 @@ export const own = FunctionImpl.make(
         const [cohort, period, file] = yield* Effect.all([
           reader.table("tenantCohorts").get(row.cohortId).pipe(Effect.orDie),
           reader.table("tenantPeriods").get(row.periodId).pipe(Effect.orDie),
-          storage.getUrl(row.storageId).pipe(
-            Effect.map((url) => url.href),
-            Effect.orDie
+          fileAddress(row.fileId).pipe(
+            Effect.map((address) => Option.getOrElse(address, () => ""))
           ),
         ]);
         const card: typeof OwnReport.Type = {

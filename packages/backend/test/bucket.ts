@@ -1,4 +1,6 @@
-import { Record as Rec } from "effect";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { Effect, Record as Rec, Schema } from "effect";
 
 /** The endpoint the tests configure for R2, which no request ever leaves the process for. */
 const BUCKET_ENDPOINT = "https://account.r2.test";
@@ -76,3 +78,25 @@ export const upload = (
 ) => {
   bucket.state.objects[bucket.keyOf(address)] = bytes;
 };
+
+/** What a `reserve` call answers: the presigned address of the file and its ID. */
+const Reserved = Schema.Struct({
+  address: Schema.String,
+  fileId: Id("bucketFiles"),
+});
+
+/** Uploads the bytes of a file that a `reserve` call reserved, as the browser does, and answers the file's ID. */
+export const uploadReserved = <E, R>(
+  bucket: ReturnType<typeof makeBucket>,
+  reserved: Effect.Effect<typeof Reserved.Type, E, R>,
+  bytes: Uint8Array
+) =>
+  Effect.map(reserved, ({ address, fileId }) => {
+    upload(bucket, address, bytes);
+    return fileId;
+  });
+
+/** Every file row the bucket holds, for a test that expects them gone. */
+export const fileRows = Effect.flatMap(DatabaseReader, (reader) =>
+  reader.table("bucketFiles").index("by_creation_time").take(32)
+);

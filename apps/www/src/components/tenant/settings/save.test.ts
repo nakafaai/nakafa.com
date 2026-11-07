@@ -53,6 +53,25 @@ describe("saveSchool", () => {
     error.mockRestore();
   });
 
+  it("hands a dialog the copy of a refusal in place of the toast, so the dialog says why and stays open", async () => {
+    const error = vi.spyOn(toast, "error");
+    const refused = vi.fn();
+
+    await saveSchool(
+      () => Promise.resolve(Result.fail({ _tag: "PersonAlreadyPlaced" })),
+      "test",
+      undefined,
+      refused
+    );
+
+    expect(refused).toHaveBeenCalledWith({
+      description: "school-refusal-already-placed.description",
+      title: "school-refusal-already-placed.title",
+    });
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
   it("shows the copy of a grant refusal by its code", async () => {
     const error = vi.spyOn(toast, "error");
 

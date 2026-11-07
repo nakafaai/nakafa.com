@@ -1,6 +1,12 @@
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr } from "effect";
 
+/**
+ * The private R2 bucket's S3 endpoint (ADR 0028): a browser uploads a file straight to its presigned address and
+ * plays an exam's audio from one, so both directives must reach it. The account's endpoint is a subdomain of this.
+ */
+const R2_SOURCE = "https://*.r2.cloudflarestorage.com";
+
 const BASE_CONTENT_SECURITY_POLICY = {
   connectSrc: [
     "'self'",
@@ -11,8 +17,14 @@ const BASE_CONTENT_SECURITY_POLICY = {
     "https://cdn.jsdelivr.net",
     "https://www.youtube-nocookie.com",
     "https://www.youtube.com",
+    R2_SOURCE,
   ],
-  mediaSrc: ["'self'", "https://*.convex.cloud", "https://cdn.islamic.network"],
+  mediaSrc: [
+    "'self'",
+    "https://*.convex.cloud",
+    "https://cdn.islamic.network",
+    R2_SOURCE,
+  ],
   scriptSrc: [
     "'self'",
     "'unsafe-eval'",

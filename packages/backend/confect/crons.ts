@@ -1,6 +1,7 @@
 import { CronJob, CronJobs } from "@confect/server";
 import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
+import bucketInternal from "@repo/backend/confect/_generated/refs/bucket.server";
 import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
@@ -15,7 +16,6 @@ import integrationsInternal from "@repo/backend/confect/_generated/refs/integrat
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import operatorsInternal from "@repo/backend/confect/_generated/refs/operators.server";
-import storageInternal from "@repo/backend/confect/_generated/refs/storage.server";
 import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
 import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
@@ -138,17 +138,17 @@ export default CronJobs.make()
   )
   .add(
     CronJob.make(
-      "free unregistered library uploads and empty the trash",
+      "free file uploads that never arrived",
       Duration.hours(24),
-      classroomInternal.library.sweep,
+      bucketInternal.sweep,
       {}
     )
   )
   .add(
     CronJob.make(
-      "reclaim unused Nina files",
+      "free unregistered library uploads and empty the trash",
       Duration.hours(24),
-      storageInternal.sweep,
+      classroomInternal.library.sweep,
       {}
     )
   )

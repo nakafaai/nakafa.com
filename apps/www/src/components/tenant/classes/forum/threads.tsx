@@ -1,11 +1,30 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import { BubbleChatIcon } from "@hugeicons/core-free-icons";
+import {
+  PaginatedQueryResult,
+  useMutation,
+  usePaginatedQuery,
+} from "@confect/react";
+import {
+  Archive02Icon,
+  ArrowTurnBackwardIcon,
+  BubbleChatIcon,
+  MoreHorizontalIcon,
+} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ThreadRow } from "@repo/backend/confect/classroom/forum/thread";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemDescription,
   ItemGroup,
@@ -13,12 +32,22 @@ import {
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
 import { Array as Arr } from "effect";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import { ChannelUnread } from "@/components/tenant/classes/channels";
+import {
+  forumCall,
+  runForumCall,
+  toastForumFailure,
+} from "@/components/tenant/classes/forum/call";
+import {
+  archiveThreadUpdate,
+  restoreThreadUpdate,
+} from "@/components/tenant/classes/forum/optimistic";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TargetLink } from "@/lib/routing/link";
@@ -35,12 +64,12 @@ const THREAD_PAGE_SIZE = 20;
  */
 export function ThreadRows() {
   const t = useTranslations("Classroom");
-  const table = useTranslations("DataTable");
-  const { classId, slug } = useClassScope();
+  const { can, classId, slug } = useClassScope();
   const search = useTableFilters((state) => state.search);
+  const [archived, setArchived] = useState(false);
   const pagination = usePaginatedQuery(
     classroom.forum.threads.list,
-    { classId, slug },
+    { classId, slug, ...(archived ? { archived } : {}) },
     { initialNumItems: THREAD_PAGE_SIZE }
   );
   if (PaginatedQueryResult.isFailure(pagination)) {
@@ -56,6 +85,45 @@ export function ThreadRows() {
     matchesSearch(row.discussion.title, search)
   );
 
+  return (
+    <>
+      {Arr.contains(can, "forum.manage") ? (
+        <div className="flex justify-end py-2 lg:pe-2">
+          <Button
+            aria-pressed={archived}
+            onClick={() => setArchived((shown) => !shown)}
+            size="sm"
+            variant={archived ? "secondary" : "ghost"}
+          >
+            <HugeIcons aria-hidden="true" icon={Archive02Icon} />
+            {t("threads-archived")}
+          </Button>
+        </div>
+      ) : null}
+      <ThreadList
+        onLoadMore={
+          PaginatedQueryResult.isCanLoadMore(pagination)
+            ? () => pagination.loadMore(THREAD_PAGE_SIZE)
+            : null
+        }
+        rows={rows}
+      />
+    </>
+  );
+}
+
+/** The discussions the list keeps, or the sentence that none matches, and the next page as the end comes into view. */
+function ThreadList({
+  onLoadMore,
+  rows,
+}: {
+  /** Loads the next page, while the list has one. */
+  onLoadMore: (() => void) | null;
+  rows: readonly (typeof ThreadRow.Type)[];
+}) {
+  const t = useTranslations("Classroom");
+  const table = useTranslations("DataTable");
+
   return Arr.isReadonlyArrayEmpty(rows) ? (
     <p className="text-muted-foreground p-4 text-center text-sm">
       {table("no-results")}
@@ -68,11 +136,7 @@ export function ThreadRows() {
       {Arr.map(rows, (row) => (
         <ThreadItem key={row.discussion.number} row={row} />
       ))}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection
-          onIntersect={() => pagination.loadMore(THREAD_PAGE_SIZE)}
-        />
-      ) : null}
+      {onLoadMore === null ? null : <Intersection onIntersect={onLoadMore} />}
     </ItemGroup>
   );
 }
@@ -80,7 +144,7 @@ export function ThreadRows() {
 /** One thread as a row: its number and title, which open it across the whole row, and its replies. */
 function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
   const t = useTranslations("Classroom");
-  const { classSlug, slug } = useClassScope();
+  const { can, classSlug, slug } = useClassScope();
   const { discussion } = row;
 
   return (
@@ -118,6 +182,72 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
             : t("discussion-replies", { count: discussion.replies })}
         </ItemDescription>
       </ItemContent>
+      {Arr.contains(can, "forum.manage") ? <ThreadShelf row={row} /> : null}
     </Item>
+  );
+}
+
+/**
+ * A discussion's menu for whoever manages the forum: Archive, which takes it out of the class's list, or Restore on an
+ * archived one. The row leaves its list at once and comes back with the School toast on a refusal.
+ */
+function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
+  const t = useTranslations("Classroom");
+  const common = useTranslations("Common");
+  const { classId, slug } = useClassScope();
+  const archive = useMutation(classroom.forum.threads.archive);
+  const restore = useMutation(classroom.forum.threads.restore);
+  const args = { classId, number: row.discussion.number, slug };
+
+  return (
+    <ItemActions className="relative">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            {row.archived ? (
+              <DropdownMenuItem
+                onClick={() =>
+                  runForumCall(
+                    forumCall(() =>
+                      restore.withOptimisticUpdate(restoreThreadUpdate)(args)
+                    ),
+                    toastForumFailure
+                  )
+                }
+              >
+                <HugeIcons icon={ArrowTurnBackwardIcon} />
+                {t("discussion-restore")}
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={() =>
+                  runForumCall(
+                    forumCall(() =>
+                      archive.withOptimisticUpdate(archiveThreadUpdate)(args)
+                    ),
+                    toastForumFailure
+                  )
+                }
+              >
+                <HugeIcons icon={Archive02Icon} />
+                {t("discussion-archive")}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </ItemActions>
   );
 }
