@@ -10,13 +10,22 @@ class CopyUnavailableError extends Schema.TaggedError<CopyUnavailableError>()(
   }
 ) {}
 
+/** The locale and namespace of one translator, as the shared server translator takes them. */
+type CopyInput = Parameters<typeof readServerTranslator>[0];
+
 /**
- * Reads the translator of one namespace. A copy that cannot load is a typed
- * failure with its cause, so the caller reports it instead of a defect.
+ * Reads the translator of one namespace. The namespace stays a type parameter,
+ * so the translator is typed for that namespace alone and not for the union of
+ * every namespace, which grows past the compiler's depth limit. A copy that
+ * cannot load is a typed failure with its cause, so the caller reports it
+ * instead of a defect.
  */
-export const readCopy = Effect.fn("www.i18n.readCopy")(function* (
-  input: Parameters<typeof readServerTranslator>[0]
-) {
+export const readCopy = Effect.fn("www.i18n.readCopy")(function* <
+  const Namespace extends CopyInput["namespace"],
+>(input: {
+  readonly locale: CopyInput["locale"];
+  readonly namespace: Namespace;
+}) {
   return yield* Effect.tryPromise({
     try: () => readServerTranslator(input),
     catch: (cause) =>
