@@ -42,7 +42,7 @@ const issueInvoice = FunctionImpl.make(
     const { invoiceId, number, tenant, total } = yield* issueContractInvoice(
       args
     ).pipe(Effect.catchTag("InvoiceNumberExhausted", Effect.die));
-    yield* requestInvoiceSession(tenant, invoiceId, "school.seat.year");
+    yield* requestInvoiceSession(tenant, invoiceId);
     return { invoiceId, number, total };
   })
 );

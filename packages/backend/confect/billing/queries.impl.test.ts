@@ -238,16 +238,17 @@ describe("billing/queries overview", () => {
           product: "school",
           tenantId,
           scope: { kind: "tenant" },
-          seats: 2,
-          ninaSeats: 2,
+          seats: 35,
+          ninaSeats: 35,
           source: { kind: "contract", contractId: "contract-pool" },
           validFrom: 0,
           validTo: NEXT_MONTH,
         });
+        // The school's month holds 6 credits for each of its 35 accounts, 210 in all.
         await ctx.db.insert("creditPools", {
           tenantId,
           month: "2026-10",
-          used: 190,
+          used: 200,
         });
         await ctx.db.insert("creditPoolDays", {
           tenantId,

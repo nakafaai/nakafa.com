@@ -1,22 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
-import { Email } from "@repo/backend/confect/tenancy/schema";
+import { schoolPeriod } from "@repo/backend/confect/billing/quote";
+import { schoolPlans } from "@repo/backend/confect/billing/tier";
 import {
-  grantRole,
-  invitePerson,
   scheduledJobs,
   slugOf,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, DateTime, Duration, Effect, Schema } from "effect";
+import { Array as Arr, DateTime, Duration, Effect } from "effect";
 
 const nf = slugOf("nf");
 const other = slugOf("other");
 const { overview, pay } = refs.public.billing.school;
-const schueler = Schema.decodeSync(Email)("schueler@other.example.test");
 
 // Fake timers hold every scheduled job, so the Xendit session a payment asks for is only listed.
 beforeEach(() => {
@@ -30,25 +27,20 @@ afterEach(() => {
 
 describe("billing/school", () => {
   it.effect(
-    "shows the Admin a free school's students and its terms, and refuses a teacher",
+    "shows the Admin a school on its trial: its accounts against the trial's, its Drive and its last day, and refuses a teacher",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const read = yield* fixture.as("admin").query(overview, { slug: nf });
         expect(read).toMatchObject({
+          accounts: { limit: schoolPlans.trial.accounts },
           currency: "IDR",
+          driveBytes: schoolPlans.trial.driveBytes,
           invoices: [],
-          plan: { kind: "free", limit: SCHOOL_FREE_STUDENTS },
+          plan: { kind: "trial" },
           rail: "xendit",
         });
-        expect(read.students).toBeGreaterThan(0);
-        expect(Arr.map(read.quotes, (quote) => quote.offer)).toEqual([
-          "school.seat.semester",
-          "school.seat.year",
-        ]);
-        expect(
-          Arr.every(read.quotes, (quote) => quote.seats === read.students)
-        ).toBe(true);
+        expect(read.accounts.used).toBeGreaterThan(0);
         const refused = yield* fixture
           .as("teacher")
           .query(overview, { slug: nf })
@@ -58,33 +50,44 @@ describe("billing/school", () => {
   );
 
   it.effect(
-    "quotes no term to a school outside Indonesia, which pays through Polar",
+    "bills a school outside Indonesia in its own currency, payable by transfer",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const read = yield* fixture
-          .as("otherOwner")
-          .query(overview, { slug: other });
+        const owner = fixture.as("otherOwner");
+        const issued = yield* owner.mutation(pay, {
+          order: { kind: "plan", accounts: 0, months: 1, plan: "pro" },
+          slug: other,
+        });
+        const read = yield* owner.query(overview, { slug: other });
         expect(read).toMatchObject({
           currency: "EUR",
-          quotes: [],
+          invoices: [
+            {
+              accounts: 100,
+              currency: "EUR",
+              number: issued.number,
+              paymentLink: null,
+              total: 10_900,
+            },
+          ],
           rail: "polar",
         });
       })
   );
 
   it.effect(
-    "issues one invoice per term, payable by transfer while Indonesia stays on Polar, and shows School once it is paid",
+    "issues one open invoice at a time, payable by transfer while Indonesia stays on Polar, shows the plan once it is paid, and lists the renewal first",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const owner = fixture.as("owner");
         const issued = yield* owner.mutation(pay, {
-          offer: "school.seat.year",
+          order: { kind: "plan", accounts: 20, months: 3, plan: "pro" },
           slug: nf,
         });
         const again = yield* owner.mutation(pay, {
-          offer: "school.seat.year",
+          order: { kind: "plan", accounts: 0, months: 12, plan: "max" },
           slug: nf,
         });
         expect(again.number).toBe(issued.number);
@@ -94,7 +97,13 @@ describe("billing/school", () => {
         ).toBe(false);
         const open = yield* owner.query(overview, { slug: nf });
         expect(open.invoices).toMatchObject([
-          { number: issued.number, paymentLink: null, status: "open" },
+          {
+            accounts: 120,
+            number: issued.number,
+            paymentLink: null,
+            status: "open",
+            total: 5_370_000 + 20 * 47_700,
+          },
         ]);
         yield* fixture.internal.mutation(
           refs.internal.billing.contracts.recordInvoiceTransfer,
@@ -102,18 +111,25 @@ describe("billing/school", () => {
         );
         const paid = yield* owner.query(overview, { slug: nf });
         expect(paid).toMatchObject({
+          accounts: { limit: 120 },
+          driveBytes: schoolPlans.pro.driveBytes + 20 * 200_000_000,
           invoices: [{ number: issued.number, status: "paid" }],
           plan: {
-            kind: "school",
-            nina: { capacity: open.students * 100, used: 0 },
-            seats: open.students,
+            added: 20,
+            credits: { capacity: 720, used: 0 },
+            kind: "pro",
+            period: schoolPeriod(TENANCY_NOW, 3),
           },
-          quotes: [],
         });
-        const nothingLeft = yield* owner
-          .mutation(pay, { offer: "school.seat.semester", slug: nf })
-          .pipe(Effect.flip);
-        expect(nothingLeft._tag).toBe("SchoolSeatsPaid");
+        const renewal = yield* owner.mutation(pay, {
+          order: { kind: "plan", accounts: 20, months: 3, plan: "pro" },
+          slug: nf,
+        });
+        const listed = yield* owner.query(overview, { slug: nf });
+        expect(Arr.map(listed.invoices, (invoice) => invoice.number)).toEqual([
+          renewal.number,
+          issued.number,
+        ]);
       })
   );
 
@@ -124,9 +140,10 @@ describe("billing/school", () => {
         vi.stubEnv("BILLING_INDONESIA_RAIL", "xendit");
         vi.stubEnv("XENDIT_API_KEY", "test-secret");
         const fixture = yield* tenancyFixture;
-        yield* fixture
-          .as("owner")
-          .mutation(pay, { offer: "school.seat.semester", slug: nf });
+        yield* fixture.as("owner").mutation(pay, {
+          order: { kind: "plan", accounts: 0, months: 1, plan: "max" },
+          slug: nf,
+        });
         const jobs = yield* fixture.run(scheduledJobs);
         expect(
           Arr.some(jobs, (job) => job.name.includes("billing/xendit/invoice"))
@@ -135,62 +152,26 @@ describe("billing/school", () => {
   );
 
   it.effect(
-    "refuses a term the school's currency has no price for, before any invoice is issued",
+    "refuses more accounts while no plan runs, before any invoice is issued",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const { personId } = yield* fixture.run(
-          invitePerson(fixture.tenants.other, schueler)
-        );
-        yield* fixture.run(
-          grantRole(fixture.tenants.other, personId, "student", {
-            kind: "tenant",
-          })
-        );
-        const refused = yield* fixture
-          .as("otherOwner")
-          .mutation(pay, { offer: "school.seat.semester", slug: other })
+        const owner = fixture.as("owner");
+        const refused = yield* owner
+          .mutation(pay, { order: { kind: "accounts", accounts: 5 }, slug: nf })
           .pipe(Effect.flip);
-        expect(refused._tag).toBe("CheckoutOfferUnavailable");
-        const read = yield* fixture
-          .as("otherOwner")
-          .query(overview, { slug: other });
+        expect(refused._tag).toBe("SchoolPlanMissing");
+        const read = yield* owner.query(overview, { slug: nf });
         expect(read.invoices).toEqual([]);
       })
   );
 
-  it.effect("lists a school's invoices newest first", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const owner = fixture.as("owner");
-      const semester = yield* owner.mutation(pay, {
-        offer: "school.seat.semester",
-        slug: nf,
-      });
-      // The semester paid for everyone enrolled, so a second invoice needs a student it has not covered.
-      yield* fixture.as("admin").mutation(refs.public.identity.cards.enroll, {
-        loginName: "siswa.baru",
-        name: "Siswa Baru",
-        slug: nf,
-        unitId: fixture.units.smp,
-      });
-      const year = yield* owner.mutation(pay, {
-        offer: "school.seat.year",
-        slug: nf,
-      });
-      const read = yield* owner.query(overview, { slug: nf });
-      expect(Arr.map(read.invoices, (invoice) => invoice.number)).toEqual([
-        year.number,
-        semester.number,
-      ]);
-    })
-  );
-
   it.effect(
-    "shows a paid school's Nina pool: what its grants hold this month and what its members drew",
+    "shows a contract school's shared AI credits: what its grants hold this month and what its members drew",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
+        const validTo = TENANCY_NOW + Duration.toMillis(Duration.days(90));
         yield* fixture.run(
           Effect.gen(function* () {
             const writer = yield* DatabaseWriter;
@@ -198,11 +179,11 @@ describe("billing/school", () => {
               product: "school",
               tenantId: fixture.tenants.nf,
               scope: { kind: "tenant" },
-              seats: 3,
-              ninaSeats: 3,
+              seats: 300,
+              ninaSeats: 300,
               source: { kind: "contract", contractId: "contract-pool" },
               validFrom: 0,
-              validTo: TENANCY_NOW + Duration.toMillis(Duration.days(90)),
+              validTo,
             });
             yield* writer.table("creditPools").insert({
               tenantId: fixture.tenants.nf,
@@ -214,10 +195,14 @@ describe("billing/school", () => {
           })
         );
         const read = yield* fixture.as("owner").query(overview, { slug: nf });
-        expect(read.plan).toMatchObject({
-          kind: "school",
-          nina: { capacity: 300, used: 120 },
-          seats: 3,
+        expect(read).toMatchObject({
+          accounts: { limit: 300 },
+          driveBytes: 300 * 200_000_000,
+          plan: {
+            credits: { capacity: 1800, used: 120 },
+            kind: "contract",
+            validTo,
+          },
         });
       })
   );

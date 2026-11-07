@@ -16,14 +16,7 @@ import {
   schoolMonthlyPrices,
   schoolPlanLines,
 } from "@repo/backend/confect/billing/tier";
-import {
-  Array as Arr,
-  BigDecimal,
-  DateTime,
-  Duration,
-  Option,
-  Schema,
-} from "effect";
+import { Array as Arr, BigDecimal, DateTime, Duration, Schema } from "effect";
 
 const DAY_MS = Duration.toMillis(Duration.days(1));
 
@@ -46,7 +39,10 @@ type Share = typeof Share.Type;
 type PricedItem = keyof typeof schoolMonthlyPrices;
 
 /** The period of `months` months that starts at `start`, by the calendar in UTC. */
-export function schoolPeriod(start: number, months: SchoolMonths): SchoolPeriod {
+export function schoolPeriod(
+  start: number,
+  months: SchoolMonths
+): SchoolPeriod {
   const end = DateTime.toEpochMillis(
     DateTime.add(DateTime.makeUnsafe(start), { months })
   );
@@ -98,13 +94,35 @@ export const PlanOrder = Schema.Struct({
   plan: PaidSchoolPlan,
 });
 
+/** The accounts a school adds to the plan that runs: any whole number from one up to the limit. */
+export const MoreAccounts = Schema.Int.check(
+  Schema.isBetween({ minimum: 1, maximum: SCHOOL_ACCOUNT_LIMIT })
+);
+
 /** Accounts added to the plan that runs over `period`, from `from` to its end, in one currency. */
 export const AccountsOrder = Schema.Struct({
-  accounts: AddedAccounts,
+  accounts: MoreAccounts,
   currency: BillingCurrency,
   from: Schema.Finite,
   period: SchoolPeriod,
 });
+
+/**
+ * What a school orders from its billing page: a paid plan for a period with the
+ * accounts it adds, which starts when the running plan ends; or more accounts for
+ * the plan that runs, until its end. The server prices either from the school's
+ * own currency and plan, never from the page.
+ */
+export const SchoolOrder = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("plan"),
+    accounts: AddedAccounts,
+    months: SchoolMonthsSchema,
+    plan: PaidSchoolPlan,
+  }),
+  Schema.Struct({ kind: Schema.Literal("accounts"), accounts: MoreAccounts }),
+]).pipe(Schema.toTaggedUnion("kind"));
+export type SchoolOrder = typeof SchoolOrder.Type;
 
 /** The whole of a period, for an item bought from its start. */
 const WHOLE: Share = { days: 1, left: 1 };
@@ -140,29 +158,25 @@ function lineOf(
 }
 
 /** The lines of a quote, and their total. */
-function quoteOf(lines: readonly ReturnType<typeof lineOf>[]) {
+function quoteOf(lines: Arr.NonEmptyReadonlyArray<ReturnType<typeof lineOf>>) {
   return {
     lines,
     total: Arr.reduce(lines, 0, (total, line) => total + line.amount),
   };
 }
 
-/** The accounts line of a quote, when it adds any. */
+/** The line of `accounts` added accounts for a share of a period of `months` months. */
 function accountsLine(
   currency: BillingCurrency,
   months: SchoolMonths,
   accounts: number,
   share: Share
 ) {
-  return Option.liftPredicate(accounts, (count) => count > 0).pipe(
-    Option.map((count) =>
-      lineOf(
-        "school.accounts",
-        count,
-        amountOf("account", currency, months, 1, share),
-        amountOf("account", currency, months, count, share)
-      )
-    )
+  return lineOf(
+    "school.accounts",
+    accounts,
+    amountOf("account", currency, months, 1, share),
+    amountOf("account", currency, months, accounts, share)
   );
 }
 
@@ -173,12 +187,15 @@ function accountsLine(
  */
 export function planQuote(input: typeof PlanOrder.Type) {
   const price = schoolPeriodPrice(input.plan, input.months, input.currency);
-  return quoteOf([
-    lineOf(schoolPlanLines[input.plan], 1, price, price),
-    ...Option.toArray(
-      accountsLine(input.currency, input.months, input.accounts, WHOLE)
-    ),
-  ]);
+  const plan = lineOf(schoolPlanLines[input.plan], 1, price, price);
+  return quoteOf(
+    input.accounts > 0
+      ? [
+          plan,
+          accountsLine(input.currency, input.months, input.accounts, WHOLE),
+        ]
+      : [plan]
+  );
 }
 
 /**
@@ -187,14 +204,12 @@ export function planQuote(input: typeof PlanOrder.Type) {
  * its discount, for the share of its days still to run.
  */
 export function accountsQuote(input: typeof AccountsOrder.Type) {
-  return quoteOf(
-    Option.toArray(
-      accountsLine(
-        input.currency,
-        input.period.months,
-        input.accounts,
-        remainingShare(input.period, input.from)
-      )
-    )
-  );
+  return quoteOf([
+    accountsLine(
+      input.currency,
+      input.period.months,
+      input.accounts,
+      remainingShare(input.period, input.from)
+    ),
+  ]);
 }

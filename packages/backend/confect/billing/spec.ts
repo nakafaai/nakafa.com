@@ -294,19 +294,19 @@ export class XenditCheckoutError extends Schema.TaggedError<XenditCheckoutError>
 }
 export const XenditCheckoutErrorWire = publicFailure(XenditCheckoutError);
 
-/** Raised when a school asks to pay for students its running School grants already pay for. */
-export const schoolSeatsPaidCode = "SCHOOL_SEATS_PAID";
-export class SchoolSeatsPaid extends Schema.TaggedError<SchoolSeatsPaid>()(
-  "SchoolSeatsPaid",
+/** Raised when a school asks to add accounts while no paid plan runs to add them to. */
+export const schoolPlanMissingCode = "SCHOOL_PLAN_MISSING";
+export class SchoolPlanMissing extends Schema.TaggedError<SchoolPlanMissing>()(
+  "SchoolPlanMissing",
   {
-    code: Schema.Literal(schoolSeatsPaidCode),
+    code: Schema.Literal(schoolPlanMissingCode),
     message: Schema.String,
   }
 ) {
-  declare readonly code: typeof schoolSeatsPaidCode;
+  declare readonly code: typeof schoolPlanMissingCode;
   declare readonly message: string;
 }
-export const SchoolSeatsPaidWire = publicFailure(SchoolSeatsPaid);
+export const SchoolPlanMissingWire = publicFailure(SchoolPlanMissing);
 
 /** What linking a Polar customer to a Nakafa user did. Only `linked` links anything. */
 export const LinkPolarCustomerOutcome = Schema.Literals([

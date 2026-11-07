@@ -3,11 +3,11 @@ import { lineAccounts, linePlan } from "@repo/backend/confect/billing/tier";
 import { Option } from "effect";
 
 describe("billing/tier", () => {
-  it("counts the accounts each invoice line pays for", () => {
+  it("counts the accounts each invoice line pays for, an Enterprise line by its seats", () => {
     expect(lineAccounts("school.pro", 1)).toBe(100);
     expect(lineAccounts("school.max", 1)).toBe(500);
     expect(lineAccounts("school.accounts", 37)).toBe(37);
-    expect(lineAccounts("Pelatihan guru", 1)).toBe(0);
+    expect(lineAccounts("Kontrak Enterprise 2026/2027", 300)).toBe(300);
   });
 
   it("reads the paid plan a line sells, and none for accounts or an operator's line", () => {

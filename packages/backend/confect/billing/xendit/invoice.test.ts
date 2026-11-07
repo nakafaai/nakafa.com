@@ -66,7 +66,7 @@ describe("billing/xendit/invoice", () => {
       const checkout = (sessionId: string, invoiceId: typeof paidId) =>
         ctx.db.insert("billingCheckouts", {
           accountId,
-          offer: "school.seat.year",
+          offer: "school.invoice",
           rail: "xendit",
           sessionId,
           url: `https://dev.xen.to/${sessionId}`,
@@ -167,7 +167,7 @@ describe("billing/xendit/invoice", () => {
       });
       await ctx.db.insert("billingCheckouts", {
         accountId,
-        offer: "school.seat.year",
+        offer: "school.invoice",
         rail: "xendit",
         sessionId: "ps_1",
         url: "https://dev.xen.to/ps_1",

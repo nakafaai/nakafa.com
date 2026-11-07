@@ -190,20 +190,6 @@ export declare const api: {
     };
   };
   billing: {
-    polar: {
-      school: {
-        checkout: FunctionReference<
-          "action",
-          "public",
-          {
-            locale: "en" | "id" | "de";
-            offer: "school.seat.month" | "school.seat.year";
-            slug: string;
-          },
-          { url: string }
-        >;
-      };
-    };
     queries: {
       overview: FunctionReference<
         "query",
@@ -235,6 +221,7 @@ export declare const api: {
               | "pro.pass.3"
               | "pro.pass.12"
               | "pro.topup"
+              | "school.invoice"
               | "school.seat.month"
               | "school.seat.semester"
               | "school.seat.year";
@@ -305,44 +292,51 @@ export declare const api: {
         "public",
         { slug: string },
         {
+          accounts: { limit: number; used: number };
           currency: "EUR" | "IDR" | "USD";
+          driveBytes: number;
           invoices: Array<{
+            accounts: number;
             currency: "EUR" | "IDR" | "USD";
             dueAt: number;
             number: string;
             paymentLink: string | null;
             periodEnd: number;
             periodStart: number;
-            seats: number;
             status: "draft" | "open" | "paid" | "void";
             total: number;
           }>;
           plan:
-            | { kind: "free"; limit: number }
+            | { endsAt: number; kind: "trial" }
             | {
-                kind: "school";
-                nina: { capacity: number; used: number };
-                seats: number;
+                added: number;
+                credits: { capacity: number; used: number };
+                kind: "pro" | "max";
+                period: { end: number; months: 1 | 3 | 6 | 12; start: number };
+              }
+            | {
+                credits: { capacity: number; used: number };
+                kind: "contract";
                 validTo: number;
               };
-          quotes: Array<{
-            offer:
-              "school.seat.month" | "school.seat.semester" | "school.seat.year";
-            periodEnd: number;
-            periodStart: number;
-            seats: number;
-            total: number;
-            unitAmount: number;
-          }>;
           rail: "polar" | "xendit";
-          students: number;
           tenantId: Id<"tenants">;
         }
       >;
       pay: FunctionReference<
         "mutation",
         "public",
-        { offer: "school.seat.semester" | "school.seat.year"; slug: string },
+        {
+          order:
+            | {
+                accounts: number;
+                kind: "plan";
+                months: 1 | 3 | 6 | 12;
+                plan: "pro" | "max";
+              }
+            | { accounts: number; kind: "accounts" };
+          slug: string;
+        },
         { number: string }
       >;
     };
@@ -15917,10 +15911,7 @@ export declare const internal: {
         open: FunctionReference<
           "action",
           "internal",
-          {
-            invoiceId: Id<"billingInvoices">;
-            offer: "school.seat.semester" | "school.seat.year";
-          },
+          { invoiceId: Id<"billingInvoices"> },
           null
         >;
         payable: FunctionReference<
@@ -15941,7 +15932,6 @@ export declare const internal: {
             accountId: Id<"billingAccounts">;
             expiresAt: number;
             invoiceId: Id<"billingInvoices">;
-            offer: "school.seat.semester" | "school.seat.year";
             sessionId: string;
             url: string;
           },

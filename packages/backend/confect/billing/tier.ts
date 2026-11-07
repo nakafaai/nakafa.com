@@ -119,12 +119,13 @@ const isSchoolLine = Schema.is(SchoolLineKey);
 
 /**
  * The accounts one invoice line pays for: the accounts of its plan for a plan
- * line, one for each added account, and none for a line an operator wrote.
+ * line, and one for each unit of an added accounts line or of a line an operator
+ * wrote, which bills the seats of an Enterprise contract.
  */
 export function lineAccounts(description: string, quantity: number) {
   return isSchoolLine(description)
     ? LINE_ACCOUNTS[description] * quantity
-    : 0;
+    : quantity;
 }
 
 /** The paid plan an invoice line sells, when it sells one. */

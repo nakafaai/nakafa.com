@@ -254,9 +254,9 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-placement-limit.description",
     title: "school-refusal-placement-limit.title",
   },
-  SchoolSeatsPaid: {
-    description: "school-refusal-seats-paid.description",
-    title: "school-refusal-seats-paid.title",
+  SchoolPlanMissing: {
+    description: "school-refusal-plan-missing.description",
+    title: "school-refusal-plan-missing.title",
   },
   ProvisionRejected: {
     description: "school-refusal-provision.description",

@@ -117,19 +117,15 @@ describe("billing/quote", () => {
     });
   });
 
-  it("charges the whole period for accounts added before it starts, and nothing for none", () => {
+  it("charges the whole period for accounts added before it starts", () => {
     const period = schoolPeriod(START, 3);
     expect(remainingShare(period, START - 1000)).toStrictEqual({
       days: 92,
       left: 92,
     });
     expect(
-      accountsQuote({ accounts: 2, currency: "IDR", from: START, period })
-        .total
+      accountsQuote({ accounts: 2, currency: "IDR", from: START, period }).total
     ).toBe(95_400);
-    expect(
-      accountsQuote({ accounts: 0, currency: "IDR", from: START, period })
-    ).toStrictEqual({ lines: [], total: 0 });
   });
 
   it("reads the months of a period back from its dates, and none for another span", () => {

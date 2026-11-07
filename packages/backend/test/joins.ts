@@ -3,7 +3,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
+import { schoolPlans } from "@repo/backend/confect/billing/tier";
 import type { SittingFixture } from "@repo/backend/test/sittings";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
@@ -74,12 +74,12 @@ export const seedMember = (
     })
   );
 
-/** Fills the free plan's student seats of the test school, which holds one student already. */
+/** Fills the trial's accounts of the test school: one new student for each, on top of the people it holds. */
 export const fillSeats = (fixture: SittingFixture) =>
   fixture.run(
     Effect.gen(function* () {
       const writer = yield* DatabaseWriter;
-      yield* Effect.forEach(Arr.range(2, SCHOOL_FREE_STUDENTS), (n) =>
+      yield* Effect.forEach(Arr.range(1, schoolPlans.trial.accounts), (n) =>
         writer
           .table("tenantPeople")
           .insert({

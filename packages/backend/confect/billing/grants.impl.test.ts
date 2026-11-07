@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -13,6 +13,16 @@ import { Effect, Schema } from "effect";
 
 const START = Date.UTC(2026, 9, 1);
 const PERIOD_END = Date.UTC(2026, 10, 1);
+
+// The period ran in October 2026, so the projection reads a moment inside it, whatever day the suite runs on.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(START + 1000);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("billing/grants.impl", () => {
   it.effect(

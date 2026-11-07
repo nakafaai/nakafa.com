@@ -6,32 +6,26 @@ import {
   type BillingAccountId,
   findAccount,
 } from "@repo/backend/confect/billing/accounts";
-import {
-  billingOfferPrice,
-  SCHOOL_FREE_STUDENTS,
-} from "@repo/backend/confect/billing/catalog";
 import { schoolInvoice } from "@repo/backend/confect/billing/receipts";
 import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import {
-  invoicedSeats,
-  invoiceSeats,
+  invoiceAccounts,
   issueSchoolInvoice,
   requestInvoiceSession,
+  runningPlan,
   runningSchoolGrants,
   schoolRail,
 } from "@repo/backend/confect/billing/school";
 import spec from "@repo/backend/confect/billing/school.spec";
-import { countStudents } from "@repo/backend/confect/billing/seats";
 import {
-  CheckoutOfferUnavailable,
-  checkoutOfferUnavailableCode,
-} from "@repo/backend/confect/billing/spec";
+  accountLimit,
+  countAccounts,
+} from "@repo/backend/confect/billing/seats";
 import {
-  proratedPrice,
-  type SchoolOffer,
-  TermOffer,
-  termOf,
-} from "@repo/backend/confect/billing/term";
+  SCHOOL_TRIAL_DAYS,
+  schoolAccountGrant,
+  schoolPlans,
+} from "@repo/backend/confect/billing/tier";
 import { schoolPoolMonthOf } from "@repo/backend/confect/credits/pool";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -40,7 +34,7 @@ import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
   Array as Arr,
   Clock,
-  DateTime,
+  Duration,
   Effect,
   Layer,
   Option,
@@ -70,63 +64,10 @@ const readInvoices = Effect.fn("billing.school.readInvoices")(function* (
   );
 });
 
-/** The Polar offers a school outside Indonesia buys seats on, and the months each one runs. */
-const POLAR_OFFERS = [
-  { offer: "school.seat.month", months: 1 },
-  { offer: "school.seat.year", months: 12 },
-] as const;
-
 /**
- * What each offer of a school's rail costs for `seats` students at `now`. An
- * Indonesian school pays a term by invoice at the term's price for the days left;
- * any other school buys Polar seats, which start now at the catalog price.
- */
-function quotesOf(country: string, seats: number, now: number) {
-  const currency = billingCurrencyFor(country);
-  const quote = (
-    offer: typeof SchoolOffer.Type,
-    period: { readonly start: number; readonly end: number },
-    priceOf: (price: number) => number
-  ) =>
-    Option.map(
-      Option.fromNullishOr(billingOfferPrice(offer, currency)),
-      (price) => ({
-        offer,
-        seats,
-        unitAmount: priceOf(price),
-        total: seats * priceOf(price),
-        periodStart: period.start,
-        periodEnd: period.end,
-      })
-    );
-  if (schoolRail(country) === "xendit") {
-    return Arr.getSomes(
-      Arr.map(TermOffer.literals, (offer) => {
-        const term = termOf(offer, country, now);
-        return quote(offer, term, (price) => proratedPrice(price, term, now));
-      })
-    );
-  }
-  return Arr.getSomes(
-    Arr.map(POLAR_OFFERS, ({ months, offer }) =>
-      quote(
-        offer,
-        {
-          start: now,
-          end: DateTime.toEpochMillis(
-            DateTime.add(DateTime.makeUnsafe(now), { months })
-          ),
-        },
-        (price) => price
-      )
-    )
-  );
-}
-
-/**
- * The school's plan, students and invoices, read at the moment of the query. The
- * terms on offer are quoted for the students its running grants do not pay for
- * yet, at each term's price for the days still to run.
+ * The school's plan, accounts, Drive and invoices, read at the moment of the
+ * query. The page prices an order with `billing/quote.ts` from the plan's period
+ * and the school's currency; the server prices it again when it issues.
  */
 const overview = FunctionImpl.make(
   databaseSchema,
@@ -135,9 +76,8 @@ const overview = FunctionImpl.make(
   Effect.fn("billing.school.overview")(function* () {
     const { tenant } = yield* Member;
     const now = yield* Clock.currentTimeMillis;
-    const students = yield* countStudents(tenant._id);
     const grants = yield* runningSchoolGrants(tenant._id, now);
-    const seats = Arr.reduce(grants, 0, (total, grant) => total + grant.seats);
+    const plan = yield* runningPlan(grants);
     const rail = schoolRail(tenant.country);
     const account = yield* findAccount(
       { kind: "tenant", tenantId: tenant._id },
@@ -146,31 +86,59 @@ const overview = FunctionImpl.make(
     const invoices = Option.isSome(account)
       ? yield* readInvoices(account.value._id)
       : [];
-    const nina = yield* schoolPoolMonthOf(
+    const credits = yield* schoolPoolMonthOf(
       tenant._id,
       Arr.reduce(grants, 0, (total, grant) => total + grant.ninaSeats),
       now
     );
-    const invoiced = Option.isSome(account)
-      ? yield* invoicedSeats(account.value._id, now)
-      : 0;
-    const unpaid = Math.max(students - seats - invoiced, 0);
-    const quotes = unpaid > 0 ? quotesOf(tenant.country, unpaid, now) : [];
+    const limit = yield* accountLimit(tenant._id, now);
+    const state = Option.match(plan, {
+      onNone: () =>
+        Option.match(Arr.head(grants), {
+          onNone: () => ({
+            plan: {
+              kind: "trial" as const,
+              endsAt:
+                tenant._creationTime +
+                Duration.toMillis(Duration.days(SCHOOL_TRIAL_DAYS)),
+            },
+            driveBytes: schoolPlans.trial.driveBytes,
+          }),
+          onSome: (latest) => ({
+            plan: {
+              kind: "contract" as const,
+              validTo: latest.validTo,
+              credits,
+            },
+            // A contract sets its seats, and each holds the Drive of one added account.
+            driveBytes: limit * schoolAccountGrant.driveBytes,
+          }),
+        }),
+      onSome: (running) => {
+        const added = Math.max(limit - schoolPlans[running.plan].accounts, 0);
+        return {
+          plan: {
+            kind: running.plan,
+            period: running.period,
+            added,
+            credits,
+          },
+          driveBytes:
+            schoolPlans[running.plan].driveBytes +
+            added * schoolAccountGrant.driveBytes,
+        };
+      },
+    });
     return {
       tenantId: tenant._id,
-      plan: Option.match(Arr.head(grants), {
-        onNone: () => ({ kind: "free" as const, limit: SCHOOL_FREE_STUDENTS }),
-        onSome: (latest) => ({
-          kind: "school" as const,
-          seats,
-          validTo: latest.validTo,
-          nina,
-        }),
-      }),
-      students,
+      plan: state.plan,
+      accounts: { limit, used: yield* countAccounts(tenant._id) },
+      driveBytes: state.driveBytes,
       rail,
-      currency: billingCurrencyFor(tenant.country),
-      quotes,
+      currency: Option.match(account, {
+        onNone: () => billingCurrencyFor(tenant.country),
+        onSome: (found) => found.currency,
+      }),
       invoices: Arr.map(invoices, (invoice) => ({
         number: invoice.number,
         status: invoice.status,
@@ -180,7 +148,7 @@ const overview = FunctionImpl.make(
         periodEnd: invoice.periodEnd,
         dueAt: invoice.dueAt,
         paymentLink: invoice.paymentLink,
-        seats: invoiceSeats(invoice),
+        accounts: invoiceAccounts(invoice),
       })),
     };
   })
@@ -214,36 +182,29 @@ const invoice = FunctionImpl.make(
 );
 
 /**
- * Issues the invoice of one term for the students no running grant or open invoice covers,
- * or returns the open invoice of that term. While Indonesia pays through Xendit, an invoice
- * without a payment link gets its hosted payment opened at once; until then the school pays
- * by bank transfer, which an operator records.
+ * Issues the invoice of one order, or returns the open invoice the school holds. While
+ * Indonesia pays through Xendit, an invoice without a payment link gets its hosted payment
+ * opened at once; until then, and outside Indonesia, the school pays by bank transfer, which
+ * an operator records.
  */
 const pay = FunctionImpl.make(
   databaseSchema,
   spec,
   "pay",
-  Effect.fn("billing.school.pay")(function* ({ offer }) {
+  Effect.fn("billing.school.pay")(function* ({ order }) {
     const { person, tenant } = yield* Member;
     const issued = yield* issueSchoolInvoice(
       personActor(person),
       tenant,
-      offer
+      order
     ).pipe(
       Effect.catchTags({
         // The school's account and the invoice sequence are ledger faults, never the payer's.
         BillingRowMissing: Effect.die,
         InvoiceNumberExhausted: Effect.die,
-        OfferUnavailable: () =>
-          Effect.fail(
-            new CheckoutOfferUnavailable({
-              code: checkoutOfferUnavailableCode,
-              message: "This offer is not available here.",
-            })
-          ),
       })
     );
-    yield* requestInvoiceSession(tenant, issued.invoiceId, offer);
+    yield* requestInvoiceSession(tenant, issued.invoiceId);
     return { number: issued.number };
   })
 );

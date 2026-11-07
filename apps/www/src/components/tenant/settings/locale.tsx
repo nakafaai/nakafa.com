@@ -14,15 +14,15 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { countries } from "country-flag-icons";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+  Array as Arr,
+  Option,
+  Number as Ord,
+  Order,
+  Result,
+  Schema,
+} from "effect";
 import { startTransition, useId, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
@@ -31,22 +31,54 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { setLocaleChange } from "@/components/tenant/settings/edits";
+import { RegionPicker } from "@/components/tenant/settings/picker";
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/locale";
 
-/** The countries a school may name, with the one it holds when its contract opened it elsewhere. */
-const countriesWith = (held: string) =>
-  Arr.dedupe(Arr.append(StartCountry.literals, held));
-
-/** The currencies of those countries, with the one the school holds. */
-const currenciesWith = (held: string) =>
-  Arr.dedupe(
-    Arr.append(
-      Arr.map(Rec.values(countryDefaults), (country) => country.currency),
-      held
+/**
+ * Every country a school may name: each code the flag package draws that the platform
+ * names, so every country in the world shows with its flag, sorted by its name in the
+ * viewer's language.
+ */
+function countryChoices(locale: string) {
+  const names = new Intl.DisplayNames([locale], {
+    fallback: "none",
+    type: "region",
+  });
+  const collator = new Intl.Collator(locale);
+  return Arr.sort(
+    Arr.filterMap(countries, (code) =>
+      Option.match(Option.fromNullishOr(names.of(code)), {
+        onNone: () => Result.failVoid,
+        onSome: (label) => Result.succeed({ label, value: code }),
+      })
+    ),
+    Order.make((a: { readonly label: string }, b) =>
+      Ord.sign(collator.compare(a.label, b.label))
     )
   );
+}
+
+/** Every currency the platform knows, with its name and the symbol it writes in the viewer's language, by code. */
+function currencyChoices(locale: string) {
+  const names = new Intl.DisplayNames([locale], { type: "currency" });
+  return Arr.map(Intl.supportedValuesOf("currency"), (code) => ({
+    label: `${names.of(code) ?? code}`,
+    symbol: Arr.map(
+      Arr.filter(
+        new Intl.NumberFormat(locale, {
+          currency: code,
+          currencyDisplay: "narrowSymbol",
+          style: "currency",
+        }).formatToParts(0),
+        (part) => part.type === "currency"
+      ),
+      (part) => part.value
+    ).join(""),
+    value: code,
+  }));
+}
 
 /**
  * The school's country and contract currency, which its Owner and its Admin change. A country that
@@ -74,22 +106,8 @@ export function SchoolLocaleCard({
   const [chosenCurrency, setNextCurrency] = useState<string | null>(null);
   const nextCountry = chosenCountry ?? country;
   const nextCurrency = chosenCurrency ?? currency;
-  const countryNames = useMemo(
-    () => new Intl.DisplayNames([locale], { type: "region" }),
-    [locale]
-  );
-  const currencyNames = useMemo(
-    () => new Intl.DisplayNames([locale], { type: "currency" }),
-    [locale]
-  );
-  const countryItems = Arr.map(countriesWith(country), (value) => ({
-    label: countryNames.of(value) ?? value,
-    value,
-  }));
-  const currencyItems = Arr.map(currenciesWith(currency), (value) => ({
-    label: `${value}, ${currencyNames.of(value) ?? value}`,
-    value,
-  }));
+  const countryItems = useMemo(() => countryChoices(locale), [locale]);
+  const currencyItems = useMemo(() => currencyChoices(locale), [locale]);
   const changed = nextCountry !== country || nextCurrency !== currency;
 
   const save = () => {
@@ -122,59 +140,30 @@ export function SchoolLocaleCard({
             <FieldLabel htmlFor={`${id}-country`}>
               {t("locale-country")}
             </FieldLabel>
-            <Select
-              items={countryItems}
-              onValueChange={(value) => {
-                if (typeof value !== "string") {
-                  return;
-                }
+            <RegionPicker
+              choices={countryItems}
+              id={`${id}-country`}
+              kind="country"
+              onChoose={(value) => {
                 setNextCountry(value);
                 if (Schema.is(StartCountry)(value)) {
                   setNextCurrency(countryDefaults[value].currency);
                 }
               }}
               value={nextCountry}
-            >
-              <SelectTrigger className="w-full" id={`${id}-country`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {Arr.map(countryItems, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            />
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-currency`}>
               {t("locale-currency")}
             </FieldLabel>
-            <Select
-              items={currencyItems}
-              onValueChange={(value) => {
-                if (typeof value === "string") {
-                  setNextCurrency(value);
-                }
-              }}
+            <RegionPicker
+              choices={currencyItems}
+              id={`${id}-currency`}
+              kind="currency"
+              onChoose={setNextCurrency}
               value={nextCurrency}
-            >
-              <SelectTrigger className="w-full" id={`${id}-currency`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {Arr.map(currencyItems, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            />
           </Field>
         </FieldGroup>
       </CardContent>
