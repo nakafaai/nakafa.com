@@ -661,6 +661,7 @@ export declare const api: {
           classId: Id<"classes">;
           clientKey: string;
           name: string;
+          parentId: Id<"classroomFolders"> | null;
           slug: string;
         },
         {
@@ -669,6 +670,9 @@ export declare const api: {
           createdAt: number;
           id: Id<"classroomFolders">;
           name: string;
+          parentId: Id<"classroomFolders"> | null;
+          starred: boolean;
+          trashedAt: number | null;
         }
       >;
       list: FunctionReference<
@@ -681,9 +685,23 @@ export declare const api: {
           createdAt: number;
           id: Id<"classroomFolders">;
           name: string;
+          parentId: Id<"classroomFolders"> | null;
+          starred: boolean;
+          trashedAt: number | null;
         }>
       >;
-      remove: FunctionReference<
+      move: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          parentId: Id<"classroomFolders"> | null;
+          slug: string;
+        },
+        null
+      >;
+      purge: FunctionReference<
         "mutation",
         "public",
         {
@@ -700,6 +718,26 @@ export declare const api: {
           classId: Id<"classes">;
           folderId: Id<"classroomFolders">;
           name: string;
+          slug: string;
+        },
+        null
+      >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
+          slug: string;
+        },
+        null
+      >;
+      trash: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          folderId: Id<"classroomFolders">;
           slug: string;
         },
         null
@@ -1120,6 +1158,12 @@ export declare const api: {
         >;
       };
       threads: {
+        archive: FunctionReference<
+          "mutation",
+          "public",
+          { classId: Id<"classes">; number: number; slug: string },
+          null
+        >;
         get: FunctionReference<
           "query",
           "public",
@@ -1175,6 +1219,7 @@ export declare const api: {
           "query",
           "public",
           {
+            archived?: boolean;
             classId: Id<"classes">;
             paginationOpts: {
               cursor: string | null;
@@ -1190,6 +1235,7 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
+              archived: boolean;
               channelId: Id<"classroomChannels">;
               discussion: {
                 lastReplyAt: number | null;
@@ -1387,6 +1433,12 @@ export declare const api: {
             text: string | null;
           }
         >;
+        restore: FunctionReference<
+          "mutation",
+          "public",
+          { classId: Id<"classes">; number: number; slug: string },
+          null
+        >;
         start: FunctionReference<
           "mutation",
           "public",
@@ -1420,7 +1472,9 @@ export declare const api: {
           folderId: Id<"classroomFolders"> | null;
           id: Id<"classroomLibrary">;
           kind: "link" | "pdf" | "image";
+          starred: boolean;
           title: string;
+          trashedAt: number | null;
         }
       >;
       canAdd: FunctionReference<
@@ -1483,26 +1537,37 @@ export declare const api: {
             folderId: Id<"classroomFolders"> | null;
             id: Id<"classroomLibrary">;
             kind: "link" | "pdf" | "image";
+            starred: boolean;
             title: string;
+            trashedAt: number | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
       >;
-      register: FunctionReference<
-        "action",
+      move: FunctionReference<
+        "mutation",
         "public",
         {
           classId: Id<"classes">;
-          clientKey: string;
           folderId: Id<"classroomFolders"> | null;
+          itemId: Id<"classroomLibrary">;
           slug: string;
-          storageId: Id<"_storage">;
-          title: string;
         },
-        { id: Id<"classroomLibrary"> }
+        null
       >;
-      remove: FunctionReference<
+      open: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          download: boolean;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        string
+      >;
+      purge: FunctionReference<
         "mutation",
         "public",
         {
@@ -1512,11 +1577,138 @@ export declare const api: {
         },
         null
       >;
-      uploadUrl: FunctionReference<
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          classId: Id<"classes">;
+          slug: string;
+          uploadId: Id<"classroomLibraryUploads">;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+      reserve: FunctionReference<
         "mutation",
         "public",
+        {
+          byteSize: number;
+          classId: Id<"classes">;
+          clientKey: string;
+          contentType:
+            | "image/png"
+            | "image/jpeg"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf";
+          folderId: Id<"classroomFolders"> | null;
+          slug: string;
+          title: string;
+        },
+        { address: string; uploadId: Id<"classroomLibraryUploads"> }
+      >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        null
+      >;
+      search: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string; text: string },
+        Array<{
+          address: string | null;
+          author: string;
+          byteSize: number | null;
+          clientKey: string;
+          createdAt: number;
+          folderId: Id<"classroomFolders"> | null;
+          id: Id<"classroomLibrary">;
+          kind: "link" | "pdf" | "image";
+          starred: boolean;
+          title: string;
+          trashedAt: number | null;
+        }>
+      >;
+      star: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          slug: string;
+          starred: boolean;
+          target:
+            | { itemId: Id<"classroomLibrary">; kind: "item" }
+            | { folderId: Id<"classroomFolders">; kind: "folder" };
+        },
+        null
+      >;
+      starred: FunctionReference<
+        "query",
+        "public",
         { classId: Id<"classes">; slug: string },
-        string
+        Array<{
+          address: string | null;
+          author: string;
+          byteSize: number | null;
+          clientKey: string;
+          createdAt: number;
+          folderId: Id<"classroomFolders"> | null;
+          id: Id<"classroomLibrary">;
+          kind: "link" | "pdf" | "image";
+          starred: boolean;
+          title: string;
+          trashedAt: number | null;
+        }>
+      >;
+      trash: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        null
+      >;
+      trashed: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            address: string | null;
+            author: string;
+            byteSize: number | null;
+            clientKey: string;
+            createdAt: number;
+            folderId: Id<"classroomFolders"> | null;
+            id: Id<"classroomLibrary">;
+            kind: "link" | "pdf" | "image";
+            starred: boolean;
+            title: string;
+            trashedAt: number | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
     };
     people: {
@@ -1534,6 +1726,12 @@ export declare const api: {
       >;
     };
     posts: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
+        null
+      >;
       edit: FunctionReference<
         "mutation",
         "public",
@@ -1544,6 +1742,7 @@ export declare const api: {
           text: string;
         },
         {
+          archived: boolean;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1564,6 +1763,7 @@ export declare const api: {
         "query",
         "public",
         {
+          archived?: boolean;
           classId: Id<"classes">;
           paginationOpts: {
             cursor: string | null;
@@ -1579,6 +1779,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            archived: boolean;
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
@@ -1614,6 +1815,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string },
         Array<{
+          archived: boolean;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1646,6 +1848,7 @@ export declare const api: {
           text: string;
         },
         {
+          archived: boolean;
           author: { id: Id<"tenantPeople">; name: string };
           clientKey: string;
           createdAt: number;
@@ -1663,6 +1866,12 @@ export declare const api: {
         }
       >;
       remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
+        null
+      >;
+      restore: FunctionReference<
         "mutation",
         "public",
         { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
@@ -1755,6 +1964,12 @@ export declare const api: {
       >;
     };
     tasks: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string },
+        null
+      >;
       edit: FunctionReference<
         "mutation",
         "public",
@@ -1771,6 +1986,7 @@ export declare const api: {
           title: string;
         },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {
@@ -1799,6 +2015,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {
@@ -1826,6 +2043,7 @@ export declare const api: {
         "query",
         "public",
         {
+          archived?: boolean;
           classId: Id<"classes">;
           paginationOpts: {
             cursor: string | null;
@@ -1842,6 +2060,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            archived: boolean;
             category: string | null;
             deadline: number;
             exam: {
@@ -1909,6 +2128,7 @@ export declare const api: {
           title: string;
         },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {
@@ -1933,6 +2153,12 @@ export declare const api: {
         }
       >;
       remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string },
+        null
+      >;
+      restore: FunctionReference<
         "mutation",
         "public",
         { classId: Id<"classes">; slug: string; task: string },
@@ -1993,6 +2219,7 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string; task: string; text: string },
         {
+          archived: boolean;
           category: string | null;
           deadline: number;
           exam: {
@@ -16137,10 +16364,10 @@ export declare const internal: {
           { messageId: Id<"classroomMessages"> },
           {
             claim:
-            | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
-            | { kind: "school"; tenantId: Id<"tenants"> }
-            | { kind: "learner"; userId: Id<"users"> }
-            | { kind: "nakafa" };
+              | { kind: "member"; tenantId: Id<"tenants">; userId: Id<"users"> }
+              | { kind: "school"; tenantId: Id<"tenants"> }
+              | { kind: "learner"; userId: Id<"users"> }
+              | { kind: "nakafa" };
             classId: Id<"classes">;
             className: string;
             history: Array<{ author: string; text: string }>;
@@ -16178,6 +16405,30 @@ export declare const internal: {
       commit: FunctionReference<
         "mutation",
         "internal",
+        { uploadId: Id<"classroomLibraryUploads"> },
+        { id: Id<"classroomLibrary"> }
+      >;
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { uploadId: Id<"classroomLibraryUploads"> },
+        null
+      >;
+      purgeRest: FunctionReference<
+        "mutation",
+        "internal",
+        { classId: Id<"classes">; folderIds: Array<Id<"classroomFolders">> },
+        null
+      >;
+      removeObjects: FunctionReference<
+        "action",
+        "internal",
+        { keys: Array<string> },
+        null
+      >;
+      reserveImport: FunctionReference<
+        "mutation",
+        "internal",
         {
           authorId: Id<"tenantPeople">;
           byteSize: number;
@@ -16190,10 +16441,26 @@ export declare const internal: {
             | "image/gif"
             | "application/pdf";
           folderId: Id<"classroomFolders"> | null;
-          storageId: Id<"_storage">;
           title: string;
         },
-        { id: Id<"classroomLibrary"> }
+        { objectKey: string; uploadId: Id<"classroomLibraryUploads"> }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+      upload: FunctionReference<
+        "query",
+        "internal",
+        { classId: Id<"classes">; uploadId: Id<"classroomLibraryUploads"> },
+        {
+          byteSize: number;
+          classId: Id<"classes">;
+          contentType:
+            | "image/png"
+            | "image/jpeg"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf";
+          objectKey: string;
+        } | null
       >;
     };
     passages: {
@@ -16232,7 +16499,7 @@ export declare const internal: {
             | { kind: "learner"; userId: Id<"users"> }
             | { kind: "nakafa" };
           contentType: string;
-          storageId: Id<"_storage">;
+          objectKey: string;
         } | null
       >;
       store: FunctionReference<
@@ -20235,7 +20502,7 @@ export declare const internal: {
           "mutation",
           "internal",
           { key: string },
-          null
+          { remaining: number; resetSeconds: number }
         >;
       };
     };
