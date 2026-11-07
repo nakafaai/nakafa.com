@@ -27,8 +27,8 @@ const PolarSchoolOffer = Schema.Literals([
 
 /**
  * The Polar checkout of a school outside Indonesia (K47): its Owner or Admin buys
- * one seat per enrolled student not paid for yet, as a business, and returns to
- * the school's billing.
+ * one seat per account not paid for yet, as a business, and returns to the
+ * school's billing.
  */
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicAction({

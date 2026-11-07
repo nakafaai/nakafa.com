@@ -51,7 +51,7 @@ export const DEFAULT_USER_CREDITS =
 const CREDIT_UNIT_USD = 0.002;
 
 /** The same unit in micro-dollars, so credit arithmetic stays in whole numbers. */
-const CREDIT_UNIT_MICRO_USD = Math.round(CREDIT_UNIT_USD * 1_000_000);
+export const CREDIT_UNIT_MICRO_USD = Math.round(CREDIT_UNIT_USD * 1_000_000);
 
 /** The most credits one answer may hold, so an answer never costs more than this in models. */
 export const MAX_CREDITS_PER_RESPONSE = 50;

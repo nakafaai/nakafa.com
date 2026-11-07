@@ -6,6 +6,7 @@ import { measureTexts } from "@repo/backend/confect/nina/judgment/measure";
 import spec, {
   type measureResultValidator,
 } from "@repo/backend/confect/nina/judgment.spec";
+import { meterOf } from "@repo/backend/confect/spend/meter";
 import { Effect, Layer, Record as Rec, Struct } from "effect";
 
 type Failed = Extract<typeof measureResultValidator.Type, { kind: "failed" }>;
@@ -21,7 +22,10 @@ const measure = FunctionImpl.make(
   "measure",
   Effect.fn("nina.judgment.measure")(function* ({ names, texts }) {
     return yield* measureTexts(names, texts).pipe(
-      Effect.provide(GatewayLive),
+      // Measuring the catalog is Nakafa's own work, on its own budget.
+      Effect.provide(
+        Layer.provideMerge(GatewayLive, meterOf({ kind: "nakafa" }))
+      ),
       Effect.map((rows) => ({
         judgments: Rec.map(
           Struct.pick(judgments, names),

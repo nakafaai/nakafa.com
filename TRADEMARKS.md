@@ -97,4 +97,4 @@ keeping its purpose.
 ## 8. Reporting Misuse
 
 Report suspected misuse of the Nakafa brand, code, or content to:
-nakafaai@gmail.com
+info@nakafa.com

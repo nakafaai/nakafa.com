@@ -26,8 +26,11 @@ import spec, {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import member from "@repo/backend/confect/middleware/member.impl";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
+import { meterOf } from "@repo/backend/confect/spend/meter";
+import type { Claim } from "@repo/backend/confect/spend/schema";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { generateText, Output, type UserContent } from "ai";
 import { Array as Arr, Effect, Layer, Option } from "effect";
@@ -35,12 +38,17 @@ import { Array as Arr, Effect, Layer, Option } from "effect";
 /** The bytes at the start of an image that `imageTypeOf` reads. */
 const HEAD_BYTES = 16;
 
-/** Answers nothing: the middleware of the function is the check that a teacher may edit the exam. */
+/**
+ * Answers the exam's school: the middleware of the function is the check that a teacher may edit
+ * the exam, and the school is whose budget the read is held against.
+ */
 const canRead = FunctionImpl.make(
   databaseSchema,
   spec,
   "canRead",
-  Effect.fn("exams.reads.canRead")(() => Effect.succeed({}))
+  Effect.fn("exams.reads.canRead")(function* () {
+    return { tenantId: (yield* Member).tenant._id };
+  })
 );
 
 /**
@@ -117,7 +125,7 @@ const sourceContent = (
  * of the model or of that shape is `ImportUnread`, so nothing is placed and the part can be sent
  * again.
  */
-const readPart = (content: UserContent) =>
+const readPart = (content: UserContent, claim: Claim) =>
   Effect.gen(function* () {
     const reader = (yield* Gateway).language("import");
     const { output } = yield* Effect.tryPromise({
@@ -134,7 +142,7 @@ const readPart = (content: UserContent) =>
     });
     return output;
   }).pipe(
-    Effect.provide(GatewayLive),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(claim))),
     Effect.catchTag("GatewayConfigurationError", () =>
       Effect.fail(new ImportUnread())
     )
@@ -151,9 +159,9 @@ const read = FunctionImpl.make(
   "read",
   Effect.fn("exams.reads.read")(
     function* ({ examId, slug, source }) {
-      yield* requireAuth();
+      const { appUser } = yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
-      yield* runQuery(examsPublic.reads.canRead, {
+      const { tenantId } = yield* runQuery(examsPublic.reads.canRead, {
         examId,
         slug,
       }).pipe(
@@ -161,7 +169,12 @@ const read = FunctionImpl.make(
           Effect.fail(new AccessDenied({ action: "exam.edit", reason: "role" }))
         )
       );
-      return yield* readPart(yield* sourceContent(examId, source));
+      // The read is the teacher's work in the exam's school, held against its budget.
+      return yield* readPart(yield* sourceContent(examId, source), {
+        kind: "member",
+        tenantId,
+        userId: appUser._id,
+      });
     },
     Effect.catchTag("SchemaError", Effect.die)
   )

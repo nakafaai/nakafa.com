@@ -1,5 +1,11 @@
+import {
+  TryoutFinishedFacts,
+  TryoutFinishedPanel,
+  TryoutFinishedPanes,
+  TryoutFinishedPlace,
+} from "@/components/tryout/review/panes";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
-import { TryoutAttemptResults } from "@/components/tryout/score/history";
+import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { TryoutSetAction } from "@/components/tryout/set/action";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type {
@@ -34,9 +40,8 @@ export interface TryoutSetOverviewProps {
 
 /**
  * Renders a set page that offers visible nested sections. A finished attempt's
- * card comes first, so the page opens on the result and its history, and the
- * running attempt's countdown and the section list follow. The server renders
- * the learner's attempt with the page, so nothing moves after the first paint.
+ * parts stand beside its result and history; a running attempt's countdown stands
+ * above its parts.
  */
 export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
   return (
@@ -46,6 +51,11 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
         page={value.page}
         returnPath={value.returnPath}
       >
+        <TryoutAttemptPicker
+          attempt={value.actionAttempt}
+          locale={value.route.locale}
+          set={value.page.set}
+        />
         <TryoutSetAction
           value={{
             activeAttempt: value.activeAttempt,
@@ -60,48 +70,37 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
           }}
         />
       </TryoutSetPageHeader>
-      <TryoutPageBody>
-        <TryoutSetResult value={value} />
-        <TryoutSectionRows
-          {...(value.actionAttempt === undefined
-            ? {}
-            : { attempt: value.actionAttempt })}
-          sections={value.sectionRoutes}
-        />
-      </TryoutPageBody>
+      {value.actionAttempt?.score ? (
+        <TryoutFinishedPanes
+          panel={
+            <TryoutFinishedPanel runtime={null}>
+              <TryoutFinishedFacts score={value.actionAttempt.score} />
+            </TryoutFinishedPanel>
+          }
+        >
+          <TryoutSetParts value={value} />
+        </TryoutFinishedPanes>
+      ) : (
+        <TryoutPageBody>
+          {value.activeAttempt ? (
+            <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
+          ) : null}
+          <TryoutSetParts value={value} />
+          <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
+        </TryoutPageBody>
+      )}
     </TryoutPage>
   );
 }
 
-/** Composes the set action inside a score card only for terminal attempts. */
-function TryoutSetResult({ value }: TryoutSetOverviewProps) {
-  const attempt = value.actionAttempt;
-
-  if (!attempt?.score) {
-    return value.activeAttempt ? (
-      <TryoutCountdown expiresAt={value.activeAttempt.expiresAt} />
-    ) : null;
-  }
-
+/** The set's parts, with the attempt that marks them once it is known. */
+function TryoutSetParts({ value }: TryoutSetOverviewProps) {
   return (
-    <TryoutAttemptResults
-      value={{
-        attempt: {
-          attemptId: attempt.attemptId,
-          attemptNumber: attempt.attemptNumber,
-          score: attempt.score,
-          startedAt: attempt.startedAt,
-          status: attempt.status,
-        },
-        identity: {
-          countryKey: value.page.set.countryKey,
-          examKey: value.page.set.examKey,
-          locale: value.route.locale,
-          setKey: value.page.set.setKey,
-          trackKey: value.page.set.trackKey,
-        },
-        publicPath: value.page.set.publicPath,
-      }}
+    <TryoutSectionRows
+      {...(value.actionAttempt === undefined
+        ? {}
+        : { attempt: value.actionAttempt })}
+      sections={value.sectionRoutes}
     />
   );
 }

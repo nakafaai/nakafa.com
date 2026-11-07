@@ -1,5 +1,4 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
-import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
   TryoutPartStat,
@@ -12,17 +11,10 @@ import {
 } from "@/components/tryout/section/metrics";
 
 /**
- * Renders score and correctness metrics, then the metrics the
- * caller composed after them, such as a set's time limit. A score that is not
- * settled yet says so in its own label, so no badge has to explain the number.
+ * Renders score and correctness metrics. A score that is not settled yet says so in
+ * its own label, so no badge has to explain the number.
  */
-export function TryoutScoreMetrics({
-  children,
-  score,
-}: {
-  children?: ReactNode;
-  score: TryoutScoreResult;
-}) {
+export function TryoutScoreMetrics({ score }: { score: TryoutScoreResult }) {
   const tTryouts = useTranslations("Tryouts");
   const scoreLabel = tTryouts(
     score.scoreStatus === "provisional"
@@ -43,7 +35,6 @@ export function TryoutScoreMetrics({
           <TryoutMetricNumber value={score.totalQuestions} />
         </TryoutMetricFraction>
       </TryoutPartStat>
-      {children}
     </TryoutPartStats>
   );
 }

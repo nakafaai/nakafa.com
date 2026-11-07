@@ -12,6 +12,7 @@
     "sort-newest": "Newest",
     "no-results": "No results.",
     "searching": "Looking through the list.",
+    "more": "Show {count} more",
     "no-values": "No values yet",
     "reset": "Reset"
   },
@@ -767,41 +768,12 @@
     "policies": "Policies",
     "audit": "Audit trail",
     "billing": "Billing",
-    "billing-free-title": "Free",
-    "billing-free-description": "Up to {limit} students, with every School feature.",
-    "billing-school-title": "School",
-    "billing-school-description": "Every student has Pro until {date}.",
-    "billing-students": "Students",
-    "billing-limit": "Free limit",
-    "billing-paid": "Paid students",
-    "billing-nina": "Nina credits this month",
-    "billing-nina-used": "{used} of {total} used",
-    "billing-upgrade": "Upgrade",
-    "billing-add": "Pay for students",
-    "billing-free-footer": "Upgrade for more than {limit} students.",
-    "billing-add-footer": "New students are billed for the rest of the term.",
-    "billing-free-empty": "Enroll students to upgrade to School.",
-    "billing-school-footer": "Every student is paid for.",
-    "billing-open-footer": "Pay the open invoice below to finish.",
-    "billing-dialog-title": "Choose a term",
-    "billing-dialog-description": "Pay per enrolled student for the days left in the term.",
-    "billing-dialog-seats": "Pay per enrolled student, with seats that renew until you cancel them.",
-    "billing-term-semester": "This semester",
-    "billing-term-year": "This school year",
-    "billing-offer-month": "Every month",
-    "billing-offer-year": "Every year",
     "billing-term-dates": "{start} to {end}",
-    "billing-quote-term": "{seats, plural, one {# student} other {# students}} until {date}",
-    "billing-quote-seats": "{seats, plural, one {# student} other {# students}} at {price} each",
     "billing-issue": "Issue invoice",
-    "billing-checkout": "Continue",
     "billing-invoices": "Invoices",
     "billing-invoices-description": "Every invoice the school was issued.",
-    "billing-invoices-footer": "Pay an open invoice before its due date.",
-    "billing-invoices-empty": "The school has no invoice yet.",
     "invoice-number": "Invoice",
-    "invoice-term": "Term",
-    "invoice-students": "Students",
+    "invoice-term": "Period",
     "invoice-total": "Total",
     "invoice-due": "Due",
     "invoice-status": "Status",
@@ -1075,6 +1047,7 @@
         "renamed": "Cohort renamed",
         "archived": "Cohort archived",
         "restored": "Cohort restored",
+        "removed": "Cohort deleted",
         "grade": {
           "set": "Cohort grade changed"
         }
@@ -1112,6 +1085,7 @@
         "archived": "Period archived",
         "rename": "Period renamed",
         "restored": "Period restored",
+        "removed": "Period deleted",
         "rescheduled": "Period dates changed"
       },
       "person": {
@@ -1363,13 +1337,19 @@
     "student-add-description": "The student gets a login name and a first login card, added together.",
     "student-add-name": "Name",
     "student-add-footer": "Print the card before you close it, because the code is shown once.",
-    "student-add-seats": "{count} of {limit} free students used.",
+    "student-add-seats": "{count} of {limit} accounts in use.",
     "student-add-submit": "Add student",
     "invites-empty": "No invite is waiting.",
     "invites-search": "Find a name or email",
     "units-search": "Find a school or NPSN",
     "cohort-restore": "Restore",
+    "cohort-delete-title": "Delete {name}?",
+    "cohort-delete-description": "The cohort goes for good. One that holds students, a teacher, classes or reports stays archived instead.",
+    "cohort-delete-confirm": "Delete cohort",
     "period-restore": "Restore",
+    "period-delete-title": "Delete {name}?",
+    "period-delete-description": "The period goes for good. The active one, or one that holds cohorts or classes, stays archived instead.",
+    "period-delete-confirm": "Delete period",
     "no-unit-title": "No active unit yet",
     "no-unit-description": "Restore or add a unit first, because periods and cohorts belong to one.",
     "no-unit-action": "Open units",
@@ -1429,7 +1409,63 @@
     "cohort-classes": "Classes",
     "member-login": "Login",
     "member-email": "Email",
-    "member-units": "Units"
+    "member-units": "Units",
+    "billing-plan-trial": "Trial",
+    "billing-plan-pro": "Pro",
+    "billing-plan-max": "Max",
+    "billing-trial-description": "Every feature with your real data until {date}.",
+    "billing-paid-description": "Your plan runs until {date}.",
+    "billing-credits": "AI credits",
+    "billing-credits-trial": "{total} credits for the whole trial",
+    "billing-credits-used": "{used} of {total} used this month",
+    "billing-drive": "Drive",
+    "billing-trial-footer": "Choose Pro or Max to keep your data after the trial.",
+    "billing-renew-footer": "Renew before the plan ends. Nothing renews by itself.",
+    "billing-open-footer": "Pay the open invoice by {date}.",
+    "billing-choose": "Choose plan",
+    "billing-renew": "Renew",
+    "billing-accounts": "Accounts",
+    "billing-accounts-description": "Every student, teacher, staff member, admin and parent counts once.",
+    "billing-accounts-used": "{used} of {total} accounts in use",
+    "billing-accounts-footer": "Added accounts are billed for the days left in your plan.",
+    "billing-accounts-trial": "The trial holds {limit} accounts. Choose a plan for more.",
+    "billing-add-accounts": "Add accounts",
+    "billing-order-title": "Choose a plan",
+    "billing-order-description": "Every price is before tax and paid in advance.",
+    "billing-more-title": "Add accounts",
+    "billing-more-description": "Each account adds {credits} AI credits a month and {drive} MB of Drive.",
+    "billing-order-plan": "Plan",
+    "billing-order-period": "Period",
+    "billing-months": "{months, plural, one {# month} other {# months}}{discount, plural, =0 {} other {, # percent off}}",
+    "billing-order-accounts": "Added accounts, optional",
+    "billing-more-accounts": "Accounts to add",
+    "billing-order-presets": "Add accounts quickly",
+    "billing-per-month": "{price} a month",
+    "billing-plan-holds": "{accounts} accounts, {credits} AI credits a month, {drive} GB Drive.",
+    "billing-line-pro": "Pro, {months, plural, one {# month} other {# months}}",
+    "billing-line-max": "Max, {months, plural, one {# month} other {# months}}",
+    "billing-line-accounts": "{accounts} added accounts, {months, plural, one {# month} other {# months}}",
+    "billing-line-prorata": "{accounts} accounts for the {days} days left",
+    "billing-total": "Total before tax",
+    "billing-runs": "Runs from {start} to {end} once paid.",
+    "billing-runs-more": "Takes effect once paid and runs until {end}.",
+    "billing-invoices-view": "View invoices",
+    "billing-invoices-footer": "{count, plural, one {# invoice} other {# invoices}} so far.",
+    "billing-invoices-empty": "The school has no invoice yet.",
+    "billing-invoices-sheet-footer": "Each invoice is paid on its own page or by bank transfer.",
+    "invoice-accounts": "Accounts",
+    "academic": "Academics",
+    "locale-country-search": "Search a country",
+    "locale-currency-search": "Search a currency",
+    "locale-empty": "Nothing matches.",
+    "billing-plan-school": "School",
+    "billing-seats-buy": "Buy seats",
+    "billing-seats-title": "Buy seats on Polar",
+    "billing-seats-description": "One seat for each of the {seats} accounts no plan pays for yet, renewed until you cancel.",
+    "billing-seats-month": "Every month",
+    "billing-seats-year": "Every year",
+    "billing-seats-each": "{price} for each seat",
+    "billing-checkout": "Continue"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1915,8 +1951,8 @@
       "l": "500 to 999",
       "xl": "1,000 or more"
     },
-    "plan-free": "Free plan, up to {limit} students.",
-    "plan-school": "School plan, paid per student.",
+    "plan-free": "Free trial for 30 days, up to {limit} accounts.",
+    "plan-school": "Pro or Max, every role counted as one account.",
     "plan-founder": "School plan, with the founder's help.",
     "founder-line": "The founder can help a large school set up.",
     "founder-link": "Talk to the founder",
@@ -2393,6 +2429,7 @@
     "score-label-estimated": "Estimated score",
     "score-label-standard": "Score",
     "correct-answers-label": "Correct answers",
+    "finished-panel": "Your result",
     "attempt-menu-label": "History",
     "attempt-menu-search-placeholder": "Search attempts...",
     "attempt-menu-empty": "No matching attempts found.",
@@ -2483,10 +2520,11 @@
     "continue-learning": "Continue Learning"
   },
   "Marketing": {
-    "about": "About",
-    "features": "Features",
+    "learn": "Learn",
+    "school": "School",
     "pricing": "Pricing",
-    "try-nakafa": "Try Nakafa"
+    "try-nakafa": "Try Nakafa",
+    "start-school": "Start free trial"
   },
   "Weather": {
     "loading": "Loading weather...",
@@ -2847,6 +2885,10 @@
       "title": "We could not complete this action.",
       "description": "Please try again."
     },
+    "exam-in-use": {
+      "title": "This exam has a sitting.",
+      "description": "Its sittings keep their results, so make a copy to change it."
+    },
     "copy-error": {
       "title": "Couldn't copy"
     },
@@ -3037,6 +3079,9 @@
     "school-cohort-archived": {
       "title": "Class archived."
     },
+    "school-cohort-deleted": {
+      "title": "Cohort deleted."
+    },
     "school-class-archived": {
       "title": "Classroom archived."
     },
@@ -3074,6 +3119,9 @@
     },
     "school-period-archived": {
       "title": "Period archived."
+    },
+    "school-period-deleted": {
+      "title": "Period deleted."
     },
     "sitting-not-in": {
       "title": "You are not in this sitting.",
@@ -3131,6 +3179,30 @@
       "title": "This period is not active.",
       "description": "Only an active period can be archived."
     },
+    "school-refusal-period-in-use-active": {
+      "title": "This period is active.",
+      "description": "Archive the period first, or keep it."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "This period still holds cohorts.",
+      "description": "Archive the period to keep its cohorts and grades."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "This period still holds grades.",
+      "description": "Archive the period to keep its grades."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "This period has a graduation.",
+      "description": "Archive the period to keep its graduation."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "This period still holds classes.",
+      "description": "Archive the period to keep its classes and grades."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "A promotion uses this period.",
+      "description": "Archive the period to keep its promotion."
+    },
     "school-refusal-cohort-name-taken": {
       "title": "This cohort name is already used.",
       "description": "Choose another name for this period."
@@ -3138,6 +3210,30 @@
     "school-refusal-cohort-limit": {
       "title": "No more cohorts fit this period.",
       "description": "Add the cohort to another period instead."
+    },
+    "school-refusal-cohort-in-use-members": {
+      "title": "This cohort still holds students.",
+      "description": "Move its students out first, or archive the cohort."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "This cohort still has a homeroom teacher.",
+      "description": "Remove the teacher first, or archive the cohort."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "This cohort still holds classes.",
+      "description": "Archive the cohort to keep its classes and grades."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "This cohort has exam sittings.",
+      "description": "Archive the cohort to keep its sittings and results."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "This cohort has report cards.",
+      "description": "Archive the cohort to keep its report cards."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "This cohort has graduation letters.",
+      "description": "Archive the cohort to keep its letters."
     },
     "school-refusal-address-invited": {
       "title": "This address already has an invite.",
@@ -3200,12 +3296,12 @@
       "description": "Remove one role before you give another."
     },
     "school-refusal-seat-limit": {
-      "title": "The free plan is full.",
-      "description": "Upgrade to School in billing to add more students."
+      "title": "Every account is in use.",
+      "description": "Add accounts in billing to give more people access."
     },
-    "school-refusal-seats-paid": {
-      "title": "Every student is paid for.",
-      "description": "New students can be billed once they enroll."
+    "school-refusal-plan-missing": {
+      "title": "No plan runs yet.",
+      "description": "Choose a plan first, then add accounts to it."
     },
     "school-refusal-person-inactive": {
       "title": "This person is no longer active.",
@@ -4029,5 +4125,158 @@
     "practice-empty": "No shared practice yet",
     "practice-class-note": "Only the topics a student switches on show here.",
     "practice-own-empty-description": "Your try-out practice shows here, and you choose what to share."
+  },
+  "SchoolSite": {
+    "metadata-title": "Nakafa School: classrooms, exams and report cards in one app",
+    "metadata-description": "Run your whole school from its classrooms: forum, library, tasks, exams, report cards, insight, graduation and parents. Free for 30 days.",
+    "breadcrumb": "School",
+    "pricing-breadcrumb": "Pricing",
+    "pricing-metadata-title": "Nakafa School pricing: Gratis, Pro and Max",
+    "pricing-metadata-description": "One price for the whole school. Every feature in every plan, accounts from 20 to 500 and more, AI credits and Drive storage. Free for 30 days.",
+    "hero-title": "Your whole school, run from its <mark>classrooms</mark>",
+    "hero-lead": "Forum, library, tasks, exams, report cards and parents in one place, with every feature in every plan.",
+    "hero-start": "Start free trial",
+    "hero-pricing": "See pricing",
+    "hero-note": "30 days free with real data. No card needed.",
+    "features-title": "Everything a school runs on",
+    "features-lead": "The classroom sits at the heart, and every tool opens from it.",
+    "feature-forum-title": "Forum",
+    "feature-forum-text": "Each class talks in its own threads, with files, polls and replies.",
+    "feature-library-title": "Library",
+    "feature-library-text": "A drive for every class, with folders and files each member can open.",
+    "feature-tasks-title": "Tasks",
+    "feature-tasks-text": "Give work with a due date, collect it, and grade it in the same class.",
+    "feature-exams-title": "Exams",
+    "feature-exams-text": "Exams, quizzes and try-outs run on one engine that scores them for you.",
+    "feature-reports-title": "Report cards",
+    "feature-reports-text": "Grades flow into report cards that teachers check and the school signs.",
+    "feature-insight-title": "Insight",
+    "feature-insight-text": "See how each class and student is doing before the report is due.",
+    "feature-graduation-title": "Graduation",
+    "feature-graduation-text": "Close the school year, move students up, and graduate a cohort.",
+    "feature-parents-title": "Parents",
+    "feature-parents-text": "Parents follow their child's tasks, grades and report cards.",
+    "feature-nina-title": "Nina",
+    "feature-nina-text": "Nakafa's AI helps teachers and students from the school's AI credits.",
+    "steps-title": "Open your school in minutes",
+    "step-open-title": "Open your school",
+    "step-open-text": "Answer five questions, and your school gets its own address.",
+    "step-invite-title": "Invite your people",
+    "step-invite-text": "Students, teachers, staff and parents join from one link.",
+    "step-teach-title": "Teach in classrooms",
+    "step-teach-text": "Each class gets its forum, library, tasks and exams from day one.",
+    "proof-title": "Built on the Nakafa learners already use",
+    "proof-languages-value": "3 languages",
+    "proof-languages-text": "Indonesian, English and German on every screen.",
+    "proof-features-value": "Every feature",
+    "proof-features-text": "Gratis, Pro and Max hold the same features. Only the capacity changes.",
+    "proof-engine-value": "One engine",
+    "proof-engine-text": "Lessons, try-outs and exams share one player, so students learn one way of working.",
+    "proof-trial-value": "30 days free",
+    "proof-trial-text": "The trial runs on real data, and an upgrade keeps all of it.",
+    "teaser-title": "One price for the whole school",
+    "teaser-lead": "Every role counts as one account, and every plan holds every feature.",
+    "teaser-link": "Compare plans",
+    "faq-title": "Questions schools ask",
+    "closing-title": "Open your school today",
+    "closing-lead": "Thirty days, every feature, real data. Upgrade when your school is ready.",
+    "plan-free": "Gratis",
+    "plan-pro": "Pro",
+    "plan-max": "Max",
+    "plan-free-description": "Try every feature with real data.",
+    "plan-pro-description": "For a school of up to 100 people.",
+    "plan-max-description": "For a school of up to 500 people.",
+    "plan-trial": "Free for {days} days",
+    "plan-month": "/month",
+    "plan-billed": "billed every {months, plural, one {month} other {# months}}",
+    "plan-billed-free": "No payment, no card",
+    "plan-accounts": "{count, number} accounts of every role",
+    "plan-credits-once": "{count, number} AI credits for the trial",
+    "plan-credits-month": "{count, number} AI credits a month",
+    "plan-storage": "{size} of Drive storage",
+    "plan-everything": "Every School feature",
+    "plan-start": "Start free trial",
+    "plan-choose": "Choose {plan}",
+    "plan-upgrade-note": "Every school starts with Gratis and upgrades inside its settings, keeping its data.",
+    "tax-note": "Prices exclude tax and are paid in advance for the period you choose.",
+    "pricing-title": "One price for the whole school",
+    "pricing-lead": "Every plan holds every feature. Pick the accounts, AI credits and storage your school needs.",
+    "period-label": "Billing period",
+    "period-option": "{months, plural, one {Monthly} other {# months}}",
+    "period-save": "Save {percent}%",
+    "calculator-title": "Add accounts from one",
+    "calculator-lead": "Each account adds {credits} AI credits a month and {size} of Drive, on your plan's invoice.",
+    "calculator-plan": "Plan",
+    "calculator-added": "Accounts to add",
+    "calculator-preset": "Add {count, number} accounts",
+    "calculator-accounts": "Accounts",
+    "calculator-credits": "AI credits a month",
+    "calculator-storage": "Drive storage",
+    "calculator-monthly": "A month",
+    "calculator-total": "Billed every {months, plural, one {month} other {# months}}",
+    "calculator-unit": "per account a month",
+    "addons-title": "Add-ons",
+    "addons-lead": "Buy more AI credits or storage at any time, beside your plan.",
+    "addon-credits-title": "{count, number} AI credits",
+    "addon-credits-text": "Paid once and usable for {months} months, never topped up by itself.",
+    "addon-drive-title": "{size} more Drive",
+    "addon-drive-text": "Billed every month beside your plan, without a period discount.",
+    "addon-once": "once",
+    "compare-title": "Compare every plan",
+    "compare-feature": "Feature",
+    "group-capacity": "Capacity",
+    "group-classroom": "Classroom",
+    "group-assessment": "Assessment",
+    "group-school": "School",
+    "group-billing": "Billing",
+    "row-accounts": "Accounts of every role",
+    "row-credits": "AI credits",
+    "row-storage": "Drive storage",
+    "row-added": "Added accounts",
+    "row-access": "Access",
+    "row-forum": "Class forum",
+    "row-library": "Class library",
+    "row-tasks": "Tasks and grading",
+    "row-exams": "Exams and quizzes",
+    "row-tryouts": "Try-outs",
+    "row-nina": "Nina, Nakafa's AI",
+    "row-reports": "Report cards",
+    "row-insight": "Insight",
+    "row-graduation": "Graduation",
+    "row-parents": "Parent accounts",
+    "row-languages": "Indonesian, English and German",
+    "row-periods": "Billing periods",
+    "row-payment": "Payment",
+    "value-included": "Included",
+    "value-once": "{count, number} once",
+    "value-month": "{count, number} a month",
+    "value-unavailable": "Not available",
+    "value-unit": "a month each",
+    "value-trial": "{days} days",
+    "value-ongoing": "Ongoing",
+    "value-periods-free": "None",
+    "value-periods-paid": "1, 3, 6 or 12 months",
+    "value-payment-free": "No payment",
+    "value-payment-paid": "Every method of the payment provider",
+    "faq-accounts-question": "Who counts as an account?",
+    "faq-accounts-answer": "Every person with access: students, teachers, staff, admins and parents. One person with several roles is still one account.",
+    "faq-trial-question": "What happens after the free trial?",
+    "faq-trial-answer": "Upgrade to Pro or Max and keep everything. Without an upgrade, the school stays open to read for 7 more days.",
+    "faq-features-question": "Do all plans have the same features?",
+    "faq-features-answer": "Yes. Gratis, Pro and Max hold every School feature. Only the accounts, AI credits and Drive storage change.",
+    "faq-languages-question": "Which languages does Nakafa School speak?",
+    "faq-languages-answer": "Indonesian, English and German, and each person picks their own.",
+    "faq-devices-question": "Does it work on phones?",
+    "faq-devices-answer": "Yes. Every screen works in the browser on phones, tablets and computers, with nothing to install.",
+    "faq-added-question": "Can we add accounts one at a time?",
+    "faq-added-answer": "Yes. Add any number from one, each with 6 AI credits a month and 200 MB of Drive. They join your plan's invoice.",
+    "faq-pay-question": "How do we pay?",
+    "faq-pay-answer": "Pay in advance for 1, 3, 6 or 12 months, with 3% off 6 months and 5% off 12 months. Schools in Indonesia pay in rupiah, others in dollars or euros.",
+    "faq-tax-question": "Are taxes included?",
+    "faq-tax-answer": "No. Every price is before tax, and the invoice adds the tax that applies.",
+    "faq-credits-question": "What are AI credits?",
+    "faq-credits-answer": "Nina, Nakafa's AI, spends credits on each answer. The whole school shares one pool, and a pack of 1,000 more lasts 12 months.",
+    "faq-change-question": "Can we change plans later?",
+    "faq-change-answer": "Yes. Move between Pro and Max or add accounts at any time, and the change applies from the next paid invoice."
   }
 }

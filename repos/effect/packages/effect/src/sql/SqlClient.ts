@@ -10,12 +10,11 @@
  * @since 4.0.0
  */
 import * as Cause from "../Cause.ts"
-import { Clock } from "../Clock.ts"
 import * as Context from "../Context.ts"
 import * as Effect from "../Effect.ts"
 import * as Exit from "../Exit.ts"
 import { identity } from "../Function.ts"
-import { CurrentTransactionService } from "../internal/sql.ts"
+import { CurrentTransactionService, recordConnectionWait, waitClock } from "../internal/sql.ts"
 import * as Option from "../Option.ts"
 import { hasProperty } from "../Predicate.ts"
 import type * as Queue from "../Queue.ts"
@@ -81,6 +80,10 @@ export interface SqlClient extends Constructor {
    * client's, such as one that sets its isolation level, provide
    * `BeginTransaction`.
    *
+   * To retry serialization failures or deadlocks, wrap the outermost
+   * `withTransaction` in `Effect.retry`. Each attempt starts a fresh
+   * transaction and re-runs the whole effect, including `COMMIT`.
+   *
    * **Gotchas**
    *
    * Deferred invalidations run individually after the commit and don't join an
@@ -88,6 +91,35 @@ export interface SqlClient extends Constructor {
    * the transaction's context defers, and a fiber that outlives the
    * transaction can't defer through it, as with `afterCommit`. Transactions
    * that don't go through `makeWithTransaction` invalidate immediately.
+   *
+   * Retrying a nested transaction only retries its savepoint, which can't
+   * recover an outer transaction the database has aborted. Since a retried
+   * effect runs more than once, keep non-transactional side effects in
+   * `afterCommit`, which discards the callbacks of a failed attempt but
+   * doesn't guarantee they run exactly once. Don't retry `ConnectionError`: a
+   * `COMMIT` that lost its connection may have committed, and retrying would
+   * apply its writes twice.
+   *
+   * **Example** (Retrying serialization failures and deadlocks)
+   *
+   * ```ts
+   * import { Effect, Schedule } from "effect"
+   * import { SqlClient } from "effect/sql"
+   *
+   * const program = Effect.gen(function*() {
+   *   const sql = yield* SqlClient.SqlClient
+   *   return yield* sql.withTransaction(
+   *     sql`UPDATE accounts SET balance = balance - 10 WHERE id = 1`
+   *   ).pipe(
+   *     Effect.provideService(SqlClient.BeginTransaction, "BEGIN ISOLATION LEVEL SERIALIZABLE"),
+   *     Effect.retry({
+   *       while: (error) => error.reason._tag === "SerializationError" || error.reason._tag === "DeadlockError",
+   *       times: 5,
+   *       schedule: Schedule.exponential("10 millis").pipe(Schedule.jittered)
+   *     })
+   *   )
+   * })
+   * ```
    */
   readonly withTransaction: <R, E, A>(
     self: Effect.Effect<A, E, R>
@@ -206,9 +238,8 @@ export declare namespace SqlClient {
     readonly spanAttributes: ReadonlyArray<readonly [string, unknown]>
     readonly transactionService?: Context.Service<TransactionConnection, TransactionConnection.Service>
     /**
-     * Whether the transaction control statements - `BEGIN`, `COMMIT`,
-     * `ROLLBACK`, and the savepoint pair - can be prepared like any other
-     * statement.
+     * Whether the transaction control statements - `BEGIN`, `COMMIT` and
+     * `SAVEPOINT` - can be prepared like any other statement.
      *
      * **Details**
      *
@@ -216,6 +247,9 @@ export declare namespace SqlClient {
      * prepare them stops parsing them again each time. Off by default,
      * because several databases refuse to prepare transaction control at all;
      * a driver has to say that its own does not.
+     *
+     * Rollbacks and savepoint releases always run unprepared, so a prepared
+     * statement the backend has dropped cannot stop cleanup.
      */
     readonly prepareTransactionControls?: boolean | undefined
     readonly beginTransaction?: string | undefined
@@ -248,6 +282,8 @@ export declare namespace SqlClient {
 let clientIdCounter = 0
 let transactionSemaphoreIdCounter = 0
 
+const ATTR_DB_OPERATION_NAME = "db.operation.name"
+
 /**
  * Constructs a `SqlClient` from connection acquirers, a compiler, transaction
  * commands, tracing attributes, optional row transforms, and reactive query
@@ -274,20 +310,20 @@ export const make = Effect.fnUntraced(function*(options: SqlClient.MakeOptions) 
   const rollback = options.rollback ?? "ROLLBACK"
   const rollbackSavepoint = options.rollbackSavepoint ?? ((name: string) => `ROLLBACK TO SAVEPOINT ${name}`)
   const transactionAcquirer = options.transactionAcquirer ?? options.acquirer
+  const unprepared = (conn: Connection.Connection, sql: string) => conn.executeUnprepared(sql, [], undefined)
   const control = options.prepareTransactionControls === true
     ? (conn: Connection.Connection, sql: string) => conn.execute(sql, [], undefined)
-    : (conn: Connection.Connection, sql: string) => conn.executeUnprepared(sql, [], undefined)
+    : unprepared
   const isTransaction = options.isTransaction
   const cleanup = isTransaction
-    ? (conn: Connection.Connection, sql: string) => isTransaction(conn) ? control(conn, sql) : Effect.void
-    : control
+    ? (conn: Connection.Connection, sql: string) => isTransaction(conn) ? unprepared(conn, sql) : Effect.void
+    : unprepared
   const withTransaction = makeWithTransaction({
     transactionService,
     spanAttributes: options.spanAttributes,
     acquireConnection: (restore) => restore(transactionAcquirer!),
     // Unlike the client's own, a provided statement isn't fixed, so it isn't prepared.
-    begin: (conn, statement) =>
-      statement === undefined ? control(conn, beginTransaction) : conn.executeUnprepared(statement, [], undefined),
+    begin: (conn, statement) => statement === undefined ? control(conn, beginTransaction) : unprepared(conn, statement),
     savepoint: (conn, id) => control(conn, savepoint(`effect_sql_${id}`)),
     releaseSavepoint: releaseSavepoint
       ? (conn, id) => cleanup(conn, releaseSavepoint(`effect_sql_${id}`))
@@ -517,6 +553,14 @@ const makeAfterCommit =
  * caller's context has no `SqlClient`, so their requests don't share a batch
  * with requests outside the transaction.
  *
+ * Each callback below except `acquireConnection` is traced like a statement,
+ * in its own client span under the `sql.transaction` span, named after the
+ * operation and the target derived from `spanAttributes`, such as
+ * `COMMIT mydb`. With `Statement.SpanPropagationEnabled`, a top-level
+ * transaction also records how long `acquireConnection` took as
+ * `db.client.connection.wait_time_ms`, so work a driver does there, such as
+ * starting the transaction, counts as waiting for the connection.
+ *
  * @stability unstable
  * @category transactions
  * @since 4.0.0
@@ -557,6 +601,7 @@ export const makeWithTransaction = <I, S>(options: {
     `effect/sql/SqlClient/TransactionSemaphore/${transactionSemaphoreIdCounter++}`
   )
   const afterCommit = makeAfterCommit(options.transactionService)
+  const target = Statement.spanTarget(options.spanAttributes)
   const deferInvalidations = (reactivity: Reactivity): Reactivity => {
     const invalidate = (keys: Parameters<Reactivity["invalidate"]>[0]) =>
       afterCommit(Effect.sync(() => reactivity.invalidateUnsafe(keys)))
@@ -574,13 +619,32 @@ export const makeWithTransaction = <I, S>(options: {
             }
             const services = fiber.context
             const reactivity = Context.getOrUndefined(services, Reactivity)
-            const clock = fiber.getRef(Clock)
+            const propagate = fiber.cache.tracerEnabled && fiber.getRef(Statement.SpanPropagationEnabled)
+            const waitedClock = propagate ? waitClock(fiber) : undefined
+            // Runs a transaction control in a span of its own, so a failure ends
+            // that span with the control's own exit.
+            const control = (operation: string, effect: Effect.Effect<void, SqlError>) =>
+              Effect.useSpan(
+                target === undefined ? operation : `${operation} ${target}`,
+                { kind: "client", parent: span },
+                (controlSpan) => {
+                  for (const [key, value] of options.spanAttributes) {
+                    controlSpan.attribute(key, value)
+                  }
+                  controlSpan.attribute(ATTR_DB_OPERATION_NAME, operation)
+                  return effect
+                }
+              )
             const connOption = Context.getOption(services, options.transactionService)
             const conn: Effect.Effect<readonly [Scope.Closeable | undefined, S], SqlError> = connOption._tag === "Some"
               ? Effect.succeed([undefined, connOption.value[0]] as const)
               : Effect.flatMap(Scope.make(), (scope) =>
                 Scope.provide(options.acquireConnection(restore), scope).pipe(
-                  Effect.map((conn) => [scope, conn] as const),
+                  Effect.provideService(Tracer.ParentSpan, span),
+                  Effect.map((conn) => {
+                    if (waitedClock !== undefined) recordConnectionWait(span, waitedClock)
+                    return [scope, conn] as const
+                  }),
                   Effect.onError((cause) => Scope.close(scope, Exit.failCause(cause)))
                 ))
             const id = connOption._tag === "Some" ? connOption.value[1] + 1 : 0
@@ -590,12 +654,16 @@ export const makeWithTransaction = <I, S>(options: {
               open: true
             }
             let committed = false
+            const start = (conn: S) =>
+              id === 0
+                ? control("BEGIN", options.begin(conn, fiber.getRef(BeginTransaction)))
+                : control("SAVEPOINT", options.savepoint(conn, id))
             const transaction = Effect.flatMap(
               conn,
               (
                 [scope, conn]
               ) =>
-                (id === 0 ? options.begin(conn, fiber.getRef(BeginTransaction)) : options.savepoint(conn, id)).pipe(
+                start(conn).pipe(
                   Effect.flatMap(() => {
                     const level = [conn, id] as const
                     afterCommitBuffers.set(level, buffer)
@@ -614,30 +682,31 @@ export const makeWithTransaction = <I, S>(options: {
                         let effect: Effect.Effect<void, SqlError>
                         if (Exit.isSuccess(exit)) {
                           if (id === 0) {
-                            span.event("effect.sql.transaction.commit", clock.currentTimeNanosUnsafe())
                             const onCommitFailure = options.onCommitFailure
+                            const commit = control("COMMIT", options.commit(conn))
                             effect = onCommitFailure
-                              ? Effect.catchCause(options.commit(conn), (commitCause) =>
-                                Effect.matchCauseEffect(onCommitFailure(conn), {
+                              ? Effect.catchCause(commit, (commitCause) =>
+                                Effect.matchCauseEffect(control("ROLLBACK", onCommitFailure(conn)), {
                                   onFailure: (cleanupCause) =>
                                     Effect.failCause(failuresToDefects(Cause.combine(commitCause, cleanupCause))),
                                   onSuccess: () => Effect.failCause(commitCause)
                                 }))
-                              : options.commit(conn)
+                              : commit
                           } else {
-                            span.event("effect.sql.transaction.savepoint", clock.currentTimeNanosUnsafe())
                             effect = Effect.void
                           }
                         } else {
-                          span.event("effect.sql.transaction.rollback", clock.currentTimeNanosUnsafe())
                           effect = Effect.orDie(
                             id > 0
-                              ? options.rollbackSavepoint(conn, id)
-                              : options.rollback(conn)
+                              ? control("ROLLBACK TO SAVEPOINT", options.rollbackSavepoint(conn, id))
+                              : control("ROLLBACK", options.rollback(conn))
                           )
                         }
                         if (id > 0 && options.releaseSavepoint) {
-                          effect = Effect.andThen(effect, Effect.orDie(options.releaseSavepoint(conn, id)))
+                          effect = Effect.andThen(
+                            effect,
+                            Effect.orDie(control("RELEASE SAVEPOINT", options.releaseSavepoint(conn, id)))
+                          )
                         }
                         return Effect.flatMap(effect, () => {
                           committed = Exit.isSuccess(exit)

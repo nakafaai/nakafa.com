@@ -3,6 +3,7 @@ import {
   Archive02Icon,
   ArchiveRestoreIcon,
   CheckmarkCircle02Icon,
+  Delete02Icon,
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -21,24 +22,25 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
-import { startTransition, useId, useState } from "react";
+import { type ReactNode, startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import { RowItems } from "@/components/shared/table/menu";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Period } from "@/components/tenant/settings/state";
 import {
   archivePeriodChange,
   editPeriodChange,
   openPeriodChange,
+  removePeriodChange,
   restorePeriodChange,
 } from "@/components/tenant/settings/terms";
 
 const SOURCE = "components/tenant/settings/period";
 
 /**
- * The restore action of an archived period in the archived list. The period shows as active at
- * once, and a refusal, such as another active period of its unit, takes it back.
+ * The menu of an archived period in the archived list: Restore, which shows the period as active at once and takes it
+ * back on a refusal, such as another active period of its unit, and Delete for a period nothing uses.
  */
 export function SchoolPeriodRestore({
   period,
@@ -53,7 +55,7 @@ export function SchoolPeriodRestore({
   );
 
   return (
-    <RowItems>
+    <PeriodDelete period={period} slug={slug}>
       <DropdownMenuItem
         onClick={() =>
           startTransition(() =>
@@ -64,7 +66,51 @@ export function SchoolPeriodRestore({
         <HugeIcons icon={ArchiveRestoreIcon} />
         {t("period-restore")}
       </DropdownMenuItem>
-    </RowItems>
+    </PeriodDelete>
+  );
+}
+
+/**
+ * A period's menu with Delete as its last item, under the period's other actions (`children`). Delete asks first, takes
+ * the period out of the list at once, and puts it back with the reason when the server refuses: a period that holds
+ * cohorts, classes or a promotion stays, archived. The active period keeps Delete in view, disabled, because it must be
+ * archived first.
+ */
+function PeriodDelete({
+  children,
+  period,
+  slug,
+}: {
+  children: ReactNode;
+  period: Period;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
+  const remove = useMutation(tenancy.periods.remove).withOptimisticUpdate(
+    removePeriodChange
+  );
+
+  return (
+    <ConfirmRowMenu
+      action={common("delete")}
+      confirm={t("period-delete-confirm")}
+      description={t("period-delete-description")}
+      disabled={period.status === "active"}
+      icon={Delete02Icon}
+      onConfirm={() =>
+        startTransition(() =>
+          saveSchool(
+            () => remove({ periodId: period.id, slug }),
+            SOURCE,
+            () => toast.success({ title: "school-period-deleted.title" })
+          )
+        )
+      }
+      title={t("period-delete-title", { name: period.name })}
+    >
+      {children}
+    </ConfirmRowMenu>
   );
 }
 
@@ -73,8 +119,8 @@ type PeriodFields = Pick<Period, "end" | "name" | "start">;
 
 /**
  * A period's row menu: it edits the period's name and dates in the dialog that adds a period, filled in, then opens a
- * planned period or archives an active one. An archived period has no menu, because the server refuses every write to
- * it, so its cell stays empty.
+ * planned period or archives an active one, and deletes a period nothing uses (`PeriodDelete`). An archived period
+ * takes `SchoolPeriodRestore` instead, because the server refuses every other write to it.
  */
 export function SchoolPeriodMenu({
   period,
@@ -101,7 +147,7 @@ export function SchoolPeriodMenu({
 
   return (
     <>
-      <RowItems>
+      <PeriodDelete period={period} slug={slug}>
         <DropdownMenuItem onClick={() => dialogs.show("edit")}>
           <HugeIcons icon={PencilEdit02Icon} />
           {t("period-edit")}
@@ -149,7 +195,7 @@ export function SchoolPeriodMenu({
             {t("period-archive")}
           </DropdownMenuItem>
         ) : null}
-      </RowItems>
+      </PeriodDelete>
       {dialogs.kind === "edit" ? (
         <PeriodDialog
           description={t("period-edit-description")}

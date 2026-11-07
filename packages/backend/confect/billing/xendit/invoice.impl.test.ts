@@ -85,8 +85,8 @@ describe("billing/xendit/invoice", () => {
       Effect.succeed(openedSession("https://dev.xen.to/invoice-1"))
     );
     const invoiceId = await t.mutation((ctx) => insertInvoice(ctx));
-    await t.action(steps.open, { invoiceId, offer: "school.seat.year" });
-    await t.action(steps.open, { invoiceId, offer: "school.seat.year" });
+    await t.action(steps.open, { invoiceId });
+    await t.action(steps.open, { invoiceId });
     const result = await t.run(async (ctx) => ({
       checkouts: await ctx.db.query("billingCheckouts").collect(),
       invoice: await ctx.db.get(invoiceId),
@@ -102,7 +102,7 @@ describe("billing/xendit/invoice", () => {
       {
         expiresAt: DUE,
         invoiceId,
-        offer: "school.seat.year",
+        offer: "school.invoice",
         sessionId: "ps-invoice-1",
         status: "open",
         url: "https://dev.xen.to/invoice-1",
@@ -113,7 +113,7 @@ describe("billing/xendit/invoice", () => {
   it("opens nothing for a paid invoice", async () => {
     const t = createBillingTestConvex();
     const invoiceId = await t.mutation((ctx) => insertInvoice(ctx, "paid"));
-    await t.action(steps.open, { invoiceId, offer: "school.seat.year" });
+    await t.action(steps.open, { invoiceId });
     expect(createSession).not.toHaveBeenCalled();
   });
 
@@ -136,7 +136,7 @@ describe("billing/xendit/invoice", () => {
     const t = createBillingTestConvex();
     vi.mocked(createSession).mockReturnValue(answer);
     const invoiceId = await t.mutation((ctx) => insertInvoice(ctx));
-    await t.action(steps.open, { invoiceId, offer: "school.seat.year" });
+    await t.action(steps.open, { invoiceId });
     const invoice = await t.run((ctx) => ctx.db.get(invoiceId));
     expect(invoice?.paymentLink).toBeNull();
   });

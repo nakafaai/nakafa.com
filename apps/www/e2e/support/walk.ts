@@ -7,6 +7,7 @@ import {
 import { Array as Arr, Effect, MutableHashSet, MutableList } from "effect";
 import { readRawKeys } from "@/e2e/support/keys";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import { readTallRows } from "@/e2e/support/wraps";
 
 /** Everything that opens over a page. */
 const POPUPS = Arr.join(
@@ -64,33 +65,37 @@ function recordMoves({ key, watched }: { key: string; watched: string }) {
   const moves: string[] = [];
   Reflect.set(window, key, moves);
   const places = new WeakMap<Element, { x: number; y: number }>();
+  // The page serializes this function, so its helpers live inside it.
+  const isShown = (item: Element, box: DOMRect) =>
+    box.height !== 0 &&
+    box.top <= window.innerHeight &&
+    box.bottom >= 0 &&
+    item.checkVisibility({
+      opacityProperty: true,
+      visibilityProperty: true,
+    });
+  // A table that scrolls moves its cells, which a press on a far column does and no reader calls a shift.
+  // A cell sticky to a side holds its place through that scroll, so the scroller's distance is not part of its place.
+  const scrolledBy = (item: Element) => {
+    let scrolled = 0;
+    let pinned = false;
+    for (let node: Element | null = item; node; node = node.parentElement) {
+      scrolled += pinned || node === item ? 0 : node.scrollLeft;
+      const style = getComputedStyle(node);
+      pinned ||=
+        style.position === "sticky" &&
+        (style.left !== "auto" || style.right !== "auto");
+    }
+    return scrolled;
+  };
   const follow = () => {
     const still = document.getAnimations().length === 0;
     for (const item of document.querySelectorAll(watched)) {
       const box = item.getBoundingClientRect();
-      if (
-        box.height === 0 ||
-        box.top > window.innerHeight ||
-        box.bottom < 0 ||
-        !item.checkVisibility({
-          opacityProperty: true,
-          visibilityProperty: true,
-        })
-      ) {
+      if (!isShown(item, box)) {
         continue;
       }
-      // A table that scrolls moves its cells, which a press on a far column does and no reader calls a shift.
-      // A cell sticky to a side holds its place through that scroll, so the scroller's distance is not part of its place.
-      let scrolled = 0;
-      let pinned = false;
-      for (let node: Element | null = item; node; node = node.parentElement) {
-        scrolled += pinned || node === item ? 0 : node.scrollLeft;
-        const style = getComputedStyle(node);
-        pinned ||=
-          style.position === "sticky" &&
-          (style.left !== "auto" || style.right !== "auto");
-      }
-      const x = box.x + scrolled;
+      const x = box.x + scrolledBy(item);
       const before = places.get(item);
       places.set(item, { x, y: box.y });
       const across = Math.abs((before?.x ?? x) - x);
@@ -451,6 +456,12 @@ export const walkSchool = async (
     await page.waitForLoadState("networkidle");
     const facts = await page.evaluate(readFacts);
     expect.soft(facts.problems, `${shape}: stands apart`).toEqual([]);
+    expect
+      .soft(
+        await page.evaluate(readTallRows),
+        `${shape}: keeps rows on one line`
+      )
+      .toEqual([]);
     expect
       .soft(await Effect.runPromise(readRawKeys(page)), `${shape}: no raw key`)
       .toEqual([]);

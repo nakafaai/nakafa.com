@@ -163,7 +163,14 @@ const writeStaticAnswer = (
     );
     const response = yield* HttpClient.get(address, {
       headers: SERVER_FUNCTION_REQUEST_HEADERS,
-    });
+    }).pipe(
+      // A busy machine can hold the build past the preview server's keep-alive, and the pooled
+      // connection the server closed then answers with a reset. The request only reads, so it is sent again.
+      Effect.retry({
+        times: 2,
+        while: (error) => error.reason._tag === "TransportError",
+      })
+    );
     const contentType = response.headers["content-type"];
     if (
       response.status !== 200 ||

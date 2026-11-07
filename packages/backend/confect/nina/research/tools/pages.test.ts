@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { getSpecialistToolWords } from "@repo/backend/confect/nina/contract/tools";
 import { readTopPages } from "@repo/backend/confect/nina/research/tools/pages";
 import { readsPages } from "@repo/backend/test/nina/pages";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 
 const readPage = vi.hoisted(() => vi.fn());
@@ -63,6 +64,10 @@ const wordsWithHashLine = [
   },
 ];
 
+/** Reads the top pages under a meter that holds whatever it is asked. */
+const readTopMetered = (...args: Parameters<typeof readTopPages>) =>
+  readTopPages(...args).pipe(Effect.provide(recordingMeter().layer));
+
 describe("research result pages", () => {
   beforeEach(() => {
     readPage.mockReset();
@@ -71,7 +76,7 @@ describe("research result pages", () => {
 
   it.effect("reads every query's first result before any second result", () =>
     Effect.gen(function* () {
-      yield* readTopPages(
+      yield* readTopMetered(
         [
           [result("a1"), result("a2")],
           [result("b1"), result("b2")],
@@ -88,7 +93,7 @@ describe("research result pages", () => {
 
   it.effect("reads an address once, however many queries find it", () =>
     Effect.gen(function* () {
-      yield* readTopPages(
+      yield* readTopMetered(
         [
           [result("a"), result("b")],
           [result("a"), result("c")],
@@ -114,7 +119,7 @@ describe("research result pages", () => {
         readPage.mockImplementation(
           readsPages({ "https://example.com/a": "Text of page a." })
         );
-        const pages = yield* readTopPages(
+        const pages = yield* readTopMetered(
           [[result("a"), result("b")]],
           "kurikulum"
         );
@@ -143,7 +148,10 @@ describe("research result pages", () => {
             ),
           })
         );
-        const pages = yield* readTopPages([[result("a")]], "kurikulum merdeka");
+        const pages = yield* readTopMetered(
+          [[result("a")]],
+          "kurikulum merdeka"
+        );
 
         expect(HashMap.get(pages, "https://example.com/a")).toEqual(
           Option.some(relevant.trim())
@@ -158,7 +166,7 @@ describe("research result pages", () => {
         readPage.mockImplementation(
           readsPages({ "https://example.com/a": writePage(relevant) })
         );
-        const pages = yield* readTopPages([[result("a")]], words);
+        const pages = yield* readTopMetered([[result("a")]], words);
 
         expect(HashMap.get(pages, "https://example.com/a")).toEqual(
           Option.some(relevant.trim())
@@ -177,7 +185,7 @@ describe("research result pages", () => {
             "https://example.com/a": writePage(headings, relevant),
           })
         );
-        const pages = yield* readTopPages(
+        const pages = yield* readTopMetered(
           [[result("a")]],
           getSpecialistToolWords({
             objective: "Cari rujukan resmi.",

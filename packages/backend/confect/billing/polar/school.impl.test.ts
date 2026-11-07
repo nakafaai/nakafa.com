@@ -46,7 +46,7 @@ beforeEach(() => {
 
 describe("billing/polar/school", () => {
   it.effect(
-    "starts the Polar checkout of a school's unpaid seats for its Owner, as a business, back to its billing",
+    "starts the Polar checkout of a seat for each account of a school on its trial, for its Owner, as a business, back to its billing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -58,6 +58,9 @@ describe("billing/polar/school", () => {
             kind: "tenant",
           })
         );
+        const { accounts } = yield* fixture
+          .as("otherOwner")
+          .query(refs.public.billing.school.overview, { slug: other });
         const started = yield* fixture.as("otherOwner").action(checkout, {
           locale: "de",
           offer: "school.seat.year",
@@ -71,14 +74,14 @@ describe("billing/polar/school", () => {
           customerIpAddress: null,
           locale: "de",
           productIds: [polarProductIdFor("school.seat.year", "sandbox")],
-          school: { seats: 1, tenantId: fixture.tenants.other },
+          school: { seats: accounts.used, tenantId: fixture.tenants.other },
           successUrl: "http://localhost:3000/school/other/settings/billing",
         });
       })
   );
 
   it.effect(
-    "refuses an offer the school's rail does not sell, and a viewer who may not pay",
+    "refuses Polar seats to a school in Indonesia, and a viewer who may not pay",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;

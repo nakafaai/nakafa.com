@@ -172,6 +172,10 @@ describe("Nakafa OpenAPI document", () => {
 
   it("derives the canonical public examples", () => {
     expect(NAKAFA_OPENAPI_DOCUMENT.info).toMatchObject({
+      contact: {
+        email: "info@nakafa.com",
+        url: "https://nakafa.com/en/legal-notice",
+      },
       version: "1.0.0",
       "x-version-policy": "/v1 is the only supported public API contract.",
     });

@@ -24,6 +24,7 @@ import {
   checkPeriodDates,
   edit,
 } from "@repo/backend/confect/tenancy/periods.edit";
+import { remove } from "@repo/backend/confect/tenancy/periods.remove";
 import { restore } from "@repo/backend/confect/tenancy/periods.restore";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
 import { openTarget } from "@repo/backend/confect/tenancy/promotion/open";
@@ -144,6 +145,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
   Layer.provide(archive),
   Layer.provide(restore),
+  Layer.provide(remove),
   Layer.provide(edit),
   Layer.provide(session),
   Layer.provide(member),

@@ -8,6 +8,7 @@ import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions
 import { createTryoutHead } from "@/components/tryout/route/head";
 import {
   useAttemptSignIn,
+  useKeptLearnerRead,
   useLearnerSection,
 } from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
@@ -93,12 +94,14 @@ function TryoutSectionVisitor() {
 function TryoutSectionLearner() {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
-  const learner = useLearnerSection({
-    page: route.page,
-    publicPath: route.sectionPath,
-    search,
-    setPath: route.setPath,
-  });
+  const learner = useKeptLearnerRead(
+    useLearnerSection({
+      page: route.page,
+      publicPath: route.sectionPath,
+      search,
+      setPath: route.setPath,
+    })
+  );
   return (
     <>
       <ShellLockCarry pending={learner.kind === "pending"} />

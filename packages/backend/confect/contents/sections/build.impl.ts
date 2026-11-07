@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { runStep } from "@repo/backend/confect/contents/sections/build";
 import spec from "@repo/backend/confect/contents/sections/build.spec";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
+import { meterOf } from "@repo/backend/confect/spend/meter";
 import { Effect, Layer } from "effect";
 
 const run = FunctionImpl.make(
@@ -12,7 +13,13 @@ const run = FunctionImpl.make(
   Effect.fn("contents.sections.build.run")(function* (args) {
     // A build step that fails is a defect: the scheduled run fails visibly,
     // and its logged position resumes it.
-    return yield* runStep(args).pipe(Effect.provide(GatewayLive), Effect.orDie);
+    // Embedding the published lessons is Nakafa's own work, on its own budget.
+    return yield* runStep(args).pipe(
+      Effect.provide(
+        Layer.provideMerge(GatewayLive, meterOf({ kind: "nakafa" }))
+      ),
+      Effect.orDie
+    );
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

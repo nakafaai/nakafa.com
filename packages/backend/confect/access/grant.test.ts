@@ -16,7 +16,7 @@ import type {
   BuiltinRole,
   GrantScope,
 } from "@repo/backend/confect/access/schema";
-import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
+import { schoolTiers } from "@repo/backend/confect/billing/tiers";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -106,14 +106,14 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
     });
     return { kind: "unit", unitId } as const;
   });
-  /** Gives the school a School grant that runs until 2099, as a paid term does. */
+  /** Gives the school a School grant of Pro's accounts that runs until 2099, as a paid plan does. */
   const paid = Effect.fn(function* () {
     yield* writer.table("billingGrants").insert({
       product: "school",
       tenantId,
       scope: { kind: "tenant" },
-      seats: SCHOOL_FREE_STUDENTS,
-      ninaSeats: SCHOOL_FREE_STUDENTS,
+      seats: schoolTiers.pro.accounts,
+      ninaSeats: schoolTiers.pro.accounts,
       source: { kind: "contract", contractId: "contract-grant-test" },
       validFrom: 0,
       validTo: Date.UTC(2099, 0, 1),
@@ -195,9 +195,9 @@ describe("access/grant assignRole", () => {
   );
 });
 
-describe("access/grant student seats", () => {
+describe("access/grant account seats", () => {
   it.effect(
-    "holds a free school at its student limit, lets a student it holds join another unit, and lifts the limit once the school pays",
+    "holds a trial school at its accounts in every role, lets a person it holds take another unit, and lifts the limit once the school pays",
     () =>
       Effect.gen(function* () {
         const codes = yield* scenario(
@@ -205,7 +205,7 @@ describe("access/grant student seats", () => {
             const { grant, paid, person, unit } = yield* tenant();
             const near = yield* unit();
             const students = yield* Effect.forEach(
-              Arr.range(1, SCHOOL_FREE_STUDENTS),
+              Arr.range(1, schoolTiers.free.accounts),
               () => person(false, "active")
             );
             yield* Effect.forEach(students, (student) =>
@@ -241,7 +241,7 @@ describe("access/grant student seats", () => {
           }),
           Codes
         );
-        expect(codes).toEqual(["SEAT_LIMIT", "ok", "ok", "ok"]);
+        expect(codes).toEqual(["SEAT_LIMIT", "ok", "SEAT_LIMIT", "ok"]);
       })
   );
 });

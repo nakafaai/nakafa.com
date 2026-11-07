@@ -8,5 +8,6 @@ export const get = registeredFunctions.get;
 export const list = registeredFunctions.list;
 export const members = registeredFunctions.members;
 export const overview = registeredFunctions.overview;
+export const remove = registeredFunctions.remove;
 export const restore = registeredFunctions.restore;
 export const experimental_reuseContext = true;

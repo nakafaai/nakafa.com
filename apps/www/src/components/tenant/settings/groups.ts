@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   type Cohort,
   draftText,
@@ -85,5 +85,16 @@ export const archiveCohortChange: OptimisticUpdate<
     localStore,
     () => true,
     (cohorts) => setCohortStatus(cohorts, cohortId, "archived")
+  );
+};
+
+/** Takes a deleted cohort out of every loaded list of cohorts at once; a refusal puts it back. */
+export const removeCohortChange: OptimisticUpdate<
+  typeof tenancy.cohorts.remove
+> = (localStore, { cohortId }) => {
+  changeCohortLists(
+    localStore,
+    () => true,
+    (cohorts) => Arr.filter(cohorts, (cohort) => cohort.id !== cohortId)
   );
 };

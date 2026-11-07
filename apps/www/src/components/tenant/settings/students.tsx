@@ -413,20 +413,20 @@ function SchoolStudentDialog({
   );
 }
 
-/** How many of the free plan's students the school has used, so the limit is no surprise. */
+/** How many of the accounts its plan pays for the school holds, so the limit is no surprise. */
 function StudentSeats() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const overview = useQuery(billing.school.overview, { slug });
 
-  if (!QueryResult.isSuccess(overview) || overview.value.plan.kind !== "free") {
+  if (!QueryResult.isSuccess(overview)) {
     return null;
   }
   return (
     <FieldDescription>
       {t("student-add-seats", {
-        count: overview.value.students,
-        limit: overview.value.plan.limit,
+        count: overview.value.accounts.used,
+        limit: overview.value.accounts.limit,
       })}
     </FieldDescription>
   );

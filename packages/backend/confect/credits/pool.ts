@@ -5,13 +5,17 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
 import { runningSchoolGrants } from "@repo/backend/confect/billing/school";
+import { schoolAccount } from "@repo/backend/confect/billing/tiers";
 import { MAX_CREDITS_PER_RESPONSE } from "@repo/backend/confect/credits/constants";
 import type { CreditPoolDraw } from "@repo/backend/confect/credits/schema";
 import { DEFAULT_NINA_DAILY_CREDITS } from "@repo/backend/confect/tenancy/policy";
 import { Array as Arr, Clock, DateTime, Effect, Option } from "effect";
 
-/** Credits each student a School grant covers adds to the school's shared Nina pool every month (K46). */
-const POOL_CREDITS_PER_SEAT = 100;
+/**
+ * Credits each account a School grant covers adds to the school's shared Nina pool every month: Pro's 600 for 100
+ * accounts, Max's 3,000 for 500, and the same for each added account.
+ */
+const POOL_CREDITS_PER_SEAT = schoolAccount.credits;
 
 /** The most school memberships one member is read through when their pool is found. */
 const MAX_MEMBERSHIPS = 50;
@@ -23,9 +27,25 @@ function poolPeriodOf(now: number) {
 }
 
 /**
+ * The Nina credits a school's running School grants give its shared pool each
+ * month (K46): 100 for every student they cover with Nina. A school whose
+ * grants cover none (a contract grant) has no pool.
+ */
+export const schoolCreditsOf = Effect.fn("credits.pool.creditsOf")(function* (
+  tenantId: Docs["tenants"]["_id"],
+  now: number
+) {
+  const grants = yield* runningSchoolGrants(tenantId, now);
+  return (
+    Arr.reduce(grants, 0, (total, grant) => total + grant.ninaSeats) *
+    POOL_CREDITS_PER_SEAT
+  );
+});
+
+/**
  * The school pool a member draws Nina credits from (K46): a member whose Pro
  * comes from a school's School grant, not from a grant of their own, draws from
- * that school's shared pool of 100 credits per covered student a month, up to the
+ * that school's shared pool of 6 credits per covered account a month, up to the
  * school's daily cap. A member with a personal Pro grant, and a member of schools
  * whose grants carry no pool (a contract grant), draws from their own allowance.
  */
@@ -48,19 +68,14 @@ export const schoolPoolOf = Effect.fn("credits.pool.of")(function* (
     .take(MAX_MEMBERSHIPS)
     .pipe(Effect.orDie);
   for (const membership of memberships) {
-    const grants = yield* runningSchoolGrants(membership.tenantId, now);
-    const ninaSeats = Arr.reduce(
-      grants,
-      0,
-      (total, grant) => total + grant.ninaSeats
-    );
-    if (ninaSeats > 0) {
+    const capacity = yield* schoolCreditsOf(membership.tenantId, now);
+    if (capacity > 0) {
       const tenant = yield* reader
         .table("tenants")
         .get(membership.tenantId)
         .pipe(Effect.orDie);
       return Option.some({
-        capacity: ninaSeats * POOL_CREDITS_PER_SEAT,
+        capacity,
         dailyCap:
           tenant.policies.ninaDailyCredits ?? DEFAULT_NINA_DAILY_CREDITS,
         tenantId: membership.tenantId,

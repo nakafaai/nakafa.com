@@ -12,6 +12,7 @@
     "sort-newest": "Terbaru",
     "no-results": "Tidak ada hasil.",
     "searching": "Mencari di seluruh daftar.",
+    "more": "Tampilkan {count} lainnya",
     "no-values": "Belum ada nilai",
     "reset": "Atur ulang"
   },
@@ -767,41 +768,12 @@
     "policies": "Kebijakan",
     "audit": "Jejak audit",
     "billing": "Tagihan",
-    "billing-free-title": "Gratis",
-    "billing-free-description": "Sampai {limit} siswa, dengan semua fitur School.",
-    "billing-school-title": "School",
-    "billing-school-description": "Setiap siswa punya Pro sampai {date}.",
-    "billing-students": "Siswa",
-    "billing-limit": "Batas gratis",
-    "billing-paid": "Siswa dibayar",
-    "billing-nina": "Kredit Nina bulan ini",
-    "billing-nina-used": "{used} dari {total} terpakai",
-    "billing-upgrade": "Upgrade",
-    "billing-add": "Bayar siswa baru",
-    "billing-free-footer": "Upgrade untuk lebih dari {limit} siswa.",
-    "billing-add-footer": "Siswa baru ditagih untuk sisa periode.",
-    "billing-free-empty": "Daftarkan siswa untuk upgrade ke School.",
-    "billing-school-footer": "Semua siswa sudah dibayar.",
-    "billing-open-footer": "Bayar tagihan terbuka di bawah untuk menyelesaikannya.",
-    "billing-dialog-title": "Pilih periode",
-    "billing-dialog-description": "Bayar per siswa terdaftar untuk sisa hari periode.",
-    "billing-dialog-seats": "Bayar per siswa terdaftar, dengan kursi yang diperpanjang sampai kamu membatalkannya.",
-    "billing-term-semester": "Semester ini",
-    "billing-term-year": "Tahun ajaran ini",
-    "billing-offer-month": "Setiap bulan",
-    "billing-offer-year": "Setiap tahun",
     "billing-term-dates": "{start} sampai {end}",
-    "billing-quote-term": "{seats} siswa sampai {date}",
-    "billing-quote-seats": "{seats} siswa, {price} per siswa",
     "billing-issue": "Buat invoice",
-    "billing-checkout": "Lanjut",
     "billing-invoices": "Invoice",
     "billing-invoices-description": "Semua invoice yang diterbitkan untuk sekolah.",
-    "billing-invoices-footer": "Bayar invoice terbuka sebelum jatuh tempo.",
-    "billing-invoices-empty": "Sekolah belum punya invoice.",
     "invoice-number": "Invoice",
     "invoice-term": "Periode",
-    "invoice-students": "Siswa",
     "invoice-total": "Total",
     "invoice-due": "Jatuh tempo",
     "invoice-status": "Status",
@@ -1075,6 +1047,7 @@
         "renamed": "Rombel diganti nama",
         "archived": "Rombel diarsipkan",
         "restored": "Rombel dipulihkan",
+        "removed": "Rombel dihapus",
         "grade": {
           "set": "Tingkat rombel diubah"
         }
@@ -1112,6 +1085,7 @@
         "archived": "Periode diarsipkan",
         "rename": "Periode diganti nama",
         "restored": "Periode dipulihkan",
+        "removed": "Periode dihapus",
         "rescheduled": "Tanggal periode diubah"
       },
       "person": {
@@ -1363,13 +1337,19 @@
     "student-add-description": "Siswa mendapat nama masuk dan kartu masuk pertama, ditambahkan bersamaan.",
     "student-add-name": "Nama",
     "student-add-footer": "Cetak kartu sebelum menutupnya, karena kode hanya ditampilkan sekali.",
-    "student-add-seats": "{count} dari {limit} siswa gratis terpakai.",
+    "student-add-seats": "{count} dari {limit} akun terpakai.",
     "student-add-submit": "Tambah siswa",
     "invites-empty": "Belum ada undangan yang menunggu.",
     "invites-search": "Cari nama atau email",
     "units-search": "Cari sekolah atau NPSN",
     "cohort-restore": "Pulihkan",
+    "cohort-delete-title": "Hapus {name}?",
+    "cohort-delete-description": "Rombel ini hilang untuk selamanya. Rombel yang masih punya siswa, wali kelas, kelas, atau rapor diarsipkan saja.",
+    "cohort-delete-confirm": "Hapus rombel",
     "period-restore": "Pulihkan",
+    "period-delete-title": "Hapus {name}?",
+    "period-delete-description": "Periode ini hilang untuk selamanya. Periode yang aktif atau masih punya rombel dan kelas diarsipkan saja.",
+    "period-delete-confirm": "Hapus periode",
     "no-unit-title": "Belum ada unit aktif",
     "no-unit-description": "Pulihkan atau tambahkan unit dulu, karena periode dan kelompok berada di dalam unit.",
     "no-unit-action": "Buka unit",
@@ -1429,7 +1409,63 @@
     "cohort-classes": "Kelas",
     "member-login": "Akun masuk",
     "member-email": "Email",
-    "member-units": "Unit"
+    "member-units": "Unit",
+    "billing-plan-trial": "Uji coba",
+    "billing-plan-pro": "Pro",
+    "billing-plan-max": "Max",
+    "billing-trial-description": "Semua fitur dengan data asli sampai {date}.",
+    "billing-paid-description": "Paket berlaku sampai {date}.",
+    "billing-credits": "Kredit AI",
+    "billing-credits-trial": "{total} kredit untuk seluruh uji coba",
+    "billing-credits-used": "{used} dari {total} terpakai bulan ini",
+    "billing-drive": "Drive",
+    "billing-trial-footer": "Pilih Pro atau Max agar data tetap tersimpan setelah uji coba.",
+    "billing-renew-footer": "Perpanjang sebelum paket berakhir. Tidak ada perpanjangan otomatis.",
+    "billing-open-footer": "Bayar invoice yang terbuka sebelum {date}.",
+    "billing-choose": "Pilih paket",
+    "billing-renew": "Perpanjang",
+    "billing-accounts": "Akun",
+    "billing-accounts-description": "Setiap siswa, guru, staf, admin, dan orang tua dihitung satu kali.",
+    "billing-accounts-used": "{used} dari {total} akun terpakai",
+    "billing-accounts-footer": "Akun tambahan ditagih untuk sisa hari paket.",
+    "billing-accounts-trial": "Uji coba memuat {limit} akun. Pilih paket untuk menambah.",
+    "billing-add-accounts": "Tambah akun",
+    "billing-order-title": "Pilih paket",
+    "billing-order-description": "Semua harga belum termasuk pajak dan dibayar di muka.",
+    "billing-more-title": "Tambah akun",
+    "billing-more-description": "Setiap akun menambah {credits} kredit AI per bulan dan Drive {drive} MB.",
+    "billing-order-plan": "Paket",
+    "billing-order-period": "Periode",
+    "billing-months": "{months} bulan{discount, plural, =0 {} other {, hemat # persen}}",
+    "billing-order-accounts": "Akun tambahan, opsional",
+    "billing-more-accounts": "Jumlah akun",
+    "billing-order-presets": "Tambah akun cepat",
+    "billing-per-month": "{price} per bulan",
+    "billing-plan-holds": "{accounts} akun, {credits} kredit AI per bulan, Drive {drive} GB.",
+    "billing-line-pro": "Pro, {months} bulan",
+    "billing-line-max": "Max, {months} bulan",
+    "billing-line-accounts": "{accounts} akun tambahan, {months} bulan",
+    "billing-line-prorata": "{accounts} akun untuk sisa {days} hari",
+    "billing-total": "Total sebelum pajak",
+    "billing-runs": "Berlaku dari {start} sampai {end} setelah dibayar.",
+    "billing-runs-more": "Berlaku setelah dibayar sampai {end}.",
+    "billing-invoices-view": "Lihat invoice",
+    "billing-invoices-footer": "{count} invoice sejauh ini.",
+    "billing-invoices-empty": "Sekolah belum punya invoice.",
+    "billing-invoices-sheet-footer": "Setiap invoice dibayar di halamannya sendiri atau lewat transfer bank.",
+    "invoice-accounts": "Akun",
+    "academic": "Akademik",
+    "locale-country-search": "Cari negara",
+    "locale-currency-search": "Cari mata uang",
+    "locale-empty": "Tidak ada yang cocok.",
+    "billing-plan-school": "School",
+    "billing-seats-buy": "Beli kursi",
+    "billing-seats-title": "Beli kursi di Polar",
+    "billing-seats-description": "Satu kursi untuk setiap {seats} akun yang belum dibayar, diperpanjang sampai dibatalkan.",
+    "billing-seats-month": "Setiap bulan",
+    "billing-seats-year": "Setiap tahun",
+    "billing-seats-each": "{price} per kursi",
+    "billing-checkout": "Lanjutkan"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1915,8 +1951,8 @@
       "l": "500 sampai 999",
       "xl": "1.000 atau lebih"
     },
-    "plan-free": "Paket Gratis, sampai {limit} siswa.",
-    "plan-school": "Paket School, bayar per siswa.",
+    "plan-free": "Uji coba gratis 30 hari, sampai {limit} akun.",
+    "plan-school": "Pro atau Max, setiap peran dihitung satu akun.",
     "plan-founder": "Paket School, dibantu pendiri.",
     "founder-line": "Pendiri bisa membantu sekolah besar bersiap.",
     "founder-link": "Bicara dengan pendiri",
@@ -2393,6 +2429,7 @@
     "score-label-estimated": "Perkiraan nilai",
     "score-label-standard": "Nilai",
     "correct-answers-label": "Jawaban benar",
+    "finished-panel": "Hasil kamu",
     "attempt-menu-label": "Riwayat",
     "attempt-menu-search-placeholder": "Cari percobaan...",
     "attempt-menu-empty": "Tidak ada percobaan yang cocok.",
@@ -2483,10 +2520,11 @@
     "continue-learning": "Lanjutkan Belajar"
   },
   "Marketing": {
-    "about": "Tentang",
-    "features": "Fitur",
+    "learn": "Belajar",
+    "school": "Sekolah",
     "pricing": "Harga",
-    "try-nakafa": "Coba Nakafa"
+    "try-nakafa": "Coba Nakafa",
+    "start-school": "Mulai gratis"
   },
   "Weather": {
     "loading": "Lagi muat cuaca...",
@@ -2847,6 +2885,10 @@
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."
     },
+    "exam-in-use": {
+      "title": "Ujian ini sudah punya jadwal.",
+      "description": "Hasil jadwalnya tetap disimpan, jadi buat salinan untuk mengubahnya."
+    },
     "copy-error": {
       "title": "Gagal nyalin nih"
     },
@@ -3037,6 +3079,9 @@
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."
     },
+    "school-cohort-deleted": {
+      "title": "Rombel dihapus."
+    },
     "school-class-archived": {
       "title": "Ruang kelas diarsipkan."
     },
@@ -3074,6 +3119,9 @@
     },
     "school-period-archived": {
       "title": "Periode diarsipkan."
+    },
+    "school-period-deleted": {
+      "title": "Periode dihapus."
     },
     "sitting-not-in": {
       "title": "Kamu tidak ada di sesi ini.",
@@ -3131,6 +3179,30 @@
       "title": "Periode ini tidak aktif.",
       "description": "Hanya periode yang aktif yang bisa diarsipkan."
     },
+    "school-refusal-period-in-use-active": {
+      "title": "Periode ini sedang aktif.",
+      "description": "Arsipkan periode ini dulu, atau biarkan saja."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "Periode ini masih punya rombel.",
+      "description": "Arsipkan periode ini agar rombel dan nilainya tetap ada."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "Periode ini masih punya nilai.",
+      "description": "Arsipkan periode ini agar nilainya tetap ada."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "Periode ini punya kelulusan.",
+      "description": "Arsipkan periode ini agar kelulusannya tetap ada."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "Periode ini masih punya kelas.",
+      "description": "Arsipkan periode ini agar kelas dan nilainya tetap ada."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "Kenaikan kelas memakai periode ini.",
+      "description": "Arsipkan periode ini agar kenaikan kelasnya tetap ada."
+    },
     "school-refusal-cohort-name-taken": {
       "title": "Nama kelompok ini sudah dipakai.",
       "description": "Pilih nama lain untuk periode ini."
@@ -3138,6 +3210,30 @@
     "school-refusal-cohort-limit": {
       "title": "Periode ini sudah penuh kelompok.",
       "description": "Tambahkan kelompok ke periode lain sebagai gantinya."
+    },
+    "school-refusal-cohort-in-use-members": {
+      "title": "Rombel ini masih punya siswa.",
+      "description": "Pindahkan siswanya dulu, atau arsipkan rombel ini."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "Rombel ini masih punya wali kelas.",
+      "description": "Hapus wali kelasnya dulu, atau arsipkan rombel ini."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "Rombel ini masih punya kelas.",
+      "description": "Arsipkan rombel ini agar kelas dan nilainya tetap ada."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "Rombel ini punya jadwal ujian.",
+      "description": "Arsipkan rombel ini agar ujian dan hasilnya tetap ada."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "Rombel ini punya rapor.",
+      "description": "Arsipkan rombel ini agar rapornya tetap ada."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "Rombel ini punya surat kelulusan.",
+      "description": "Arsipkan rombel ini agar suratnya tetap ada."
     },
     "school-refusal-address-invited": {
       "title": "Alamat ini sudah diundang.",
@@ -3200,12 +3296,12 @@
       "description": "Hapus satu peran sebelum memberi peran lain."
     },
     "school-refusal-seat-limit": {
-      "title": "Paket gratis sudah penuh.",
-      "description": "Upgrade ke School di tagihan untuk menambah siswa."
+      "title": "Semua akun sudah terpakai.",
+      "description": "Tambah akun di tagihan agar lebih banyak orang bisa masuk."
     },
-    "school-refusal-seats-paid": {
-      "title": "Semua siswa sudah dibayar.",
-      "description": "Siswa baru bisa ditagih setelah terdaftar."
+    "school-refusal-plan-missing": {
+      "title": "Belum ada paket yang berjalan.",
+      "description": "Pilih paket dulu, lalu tambah akun."
     },
     "school-refusal-person-inactive": {
       "title": "Orang ini sudah tidak aktif.",
@@ -4029,5 +4125,158 @@
     "practice-empty": "Belum ada latihan yang dibagikan",
     "practice-class-note": "Hanya topik yang diaktifkan siswa yang tampil di sini.",
     "practice-own-empty-description": "Latihan try-out kamu tampil di sini, dan kamu yang memilih apa yang dibagikan."
+  },
+  "SchoolSite": {
+    "metadata-title": "Nakafa School: kelas, ujian, dan rapor dalam satu aplikasi",
+    "metadata-description": "Jalankan seluruh sekolah dari kelasnya: forum, perpustakaan, tugas, ujian, rapor, insight, kelulusan, dan orang tua. Gratis 30 hari.",
+    "breadcrumb": "Sekolah",
+    "pricing-breadcrumb": "Harga",
+    "pricing-metadata-title": "Harga Nakafa School: Gratis, Pro, dan Max",
+    "pricing-metadata-description": "Satu harga untuk seluruh sekolah. Semua fitur di setiap paket, 20 sampai 500 akun atau lebih, kredit AI, dan penyimpanan Drive. Gratis 30 hari.",
+    "hero-title": "Seluruh sekolah, dijalankan dari <mark>kelasnya</mark>",
+    "hero-lead": "Forum, perpustakaan, tugas, ujian, rapor, dan orang tua di satu tempat, dengan semua fitur di setiap paket.",
+    "hero-start": "Mulai uji coba gratis",
+    "hero-pricing": "Lihat harga",
+    "hero-note": "Gratis 30 hari dengan data nyata. Tanpa kartu.",
+    "features-title": "Semua yang dibutuhkan sekolah",
+    "features-lead": "Kelas menjadi pusatnya, dan setiap alat dibuka dari sana.",
+    "feature-forum-title": "Forum",
+    "feature-forum-text": "Setiap kelas berdiskusi di utasnya sendiri, dengan file, polling, dan balasan.",
+    "feature-library-title": "Perpustakaan",
+    "feature-library-text": "Drive untuk setiap kelas, dengan folder dan file yang bisa dibuka semua anggota.",
+    "feature-tasks-title": "Tugas",
+    "feature-tasks-text": "Beri tugas dengan tenggat, kumpulkan, lalu nilai di kelas yang sama.",
+    "feature-exams-title": "Ujian",
+    "feature-exams-text": "Ujian, kuis, dan try-out berjalan di satu mesin yang menilainya untukmu.",
+    "feature-reports-title": "Rapor",
+    "feature-reports-text": "Nilai masuk ke rapor yang diperiksa guru dan disahkan sekolah.",
+    "feature-insight-title": "Insight",
+    "feature-insight-text": "Lihat perkembangan setiap kelas dan siswa sebelum rapor dibagikan.",
+    "feature-graduation-title": "Kelulusan",
+    "feature-graduation-text": "Tutup tahun ajaran, naikkan kelas, dan luluskan satu angkatan.",
+    "feature-parents-title": "Orang tua",
+    "feature-parents-text": "Orang tua mengikuti tugas, nilai, dan rapor anaknya.",
+    "feature-nina-title": "Nina",
+    "feature-nina-text": "AI Nakafa membantu guru dan siswa dari kredit AI sekolah.",
+    "steps-title": "Buka sekolahmu dalam hitungan menit",
+    "step-open-title": "Buka sekolahmu",
+    "step-open-text": "Jawab lima pertanyaan, dan sekolahmu mendapat alamatnya sendiri.",
+    "step-invite-title": "Undang warga sekolah",
+    "step-invite-text": "Siswa, guru, staf, dan orang tua bergabung dari satu tautan.",
+    "step-teach-title": "Mengajar di kelas",
+    "step-teach-text": "Setiap kelas langsung punya forum, perpustakaan, tugas, dan ujian.",
+    "proof-title": "Dibangun di atas Nakafa yang sudah dipakai pelajar",
+    "proof-languages-value": "3 bahasa",
+    "proof-languages-text": "Indonesia, Inggris, dan Jerman di setiap layar.",
+    "proof-features-value": "Semua fitur",
+    "proof-features-text": "Gratis, Pro, dan Max punya fitur yang sama. Hanya kapasitasnya yang berbeda.",
+    "proof-engine-value": "Satu mesin",
+    "proof-engine-text": "Materi, try-out, dan ujian memakai satu pemutar, jadi siswa belajar satu cara kerja.",
+    "proof-trial-value": "Gratis 30 hari",
+    "proof-trial-text": "Uji coba memakai data nyata, dan semuanya tetap ada setelah upgrade.",
+    "teaser-title": "Satu harga untuk seluruh sekolah",
+    "teaser-lead": "Setiap peran dihitung satu akun, dan setiap paket punya semua fitur.",
+    "teaser-link": "Bandingkan paket",
+    "faq-title": "Yang sering ditanyakan sekolah",
+    "closing-title": "Buka sekolahmu hari ini",
+    "closing-lead": "Tiga puluh hari, semua fitur, data nyata. Upgrade saat sekolahmu siap.",
+    "plan-free": "Gratis",
+    "plan-pro": "Pro",
+    "plan-max": "Max",
+    "plan-free-description": "Coba semua fitur dengan data nyata.",
+    "plan-pro-description": "Untuk sekolah sampai 100 orang.",
+    "plan-max-description": "Untuk sekolah sampai 500 orang.",
+    "plan-trial": "Gratis {days} hari",
+    "plan-month": "/bulan",
+    "plan-billed": "ditagih setiap {months} bulan",
+    "plan-billed-free": "Tanpa pembayaran, tanpa kartu",
+    "plan-accounts": "{count, number} akun semua peran",
+    "plan-credits-once": "{count, number} kredit AI selama uji coba",
+    "plan-credits-month": "{count, number} kredit AI per bulan",
+    "plan-storage": "Penyimpanan Drive {size}",
+    "plan-everything": "Semua fitur School",
+    "plan-start": "Mulai uji coba gratis",
+    "plan-choose": "Pilih {plan}",
+    "plan-upgrade-note": "Setiap sekolah mulai dari Gratis lalu upgrade di pengaturannya, tanpa kehilangan data.",
+    "tax-note": "Harga belum termasuk pajak dan dibayar di muka untuk periode yang dipilih.",
+    "pricing-title": "Satu harga untuk seluruh sekolah",
+    "pricing-lead": "Setiap paket punya semua fitur. Pilih akun, kredit AI, dan penyimpanan yang dibutuhkan sekolahmu.",
+    "period-label": "Periode tagihan",
+    "period-option": "{months, plural, one {Bulanan} other {# bulan}}",
+    "period-save": "Hemat {percent}%",
+    "calculator-title": "Tambah akun mulai dari satu",
+    "calculator-lead": "Setiap akun menambah {credits} kredit AI per bulan dan Drive {size}, di tagihan paketmu.",
+    "calculator-plan": "Paket",
+    "calculator-added": "Akun yang ditambah",
+    "calculator-preset": "Tambah {count, number} akun",
+    "calculator-accounts": "Akun",
+    "calculator-credits": "Kredit AI per bulan",
+    "calculator-storage": "Penyimpanan Drive",
+    "calculator-monthly": "Per bulan",
+    "calculator-total": "Ditagih setiap {months} bulan",
+    "calculator-unit": "per akun per bulan",
+    "addons-title": "Tambahan",
+    "addons-lead": "Beli kredit AI atau penyimpanan tambahan kapan saja, di samping paketmu.",
+    "addon-credits-title": "{count, number} kredit AI",
+    "addon-credits-text": "Sekali bayar, berlaku {months} bulan, tanpa isi ulang otomatis.",
+    "addon-drive-title": "Drive tambahan {size}",
+    "addon-drive-text": "Ditagih setiap bulan di samping paketmu, tanpa diskon periode.",
+    "addon-once": "sekali",
+    "compare-title": "Bandingkan semua paket",
+    "compare-feature": "Fitur",
+    "group-capacity": "Kapasitas",
+    "group-classroom": "Kelas",
+    "group-assessment": "Penilaian",
+    "group-school": "Sekolah",
+    "group-billing": "Tagihan",
+    "row-accounts": "Akun semua peran",
+    "row-credits": "Kredit AI",
+    "row-storage": "Penyimpanan Drive",
+    "row-added": "Akun tambahan",
+    "row-access": "Akses",
+    "row-forum": "Forum kelas",
+    "row-library": "Perpustakaan kelas",
+    "row-tasks": "Tugas dan penilaian",
+    "row-exams": "Ujian dan kuis",
+    "row-tryouts": "Try-out",
+    "row-nina": "Nina, AI Nakafa",
+    "row-reports": "Rapor",
+    "row-insight": "Insight",
+    "row-graduation": "Kelulusan",
+    "row-parents": "Akun orang tua",
+    "row-languages": "Bahasa Indonesia, Inggris, dan Jerman",
+    "row-periods": "Periode tagihan",
+    "row-payment": "Pembayaran",
+    "value-included": "Termasuk",
+    "value-once": "{count, number} sekali",
+    "value-month": "{count, number} per bulan",
+    "value-unavailable": "Tidak tersedia",
+    "value-unit": "per akun per bulan",
+    "value-trial": "{days} hari",
+    "value-ongoing": "Berlanjut",
+    "value-periods-free": "Tidak ada",
+    "value-periods-paid": "1, 3, 6, atau 12 bulan",
+    "value-payment-free": "Tanpa pembayaran",
+    "value-payment-paid": "Semua metode penyedia pembayaran",
+    "faq-accounts-question": "Siapa yang dihitung sebagai akun?",
+    "faq-accounts-answer": "Setiap orang yang punya akses: siswa, guru, staf, admin, dan orang tua. Satu orang dengan beberapa peran tetap satu akun.",
+    "faq-trial-question": "Apa yang terjadi setelah uji coba gratis?",
+    "faq-trial-answer": "Upgrade ke Pro atau Max dan semuanya tetap ada. Tanpa upgrade, sekolah masih bisa dibaca selama 7 hari lagi.",
+    "faq-features-question": "Apakah semua paket punya fitur yang sama?",
+    "faq-features-answer": "Ya. Gratis, Pro, dan Max punya semua fitur School. Hanya jumlah akun, kredit AI, dan penyimpanan Drive yang berbeda.",
+    "faq-languages-question": "Nakafa School tersedia dalam bahasa apa?",
+    "faq-languages-answer": "Bahasa Indonesia, Inggris, dan Jerman, dan setiap orang memilih bahasanya sendiri.",
+    "faq-devices-question": "Apakah bisa dipakai di ponsel?",
+    "faq-devices-answer": "Bisa. Setiap layar berjalan di browser ponsel, tablet, dan komputer, tanpa perlu memasang apa pun.",
+    "faq-added-question": "Bisakah menambah akun satu per satu?",
+    "faq-added-answer": "Bisa. Tambah berapa pun mulai dari satu, masing-masing dengan 6 kredit AI per bulan dan Drive 200 MB. Akun tambahan masuk ke tagihan paketmu.",
+    "faq-pay-question": "Bagaimana cara membayarnya?",
+    "faq-pay-answer": "Bayar di muka untuk 1, 3, 6, atau 12 bulan, dengan hemat 3% untuk 6 bulan dan 5% untuk 12 bulan. Sekolah di Indonesia membayar dalam rupiah, sekolah lain dalam dolar atau euro.",
+    "faq-tax-question": "Apakah harga sudah termasuk pajak?",
+    "faq-tax-answer": "Belum. Semua harga sebelum pajak, dan tagihan menambahkan pajak yang berlaku.",
+    "faq-credits-question": "Apa itu kredit AI?",
+    "faq-credits-answer": "Nina, AI Nakafa, memakai kredit untuk setiap jawaban. Seluruh sekolah berbagi satu kuota, dan paket 1.000 kredit tambahan berlaku 12 bulan.",
+    "faq-change-question": "Bisakah ganti paket nanti?",
+    "faq-change-answer": "Bisa. Pindah antara Pro dan Max atau tambah akun kapan saja, dan perubahannya berlaku mulai tagihan berikutnya yang dibayar."
   }
 }

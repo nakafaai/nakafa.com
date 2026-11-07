@@ -1,5 +1,183 @@
 # effect
 
+## 4.1.2
+
+### Patch Changes
+
+- [#10217](https://github.com/Effect-TS/effect/pull/10217) [`5216684`](https://github.com/Effect-TS/effect/commit/52166841177ca39d32cc4c06ac5fcdd660656748) Thanks @devangpratap! - Fix `ByteSize` decimal unit constructors such as `megabytes(2.01)` throwing or returning the wrong byte count, and reject fractional-byte quantities instead of rounding them.
+
+- [#10261](https://github.com/Effect-TS/effect/pull/10261) [`b707ad1`](https://github.com/Effect-TS/effect/commit/b707ad1bce3cbf1613fd97622901d7e81e2a34c7) Thanks @effect-bot! - Fix cluster entity defect restart backoff being shared by all entities of a type and never resetting.
+
+- [#10249](https://github.com/Effect-TS/effect/pull/10249) [`46f48af`](https://github.com/Effect-TS/effect/commit/46f48afc88b4b4df3cc1c470ae01f31cc7f8d77c) Thanks @effect-bot! - Prevent an interrupted cluster request that keeps defecting from stalling message delivery to other entities.
+
+- [#10218](https://github.com/Effect-TS/effect/pull/10218) [`92201bc`](https://github.com/Effect-TS/effect/commit/92201bcd47f1789590ff884542051e2123fdb529) Thanks @sbking! - Defer the runner notification for a discarded persisted send made inside a `ClusterSchema.WithTransaction` handler until the transaction commits. The message was invisible to the runner before the commit, so delivery waited for the next storage poll.
+
+- [#10260](https://github.com/Effect-TS/effect/pull/10260) [`cf329f3`](https://github.com/Effect-TS/effect/commit/cf329f3b694ba8659946ee74dbbb6cdb6e5535de) Thanks @effect-bot! - Fix `ClusterWorkflowEngine` turning transient storage failures while saving durable clocks or deferred completions into workflow defects; they are now retried.
+
+- [#10262](https://github.com/Effect-TS/effect/pull/10262) [`1d25d78`](https://github.com/Effect-TS/effect/commit/1d25d78d9639e2725f4ea8d056a77b3bde9afd78) Thanks @effect-bot! - Fix `ClusterWorkflowEngine` blocking shard reacquisition indefinitely after a forced shard release interrupted a workflow resume waiting on its active run.
+
+- [#10226](https://github.com/Effect-TS/effect/pull/10226) [`d190d97`](https://github.com/Effect-TS/effect/commit/d190d973a7fb2ebb71bfaf1a01adbffef1833555) Thanks @tim-smart! - Fix `ClusterWorkflowEngine` letting a runner that lost its shard delete a newer activity result, which could run the activity again and change the workflow's history.
+
+- [#10241](https://github.com/Effect-TS/effect/pull/10241) [`d7b3b6b`](https://github.com/Effect-TS/effect/commit/d7b3b6bd6be4d96babda9d191538fe25c7124f44) Thanks @Marve10s! - Fix `HttpClient.withCookiesRef` not sending cookies when the request URL is completed after it, for example by the `baseUrl` of `HttpApiClient`. Cookies are now selected for the final URL of each request, including redirect hops.
+
+- [#10211](https://github.com/Effect-TS/effect/pull/10211) [`a478745`](https://github.com/Effect-TS/effect/commit/a4787453be8e4f360f0212fb0b25bc4a0e18fc72) Thanks @effect-bot! - Keep `EventLogServer` session auth challenges on their RPC connection, so a challenge is released when its client disconnects instead of being retained by the server after an unauthenticated disconnect.
+
+- [#10221](https://github.com/Effect-TS/effect/pull/10221) [`69eaa29`](https://github.com/Effect-TS/effect/commit/69eaa29dfe5c33547ad12068f65d31b2123194c3) Thanks @clean99! - Fix `Iterable.filterMapWhile` iterators yielding values or pulling from the source after they have returned `done`.
+
+- [#10233](https://github.com/Effect-TS/effect/pull/10233) [`3711ba6`](https://github.com/Effect-TS/effect/commit/3711ba65343a0932840478aa758a2612be0327a7) Thanks @clean99! - Fix `Iterable.unfold` iterators calling the generating function again after they have returned `done`.
+
+- [#9972](https://github.com/Effect-TS/effect/pull/9972) [`715c5e4`](https://github.com/Effect-TS/effect/commit/715c5e4b4528889be2ce30163b130d422e7ab68f) Thanks @eugene1g! - Add `Json5.parse` and `Jsonc.parse` to `effect/encoding`, returning a `Result` that fails with an `EncodingError` on invalid input.
+
+- [#10257](https://github.com/Effect-TS/effect/pull/10257) [`b0a1cee`](https://github.com/Effect-TS/effect/commit/b0a1ceebcd053d73dbd4fdf836c4d3471dc18f3c) Thanks @tim-smart! - Use a `ClientCapabilities` instance for the fallback MCP client profile in `McpServer`.
+
+- [#10242](https://github.com/Effect-TS/effect/pull/10242) [`2a10622`](https://github.com/Effect-TS/effect/commit/2a10622e906caccd7a9b4a90d1aaef090e8e00cc) Thanks @Marve10s! - Fix `McpServer` running middleware provided outside a combined middleware inside it.
+
+- [#10243](https://github.com/Effect-TS/effect/pull/10243) [`6bccdd5`](https://github.com/Effect-TS/effect/commit/6bccdd54e1bc5d7f182972811d6827d1ad10f1aa) Thanks @Marve10s! - Encode declared `McpServer` tool failures with their JSON codec, so values such as `bigint`, `Map` and `Option` no longer cause an internal error or lossy output
+
+- [#10244](https://github.com/Effect-TS/effect/pull/10244) [`60be011`](https://github.com/Effect-TS/effect/commit/60be01136a530ec10d8b67efc812eee94804444c) Thanks @Marve10s! - Fix 2026-07-28 MCP listings failing for resources, resource templates and prompts registered as plain objects.
+
+- [#10235](https://github.com/Effect-TS/effect/pull/10235) [`e1edcdc`](https://github.com/Effect-TS/effect/commit/e1edcdc8d60bef515a2c5fa97706d4baaf0c0290) Thanks @schutzelaars! - Stop OTLP log and trace exporters from keeping a timer pending while idle. A Node program kept alive only by an idle exporter now exits.
+
+- [#10210](https://github.com/Effect-TS/effect/pull/10210) [`ef81e9d`](https://github.com/Effect-TS/effect/commit/ef81e9dbd1221ab8a9c38ce50f96129054e3b6e2) Thanks @effect-bot! - Fix `RateLimiter.layerStoreRedis` sharing state between different keys. A key ending in `:refill` or `:adaptive` no longer reads or writes another key's token-bucket refill time or adaptive state.
+
+- [#10223](https://github.com/Effect-TS/effect/pull/10223) [`013fb34`](https://github.com/Effect-TS/effect/commit/013fb34f88f3451ede7e7333f205563f07716b13) Thanks @effect-bot! - Fix `RpcServer` returning an empty HTTP 500 for requests with malformed headers; such requests now fail with a defect `Exit`, and malformed notifications are dropped.
+
+- [#10251](https://github.com/Effect-TS/effect/pull/10251) [`113dbc7`](https://github.com/Effect-TS/effect/commit/113dbc74b259b7e56e618a506dc67e85794c36ed) Thanks @wmaurer! - Fix `Schedule.fixed`, `Schedule.windowed` and `Schedule.cron` returning a zero delay when the clock is a fraction of a nanosecond before the next run.
+
+- [#10230](https://github.com/Effect-TS/effect/pull/10230) [`519d66e`](https://github.com/Effect-TS/effect/commit/519d66eb5972ef3c801fb164dd652f25a71e0511) Thanks @effect-bot! - Add `SchemaBinary.int32`, `uint32`, `int64` and `uint64`, opt-in schemas that write integers as fixed-width little-endian payloads. The 32-bit schemas decode to `number` and the 64-bit schemas to `bigint`. Out-of-range and non-integer values are rejected instead of wrapped.
+
+- [#10213](https://github.com/Effect-TS/effect/pull/10213) [`e7a6ea4`](https://github.com/Effect-TS/effect/commit/e7a6ea43fe8ac77f68329b84d26dc2d1e136d745) Thanks @effect-bot! - SQL transactions now trace `BEGIN`, `COMMIT`, `ROLLBACK` and savepoint statements as child spans of `sql.transaction`, replacing its `effect.sql.transaction.commit`, `savepoint` and `rollback` events; with `Statement.SpanPropagationEnabled`, the transaction also parents connection spans and records its connection wait time.
+
+- [#10240](https://github.com/Effect-TS/effect/pull/10240) [`019f35e`](https://github.com/Effect-TS/effect/commit/019f35e0a7ebe050eae01d68cc14ae63158fd8e4) Thanks @clean99! - Fix `Stream.groupAdjacentBy` dropping its last group when the stream fails. The group is now emitted before the error.
+
+- [#10278](https://github.com/Effect-TS/effect/pull/10278) [`2a0d16c`](https://github.com/Effect-TS/effect/commit/2a0d16cd1ff63a69baf5d19a13dc2051b500150c) Thanks @tim-smart! - Fix `AnthropicStructuredOutput.toCodecAnthropic`, `OpenAiStructuredOutput.toCodecOpenAI`, and MCP tool schemas returning or rejecting a root `$ref` when the schema is an identified alias of another identified schema.
+
+- [#10236](https://github.com/Effect-TS/effect/pull/10236) [`e5570c9`](https://github.com/Effect-TS/effect/commit/e5570c999651935f12a01441ab1e8979a7a6e94d) Thanks @clean99! - Fix `DateTime.startOf`, `endOf` and `nearest` moving a zoned `DateTime` to the other occurrence of a repeated DST hour, and calendar-unit `endOf` returning an instant an hour early when the period ends in a repeated hour.
+
+## 4.1.1
+
+### Patch Changes
+
+- [#10186](https://github.com/Effect-TS/effect/pull/10186) [`8567117`](https://github.com/Effect-TS/effect/commit/8567117e0840e35b595df23fa93681e41e4d0fb0) Thanks @effect-bot! - Restore `SchemaBinary.toCodec` derivation for `Prompt.FilePart` and the AI response part schemas that include it.
+
+- [#10119](https://github.com/Effect-TS/effect/pull/10119) [`3f5c6aa`](https://github.com/Effect-TS/effect/commit/3f5c6aa1e1cba6c794ff9866fbf887e67a07bebc) Thanks @Marve10s! - Fix `AtomRegistry.subscribe` without `immediate` never notifying for an atom that has not been read yet. Subscribing now builds the atom, so the listener hears later changes. This also fixes `get.subscribe`, `get.stream` with `withoutInitialValue`, and `useAtomSubscribe` in `@effect/atom-react`.
+  
+  A failed build no longer makes `subscribe` throw: the next read reports the failure, and the listener hears the recovery. An error thrown by a failed build's finalizer no longer aborts the next build; it is reported once that build has its value.
+
+- [#10189](https://github.com/Effect-TS/effect/pull/10189) [`29b89b6`](https://github.com/Effect-TS/effect/commit/29b89b62875cc1980d7f94486c259f2a7603d13a) Thanks @tim-smart! - Speed up `Base64Url.decode` and `Base64Url.decodeString` by decoding the URL-safe alphabet directly, instead of transliterating the input and decoding it again as standard Base64.
+
+- [#10188](https://github.com/Effect-TS/effect/pull/10188) [`0b4cfbc`](https://github.com/Effect-TS/effect/commit/0b4cfbcbea0a47c8c202a0eb205ff2fe47b97246) Thanks @effect-bot! - Limit `BigDecimal` scales to prevent resource exhaustion.
+  
+  - `BigDecimal.fromString` and `Schema.BigDecimalFromString` reject strings whose scale, before or after removing trailing zeros, is outside ±10,000, such as `"1e300000000"`, `"10e10000"` or more than 10,000 fractional digits. `BigDecimal.fromStringUnsafe` throws for them.
+  - Operations that align scales (`sum`, `subtract`, `remainder`, `scale`, `round`, `truncate`, `ceil`, `floor`) throw a `RangeError` when the scales differ by more than 20,000.
+  - `round` returns values already at or below the target scale unchanged.
+
+- [#10192](https://github.com/Effect-TS/effect/pull/10192) [`088510f`](https://github.com/Effect-TS/effect/commit/088510fc334364ffc46c6c7b21bc950b31b73cd1) Thanks @effect-bot! - Enforce `MaxBodySize` on buffered request body reads in `BunHttpServer`, `DenoHttpServer`, and `HttpServerRequest.fromClientRequest`.
+
+- [#10142](https://github.com/Effect-TS/effect/pull/10142) [`ad62cd7`](https://github.com/Effect-TS/effect/commit/ad62cd791a32d9f75e549edc6020466f59b089a9) Thanks @effect-bot! - Add `onRejection` to `CircuitBreaker.execute`. With `"allow"`, a call the circuit would refuse with `CircuitOpen` or `CircuitHalfOpen` runs unrecorded instead, while a call the circuit admits, probe included, is recorded as usual. Calls that must always run can then still count towards the breaker's state. Defaults to `"fail"`, which keeps the current behavior.
+
+- [#10169](https://github.com/Effect-TS/effect/pull/10169) [`ba406a5`](https://github.com/Effect-TS/effect/commit/ba406a5e1103740e7ff8bb1b06ead65ad4eb1b63) Thanks @tim-smart! - Pass `{ probe }` to `CircuitBreaker` `classify` callbacks, including `HttpClient.withCircuitBreaker`. `probe` is `true` when the call is the HalfOpen probe, so a classifier can count an outcome it otherwise ignores, such as a rate-limited response, as a failure that reopens the circuit. Existing one-argument classifiers are unchanged. The callback type is exported as `CircuitBreaker.Classifier`.
+
+- [#10126](https://github.com/Effect-TS/effect/pull/10126) [`5e56eba`](https://github.com/Effect-TS/effect/commit/5e56eba0273b67e769170adfc6e123f0b6d985ad) Thanks @baptisteArno! - Fix `ClickhouseMigrator` failing to create its migrations table or record applied migrations, by running those statements as ClickHouse commands instead of queries. `Migrator.make` accepts an optional `transformWrites` option for these statements, defaulting to `identity`.
+
+- [#10206](https://github.com/Effect-TS/effect/pull/10206) [`6a95d51`](https://github.com/Effect-TS/effect/commit/6a95d515ab4d8e4ed6b34d3a1b2d937af3fe8db0) Thanks @effect-bot! - Retry transient `PersistenceError`s when a cluster workflow sends an activity or reads its reply during a pending interrupt, instead of storing the failure as a workflow defect. A request whose save was committed but not acknowledged is deduplicated, so the activity still runs once.
+  
+  A cluster client request whose send fails is no longer retained by `Sharding`.
+
+- [#10205](https://github.com/Effect-TS/effect/pull/10205) [`24d5acd`](https://github.com/Effect-TS/effect/commit/24d5acd8a12000ed64f295ef36084adaf3c08ef2) Thanks @effect-bot! - Fix local callers of persisted entity requests hanging when a reply save commits but reports a failure, for example when the connection drops before the COMMIT acknowledgement arrives. The runner now checks storage for the committed reply and lets the caller read it, without replaying the request.
+
+- [#10163](https://github.com/Effect-TS/effect/pull/10163) [`c38dfa0`](https://github.com/Effect-TS/effect/commit/c38dfa0f6f311eb3bc4c65b84e48b775d0f425d4) Thanks @effect-bot! - Fix persisted success replies being stored after a `ClusterSchema.WithTransaction` request transaction rolled back. A failed save inside the request transaction is no longer retried, since a retry could autocommit the reply outside the aborted transaction (for example after a MySQL deadlock). The failed transaction now replays the request instead.
+
+- [#10197](https://github.com/Effect-TS/effect/pull/10197) [`f2755e7`](https://github.com/Effect-TS/effect/commit/f2755e768d1e78549a99da816c3509a94b7db939) Thanks @effect-bot! - Fix type-checking the `effect` crypto declarations with `@types/node` 22 or 24 and without the DOM library. The `*FromCryptoKey` constructors in `Aead`, `Cipher`, `KeyAgreement`, `KeyWrap`, `Mac` and `Signature` now accept the new structural `WebCrypto.CryptoKey` type instead of the global `CryptoKey`, and DOM and Node Web Crypto keys are both assignable to it. The `WebCrypto` reference and `WebCrypto.layer` now use the type of `globalThis.crypto` instead of the global `Crypto` type.
+
+- [#10137](https://github.com/Effect-TS/effect/pull/10137) [`a40cb20`](https://github.com/Effect-TS/effect/commit/a40cb200d607ba62126bf26287dcbca98fb50231) Thanks @effect-bot! - Fix `DateTime.Zoned` exposing its `adjustedEpochMilliseconds` cache as an enumerable property after `DateTime.toDate`, which broke `Object.keys`, spread and deep equality.
+
+- [#10174](https://github.com/Effect-TS/effect/pull/10174) [`bd6b9c2`](https://github.com/Effect-TS/effect/commit/bd6b9c200542b1c022443028c158aeaf94779c58) Thanks @effect-bot! - Speed up `DateTime` construction by creating the `partsUtc`, `adjustedEpochMilliseconds` and `partsAdjusted` cache properties on first use. Reading and writing these fields is unchanged, but `Object.hasOwn`, `Object.getOwnPropertyNames` and `Object.getOwnPropertyDescriptor` no longer report them before the caches are populated, or at all on instances sealed or frozen before first use. Reading the parts of, or writing these fields on, an instance frozen before first use no longer throws.
+
+- [#10082](https://github.com/Effect-TS/effect/pull/10082) [`49d84d6`](https://github.com/Effect-TS/effect/commit/49d84d63fd217afbfdc127631b9fb8df971acb82) Thanks @typedrat! - Fix `Equal.equals` and `Hash.hash` throwing on plain objects whose `"~effect/Equal"` or `"~effect/Hash"` key is not a function. Such values are now treated as data.
+
+- [#10185](https://github.com/Effect-TS/effect/pull/10185) [`a8f77d5`](https://github.com/Effect-TS/effect/commit/a8f77d5ad30e8b0dac6aa6aa1ce3ae289f3be6e4) Thanks @effect-bot! - Verify the session authentication signature before an EventLog server binds a signing key to an identity, and reject a verified key that differs from the identity's existing binding. A request with an invalid signature no longer creates a binding.
+  
+  `EventLogServerUnencrypted.EventLogServerAuthorization.authorizeIdentity` and the `authorizeIdentity` option of `EventLogServer.layerRpcHandlers` now also receive the presented signing public key. Use the new `EventLogSessionAuth.deriveSigningPublicKey` to record an identity's signing key at provisioning time and reject any other key.
+
+- [#10164](https://github.com/Effect-TS/effect/pull/10164) [`7a9c22f`](https://github.com/Effect-TS/effect/commit/7a9c22fd24c93ab011611540907a69a973b5a1ed) Thanks @effect-bot! - Stop finished fibers from retaining their last span and stack frame. A finished fiber kept alive by a cache entry, observer or `Deferred` no longer keeps the ended span's parent chain, and the success values recorded on those spans, from being garbage collected.
+
+- [#10145](https://github.com/Effect-TS/effect/pull/10145) [`efcb8cc`](https://github.com/Effect-TS/effect/commit/efcb8cca2f8217ecd3af242837a590bb46a79f94) Thanks @jpowersdev! - Fix `Host.domainNameFromString` rejecting decomposed Unicode domain names.
+
+- [#10125](https://github.com/Effect-TS/effect/pull/10125) [`378f5f0`](https://github.com/Effect-TS/effect/commit/378f5f0c1d9466784e87cfbaaccc1afeffdc762b) Thanks @pujitha24! - Fix `Effect.request` retaining completed requests and their async context in its batch pool.
+
+- [#10208](https://github.com/Effect-TS/effect/pull/10208) [`d4272bd`](https://github.com/Effect-TS/effect/commit/d4272bd087e91455e40e13e00c97a6a6f3246338) Thanks @effect-bot! - Stop GraphQL calls from succeeding on non-2xx HTTP responses. A non-2xx GraphQL body without `errors`, including `{ data: null }`, now fails with a `TransportError` carrying the HTTP `status`, `headers` and `Retry-After`, so retry policies on `isRetryable` apply. A non-2xx body with `data` and `errors` fails with a `ResponseError` even with `{ partial: true }`.
+
+- [#10207](https://github.com/Effect-TS/effect/pull/10207) [`7d6ead4`](https://github.com/Effect-TS/effect/commit/7d6ead4e010b7dd29a9a6d6e4c31b4784f832a9f) Thanks @effect-bot! - Add `HttpClient.timeout`, which fails requests that receive no response within the given duration with an `HttpClientError` wrapping a `TransportError`, so the timed client keeps the standard `HttpClient` service type and is retried by `retryTransient`. The timeout covers the wrapped client until it returns a response, which for a plain client is when the response headers arrive; body reads after that are not covered.
+
+- [#10166](https://github.com/Effect-TS/effect/pull/10166) [`59178ce`](https://github.com/Effect-TS/effect/commit/59178cefd1b5efa6230a51427ffa5bbfdcf34e7e) Thanks @tkr109! - Fix `Iterable.takeWhile` iterators yielding values or pulling from the source after they have returned `done`.
+
+- [#10070](https://github.com/Effect-TS/effect/pull/10070) [`9394b6d`](https://github.com/Effect-TS/effect/commit/9394b6d53b803b7beae080769521394943679826) Thanks @effect-bot! - Fix `SchemaRepresentation.fromJsonSchemaDocument` rejecting objects whose `anyOf` / `oneOf` branches are combined with sibling properties that contain an `enum`, such as branches redeclaring an enum property already declared by the object.
+
+- [#10116](https://github.com/Effect-TS/effect/pull/10116) [`5d3f066`](https://github.com/Effect-TS/effect/commit/5d3f066ba1a212382ba9d3fcbfc2def98d228bfc) Thanks @skyaara! - Declare `KeyFormat.JsonWebKey` instead of referencing the DOM library's global `JsonWebKey`, so `effect` declarations type-check with Node-only types.
+
+- [#10082](https://github.com/Effect-TS/effect/pull/10082) [`49d84d6`](https://github.com/Effect-TS/effect/commit/49d84d63fd217afbfdc127631b9fb8df971acb82) Thanks @typedrat! - Add MCP Skills extension (SEP-2640) support. Servers publish skills with `McpServer.skill` or `McpServer.registerSkill`. Clients opt in with `extensions: { skills: true }` and use `listSkills`, `getSkill`, `readResourceDirectory` and `readSkillResource`, which verifies files against the listed digests and frontmatter.
+
+- [#10089](https://github.com/Effect-TS/effect/pull/10089) [`2863a22`](https://github.com/Effect-TS/effect/commit/2863a22ba21c6a658f8174314c638b29aedce8cc) Thanks @creatifcoding! - Fix `McpServer` toolkit results whose encoded success is not JSON, such as a `Schema.Void`, `Schema.Date` or `Schema.optional` field, failing `tools/call` with an internal error. `structuredContent` and its text mirror now use the same JSON encoding as the advertised `outputSchema`.
+
+- [#10082](https://github.com/Effect-TS/effect/pull/10082) [`49d84d6`](https://github.com/Effect-TS/effect/commit/49d84d63fd217afbfdc127631b9fb8df971acb82) Thanks @typedrat! - Fix `McpServer` returning an internal error from `resources/list` and `resources/templates/list` on `v2026_07_28` when an optional resource field is `undefined`.
+
+- [#10082](https://github.com/Effect-TS/effect/pull/10082) [`49d84d6`](https://github.com/Effect-TS/effect/commit/49d84d63fd217afbfdc127631b9fb8df971acb82) Thanks @typedrat! - Recognize `.py` and `.sh` files in `Mime.getType`.
+
+- [#10204](https://github.com/Effect-TS/effect/pull/10204) [`20cca92`](https://github.com/Effect-TS/effect/commit/20cca92e0772522a9ca514e5ac742085e78de69d) Thanks @jpowersdev! - `Ndjson.decode` and `Ndjson.decodeString` now also skip lines containing only spaces or tabs when `ignoreEmptyLines` is enabled.
+
+- [#10191](https://github.com/Effect-TS/effect/pull/10191) [`1f22f02`](https://github.com/Effect-TS/effect/commit/1f22f02bcd4d806bcc9d811fa27485052fae4dfe) Thanks @jpowersdev! - Fix `OtlpSerialization.layerJson` writing `bytesValue` data as plain objects instead of base64 strings. `Uint8Array` views and Node `Buffer`s are now encoded as OTLP/JSON expects.
+
+- [#10152](https://github.com/Effect-TS/effect/pull/10152) [`dd2b7a3`](https://github.com/Effect-TS/effect/commit/dd2b7a37bd58ab145086f5b31370bbe5ba9a6581) Thanks @jpowersdev! - Fix `Path.format` dropping the dot before extensions given without one, such as `ext: "csv"`.
+
+- [#10157](https://github.com/Effect-TS/effect/pull/10157) [`52f4e42`](https://github.com/Effect-TS/effect/commit/52f4e4224cb6f6e2880dfb39919b73827697a3fc) Thanks @effect-bot! - Stop PgClient transactions from staying open after a pooler drops their prepared statements.
+
+- [#10129](https://github.com/Effect-TS/effect/pull/10129) [`194dd79`](https://github.com/Effect-TS/effect/commit/194dd79f17d70b264cd4d82d2185726faaa30d4e) Thanks @Gourav224! - Fix `Pool.get` and `Pool.use` hanging in finalizers registered after the pool once its idle items expire. The pool now runs in a child scope that stays open until the pool shuts down.
+
+- [#10104](https://github.com/Effect-TS/effect/pull/10104) [`c5de00a`](https://github.com/Effect-TS/effect/commit/c5de00aa4294bb09d5e2ac80f3b34038f911caa3) Thanks @tim-smart! - Speed up `FileSystem.glob` by reading subdirectories concurrently, in at most 16 forked fibers per call plus the calling fiber, and only forking a fiber for directory entries that need a `stat` or `readLink`. Results and their order are unchanged.
+
+- [#10098](https://github.com/Effect-TS/effect/pull/10098) [`460827e`](https://github.com/Effect-TS/effect/commit/460827e3347bf213e1a4c7f28c9f61ac0068f919) Thanks @effect-bot! - Reclaim expired keys in `RateLimiter.layerStoreMemory`. Each entry now expires once its state is indistinguishable from an unseen key, matching the TTLs of the Redis store, and a background sweep scoped to the layer removes expired entries every minute, so an idle store drains to empty instead of retaining every key it has seen.
+
+- [#10103](https://github.com/Effect-TS/effect/pull/10103) [`0325583`](https://github.com/Effect-TS/effect/commit/03255832dde72d7f6334c258d11610c02e7fe89b) Thanks @effect-bot! - Fix `RateLimiter` handling of zero and negative limits:
+  
+  - `RateLimiterStore.fixedWindow` now honors a zero `limit` in the memory and Redis stores.
+  - The Redis fixed-window script now rejects an over-limit first request instead of charging it.
+  - Delay-mode `RateLimiter.consume` now returns an infinite delay for a nonpositive limit instead of admitting requests.
+
+- [#10167](https://github.com/Effect-TS/effect/pull/10167) [`20bef50`](https://github.com/Effect-TS/effect/commit/20bef509347c057efa0c146544fb7247b0713ad7) Thanks @tim-smart! - Remove the `Effect.request` batch pool and allocate a new batch for each batch key.
+
+- [#10171](https://github.com/Effect-TS/effect/pull/10171) [`2f50b91`](https://github.com/Effect-TS/effect/commit/2f50b91232c65d8ef12557e21e18a2bb7d342533) Thanks @effect-bot! - Document that a request accepted by an `RpcClient.Protocol` stays pending until a reply names it, and how a transport that only delivers requests acknowledges `discard` calls and rejects the rest.
+
+- [#10121](https://github.com/Effect-TS/effect/pull/10121) [`b41529e`](https://github.com/Effect-TS/effect/commit/b41529e2ea04dff5fb1f68ef8044d42b75ba141e) Thanks @Marve10s! - Fail discarded RPC calls (`discard: true`) promptly on transport errors.
+  
+  A discarded call waited for its pending send to finish before reporting any failure. While a socket was disconnected the call hung instead of failing, and once it reconnected the request was still sent and the handler ran. Failures now complete the call immediately and interrupt the pending send. Successful acknowledgements still wait for the send to finish.
+
+- [#10138](https://github.com/Effect-TS/effect/pull/10138) [`80954c9`](https://github.com/Effect-TS/effect/commit/80954c98972cc4d61bbfc9157bb6e8b1987cdf81) Thanks @effect-bot! - Fix `RpcClient` acknowledging stream chunks dropped by an interrupted consumer, which could drain the entire server stream before the interrupt was sent.
+
+- [#10133](https://github.com/Effect-TS/effect/pull/10133) [`5daca23`](https://github.com/Effect-TS/effect/commit/5daca234c83ae751eae13ac2262c96a2c7b2d90f) Thanks @aidenlx! - Fix `Rpc.SuccessChunk` resolving to `never` for a union of RPCs.
+
+- [#10120](https://github.com/Effect-TS/effect/pull/10120) [`c96c31e`](https://github.com/Effect-TS/effect/commit/c96c31e90ee0ee6a6ad2f0e3fe7c4fbc7b25f4aa) Thanks @Marve10s! - Fail only the affected calls when an `RpcClient.layerProtocolWorker` worker crashes.
+
+- [#10190](https://github.com/Effect-TS/effect/pull/10190) [`136ddf9`](https://github.com/Effect-TS/effect/commit/136ddf95cc1dc0c93c6be1023c1caa43de78b2ab) Thanks @effect-bot! - Brand SQL fragments and segments with the new `Statement.FragmentTypeId` and `Statement.SegmentTypeId` symbols, so `sql` interpolation binds plain objects shaped like fragments or segments as parameters instead of SQL; build fragments and segments with the `Statement` constructors.
+
+- [#10141](https://github.com/Effect-TS/effect/pull/10141) [`5ca262e`](https://github.com/Effect-TS/effect/commit/5ca262e7b4c5faf256800fdfd96990f7e609adba) Thanks @effect-bot! - Document how to retry serialization failures and deadlocks with `SqlClient.withTransaction`.
+
+- [#10148](https://github.com/Effect-TS/effect/pull/10148) [`898b049`](https://github.com/Effect-TS/effect/commit/898b0495b8e8a809099e39c1bc9532eec05d3b16) Thanks @effect-bot! - Encode `HttpApiSchema.StreamSse` `data` values with the schema's JSON codec, so schemas such as `Schema.Date`, `Schema.BigInt` and `Schema.Option` round-trip through SSE events and are documented accurately in OpenAPI.
+
+- [#10182](https://github.com/Effect-TS/effect/pull/10182) [`73e6ea1`](https://github.com/Effect-TS/effect/commit/73e6ea15922f5b45ac785934c200e1240cc59bff) Thanks @effect-bot! - `Sse.encoder` now removes CR and LF from event `id` and `event` values, and NUL from `id` values, so they cannot add fields or events to the encoded stream.
+
+- [#10105](https://github.com/Effect-TS/effect/pull/10105) [`937f170`](https://github.com/Effect-TS/effect/commit/937f170b9ea435a2dbbe53f83a10891396937407) Thanks @tim-smart! - Speed up `Glob.match` by tracking match states as a bitmask and reading path segments without splitting the path. Patterns such as `*.ts` that are a literal prefix and suffix around one `*` are also checked without backtracking, which helps `FileSystem.glob` too.
+
+- [#10177](https://github.com/Effect-TS/effect/pull/10177) [`f5f96b2`](https://github.com/Effect-TS/effect/commit/f5f96b27c227930407c4a8328d69f25669c0b27e) Thanks @jpowersdev! - Fix `OtlpSerialization.layerProtobuf` throwing on metric data points without `startTimeUnixNano`.
+
+- [#10049](https://github.com/Effect-TS/effect/pull/10049) [`1946637`](https://github.com/Effect-TS/effect/commit/19466374c494ffa65e3d5da492e386b5b54ae9d9) Thanks @lloydrichards! - Add `McpClient` server `capabilities`, discovery page and item `limits`, and `toolkit` options for approved tool snapshots, complete results, returned failures, trusted annotations and tool customization.
+
+- [#10181](https://github.com/Effect-TS/effect/pull/10181) [`197ce1d`](https://github.com/Effect-TS/effect/commit/197ce1dad96a03d5730d2695b63166009f6d9efe) Thanks @effect-bot! - Fix `Tool.unsafeSecureJsonParse` accepting Unicode-escaped `__proto__` and `constructor` keys. JSON text containing a `\u` escape is now always scanned, so escaped spellings throw a `SyntaxError` like their literal forms. Objects with a `null` `constructor` value are accepted instead of throwing a `TypeError`.
+
+- [#9883](https://github.com/Effect-TS/effect/pull/9883) [`b49120e`](https://github.com/Effect-TS/effect/commit/b49120e793031b30aed61025ab78578315eba36d) Thanks @danieljvdm! - Add unstable `effect/jose` modules for JWKs (generation, PEM/DER conversion and thumbprints), compact JWS and JWE, schema-typed signed and encrypted JWTs with decryption key resolvers, and local or remote JWKS resolution.
+
+- [#10146](https://github.com/Effect-TS/effect/pull/10146) [`33d3088`](https://github.com/Effect-TS/effect/commit/33d30883ad419a73a8ef55d4cdf5a8235fc4bbc2) Thanks @effect-bot! - Wake a parent workflow when its suspended child is interrupted with `ClusterWorkflowEngine`, and surface the child's interruption to the parent as a defect from `Child.execute` so the parent completes instead of replaying.
+
 ## 4.1.0
 
 ### Minor Changes

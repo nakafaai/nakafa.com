@@ -1,5 +1,5 @@
 import { describe, it } from "@effect/vitest"
-import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils"
+import { assertFalse, assertTrue, deepStrictEqual, strictEqual, throws } from "@effect/vitest/utils"
 import {
   Cause,
   Context,
@@ -157,46 +157,6 @@ describe("Tool", () => {
         strictEqual(error.module, "Toolkit")
         strictEqual(error.method, "Positive.handle")
         strictEqual(error.reason._tag, "ToolResultEncodingError")
-      }))
-
-    it.effect("should return tool call handler failures with failure mode return using OpenAI transformer", () =>
-      Effect.gen(function*() {
-        const toolkit = Toolkit.make(FailureModeReturn)
-
-        const toolResult = { testFailure: "failure-mode-return-tool" }
-        const handlers = toolkit.toLayer({
-          FailureModeReturn: () => Effect.fail(toolResult)
-        })
-
-        const toolCallId = "tool-123"
-        const toolName = "FailureModeReturn"
-
-        const response = yield* LanguageModel.generateText({
-          prompt: "Test",
-          toolkit
-        }).pipe(
-          TestUtils.withLanguageModel({
-            generateText: [{
-              type: "tool-call",
-              id: toolCallId,
-              name: toolName,
-              params: { testParam: "test-param" }
-            }]
-          }),
-          Effect.provide(handlers)
-        )
-
-        deepStrictEqual(response.toolResults, [
-          Response.makePart("tool-result", {
-            id: toolCallId,
-            name: toolName,
-            isFailure: true,
-            result: toolResult,
-            encodedResult: toolResult,
-            providerExecuted: false,
-            preliminary: false
-          })
-        ])
       }))
 
     it.effect("should raise an error on tool call handler failures when failure mode is error", () =>
@@ -1624,5 +1584,17 @@ describe("Dynamic", () => {
       })().annotate(Tool.Strict, false)
       strictEqual(Tool.getStrictMode(tool), false)
     })
+  })
+})
+
+describe("unsafeSecureJsonParse", () => {
+  it("rejects Unicode-escaped prototype keys", () => {
+    const error = new SyntaxError("Object contains forbidden prototype property")
+    throws(() => Tool.unsafeSecureJsonParse(`{"\\u005f_proto__":{"polluted":true}}`), error)
+    throws(() => Tool.unsafeSecureJsonParse(`{"\\u0063onstructor":{"prototype":{"polluted":true}}}`), error)
+  })
+
+  it("accepts Unicode-escaped constructor keys with null values", () => {
+    deepStrictEqual(Tool.unsafeSecureJsonParse(`{"\\u0063onstructor":null}`), { constructor: null })
   })
 })

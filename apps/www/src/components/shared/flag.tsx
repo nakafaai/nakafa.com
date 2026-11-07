@@ -48,17 +48,23 @@ function getFlagSource(countryCode: string | undefined) {
   );
 }
 
-/** Renders one supported country flag without dynamic component lookup. */
+/**
+ * Renders one country flag without dynamic component lookup: a bundled one, or the SVG
+ * text of any other the caller loaded from the same package.
+ */
 export function CountryFlagIcon({
   className,
   countryCode,
   fallback = null,
+  source,
 }: {
   className?: string;
   countryCode?: string | undefined;
   fallback?: ReactNode;
+  source?: string | undefined;
 }) {
-  const flagSource = getFlagSource(countryCode);
+  const flagSource =
+    source === undefined ? getFlagSource(countryCode) : parseFlagSource(source);
   if (!flagSource) {
     return fallback;
   }

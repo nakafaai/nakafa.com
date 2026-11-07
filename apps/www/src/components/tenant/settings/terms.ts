@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   draftText,
   editPeriod,
@@ -90,6 +90,17 @@ export const archivePeriodChange: OptimisticUpdate<
     localStore,
     () => true,
     (page) => setPeriodStatus(page, periodId, "archived")
+  );
+};
+
+/** Takes a deleted period out of every loaded list of periods at once; a refusal puts it back. */
+export const removePeriodChange: OptimisticUpdate<
+  typeof tenancy.periods.remove
+> = (localStore, { periodId }) => {
+  changePeriodLists(
+    localStore,
+    () => true,
+    (page) => Arr.filter(page, (period) => period.id !== periodId)
   );
 };
 

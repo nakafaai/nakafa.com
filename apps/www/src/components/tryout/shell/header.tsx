@@ -25,7 +25,7 @@ export function TryoutPageHeader({
   items,
   title,
 }: {
-  /** The page's action, at the end of the header. */
+  /** The page's actions, at the end of the header. */
   children?: ReactNode;
   items: readonly BreadcrumbHeaderItem[];
   title: string;
@@ -68,7 +68,7 @@ export function TryoutPageHeader({
         </span>
         {title}
       </h1>
-      <div className="flex shrink-0 justify-end">{children}</div>
+      <div className="flex shrink-0 justify-end gap-2">{children}</div>
     </BreadcrumbHeaderFrame>
   );
 }

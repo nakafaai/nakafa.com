@@ -16,7 +16,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-/** Makes the fixture's learner a member of a school whose School grant covers `ninaSeats` students' Nina pool. */
+/** Makes the fixture's learner a member of a school whose School grant covers `ninaSeats` accounts' Nina pool. */
 async function joinSchool(
   t: Awaited<ReturnType<typeof creditFixture>>["t"],
   userId: Id<"users">,
@@ -62,7 +62,7 @@ async function joinSchool(
 describe("Nina school pool", () => {
   it("holds a school member's answer from the school's pool, leaves the member's own balance, and gives the pool back the unused part", async () => {
     const { t, identity, reserve } = await creditFixture(5);
-    const tenantId = await joinSchool(t, identity.userId, 3);
+    const tenantId = await joinSchool(t, identity.userId, 100);
     const hold = await reserve();
     expect(hold).toMatchObject({
       credits: 50,
@@ -92,23 +92,23 @@ describe("Nina school pool", () => {
 
   it("holds no more than the school's daily cap leaves, and refuses a member whose day or school month is spent", async () => {
     const { t, identity, reserve } = await creditFixture(5);
-    await joinSchool(t, identity.userId, 1, 30);
+    await joinSchool(t, identity.userId, 17, 30);
     expect((await reserve()).credits).toBe(30);
     await expect(reserve()).rejects.toThrow("Not enough credits");
     vi.setSystemTime(CREDITS_NOW + 86_400_000);
     expect((await reserve()).credits).toBe(30);
     vi.setSystemTime(CREDITS_NOW + 2 * 86_400_000);
     expect((await reserve()).credits).toBe(30);
-    // The school's month holds 100 credits for its one student, and 90 are drawn.
+    // The school's month holds 6 credits for each of its 17 accounts, 102 in all, and 90 are drawn.
     vi.setSystemTime(CREDITS_NOW + 3 * 86_400_000);
-    expect((await reserve()).credits).toBe(10);
+    expect((await reserve()).credits).toBe(12);
     vi.setSystemTime(CREDITS_NOW + 4 * 86_400_000);
     await expect(reserve()).rejects.toThrow("Not enough credits");
   });
 
   it("keeps a member on their own allowance while they hold Pro of their own, or their school's grant has no pool", async () => {
     const own = await creditFixture(5);
-    await joinSchool(own.t, own.identity.userId, 3);
+    await joinSchool(own.t, own.identity.userId, 100);
     await own.t.mutation((ctx) =>
       ctx.db.insert("billingGrants", {
         product: "pro",
@@ -128,7 +128,7 @@ describe("Nina school pool", () => {
 
   it("gives a deleted member's pool nothing back", async () => {
     const { t, identity, reserve } = await creditFixture(5);
-    await joinSchool(t, identity.userId, 3);
+    await joinSchool(t, identity.userId, 100);
     const hold = await reserve();
     await t.mutation((ctx) => ctx.db.delete("users", identity.userId));
     await refundHold(t, hold, "settled-turn", 44);

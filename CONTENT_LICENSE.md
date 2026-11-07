@@ -208,4 +208,4 @@ keeping its purpose.
 ## 16. Contact
 
 Written permission, licensing questions, and reports of misuse:
-nakafaai@gmail.com
+info@nakafa.com

@@ -50,11 +50,30 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   {
     action: "astral-sh/setup-uv",
     approvedSha: "68559e99cc807c1eb7e9238fd43a15bba460eec2",
-    expectedInputs: { version: "0.13.6" },
+    expectedInputs: {
+      "cache-dependency-glob": "apps/cas/uv.lock",
+      version: "0.13.6",
+    },
     expectedTag: "v10.3.3",
     expectedUsages: 1,
     reason:
-      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys.",
+      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys. Its cache key reads only the CAS lockfile, because the default glob walks every folder, node_modules included, for 3.5 minutes.",
+  },
+  {
+    action: "actions/cache/restore",
+    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+    expectedTag: "v6.1.0",
+    expectedUsages: 1,
+    reason:
+      "The deploy job restores the Convex reads of the last deploy of the same release and code, so an unchanged release is not read again (#1773).",
+  },
+  {
+    action: "actions/cache/save",
+    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+    expectedTag: "v6.1.0",
+    expectedUsages: 1,
+    reason:
+      "The deploy job saves the Convex reads of a release under the key its restore step read, for the next deploy of the same release (#1773).",
   },
   {
     action: "actions/upload-artifact",

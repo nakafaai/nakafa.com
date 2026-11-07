@@ -4,6 +4,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
+import { answerRootDocument } from "@/lib/llms/negotiate.server";
 import { isRawProfileAddress } from "@/lib/profile/gate";
 import { readBrowserPage } from "@/lib/routing/browser.server";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
@@ -109,7 +110,7 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
 
   const root = readRootRedirectResponse(request);
   if (Option.isSome(root)) {
-    return root.value;
+    return yield* answerRootDocument(request, root.value);
   }
   if (isBareRoutePath(url)) {
     const bare = readBareRedirect(request);
@@ -143,7 +144,9 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * other path, a probe for a file included, answers the static not-found page.
  * Every not-found answer is that static page unless a Worker route renders the
  * path, which answers the app's own page in the address's locale. Markdown is
- * never negotiated: an agent reads a page's `.md` twin, which the build writes
+ * negotiated only where the Worker answers already: the root answers its locale
+ * home's twin, and the entry answers a not-found page as Markdown. Every other
+ * page is an asset, so an agent reads its `.md` twin, which the build writes
  * beside its HTML.
  */
 export const answerRequest = Effect.fn("www.routing.answer.request")(function* (

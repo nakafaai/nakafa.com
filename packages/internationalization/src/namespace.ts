@@ -48,6 +48,7 @@ const messageNamespaceFlags = {
   SchoolReports: true,
   SchoolRoster: true,
   SchoolSettings: true,
+  SchoolSite: true,
   SchoolStart: true,
   SEO: true,
   Toast: true,
