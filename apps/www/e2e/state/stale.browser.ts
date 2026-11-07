@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+import { GOING_ATTRIBUTE } from "@repo/design-system/lib/lazy";
 import standalone from "@repo/internationalization/dictionaries/standalone/en.json" with {
   type: "json",
 };
@@ -13,17 +14,15 @@ const TITLE = "Sign in to Nakafa";
 const FIRST_DOCUMENT = "nakafaFirstDocument";
 /** The tab's storage mark set if any document of the test ever drew the error state. */
 const BROKE = "nakafa-e2e-drew-error";
+/** The tab's reload mark of the sign-in page, as the head script keeps it. */
+const SIGN_IN_MARK = `nakafa:stale-chunk:${SIGN_IN}`;
 
 /**
- * A page loaded before a deploy asks for a chunk the deploy removed. The page
- * reloads once at the same address and loads the current chunks, and the
- * learner never sees the error page. Here every chunk that the first document
- * did not load answers 404 until the page loads again, as the chunks of an
- * earlier deploy do once the next deploy is live.
+ * Opens the sign-in page once React owns it, and marks the tab's storage if any
+ * document of the test ever draws the error state. Answers the theme button,
+ * whose menu loads a chunk the first document did not load.
  */
-test("reloads once for a chunk of an earlier deploy instead of showing an error", async ({
-  page,
-}) => {
+async function openSignIn(page: Page) {
   await page.addInitScript(
     ({ broke, title }) => {
       new MutationObserver(() => {
@@ -34,18 +33,18 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
     },
     { broke: BROKE, title: standalone.Error.title }
   );
-
   await page.goto(SIGN_IN);
   const theme = page.getByRole("button", { exact: true, name: "Theme" });
-  await expect(theme).toBeVisible();
-  await expect
-    .poll(() =>
-      theme.evaluate((node) =>
-        Object.keys(node).some((key) => key.startsWith("__reactProps$"))
-      )
-    )
-    .toBe(true);
+  await waitUntilTakenOver(theme);
+  return theme;
+}
 
+/**
+ * Deploys under the open page: every chunk that the first document did not load
+ * answers 404 until the page loads again, as the chunks of an earlier deploy do
+ * once the next deploy is live. Answers a wait for that next load.
+ */
+async function deployUnder(page: Page) {
   const loaded = HashSet.fromIterable(
     await page.evaluate(() =>
       performance.getEntriesByType("resource").map((entry) => entry.name)
@@ -65,11 +64,10 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
   page.once("load", () => {
     removed.active = false;
   });
+}
 
-  const reloaded = page.waitForEvent("load");
-  await theme.click();
-  await reloaded;
-
+/** Proves that the page loaded again into the current deploy and never drew the error state. */
+async function expectReloadedWithoutError(page: Page) {
   await expect
     .poll(() =>
       page
@@ -83,6 +81,87 @@ test("reloads once for a chunk of an earlier deploy instead of showing an error"
   expect(
     await page.evaluate((mark) => sessionStorage.getItem(mark), BROKE)
   ).toBeNull();
+}
+
+/**
+ * A page loaded before a deploy asks for a chunk the deploy removed. The page
+ * reloads once at the same address and loads the current chunks, and the
+ * learner never sees the error page.
+ */
+test("reloads once for a chunk of an earlier deploy instead of showing an error", async ({
+  page,
+}) => {
+  const theme = await openSignIn(page);
+  await deployUnder(page);
+
+  const reloaded = page.waitForEvent("load");
+  await theme.click();
+  await reloaded;
+
+  await expectReloadedWithoutError(page);
+});
+
+/**
+ * A tab that already reloaded for an earlier deploy keeps that reload's mark. The
+ * next deploy still reloads it: the mark holds back a second reload only for the
+ * moments in which a chunk still missing after its reload must show its error.
+ */
+test("reloads a tab again that reloaded for an earlier deploy", async ({
+  page,
+}) => {
+  const theme = await openSignIn(page);
+  // The mark that an earlier release wrote, which held no time.
+  await page.evaluate(
+    (mark) => sessionStorage.setItem(mark, "1"),
+    SIGN_IN_MARK
+  );
+  await deployUnder(page);
+
+  const reloaded = page.waitForEvent("load");
+  await theme.click();
+  await reloaded;
+
+  await expectReloadedWithoutError(page);
+});
+
+/**
+ * A page with work the server does not hold yet asks before it goes, and the
+ * reader stays. The reload for the missing chunk never happened, so the page
+ * keeps its place and draws no error, and the next press reloads it into the
+ * current deploy, which no longer asks.
+ */
+test("keeps a page that a prompt held through its reload, and reloads at the next press", async ({
+  page,
+}) => {
+  const theme = await openSignIn(page);
+  await page.evaluate(() => {
+    let asked = false;
+    window.addEventListener("beforeunload", (event) => {
+      if (!asked) {
+        asked = true;
+        event.preventDefault();
+      }
+    });
+  });
+  await deployUnder(page);
+
+  const prompt = page.waitForEvent("dialog");
+  await theme.click();
+  const dialog = await prompt;
+  expect(dialog.type()).toBe("beforeunload");
+  await dialog.dismiss();
+
+  await expect(page.locator("html")).toHaveAttribute(GOING_ATTRIBUTE, "reload");
+  await expect(page.getByRole("heading", { name: TITLE })).toBeVisible();
+  expect(
+    await page.evaluate((mark) => sessionStorage.getItem(mark), BROKE)
+  ).toBeNull();
+
+  const reloaded = page.waitForEvent("load");
+  await theme.click();
+  await reloaded;
+
+  await expectReloadedWithoutError(page);
 });
 
 /**
