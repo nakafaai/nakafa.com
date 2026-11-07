@@ -14,7 +14,7 @@ describe("Nakafa public agent skill", () => {
     expect(text.startsWith("---\n")).toBe(true);
     expect(text).toContain("name: nakafa");
     expect(text).toContain(
-      "description: Use Nakafa to retrieve multilingual educational lessons"
+      "description: Use when a user asks to learn a school or university subject"
     );
     expect(text).toContain(
       `license: ${CONTENT_LICENSE_NAME} (${CONTENT_LICENSE_URL})`
@@ -48,10 +48,8 @@ describe("Nakafa public agent skill", () => {
             {
               name: "nakafa",
               type: "skill-md",
-              description: expect.stringContaining(
-                "multilingual educational lessons"
-              ),
-              url: "/.well-known/agent-skills/nakafa/SKILL.md",
+              description: expect.stringContaining("Use when a user asks"),
+              url: "/skill.md",
               digest: `sha256:${digest}`,
             },
           ],

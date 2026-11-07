@@ -5,6 +5,7 @@ import {
   NAKAFA_PUBLIC_API_PATH,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/agent/constants";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { encodeJsonText } from "@repo/utilities/json";
 
@@ -23,9 +24,10 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
   },
   info: {
     contact: {
-      email: "info@nakafa.com",
+      email: COMPANY_IDENTITY.email,
       name: "Nakafa Support",
-      url: `${SITE_ORIGIN}/contact`,
+      // The legal notice names every contact of the company; no page answers `/contact`.
+      url: `${SITE_ORIGIN}/en/legal-notice`,
     },
     description:
       "Read-only public access to Nakafa's signed educational content through one supported V1 contract.",

@@ -39,7 +39,7 @@ D2. Signed-in and School surfaces render only in the browser. School hosts (*.na
 
 D3. One small dynamic Worker, with its own bundle and no TanStack or SSR code, serves nakafa.com/api/*. It answers the Better Auth relay, weather from request.cf coordinates, the pricing currency from CF-IPCountry, and the Aksara renderer manifest. Its CPU per request is measured in Workers Logs; on 30 Oct 2026 the auth relay and the session read reached 61 to 63 ms on a cold isolate. The Convex token is fetched per document load and held in memory only.
 
-D4. A page with an Aksara source has a static .md twin beside its HTML. The HTML head links it with a rel alternate of type text/markdown, and llms.txt lists it. Accept negotiation and its Worker are removed, so a request that asks for Markdown receives HTML.
+D4. A page with an Aksara source has a static .md twin beside its HTML. The HTML head links it with a rel alternate of type text/markdown, and llms.txt lists it. Accept negotiation and its Worker are removed, so a request that asks for Markdown receives HTML. (Amended 7 Nov 2026: the two addresses that the Worker answers already negotiate, at no extra invocation. The root answers its negotiated locale home's twin to a request that prefers Markdown, and a not-found answer is a short Markdown page with the same 404. Both say `Vary: Accept`, and HTML wins a tie. Every page with an asset still answers HTML, because negotiating there would run the Worker for every page view; `apps/www/src/lib/llms/negotiate.server.ts` owns this.)
 
 D5. Social images are one per collection or family, not one per page.
 
