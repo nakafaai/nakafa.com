@@ -2,6 +2,7 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { API, Checker, Snapshot } from "tsrs/sync";
 import { effectFindings, effectTestViolations } from "#scripts/check/effect";
+import { spyOnMethod } from "#scripts/check/fixture";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
 const FILE = "packages/example/src/program.test.ts";
@@ -21,7 +22,7 @@ afterEach(() => vi.restoreAllMocks());
 describe("Effect test policy", () => {
   it.effect("closes the compiler after an isolated batch", () =>
     Effect.gen(function* () {
-      const close = vi.spyOn(API.prototype, "close");
+      const close = spyOnMethod(API.prototype, "close");
       const violations = yield* effectTestViolations([
         { file: FILE, sourceText: "const Effect = client;" },
         {
@@ -78,12 +79,13 @@ describe("Effect test policy", () => {
   it.effect("closes the compiler and preserves native failures", () =>
     Effect.gen(function* () {
       const cause = new Error("native compiler disconnected");
-      const close = vi.spyOn(API.prototype, "close");
-      vi.spyOn(Checker.prototype, "getSymbolAtLocation").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      const close = spyOnMethod(API.prototype, "close");
+      spyOnMethod(
+        Checker.prototype,
+        "getSymbolAtLocation"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* effectTestViolations([
         {
           file: FILE,
@@ -99,7 +101,9 @@ describe("Effect test policy", () => {
 
   it.effect("fails when the native compiler omits the test project", () =>
     Effect.gen(function* () {
-      vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(undefined);
+      vi.spyOn(Snapshot.prototype, "getConfiguredProject").mockReturnValueOnce(
+        undefined
+      );
       const failure = yield* effectTestViolations([
         { file: FILE, sourceText: "export {};" },
       ]).pipe(Effect.flip);

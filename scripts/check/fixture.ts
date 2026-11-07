@@ -1,4 +1,4 @@
-import { Array as Arr, Effect, Record as Rec, Result } from "effect";
+import { Array as Arr, Effect, Record as Rec, Result, Schema } from "effect";
 import { isProjectConfig } from "#scripts/check/arrays";
 import { openCompiler, parseSources } from "#scripts/check/source";
 
@@ -24,6 +24,27 @@ const virtualFiles = (files: Readonly<Record<string, string>>) =>
       text,
     ])
   );
+
+/** The tsrs API methods whose reads the tests count or replace. */
+const SpiedMethod = Schema.Literals([
+  "close",
+  "getSourceFile",
+  "getSymbolAtLocation",
+  "isArrayLikeType",
+  "update",
+]);
+
+/**
+ * Spies on the reads of one tsrs API method. tsrs defines each method as a
+ * prototype getter that caches the method on its instance at the first read,
+ * so a test counts that read, or replaces the method it returns.
+ */
+export function spyOnMethod(
+  prototype: { readonly [Name in typeof SpiedMethod.Type]?: unknown },
+  method: typeof SpiedMethod.Type
+) {
+  return vi.spyOn(prototype, method, "get");
+}
 
 /**
  * Opens a scoped compiler over fixture files, and parses the modules among them

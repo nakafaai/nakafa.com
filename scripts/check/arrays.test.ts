@@ -8,6 +8,7 @@ import {
   PROJECT,
   PROJECT_CONFIG,
   ROOT,
+  spyOnMethod,
   withProject,
 } from "#scripts/check/fixture";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
@@ -214,9 +215,11 @@ describe("array findings by project", () => {
       Effect.gen(function* () {
         const cause = new Error("native snapshot unavailable");
         const failure = yield* judgmentFailure(() => {
-          vi.spyOn(Snapshot.prototype, "update").mockImplementationOnce(() => {
-            throw cause;
-          });
+          spyOnMethod(Snapshot.prototype, "update").mockImplementationOnce(
+            () => {
+              throw cause;
+            }
+          );
         });
         assert.deepStrictEqual(
           [failure._tag, failure.cause, failure.message],
@@ -250,11 +253,12 @@ describe("array findings by project", () => {
       Effect.gen(function* () {
         const cause = new Error("native program disconnected");
         const failure = yield* judgmentFailure(() => {
-          vi.spyOn(Program.prototype, "getSourceFile").mockImplementationOnce(
-            () => {
-              throw cause;
-            }
-          );
+          spyOnMethod(
+            Program.prototype,
+            "getSourceFile"
+          ).mockImplementationOnce(() => {
+            throw cause;
+          });
         });
         assert.deepStrictEqual(
           [failure._tag, failure.cause, failure.message],

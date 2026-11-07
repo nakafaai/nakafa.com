@@ -2,6 +2,7 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { isIdentifier, type SourceFile, SyntaxKind } from "tsrs/ast";
 import { API, Checker, Program, Snapshot } from "tsrs/sync";
+import { spyOnMethod } from "#scripts/check/fixture";
 import {
   descendants,
   parseSources,
@@ -56,7 +57,7 @@ afterEach(() => vi.restoreAllMocks());
 describe("repository source batch", () => {
   it.effect("parses every module in one batch and closes the compiler", () =>
     Effect.gen(function* () {
-      const close = vi.spyOn(API.prototype, "close");
+      const close = spyOnMethod(API.prototype, "close");
       const modules = yield* Effect.scoped(
         Effect.map(
           parseSources([
@@ -226,7 +227,7 @@ describe("repository source batch failures", () => {
       const parse = Effect.scoped(
         parseSources([{ file: FILE, sourceText: "export {};" }])
       ).pipe(Effect.flip);
-      vi.spyOn(Snapshot.prototype, "update").mockImplementationOnce(() => {
+      spyOnMethod(Snapshot.prototype, "update").mockImplementationOnce(() => {
         throw cause;
       });
       const snapshotFailure = yield* parse;
@@ -234,8 +235,8 @@ describe("repository source batch failures", () => {
         undefined
       );
       const projectFailure = yield* parse;
-      vi.spyOn(Program.prototype, "getSourceFile").mockReturnValueOnce(
-        undefined
+      spyOnMethod(Program.prototype, "getSourceFile").mockReturnValueOnce(
+        () => undefined
       );
       const sourceFailure = yield* parse;
 
@@ -265,11 +266,12 @@ describe("repository source batch failures", () => {
   it.effect("fails binding with a typed error when the checker fails", () =>
     Effect.gen(function* () {
       const cause = new Error("native checker disconnected");
-      vi.spyOn(Checker.prototype, "getSymbolAtLocation").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      spyOnMethod(
+        Checker.prototype,
+        "getSymbolAtLocation"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* bindLast(
         [{ file: FILE, sourceText: "Map;\n" }],
         ["Map"]
@@ -284,11 +286,12 @@ describe("repository source batch failures", () => {
   it.effect("fails declaring with a typed error when the checker fails", () =>
     Effect.gen(function* () {
       const cause = new Error("native checker disconnected");
-      vi.spyOn(Checker.prototype, "getSymbolAtLocation").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      spyOnMethod(
+        Checker.prototype,
+        "getSymbolAtLocation"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* declareLast(
         [{ file: FILE, sourceText: "Map;\n" }],
         ["Map"]
