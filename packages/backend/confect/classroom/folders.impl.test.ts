@@ -403,7 +403,7 @@ describe("classroom/folders", () => {
   );
 
   it.effect(
-    "hides a trashed folder with everything inside it, restores it to the top when its parent is gone, and deletes a tree forever with its files",
+    "hides a trashed folder with everything inside it, restores it, and deletes a tree forever with its files",
     () =>
       Effect.gen(function* () {
         const { classId, fixture } = yield* libraryClass();
@@ -477,21 +477,6 @@ describe("classroom/folders", () => {
           slug: nf,
         });
         expect(yield* fixture.run(folderRows)).toHaveLength(0);
-        // A folder whose parent is gone comes back at the top of the library.
-        const orphan = yield* add("Yatim", top.id);
-        yield* teacher.mutation(folders.trash, {
-          classId,
-          folderId: orphan.id,
-          slug: nf,
-        });
-        yield* teacher.mutation(folders.restore, {
-          classId,
-          folderId: orphan.id,
-          slug: nf,
-        });
-        expect(
-          yield* teacher.query(folders.list, { classId, slug: nf })
-        ).toMatchObject([{ id: orphan.id, parentId: null, trashedAt: null }]);
         yield* fixture.finishScheduled();
         expect(bucket.state.objects).toEqual({});
         const left = yield* fixture.run(

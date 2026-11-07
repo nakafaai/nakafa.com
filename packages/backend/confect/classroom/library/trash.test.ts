@@ -13,7 +13,7 @@ import { makeBucket, stubBucket, upload } from "@repo/backend/test/bucket";
 import { firstPage, nf } from "@repo/backend/test/classroom";
 import { addFile, libraryClass, PDF } from "@repo/backend/test/library";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Result, Struct } from "effect";
+import { Array as Arr, Duration, Effect, Exit, Struct } from "effect";
 
 /** The fetch that R2 answers, stubbed once for the file. */
 const fetcher = vi.fn<typeof fetch>();
@@ -205,11 +205,9 @@ describe("classroom/library trash", () => {
         const { classId, fixture } = yield* libraryClass();
         // Four shards hold the day's 30,000 writes and one call takes at most two of them, so the third call of 15,000 is refused at the latest.
         const spent = yield* Effect.forEach(Arr.range(1, 3), () =>
-          fixture
-            .run(spendOperations("bucketWrite", 15_000))
-            .pipe(Effect.result)
+          Effect.exit(fixture.run(spendOperations("bucketWrite", 15_000)))
         );
-        expect(Arr.some(spent, Result.isFailure)).toBe(true);
+        expect(Arr.some(spent, Exit.isFailure)).toBe(true);
         yield* fixture.run(refundBucket(10));
         const link = yield* fixture.as("teacher").mutation(library.addLink, {
           address: "https://youtu.be/satu",
