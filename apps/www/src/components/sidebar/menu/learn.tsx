@@ -125,7 +125,11 @@ export function SiteAboutMenuItem() {
   return (
     <DropdownMenuItem
       icon={FavouriteIcon}
-      render={<a href={new URL(`/${locale}`, SITE_ORIGIN).href} />}
+      render={({ children, ...props }) => (
+        <a {...props} href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+          {children}
+        </a>
+      )}
     >
       {t("about-nakafa")}
     </DropdownMenuItem>
@@ -139,13 +143,16 @@ export function CommunityMenuItem() {
   return (
     <DropdownMenuItem
       icon={DiscordIcon}
-      render={
+      render={({ children, ...props }) => (
         <a
+          {...props}
           href={COMPANY_SOCIAL_PROFILES.discord}
           rel="noopener noreferrer"
           target="_blank"
-        />
-      }
+        >
+          {children}
+        </a>
+      )}
     >
       {t("community")}
       <HugeIcons className="ml-auto size-4" icon={LinkSquare02Icon} />

@@ -51,9 +51,16 @@ export function OpenInSubmenuContent() {
         <DropdownMenuItem
           icon={<BrandLogo name={item.logo} />}
           key={item.title}
-          render={
-            <a href={item.href} rel="noopener noreferrer" target="_blank" />
-          }
+          render={({ children, ...props }) => (
+            <a
+              {...props}
+              href={item.href}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {children}
+            </a>
+          )}
         >
           {item.title}
         </DropdownMenuItem>

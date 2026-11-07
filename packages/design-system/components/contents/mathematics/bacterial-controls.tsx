@@ -20,7 +20,7 @@ import {
   VisualCardMenu,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Schema } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { type ComponentProps, createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 
 const SPEED_STEP = 0.25;
@@ -87,25 +87,47 @@ export function BacterialSpeeds({
       }}
       value={speed}
     >
-      <SelectTrigger aria-label={t("speed")} size="sm">
-        <HugeIcons
-          className="text-muted-foreground"
-          icon={DashboardSpeed01Icon}
-        />
+      <BacterialSelectParts
+        icon={DashboardSpeed01Icon}
+        items={items}
+        label={t("speed")}
+        menu={t("menu-speed")}
+      />
+    </Select>
+  );
+}
+
+/**
+ * The trigger and the list of one select of the growth card's toolbar: the icon of what it chooses, the chosen value
+ * at the width of its widest label, and its labelled list, each option with the same icon.
+ */
+function BacterialSelectParts({
+  icon,
+  items,
+  label,
+  menu,
+}: {
+  icon: ComponentProps<typeof HugeIcons>["icon"];
+  items: readonly { readonly label: string; readonly value: number }[];
+  /** The name of the select for assistive technology. */
+  label: string;
+  /** The one word above the list. */
+  menu: string;
+}) {
+  return (
+    <>
+      <SelectTrigger aria-label={label} size="sm">
+        <HugeIcons className="text-muted-foreground" icon={icon} />
         <SelectValue labels={Arr.map(items, (item) => item.label)} />
       </SelectTrigger>
-      <SelectContent label={t("menu-speed")}>
+      <SelectContent label={menu}>
         {Arr.map(items, (item) => (
-          <SelectItem
-            icon={DashboardSpeed01Icon}
-            key={item.value}
-            value={item.value}
-          >
+          <SelectItem icon={icon} key={item.value} value={item.value}>
             {item.label}
           </SelectItem>
         ))}
       </SelectContent>
-    </Select>
+    </>
   );
 }
 
@@ -174,17 +196,12 @@ export function BacterialGenerations({
       }}
       value={generation}
     >
-      <SelectTrigger aria-label={t("time")} size="sm">
-        <HugeIcons className="text-muted-foreground" icon={Time04Icon} />
-        <SelectValue labels={Arr.map(items, (item) => item.label)} />
-      </SelectTrigger>
-      <SelectContent label={t("menu-time")}>
-        {Arr.map(items, (item) => (
-          <SelectItem icon={Time04Icon} key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
+      <BacterialSelectParts
+        icon={Time04Icon}
+        items={items}
+        label={t("time")}
+        menu={t("menu-time")}
+      />
     </Select>
   );
 }

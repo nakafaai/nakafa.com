@@ -63,25 +63,31 @@ export function RefContent({ githubUrl, className }: Props) {
           <DropdownMenuContent align="start" label={t("menu-sources")}>
             <DropdownMenuItem
               icon={YoutubeIcon}
-              render={
+              render={({ children, ...props }) => (
                 <a
+                  {...props}
                   href={COMPANY_SOCIAL_PROFILES.youtube}
                   rel="noopener noreferrer"
                   target="_blank"
-                />
-              }
+                >
+                  {children}
+                </a>
+              )}
             >
               {t("videos")}
             </DropdownMenuItem>
             <DropdownMenuItem
               icon={DiscordIcon}
-              render={
+              render={({ children, ...props }) => (
                 <a
+                  {...props}
                   href={COMPANY_SOCIAL_PROFILES.discord}
                   rel="noopener noreferrer"
                   target="_blank"
-                />
-              }
+                >
+                  {children}
+                </a>
+              )}
             >
               {t("community")}
             </DropdownMenuItem>

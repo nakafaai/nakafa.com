@@ -23,7 +23,11 @@ export function SidebarSchoolMenuItem({ tenant }: { tenant: KnownSchool }) {
   return (
     <DropdownMenuItem
       icon={<SchoolMark logo={tenant.logo} mascot={tenant.mascot} />}
-      render={<a href={schoolOrigin(tenant.slug).href} />}
+      render={({ children, ...props }) => (
+        <a {...props} href={schoolOrigin(tenant.slug).href}>
+          {children}
+        </a>
+      )}
     >
       <span className="truncate">{tenant.name}</span>
     </DropdownMenuItem>
@@ -64,7 +68,11 @@ function SidebarStartSchoolMenuItem() {
   return (
     <DropdownMenuItem
       icon={PlusSignIcon}
-      render={<a href={new URL(`/${locale}/school/new`, SITE_ORIGIN).href} />}
+      render={({ children, ...props }) => (
+        <a {...props} href={new URL(`/${locale}/school/new`, SITE_ORIGIN).href}>
+          {children}
+        </a>
+      )}
     >
       {t("open-school")}
     </DropdownMenuItem>
