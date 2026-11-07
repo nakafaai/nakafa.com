@@ -266,6 +266,7 @@ export const period = Kind.make("period", "tenantPeriods", {
     Schema.Struct({ type: Schema.Literal("period.opened") }),
     Schema.Struct({ type: Schema.Literal("period.archived") }),
     Schema.Struct({ type: Schema.Literal("period.restored") }),
+    Schema.Struct({ type: Schema.Literal("period.removed") }),
     Schema.Struct({ type: Schema.Literal("period.rename") }),
     Schema.Struct({ type: Schema.Literal("period.rescheduled") }),
   ],
@@ -302,6 +303,7 @@ export const cohort = Kind.make("cohort", "tenantCohorts", {
     }),
     Schema.Struct({ type: Schema.Literal("cohort.archived") }),
     Schema.Struct({ type: Schema.Literal("cohort.restored") }),
+    Schema.Struct({ type: Schema.Literal("cohort.removed") }),
     Schema.Struct({
       assignment: AssignmentKind,
       person: Id("tenantPeople"),

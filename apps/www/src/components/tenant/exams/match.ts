@@ -122,16 +122,18 @@ export const pairsKey = (
         : null,
   });
 
-/** The key once a part leaves its match: the pairs of every other part, which no longer pair every statement. */
-export const keyWithoutPart = (
-  answers: Arr.NonEmptyReadonlyArray<Interaction>,
-  key: readonly InteractionKey[] | null,
-  partId: string
-) =>
-  pairsKey(
-    answers,
-    Arr.filter(
-      keyPairs(key),
-      (pair) => pair.source !== partId && pair.target !== partId
-    )
-  );
+/** The pairs whose statement and answer the match of the answers still holds, since a part taken away pairs nothing. */
+export const livePairs = (
+  answers: readonly Interaction[],
+  pairs: readonly Pair[]
+): readonly Pair[] =>
+  Option.match(matchOf(answers), {
+    onNone: () => [],
+    onSome: (match) =>
+      Arr.filter(
+        pairs,
+        (pair) =>
+          Arr.some(match.sources, (part) => part.id === pair.source) &&
+          Arr.some(match.targets, (part) => part.id === pair.target)
+      ),
+  });

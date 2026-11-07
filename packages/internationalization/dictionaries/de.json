@@ -12,6 +12,7 @@
     "sort-newest": "Neueste",
     "no-results": "Keine Treffer.",
     "searching": "Liste wird durchsucht.",
+    "more": "{count} weitere zeigen",
     "no-values": "Noch keine Werte",
     "reset": "Zurücksetzen"
   },
@@ -617,6 +618,7 @@
     "number-unit-placeholder": "cm",
     "number-value-of": "Richtige Zahl von Frage {number}",
     "number-tolerance-of": "Toleranz von Frage {number}",
+    "number-tolerance": "Toleranz",
     "number-within-of": "Toleranzbetrag von Frage {number}",
     "number-tolerance-exact": "Genau diese Zahl",
     "number-tolerance-absolute": "Innerhalb eines Abstands",
@@ -646,10 +648,12 @@
     "statement-add": "Aussage hinzufügen",
     "match-answer-add": "Antwortmöglichkeit hinzufügen",
     "statement-number": "Aussage {name}",
-    "pair-of": "Antwort für Aussage {name} von Frage {number}",
+    "line-statement": "Aussage {name}, nicht verbunden",
+    "line-statement-joined": "Aussage {name}, verbunden mit {answer}",
+    "line-answer": "Antwort {name}",
+    "line-remove": "Linie von Aussage {name} entfernen",
     "pair-choose": "Wählen",
-    "pair-hint": "Gib jeder Aussage eine Antwort.",
-    "pair-statement": "Antwort für Aussage {number}",
+    "pair-hint": "Zieh eine Linie von einer Aussage zu ihrer Antwort, oder drück beide.",
     "template-table": "Richtig-oder-falsch-Tabelle",
     "column-of": "Frage {number}, Spalte {name}",
     "column-placeholder": "Spalte",
@@ -767,41 +771,12 @@
     "policies": "Richtlinien",
     "audit": "Prüfprotokoll",
     "billing": "Abrechnung",
-    "billing-free-title": "Kostenlos",
-    "billing-free-description": "Bis zu {limit} Schüler, mit allen School-Funktionen.",
-    "billing-school-title": "School",
-    "billing-school-description": "Jeder Schüler hat Pro bis {date}.",
-    "billing-students": "Schüler",
-    "billing-limit": "Kostenlose Grenze",
-    "billing-paid": "Bezahlte Schüler",
-    "billing-nina": "Nina-Credits diesen Monat",
-    "billing-nina-used": "{used} von {total} genutzt",
-    "billing-upgrade": "Upgraden",
-    "billing-add": "Neue Schüler bezahlen",
-    "billing-free-footer": "Upgrade für mehr als {limit} Schüler.",
-    "billing-add-footer": "Neue Schüler werden für den Rest des Zeitraums berechnet.",
-    "billing-free-empty": "Schreibe Schüler für das Upgrade ein.",
-    "billing-school-footer": "Alle Schüler sind bezahlt.",
-    "billing-open-footer": "Bezahle die offene Rechnung unten, um abzuschließen.",
-    "billing-dialog-title": "Zeitraum wählen",
-    "billing-dialog-description": "Bezahle pro eingeschriebenem Schüler für die restlichen Tage des Zeitraums.",
-    "billing-dialog-seats": "Bezahle pro eingeschriebenem Schüler, mit Plätzen, die sich verlängern, bis du sie kündigst.",
-    "billing-term-semester": "Dieses Halbjahr",
-    "billing-term-year": "Dieses Schuljahr",
-    "billing-offer-month": "Jeden Monat",
-    "billing-offer-year": "Jedes Jahr",
     "billing-term-dates": "{start} bis {end}",
-    "billing-quote-term": "{seats} Schüler bis {date}",
-    "billing-quote-seats": "{seats} Schüler zu je {price}",
     "billing-issue": "Rechnung erstellen",
-    "billing-checkout": "Weiter",
     "billing-invoices": "Rechnungen",
     "billing-invoices-description": "Jede Rechnung, die die Schule erhalten hat.",
-    "billing-invoices-footer": "Bezahle eine offene Rechnung vor ihrem Fälligkeitsdatum.",
-    "billing-invoices-empty": "Die Schule hat noch keine Rechnung.",
     "invoice-number": "Rechnung",
     "invoice-term": "Zeitraum",
-    "invoice-students": "Schüler",
     "invoice-total": "Gesamt",
     "invoice-due": "Fällig",
     "invoice-status": "Status",
@@ -1075,6 +1050,7 @@
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert",
         "restored": "Klasse wiederhergestellt",
+        "removed": "Klasse gelöscht",
         "grade": {
           "set": "Klassenstufe geändert"
         }
@@ -1112,6 +1088,7 @@
         "archived": "Zeitraum archiviert",
         "rename": "Zeitraum umbenannt",
         "restored": "Zeitraum wiederhergestellt",
+        "removed": "Zeitraum gelöscht",
         "rescheduled": "Zeitraumdaten geändert"
       },
       "person": {
@@ -1363,13 +1340,19 @@
     "student-add-description": "Der Schüler erhält einen Anmeldenamen und eine erste Anmeldekarte, beides in einem Schritt.",
     "student-add-name": "Name",
     "student-add-footer": "Drucke die Karte, bevor du schließt, denn der Code wird nur einmal angezeigt.",
-    "student-add-seats": "{count} von {limit} kostenlosen Schülern belegt.",
+    "student-add-seats": "{count} von {limit} Konten belegt.",
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
     "invites-search": "Name oder E-Mail suchen",
     "units-search": "Schule, NPSN suchen",
     "cohort-restore": "Wiederherstellen",
+    "cohort-delete-title": "{name} löschen?",
+    "cohort-delete-description": "Die Klasse ist dann endgültig weg. Eine Klasse mit Lernenden, Klassenleitung, Kursen oder Zeugnissen bleibt stattdessen archiviert.",
+    "cohort-delete-confirm": "Klasse löschen",
     "period-restore": "Wiederherstellen",
+    "period-delete-title": "{name} löschen?",
+    "period-delete-description": "Die Periode ist dann endgültig weg. Die aktive Periode oder eine mit Klassen oder Kursen bleibt stattdessen archiviert.",
+    "period-delete-confirm": "Periode löschen",
     "no-unit-title": "Noch keine aktive Einheit",
     "no-unit-description": "Stelle zuerst eine Einheit wieder her oder lege eine an, denn Perioden und Kohorten gehören zu ihr.",
     "no-unit-action": "Einheiten öffnen",
@@ -1429,7 +1412,63 @@
     "cohort-classes": "Klassen",
     "member-login": "Anmeldename",
     "member-email": "E-Mail",
-    "member-units": "Einheiten"
+    "member-units": "Einheiten",
+    "billing-plan-trial": "Test",
+    "billing-plan-pro": "Pro",
+    "billing-plan-max": "Max",
+    "billing-trial-description": "Alle Funktionen mit echten Daten bis {date}.",
+    "billing-paid-description": "Dein Tarif läuft bis {date}.",
+    "billing-credits": "KI-Credits",
+    "billing-credits-trial": "{total} Credits für den ganzen Test",
+    "billing-credits-used": "{used} von {total} diesen Monat genutzt",
+    "billing-drive": "Drive",
+    "billing-trial-footer": "Wähle Pro oder Max, um deine Daten nach dem Test zu behalten.",
+    "billing-renew-footer": "Verlängere vor dem Ende des Tarifs. Nichts verlängert sich von selbst.",
+    "billing-open-footer": "Bezahle die offene Rechnung bis {date}.",
+    "billing-choose": "Tarif wählen",
+    "billing-renew": "Verlängern",
+    "billing-accounts": "Konten",
+    "billing-accounts-description": "Alle Schüler, Lehrkräfte, Mitarbeitende, Admins und Eltern zählen je einmal.",
+    "billing-accounts-used": "{used} von {total} Konten belegt",
+    "billing-accounts-footer": "Zusätzliche Konten werden für die restlichen Tage des Tarifs berechnet.",
+    "billing-accounts-trial": "Der Test umfasst {limit} Konten. Wähle einen Tarif für mehr.",
+    "billing-add-accounts": "Konten hinzufügen",
+    "billing-order-title": "Tarif wählen",
+    "billing-order-description": "Alle Preise verstehen sich vor Steuern und im Voraus.",
+    "billing-more-title": "Konten hinzufügen",
+    "billing-more-description": "Jedes Konto bringt {credits} KI-Credits im Monat und {drive} MB Drive.",
+    "billing-order-plan": "Tarif",
+    "billing-order-period": "Zeitraum",
+    "billing-months": "{months, plural, one {# Monat} other {# Monate}}{discount, plural, =0 {} other {, # Prozent Rabatt}}",
+    "billing-order-accounts": "Zusätzliche Konten, optional",
+    "billing-more-accounts": "Anzahl Konten",
+    "billing-order-presets": "Konten schnell hinzufügen",
+    "billing-per-month": "{price} im Monat",
+    "billing-plan-holds": "{accounts} Konten, {credits} KI-Credits im Monat, {drive} GB Drive.",
+    "billing-line-pro": "Pro, {months, plural, one {# Monat} other {# Monate}}",
+    "billing-line-max": "Max, {months, plural, one {# Monat} other {# Monate}}",
+    "billing-line-accounts": "{accounts} zusätzliche Konten, {months, plural, one {# Monat} other {# Monate}}",
+    "billing-line-prorata": "{accounts} Konten für die restlichen {days} Tage",
+    "billing-total": "Summe vor Steuern",
+    "billing-runs": "Läuft nach Zahlung vom {start} bis {end}.",
+    "billing-runs-more": "Gilt nach Zahlung bis {end}.",
+    "billing-invoices-view": "Rechnungen ansehen",
+    "billing-invoices-footer": "{count, plural, one {# Rechnung} other {# Rechnungen}} bisher.",
+    "billing-invoices-empty": "Die Schule hat noch keine Rechnung.",
+    "billing-invoices-sheet-footer": "Jede Rechnung wird auf ihrer eigenen Seite oder per Überweisung bezahlt.",
+    "invoice-accounts": "Konten",
+    "academic": "Unterricht",
+    "locale-country-search": "Land suchen",
+    "locale-currency-search": "Währung suchen",
+    "locale-empty": "Nichts gefunden.",
+    "billing-plan-school": "School",
+    "billing-seats-buy": "Plätze kaufen",
+    "billing-seats-title": "Plätze bei Polar kaufen",
+    "billing-seats-description": "Ein Platz für jedes der {seats} Konten, die noch kein Tarif bezahlt, verlängert bis zur Kündigung.",
+    "billing-seats-month": "Jeden Monat",
+    "billing-seats-year": "Jedes Jahr",
+    "billing-seats-each": "{price} pro Platz",
+    "billing-checkout": "Weiter"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1909,8 +1948,8 @@
       "l": "500 bis 999",
       "xl": "1.000 oder mehr"
     },
-    "plan-free": "Tarif Free, bis {limit} Schüler.",
-    "plan-school": "Tarif School, pro Schüler bezahlt.",
+    "plan-free": "Kostenloser Test für 30 Tage, bis {limit} Konten.",
+    "plan-school": "Pro oder Max, jede Rolle zählt als ein Konto.",
     "plan-founder": "Tarif School, mit Hilfe des Gründers.",
     "founder-line": "Der Gründer hilft großen Schulen beim Start.",
     "founder-link": "Mit dem Gründer sprechen",
@@ -2387,6 +2426,7 @@
     "score-label-estimated": "Geschätzte Punktzahl",
     "score-label-standard": "Punktzahl",
     "correct-answers-label": "Richtige Antworten",
+    "finished-panel": "Dein Ergebnis",
     "attempt-menu-label": "Verlauf",
     "attempt-menu-search-placeholder": "Versuche suchen...",
     "attempt-menu-empty": "Keine passenden Versuche gefunden.",
@@ -2841,6 +2881,10 @@
       "title": "Aktion nicht abgeschlossen.",
       "description": "Bitte versuche es erneut."
     },
+    "exam-in-use": {
+      "title": "Diese Prüfung hat einen Termin.",
+      "description": "Ihre Termine behalten ihre Ergebnisse, also ändere eine Kopie."
+    },
     "copy-error": {
       "title": "Kopieren nicht möglich"
     },
@@ -3031,6 +3075,9 @@
     "school-cohort-archived": {
       "title": "Klasse archiviert."
     },
+    "school-cohort-deleted": {
+      "title": "Klasse gelöscht."
+    },
     "school-class-archived": {
       "title": "Lerngruppe archiviert."
     },
@@ -3068,6 +3115,9 @@
     },
     "school-period-archived": {
       "title": "Zeitraum archiviert."
+    },
+    "school-period-deleted": {
+      "title": "Periode gelöscht."
     },
     "sitting-not-in": {
       "title": "Nicht in dieser Sitzung.",
@@ -3125,6 +3175,30 @@
       "title": "Diese Periode ist nicht aktiv.",
       "description": "Nur eine aktive Periode kann archiviert werden."
     },
+    "school-refusal-period-in-use-active": {
+      "title": "Diese Periode ist aktiv.",
+      "description": "Archiviere die Periode zuerst, oder behalte sie."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "Diese Periode hat noch Klassen.",
+      "description": "Archiviere die Periode, damit Klassen und Noten bleiben."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "Diese Periode hat noch Noten.",
+      "description": "Archiviere die Periode, damit ihre Noten bleiben."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "Diese Periode hat einen Abschluss.",
+      "description": "Archiviere die Periode, damit ihr Abschluss bleibt."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "Diese Periode hat noch Kurse.",
+      "description": "Archiviere die Periode, damit Kurse und Noten bleiben."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "Eine Versetzung nutzt diese Periode.",
+      "description": "Archiviere die Periode, damit die Versetzung bleibt."
+    },
     "school-refusal-cohort-name-taken": {
       "title": "Diesen Namen gibt es schon.",
       "description": "Wähle für diese Periode einen anderen Namen."
@@ -3132,6 +3206,30 @@
     "school-refusal-cohort-limit": {
       "title": "Diese Periode ist voll.",
       "description": "Lege die Kohorte stattdessen in einer anderen Periode an."
+    },
+    "school-refusal-cohort-in-use-members": {
+      "title": "Diese Klasse hat noch Lernende.",
+      "description": "Verschiebe zuerst die Lernenden, oder archiviere die Klasse."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "Diese Klasse hat noch eine Klassenleitung.",
+      "description": "Entferne zuerst die Lehrkraft, oder archiviere die Klasse."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "Diese Klasse hat noch Kurse.",
+      "description": "Archiviere die Klasse, damit Kurse und Noten bleiben."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "Diese Klasse hat Prüfungstermine.",
+      "description": "Archiviere die Klasse, damit Termine und Ergebnisse bleiben."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "Diese Klasse hat Zeugnisse.",
+      "description": "Archiviere die Klasse, damit ihre Zeugnisse bleiben."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "Diese Klasse hat Abschlussbriefe.",
+      "description": "Archiviere die Klasse, damit ihre Briefe bleiben."
     },
     "school-refusal-address-invited": {
       "title": "Diese Adresse ist schon eingeladen.",
@@ -3194,12 +3292,12 @@
       "description": "Entferne zuerst eine Rolle, bevor du eine weitere gibst."
     },
     "school-refusal-seat-limit": {
-      "title": "Der kostenlose Plan ist voll.",
-      "description": "Wechsle in der Abrechnung zu School, um weitere Schüler hinzuzufügen."
+      "title": "Alle Konten sind belegt.",
+      "description": "Füge in der Abrechnung Konten hinzu, um mehr Personen Zugang zu geben."
     },
-    "school-refusal-seats-paid": {
-      "title": "Alle Schüler sind bezahlt.",
-      "description": "Neue Schüler lassen sich nach der Einschreibung abrechnen."
+    "school-refusal-plan-missing": {
+      "title": "Noch läuft kein Tarif.",
+      "description": "Wähle zuerst einen Tarif und füge dann Konten hinzu."
     },
     "school-refusal-person-inactive": {
       "title": "Diese Person ist nicht mehr aktiv.",

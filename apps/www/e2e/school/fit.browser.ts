@@ -10,12 +10,6 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 /** The grid's card of the first question, whose name opens it and may add that it has no key yet. */
 const FIRST_CARD = /^Open question 1\b/u;
 
-/** Whether the value an element shows fits inside it, uncut by an ellipsis. */
-function fitsWhole(element: Element) {
-  const value = element.querySelector('[data-slot="select-value"]');
-  return value !== null && value.scrollWidth <= value.clientWidth;
-}
-
 /**
  * The alignment a thumbnail's paper gives text that sets none of its own, such as a heading or a list
  * item: the start, as on the page, and not the centre of the button that holds the thumbnail.
@@ -52,7 +46,7 @@ function headingLines(column: Element) {
   };
 }
 
-test("the teacher's canvas reaches the screen's edge, and its paper shows each matching key's placeholder whole, a true or false table's headings on one line in the student's words, its thumbnails from the start, and a page's row in two lines on a phone", async ({
+test("the teacher's canvas reaches the screen's edge, and its matching key draws each statement's dot, a true or false table's headings on one line in the student's words, its thumbnails from the start, and a page's row in two lines on a phone", async ({
   baseURL,
   browser,
 }) => {
@@ -83,17 +77,16 @@ test("the teacher's canvas reaches the screen's edge, and its paper shows each m
     .boundingBox();
   expect(canvasBox?.x).toBe(0);
 
-  // Each statement's key select in the teacher layer shows its placeholder whole, as the student's
-  // paper shows its own.
+  // Matching's key in the teacher layer draws its board, each statement with its dot.
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
   await page.getByRole("menuitemradio", { name: "Matching" }).click();
-  const keys = page.getByRole("combobox", {
-    name: "Answer for statement 1 of question 1",
-  });
-  await expect(keys).toHaveText("Choose");
-  expect(await keys.evaluate(fitsWhole)).toBe(true);
+  await expect(
+    page
+      .getByRole("complementary", { name: "For teachers" })
+      .getByRole("button", { name: "Statement 1, not joined" })
+  ).toBeVisible();
 
   // A true or false table's column headings stand on the line of the statements' heading. Each column is
   // given its words first, as a teacher writes them: an empty editor holds only a line break, whose box is

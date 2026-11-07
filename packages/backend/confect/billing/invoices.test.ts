@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 describe("billing/invoices", () => {
-  it("issues open invoices at the catalog price in the account's currency for the days left, with the next numbers of the year", async () => {
+  it("issues open invoices of the given lines in the account's currency, with the next numbers of the year", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const tenantId = await ctx.db.insert("tenants", {
@@ -43,26 +43,38 @@ describe("billing/invoices", () => {
         ctx,
         issueInvoice({
           accountId,
-          billedFrom: 1000,
           buyerTaxId: null,
           dueAt: 5000,
-          offer: "school.seat.year",
+          lines: [
+            {
+              amount: 7_990_000,
+              description: "school.max",
+              quantity: 1,
+              unitAmount: 7_990_000,
+            },
+          ],
           periodEnd: 4000,
           periodStart: 1000,
-          seats: 300,
+          total: 7_990_000,
         })
       );
       const second = await runInMutation(
         ctx,
         issueInvoice({
           accountId,
-          billedFrom: 7 * DAY,
           buyerTaxId: "01.234.567.8-901.000",
           dueAt: 5000,
-          offer: "school.seat.year",
+          lines: [
+            {
+              amount: 31_800,
+              description: "school.accounts",
+              quantity: 2,
+              unitAmount: 15_900,
+            },
+          ],
           periodEnd: 10 * DAY,
-          periodStart: 0,
-          seats: 2,
+          periodStart: 7 * DAY,
+          total: 31_800,
         })
       );
       const stored = await ctx.db.get(first.invoiceId);
@@ -77,50 +89,12 @@ describe("billing/invoices", () => {
     });
     expect(result).toEqual({
       currency: "IDR",
-      firstTotal: 30_000_000,
-      lineAmount: 30_000_000,
+      firstTotal: 7_990_000,
+      lineAmount: 7_990_000,
       numbers: ["NKF-2026-000001", "NKF-2026-000002"],
-      // Two seats billed for the last 3 of 10 days pay 30% of Rp100.000 each.
-      secondTotal: 60_000,
+      secondTotal: 31_800,
       status: "open",
     });
-  });
-
-  it("refuses an offer the account's currency is not priced in", async () => {
-    const t = createBillingTestConvex();
-    const exit = await t.run(async (ctx) => {
-      const tenantId = await ctx.db.insert("tenants", {
-        country: "ID",
-        currency: "IDR",
-        kind: "school",
-        name: "Sekolah Tanpa Harga",
-        policies: { emailDomains: [], nina: false, studentThreads: false },
-        slug: "sekolah-tanpa-harga",
-        status: "active",
-      });
-      const accountId = await ctx.db.insert("billingAccounts", {
-        owner: { kind: "tenant", tenantId },
-        rail: "xendit",
-        country: "ID",
-        currency: "IDR",
-        providerCustomerId: null,
-      });
-      const outcome = await exitInMutation(
-        ctx,
-        issueInvoice({
-          accountId,
-          billedFrom: 1000,
-          buyerTaxId: null,
-          dueAt: 5000,
-          offer: "school.seat.month",
-          periodEnd: 4000,
-          periodStart: 1000,
-          seats: 1,
-        })
-      );
-      return Exit.isFailure(outcome);
-    });
-    expect(exit).toBe(true);
   });
 
   it("refuses an invoice for an account that is gone", async () => {
@@ -147,13 +121,19 @@ describe("billing/invoices", () => {
         ctx,
         issueInvoice({
           accountId,
-          billedFrom: 1000,
           buyerTaxId: null,
           dueAt: 5000,
-          offer: "school.seat.year",
+          lines: [
+            {
+              amount: 15_900,
+              description: "school.accounts",
+              quantity: 1,
+              unitAmount: 15_900,
+            },
+          ],
           periodEnd: 4000,
           periodStart: 1000,
-          seats: 1,
+          total: 15_900,
         })
       );
       return Exit.isFailure(outcome);

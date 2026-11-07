@@ -14,7 +14,7 @@ import { assignRole } from "@repo/backend/confect/access/grant";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { googleHostedDomains } from "@repo/backend/confect/auth/tokens";
-import { ensureStudentSeat } from "@repo/backend/confect/billing/seats";
+import { ensureAccountSeat } from "@repo/backend/confect/billing/seats";
 import {
   sittingAuthority,
   withExam,
@@ -134,9 +134,9 @@ const admitsAccount = Effect.fn("exams.sittings.join.admits")(function* (
   );
 });
 
-/** Whether the school on the free plan still holds a student seat for one more student. */
+/** Whether the school's plan still pays for one more account. */
 const seatLeft = (tenantId: TenantsDoc["_id"]) =>
-  ensureStudentSeat(tenantId).pipe(
+  ensureAccountSeat(tenantId).pipe(
     Effect.as(true),
     Effect.catchTag("GrantRejected", () => Effect.succeed(false))
   );
@@ -260,8 +260,8 @@ const joinAsMember = Effect.fn("exams.sittings.join.member")(function* (
   if (yield* refusesMember(person, grants, sitting)) {
     return refused("NotAdmitted");
   }
-  const studies = Arr.some(grants, (grant) => grant.role.key === "student");
-  if (!(studies || (yield* seatLeft(tenant._id)))) {
+  // A Person who already holds a role is one account already.
+  if (!(Arr.isReadonlyArrayNonEmpty(grants) || (yield* seatLeft(tenant._id)))) {
     return refused("SeatLimit");
   }
   return yield* admitStudent(person, sitting);

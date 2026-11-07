@@ -2,6 +2,7 @@ import { useMutation } from "@confect/react";
 import {
   Archive02Icon,
   ArchiveRestoreIcon,
+  Delete02Icon,
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -14,9 +15,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Option, Schema } from "effect";
-import { startTransition, useId, useState } from "react";
+import { type ReactNode, startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { RowItems } from "@/components/shared/table/menu";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { chosenGrade } from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
@@ -25,6 +26,7 @@ import {
 import {
   archiveCohortChange,
   editCohortChange,
+  removeCohortChange,
   restoreCohortChange,
 } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -33,7 +35,8 @@ import type { Cohort } from "@/components/tenant/settings/state";
 const SOURCE = "components/tenant/settings/cohort/menu";
 
 /**
- * The restore action of an archived cohort in the archived list. The cohort shows as active at once.
+ * The menu of an archived cohort in the archived list: Restore, which shows the cohort as active at once, and Delete for
+ * a cohort nothing uses.
  */
 export function SchoolCohortRestore({
   cohort,
@@ -48,7 +51,7 @@ export function SchoolCohortRestore({
   );
 
   return (
-    <RowItems>
+    <CohortDelete cohort={cohort} slug={slug}>
       <DropdownMenuItem
         onClick={() =>
           startTransition(() =>
@@ -59,14 +62,56 @@ export function SchoolCohortRestore({
         <HugeIcons icon={ArchiveRestoreIcon} />
         {t("cohort-restore")}
       </DropdownMenuItem>
-    </RowItems>
+    </CohortDelete>
+  );
+}
+
+/**
+ * A cohort's menu with Delete as its last item, under the cohort's other actions (`children`). Delete asks first, takes
+ * the cohort out of the list at once, and puts it back with the reason when the server refuses: a cohort that holds
+ * students, a homeroom teacher, classes, sittings or reports stays, archived.
+ */
+function CohortDelete({
+  children,
+  cohort,
+  slug,
+}: {
+  children: ReactNode;
+  cohort: Cohort;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
+  const remove = useMutation(tenancy.cohorts.remove).withOptimisticUpdate(
+    removeCohortChange
+  );
+
+  return (
+    <ConfirmRowMenu
+      action={common("delete")}
+      confirm={t("cohort-delete-confirm")}
+      description={t("cohort-delete-description")}
+      icon={Delete02Icon}
+      onConfirm={() =>
+        startTransition(() =>
+          saveSchool(
+            () => remove({ cohortId: cohort.id, slug }),
+            SOURCE,
+            () => toast.success({ title: "school-cohort-deleted.title" })
+          )
+        )
+      }
+      title={t("cohort-delete-title", { name: cohort.name })}
+    >
+      {children}
+    </ConfirmRowMenu>
   );
 }
 
 /**
  * A cohort's row menu: Edit opens a dialog of its name and its school year, which starts from what the cohort holds
- * and saves only a change, or Archive. An archived cohort offers Restore alone (`SchoolCohortRestore`), because the server
- * refuses every other write to it.
+ * and saves only a change, Archive, and Delete for a cohort nothing uses (`CohortDelete`). An archived cohort offers
+ * Restore and Delete (`SchoolCohortRestore`), because the server refuses every other write to it.
  */
 export function SchoolCohortMenu({
   cohort,
@@ -103,7 +148,7 @@ export function SchoolCohortMenu({
 
   return (
     <>
-      <RowItems>
+      <CohortDelete cohort={cohort} slug={slug}>
         <DropdownMenuItem
           onClick={() => {
             setName(cohort.name);
@@ -143,7 +188,7 @@ export function SchoolCohortMenu({
           <HugeIcons icon={Archive02Icon} />
           {t("cohort-archive")}
         </DropdownMenuItem>
-      </RowItems>
+      </CohortDelete>
       <ResponsiveDialog
         description={t("cohort-edit-description")}
         footer={

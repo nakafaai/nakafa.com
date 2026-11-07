@@ -1,4 +1,5 @@
 import type { Mock } from "@effect/vitest";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, ConfigProvider, Effect, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -42,7 +43,9 @@ export function overKey(fetcher: Mock<typeof fetch>, key: string | undefined) {
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromUnknown({ FIRECRAWL_API_KEY: key })
       ),
-      Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      Effect.provideService(FetchHttpClient.Fetch, fetcher),
+      // Every provider call is held by a meter that holds whatever it is asked.
+      Effect.provide(recordingMeter().layer)
     );
 }
 

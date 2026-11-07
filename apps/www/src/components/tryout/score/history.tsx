@@ -19,11 +19,6 @@ import {
   AutocompleteList,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
@@ -31,34 +26,27 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { rowLineVariants } from "@repo/design-system/lib/row";
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { DataFailure } from "@/components/shared/failure";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
-import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
+import { useFactsWaiting } from "@/components/tryout/section/summary";
+import { KEPT_ATTEMPT_SCRIPT } from "@/components/tryout/set/kept";
+import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
+import {
+  useKeepAttemptLabel,
+  useKeptPageAttempt,
+} from "@/components/tryout/set/name";
 import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
 type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
 type ScoredHistoryRow = TryoutAttemptHistoryProps["value"]["attempts"][number];
-type ScoredAttempt = Pick<
-  ScoredHistoryRow,
-  "attemptId" | "attemptNumber" | "score" | "startedAt" | "status"
->;
-
-/** Props of the attempt results: `value` holds the scored attempt, its set identity, and the set's page. */
-interface TryoutAttemptResultsProps {
-  value: {
-    attempt: ScoredAttempt;
-    identity: HistoryIdentity;
-    publicPath: string;
-  };
-}
 
 /** Props of one attempt row: `value.attempt` is the option the picker lists. */
 interface TryoutAttemptHistoryItemProps {
@@ -107,8 +95,56 @@ interface TryoutAttemptHistoryProps {
     locale: HistoryIdentity["locale"];
     onLoadMore: (() => void) | undefined;
     onChoose: (attemptId: HistoryRow["attemptId"]) => void;
+    /** The page's path and search, which a kept label is read by. */
+    pathname: string;
+    search: string;
     selectedAttemptId: HistoryRow["attemptId"];
   };
+}
+
+/** What the picker shows, which its place at first paint draws too, so the two stand pixel for pixel. */
+function TryoutAttemptFace({ children }: { children?: ReactNode }) {
+  return (
+    <>
+      <HugeIcons icon={TransactionHistoryIcon} />
+      <HeaderLabel>{children}</HeaderLabel>
+      <HugeIcons
+        className="tryout-history-chevron ml-auto size-4 transition-transform ease-out @max-2xl/header:hidden"
+        icon={ArrowDown01Icon}
+      />
+    </>
+  );
+}
+
+/**
+ * The picker's place until a learner's read answers. A button that appears late is a flicker, so a set
+ * this browser saw tried more than once shows its picker from the first frame, and the live one
+ * replaces it where it stands. A first visit has nothing to draw, so its place stays empty.
+ */
+function TryoutAttemptPlace() {
+  const label = useKeptPageAttempt();
+  return (
+    <Button
+      className="data-empty:hidden"
+      data-attempt-picker=""
+      data-empty={label === undefined ? "" : undefined}
+      inert
+      type="button"
+      variant="outline"
+    >
+      <TryoutAttemptFace>
+        <span
+          className="before:content-[attr(data-label)]"
+          data-label={label ?? ""}
+        />
+      </TryoutAttemptFace>
+      <script
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only
+        dangerouslySetInnerHTML={{ __html: KEPT_ATTEMPT_SCRIPT }}
+        suppressHydrationWarning
+      />
+    </Button>
+  );
 }
 
 /** Renders the prior production attempt-history picker styling. */
@@ -117,9 +153,27 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   const [open, { close, set }] = useDisclosure(false);
   const tTryouts = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
-  const firstAttempt = Arr.head(value.attempts);
+  const labelOf = (attempt: ScoredHistoryRow) =>
+    tTryouts("attempt-select-label", { number: attempt.attemptNumber });
+  const latest = Option.map(Arr.head(value.attempts), labelOf);
+  const label = Option.orElse(
+    Option.map(
+      Arr.findFirst(
+        value.attempts,
+        (attempt) => attempt.attemptId === value.selectedAttemptId
+      ),
+      labelOf
+    ),
+    () => latest
+  );
+  // The set's own address opens the latest attempt, whichever attempt this page shows.
+  useKeepAttemptLabel(value.pathname, Option.getOrUndefined(latest));
+  useKeepAttemptLabel(
+    `${value.pathname}${value.search}`,
+    Option.getOrUndefined(label)
+  );
 
-  if (Option.isNone(firstAttempt)) {
+  if (Option.isNone(label)) {
     return null;
   }
 
@@ -143,28 +197,13 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
         render={
           <Button
             className="group data-open:[&_.tryout-history-chevron]:rotate-180"
+            data-attempt-picker=""
             type="button"
             variant="outline"
           />
         }
       >
-        <HugeIcons icon={TransactionHistoryIcon} />
-        {tTryouts("attempt-select-label", {
-          number: Option.match(
-            Arr.findFirst(
-              value.attempts,
-              (attempt) => attempt.attemptId === value.selectedAttemptId
-            ),
-            {
-              onNone: () => firstAttempt.value.attemptNumber,
-              onSome: (attempt) => attempt.attemptNumber,
-            }
-          ),
-        })}
-        <HugeIcons
-          className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
-          icon={ArrowDown01Icon}
-        />
+        <TryoutAttemptFace>{label.value}</TryoutAttemptFace>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 p-0">
         <Autocomplete
@@ -233,58 +272,92 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
 }
 
 /**
- * Renders the card of the page's finished attempt, first on its page: its metrics, then the metrics the caller
- * composed after them. The page already shows that the attempt is over, so the card says nothing about it. A set
- * tried more than once has the picker of its attempts in the footer. Choosing an attempt opens that attempt's own
- * page, so the score and the review always belong to one attempt.
+ * The picker of a set's attempts, for the page's header, once a set has been tried more than once.
+ * Choosing an attempt opens that attempt's page, so the score and the review always belong to one
+ * attempt. A page whose attempt has no score has nothing to pick from.
  */
-export function TryoutAttemptResults({
-  children,
-  value,
-}: TryoutAttemptResultsProps & { children?: ReactNode }) {
+export function TryoutAttemptPicker({
+  attempt,
+  locale,
+  set,
+}: {
+  readonly attempt:
+    | Pick<CurrentAttempt, "attemptId" | "score">
+    | null
+    | undefined;
+  readonly locale: HistoryIdentity["locale"];
+  readonly set: SetPage["set"];
+}) {
+  const waiting = useFactsWaiting(attempt === undefined);
+  if (waiting) {
+    return <TryoutAttemptPlace />;
+  }
+  if (!attempt?.score) {
+    return null;
+  }
+  return (
+    <TryoutAttemptChoice
+      attemptId={attempt.attemptId}
+      identity={{
+        countryKey: set.countryKey,
+        examKey: set.examKey,
+        locale,
+        setKey: set.setKey,
+        trackKey: set.trackKey,
+      }}
+      publicPath={set.publicPath}
+    />
+  );
+}
+
+/** Reads a set's attempts for the picker, which waits until there is more than one to pick from. */
+function TryoutAttemptChoice({
+  attemptId,
+  identity,
+  publicPath,
+}: {
+  readonly attemptId: HistoryRow["attemptId"];
+  readonly identity: HistoryIdentity;
+  readonly publicPath: string;
+}) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const navigate = useNavigate();
   const history = usePaginatedQuery(
     tryouts.queries.history.bySet,
-    isAuthenticated ? value.identity : "skip",
+    isAuthenticated ? identity : "skip",
     { initialNumItems: 25 }
   );
+  const firstPage = PaginatedQueryResult.isLoadingFirstPage(history);
   const attempts = useKeptAttempts(
     Arr.filter(history.results, hasScore),
-    PaginatedQueryResult.isLoadingFirstPage(history)
+    firstPage
   );
+  const { pathname, searchStr } = useLocation();
 
+  if (attempts.length < 2) {
+    return firstPage ? <TryoutAttemptPlace /> : null;
+  }
   return (
-    <Card>
-      <CardContent className="[--number-flow-mask-height:0.125em]">
-        {PaginatedQueryResult.isFailure(history) && <DataFailure />}
-        <TryoutScoreMetrics score={value.attempt.score}>
-          {children}
-        </TryoutScoreMetrics>
-      </CardContent>
-      {attempts.length > 1 ? (
-        <CardFooter>
-          <TryoutAttemptHistory
-            value={{
-              attempts,
-              locale: value.identity.locale,
-              onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
-                ? () => history.loadMore(25)
-                : undefined,
-              onChoose: (attemptId) => {
-                if (attemptId === value.attempt.attemptId) {
-                  return;
-                }
-                navigate({
-                  href: `/${value.identity.locale}${getTryoutAttemptHref(value.publicPath, attemptId)}`,
-                });
-              },
-              selectedAttemptId: value.attempt.attemptId,
-            }}
-          />
-        </CardFooter>
-      ) : null}
-    </Card>
+    <TryoutAttemptHistory
+      value={{
+        attempts,
+        locale: identity.locale,
+        onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
+          ? () => history.loadMore(25)
+          : undefined,
+        onChoose: (chosen) => {
+          if (chosen === attemptId) {
+            return;
+          }
+          navigate({
+            href: `/${identity.locale}${getTryoutAttemptHref(publicPath, chosen, Option.none())}`,
+          });
+        },
+        pathname,
+        search: searchStr,
+        selectedAttemptId: attemptId,
+      }}
+    />
   );
 }
 

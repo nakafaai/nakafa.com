@@ -14,6 +14,7 @@ import {
   CohortStatus,
 } from "@repo/backend/confect/tenancy/cohort";
 import {
+  CohortInUse,
   CohortLimit,
   CohortNameTaken,
 } from "@repo/backend/confect/tenancy/errors";
@@ -59,8 +60,8 @@ const CohortDetailView = Schema.Struct({
 });
 
 /**
- * The cohorts of one period. The school's Admin creates, renames, and archives
- * them, and the roles that read the plan read them. A Person placed in a cohort
+ * The cohorts of one period. The school's Admin creates, renames, archives,
+ * restores and deletes them, and the roles that read the plan read them. A Person placed in a cohort
  * reads its members, because the `cohortMember` relation opens `cohort.view`.
  */
 export default GroupSpec.make()
@@ -146,5 +147,13 @@ export default GroupSpec.make()
       args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),
       returns: () => CohortView,
       error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "tenant.manage" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "remove",
+      args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, CohortInUse]),
     }).middleware(TenantAccess, { action: "tenant.manage" })
   );

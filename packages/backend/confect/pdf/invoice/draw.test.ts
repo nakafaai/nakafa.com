@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { drawInvoicePdf } from "@repo/backend/confect/pdf/invoice/draw";
-import { Effect, Exit } from "effect";
+import { Array as Arr, Effect, Exit } from "effect";
+
+/** The page count a PDF's page tree states. */
+const PAGE_COUNT = /\/Count (?<pages>\d+)/u;
 
 /** A paid pack, as a learner downloads it. */
 const paid = {
@@ -42,6 +45,24 @@ describe("pdf/invoice", () => {
         expect(new TextDecoder("latin1").decode(bytes.slice(0, 5))).toBe(
           "%PDF-"
         );
+      })
+  );
+
+  it.effect(
+    "draws a long school invoice over several pages, each in the frame",
+    () =>
+      Effect.gen(function* () {
+        const bytes = yield* drawInvoicePdf({
+          ...paid,
+          lines: Arr.makeBy(60, (index) => ({
+            amount: "Rp 12.450.000",
+            description: `Nakafa School, paket Sekolah, 120 akun, bagian ${index + 1}`,
+          })),
+          locale: "de",
+          status: "void",
+        });
+        const pages = new TextDecoder("latin1").decode(bytes).match(PAGE_COUNT);
+        expect(Number(pages?.groups?.pages)).toBeGreaterThan(1);
       })
   );
 

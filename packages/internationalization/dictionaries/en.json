@@ -12,6 +12,7 @@
     "sort-newest": "Newest",
     "no-results": "No results.",
     "searching": "Looking through the list.",
+    "more": "Show {count} more",
     "no-values": "No values yet",
     "reset": "Reset"
   },
@@ -617,6 +618,7 @@
     "number-unit-placeholder": "cm",
     "number-value-of": "Correct number of question {number}",
     "number-tolerance-of": "Tolerance of question {number}",
+    "number-tolerance": "Tolerance",
     "number-within-of": "Tolerance amount of question {number}",
     "number-tolerance-exact": "Exactly this number",
     "number-tolerance-absolute": "Within a distance",
@@ -646,10 +648,12 @@
     "statement-add": "Add statement",
     "match-answer-add": "Add an answer",
     "statement-number": "Statement {name}",
-    "pair-of": "Answer for statement {name} of question {number}",
+    "line-statement": "Statement {name}, not joined",
+    "line-statement-joined": "Statement {name}, joined to {answer}",
+    "line-answer": "Answer {name}",
+    "line-remove": "Remove the line of statement {name}",
     "pair-choose": "Choose",
-    "pair-hint": "Give every statement one answer.",
-    "pair-statement": "Answer for statement {number}",
+    "pair-hint": "Drag a line from a statement to its answer, or press both.",
     "template-table": "True or false table",
     "column-of": "Question {number}, column {name}",
     "column-placeholder": "Column",
@@ -767,41 +771,12 @@
     "policies": "Policies",
     "audit": "Audit trail",
     "billing": "Billing",
-    "billing-free-title": "Free",
-    "billing-free-description": "Up to {limit} students, with every School feature.",
-    "billing-school-title": "School",
-    "billing-school-description": "Every student has Pro until {date}.",
-    "billing-students": "Students",
-    "billing-limit": "Free limit",
-    "billing-paid": "Paid students",
-    "billing-nina": "Nina credits this month",
-    "billing-nina-used": "{used} of {total} used",
-    "billing-upgrade": "Upgrade",
-    "billing-add": "Pay for students",
-    "billing-free-footer": "Upgrade for more than {limit} students.",
-    "billing-add-footer": "New students are billed for the rest of the term.",
-    "billing-free-empty": "Enroll students to upgrade to School.",
-    "billing-school-footer": "Every student is paid for.",
-    "billing-open-footer": "Pay the open invoice below to finish.",
-    "billing-dialog-title": "Choose a term",
-    "billing-dialog-description": "Pay per enrolled student for the days left in the term.",
-    "billing-dialog-seats": "Pay per enrolled student, with seats that renew until you cancel them.",
-    "billing-term-semester": "This semester",
-    "billing-term-year": "This school year",
-    "billing-offer-month": "Every month",
-    "billing-offer-year": "Every year",
     "billing-term-dates": "{start} to {end}",
-    "billing-quote-term": "{seats, plural, one {# student} other {# students}} until {date}",
-    "billing-quote-seats": "{seats, plural, one {# student} other {# students}} at {price} each",
     "billing-issue": "Issue invoice",
-    "billing-checkout": "Continue",
     "billing-invoices": "Invoices",
     "billing-invoices-description": "Every invoice the school was issued.",
-    "billing-invoices-footer": "Pay an open invoice before its due date.",
-    "billing-invoices-empty": "The school has no invoice yet.",
     "invoice-number": "Invoice",
-    "invoice-term": "Term",
-    "invoice-students": "Students",
+    "invoice-term": "Period",
     "invoice-total": "Total",
     "invoice-due": "Due",
     "invoice-status": "Status",
@@ -1075,6 +1050,7 @@
         "renamed": "Cohort renamed",
         "archived": "Cohort archived",
         "restored": "Cohort restored",
+        "removed": "Cohort deleted",
         "grade": {
           "set": "Cohort grade changed"
         }
@@ -1112,6 +1088,7 @@
         "archived": "Period archived",
         "rename": "Period renamed",
         "restored": "Period restored",
+        "removed": "Period deleted",
         "rescheduled": "Period dates changed"
       },
       "person": {
@@ -1363,13 +1340,19 @@
     "student-add-description": "The student gets a login name and a first login card, added together.",
     "student-add-name": "Name",
     "student-add-footer": "Print the card before you close it, because the code is shown once.",
-    "student-add-seats": "{count} of {limit} free students used.",
+    "student-add-seats": "{count} of {limit} accounts in use.",
     "student-add-submit": "Add student",
     "invites-empty": "No invite is waiting.",
     "invites-search": "Find a name or email",
     "units-search": "Find a school or NPSN",
     "cohort-restore": "Restore",
+    "cohort-delete-title": "Delete {name}?",
+    "cohort-delete-description": "The cohort goes for good. One that holds students, a teacher, classes or reports stays archived instead.",
+    "cohort-delete-confirm": "Delete cohort",
     "period-restore": "Restore",
+    "period-delete-title": "Delete {name}?",
+    "period-delete-description": "The period goes for good. The active one, or one that holds cohorts or classes, stays archived instead.",
+    "period-delete-confirm": "Delete period",
     "no-unit-title": "No active unit yet",
     "no-unit-description": "Restore or add a unit first, because periods and cohorts belong to one.",
     "no-unit-action": "Open units",
@@ -1429,7 +1412,63 @@
     "cohort-classes": "Classes",
     "member-login": "Login",
     "member-email": "Email",
-    "member-units": "Units"
+    "member-units": "Units",
+    "billing-plan-trial": "Trial",
+    "billing-plan-pro": "Pro",
+    "billing-plan-max": "Max",
+    "billing-trial-description": "Every feature with your real data until {date}.",
+    "billing-paid-description": "Your plan runs until {date}.",
+    "billing-credits": "AI credits",
+    "billing-credits-trial": "{total} credits for the whole trial",
+    "billing-credits-used": "{used} of {total} used this month",
+    "billing-drive": "Drive",
+    "billing-trial-footer": "Choose Pro or Max to keep your data after the trial.",
+    "billing-renew-footer": "Renew before the plan ends. Nothing renews by itself.",
+    "billing-open-footer": "Pay the open invoice by {date}.",
+    "billing-choose": "Choose plan",
+    "billing-renew": "Renew",
+    "billing-accounts": "Accounts",
+    "billing-accounts-description": "Every student, teacher, staff member, admin and parent counts once.",
+    "billing-accounts-used": "{used} of {total} accounts in use",
+    "billing-accounts-footer": "Added accounts are billed for the days left in your plan.",
+    "billing-accounts-trial": "The trial holds {limit} accounts. Choose a plan for more.",
+    "billing-add-accounts": "Add accounts",
+    "billing-order-title": "Choose a plan",
+    "billing-order-description": "Every price is before tax and paid in advance.",
+    "billing-more-title": "Add accounts",
+    "billing-more-description": "Each account adds {credits} AI credits a month and {drive} MB of Drive.",
+    "billing-order-plan": "Plan",
+    "billing-order-period": "Period",
+    "billing-months": "{months, plural, one {# month} other {# months}}{discount, plural, =0 {} other {, # percent off}}",
+    "billing-order-accounts": "Added accounts, optional",
+    "billing-more-accounts": "Accounts to add",
+    "billing-order-presets": "Add accounts quickly",
+    "billing-per-month": "{price} a month",
+    "billing-plan-holds": "{accounts} accounts, {credits} AI credits a month, {drive} GB Drive.",
+    "billing-line-pro": "Pro, {months, plural, one {# month} other {# months}}",
+    "billing-line-max": "Max, {months, plural, one {# month} other {# months}}",
+    "billing-line-accounts": "{accounts} added accounts, {months, plural, one {# month} other {# months}}",
+    "billing-line-prorata": "{accounts} accounts for the {days} days left",
+    "billing-total": "Total before tax",
+    "billing-runs": "Runs from {start} to {end} once paid.",
+    "billing-runs-more": "Takes effect once paid and runs until {end}.",
+    "billing-invoices-view": "View invoices",
+    "billing-invoices-footer": "{count, plural, one {# invoice} other {# invoices}} so far.",
+    "billing-invoices-empty": "The school has no invoice yet.",
+    "billing-invoices-sheet-footer": "Each invoice is paid on its own page or by bank transfer.",
+    "invoice-accounts": "Accounts",
+    "academic": "Academics",
+    "locale-country-search": "Search a country",
+    "locale-currency-search": "Search a currency",
+    "locale-empty": "Nothing matches.",
+    "billing-plan-school": "School",
+    "billing-seats-buy": "Buy seats",
+    "billing-seats-title": "Buy seats on Polar",
+    "billing-seats-description": "One seat for each of the {seats} accounts no plan pays for yet, renewed until you cancel.",
+    "billing-seats-month": "Every month",
+    "billing-seats-year": "Every year",
+    "billing-seats-each": "{price} for each seat",
+    "billing-checkout": "Continue"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1909,8 +1948,8 @@
       "l": "500 to 999",
       "xl": "1,000 or more"
     },
-    "plan-free": "Free plan, up to {limit} students.",
-    "plan-school": "School plan, paid per student.",
+    "plan-free": "Free trial for 30 days, up to {limit} accounts.",
+    "plan-school": "Pro or Max, every role counted as one account.",
     "plan-founder": "School plan, with the founder's help.",
     "founder-line": "The founder can help a large school set up.",
     "founder-link": "Talk to the founder",
@@ -2387,6 +2426,7 @@
     "score-label-estimated": "Estimated score",
     "score-label-standard": "Score",
     "correct-answers-label": "Correct answers",
+    "finished-panel": "Your result",
     "attempt-menu-label": "History",
     "attempt-menu-search-placeholder": "Search attempts...",
     "attempt-menu-empty": "No matching attempts found.",
@@ -2841,6 +2881,10 @@
       "title": "We could not complete this action.",
       "description": "Please try again."
     },
+    "exam-in-use": {
+      "title": "This exam has a sitting.",
+      "description": "Its sittings keep their results, so make a copy to change it."
+    },
     "copy-error": {
       "title": "Couldn't copy"
     },
@@ -3031,6 +3075,9 @@
     "school-cohort-archived": {
       "title": "Class archived."
     },
+    "school-cohort-deleted": {
+      "title": "Cohort deleted."
+    },
     "school-class-archived": {
       "title": "Classroom archived."
     },
@@ -3068,6 +3115,9 @@
     },
     "school-period-archived": {
       "title": "Period archived."
+    },
+    "school-period-deleted": {
+      "title": "Period deleted."
     },
     "sitting-not-in": {
       "title": "You are not in this sitting.",
@@ -3125,6 +3175,30 @@
       "title": "This period is not active.",
       "description": "Only an active period can be archived."
     },
+    "school-refusal-period-in-use-active": {
+      "title": "This period is active.",
+      "description": "Archive the period first, or keep it."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "This period still holds cohorts.",
+      "description": "Archive the period to keep its cohorts and grades."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "This period still holds grades.",
+      "description": "Archive the period to keep its grades."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "This period has a graduation.",
+      "description": "Archive the period to keep its graduation."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "This period still holds classes.",
+      "description": "Archive the period to keep its classes and grades."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "A promotion uses this period.",
+      "description": "Archive the period to keep its promotion."
+    },
     "school-refusal-cohort-name-taken": {
       "title": "This cohort name is already used.",
       "description": "Choose another name for this period."
@@ -3132,6 +3206,30 @@
     "school-refusal-cohort-limit": {
       "title": "No more cohorts fit this period.",
       "description": "Add the cohort to another period instead."
+    },
+    "school-refusal-cohort-in-use-members": {
+      "title": "This cohort still holds students.",
+      "description": "Move its students out first, or archive the cohort."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "This cohort still has a homeroom teacher.",
+      "description": "Remove the teacher first, or archive the cohort."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "This cohort still holds classes.",
+      "description": "Archive the cohort to keep its classes and grades."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "This cohort has exam sittings.",
+      "description": "Archive the cohort to keep its sittings and results."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "This cohort has report cards.",
+      "description": "Archive the cohort to keep its report cards."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "This cohort has graduation letters.",
+      "description": "Archive the cohort to keep its letters."
     },
     "school-refusal-address-invited": {
       "title": "This address already has an invite.",
@@ -3194,12 +3292,12 @@
       "description": "Remove one role before you give another."
     },
     "school-refusal-seat-limit": {
-      "title": "The free plan is full.",
-      "description": "Upgrade to School in billing to add more students."
+      "title": "Every account is in use.",
+      "description": "Add accounts in billing to give more people access."
     },
-    "school-refusal-seats-paid": {
-      "title": "Every student is paid for.",
-      "description": "New students can be billed once they enroll."
+    "school-refusal-plan-missing": {
+      "title": "No plan runs yet.",
+      "description": "Choose a plan first, then add accounts to it."
     },
     "school-refusal-person-inactive": {
       "title": "This person is no longer active.",

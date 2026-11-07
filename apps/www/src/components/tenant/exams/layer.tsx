@@ -319,10 +319,9 @@ export function TeacherLayer({
         onSome: (match) => (
           <MatchKey
             editable={editable}
-            keyed={shown.key}
             match={match}
-            number={number}
             onPair={editing.setPairs}
+            pairs={editing.pairs}
           />
         ),
       })}

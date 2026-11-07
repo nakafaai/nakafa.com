@@ -1,7 +1,7 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import { TermOffer } from "@repo/backend/confect/billing/term";
+import { SchoolLineKey } from "@repo/backend/confect/billing/quote";
 import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
 import { Array as Arr, Schema } from "effect";
 
@@ -27,25 +27,28 @@ const PAYMENT_ITEMS = {
   },
 } as const;
 
-/** What each term of School buys, in the language of the invoice. */
+/** What each School line buys, in the language of the invoice. The invoice's period says for how long. */
 const SCHOOL_ITEMS = {
   de: {
-    "school.seat.semester": "Nakafa School, ein Semester",
-    "school.seat.year": "Nakafa School, ein Schuljahr",
+    "school.accounts": "Zusätzliche Konten",
+    "school.max": "Nakafa School Max",
+    "school.pro": "Nakafa School Pro",
   },
   en: {
-    "school.seat.semester": "Nakafa School, one semester",
-    "school.seat.year": "Nakafa School, one school year",
+    "school.accounts": "Additional accounts",
+    "school.max": "Nakafa School Max",
+    "school.pro": "Nakafa School Pro",
   },
   id: {
-    "school.seat.semester": "Nakafa School, satu semester",
-    "school.seat.year": "Nakafa School, satu tahun ajaran",
+    "school.accounts": "Akun tambahan",
+    "school.max": "Nakafa School Max",
+    "school.pro": "Nakafa School Pro",
   },
-} as const;
+} as const satisfies Record<ActiveAppLocaleCode, Record<SchoolLineKey, string>>;
 
-/** An invoice line's text: the words of a School term, or the text an operator wrote. */
+/** An invoice line's text: the words of a School line, or the text an operator wrote. */
 const lineDescription = (description: string, locale: ActiveAppLocaleCode) =>
-  Schema.is(TermOffer)(description)
+  Schema.is(SchoolLineKey)(description)
     ? SCHOOL_ITEMS[locale][description]
     : description;
 

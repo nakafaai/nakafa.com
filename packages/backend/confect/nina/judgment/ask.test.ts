@@ -5,7 +5,7 @@ import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import {
   askedOf,
   decides,
-  GatewayTest,
+  GatewayIsolated,
   provider,
 } from "@repo/backend/test/gateway";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -48,7 +48,7 @@ describe("judgment", () => {
             type: "boolean",
           },
         });
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -70,7 +70,7 @@ describe("judgment", () => {
           ownNote: false,
           private: false,
         });
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -87,7 +87,7 @@ describe("judgment", () => {
         expect(others).toEqual([]);
         expect(request?.state).toEqual([{ text: note, type: "text" }]);
         expect(request && askedOf(request)).toEqual(["ownNote", "private"]);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -100,7 +100,7 @@ describe("judgment", () => {
         expect(Arr.map(requests(), (request) => request.state)).toEqual([
           [{ text: japanese, type: "text" }],
         ]);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect("cuts a text to what the model reads", () =>
@@ -113,7 +113,7 @@ describe("judgment", () => {
       expect(part && "text" in part ? part.text : "").toContain(
         "[Shortened to about 1000 of "
       );
-    }).pipe(Effect.provide(GatewayTest))
+    }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect("gives the probability of each judgment for the text", () =>
@@ -123,7 +123,7 @@ describe("judgment", () => {
         lasting: 0.9,
         private: 0.1,
       });
-    }).pipe(Effect.provide(GatewayTest))
+    }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -152,6 +152,6 @@ describe("judgment", () => {
         });
         expect(encodeJsonText(failure)).not.toContain("Provider detail");
         expect(encodeJsonText(failure)).not.toContain("Kelas");
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 });

@@ -8,6 +8,7 @@ import { PeriodAccess } from "@repo/backend/confect/tenancy/access";
 import {
   PeriodActive,
   PeriodDatesInvalid,
+  PeriodInUse,
   PeriodNotActive,
   PeriodOverlaps,
   PromotionState,
@@ -26,7 +27,7 @@ const PeriodView = Schema.Struct({
 });
 
 /**
- * The periods of a school. Its Admin creates, edits, opens, and archives them; the
+ * The periods of a school. Its Admin creates, edits, opens, archives, restores and deletes them; the
  * roles that read the school's plan read them, and an archived school or period
  * refuses every write.
  */
@@ -78,6 +79,14 @@ export default GroupSpec.make()
       args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
       returns: () => PeriodView,
       error: () => Schema.Union([AccessDenied, PeriodActive]),
+    }).middleware(TenantAccess, { action: "tenant.manage" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "remove",
+      args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, PeriodInUse]),
     }).middleware(TenantAccess, { action: "tenant.manage" })
   )
   .addFunction(

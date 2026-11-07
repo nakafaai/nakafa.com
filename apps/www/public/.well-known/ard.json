@@ -1,0 +1,39 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Nakafa",
+    "identifier": "nakafa.com",
+    "documentationUrl": "https://nakafa.com/llms.txt"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:nakafa.com:mcp:content",
+      "displayName": "Nakafa MCP Server",
+      "mediaType": "application/mcp-server-card+json",
+      "type": "application/mcp-server-card+json",
+      "url": "https://raw.githubusercontent.com/nakafaai/nakafa.com/main/server.json",
+      "description": "Read-only access to Nakafa's signed educational content and reviewed Quran references.",
+      "tags": ["education", "lessons", "quran", "mcp-server"],
+      "representativeQueries": [
+        "Explain a high school mathematics topic with a cited lesson",
+        "Find a Quran verse with its Indonesian translation",
+        "Search free lessons in Indonesian, English or German",
+        "Practice an SNBT try-out set"
+      ]
+    },
+    {
+      "identifier": "urn:air:nakafa.com:skill:nakafa",
+      "displayName": "Nakafa agent skill",
+      "mediaType": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://nakafa.com/skill.md",
+      "description": "When and how an agent reads Nakafa lessons, articles, Quran pages and try-outs as Markdown or through MCP tools, and cites them.",
+      "tags": ["education", "agent-skills", "llms-txt"],
+      "representativeQueries": [
+        "Read a school lesson as Markdown and cite its page",
+        "Look up a surah and verse in the Quran",
+        "List the lessons of a curriculum subject"
+      ]
+    }
+  ]
+}

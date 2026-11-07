@@ -95,7 +95,7 @@ describe("billing/receipts", () => {
       lines: [
         {
           amount: 20_218,
-          description: "school.seat.semester",
+          description: "school.pro",
           quantity: 1,
           unitAmount: 20_218,
         },
@@ -107,7 +107,7 @@ describe("billing/receipts", () => {
     expect(schoolInvoice(invoice, "SMA Harapan", "en")).toMatchObject({
       buyer: { email: null, name: "SMA Harapan" },
       dueOn: "November 2, 2026",
-      lines: [{ description: "Nakafa School, one semester" }],
+      lines: [{ description: "Nakafa School Pro" }],
       number: "NKF-2026-000001",
       paidWith: null,
       status: "open",

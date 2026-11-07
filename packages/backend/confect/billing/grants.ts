@@ -218,7 +218,7 @@ export const latestPersonalGrant = Effect.fn("billing.grants.latestPersonal")(
 );
 
 /** The school grant of one school that runs latest at `now`, if any runs. */
-export const latestSchoolGrant = Effect.fn("billing.grants.latestSchool")(
+const latestSchoolGrant = Effect.fn("billing.grants.latestSchool")(
   function* (tenantId: Docs["tenants"]["_id"], now: number) {
     const reader = yield* DatabaseReader;
     return yield* reader

@@ -38,12 +38,12 @@ describe("school settings routes", () => {
       ])
     ).toEqual([
       ["/school/$slug/settings/profile", "profile", "school"],
-      ["/school/$slug/settings/periods", "periods", "school"],
-      ["/school/$slug/settings/cohorts", "cohorts", "school"],
-      ["/school/$slug/settings/classes", "classes", "school"],
-      ["/school/$slug/settings/grading", "grading", "school"],
-      ["/school/$slug/settings/units", "units", "school"],
       ["/school/$slug/settings/billing", "billing", "school"],
+      ["/school/$slug/settings/periods", "periods", "academic"],
+      ["/school/$slug/settings/cohorts", "cohorts", "academic"],
+      ["/school/$slug/settings/classes", "classes", "academic"],
+      ["/school/$slug/settings/grading", "grading", "academic"],
+      ["/school/$slug/settings/units", "units", "academic"],
       ["/school/$slug/settings/members", "members", "people"],
       ["/school/$slug/settings/roles", "roles", "people"],
       ["/school/$slug/settings/invites", "invites", "people"],
@@ -65,18 +65,8 @@ describe("school settings routes", () => {
         Arr.map(group.sections, (section) => section.labelKey),
       ])
     ).toEqual([
-      [
-        "school",
-        [
-          "profile",
-          "periods",
-          "cohorts",
-          "classes",
-          "grading",
-          "units",
-          "billing",
-        ],
-      ],
+      ["school", ["profile", "billing"]],
+      ["academic", ["periods", "cohorts", "classes", "grading", "units"]],
       [
         "people",
         ["members", "roles", "invites", "students", "roster", "guardians"],
@@ -95,11 +85,11 @@ describe("school settings routes", () => {
     ).toEqual([
       "/school/$slug/settings/profile",
       "/school/$slug/settings/profile",
-      "/school/$slug/settings/profile",
-      "/school/$slug/settings/profile",
-      "/school/$slug/settings/profile",
-      "/school/$slug/settings/profile",
-      "/school/$slug/settings/profile",
+      "/school/$slug/settings/periods",
+      "/school/$slug/settings/periods",
+      "/school/$slug/settings/periods",
+      "/school/$slug/settings/periods",
+      "/school/$slug/settings/periods",
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
@@ -142,7 +132,7 @@ describe("school settings routes", () => {
         Arr.map(group.sections, (section) => section.labelKey),
       ])
     ).toEqual([
-      ["school", ["periods", "cohorts", "classes"]],
+      ["academic", ["periods", "cohorts", "classes"]],
       ["people", ["members"]],
     ]);
     expect(openSettingsGroups(slug, ["audit.view"])).toMatchObject([

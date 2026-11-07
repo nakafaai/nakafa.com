@@ -7,6 +7,7 @@ import {
   createPeriodChange,
   editPeriodChange,
   openPeriodChange,
+  removePeriodChange,
   restorePeriodChange,
 } from "@/components/tenant/settings/terms";
 import { createLocalStore } from "@/test/optimistic";
@@ -155,5 +156,20 @@ describe("components/tenant/settings/terms", () => {
         item.end,
       ])
     ).toEqual([["Genap 2027", "2027-07-01", "2027-12-20"]]);
+  });
+
+  it("takes a deleted period out of every loaded list at once, and keeps the others", () => {
+    const local = createLocalStore();
+    const june = period("june", "2027-06-01", "planned");
+    const july = period("july", "2027-07-01", "archived");
+    local.seed(
+      tenancy.periods.list,
+      { paginationOpts: paging, slug, unitId: smp },
+      pageOf([june, july])
+    );
+    removePeriodChange(local.store, { periodId: june.id, slug });
+    expect(Arr.map(periodsOf(local, smp), (item) => item.name)).toEqual([
+      july.name,
+    ]);
   });
 });

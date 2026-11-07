@@ -191,7 +191,7 @@ describe("billing/contracts", () => {
               currency: "IDR",
               lines: [
                 {
-                  description: "school.seat.year",
+                  description: "Kontrak Enterprise 2026/2027",
                   quantity: 300,
                   unitAmount: 100_000,
                   amount: 30_000_000,

@@ -1,6 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { TermOffer } from "@repo/backend/confect/billing/term";
 import { Schema } from "effect";
 
 /** An open invoice that holds no payment link yet: what its hosted payment needs. */
@@ -22,7 +21,6 @@ export default GroupSpec.make()
       name: "open",
       args: () => ({
         invoiceId: IdSchema("billingInvoices"),
-        offer: TermOffer,
       }),
       returns: () => Schema.Null,
     })
@@ -41,7 +39,6 @@ export default GroupSpec.make()
         accountId: IdSchema("billingAccounts"),
         expiresAt: Schema.Finite,
         invoiceId: IdSchema("billingInvoices"),
-        offer: TermOffer,
         sessionId: Schema.String,
         url: Schema.String,
       }),

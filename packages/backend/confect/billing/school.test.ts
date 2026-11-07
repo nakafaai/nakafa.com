@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
+  type SchoolOrder,
+  schoolPeriod,
+} from "@repo/backend/confect/billing/quote";
+import {
   applyInvoicePaid,
   ensureSchoolAccount,
   issueSchoolInvoice,
   schoolRail,
 } from "@repo/backend/confect/billing/school";
-import { termOf } from "@repo/backend/confect/billing/term";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -17,9 +20,9 @@ import {
   runInMutation,
 } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { Array as Arr, Cause, Effect, Exit } from "effect";
+import { Cause, Effect, Exit } from "effect";
 
-/** 26 Oct 2026, 12:00 in Jakarta: 67 of the 184 days of the first semester are still to run, counting today. */
+/** 26 Oct 2026, 12:00 in Jakarta. */
 const NOW = Date.UTC(2026, 9, 26, 5, 0, 0);
 
 beforeEach(() => {
@@ -30,40 +33,6 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
-
-/** Enrolls `count` students in one unit of a school, each with an active student grant. */
-async function enrollStudents(
-  ctx: MutationCtx,
-  tenantId: Id<"tenants">,
-  count: number
-) {
-  const unitId = await ctx.db.insert("tenantUnits", {
-    contentLanguage: "id",
-    level: "smp",
-    name: "SMP",
-    status: "active",
-    tenantId,
-    timeZone: "Asia/Jakarta",
-  });
-  for (const _ of Arr.range(1, count)) {
-    const personId = await ctx.db.insert("tenantPeople", {
-      account: { state: "unclaimed" },
-      kind: "member",
-      name: "Siswa",
-      status: "active",
-      tenantId,
-    });
-    await ctx.db.insert("tenantGrants", {
-      grantedBy: { kind: "system" },
-      personId,
-      role: { key: "student", kind: "builtin" },
-      scope: { kind: "unit", unitId },
-      status: "active",
-      tenantId,
-      term: { kind: "standing" },
-    });
-  }
-}
 
 /** The school as Confect reads it, with its slug decoded, for the billing programs that take one. */
 const readTenant = (tenantId: Id<"tenants">) =>
@@ -116,56 +85,66 @@ describe("billing/school accounts", () => {
   });
 });
 
+/** Issues one order's invoice for a school, as its billing page asks for it. */
+const issueOrder = (tenantId: Id<"tenants">, order: SchoolOrder) =>
+  Effect.flatMap(readTenant(tenantId), (tenant) =>
+    issueSchoolInvoice(systemActor, tenant, order)
+  );
+
+/** Pays one invoice by transfer at `paidAt`. */
+const payInvoice = (invoiceId: Id<"billingInvoices">, paidAt = NOW) =>
+  applyInvoicePaid(systemActor, invoiceId, {
+    method: "transfer",
+    paidAt,
+    providerPaymentId: `BCA-${invoiceId}`,
+  });
+
+const DAY = 24 * 60 * 60 * 1000;
+
 describe("billing/school invoices", () => {
-  it("invoices the students the school does not pay for yet, for the days left of the term, once per term", async () => {
+  it("bills a plan with its added accounts for a whole period from now, and returns the open invoice to a second order", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const tenantId = await insertSchool(ctx);
-      await enrollStudents(ctx, tenantId, 3);
-      await ctx.db.insert("billingGrants", {
-        product: "school",
-        tenantId,
-        scope: { kind: "tenant" },
-        seats: 1,
-        ninaSeats: 1,
-        source: { kind: "contract", contractId: "contract-school-test" },
-        validFrom: 0,
-        validTo: Date.UTC(2099, 0, 1),
-      });
-      const issue = () =>
-        runInMutation(
-          ctx,
-          Effect.flatMap(readTenant(tenantId), (tenant) =>
-            issueSchoolInvoice(systemActor, tenant, "school.seat.semester")
-          )
-        );
-      const first = await issue();
-      const again = await issue();
-      const invoices = await ctx.db.query("billingInvoices").collect();
+      const first = await runInMutation(
+        ctx,
+        issueOrder(tenantId, {
+          kind: "plan",
+          accounts: 1,
+          months: 6,
+          plan: "pro",
+        })
+      );
+      const again = await runInMutation(
+        ctx,
+        issueOrder(tenantId, {
+          kind: "plan",
+          accounts: 0,
+          months: 1,
+          plan: "max",
+        })
+      );
       return {
         again: again.number,
         first: first.number,
-        invoices,
+        invoices: await ctx.db.query("billingInvoices").collect(),
         journal: await journalOf(ctx, tenantId, "billing.invoice.issued"),
       };
     });
-    const term = termOf("school.seat.semester", "ID", NOW);
+    const period = schoolPeriod(NOW, 6);
     expect(result.again).toBe(result.first);
     expect(result.invoices).toMatchObject([
       {
         currency: "IDR",
-        // Two unpaid students at Rp60.000 for 67 of the semester's 184 days.
         lines: [
-          {
-            description: "school.seat.semester",
-            quantity: 2,
-            unitAmount: 21_848,
-          },
+          { description: "school.pro", quantity: 1, amount: 10_417_800 },
+          { description: "school.accounts", quantity: 1, amount: 92_538 },
         ],
-        total: 43_696,
+        total: 10_510_338,
         number: "NKF-2026-000001",
-        periodEnd: term.end,
-        periodStart: term.start,
+        periodStart: period.start,
+        periodEnd: period.end,
+        dueAt: NOW + 14 * DAY,
         status: "open",
       },
     ]);
@@ -174,115 +153,149 @@ describe("billing/school invoices", () => {
         change: {
           currency: "IDR",
           number: "NKF-2026-000001",
-          total: 43_696,
+          total: 10_510_338,
           type: "billing.invoice.issued",
         },
       },
     ]);
   });
 
-  it("bills a student added after an invoice on an invoice of their own, and never bills one student twice", async () => {
+  it("starts a renewal when the running plan ends, and prorates added accounts to that end", async () => {
     const t = createBillingTestConvex();
-    const result = await t.run(async (ctx) => {
-      const tenantId = await insertSchool(ctx);
-      await enrollStudents(ctx, tenantId, 2);
-      const issue = (offer: "school.seat.semester" | "school.seat.year") =>
-        runInMutation(
-          ctx,
-          Effect.flatMap(readTenant(tenantId), (tenant) =>
-            issueSchoolInvoice(systemActor, tenant, offer)
-          )
-        );
-      await issue("school.seat.semester");
-      const overlapping = await exitInMutation(
+    const year = schoolPeriod(NOW, 12);
+    const tenantId = await t.run(async (ctx) => {
+      const school = await insertSchool(ctx);
+      const plan = await runInMutation(
         ctx,
-        Effect.flatMap(readTenant(tenantId), (tenant) =>
-          issueSchoolInvoice(systemActor, tenant, "school.seat.year")
-        )
+        issueOrder(school, {
+          kind: "plan",
+          accounts: 0,
+          months: 12,
+          plan: "max",
+        })
       );
-      await enrollStudents(ctx, tenantId, 1);
-      await issue("school.seat.semester");
-      const invoices = await ctx.db.query("billingInvoices").collect();
-      return {
-        overlapping: Exit.match(overlapping, {
-          onFailure: (cause) => String(Cause.squash(cause)),
-          onSuccess: () => "issued",
-        }),
-        seats: Arr.map(invoices, ({ lines }) => lines[0]?.quantity),
-      };
+      await runInMutation(ctx, payInvoice(plan.invoiceId));
+      return school;
     });
-    expect(result.overlapping).toContain("SchoolSeatsPaid");
-    expect(result.seats).toEqual([2, 1]);
-  });
-
-  it("lets an open invoice whose term has ended hold nobody back from the next term", async () => {
-    const t = createBillingTestConvex();
-    const seats = await t.run(async (ctx) => {
-      const tenantId = await insertSchool(ctx);
-      await enrollStudents(ctx, tenantId, 2);
-      const old = await runInMutation(
+    // A transaction reads one moment, so the later orders run in transactions of their own.
+    vi.setSystemTime(year.end - 100 * DAY);
+    const result = await t.run(async (ctx) => {
+      const more = await runInMutation(
         ctx,
-        Effect.flatMap(readTenant(tenantId), (tenant) =>
-          issueSchoolInvoice(systemActor, tenant, "school.seat.semester")
-        )
+        issueOrder(tenantId, { kind: "accounts", accounts: 10 })
       );
-      await ctx.db.patch(old.invoiceId, { periodEnd: NOW - 1 });
       await runInMutation(
         ctx,
-        Effect.flatMap(readTenant(tenantId), (tenant) =>
-          issueSchoolInvoice(systemActor, tenant, "school.seat.year")
-        )
+        payInvoice(more.invoiceId, year.end - 100 * DAY)
       );
-      const invoices = await ctx.db.query("billingInvoices").collect();
-      return Arr.map(invoices, ({ lines }) => lines[0]?.quantity);
+      const renewal = await runInMutation(
+        ctx,
+        issueOrder(tenantId, {
+          kind: "plan",
+          accounts: 10,
+          months: 1,
+          plan: "max",
+        })
+      );
+      return {
+        grants: await ctx.db.query("billingGrants").collect(),
+        more: await ctx.db.get(more.invoiceId),
+        renewal: await ctx.db.get(renewal.invoiceId),
+      };
     });
-    expect(seats).toEqual([2, 2]);
+    expect(result.more).toMatchObject({
+      // 181,260 × 10 accounts × 100 of the year's 365 days.
+      lines: [
+        { description: "school.accounts", quantity: 10, amount: 496_603 },
+      ],
+      periodEnd: year.end,
+      periodStart: year.end - 100 * DAY,
+    });
+    expect(result.grants).toMatchObject([
+      { seats: 500, validFrom: year.start, validTo: year.end },
+      { seats: 10, validFrom: year.end - 100 * DAY, validTo: year.end },
+    ]);
+    expect(result.renewal).toMatchObject({
+      lines: [
+        { description: "school.max", amount: 7_990_000 },
+        { description: "school.accounts", quantity: 10, amount: 159_000 },
+      ],
+      periodStart: year.end,
+      periodEnd: schoolPeriod(year.end, 1).end,
+    });
   });
 
-  it("issues nothing to a school whose students are all paid for", async () => {
+  it("refuses more accounts while no paid plan runs, a contract included", async () => {
     const t = createBillingTestConvex();
     const failure = await t.run(async (ctx) => {
       const tenantId = await insertSchool(ctx);
+      await ctx.db.insert("billingGrants", {
+        product: "school",
+        tenantId,
+        scope: { kind: "tenant" },
+        seats: 300,
+        ninaSeats: 0,
+        source: { kind: "contract", contractId: "contract-school-test" },
+        validFrom: 0,
+        validTo: Date.UTC(2099, 0, 1),
+      });
       const exit = await exitInMutation(
         ctx,
-        Effect.flatMap(readTenant(tenantId), (tenant) =>
-          issueSchoolInvoice(systemActor, tenant, "school.seat.year")
-        )
+        issueOrder(tenantId, { kind: "accounts", accounts: 5 })
       );
       return Exit.match(exit, {
         onFailure: (cause) => String(Cause.squash(cause)),
         onSuccess: () => "issued",
       });
     });
-    expect(failure).toContain("SchoolSeatsPaid");
+    expect(failure).toContain("SchoolPlanMissing");
+  });
+
+  it("lets an open invoice whose period has ended hold no new order back", async () => {
+    const t = createBillingTestConvex();
+    const numbers = await t.run(async (ctx) => {
+      const tenantId = await insertSchool(ctx);
+      const old = await runInMutation(
+        ctx,
+        issueOrder(tenantId, {
+          kind: "plan",
+          accounts: 0,
+          months: 1,
+          plan: "pro",
+        })
+      );
+      await ctx.db.patch(old.invoiceId, { periodEnd: NOW - 1 });
+      const next = await runInMutation(
+        ctx,
+        issueOrder(tenantId, {
+          kind: "plan",
+          accounts: 0,
+          months: 3,
+          plan: "pro",
+        })
+      );
+      return [old.number, next.number];
+    });
+    expect(numbers).toEqual(["NKF-2026-000001", "NKF-2026-000002"]);
   });
 });
 
 describe("billing/school payments", () => {
-  it("pays an invoice once, grants Pro for its term and seats, and journals the payment", async () => {
+  it("pays an invoice once, grants Pro for its period and accounts, and journals the payment", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const tenantId = await insertSchool(ctx);
-      await enrollStudents(ctx, tenantId, 2);
       const issued = await runInMutation(
         ctx,
-        Effect.flatMap(readTenant(tenantId), (tenant) =>
-          issueSchoolInvoice(systemActor, tenant, "school.seat.year")
-        )
+        issueOrder(tenantId, {
+          kind: "plan",
+          accounts: 5,
+          months: 12,
+          plan: "pro",
+        })
       );
-      const payment = {
-        method: "transfer" as const,
-        paidAt: NOW,
-        providerPaymentId: "BCA-0001",
-      };
-      const outcome = await runInMutation(
-        ctx,
-        applyInvoicePaid(systemActor, issued.invoiceId, payment)
-      );
-      const repeated = await runInMutation(
-        ctx,
-        applyInvoicePaid(systemActor, issued.invoiceId, payment)
-      );
+      const outcome = await runInMutation(ctx, payInvoice(issued.invoiceId));
+      const repeated = await runInMutation(ctx, payInvoice(issued.invoiceId));
       return {
         grants: await ctx.db.query("billingGrants").collect(),
         invoice: await ctx.db.get(issued.invoiceId),
@@ -292,7 +305,7 @@ describe("billing/school payments", () => {
         repeated,
       };
     });
-    const term = termOf("school.seat.year", "ID", NOW);
+    const period = schoolPeriod(NOW, 12);
     expect(result.outcome).toBe("applied");
     expect(result.repeated).toBe("duplicate");
     expect(result.invoice?.status).toBe("paid");
@@ -300,19 +313,18 @@ describe("billing/school payments", () => {
       {
         kind: "invoice",
         method: "transfer",
-        providerPaymentId: "BCA-0001",
         rail: "xendit",
         status: "succeeded",
       },
     ]);
     expect(result.grants).toMatchObject([
       {
-        ninaSeats: 2,
+        ninaSeats: 105,
         product: "school",
-        seats: 2,
+        seats: 105,
         source: { kind: "invoice" },
-        validFrom: term.start,
-        validTo: term.end,
+        validFrom: period.start,
+        validTo: period.end,
       },
     ]);
     expect(result.journal).toMatchObject([
@@ -346,7 +358,7 @@ describe("billing/school payments", () => {
         currency: "IDR",
         lines: [
           {
-            description: "school.seat.year",
+            description: "school.pro",
             quantity: 1,
             unitAmount: 100_000,
             amount: 100_000,
