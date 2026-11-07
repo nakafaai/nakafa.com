@@ -59,18 +59,18 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
  * with no width by what they hold, so without these the heads of a table with no rows yet stand up to 50 px from where
  * its rows put them. Only the first column of text has no width and takes what the others leave, down to the room of a
  * name. Every other column holds its width as its floor too, so the heads also stand still in a table wider than its
- * screen, a later column of text holds the room of the longest `TableText` and its cell padding, and a value wider than
- * its column still widens it.
+ * screen. Every cell keeps one line and cuts what passes its column's width (`TableText`, `TableValue`), so no value
+ * widens a column. A column of known values holds the longest status badge whole, or a first value with its `+N`.
  */
 export const headWidth = cva("", {
   variants: {
     width: {
-      choice: "w-36 min-w-36",
+      choice: "w-48 min-w-48",
       days: "w-52 min-w-52",
       menu: "min-w-12",
       number: "w-28 min-w-28",
       text: "min-w-60 not-first:w-72 sm:min-w-50 sm:not-first:min-w-64",
-      values: "w-36 min-w-36",
+      values: "w-48 min-w-48",
       wide: "w-60 min-w-60",
     },
   },
