@@ -48,9 +48,9 @@ describe("tenancy/cohorts create and list", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const period = yield* sma(fixture);
-      const made = yield* cohort(fixture, period.id, "7A", 7);
+      const made = yield* cohort(fixture, period.id, "7A", 10);
       expect(made).toEqual({
-        grade: 7,
+        grade: 10,
         id: expect.any(String),
         name: "7A",
         status: "active",
@@ -73,9 +73,9 @@ describe("tenancy/cohorts create and list", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        yield* cohort(fixture, period.id, "B", 7);
-        yield* cohort(fixture, period.id, "a", 7);
-        yield* cohort(fixture, period.id, "8A", 8);
+        yield* cohort(fixture, period.id, "B", 10);
+        yield* cohort(fixture, period.id, "a", 10);
+        yield* cohort(fixture, period.id, "8A", 11);
         const listed = yield* fixture
           .as("principal")
           .query(list, { periodId: period.id, slug: nf });
@@ -89,11 +89,28 @@ describe("tenancy/cohorts create and list", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        yield* cohort(fixture, period.id, "7A", 7);
-        const taken = yield* cohort(fixture, period.id, "7a", 7).pipe(
+        yield* cohort(fixture, period.id, "7A", 10);
+        const taken = yield* cohort(fixture, period.id, "7a", 10).pipe(
           Effect.flip
         );
         expect(taken).toMatchObject({ _tag: "CohortNameTaken" });
+      })
+  );
+
+  it.effect(
+    "refuses a grade the level of the period's unit does not teach, and creates nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* sma(fixture);
+        const refused = yield* cohort(fixture, period.id, "7A", 7).pipe(
+          Effect.flip
+        );
+        const listed = yield* fixture
+          .as("admin")
+          .query(list, { periodId: period.id, slug: nf });
+        expect(refused).toMatchObject({ _tag: "CohortGradeOutsideLevel" });
+        expect(listed).toEqual([]);
       })
   );
 
@@ -107,7 +124,7 @@ describe("tenancy/cohorts create and list", () => {
             Arr.makeBy(COHORT_LIMIT, (index) => index),
             (index) =>
               writer.table("tenantCohorts").insert({
-                grade: 1,
+                grade: 10,
                 name: `Kelas ${index}`,
                 nameKey: `kelas ${index}`,
                 periodId: period.id,
@@ -119,7 +136,7 @@ describe("tenancy/cohorts create and list", () => {
           )
         )
       );
-      const refusal = yield* cohort(fixture, period.id, "Penuh", 1).pipe(
+      const refusal = yield* cohort(fixture, period.id, "Penuh", 10).pipe(
         Effect.flip
       );
       expect(refusal).toMatchObject({ _tag: "CohortLimit" });
@@ -144,13 +161,13 @@ describe("tenancy/cohorts create and list", () => {
           periodId: period.id,
           slug: nf,
         });
-        const archivedPeriod = yield* cohort(fixture, period.id, "7A", 7).pipe(
+        const archivedPeriod = yield* cohort(fixture, period.id, "7A", 10).pipe(
           Effect.flip
         );
         const byPrincipal = yield* fixture
           .as("principal")
           .mutation(create, {
-            grade: 7,
+            grade: 10,
             name: "7B",
             periodId: period.id,
             slug: nf,
@@ -297,7 +314,7 @@ describe("tenancy/cohorts get", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const made = yield* cohort(fixture, period.id, "7A", 10);
         const foreign = yield* foreignCohort(fixture);
         const byStudent = yield* fixture
           .as("student")
@@ -327,13 +344,18 @@ describe("tenancy/cohorts roles", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const made = yield* cohort(fixture, period.id, "7A", 10);
         const read = yield* fixture
           .as("principal")
           .query(list, { periodId: period.id, slug: nf });
         const refused = yield* fixture
           .as("principal")
-          .mutation(edit, { cohortId: made.id, grade: 7, name: "7B", slug: nf })
+          .mutation(edit, {
+            cohortId: made.id,
+            grade: 10,
+            name: "7B",
+            slug: nf,
+          })
           .pipe(Effect.flip);
         const byStudent = yield* fixture
           .as("student")
@@ -355,13 +377,18 @@ describe("tenancy/cohorts archive", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const made = yield* cohort(fixture, period.id, "7A", 10);
         const archived = yield* fixture
           .as("admin")
           .mutation(archive, { cohortId: made.id, slug: nf });
         const refused = yield* fixture
           .as("admin")
-          .mutation(edit, { cohortId: made.id, grade: 7, name: "7B", slug: nf })
+          .mutation(edit, {
+            cohortId: made.id,
+            grade: 10,
+            name: "7B",
+            slug: nf,
+          })
           .pipe(Effect.flip);
         const listed = yield* fixture
           .as("principal")
@@ -410,7 +437,7 @@ describe("tenancy/cohorts of an archived period", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const made = yield* cohort(fixture, period.id, "7A", 10);
         yield* fixture.as("admin").mutation(periods.open, {
           periodId: period.id,
           slug: nf,
@@ -421,7 +448,12 @@ describe("tenancy/cohorts of an archived period", () => {
         });
         const renamed = yield* fixture
           .as("admin")
-          .mutation(edit, { cohortId: made.id, grade: 7, name: "7B", slug: nf })
+          .mutation(edit, {
+            cohortId: made.id,
+            grade: 10,
+            name: "7B",
+            slug: nf,
+          })
           .pipe(Effect.flip);
         const archived = yield* fixture
           .as("admin")
@@ -443,7 +475,7 @@ describe("tenancy/cohorts owner, unit admin, and non-member", () => {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
         const owned = yield* fixture.as("owner").mutation(create, {
-          grade: 8,
+          grade: 11,
           name: "8A",
           periodId: period.id,
           slug: nf,
@@ -451,7 +483,7 @@ describe("tenancy/cohorts owner, unit admin, and non-member", () => {
         const unitAdmin = yield* fixture
           .as("unitAdmin")
           .mutation(create, {
-            grade: 8,
+            grade: 11,
             name: "8B",
             periodId: period.id,
             slug: nf,
@@ -460,13 +492,17 @@ describe("tenancy/cohorts owner, unit admin, and non-member", () => {
         const stranger = yield* fixture
           .as("stranger")
           .mutation(create, {
-            grade: 8,
+            grade: 11,
             name: "8C",
             periodId: period.id,
             slug: nf,
           })
           .pipe(Effect.flip);
-        expect(owned).toMatchObject({ grade: 8, name: "8A", status: "active" });
+        expect(owned).toMatchObject({
+          grade: 11,
+          name: "8A",
+          status: "active",
+        });
         expect([unitAdmin, stranger]).toMatchObject([
           denied("role"),
           { _tag: "NotMember", code: "NOT_MEMBER" },

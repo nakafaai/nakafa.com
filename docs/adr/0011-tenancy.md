@@ -191,9 +191,13 @@ readable and refuses writes, as does every cohort of it.
 
 A cohort has a name of one line, 1 to 40 characters, unique within its period
 without regard to case (`nameKey`, the lowercase name, is what the index
-compares), a grade from 1 to 13, and a status of `active` or `archived`. A
-period holds at most 200 cohorts, archived ones included, and every list of
-cohorts reads at most that many. The cohort list carries no member count,
+compares), a grade its unit's level teaches, and a status of `active` or
+`archived`. `tenancy/grades.ts` owns the grades of each level: SD and MI 1 to 6,
+SMP and MTs 7 to 9, and SMA, MA, and SMK 10 to 12, while PAUD, SLB, and other
+take any grade from 1 to 13. The dialogs offer only those grades, and create and
+edit refuse another as `CohortGradeOutsideLevel`; a rename keeps a grade written
+before the unit changed level. A period holds at most 200 cohorts, archived
+ones included, and every list of cohorts reads at most that many. The cohort list carries no member count,
 because a count would read every placement of the period.
 
 A placement is one Person in one cohort of one period: the `cohortMember`
@@ -284,7 +288,8 @@ a graduate with `PersonGraduated`. The place step refuses a Person who already
 graduated from the unit the same way, so a graduate never gets a second row or a
 new placement. A graduation fits only the last grade of the
 unit's level: grade 6 for SD and MI, 9 for SMP and MTs, and 12 for SMA, MA, and
-SMK (`LAST_GRADE`). The other levels have no last grade. A homeroom teacher is
+SMK (`lastGradeOf` in `tenancy/grades.ts`, the last grade of each level's
+range). The other levels have no last grade. A homeroom teacher is
 copied only to a cohort destination, because a graduating cohort has no class to
 lead.
 

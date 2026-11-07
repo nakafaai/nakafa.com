@@ -69,7 +69,7 @@ describe("tenancy/people rename and remove", () => {
           unitId: fixture.units.sma,
         });
         const seventh = yield* admin.mutation(createCohort, {
-          grade: 7,
+          grade: 10,
           name: "7A",
           periodId: period.id,
           slug: nf,
@@ -260,7 +260,7 @@ describe("tenancy/people rename and remove", () => {
           unitId: fixture.units.sma,
         });
         const springRoom = yield* admin.mutation(createCohort, {
-          grade: 7,
+          grade: 10,
           name: "7A",
           periodId: spring.id,
           slug: nf,
@@ -283,7 +283,7 @@ describe("tenancy/people rename and remove", () => {
           unitId: fixture.units.sma,
         });
         const autumnRoom = yield* admin.mutation(createCohort, {
-          grade: 8,
+          grade: 11,
           name: "8A",
           periodId: autumn.id,
           slug: nf,
@@ -306,7 +306,7 @@ describe("tenancy/people rename and remove", () => {
           unitId: fixture.units.sma,
         });
         const nextRoom = yield* admin.mutation(createCohort, {
-          grade: 8,
+          grade: 11,
           name: "8B",
           periodId: next.id,
           slug: nf,

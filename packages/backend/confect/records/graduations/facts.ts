@@ -19,8 +19,8 @@ import type {
 } from "@repo/backend/confect/records/letter";
 import { transcriptOf } from "@repo/backend/confect/records/transcript";
 import { rosterEntryOf } from "@repo/backend/confect/roster/entry";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
-import { lastGradeOf } from "@repo/backend/confect/tenancy/promotion/destination";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
 /**

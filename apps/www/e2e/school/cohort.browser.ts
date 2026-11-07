@@ -20,7 +20,7 @@ const SEEDED_COHORT = "X-1";
 /** The address of one cohort's page. */
 const COHORT_PAGE = /\/settings\/cohorts\/[^/]+$/u;
 
-/** Adds one cohort of grade 7 to the active period, from the cohorts page. */
+/** Adds one cohort of grade 10, the first grade of the acceptance school's SMA unit, from the cohorts page. */
 async function addCohort(page: Page, name: string) {
   const add = page
     .locator("header")
@@ -30,7 +30,7 @@ async function addCohort(page: Page, name: string) {
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Name").fill(name);
   await dialog.getByRole("combobox", { name: "Grade" }).click();
-  await page.getByRole("option", { exact: true, name: "7" }).click();
+  await page.getByRole("option", { exact: true, name: "10" }).click();
   await dialog.getByRole("button", { name: "Add cohort" }).click();
   await expect(page.getByRole("link", { name })).toBeVisible();
 }
@@ -195,7 +195,7 @@ test("the audit trail says, under its list, that policy values are not copied in
   await context.close();
 });
 
-test("an admin opens a period, then creates a cohort of it and edits its name and grade", async ({
+test("an admin opens a period, then creates a cohort of it in a grade its SMA unit teaches and edits its name and grade", async ({
   browser,
   baseURL,
 }) => {
@@ -219,30 +219,32 @@ test("an admin opens a period, then creates a cohort of it and edits its name an
   await waitUntilTakenOver(addCohortAction);
   await addCohortAction.click();
   const cohortDialog = page.getByRole("dialog");
-  await cohortDialog.getByLabel("Name").fill("7A");
+  await cohortDialog.getByLabel("Name").fill("X A");
+  // The acceptance school's unit is an SMA, so the grade list holds its grades and no other.
   await cohortDialog.getByRole("combobox", { name: "Grade" }).click();
-  await page.getByRole("option", { exact: true, name: "7" }).click();
+  await expect(page.getByRole("option")).toHaveText(["10", "11", "12"]);
+  await page.getByRole("option", { exact: true, name: "10" }).click();
   await cohortDialog.getByRole("button", { name: "Add cohort" }).click();
-  const cohortRow = page.getByRole("row", { name: "7A" });
+  const cohortRow = page.getByRole("row", { name: "X A" });
   await expect(cohortRow).toBeVisible();
 
   // Edit starts from the cohort's name and grade, and the row shows both changes at once.
   await cohortRow.getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Edit" }).click();
   const editDialog = page.getByRole("dialog");
-  await expect(editDialog.getByLabel("Name")).toHaveValue("7A");
+  await expect(editDialog.getByLabel("Name")).toHaveValue("X A");
   await expect(editDialog.getByRole("combobox", { name: "Grade" })).toHaveText(
-    "7"
+    "10"
   );
-  await editDialog.getByLabel("Name").fill("8 Biru");
+  await editDialog.getByLabel("Name").fill("XI Biru");
   await editDialog.getByRole("combobox", { name: "Grade" }).click();
-  await page.getByRole("option", { exact: true, name: "8" }).click();
+  await page.getByRole("option", { exact: true, name: "11" }).click();
   const editedBefore = changes.sent;
   await editDialog.getByRole("button", { name: "Save" }).click();
-  const editedRow = page.getByRole("row", { name: "8 Biru" });
+  const editedRow = page.getByRole("row", { name: "XI Biru" });
   await expect(editedRow).toBeVisible();
   await expect(
-    editedRow.getByRole("cell", { exact: true, name: "8" })
+    editedRow.getByRole("cell", { exact: true, name: "11" })
   ).toBeVisible();
 
   // The server kept both.
@@ -250,8 +252,8 @@ test("an admin opens a period, then creates a cohort of it and edits its name an
   await page.reload();
   await expect(
     page
-      .getByRole("row", { name: "8 Biru" })
-      .getByRole("cell", { exact: true, name: "8" })
+      .getByRole("row", { name: "XI Biru" })
+      .getByRole("cell", { exact: true, name: "11" })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });

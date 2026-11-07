@@ -3243,6 +3243,10 @@
       "title": "Nama kelompok ini sudah dipakai.",
       "description": "Pilih nama lain untuk periode ini."
     },
+    "school-refusal-cohort-grade": {
+      "title": "Tingkat ini tidak ada di sini.",
+      "description": "Pilih tingkat yang diajarkan jenjang sekolah ini."
+    },
     "school-refusal-cohort-limit": {
       "title": "Periode ini sudah penuh kelompok.",
       "description": "Tambahkan kelompok ke periode lain sebagai gantinya."
