@@ -30,6 +30,8 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { schemeForEntry } from "@repo/backend/confect/records/version";
+import { meterOf } from "@repo/backend/confect/spend/meter";
+import { personClaim } from "@repo/backend/confect/spend/schema";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { generateText, Output } from "ai";
 import {
@@ -124,6 +126,10 @@ const source = FunctionImpl.make(
       .get(klass.unitId)
       .pipe(Effect.orDie);
     const { kktp } = yield* schemeForEntry(draft.tenantId);
+    const asker = yield* reader
+      .table("tenantPeople")
+      .get(draft.askedBy)
+      .pipe(Effect.orDie);
     const skills = yield* reader
       .table("insightMastery")
       .index("by_personId_and_periodId_and_competency", (query) =>
@@ -132,6 +138,7 @@ const source = FunctionImpl.make(
       .take(SKILL_PAGE)
       .pipe(Effect.orDie);
     return {
+      claim: personClaim(asker, draft.tenantId),
       kktp,
       locale: unit.contentLanguage,
       skills: Arr.map(
@@ -204,6 +211,7 @@ const answerOf = (from: typeof DraftSource.Type) =>
     return output.unsure ? null : output.text;
   }).pipe(
     Effect.provide(GatewayLive),
+    Effect.provide(meterOf(from.claim)),
     Effect.orElseSucceed(() => null)
   );
 

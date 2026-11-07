@@ -19,7 +19,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { GatewayTest } from "@repo/backend/test/gateway";
+import { GatewayIsolated } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
 import type { MockLanguageModelV4 } from "ai/test";
 import { DateTime, Effect, MutableList } from "effect";
@@ -64,7 +64,7 @@ export async function runSpecialist<A, E>(
     Effect.runPromise(
       program(userId).pipe(
         Effect.provide([
-          GatewayTest,
+          GatewayIsolated,
           RegisteredFunction.actionLayer(schema, ctx),
         ])
       )

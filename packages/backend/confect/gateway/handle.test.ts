@@ -2,6 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/gateway/handle";
 import { languageModel as profile } from "@repo/backend/confect/gateway/model";
 import { Purpose, purposes } from "@repo/backend/confect/gateway/purpose";
+import {
+  decisionCost,
+  embeddingCost,
+  tokenBound,
+} from "@repo/backend/confect/spend/rates";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import {
@@ -36,8 +42,9 @@ function vector(first: number) {
   return Arr.makeBy(DIMENSIONS, (index) => (index === 0 ? first : 0));
 }
 
-/** A gateway over one recording language model, one deterministic decision model and one embedding model. */
-function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"]) {
+/** A gateway over one recording language model, one deterministic decision model, one embedding model and a recording meter. */
+function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"], refuse = false) {
+  const meter = recordingMeter(refuse);
   const model = new MockLanguageModelV4({
     doGenerate: answer,
     doStream: { stream: new ReadableStream() },
@@ -48,6 +55,7 @@ function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"]) {
       (({ values }) =>
         Promise.resolve({
           embeddings: Arr.map(values, (_, index) => vector(index)),
+          usage: { tokens: 11 },
           warnings: [],
         })),
     // The Convex AI gateway takes up to 512 texts in one request.
@@ -60,6 +68,7 @@ function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"]) {
     doDecide: () =>
       Promise.resolve({
         answers: { lasting: { type: "boolean", probability: 0.9 } },
+        usage: { inputTokens: 1000, outputTokens: 0 },
         warnings: [],
       }),
   });
@@ -73,8 +82,12 @@ function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"]) {
     decisionModel,
     embedder,
     embeddingModel,
-    gateway: make({ decisionModel, embeddingModel, languageModel }),
+    gateway: make(
+      { decisionModel, embeddingModel, languageModel },
+      meter.service
+    ),
     languageModel,
+    meter,
     model,
   };
 }
@@ -190,6 +203,70 @@ describe("Gateway handles", () => {
       })
   );
 
+  it.effect(
+    "holds a decision's text bound for each ask and settles to the tokens it read",
+    () =>
+      Effect.gen(function* () {
+        const { gateway, meter } = serve();
+        yield* gateway.decide("Kelas 12 IPA.", {
+          lasting: { type: "boolean", instructions: "Does it last?" },
+        });
+        const request = JSON.stringify({
+          questions: {
+            lasting: { type: "boolean", instructions: "Does it last?" },
+          },
+          state: "Kelas 12 IPA.",
+        });
+        expect(meter.calls()).toEqual([
+          `hold decision ${decisionCost(tokenBound(request)) * 3}`,
+          `settle ${decisionCost(1000)}`,
+        ]);
+      })
+  );
+
+  it.effect("settles a decision with no reported tokens to its hold", () =>
+    Effect.gen(function* () {
+      const { decisionModel, gateway, meter } = serve();
+      decisionModel.mockReturnValue(
+        new DecisionMockModel({
+          doDecide: () =>
+            Promise.resolve({
+              answers: { lasting: { type: "boolean", probability: 0.9 } },
+              warnings: [],
+            }),
+        })
+      );
+      yield* gateway.decide("Kelas 12 IPA.", {
+        lasting: { type: "boolean", instructions: "Does it last?" },
+      });
+      const [hold, settle] = meter.calls();
+      expect(settle?.replace("settle", "hold decision")).toBe(hold);
+    })
+  );
+
+  it.effect(
+    "fails a refused decision or embedding as an exhausted quota, before any provider call",
+    () =>
+      Effect.gen(function* () {
+        const { embedder, gateway } = serve(undefined, true);
+        const decision = yield* Effect.flip(
+          gateway.decide("Kelas 12 IPA.", {
+            lasting: { type: "boolean", instructions: "Does it last?" },
+          })
+        );
+        const embedding = yield* Effect.flip(gateway.embed(["first"]));
+        expect(decision).toMatchObject({
+          _tag: "GatewayFailure",
+          reason: "quota",
+        });
+        expect(embedding).toMatchObject({
+          _tag: "GatewayFailure",
+          reason: "quota",
+        });
+        expect(embedder.doEmbedCalls).toEqual([]);
+      })
+  );
+
   it("keeps the served model's identity for usage accounting", () => {
     const { gateway, model } = serve();
     const handle = gateway.language("background");
@@ -201,7 +278,7 @@ describe("Gateway handles", () => {
 describe("Gateway embeddings", () => {
   it.effect("embeds each text at the vector length of the index", () =>
     Effect.gen(function* () {
-      const { embedder, embeddingModel, gateway } = serve();
+      const { embedder, embeddingModel, gateway, meter } = serve();
       const embeddings = yield* gateway.embed(["first", "second"]);
       // The request asks for zero retention, as a decision does.
       expect(embeddingModel).toHaveBeenCalledExactlyOnceWith(
@@ -209,6 +286,11 @@ describe("Gateway embeddings", () => {
         { zdr: true }
       );
       expect(embeddings).toEqual([vector(0), vector(1)]);
+      // "first" and "second" bound the hold at 11 tokens, and the reply reports 11.
+      expect(meter.calls()).toEqual([
+        `hold embedding ${embeddingCost(11)}`,
+        `settle ${embeddingCost(11)}`,
+      ]);
       expect(embedder.doEmbedCalls[0]).toMatchObject({
         providerOptions: { openaiCompatible: { dimensions: DIMENSIONS } },
         values: ["first", "second"],

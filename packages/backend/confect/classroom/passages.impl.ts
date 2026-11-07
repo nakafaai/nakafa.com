@@ -21,6 +21,8 @@ import {
 import spec from "@repo/backend/confect/classroom/passages.spec";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
+import { meterOf } from "@repo/backend/confect/spend/meter";
+import { type Claim, personClaim } from "@repo/backend/confect/spend/schema";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { generateText } from "ai";
 import { Array as Arr, Duration, Effect, Layer } from "effect";
@@ -50,12 +52,21 @@ const source = FunctionImpl.make(
     ) {
       return null;
     }
-    return { contentType: item.contentType, storageId: item.storageId };
+    // The index is built for the teacher who added the file, in their school.
+    const author = yield* reader
+      .table("tenantPeople")
+      .get(item.authorId)
+      .pipe(Effect.orDie);
+    return {
+      claim: personClaim(author, item.tenantId),
+      contentType: item.contentType,
+      storageId: item.storageId,
+    };
   })
 );
 
 /** The text of a file as the model reads it, or nothing when the call fails, which leaves the file out of the index. */
-const textOf = (file: Blob, contentType: string) =>
+const textOf = (file: Blob, contentType: string, claim: Claim) =>
   Effect.gen(function* () {
     const reader = (yield* Gateway).language("import");
     const data = new Uint8Array(
@@ -78,11 +89,12 @@ const textOf = (file: Blob, contentType: string) =>
     return text;
   }).pipe(
     Effect.provide(GatewayLive),
+    Effect.provide(meterOf(claim)),
     Effect.orElseSucceed(() => "")
   );
 
 /** Embeds a file's passages, or answers none when the call fails. */
-const embedded = (passages: readonly string[]) =>
+const embedded = (passages: readonly string[], claim: Claim) =>
   Effect.gen(function* () {
     const vectors = yield* (yield* Gateway).embed(passages);
     return Arr.zipWith(passages, vectors, (text, embedding) => ({
@@ -91,6 +103,7 @@ const embedded = (passages: readonly string[]) =>
     }));
   }).pipe(
     Effect.provide(GatewayLive),
+    Effect.provide(meterOf(claim)),
     Effect.orElseSucceed(() => [])
   );
 
@@ -110,14 +123,16 @@ const build = FunctionImpl.make(
     const file = yield* (yield* StorageActionWriter)
       .get(found.storageId)
       .pipe(Effect.orDie);
-    const passages = passagesOf(yield* textOf(file, found.contentType));
+    const passages = passagesOf(
+      yield* textOf(file, found.contentType, found.claim)
+    );
     if (Arr.isReadonlyArrayEmpty(passages)) {
       return null;
     }
     const { runMutation } = yield* MutationRunner;
     yield* runMutation(classroomInternal.passages.store, {
       itemId,
-      passages: yield* embedded(passages),
+      passages: yield* embedded(passages, found.claim),
     }).pipe(Effect.orDie);
     return null;
   })

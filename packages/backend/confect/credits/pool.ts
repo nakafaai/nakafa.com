@@ -23,6 +23,22 @@ function poolPeriodOf(now: number) {
 }
 
 /**
+ * The Nina credits a school's running School grants give its shared pool each
+ * month (K46): 100 for every student they cover with Nina. A school whose
+ * grants cover none (a contract grant) has no pool.
+ */
+export const schoolCreditsOf = Effect.fn("credits.pool.creditsOf")(function* (
+  tenantId: Docs["tenants"]["_id"],
+  now: number
+) {
+  const grants = yield* runningSchoolGrants(tenantId, now);
+  return (
+    Arr.reduce(grants, 0, (total, grant) => total + grant.ninaSeats) *
+    POOL_CREDITS_PER_SEAT
+  );
+});
+
+/**
  * The school pool a member draws Nina credits from (K46): a member whose Pro
  * comes from a school's School grant, not from a grant of their own, draws from
  * that school's shared pool of 100 credits per covered student a month, up to the
@@ -48,19 +64,14 @@ export const schoolPoolOf = Effect.fn("credits.pool.of")(function* (
     .take(MAX_MEMBERSHIPS)
     .pipe(Effect.orDie);
   for (const membership of memberships) {
-    const grants = yield* runningSchoolGrants(membership.tenantId, now);
-    const ninaSeats = Arr.reduce(
-      grants,
-      0,
-      (total, grant) => total + grant.ninaSeats
-    );
-    if (ninaSeats > 0) {
+    const capacity = yield* schoolCreditsOf(membership.tenantId, now);
+    if (capacity > 0) {
       const tenant = yield* reader
         .table("tenants")
         .get(membership.tenantId)
         .pipe(Effect.orDie);
       return Option.some({
-        capacity: ninaSeats * POOL_CREDITS_PER_SEAT,
+        capacity,
         dailyCap:
           tenant.policies.ninaDailyCredits ?? DEFAULT_NINA_DAILY_CREDITS,
         tenantId: membership.tenantId,

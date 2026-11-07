@@ -9,7 +9,7 @@ import {
   MEMORY_PAUSED,
   runMemory,
 } from "@repo/backend/confect/nina/memory/tool";
-import { GatewayTest } from "@repo/backend/test/gateway";
+import { GatewayIsolated } from "@repo/backend/test/gateway";
 import type { createNinaTest } from "@repo/backend/test/nina";
 import {
   finalAnswer,
@@ -68,7 +68,7 @@ async function search(
           : turn.pipe(Effect.provide(read));
       }).pipe(
         Effect.provide([
-          GatewayTest,
+          GatewayIsolated,
           RegisteredFunction.actionLayer(schema, ctx),
         ])
       )

@@ -9,6 +9,8 @@ import { generatePresentation } from "@repo/backend/confect/nina/presentation";
 import spec from "@repo/backend/confect/nina/response.spec";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
+import { meterOf } from "@repo/backend/confect/spend/meter";
+import { turnClaim } from "@repo/backend/confect/spend/schema";
 import { Effect, Exit, Layer } from "effect";
 
 const run = FunctionImpl.make(schema, spec, "run", answerTurn);
@@ -41,6 +43,8 @@ const present = FunctionImpl.make(
     ).pipe(
       Effect.flatMap(Exit.asVoidAll),
       Effect.provide(GatewayLive),
+      // The follow-up work of a turn is held against the turn's payer.
+      Effect.provide(meterOf(turnClaim(turn))),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.logWarning("Nina presentation configuration unavailable", {
           turnId: turn._id,

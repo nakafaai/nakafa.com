@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { languageModel as profile } from "@repo/backend/confect/gateway/model";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
+import { languageCeiling } from "@repo/backend/confect/spend/rates";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
   appendNinaTurn,
@@ -103,6 +104,63 @@ describe("Nina generation through the real Agent component", () => {
         expect.objectContaining({ agent: "nina", calls: 1, cost: 0.25 }),
       ]);
     })
+  );
+
+  it.effect(
+    "holds the turn's model call against its learner's month and settles it to the reported bill",
+    () =>
+      Effect.gen(function* () {
+        provider.languageModel.mockReturnValue(
+          new MockLanguageModelV4({
+            doStream: ninaStream([
+              { type: "stream-start", warnings: [] },
+              { type: "text-start", id: "answer" },
+              { type: "text-delta", id: "answer", delta: "A metered answer." },
+              { type: "text-end", id: "answer" },
+              {
+                type: "finish",
+                finishReason: { unified: "stop", raw: "stop" },
+                usage: ninaUsage,
+                providerMetadata: { convexGateway: { cost: 0.0004 } },
+              },
+            ]),
+          })
+        );
+        const f = yield* Effect.promise(() => fixture());
+        yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+        const ledger = yield* Effect.promise(() =>
+          f.t.run(async (ctx) => ({
+            escrows: await ctx.db.query("vendorEscrows").collect(),
+            rows: await ctx.db.query("vendorSpend").collect(),
+          }))
+        );
+        expect(
+          ledger.rows.map(({ calls, held, payer, spent, vendor }) => ({
+            calls,
+            held,
+            payer,
+            spent,
+            vendor,
+          }))
+        ).toEqual([
+          {
+            calls: 1,
+            held: 0,
+            payer: { kind: "learner", userId: f.identity.userId },
+            spent: 400,
+            vendor: "anthropic",
+          },
+        ]);
+        expect(
+          ledger.escrows.map(({ held, state, work }) => ({ held, state, work }))
+        ).toEqual([
+          {
+            held: languageCeiling("chat"),
+            state: { spent: 400, status: "settled" },
+            work: "chat",
+          },
+        ]);
+      })
   );
 
   it.effect("keeps an answer when the provider omits usage counters", () =>

@@ -7,7 +7,7 @@ import type { CalendarEvent } from "@repo/backend/confect/connectors/schema";
 import { calendarCapability } from "@repo/backend/confect/nina/calendar/capability";
 import { runCalendar } from "@repo/backend/confect/nina/calendar/tool";
 import type { Held } from "@repo/backend/confect/nina/capability/held";
-import { GatewayTest } from "@repo/backend/test/gateway";
+import { GatewayIsolated } from "@repo/backend/test/gateway";
 import type { createNinaTest } from "@repo/backend/test/nina";
 import {
   finalAnswer,
@@ -78,7 +78,7 @@ async function read(
           : turn.pipe(Effect.provide(reader));
       }).pipe(
         Effect.provide([
-          GatewayTest,
+          GatewayIsolated,
           RegisteredFunction.actionLayer(schema, ctx),
         ])
       )
