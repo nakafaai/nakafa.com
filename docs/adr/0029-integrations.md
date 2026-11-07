@@ -162,7 +162,7 @@ for any OAuth endpoint that lives on the school host. The forward must:
   token and never a session cookie;
 - never reach the origin of another cell;
 - add no edge secret. The Convex origin is public, because its URL is in
-  `NEXT_PUBLIC_CONVEX_SITE_URL`, so the route verifies the token itself and
+  `VITE_CONVEX_SITE_URL`, so the route verifies the token itself and
   trusts nothing the forward adds. It derives the resource a token must name
   from the tenant of the token, and not from a header.
 

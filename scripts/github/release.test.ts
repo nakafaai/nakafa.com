@@ -39,7 +39,10 @@ describe("GitHub Action releases", () => {
       const repositories = Arr.map(reviews, ({ repository }) => repository);
 
       expect(Arr.dedupe(repositories).length).toBe(repositories.length);
-      expect(repositories).not.toContain("actions/cache");
+      // The deploy job's cache restore and save share the one actions/cache review.
+      expect(
+        Arr.filter(repositories, (repository) => repository === "actions/cache")
+      ).toHaveLength(1);
     })
   );
 
