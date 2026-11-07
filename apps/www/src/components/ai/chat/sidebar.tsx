@@ -95,10 +95,9 @@ export function AiChatSidebar({
               activeOptions={EXACT_ACTIVE_OPTIONS}
               className={cn(
                 buttonVariants({
-                  className:
-                    "w-full border border-sidebar-border shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50",
+                  className: "w-full",
                   size: "sm",
-                  variant: "secondary",
+                  variant: "outline",
                 })
               )}
               title={t("new-chat")}
