@@ -228,6 +228,7 @@ describe("Nakafa OpenAPI document", () => {
   it("documents the real edge and application rate-limit contracts", () => {
     const operations = readOperations();
     const metered = HashSet.fromIterable([
+      "getNakafaApiIndex",
       "getNakafaContent",
       "getNakafaQuranReference",
       "searchNakafaContent",
@@ -240,7 +241,11 @@ describe("Nakafa OpenAPI document", () => {
       expect(operation.responses).toHaveProperty("403");
       if (HashSet.has(metered, operation.operationId)) {
         expect(operation.responses["429"]).toMatchObject({
-          headers: { "Retry-After": { schema: { type: "string" } } },
+          headers: {
+            RateLimit: { schema: { type: "string" } },
+            "RateLimit-Policy": { schema: { type: "string" } },
+            "Retry-After": { schema: { type: "string" } },
+          },
         });
       } else {
         expect(operation.responses).not.toHaveProperty("429");

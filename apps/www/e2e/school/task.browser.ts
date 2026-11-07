@@ -17,6 +17,18 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The last quarter hour of a day, as the time list names it in a 12 or a 24 hour locale. */
 const LATE_EVENING = /^(?:11:45\sPM|23:45)$/u;
 
+/** The narrowest screen whose task pane stands beside the list rather than in a sheet. */
+const WIDE = 1280;
+
+/** The open task: the pane at the screen's right on a wide screen, the sheet from the bottom on a narrow one. */
+const paneOf = (page: Page, width: number) =>
+  width >= WIDE
+    ? page.getByRole("complementary", { name: "Task" })
+    : page.getByRole("dialog", { name: "Latihan Gerak Lurus" });
+
+/** The address of the class's tasks, which a press on a task keeps. */
+const TASKS_PATH = /\/classes\/fisika-x-1\/tasks$/u;
+
 /** The address of the task the test publishes. */
 const TASK_PATH = /\/classes\/fisika-x-1\/tasks\/latihan-gerak-lurus$/u;
 
@@ -47,7 +59,7 @@ for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`a subject teacher publishes a task, finds it in the class's tasks, opens its page, and edits it from the header, at ${viewport.width} px`, async ({
+  test(`a subject teacher publishes a task, opens it in the pane beside the list, edits it from the pane, and deletes it, at ${viewport.width} px`, async ({
     browser,
     baseURL,
   }) => {
@@ -67,27 +79,22 @@ for (const viewport of [
 
     await publishTask(page);
 
-    const link = page.getByRole("link", { name: "Latihan Gerak Lurus" });
-    await expect(link).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    const open = page.getByRole("button", { name: "Latihan Gerak Lurus" });
+    await expect(open).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await expect(page.getByText("0 handed in")).toBeVisible();
-    await link.click();
-    await page.waitForURL(TASK_PATH);
-    await expect(
-      page.getByRole("heading", { name: "Latihan Gerak Lurus", level: 2 })
-    ).toBeVisible();
-    await expect(page.getByText("Kerjakan soal 1 sampai 10.")).toBeVisible();
-    await expect(page.getByText("No work yet")).toBeVisible();
-    await expect(
-      page.getByRole("navigation", { name: "breadcrumb" })
-    ).toContainText("Latihan Gerak Lurus");
+    await open.click();
+    // A wide screen keeps the task in the pane at the screen's right, and a phone in a sheet from the bottom.
+    const pane = paneOf(page, viewport.width);
+    await expect(pane.getByText("Kerjakan soal 1 sampai 10.")).toBeVisible();
+    await expect(pane.getByText("No work yet")).toBeVisible();
+    await expect(page).toHaveURL(TASKS_PATH);
+    await page.screenshot({
+      path: test.info().outputPath(`task-pane-${viewport.width}.png`),
+    });
 
-    // Edit task in the header opens the task as it stands, saves only a change, and keeps the task's address.
-    const edit = page
-      .locator("header")
-      .getByRole("button", { name: "Edit task" });
-    await waitUntilTakenOver(edit);
-    await edit.click();
-    const dialog = page.getByRole("dialog");
+    // Edit task in the pane's footer opens the task as it stands, saves only a change, and keeps the task's address.
+    await pane.getByRole("button", { name: "Edit task" }).click();
+    const dialog = page.getByRole("dialog", { name: "Edit task" });
     await expect(dialog.getByRole("textbox", { name: "Title" })).toHaveValue(
       "Latihan Gerak Lurus"
     );
@@ -98,14 +105,32 @@ for (const viewport of [
     const editedBefore = changes.sent;
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toBeHidden();
-    await expect(
-      page.getByRole("main").getByText("Kerjakan soal 1 sampai 5.")
-    ).toBeVisible();
-    // The server keeps the edit once it answered: a reload drops a change still on its way.
+    await expect(pane.getByText("Kerjakan soal 1 sampai 5.")).toBeVisible();
+    // The server keeps the edit once it answered, and the task's own address opens the list with it in the pane.
     await saved(changes, editedBefore);
-    await page.reload();
+    await page.goto(address("/classes/fisika-x-1/tasks/latihan-gerak-lurus"));
     await page.waitForURL(TASK_PATH);
-    await expect(page.getByText("Kerjakan soal 1 sampai 5.")).toBeVisible({
+    await expect(
+      paneOf(page, viewport.width).getByText("Kerjakan soal 1 sampai 5.")
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await expect(
+      page.getByRole("navigation", { name: "breadcrumb" })
+    ).toContainText("Latihan Gerak Lurus");
+    if (viewport.width < WIDE) {
+      await page.keyboard.press("Escape");
+      await expect(paneOf(page, viewport.width)).toBeHidden();
+    }
+
+    // Delete asks first, takes the row away at once, and the class is left with no task.
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Latihan Gerak Lurus" })
+      .getByRole("button", { name: "More actions" })
+      .click();
+    await page.getByRole("menuitem", { name: "Delete task" }).click();
+    const confirm = page.getByRole("dialog", { name: "Delete this task" });
+    await confirm.getByRole("button", { name: "Delete task" }).click();
+    await expect(page.getByText("No task yet")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
     await context.close();
@@ -183,7 +208,7 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
   await part.getByRole("checkbox", { name: "Acceptance Learner" }).click();
   await publish.click();
   await expect(
-    tasks.getByRole("link", { exact: true, name: "Remedial" })
+    tasks.getByRole("button", { exact: true, name: "Remedial" })
   ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
@@ -195,21 +220,23 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
   const taskAddress = address("/classes/fisika-x-1/tasks/latihan-gerak-lurus");
   const page = await learner.newPage();
   await page.goto(address("/classes/fisika-x-1/tasks"));
-  await expect(page.getByRole("link", { name: "Remedial" })).toBeVisible({
+  await expect(page.getByRole("button", { name: "Remedial" })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await page.goto(taskAddress);
-  const field = page.getByRole("textbox", { name: "Your work" });
+  // The task's address opens the list with the task in the pane, and Hand in stands in the pane's footer.
+  const pane = page.getByRole("complementary", { name: "Task" });
+  const field = pane.getByRole("textbox", { name: "Your work" });
   await waitUntilTakenOver(field);
-  const form = page.locator("form").filter({ has: field });
-  const handIn = form.getByRole("button", { name: "Hand in" });
+  const footer = pane.locator("footer");
+  const handIn = footer.getByRole("button", { name: "Hand in" });
   await expect(handIn).toBeDisabled();
-  await watchLabels(form);
+  await watchLabels(footer);
 
   await field.fill("1. B, 2. D, 3. A");
   await handIn.click();
   // The work shows as handed in at once and stays in the field, and Hand in waits for new work.
-  await expect(page.getByText("Handed in", { exact: true })).toBeVisible();
+  await expect(pane.getByText("Handed in", { exact: true })).toBeVisible();
   await expect(field).toHaveValue("1. B, 2. D, 3. A");
   await expect(handIn).toBeDisabled();
 

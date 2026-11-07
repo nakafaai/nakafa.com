@@ -2,7 +2,10 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
-import { FolderLimit } from "@repo/backend/confect/classroom/errors";
+import {
+  FolderCycle,
+  FolderLimit,
+} from "@repo/backend/confect/classroom/errors";
 import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import {
   FolderName,
@@ -16,9 +19,16 @@ import { Schema } from "effect";
 /** The class and school that every function of the folders names. */
 const classArgs = { classId: Id("classes"), slug: TenantSlug };
 
+/** The folder a call names. */
+const folderArg = { folderId: Id("classroomFolders") };
+
+/** The folder a folder sits in, or none for the top of the library. */
+const parentArg = { parentId: Schema.NullOr(Id("classroomFolders")) };
+
 /**
- * The folders of a class library (ADR 0025): one level, oldest first. Whoever reads the library reads them, and its
- * teachers add, rename and remove them. A removed folder leaves its items in the library, at its top.
+ * The folders of a class library (ADR 0025), at any depth, oldest first, the trash included so the reader builds
+ * the whole tree, its breadcrumbs, and its trash at once. Whoever reads the library reads them; whoever may manage
+ * it adds, renames, moves, trashes, restores, and deletes them forever with everything inside them.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -34,7 +44,12 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "add",
-      args: () => ({ ...classArgs, clientKey: ClientKey, name: FolderName }),
+      args: () => ({
+        ...classArgs,
+        ...parentArg,
+        clientKey: ClientKey,
+        name: FolderName,
+      }),
       returns: () => FolderView,
       error: () => Schema.Union([AccessDenied, FolderLimit]),
     }).middleware(ClassAccess, { action: "library.manage", arg: "classId" })
@@ -42,19 +57,39 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "rename",
-      args: () => ({
-        ...classArgs,
-        folderId: Id("classroomFolders"),
-        name: FolderName,
-      }),
+      args: () => ({ ...classArgs, ...folderArg, name: FolderName }),
       returns: () => Schema.Null,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "library.manage", arg: "classId" })
   )
   .addFunction(
     FunctionSpec.publicMutation({
-      name: "remove",
-      args: () => ({ ...classArgs, folderId: Id("classroomFolders") }),
+      name: "move",
+      args: () => ({ ...classArgs, ...folderArg, ...parentArg }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, FolderCycle]),
+    }).middleware(ClassAccess, { action: "library.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "trash",
+      args: () => ({ ...classArgs, ...folderArg }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "library.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({ ...classArgs, ...folderArg }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "library.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "purge",
+      args: () => ({ ...classArgs, ...folderArg }),
       returns: () => Schema.Null,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "library.manage", arg: "classId" })

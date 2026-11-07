@@ -7,14 +7,15 @@ import {
 import { Effect, Number as Num, Option, Schema, Struct } from "effect";
 
 /**
- * The most bytes the forum of one school holds, counted from each file, the guard
- * that keeps one school from spending the storage of all. A compressed photo is
+ * The most bytes the files of one school hold, its forum attachments and its class
+ * libraries counted together, the guard that keeps one school from spending the
+ * storage of all. A compressed photo is
  * about 300 KB, so this holds about 35,000 of them, more than a school of 500 sends
  * in two years. The plan may set another number later (ADR 0028).
  */
 export const SCHOOL_BYTE_LIMIT = 10 * 1024 * 1024 * 1024;
 
-/** How many bytes the forum of one school holds. */
+/** How many bytes the forum attachments and the class libraries of one school hold. */
 export const fileUseValidator = Schema.Struct({
   bytes: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
   tenantId: Id("tenants"),

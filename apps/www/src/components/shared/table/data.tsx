@@ -283,8 +283,8 @@ function DataTableValue({
 }
 
 /**
- * A column's head, in its place in the line: the button that opens what filters the column, or nothing over the row's
- * menu, the one column with nothing to filter by.
+ * A column's head, in its place in the line: the button that opens what filters the column, or, over the row's menu, the
+ * one column with nothing to filter by, a name that only a screen reader reads, so every head of the table is named.
  */
 function DataTableHead<TData extends RowData>({
   children,
@@ -295,12 +295,17 @@ function DataTableHead<TData extends RowData>({
   header: Header<typeof dataTableFeatures, TData>;
   index: number;
 }) {
+  const common = useTranslations("Common");
   const column = header.column;
   const { align, filter, title = "", wide } = column.columnDef.meta ?? {};
   const place = placeOf(index, align);
 
   if (header.isPlaceholder || filter === undefined) {
-    return <ColumnHead place={place} width="menu" />;
+    return (
+      <ColumnHead place={place} width="menu">
+        <span className="sr-only">{common("menu-actions")}</span>
+      </ColumnHead>
+    );
   }
   return (
     <ColumnHead

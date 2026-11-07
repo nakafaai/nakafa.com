@@ -57,6 +57,8 @@ export const TaskAddress = Schema.String.check(
  * have handed work in, and the scheduled runs of its deadline's notices. `category`
  * files it among the class's tasks. `targets` names the students it goes to when it
  * goes to part of the class, and without it the whole class is its target.
+ * `sittingId` names the run of the exam document a task is built from, when the
+ * teacher built it in the exam editor, and students do it in the exam player.
  */
 export const taskValidator = Schema.Struct({
   authorId: Id("tenantPeople"),
@@ -70,6 +72,7 @@ export const taskValidator = Schema.Struct({
   latePolicy: LatePolicy,
   points: TaskPoints,
   sealedText: Sealed,
+  sittingId: Schema.optionalKey(Id("examSittings")),
   slug: TaskAddress,
   targets: Schema.optionalKey(TaskTargets),
   tenantId: Id("tenants"),
@@ -100,6 +103,13 @@ export const submissionValidator = Schema.Struct({
 export const TaskView = Schema.Struct({
   category: Schema.NullOr(TaskCategory),
   deadline: Schema.Finite,
+  exam: Schema.NullOr(
+    Schema.Struct({
+      examId: Id("exams"),
+      sittingId: Id("examSittings"),
+      token: Schema.String,
+    })
+  ),
   handedIn: Schema.Int,
   id: Id("classroomTasks"),
   latePolicy: LatePolicy,

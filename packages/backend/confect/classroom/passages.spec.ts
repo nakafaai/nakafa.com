@@ -18,7 +18,7 @@ export default GroupSpec.make()
           Schema.Struct({
             claim: Claim,
             contentType: Schema.String,
-            storageId: Id("_storage"),
+            objectKey: Schema.String,
           })
         ),
     })

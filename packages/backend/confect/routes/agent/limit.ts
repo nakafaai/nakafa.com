@@ -8,12 +8,12 @@ import { Effect } from "effect";
 
 const MAX_CLIENT_ADDRESS_LENGTH = 256;
 
-/** Consumes one per-client public read token through the Convex component. */
+/** Consumes one per-client public read token through the Convex component, and answers what is left. */
 export const enforceAgentReadLimit = Effect.fn("agent.enforceReadLimit")(
   function* (request: Request) {
     const { runMutation } = yield* MutationRunner;
     const key = yield* readClientKey(request);
-    yield* runMutation(routesInternal.agent.quota.consume, { key }).pipe(
+    return yield* runMutation(routesInternal.agent.quota.consume, { key }).pipe(
       Effect.catchTag("SchemaError", (error) =>
         Effect.fail(
           new NakafaAgentDataReadError({

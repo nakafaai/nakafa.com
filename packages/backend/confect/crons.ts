@@ -138,6 +138,14 @@ export default CronJobs.make()
   )
   .add(
     CronJob.make(
+      "free unregistered library uploads and empty the trash",
+      Duration.hours(24),
+      classroomInternal.library.sweep,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
       "reclaim unused Nina files",
       Duration.hours(24),
       storageInternal.sweep,

@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Exit, Option, Result, Schema } from "effect";
-import { FetchHttpClient } from "effect/http";
 import {
   addLibraryLink,
   pickFromDrive,
@@ -12,9 +10,14 @@ import {
 } from "@/components/tenant/classes/library/add";
 import { pickDriveFile } from "@/components/tenant/classes/library/drive";
 import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
+import { putLibraryFile } from "@/components/tenant/classes/library/send";
 
 vi.mock("@/components/tenant/classes/library/drive", () => ({
   pickDriveFile: vi.fn(),
+}));
+
+vi.mock("@/components/tenant/classes/library/send", () => ({
+  putLibraryFile: vi.fn(),
 }));
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
@@ -38,15 +41,20 @@ const stored: LibraryItem = {
   folderId: null,
   id: Schema.decodeUnknownSync(Id("classroomLibrary"))("item-1"),
   kind: "link",
+  starred: false,
   title: args.title,
+  trashedAt: null,
 };
 
-/** The address that `classroom.library.uploadUrl` answers with. */
-const requestUrl = () =>
-  Promise.resolve(Result.succeed(new URL("https://upload.test/file")));
+const uploadId = Schema.decodeUnknownSync(Id("classroomLibraryUploads"))(
+  "upload-1"
+);
 
-/** The fetch that Effect's client calls in place of the global one. */
-const fetcher = vi.fn<typeof fetch>();
+/** What `classroom.library.reserve` answers with: the presigned address and the reservation. */
+const reserve = () =>
+  Promise.resolve(
+    Result.succeed({ address: "https://r2.test/files/a", uploadId })
+  );
 
 describe("addLibraryLink", () => {
   it.effect(
@@ -97,34 +105,39 @@ describe("addLibraryLink", () => {
 
 describe("uploadLibraryFile", () => {
   it.effect(
-    "sends the file to its address, then registers the stored file, and fails with the server's refusal",
+    "reserves the file's bytes, sends it to the presigned address with its progress, registers it, and fails with the server's refusal",
     () =>
       Effect.gen(function* () {
-        fetcher.mockImplementation(() =>
-          Promise.resolve(
-            new Response(encodeJsonText({ storageId: "store-1" }), {
-              headers: { "content-type": "application/json" },
-              status: 200,
-            })
-          )
+        vi.mocked(putLibraryFile).mockImplementation(
+          (_address, _file, progress) => Effect.sync(() => progress(1))
         );
         const file = new File(["%PDF-1.7"], "modul.pdf", {
           type: "application/pdf",
         });
-        const register = vi.fn((_storageId: unknown) =>
+        const register = vi.fn((_uploadId: unknown) =>
           Promise.resolve(Result.succeed({ id: stored.id }))
         );
-        const kept = yield* uploadLibraryFile(file, requestUrl, register).pipe(
-          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        const progress = vi.fn();
+        const kept = yield* uploadLibraryFile(
+          file,
+          reserve,
+          register,
+          progress
         );
         expect(kept).toEqual({ id: stored.id });
-        expect(register).toHaveBeenCalledWith("store-1");
-        const refusal = yield* uploadLibraryFile(file, requestUrl, () =>
-          Promise.resolve(Result.fail({ _tag: "FileTypeRefused" }))
-        ).pipe(
-          Effect.provideService(FetchHttpClient.Fetch, fetcher),
-          Effect.flip
+        expect(putLibraryFile).toHaveBeenCalledWith(
+          "https://r2.test/files/a",
+          file,
+          progress
         );
+        expect(progress).toHaveBeenCalledWith(1);
+        expect(register).toHaveBeenCalledWith(uploadId);
+        const refusal = yield* uploadLibraryFile(
+          file,
+          reserve,
+          () => Promise.resolve(Result.fail({ _tag: "FileTypeRefused" })),
+          progress
+        ).pipe(Effect.flip);
         expect(refusal).toEqual({ _tag: "FileTypeRefused" });
       })
   );
@@ -145,7 +158,12 @@ describe("sendLibraryFile", () => {
           Effect.succeed(clientKey)
         );
         expect(uploads.start).toHaveBeenCalledWith(
-          expect.objectContaining({ ...shown, clientKey: kept, sent: false })
+          expect.objectContaining({
+            ...shown,
+            clientKey: kept,
+            progress: 0,
+            sent: false,
+          })
         );
         expect(uploads.settle).toHaveBeenCalledWith(kept);
         const refused = yield* sendLibraryFile(uploads, shown, () =>

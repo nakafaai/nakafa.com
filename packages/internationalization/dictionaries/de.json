@@ -1239,7 +1239,7 @@
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
     "logins-search": "Schüler suchen",
     "members-empty": "Noch niemand ist der Schule beigetreten.",
-    "members-empty-description": "Lade Lehrkräfte oder Administratoren ein. Schüler kommen über Schülerkonten dazu.",
+    "members-empty-description": "Lade Lehrkräfte oder Administratoren ein, Schüler kommen über Schülerkonten dazu.",
     "members-search": "Name suchen",
     "member-name": "Name",
     "member-status": "Status",
@@ -1587,9 +1587,6 @@
     "library-kind-link": "Link",
     "library-kind-pdf": "PDF",
     "library-kind-image": "Bild",
-    "library-remove": "Entfernen",
-    "library-remove-title": "Diesen Eintrag entfernen",
-    "library-remove-description": "Er verschwindet für alle aus der Bibliothek und lässt sich nicht zurückholen.",
     "tabs-tasks": "Aufgaben",
     "tabs-people": "Personen",
     "people-search": "Personen suchen",
@@ -1705,11 +1702,40 @@
     "library-folder-create": "Erstellen",
     "library-folder-rename": "Umbenennen",
     "library-folder-rename-description": "Die Klasse sieht den neuen Namen sofort.",
-    "library-folder-remove": "Löschen",
-    "library-folder-remove-title": "Diesen Ordner löschen",
-    "library-folder-remove-description": "Seine Dateien bleiben in der Bibliothek.",
     "library-folder-empty-description": "Die Dateien und Links dieses Ordners erscheinen hier, die neuesten zuerst.",
-    "library-kind-folder": "Ordner"
+    "library-kind-folder": "Ordner",
+    "task-detail": "Aufgabe",
+    "task-submissions": "Abgegeben",
+    "task-read": "Arbeit lesen",
+    "task-remove": "Aufgabe löschen",
+    "task-remove-title": "Diese Aufgabe löschen",
+    "task-remove-description": "Die abgegebenen Arbeiten werden mit gelöscht, und das lässt sich nicht rückgängig machen.",
+    "library-download": "Herunterladen",
+    "library-move": "Verschieben",
+    "library-move-title": "Verschieben nach",
+    "library-move-description": "Wähle den Zielordner.",
+    "library-top": "Bibliothek",
+    "library-star": "Markieren",
+    "library-unstar": "Markierung entfernen",
+    "library-trash": "In den Papierkorb",
+    "library-uploading": "{percent} %",
+    "library-view-files": "Dateien",
+    "library-view-starred": "Markiert",
+    "library-view-trash": "Papierkorb",
+    "library-trashed": "Gelöscht",
+    "library-trash-empty": "Der Papierkorb ist leer",
+    "library-trash-empty-description": "Gelöschte Dateien und Ordner bleiben hier 30 Tage, dann werden sie entfernt.",
+    "library-purge": "Endgültig löschen",
+    "library-purge-title": "Endgültig löschen",
+    "library-purge-description": "Das gibt Speicher der Schule frei und lässt sich nicht rückgängig machen.",
+    "library-restore": "Wiederherstellen",
+    "library-path": "Ordnerpfad",
+    "task-exam": "Fragen",
+    "task-exam-none": "Eine schriftliche Antwort",
+    "task-exam-description": "Wähle eine Prüfung aus dem Prüfungseditor, und die Klasse bearbeitet sie im Prüfungsplayer.",
+    "task-start": "Starten",
+    "task-questions": "Fragen",
+    "task-results": "Ergebnisse"
   },
   "SchoolGrades": {
     "email": "E-Mail",
@@ -3213,7 +3239,7 @@
       "description": "Verschiebe zuerst die Lernenden, oder archiviere die Klasse."
     },
     "school-refusal-cohort-in-use-homeroom": {
-      "title": "Diese Klasse hat noch eine Klassenleitung.",
+      "title": "Die Klasse hat noch eine Leitung.",
       "description": "Entferne zuerst die Lehrkraft, oder archiviere die Klasse."
     },
     "school-refusal-cohort-in-use-classes": {
@@ -3510,6 +3536,10 @@
     "school-refusal-channel-fixed": {
       "title": "Der allgemeine Kanal heißt immer so.",
       "description": "Benenne stattdessen einen Themenkanal um."
+    },
+    "library-storage-full": {
+      "title": "Die Datei wurde nicht hinzugefügt.",
+      "description": "Der Speicher der Schule ist voll. Lösche Dateien endgültig, um Platz zu schaffen."
     }
   },
   "Ai": {

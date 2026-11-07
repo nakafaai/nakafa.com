@@ -7,12 +7,12 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { subjectTeacherOf } from "@repo/backend/confect/classroom/authority";
 import { MentionRefused } from "@repo/backend/confect/classroom/forum/errors";
 import {
   type Mention,
   mentionedPeople,
 } from "@repo/backend/confect/classroom/forum/mention";
+import { managesForum } from "@repo/backend/confect/classroom/forum/policy";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { queueMail } from "@repo/backend/confect/notifications/mail";
@@ -21,8 +21,8 @@ import { Array as Arr, Duration, Effect, Option } from "effect";
 
 /**
  * The mentions of a message, checked before it is written: each Person once, each
- * one an active Person who writes in the class now, everyone only from a subject
- * teacher of the class, and Nina only in a school that turned her on (ADR 0025).
+ * one an active Person who writes in the class now, everyone only from whoever
+ * manages the class's forum, and Nina only in a school that turned her on (ADR 0025).
  * Any other mention refuses the message.
  * It answers the mentions as they are stored and the Persons they name.
  */
@@ -34,7 +34,7 @@ export const checkMentions = Effect.fn("classroom.forum.notice.check")(
       mentions,
       (mention) => mention._tag === "everyone"
     );
-    if (everyone && !(yield* subjectTeacherOf(row, principal))) {
+    if (everyone && !(yield* managesForum(row))) {
       return yield* new MentionRefused();
     }
     const nina = Arr.some(mentions, (mention) => mention._tag === "nina");

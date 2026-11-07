@@ -10,7 +10,11 @@ import {
   period,
 } from "@repo/backend/test/classroom";
 import { schoolViews } from "@repo/backend/test/inbox";
-import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
+import {
+  journal,
+  scheduledJobs,
+  TENANCY_NOW,
+} from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 
@@ -36,6 +40,7 @@ describe("classroom/tasks", () => {
         const teacher = fixture.as("teacher");
         const publish = (clientKey: string, title: string, deadline: number) =>
           teacher.mutation(tasks.publish, {
+            examId: null,
             targets: null,
             classId: forum.classId,
             clientKey,
@@ -121,6 +126,7 @@ describe("classroom/tasks", () => {
         const teacher = fixture.as("teacher");
         const student = fixture.as("student");
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: forum.classId,
           clientKey: "open-task",
@@ -133,6 +139,7 @@ describe("classroom/tasks", () => {
           title: "Ringkasan",
         });
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: forum.classId,
           clientKey: "closed-task",
@@ -268,6 +275,7 @@ describe("classroom/tasks", () => {
         const other = yield* forumClass(fixture, term.id, "X-4", false);
         const teacher = fixture.as("teacher");
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: other.classId,
           clientKey: "other-task",
@@ -283,6 +291,7 @@ describe("classroom/tasks", () => {
           fixture
             .as("student")
             .mutation(tasks.publish, {
+              examId: null,
               targets: null,
               classId: forum.classId,
               clientKey: "student-task",
@@ -318,6 +327,7 @@ describe("classroom/tasks", () => {
         ]);
         // Work of one class is refused under another class the teacher also teaches.
         yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           classId: forum.classId,
           clientKey: "own-task",
@@ -352,6 +362,81 @@ describe("classroom/tasks", () => {
           })
           .pipe(Effect.flip);
         expect(foreign).toMatchObject(denied("resource"));
+      })
+  );
+
+  it.effect(
+    "lets the school's Owner publish a task and delete it with its work and its pending notices, and refuses a student",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-5");
+        const args = { classId: forum.classId, slug: nf };
+        const owner = fixture.as("owner");
+        const task = yield* owner.mutation(tasks.publish, {
+          examId: null,
+          ...args,
+          category: null,
+          clientKey: "owner-task",
+          deadline: TENANCY_NOW + DAY,
+          latePolicy: "accept",
+          points: 10,
+          targets: null,
+          text: "Baca bab dua.",
+          title: "Bacaan",
+        });
+        yield* fixture.as("student").mutation(tasks.submit, {
+          ...args,
+          task: task.slug,
+          text: "Sudah dibaca.",
+        });
+        const refused = yield* fixture
+          .as("student")
+          .mutation(tasks.remove, { ...args, task: task.slug })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("role"));
+        const stored = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("classroomTasks").get(task.id)
+          )
+        );
+        const notices = stored.jobs ?? [];
+        expect(notices.length).toBeGreaterThan(0);
+        expect(
+          yield* owner.mutation(tasks.remove, { ...args, task: task.slug })
+        ).toBeNull();
+        const left = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            Effect.all([
+              reader
+                .table("classroomTasks")
+                .index("by_classId_and_slug", (query) =>
+                  query.eq("classId", forum.classId).eq("slug", task.slug)
+                )
+                .collect(),
+              reader
+                .table("classroomSubmissions")
+                .index("by_taskId_and_personId", (query) =>
+                  query.eq("taskId", task.id)
+                )
+                .collect(),
+            ])
+          )
+        );
+        expect(left[0]).toEqual([]);
+        expect(left[1]).toEqual([]);
+        const jobs = yield* fixture.run(scheduledJobs);
+        expect(
+          Arr.map(
+            Arr.filter(jobs, (job) => Arr.contains(notices, job._id)),
+            (job) => job.state.kind
+          )
+        ).toEqual(Arr.map(notices, () => "canceled"));
+        const missing = yield* owner
+          .mutation(tasks.remove, { ...args, task: task.slug })
+          .pipe(Effect.flip);
+        expect(missing).toMatchObject(denied("resource"));
       })
   );
 });

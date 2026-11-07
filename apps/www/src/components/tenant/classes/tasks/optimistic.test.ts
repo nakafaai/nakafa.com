@@ -6,6 +6,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import {
   type ClassTask,
   editUpdate,
+  removeUpdate,
   scoreUpdate,
   submitUpdate,
   type TaskWork,
@@ -21,6 +22,7 @@ const personId = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 const task = (address: string, mine: ClassTask["mine"]): ClassTask => ({
   category: null,
   deadline: 100,
+  exam: null,
   handedIn: 3,
   id: taskOf(address),
   latePolicy: "accept",
@@ -221,6 +223,36 @@ describe("task optimistic updates", () => {
         classroom.tasks.submissions,
         { ...pageArgs, task: "ringkasan" },
         Option.some({ isDone: true, page: [work("a", 45), work("b", 3)] }),
+      ],
+    ]);
+  });
+
+  it("takes a deleted task out of every list that holds it, and leaves the others", () => {
+    const store = storeByRef([
+      [
+        classroom.tasks.list,
+        [
+          {
+            args: pageArgs,
+            value: Option.some({
+              isDone: true,
+              page: [task("ringkasan", null), task("latihan", null)],
+            }),
+          },
+          {
+            args: { ...pageArgs, standing: "open" },
+            value: Option.some({ isDone: true, page: [task("latihan", null)] }),
+          },
+          { args: { ...pageArgs, standing: "late" }, value: Option.none() },
+        ],
+      ],
+    ]);
+    removeUpdate(store.localStore, { classId, slug, task: "ringkasan" });
+    expect(store.setQuery.mock.calls).toEqual([
+      [
+        classroom.tasks.list,
+        pageArgs,
+        Option.some({ isDone: true, page: [task("latihan", null)] }),
       ],
     ]);
   });

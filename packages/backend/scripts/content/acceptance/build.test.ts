@@ -114,7 +114,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
       mock.mockReturnValue(Effect.void);
     }
     mocks.backend.mockImplementation((_runtime, program) => program);
-    mocks.sink.mockImplementation((_origin, program) => program);
+    mocks.sink.mockImplementation((_origin, _directory, program) => program);
   });
   afterEach(() => vi.resetAllMocks());
 
@@ -212,7 +212,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
         mocks.backend.mockImplementation((_runtime, program) =>
           record("backend ready").pipe(Effect.andThen(program))
         );
-        mocks.sink.mockImplementation((_origin, program) =>
+        mocks.sink.mockImplementation((_origin, _directory, program) =>
           record("analytics stand-in").pipe(Effect.andThen(program))
         );
         mocks.command.mockReturnValue(record("command"));
@@ -226,6 +226,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
         yield* runAcceptance("/test", "start", []);
         expect(mocks.sink).toHaveBeenCalledWith(
           runtime.analytics,
+          runtime.directory,
           expect.anything()
         );
         expect(MutableList.toArray(steps)).toEqual([

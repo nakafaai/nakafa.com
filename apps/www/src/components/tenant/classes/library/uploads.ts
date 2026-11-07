@@ -13,6 +13,7 @@ const Upload = Schema.Struct({
   clientKey: ClientKey,
   createdAt: Schema.Finite,
   kind: Schema.Literals(["pdf", "image"]),
+  progress: Schema.Finite,
   sent: Schema.Boolean,
   title: Schema.String,
 });
@@ -24,6 +25,8 @@ const UploadsState = Schema.Struct({ uploads: Schema.Array(Upload) });
 
 /** The actions that start, keep, and end the adding of one file. */
 interface UploadsActions {
+  /** Records how much of a file has reached R2, from 0 to 1. */
+  readonly advance: (clientKey: string, progress: number) => void;
   /** Ends an upload that the server refused, or whose item was removed. */
   readonly end: (clientKey: string) => void;
   /** Marks an upload as kept by the server. */
@@ -38,6 +41,12 @@ export type LibraryUploads = typeof UploadsState.Type & UploadsActions;
 /** Creates the uploads of one class page. Each page creates its own, once. */
 export const createLibraryUploads = () =>
   createStore<LibraryUploads>()((set) => ({
+    advance: (clientKey, progress) =>
+      set((state) => ({
+        uploads: Arr.map(state.uploads, (upload) =>
+          upload.clientKey === clientKey ? { ...upload, progress } : upload
+        ),
+      })),
     end: (clientKey) =>
       set((state) => ({
         uploads: Arr.filter(

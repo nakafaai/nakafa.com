@@ -44,6 +44,7 @@ const published = Effect.fn("test.notifications.tasks")(function* (
   const term = yield* period(fixture, fixture.units.smp);
   const forum = yield* forumClass(fixture, term.id, "X-1");
   const task = yield* fixture.as("teacher").mutation(tasks.publish, {
+    examId: null,
     category: null,
     classId: forum.classId,
     clientKey: "task-notices",

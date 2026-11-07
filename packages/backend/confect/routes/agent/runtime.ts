@@ -1,7 +1,10 @@
 import { projectPublicApiPath } from "@repo/backend/agent/edge";
 import type { AgentHttpInputError } from "@repo/backend/confect/routes/agent/input";
 import { enforceAgentReadLimit } from "@repo/backend/confect/routes/agent/limit";
-import type { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
+import {
+  type AgentRateLimitError,
+  agentQuotaHeaders,
+} from "@repo/backend/confect/routes/agent/quota";
 import {
   agentFailureResponse,
   httpInputFailureResponse,
@@ -18,7 +21,11 @@ type AgentDomainError =
   | AgentRateLimitError
   | NakafaAgentDataReadError
   | NakafaAgentInputError;
-/** Applies the application quota before reading or parsing content input. */
+/**
+ * Applies the application quota before reading or parsing content input. An
+ * admitted read answers with the RateLimit fields, so a client can pace itself
+ * before it meets a 429.
+ */
 export function runMeteredRequest<R>(
   request: Request,
   requestId: string,
@@ -27,7 +34,21 @@ export function runMeteredRequest<R>(
   return runAgentRequest(
     request,
     requestId,
-    enforceAgentReadLimit(request).pipe(Effect.flatMap(() => program))
+    enforceAgentReadLimit(request).pipe(
+      Effect.flatMap((quota) =>
+        Effect.map(program, (response) => {
+          const fields = agentQuotaHeaders(quota);
+          const headers = new Headers(response.headers);
+          headers.set("RateLimit", fields.RateLimit);
+          headers.set("RateLimit-Policy", fields["RateLimit-Policy"]);
+          return new Response(response.body, {
+            headers,
+            status: response.status,
+            statusText: response.statusText,
+          });
+        })
+      )
+    )
   );
 }
 

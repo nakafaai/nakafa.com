@@ -34,6 +34,29 @@ export function signedInHead(seo: ScreenSeo) {
   );
 }
 
+/** The robots rule of a search that names a query: kept out of indexes, while its links are followed. */
+const QUERY_ROBOTS = "noindex,follow";
+
+/**
+ * The head of the search page. The bare page names no query and holds no learner's
+ * data, so search engines may index it; a page with a query is a result list,
+ * which stays out of indexes while engines still follow its links.
+ */
+export function searchHead(seo: ScreenSeo, query: string) {
+  const head = signedInHead(seo);
+  if (query === "") {
+    return head;
+  }
+  return {
+    links: head.links,
+    meta: Arr.map(head.meta, (entry) =>
+      "name" in entry && (entry.name === "robots" || entry.name === "googlebot")
+        ? { ...entry, content: QUERY_ROBOTS }
+        : entry
+    ),
+  };
+}
+
 /**
  * The head of a profile tab. The reference's profile pages name their canonical
  * address and no hreflang alternates, so the shared head's alternates are left out.

@@ -65,8 +65,10 @@ const apiRoutes = HttpRouter.addAll(
           yield* HttpServerRequest.HttpServerRequest
         );
         const requestId = yield* RequestIdentity;
+        // The index is the first read an agent makes, so it counts against the quota and
+        // answers the RateLimit fields that tell the agent how fast it may go on.
         return HttpServerResponse.fromWeb(
-          yield* runAgentRequest(
+          yield* runMeteredRequest(
             request,
             requestId,
             decodeAgentOutput(
