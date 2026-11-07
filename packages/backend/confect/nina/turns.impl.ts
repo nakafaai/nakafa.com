@@ -148,10 +148,19 @@ const start = FunctionImpl.make(
         })
         .pipe(Effect.orDie));
     const saved = yield* savePrompt(ctx, keys, {
-      fileIds: prompt.fileIds,
       message: prompt.message,
       threadId,
     }).pipe(Effect.mapError(writeFailure));
+    // The chat keeps the files its learner sent until the chat is deleted, so a later turn reads them again.
+    yield* Effect.forEach(
+      prompt.newFiles,
+      (fileId) =>
+        writer
+          .table("ninaFiles")
+          .insert({ chatId, fileId, messageId: saved.messageId })
+          .pipe(Effect.orDie),
+      { discard: true }
+    );
     const turnId = yield* writer
       .table("ninaTurns")
       .insert({

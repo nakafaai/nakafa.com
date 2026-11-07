@@ -3,6 +3,7 @@ import {
   type MessageDoc,
 } from "@convex-dev/agent";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { freshAddresses } from "@repo/backend/confect/nina/files";
 import {
   readMessageFromAction,
   readThreadFromAction,
@@ -116,8 +117,8 @@ export const readRecentContext = Effect.fn("nina.sealed.context")(function* (
   );
   return {
     existingResponses: toModelMessages(Arr.drop(from, 1)),
-    inputPrompt: toModelMessages(Arr.take(from, 1)),
-    recent: toModelMessages(before),
+    inputPrompt: yield* freshAddresses(toModelMessages(Arr.take(from, 1))),
+    recent: yield* freshAddresses(toModelMessages(before)),
   };
 });
 
@@ -134,5 +135,5 @@ export const readPromptInput = Effect.fn("nina.sealed.prompt")(function* (
   if (prompt?.status !== "success") {
     return [];
   }
-  return toModelMessages([prompt]);
+  return yield* freshAddresses(toModelMessages([prompt]));
 });
