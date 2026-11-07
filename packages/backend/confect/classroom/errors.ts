@@ -138,3 +138,15 @@ export class FileTypeRefused extends Schema.TaggedError<FileTypeRefused>()(
   "FileTypeRefused",
   refusal("FILE_TYPE_REFUSED", "Only a PDF or an image can be added.")
 ) {}
+
+/** Registering a library upload whose bytes never arrived, or whose reservation the sweep already freed. */
+export class UploadMissing extends Schema.TaggedError<UploadMissing>()(
+  "UploadMissing",
+  refusal("UPLOAD_MISSING", "This upload did not arrive. Add the file again.")
+) {}
+
+/** Moving a folder into itself or into a folder inside it. */
+export class FolderCycle extends Schema.TaggedError<FolderCycle>()(
+  "FolderCycle",
+  refusal("FOLDER_CYCLE", "A folder cannot move into itself.")
+) {}

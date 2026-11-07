@@ -16,7 +16,7 @@ export default GroupSpec.make()
         Schema.NullOr(
           Schema.Struct({
             contentType: Schema.String,
-            storageId: Id("_storage"),
+            objectKey: Schema.String,
           })
         ),
     })

@@ -6,6 +6,7 @@ import { deployNakafaBots } from "#www/deploy/bots";
 import { deployCas } from "#www/deploy/cas";
 import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
+import { deployFiles } from "#www/deploy/files";
 import { deployNakafaRedirects } from "#www/deploy/redirect";
 import { readActiveContentRelease } from "#www/deploy/release";
 import {
@@ -36,6 +37,8 @@ import { deployedWorkerBindings, workerSettings } from "#www/worker";
  * when its files or its bindings change, so an activation's deploy of an unchanged
  * commit rebuilds the static pages of the new release (ADR 0038 D8).
  *
+ * Every stage declares its private file bucket, which Convex signs addresses for.
+ *
  * Production Workers and the DNS records are retained: a stack change that drops
  * one leaves the cloud object in place, and never deletes it.
  */
@@ -62,6 +65,8 @@ export default Stack(
       yield* deployNakafaRedirects(zone).pipe(RemovalPolicy.retain());
       yield* deployNakafaIdZone().pipe(RemovalPolicy.retain());
     }
+
+    yield* deployFiles(stage, isProduction);
 
     const web = yield* Website.Vite("Web", {
       name: workerName("web", stage),

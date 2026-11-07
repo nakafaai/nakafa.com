@@ -52,14 +52,16 @@ const itemFields = {
   folderId: Schema.optionalKey(Id("classroomFolders")),
   sealedTitle: Sealed,
   tenantId: Id("tenants"),
+  trashedAt: Schema.optionalKey(Schema.Finite),
 };
 
 /**
  * One item of a class library (ADR 0025): a link, whose address is sealed with
- * the school key, or a file in Convex storage, whose type the server read from
- * its leading bytes. The bytes of a file are not sealed (ADR 0028). Both bind
- * their sealed fields to the class and the client key of their creation, so a
- * repeated add writes once.
+ * the school key, or a file kept as one object of the private R2 bucket, whose
+ * type the server read from its leading bytes. The bytes of a file are not
+ * sealed (ADR 0028). Both bind their sealed fields to the class and the client
+ * key of their creation, so a repeated add writes once. An item in the trash
+ * keeps its place and its bytes until it is restored or deleted forever.
  */
 export const libraryValidator = Schema.Union([
   Schema.Struct({
@@ -72,7 +74,7 @@ export const libraryValidator = Schema.Union([
     byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
     contentType: LibraryFileType,
     kind: Schema.Literal("file"),
-    storageId: Id("_storage"),
+    objectKey: Schema.String,
   }),
 ]);
 
@@ -81,9 +83,10 @@ export const LibraryKind = Schema.Literals(["link", "pdf", "image"]);
 
 /**
  * One item as the library shows it: what it is, its title, its author, when it
- * was added, the folder it sits in, and where it opens. A file's address is read for each reader after
- * the access check and is never stored (ADR 0028); a file that storage no
- * longer holds has none.
+ * was added, the folder it sits in, whether the reader starred it, and when it
+ * went to the trash. A link carries its address; a file has none, because its
+ * short-lived address is signed for each opening after the access check and is
+ * never stored (ADR 0028).
  */
 export const LibraryView = Schema.Struct({
   address: Schema.NullOr(Schema.String),
@@ -94,7 +97,9 @@ export const LibraryView = Schema.Struct({
   folderId: Schema.NullOr(Id("classroomFolders")),
   id: Id("classroomLibrary"),
   kind: LibraryKind,
+  starred: Schema.Boolean,
   title: Schema.String,
+  trashedAt: Schema.NullOr(Schema.Finite),
 });
 
 /** A sealed field of a library item, bound to the row that names it (ADR 0030). */

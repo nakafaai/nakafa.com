@@ -7,8 +7,8 @@ import {
   MutationRunner,
   QueryRunner,
   Scheduler,
-  StorageActionWriter,
 } from "@repo/backend/confect/_generated/services";
+import { readObject } from "@repo/backend/confect/bucket/object";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { dropPassages } from "@repo/backend/confect/classroom/library/drop";
 import { libraryField } from "@repo/backend/confect/classroom/library/item";
@@ -22,8 +22,9 @@ import spec from "@repo/backend/confect/classroom/passages.spec";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
+import { FetchClient } from "@repo/utilities/http/client";
 import { generateText } from "ai";
-import { Array as Arr, Duration, Effect, Layer } from "effect";
+import { Array as Arr, Duration, Effect, Layer, Option } from "effect";
 
 /** Rows one clearing or rebuilding run reads. */
 const BATCH = 100;
@@ -50,7 +51,7 @@ const source = FunctionImpl.make(
     ) {
       return null;
     }
-    return { contentType: item.contentType, storageId: item.storageId };
+    return { contentType: item.contentType, objectKey: item.objectKey };
   })
 );
 
@@ -107,9 +108,15 @@ const build = FunctionImpl.make(
     if (found === null) {
       return null;
     }
-    const file = yield* (yield* StorageActionWriter)
-      .get(found.storageId)
-      .pipe(Effect.orDie);
+    const stored = yield* readObject(found.objectKey).pipe(
+      Effect.provide(FetchClient),
+      Effect.orDie
+    );
+    // A file deleted while its passages waited has no object, and no passages to build.
+    if (Option.isNone(stored)) {
+      return null;
+    }
+    const file = new Blob([stored.value], { type: found.contentType });
     const passages = passagesOf(yield* textOf(file, found.contentType));
     if (Arr.isReadonlyArrayEmpty(passages)) {
       return null;

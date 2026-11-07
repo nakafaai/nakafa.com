@@ -19,6 +19,7 @@ import billingGrants from "./tables/billingGrants";
 import billingInvoices from "./tables/billingInvoices";
 import billingPayments from "./tables/billingPayments";
 import billingSubscriptions from "./tables/billingSubscriptions";
+import bucketUse from "./tables/bucketUse";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classGrades from "./tables/classGrades";
@@ -28,12 +29,14 @@ import classroomChannels from "./tables/classroomChannels";
 import classroomFileUse from "./tables/classroomFileUse";
 import classroomFolders from "./tables/classroomFolders";
 import classroomLibrary from "./tables/classroomLibrary";
+import classroomLibraryUploads from "./tables/classroomLibraryUploads";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPassages from "./tables/classroomPassages";
 import classroomPostVotes from "./tables/classroomPostVotes";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
 import classroomScheduled from "./tables/classroomScheduled";
+import classroomStars from "./tables/classroomStars";
 import classroomSubmissions from "./tables/classroomSubmissions";
 import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
@@ -188,6 +191,7 @@ export default $defineSchema({
   billingInvoices: $Table.tableDefinition(billingInvoices),
   billingPayments: $Table.tableDefinition(billingPayments),
   billingSubscriptions: $Table.tableDefinition(billingSubscriptions),
+  bucketUse: $Table.tableDefinition(bucketUse),
   chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
   classGrades: $Table.tableDefinition(classGrades),
@@ -197,12 +201,14 @@ export default $defineSchema({
   classroomFileUse: $Table.tableDefinition(classroomFileUse),
   classroomFolders: $Table.tableDefinition(classroomFolders),
   classroomLibrary: $Table.tableDefinition(classroomLibrary),
+  classroomLibraryUploads: $Table.tableDefinition(classroomLibraryUploads),
   classroomMessages: $Table.tableDefinition(classroomMessages),
   classroomPassages: $Table.tableDefinition(classroomPassages),
   classroomPostVotes: $Table.tableDefinition(classroomPostVotes),
   classroomPosts: $Table.tableDefinition(classroomPosts),
   classroomReads: $Table.tableDefinition(classroomReads),
   classroomScheduled: $Table.tableDefinition(classroomScheduled),
+  classroomStars: $Table.tableDefinition(classroomStars),
   classroomSubmissions: $Table.tableDefinition(classroomSubmissions),
   classroomTallies: $Table.tableDefinition(classroomTallies),
   classroomTasks: $Table.tableDefinition(classroomTasks),
