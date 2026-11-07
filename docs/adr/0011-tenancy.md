@@ -46,7 +46,7 @@ signed profile (ADR 0032). They never appear in code names. The first profile is
 Indonesia.
 
 The tenant slug is the tenant's public address: the `slug.nakafa.com` label, under the domain of the tenant's data cell (ADR 0026). School addresses have no locale prefix, because the
-language comes from the `NEXT_LOCALE` cookie (ADR 0026). It is the context every tenant
+language comes from the `NAKAFA_LOCALE` cookie (ADR 0026). It is the context every tenant
 function receives, never an authorization claim. The member middleware resolves
 the tenant and the caller's Person from it; objects named by ID derive their
 tenant from data (ADR 0012). Every tenant-owned table carries `tenantId`.
