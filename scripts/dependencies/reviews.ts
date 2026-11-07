@@ -98,9 +98,9 @@ export const REGISTRY_REVIEWS = [
     "The adapter stays on 0.12.6, the last release that admits Better Auth 1.6. 0.13.0 peers better-auth >=1.7.16 and rejects compound unique indexes, so the agent OAuth flow cannot move with it (see better-auth@latest). 0.12.7 also rewrites x-forwarded-host on every auth request to an exact trusted origin or CONVEX_SITE_URL, while the school hosts reach Better Auth through the x-forwarded-host that the web app's auth proxy sends (confect/auth/host.ts, ADR 0026); a move sends x-better-auth-forwarded-host instead and trusts the exact origin of each request. Checked 7 November 2026.",
   ],
   [
-    "@types/node@24",
-    "24.19.2",
-    "Declarations stay on the Node 24 line while Convex runs the backend's Node actions on node.nodeVersion 24 (packages/backend/convex.json), so the types never offer an API that runtime lacks. They move to 26 with that runtime, once a dev deployment runs it.",
+    "@types/node@26",
+    "26.6.6",
+    "The root, API and MCP manifests declare the Node 26 types (#1872): the scripts and tooling run on Node 26, and the API and MCP Workers run on workerd. The backend declares no Node types, so its Node actions on node.nodeVersion 24 (packages/backend/convex.json) gain no Node 26 API from this.",
   ],
   [
     "node@26",

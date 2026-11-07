@@ -263,7 +263,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "24.19.2",
+    approved: "26.6.6",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
