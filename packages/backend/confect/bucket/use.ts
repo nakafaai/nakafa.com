@@ -66,10 +66,13 @@ export const chargeBucket = Effect.fn("bucket.use.charge")(function* (
     return yield* new StorageFull({ reason: "bucket" });
   }
   const writer = (yield* DatabaseWriter).table("bucketUse");
-  yield* Option.match(use, {
-    onNone: () => writer.insert({ bytes }).pipe(Effect.asVoid),
-    onSome: (row) => writer.patch(row._id, { bytes: held + bytes }),
-  }).pipe(Effect.orDie);
+  if (Option.isNone(use)) {
+    yield* writer.insert({ bytes }).pipe(Effect.orDie);
+    return;
+  }
+  yield* writer
+    .patch(use.value._id, { bytes: held + bytes })
+    .pipe(Effect.orDie);
 });
 
 /** Takes bytes off the bucket's use once their object is gone or its upload failed. */

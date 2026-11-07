@@ -72,11 +72,14 @@ const canonicalQuery = (query: Record<string, string>) =>
   Arr.join(
     Arr.map(
       Arr.sort(
-        Arr.map(Rec.toEntries(query), ([name, value]) => [
-          encodeStrict(name),
-          encodeStrict(value),
-        ]),
-        Order.mapInput(Order.String, ([name]: readonly string[]) => name)
+        Arr.map(
+          Rec.toEntries(query),
+          ([name, value]) => [encodeStrict(name), encodeStrict(value)] as const
+        ),
+        Order.mapInput(
+          Order.String,
+          (pair: readonly [string, string]) => pair[0]
+        )
       ),
       ([name, value]) => `${name}=${value}`
     ),
