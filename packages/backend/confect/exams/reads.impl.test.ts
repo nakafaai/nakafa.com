@@ -115,7 +115,7 @@ describe("exams/reads read", () => {
           fixture.convex.run((ctx) => ctx.db.query("vendorSpend").collect())
         );
         expect(
-          spend.map(({ calls, held, payer, spent, vendor }) => ({
+          Arr.map(spend, ({ calls, held, payer, spent, vendor }) => ({
             calls,
             held,
             payer: payer.kind,

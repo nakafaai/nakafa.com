@@ -5,7 +5,7 @@ import { metered, meterOf } from "@repo/backend/confect/spend/meter";
 import { createBillingTestConvex } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { recordingMeter } from "@repo/backend/test/spend";
-import { Effect, Fiber } from "effect";
+import { Array as Arr, Effect, Fiber } from "effect";
 
 /** When the test learner's credits were last reset. */
 const NOW = Date.UTC(2026, 10, 7, 10);
@@ -84,7 +84,7 @@ describe("spend/meter", () => {
     expect(outcome).toEqual({ answered: "answer", refused: "SpendRefused" });
     const rows = await t.run((ctx) => ctx.db.query("vendorSpend").collect());
     expect(
-      rows.map(({ calls, held, spent }) => ({ calls, held, spent }))
+      Arr.map(rows, ({ calls, held, spent }) => ({ calls, held, spent }))
     ).toEqual([{ calls: 1, held: 0, spent: 1875 }]);
   });
 });

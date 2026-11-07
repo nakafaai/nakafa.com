@@ -16,7 +16,7 @@ import {
   runInMutation,
 } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { Cause, Exit } from "effect";
+import { Array as Arr, Cause, Exit } from "effect";
 
 const NOW = Date.UTC(2026, 10, 7, 10);
 const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
@@ -63,7 +63,7 @@ function insertPoolGrant(
 /** Every vendor row, as a person reads it. */
 async function rowsOf(ctx: MutationCtx) {
   const rows = await ctx.db.query("vendorSpend").collect();
-  return rows.map(({ calls, held, month, payer, spent, vendor }) => ({
+  return Arr.map(rows, ({ calls, held, month, payer, spent, vendor }) => ({
     calls,
     held,
     month,

@@ -5,6 +5,7 @@ import {
   languageCost,
   reportedCost,
 } from "@repo/backend/confect/spend/rates";
+import type { Escrow } from "@repo/backend/confect/spend/schema";
 import type { LanguageModelMiddleware } from "ai";
 import { Effect, Exit, Function as Fn } from "effect";
 
@@ -63,7 +64,7 @@ export function callCost(
  * cost its finish part reports, or to the whole hold when the stream ends
  * without one or is cancelled.
  */
-function settling(meter: Meters, escrow: Effect.Success<Meters["hold"]>) {
+function settling(meter: Meters, escrow: Escrow) {
   let spent = escrow.held;
   return new TransformStream<StreamPart, StreamPart>({
     transform: (part, controller) => {

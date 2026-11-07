@@ -211,7 +211,7 @@ describe("Gateway handles", () => {
         yield* gateway.decide("Kelas 12 IPA.", {
           lasting: { type: "boolean", instructions: "Does it last?" },
         });
-        const request = JSON.stringify({
+        const request = encodeJsonText({
           questions: {
             lasting: { type: "boolean", instructions: "Does it last?" },
           },
@@ -296,6 +296,24 @@ describe("Gateway embeddings", () => {
         values: ["first", "second"],
       });
     })
+  );
+
+  it.effect(
+    "settles an embedding whose reply reports no tokens to its hold",
+    () =>
+      Effect.gen(function* () {
+        const { gateway, meter } = serve(({ values }) =>
+          Promise.resolve({
+            embeddings: Arr.map(values, (_, index) => vector(index)),
+            warnings: [],
+          })
+        );
+        yield* gateway.embed(["first"]);
+        expect(meter.calls()).toEqual([
+          `hold embedding ${embeddingCost(5)}`,
+          `settle ${embeddingCost(5)}`,
+        ]);
+      })
   );
 
   it.effect("embeds with the candidate model a caller names", () =>

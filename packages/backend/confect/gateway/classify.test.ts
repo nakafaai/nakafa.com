@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { classify } from "@repo/backend/confect/gateway/classify";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
+import { SpendRefused } from "@repo/backend/confect/spend/schema";
 import { APICallError, NoOutputGeneratedError, RetryError } from "ai";
 import { Schema } from "effect";
 
@@ -271,6 +272,16 @@ describe("Gateway failure classification", () => {
     ["nothing", undefined, "unknown"],
   ] as const)("classifies %s by name", (_, error, reason) => {
     expect(classify(error)).toEqual(new GatewayFailure({ reason }));
+  });
+
+  it("classifies a call the payer's budget refused as an exhausted quota", () => {
+    const refused = new SpendRefused({
+      budget: 775_000,
+      held: 45_625,
+      used: 760_000,
+      vendor: "anthropic",
+    });
+    expect(classify(refused)).toEqual(new GatewayFailure({ reason: "quota" }));
   });
 
   it("unwraps retries and empty outputs to the failure behind them", () => {

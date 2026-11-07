@@ -135,7 +135,7 @@ describe("Nina generation through the real Agent component", () => {
           }))
         );
         expect(
-          ledger.rows.map(({ calls, held, payer, spent, vendor }) => ({
+          Arr.map(ledger.rows, ({ calls, held, payer, spent, vendor }) => ({
             calls,
             held,
             payer,
@@ -152,7 +152,11 @@ describe("Nina generation through the real Agent component", () => {
           },
         ]);
         expect(
-          ledger.escrows.map(({ held, state, work }) => ({ held, state, work }))
+          Arr.map(ledger.escrows, ({ held, state, work }) => ({
+            held,
+            state,
+            work,
+          }))
         ).toEqual([
           {
             held: languageCeiling("chat"),

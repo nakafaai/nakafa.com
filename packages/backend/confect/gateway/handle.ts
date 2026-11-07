@@ -28,6 +28,7 @@ import {
   embeddingCost,
   tokenBound,
 } from "@repo/backend/confect/spend/rates";
+import { encodeJsonText } from "@repo/utilities/json";
 import { defaultSettingsMiddleware, embedMany, wrapLanguageModel } from "ai";
 import { Array as Arr, Context, Duration, Effect } from "effect";
 
@@ -124,7 +125,7 @@ export function make(
     decide: (state, questions) => {
       // The request's text bounds its tokens, and each ask may be billed.
       const held =
-        decisionCost(tokenBound(JSON.stringify({ questions, state }))) *
+        decisionCost(tokenBound(encodeJsonText({ questions, state }))) *
         DECISION_ASKS;
       return metering(
         metered(
@@ -193,7 +194,9 @@ export function make(
                 Effect.fail(new GatewayFailure({ reason: "timeout" })),
             })
           ),
-          ({ usage }) => embeddingCost(usage.tokens)
+          // A reply that reports no tokens costs its whole hold.
+          ({ usage }) =>
+            Number.isInteger(usage.tokens) ? embeddingCost(usage.tokens) : held
         )
       );
       // A reply that does not match the request is not a vector the index

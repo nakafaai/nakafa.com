@@ -1,9 +1,8 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type { NinaCreditHold } from "@repo/backend/confect/nina/credits/schema";
 import { Vendor, Work } from "@repo/backend/confect/spend/rates";
 import { Schema } from "effect";
-
-type UserId = Extract<Claim, { kind: "learner" }>["userId"];
-type TenantId = Extract<Claim, { kind: "school" }>["tenantId"];
 
 /** A whole number of micro-dollars, zero or more. */
 const MicroUsd = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -94,10 +93,9 @@ export class SpendRefused extends Schema.TaggedError<SpendRefused>()(
  * from, or its learner. Every call of the turn and of its follow-up work is
  * held against the same payer as its credits.
  */
-export function turnClaim(turn: {
-  readonly userId: UserId;
-  readonly pool?: { readonly tenantId: TenantId };
-}): Claim {
+export function turnClaim(
+  turn: Pick<typeof NinaCreditHold.Type, "pool" | "userId">
+): Claim {
   return turn.pool === undefined
     ? { kind: "learner", userId: turn.userId }
     : { kind: "member", tenantId: turn.pool.tenantId, userId: turn.userId };
@@ -108,12 +106,8 @@ export function turnClaim(turn: {
  * account holds them, and the school alone when none does yet.
  */
 export function personClaim(
-  person: {
-    readonly account:
-      | { readonly state: "unclaimed" }
-      | { readonly state: "claimed"; readonly userId: UserId };
-  },
-  tenantId: TenantId
+  person: Pick<Docs["tenantPeople"], "account">,
+  tenantId: Docs["tenants"]["_id"]
 ): Claim {
   return person.account.state === "claimed"
     ? { kind: "member", tenantId, userId: person.account.userId }
