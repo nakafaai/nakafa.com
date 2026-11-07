@@ -14,6 +14,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { ClassStatus } from "@repo/backend/confect/classroom/class";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option } from "effect";
@@ -24,6 +25,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableList } from "@/components/shared/table/list";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -339,7 +341,15 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
       ),
     }),
     classColumns.list(teachersOf, {
-      cell: (info) => <span dir="auto">{Arr.join(info.getValue(), ", ")}</span>,
+      cell: (info) => (
+        <TableList items={info.getValue()}>
+          {(teacher) => (
+            <Badge variant="outline">
+              <span className="truncate">{teacher}</span>
+            </Badge>
+          )}
+        </TableList>
+      ),
       header: t("class-teachers"),
       id: "teachers",
       options: namedOptions(

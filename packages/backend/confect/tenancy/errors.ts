@@ -344,3 +344,53 @@ export class NpsnTaken extends Schema.TaggedError<NpsnTaken>()(
   "NpsnTaken",
   refusal("NPSN_TAKEN", "Another unit of this school has this number.")
 ) {}
+
+/**
+ * What keeps a period in use: being the active period, or a cohort, a class, a class grade, a graduation decision, or a
+ * promotion that points at it.
+ */
+export const PeriodHold = Schema.Literals([
+  "active",
+  "classes",
+  "cohorts",
+  "grades",
+  "graduations",
+  "promotions",
+]);
+
+/** Deleting a period that is active or that a record still points at; archiving it keeps those records whole. */
+export class PeriodInUse extends Schema.TaggedError<PeriodInUse>()(
+  "PeriodInUse",
+  {
+    ...refusal(
+      "PERIOD_IN_USE",
+      "This period is active or still holds cohorts, classes, grades, a graduation or a promotion. Archive it instead."
+    ),
+    holds: PeriodHold,
+  }
+) {}
+
+/**
+ * What keeps a cohort in use: a placed person, an active homeroom teacher, a class, an exam sitting, a report card, or
+ * a graduation letter that points at it.
+ */
+export const CohortHold = Schema.Literals([
+  "classes",
+  "homeroom",
+  "letters",
+  "members",
+  "reports",
+  "sittings",
+]);
+
+/** Deleting a cohort that a record still points at; archiving it keeps those records whole. */
+export class CohortInUse extends Schema.TaggedError<CohortInUse>()(
+  "CohortInUse",
+  {
+    ...refusal(
+      "COHORT_IN_USE",
+      "This cohort still holds people, a homeroom teacher, classes, sittings or reports. Archive it instead."
+    ),
+    holds: CohortHold,
+  }
+) {}

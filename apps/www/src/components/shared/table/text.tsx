@@ -1,14 +1,29 @@
-import type { ReactNode } from "react";
+import { Array as Arr } from "effect";
+import type { PointerEvent, ReactNode } from "react";
 
 /**
- * A long value in a table, such as an address or a competency: one line up to the width a usual value reads in, and more
- * lines past that, so the longest one a school holds reads whole and never pushes the columns after it out of view.
+ * Shows the whole of a cell's words on hover once a line cuts them: the cell itself, or a badge's name inside it. The
+ * title is read at the hover, so a cell whose words fit carries none and the rows draw no title they do not need.
+ */
+function showWhole(event: PointerEvent<HTMLElement>) {
+  const box = event.currentTarget;
+  const cut = Arr.some(
+    [box, ...box.querySelectorAll<HTMLElement>(".truncate")],
+    (part) => part.scrollWidth > part.clientWidth
+  );
+  box.title = cut ? box.textContent.trim() : "";
+}
+
+/**
+ * A long value in a later column of text, such as an address or a competency: one line in the width its column holds,
+ * cut with an ellipsis past it and whole on hover, so a row never grows past one line and never moves a head.
  */
 export function TableText({ children }: { children: ReactNode }) {
   return (
     <span
-      className="mx-auto block max-w-64 min-w-56 wrap-anywhere whitespace-normal"
+      className="block w-0 min-w-full truncate"
       dir="auto"
+      onPointerEnter={showWhole}
     >
       {children}
     </span>
@@ -16,14 +31,16 @@ export function TableText({ children }: { children: ReactNode }) {
 }
 
 /**
- * A known value in a table, such as a status, a role or a unit's name: its words wrap inside the width its column holds,
- * a badge's too, so the longest one a school holds never moves the column heads when its rows arrive.
+ * A known value in a table, such as a status, a role or a unit's name: one line in the width its column holds, cut with
+ * an ellipsis past it and whole on hover. A badge keeps its one compact size and cuts its own name inside that width, so
+ * a long state never grows a bubble. The cut leaves room above and below for the focus ring of a badge that opens more.
  */
 export function TableValue({ children }: { children: ReactNode }) {
   return (
     <span
-      className="block whitespace-normal [&_[data-slot=badge]]:h-auto [&_[data-slot=badge]]:whitespace-normal"
+      className="-my-1 block w-0 min-w-full truncate py-1 [&_[data-slot=badge]]:max-w-full"
       dir="auto"
+      onPointerEnter={showWhole}
     >
       {children}
     </span>
@@ -32,11 +49,12 @@ export function TableValue({ children }: { children: ReactNode }) {
 
 /**
  * What the first column of text holds: it takes the width the column has and adds none, so the column keeps its floor
- * and whatever the others leave, a long name wraps inside it, and the heads stand where the first frame drew them.
+ * and whatever the others leave, a long name ends in an ellipsis on its one line and reads whole on hover, and the
+ * heads stand where the first frame drew them.
  */
 export function TableLead({ children }: { children: ReactNode }) {
   return (
-    <span className="block w-0 min-w-full wrap-break-word whitespace-normal">
+    <span className="block w-0 min-w-full truncate" onPointerEnter={showWhole}>
       {children}
     </span>
   );

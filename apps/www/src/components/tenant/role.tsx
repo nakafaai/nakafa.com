@@ -35,7 +35,7 @@ export function RoleBadge({ role }: { role: BuiltinRole }) {
       variant="outline"
     >
       <HugeIcons icon={look.icon} />
-      {tSchool(`role.${role}`)}
+      <span className="truncate">{tSchool(`role.${role}`)}</span>
     </Badge>
   );
 }

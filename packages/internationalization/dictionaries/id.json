@@ -12,6 +12,7 @@
     "sort-newest": "Terbaru",
     "no-results": "Tidak ada hasil.",
     "searching": "Mencari di seluruh daftar.",
+    "more": "Tampilkan {count} lainnya",
     "no-values": "Belum ada nilai",
     "reset": "Atur ulang"
   },
@@ -1046,6 +1047,7 @@
         "renamed": "Rombel diganti nama",
         "archived": "Rombel diarsipkan",
         "restored": "Rombel dipulihkan",
+        "removed": "Rombel dihapus",
         "grade": {
           "set": "Tingkat rombel diubah"
         }
@@ -1083,6 +1085,7 @@
         "archived": "Periode diarsipkan",
         "rename": "Periode diganti nama",
         "restored": "Periode dipulihkan",
+        "removed": "Periode dihapus",
         "rescheduled": "Tanggal periode diubah"
       },
       "person": {
@@ -1340,7 +1343,13 @@
     "invites-search": "Cari nama atau email",
     "units-search": "Cari sekolah atau NPSN",
     "cohort-restore": "Pulihkan",
+    "cohort-delete-title": "Hapus {name}?",
+    "cohort-delete-description": "Rombel ini hilang untuk selamanya. Rombel yang masih punya siswa, wali kelas, kelas, atau rapor diarsipkan saja.",
+    "cohort-delete-confirm": "Hapus rombel",
     "period-restore": "Pulihkan",
+    "period-delete-title": "Hapus {name}?",
+    "period-delete-description": "Periode ini hilang untuk selamanya. Periode yang aktif atau masih punya rombel dan kelas diarsipkan saja.",
+    "period-delete-confirm": "Hapus periode",
     "no-unit-title": "Belum ada unit aktif",
     "no-unit-description": "Pulihkan atau tambahkan unit dulu, karena periode dan kelompok berada di dalam unit.",
     "no-unit-action": "Buka unit",
@@ -2869,6 +2878,10 @@
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."
     },
+    "exam-in-use": {
+      "title": "Ujian ini sudah punya jadwal.",
+      "description": "Hasil jadwalnya tetap disimpan, jadi buat salinan untuk mengubahnya."
+    },
     "copy-error": {
       "title": "Gagal nyalin nih"
     },
@@ -3059,6 +3072,9 @@
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."
     },
+    "school-cohort-deleted": {
+      "title": "Rombel dihapus."
+    },
     "school-class-archived": {
       "title": "Ruang kelas diarsipkan."
     },
@@ -3096,6 +3112,9 @@
     },
     "school-period-archived": {
       "title": "Periode diarsipkan."
+    },
+    "school-period-deleted": {
+      "title": "Periode dihapus."
     },
     "sitting-not-in": {
       "title": "Kamu tidak ada di sesi ini.",
@@ -3153,6 +3172,30 @@
       "title": "Periode ini tidak aktif.",
       "description": "Hanya periode yang aktif yang bisa diarsipkan."
     },
+    "school-refusal-period-in-use-active": {
+      "title": "Periode ini sedang aktif.",
+      "description": "Arsipkan periode ini dulu, atau biarkan saja."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "Periode ini masih punya rombel.",
+      "description": "Arsipkan periode ini agar rombel dan nilainya tetap ada."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "Periode ini masih punya nilai.",
+      "description": "Arsipkan periode ini agar nilainya tetap ada."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "Periode ini punya kelulusan.",
+      "description": "Arsipkan periode ini agar kelulusannya tetap ada."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "Periode ini masih punya kelas.",
+      "description": "Arsipkan periode ini agar kelas dan nilainya tetap ada."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "Kenaikan kelas memakai periode ini.",
+      "description": "Arsipkan periode ini agar kenaikan kelasnya tetap ada."
+    },
     "school-refusal-cohort-name-taken": {
       "title": "Nama kelompok ini sudah dipakai.",
       "description": "Pilih nama lain untuk periode ini."
@@ -3160,6 +3203,30 @@
     "school-refusal-cohort-limit": {
       "title": "Periode ini sudah penuh kelompok.",
       "description": "Tambahkan kelompok ke periode lain sebagai gantinya."
+    },
+    "school-refusal-cohort-in-use-members": {
+      "title": "Rombel ini masih punya siswa.",
+      "description": "Pindahkan siswanya dulu, atau arsipkan rombel ini."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "Rombel ini masih punya wali kelas.",
+      "description": "Hapus wali kelasnya dulu, atau arsipkan rombel ini."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "Rombel ini masih punya kelas.",
+      "description": "Arsipkan rombel ini agar kelas dan nilainya tetap ada."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "Rombel ini punya jadwal ujian.",
+      "description": "Arsipkan rombel ini agar ujian dan hasilnya tetap ada."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "Rombel ini punya rapor.",
+      "description": "Arsipkan rombel ini agar rapornya tetap ada."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "Rombel ini punya surat kelulusan.",
+      "description": "Arsipkan rombel ini agar suratnya tetap ada."
     },
     "school-refusal-address-invited": {
       "title": "Alamat ini sudah diundang.",

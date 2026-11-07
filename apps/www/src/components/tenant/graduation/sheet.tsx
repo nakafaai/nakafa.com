@@ -26,6 +26,7 @@ import {
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -169,16 +170,15 @@ function CohortGraduationBody() {
     }),
     lineColumns.list(readinessOf, {
       cell: (info) => (
-        <span className="flex gap-1">
-          {Arr.map(info.getValue(), (value) => (
+        <TableList items={info.getValue()}>
+          {(value) => (
             <TableStatus
               icon={READY_LOOKS[value].icon}
-              key={value}
               label={t(`ready-${value}`)}
               tone={READY_LOOKS[value].tone}
             />
-          ))}
-        </span>
+          )}
+        </TableList>
       ),
       header: t("ready"),
       id: "ready",

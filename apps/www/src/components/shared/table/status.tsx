@@ -19,7 +19,8 @@ export type StatusLook = Pick<
 /**
  * A record's status in a table cell, as the try-out catalog shows a try-out's: a badge in the
  * tone of the state, with the state's own icon and its name. Every state of one table takes an
- * icon of its own, so no two states of the table share one.
+ * icon of its own, so no two states of the table share one. The badge keeps one line, and a name longer than its
+ * column ends in an ellipsis (`TableValue`).
  */
 export function TableStatus({
   band = false,
@@ -38,7 +39,7 @@ export function TableStatus({
   return (
     <Badge variant={band ? BAND_STATUS_BADGES[tone] : STATUS_BADGES[tone]}>
       <HugeIcons data-icon="inline-start" icon={icon} />
-      {label}
+      <span className="truncate">{label}</span>
     </Badge>
   );
 }

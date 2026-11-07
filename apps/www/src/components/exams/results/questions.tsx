@@ -283,14 +283,6 @@ function AnswerList({
           answerColumns.text(
             (answer) => responseText(question, answer.response),
             {
-              cell: (info) => (
-                <span
-                  className="block min-w-56 wrap-break-word whitespace-pre-wrap"
-                  dir="auto"
-                >
-                  {info.getValue()}
-                </span>
-              ),
               header: t("results-answers"),
               id: "response",
             }

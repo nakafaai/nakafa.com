@@ -6,15 +6,13 @@ import {
 import type { ComponentProps, ReactNode } from "react";
 
 /**
- * A name in a table, whose words wrap inside the width its column has, so the longest name a school holds reads whole.
- * The first column's width comes from the table, never from its rows (`TableLead`, `headWidth`).
+ * A name in a table, on one line in the width its column has, ending in an ellipsis past it, so the longest name a
+ * school holds never grows its row. The first column's width comes from the table, never from its rows (`TableLead`,
+ * `headWidth`), which shows the whole name on hover.
  */
 export function TableName({ children }: { children: ReactNode }) {
   return (
-    <span
-      className="block min-w-0 font-medium wrap-break-word whitespace-normal"
-      dir="auto"
-    >
+    <span className="block min-w-0 truncate font-medium" dir="auto">
       {children}
     </span>
   );
@@ -39,7 +37,7 @@ export function TableTitle({
   return (
     <span className="flex min-w-0 items-center gap-2 font-medium">
       <HugeIcons
-        className={statusIconVariants({ className: "size-4", tone })}
+        className={statusIconVariants({ className: "size-4 shrink-0", tone })}
         icon={icon}
       />
       <TableName>{children}</TableName>

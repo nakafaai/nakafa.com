@@ -12,6 +12,7 @@
     "sort-newest": "Neueste",
     "no-results": "Keine Treffer.",
     "searching": "Liste wird durchsucht.",
+    "more": "{count} weitere zeigen",
     "no-values": "Noch keine Werte",
     "reset": "Zurücksetzen"
   },
@@ -1046,6 +1047,7 @@
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert",
         "restored": "Klasse wiederhergestellt",
+        "removed": "Klasse gelöscht",
         "grade": {
           "set": "Klassenstufe geändert"
         }
@@ -1083,6 +1085,7 @@
         "archived": "Zeitraum archiviert",
         "rename": "Zeitraum umbenannt",
         "restored": "Zeitraum wiederhergestellt",
+        "removed": "Zeitraum gelöscht",
         "rescheduled": "Zeitraumdaten geändert"
       },
       "person": {
@@ -1340,7 +1343,13 @@
     "invites-search": "Name oder E-Mail suchen",
     "units-search": "Schule, NPSN suchen",
     "cohort-restore": "Wiederherstellen",
+    "cohort-delete-title": "{name} löschen?",
+    "cohort-delete-description": "Die Klasse ist dann endgültig weg. Eine Klasse mit Lernenden, Klassenleitung, Kursen oder Zeugnissen bleibt stattdessen archiviert.",
+    "cohort-delete-confirm": "Klasse löschen",
     "period-restore": "Wiederherstellen",
+    "period-delete-title": "{name} löschen?",
+    "period-delete-description": "Die Periode ist dann endgültig weg. Die aktive Periode oder eine mit Klassen oder Kursen bleibt stattdessen archiviert.",
+    "period-delete-confirm": "Periode löschen",
     "no-unit-title": "Noch keine aktive Einheit",
     "no-unit-description": "Stelle zuerst eine Einheit wieder her oder lege eine an, denn Perioden und Kohorten gehören zu ihr.",
     "no-unit-action": "Einheiten öffnen",
@@ -2869,6 +2878,10 @@
       "title": "Aktion nicht abgeschlossen.",
       "description": "Bitte versuche es erneut."
     },
+    "exam-in-use": {
+      "title": "Diese Prüfung hat einen Termin.",
+      "description": "Ihre Termine behalten ihre Ergebnisse, also ändere eine Kopie."
+    },
     "copy-error": {
       "title": "Kopieren nicht möglich"
     },
@@ -3059,6 +3072,9 @@
     "school-cohort-archived": {
       "title": "Klasse archiviert."
     },
+    "school-cohort-deleted": {
+      "title": "Klasse gelöscht."
+    },
     "school-class-archived": {
       "title": "Lerngruppe archiviert."
     },
@@ -3096,6 +3112,9 @@
     },
     "school-period-archived": {
       "title": "Zeitraum archiviert."
+    },
+    "school-period-deleted": {
+      "title": "Periode gelöscht."
     },
     "sitting-not-in": {
       "title": "Nicht in dieser Sitzung.",
@@ -3153,6 +3172,30 @@
       "title": "Diese Periode ist nicht aktiv.",
       "description": "Nur eine aktive Periode kann archiviert werden."
     },
+    "school-refusal-period-in-use-active": {
+      "title": "Diese Periode ist aktiv.",
+      "description": "Archiviere die Periode zuerst, oder behalte sie."
+    },
+    "school-refusal-period-in-use-cohorts": {
+      "title": "Diese Periode hat noch Klassen.",
+      "description": "Archiviere die Periode, damit Klassen und Noten bleiben."
+    },
+    "school-refusal-period-in-use-grades": {
+      "title": "Diese Periode hat noch Noten.",
+      "description": "Archiviere die Periode, damit ihre Noten bleiben."
+    },
+    "school-refusal-period-in-use-graduations": {
+      "title": "Diese Periode hat einen Abschluss.",
+      "description": "Archiviere die Periode, damit ihr Abschluss bleibt."
+    },
+    "school-refusal-period-in-use-classes": {
+      "title": "Diese Periode hat noch Kurse.",
+      "description": "Archiviere die Periode, damit Kurse und Noten bleiben."
+    },
+    "school-refusal-period-in-use-promotions": {
+      "title": "Eine Versetzung nutzt diese Periode.",
+      "description": "Archiviere die Periode, damit die Versetzung bleibt."
+    },
     "school-refusal-cohort-name-taken": {
       "title": "Diesen Namen gibt es schon.",
       "description": "Wähle für diese Periode einen anderen Namen."
@@ -3160,6 +3203,30 @@
     "school-refusal-cohort-limit": {
       "title": "Diese Periode ist voll.",
       "description": "Lege die Kohorte stattdessen in einer anderen Periode an."
+    },
+    "school-refusal-cohort-in-use-members": {
+      "title": "Diese Klasse hat noch Lernende.",
+      "description": "Verschiebe zuerst die Lernenden, oder archiviere die Klasse."
+    },
+    "school-refusal-cohort-in-use-homeroom": {
+      "title": "Diese Klasse hat noch eine Klassenleitung.",
+      "description": "Entferne zuerst die Lehrkraft, oder archiviere die Klasse."
+    },
+    "school-refusal-cohort-in-use-classes": {
+      "title": "Diese Klasse hat noch Kurse.",
+      "description": "Archiviere die Klasse, damit Kurse und Noten bleiben."
+    },
+    "school-refusal-cohort-in-use-sittings": {
+      "title": "Diese Klasse hat Prüfungstermine.",
+      "description": "Archiviere die Klasse, damit Termine und Ergebnisse bleiben."
+    },
+    "school-refusal-cohort-in-use-reports": {
+      "title": "Diese Klasse hat Zeugnisse.",
+      "description": "Archiviere die Klasse, damit ihre Zeugnisse bleiben."
+    },
+    "school-refusal-cohort-in-use-letters": {
+      "title": "Diese Klasse hat Abschlussbriefe.",
+      "description": "Archiviere die Klasse, damit ihre Briefe bleiben."
     },
     "school-refusal-address-invited": {
       "title": "Diese Adresse ist schon eingeladen.",

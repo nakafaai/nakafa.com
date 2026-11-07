@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { ExamInUse } from "@repo/backend/confect/exams/errors";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Result } from "effect";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
@@ -30,6 +31,23 @@ describe("runExamAction", () => {
     expect(error).toHaveBeenCalledWith({
       description: "action-error.description",
       title: "action-error.title",
+    });
+    error.mockRestore();
+  });
+
+  it("says that a sitting keeps an exam that a delete was refused for, instead of the action error", async () => {
+    const error = vi.spyOn(toast, "error");
+    const send = (): Promise<Result.Result<null, ExamInUse>> =>
+      Promise.resolve(Result.fail(new ExamInUse()));
+
+    await runExamAction(sentAction(send), {
+      onFailure: vi.fn(),
+      onSuccess: vi.fn(),
+    });
+
+    expect(error).toHaveBeenCalledWith({
+      description: "exam-in-use.description",
+      title: "exam-in-use.title",
     });
     error.mockRestore();
   });

@@ -80,6 +80,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
         },
         {
@@ -87,7 +88,11 @@ export declare const api: {
           isDone: boolean;
           page: Array<{
             id: Id<"tenantGrants">;
-            person: { id: Id<"tenantPeople">; name: string };
+            person: {
+              email: string | null;
+              id: Id<"tenantPeople">;
+              name: string;
+            };
             revocable: boolean;
             role: {
               key:
@@ -431,7 +436,7 @@ export declare const api: {
         "query",
         "public",
         { chatId: string },
-        null | { title: null | string }
+        { title: string | null } | null
       >;
       getOwnChats: FunctionReference<
         "query",
@@ -1520,7 +1525,9 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string },
         Array<{
+          email: string | null;
           id: Id<"tenantPeople">;
+          joined: boolean;
           kind: "student" | "teacher";
           name: string;
         }>
@@ -8807,7 +8814,11 @@ export declare const api: {
           linkId: Id<"guardianLinks">;
           staffCheck: boolean;
           status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
-          student: { id: Id<"tenantPeople">; name: string };
+          student: {
+            email: string | null;
+            id: Id<"tenantPeople">;
+            name: string;
+          };
         }>
       >;
       confirm: FunctionReference<
@@ -8843,7 +8854,11 @@ export declare const api: {
           linkId: Id<"guardianLinks">;
           staffCheck: boolean;
           status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
-          student: { id: Id<"tenantPeople">; name: string };
+          student: {
+            email: string | null;
+            id: Id<"tenantPeople">;
+            name: string;
+          };
         }
       >;
     };
@@ -8860,6 +8875,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
         },
         {
@@ -8990,16 +9006,32 @@ export declare const api: {
       waiting: FunctionReference<
         "query",
         "public",
-        { slug: string },
-        Array<{
-          createdAt: number;
-          id: Id<"guardianRequests">;
-          kind: "reportCopy" | "dataCorrection";
-          linkId: Id<"guardianLinks">;
-          state: "waiting" | "approved" | "declined";
-          student: string;
-          text: string;
-        }>
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            createdAt: number;
+            id: Id<"guardianRequests">;
+            kind: "reportCopy" | "dataCorrection";
+            linkId: Id<"guardianLinks">;
+            state: "waiting" | "approved" | "declined";
+            student: string;
+            text: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
     };
   };
@@ -9085,6 +9117,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
         },
         {
@@ -9187,13 +9220,13 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-              cohortId: Id<"tenantCohorts">;
-              id: Id<"classes">;
-              name: string;
-              periodId: Id<"tenantPeriods">;
-              slug: string;
-              status: "active" | "archived";
-              subject?: string;
+            cohortId: Id<"tenantCohorts">;
+            id: Id<"classes">;
+            name: string;
+            periodId: Id<"tenantPeriods">;
+            slug: string;
+            status: "active" | "archived";
+            subject?: string;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -9220,6 +9253,7 @@ export declare const api: {
           kktp: number;
           students: Array<{
             draft: { text: string | null } | null;
+            email: string | null;
             id: Id<"tenantPeople">;
             name: string;
             narrative: { shared: boolean; text: string } | null;
@@ -10107,6 +10141,7 @@ export declare const api: {
               | { grade: number; type: "cohort.grade.set" }
               | { type: "cohort.archived" }
               | { type: "cohort.restored" }
+              | { type: "cohort.removed" }
               | {
                   assignment: "homeroom";
                   person: Id<"tenantPeople">;
@@ -10161,6 +10196,12 @@ export declare const api: {
                   personId: Id<"tenantPeople">;
                   state: "released";
                   type: "grade.released";
+                }
+              | {
+                  classId: Id<"classes">;
+                  periodId: Id<"tenantPeriods">;
+                  personId: Id<"tenantPeople">;
+                  type: "grade.corrected";
                 }
               | {
                   guardian: Id<"tenantPeople">;
@@ -10231,6 +10272,7 @@ export declare const api: {
               | { type: "period.opened" }
               | { type: "period.archived" }
               | { type: "period.restored" }
+              | { type: "period.removed" }
               | { type: "period.rename" }
               | { type: "period.rescheduled" }
               | { type: "graduation.decided" }
@@ -11829,7 +11871,11 @@ export declare const api: {
               state: "draft" | "released";
               value: number;
             } | null;
-            student: { id: Id<"tenantPeople">; name: string };
+            student: {
+              email: string | null;
+              id: Id<"tenantPeople">;
+              name: string;
+            };
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -11933,7 +11979,11 @@ export declare const api: {
             } | null;
             missing: Array<"npsn" | "decision" | "nisn" | "report">;
             nisn: string | null;
-            student: { id: Id<"tenantPeople">; name: string };
+            student: {
+              email: string | null;
+              id: Id<"tenantPeople">;
+              name: string;
+            };
             transcript: {
               average: number;
               subjects: Array<{ subject: string; value: number }>;
@@ -11971,7 +12021,11 @@ export declare const api: {
               state: "issued" | "locked";
             } | null;
             missing: Array<"npsn" | "decision" | "nisn" | "report">;
-            student: { id: Id<"tenantPeople">; name: string };
+            student: {
+              email: string | null;
+              id: Id<"tenantPeople">;
+              name: string;
+            };
             transcript: {
               average: number;
               subjects: Array<{ subject: string; value: number }>;
@@ -12091,7 +12145,11 @@ export declare const api: {
               note: string;
               state: "draft" | "completed" | "approved" | "locked";
             } | null;
-            student: { id: Id<"tenantPeople">; name: string };
+            student: {
+              email: string | null;
+              id: Id<"tenantPeople">;
+              name: string;
+            };
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -12382,6 +12440,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            email: string | null;
             id: Id<"tenantPeople">;
             login: string | null;
             name: string;
@@ -12389,6 +12448,24 @@ export declare const api: {
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      overview: FunctionReference<
+        "query",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        Array<{
+          classes: number;
+          homeroom: string | null;
+          id: Id<"tenantCohorts">;
+          name: string;
+          students: number;
+        }>
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        null
       >;
       restore: FunctionReference<
         "mutation",
@@ -12627,6 +12704,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
           status: "active" | "suspended" | "removed";
         },
@@ -12656,18 +12734,6 @@ export declare const api: {
           status: "active" | "suspended" | "removed";
         }
       >;
-      overview: FunctionReference<
-        "query",
-        "public",
-        { periodId: Id<"tenantPeriods">; slug: string },
-        Array<{
-          classes: number;
-          homeroom: string | null;
-          id: Id<"tenantCohorts">;
-          name: string;
-          students: number;
-        }>
-      >;
       rename: FunctionReference<
         "mutation",
         "public",
@@ -12692,6 +12758,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
         },
         {
@@ -12721,6 +12788,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
         },
         {
@@ -12827,6 +12895,12 @@ export declare const api: {
           start: string;
           status: "planned" | "active" | "archived";
         }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        null
       >;
       restore: FunctionReference<
         "mutation",
@@ -13492,6 +13566,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
         },
         {
