@@ -348,6 +348,15 @@ describe("classroom/folders", () => {
           itemId: link.id,
           slug: nf,
         });
+        vi.setSystemTime(TENANCY_NOW + 1000);
+        const later = yield* teacher.mutation(library.addLink, {
+          address: "https://youtu.be/dua",
+          classId,
+          clientKey: "tautan-later",
+          folderId: null,
+          slug: nf,
+          title: "Tautan baru",
+        });
         const student = fixture.as("student");
         const star = (
           target:
@@ -363,6 +372,7 @@ describe("classroom/folders", () => {
           });
         yield* star({ itemId: link.id, kind: "item" }, true);
         yield* star({ itemId: link.id, kind: "item" }, true);
+        yield* star({ itemId: later.id, kind: "item" }, true);
         yield* star({ folderId: top.id, kind: "folder" }, true);
         yield* star({ folderId: top.id, kind: "folder" }, true);
         expect(
@@ -370,7 +380,7 @@ describe("classroom/folders", () => {
             yield* student.query(library.starred, { classId, slug: nf }),
             (item) => item.title
           )
-        ).toEqual(["Tautan"]);
+        ).toEqual(["Tautan baru", "Tautan"]);
         expect(
           Arr.filter(
             yield* student.query(folders.list, { classId, slug: nf }),
@@ -383,15 +393,18 @@ describe("classroom/folders", () => {
         yield* star({ itemId: link.id, kind: "item" }, false);
         yield* star({ itemId: link.id, kind: "item" }, false);
         expect(
-          yield* student.query(library.starred, { classId, slug: nf })
-        ).toEqual([]);
+          Arr.map(
+            yield* student.query(library.starred, { classId, slug: nf }),
+            (item) => item.title
+          )
+        ).toEqual(["Tautan baru"]);
         expect(
           yield* student.query(library.search, {
             classId,
             slug: nf,
             text: "taut",
           })
-        ).toMatchObject([{ id: link.id }]);
+        ).toMatchObject([{ id: later.id }, { id: link.id }]);
         expect(
           yield* student.query(library.search, {
             classId,
@@ -471,12 +484,15 @@ describe("classroom/folders", () => {
           folderId: child.id,
           slug: nf,
         });
+        const kept = yield* add("Lain", null);
         yield* teacher.mutation(folders.purge, {
           classId,
           folderId: top.id,
           slug: nf,
         });
-        expect(yield* fixture.run(folderRows)).toHaveLength(0);
+        expect(
+          Arr.map(yield* fixture.run(folderRows), (folder) => folder._id)
+        ).toEqual([kept.id]);
         yield* fixture.finishScheduled();
         expect(bucket.state.objects).toEqual({});
         const left = yield* fixture.run(

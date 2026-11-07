@@ -24,6 +24,7 @@ import {
   Array as Arr,
   Effect,
   HashSet,
+  Order,
   Result,
   String as Str,
   Struct,
@@ -118,8 +119,9 @@ export const starred = FunctionImpl.make(
     );
     const shows = yield* visibleItems(items);
     return yield* libraryViews(
-      Arr.sort(Arr.filter(items, shows), (left, right) =>
-        right.createdAt > left.createdAt ? 1 : -1
+      Arr.sort(
+        Arr.filter(items, shows),
+        Order.flip(Order.mapInput(Order.Number, (item) => item.createdAt))
       )
     );
   })

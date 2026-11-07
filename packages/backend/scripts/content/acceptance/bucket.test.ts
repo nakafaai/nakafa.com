@@ -160,9 +160,7 @@ describe("acceptance bucket stand-in", () => {
           Effect.gen(function* () {
             const now = yield* Clock.currentTimeMillis;
             const put = yield* client.execute(
-              HttpClientRequest.put(yield* sign("PUT", now)).pipe(
-                HttpClientRequest.bodyUint8Array(new Uint8Array([1, 2]))
-              )
+              HttpClientRequest.put(yield* sign("PUT", now))
             );
             const typed = yield* client.get(yield* sign("GET", now));
             const expired = yield* client.get(

@@ -68,11 +68,9 @@ const isSigned = Effect.fn("contentAcceptance.bucket.isSigned")(function* (
   ) {
     return false;
   }
-  const headers = Rec.fromEntries(
-    Arr.map(
-      Arr.filter(names, (name) => name !== "host"),
-      (name) => [name, request.headers[name] ?? ""] as const
-    )
+  const headers = Rec.filter(
+    request.headers,
+    (_, name) => name !== "host" && Arr.contains(names, name)
   );
   const extra = Rec.filter(query, (_, name) => !Str.startsWith("X-Amz-")(name));
   const target = new URL(url.pathname, url.origin);

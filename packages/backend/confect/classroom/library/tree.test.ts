@@ -35,6 +35,10 @@ describe("classroom/library tree", () => {
     ).toEqual(["b", "c"]);
   });
 
+  it("stops at a folder whose parent is gone", () => {
+    expect(ancestry([folder("x", "gone")], "x")).toEqual([folder("x", "gone")]);
+  });
+
   it("stops a walk that meets a cycle", () => {
     const folders = [folder("a", "b"), folder("b", "a")];
     expect(ancestry(folders, "a")).toHaveLength(FOLDER_LIMIT);
