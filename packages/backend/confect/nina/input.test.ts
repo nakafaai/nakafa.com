@@ -11,6 +11,7 @@ import { readInput } from "@repo/backend/confect/nina/input";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import {
+  answerCalls,
   appendNinaTurn,
   createNinaTest,
   fundLearner,
@@ -301,8 +302,8 @@ describe("The cached prefix of the model input", () => {
     );
     const f = await createNinaTest({ history: 2 });
     await f.t.action(run, { turnId: f.turnId });
-    const [first, later] = model.doStreamCalls;
-    expect(model.doStreamCalls).toHaveLength(2);
+    const [first, later] = answerCalls(model);
+    expect(answerCalls(model)).toHaveLength(2);
     expect(prefixOf(first?.prompt ?? [])).toHaveLength(1 + 4);
     expect(encodeJsonText(prefixOf(later?.prompt ?? []))).toBe(
       encodeJsonText(prefixOf(first?.prompt ?? []))
@@ -332,7 +333,7 @@ describe("The cached prefix of the model input", () => {
     vi.setSystemTime(Date.UTC(2026, 9, 11, 10));
     const next = await appendNinaTurn(f, { prompt: "And at infinity?" });
     await f.t.action(run, { turnId: next.turnId });
-    const [one, two] = model.doStreamCalls;
+    const [one, two] = answerCalls(model);
     const before = prefixOf(one?.prompt ?? []);
     expect(unmarked(Arr.take(two?.prompt ?? [], before.length))).toBe(
       unmarked(before)
@@ -368,7 +369,7 @@ describe("The cached prefix of the model input", () => {
       slug: "chat",
     });
     await f.t.action(run, { turnId: next.turnId });
-    const [one, two] = model.doStreamCalls;
+    const [one, two] = answerCalls(model);
     expect(unmarked(two?.prompt[0])).toBe(unmarked(one?.prompt[0]));
     const newest = encodeJsonText(newestOf(two?.prompt ?? []));
     expect(newest).toContain("- url: https://nakafa.com/en/chat");
@@ -386,7 +387,7 @@ describe("The cached prefix of the model input", () => {
     // Admission keeps a conversation's focus for its follow-up turns.
     await f.focusTurn(next.turnId);
     await f.t.action(run, { turnId: next.turnId });
-    const [one, two] = model.doStreamCalls;
+    const [one, two] = answerCalls(model);
     expect(encodeJsonText(one?.prompt[0])).toContain(
       "# Focused Try-out Question"
     );
@@ -416,9 +417,9 @@ describe("Nina model input after a retry", () => {
     // The learner retries the retry, then the first asking again.
     await converse({ kind: "retry", order: second.order }, first.chatId);
     await converse({ kind: "retry", order: first.order }, first.chatId);
-    expect(model.doStreamCalls).toHaveLength(4);
+    expect(answerCalls(model)).toHaveLength(4);
     // Each retry holds the question once, and the answers it replaces are gone.
-    for (const call of Arr.drop(model.doStreamCalls, 1)) {
+    for (const call of Arr.drop(answerCalls(model), 1)) {
       const input = encodeJsonText(call.prompt);
       expect(input.split(QUESTION)).toHaveLength(2);
       expect(input).not.toContain(ANSWER);
@@ -451,7 +452,7 @@ describe("Nina model input after a retry", () => {
       },
       first.chatId
     );
-    const [, elsewhere, back] = model.doStreamCalls;
+    const [, elsewhere, back] = answerCalls(model);
     const away = encodeJsonText(newestOf(elsewhere?.prompt ?? []));
     expect(away).toContain("- url: https://nakafa.com/en/chat");
     expect(away).not.toContain("https://nakafa.com/en/home");
