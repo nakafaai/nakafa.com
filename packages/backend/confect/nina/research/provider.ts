@@ -57,10 +57,6 @@ const SEARCH_SOURCES = ["web", "news"];
 /** The asks one request may make: its first and the new asks after a bad gateway. */
 const ASKS = BAD_GATEWAY_RETRIES + 1;
 
-/** Fails a call the month's budget refused with `failure`, before the provider is asked. */
-const refusedAs = <Failure>(failure: Failure) =>
-  Effect.catchTag("SpendRefused", () => Effect.fail(failure));
-
 /** What a learner is told when the deployment has no provider key. */
 const NOT_CONFIGURED = "Web research is not configured.";
 /** What a learner is told when a search got no usable answer. */
@@ -298,7 +294,11 @@ export const requestSearch = Effect.fn("research.requestSearch")(
         })
       ),
       () => searchCost(search.limit * SEARCH_SOURCES.length)
-    ).pipe(refusedAs(new ResearchSearchError({ message: BUDGET_SPENT })));
+    ).pipe(
+      Effect.catchTag("SpendRefused", () =>
+        Effect.fail(new ResearchSearchError({ message: BUDGET_SPENT }))
+      )
+    );
     return answer.data;
   }
 );
@@ -345,7 +345,11 @@ export const requestScrape = Effect.fn("research.requestScrape")(
         })
       ),
       scrapeCost
-    ).pipe(refusedAs(new ResearchScrapeError({ message: BUDGET_SPENT })));
+    ).pipe(
+      Effect.catchTag("SpendRefused", () =>
+        Effect.fail(new ResearchScrapeError({ message: BUDGET_SPENT }))
+      )
+    );
     return answer.data;
   }
 );
