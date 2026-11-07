@@ -71,10 +71,17 @@ describe("spend/meter", () => {
             Effect.succeed("answer"),
             () => 1875
           );
-          const refused = yield* Effect.flip(
-            metered("chat", 10_000_000, Effect.succeed("never"), () => 0)
+          // A ceiling above what the free month has left holds the rest of it.
+          const rest = yield* metered(
+            "chat",
+            10_000_000,
+            Effect.succeed("rest"),
+            () => 775_000 - 1875
           );
-          return { answered, refused: refused._tag };
+          const refused = yield* Effect.flip(
+            metered("chat", 1, Effect.succeed("never"), () => 0)
+          );
+          return { answered, refused: refused._tag, rest };
         }).pipe(
           Effect.provide(
             Layer.provide(
@@ -85,10 +92,14 @@ describe("spend/meter", () => {
         )
       )
     );
-    expect(outcome).toEqual({ answered: "answer", refused: "SpendRefused" });
+    expect(outcome).toEqual({
+      answered: "answer",
+      refused: "SpendRefused",
+      rest: "rest",
+    });
     const rows = await t.run((ctx) => ctx.db.query("vendorSpend").collect());
     expect(
       Arr.map(rows, ({ calls, held, spent }) => ({ calls, held, spent }))
-    ).toEqual([{ calls: 1, held: 0, spent: 1875 }]);
+    ).toEqual([{ calls: 2, held: 0, spent: 775_000 }]);
   });
 });
