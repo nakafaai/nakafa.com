@@ -68,8 +68,9 @@ interface OptionRowProps {
 /**
  * One option of a question: the letter and the rich text the caller composes, framed as the player
  * frames it, as wide as the student reads it, with the teacher's remove control over its end. The row wires the text it holds. The key of the question is marked in the teacher's layer,
- * not here. Removing is shown when the option may go, on hover or focus, and always on a touch
- * screen. The text saves after its quiet period once the teacher types in it. A change that edits no
+ * not here. Every answer type removes a part with this one control: at the row's end, centered on the row however
+ * tall its text grows, 32 pixels square, shown when the part may go, on hover or focus, and always on a touch
+ * screen. The row is at least as tall as the control, so a pointer finds it anywhere along the row. The text saves after its quiet period once the teacher types in it. A change that edits no
  * text, such as the editor taking its lock, saves nothing. Removing the option drops the pending save
  * of its text. A label the server refused goes back into the editor, unless the teacher has typed on since. A
  * save the server never answered keeps the teacher's words in the editor, with a retry under them, since the
@@ -210,7 +211,7 @@ export function OptionRow({
   }, [saver]);
 
   return (
-    <div className="group/option relative pointer-coarse:has-[[data-remove]]:[--option-end:--spacing(8)]">
+    <div className="group/option relative flex min-h-8 flex-col justify-center pointer-coarse:has-[[data-remove]]:[--option-end:--spacing(8)]">
       <ExamDocumentWiringProvider
         content={Node.fromJSON(assessmentSchema, label).toJSON()}
         extensions={OPTION_EXTENSIONS}
@@ -238,7 +239,7 @@ export function OptionRow({
       {onRemove === null ? null : (
         <Button
           aria-label={removeName}
-          className="absolute end-1.5 top-1.5 opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
+          className="absolute end-1 top-1/2 -translate-y-1/2 opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
           data-remove=""
           disabled={locked}
           onClick={remove}

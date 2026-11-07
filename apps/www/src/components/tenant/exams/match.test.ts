@@ -5,7 +5,7 @@ import { Array as Arr, Option } from "effect";
 import { emptyLabel } from "@/components/tenant/exams/answer";
 import {
   keyPairs,
-  keyWithoutPart,
+  livePairs,
   matchOf,
   pairsKey,
   withPartAdded,
@@ -91,7 +91,7 @@ describe("withPartAdded and withPartRemoved", () => {
   });
 });
 
-describe("pairsKey and keyWithoutPart", () => {
+describe("pairsKey and livePairs", () => {
   it("keys a match only once every statement is paired, and reads its pairs back", () => {
     expect(pairsKey(answers, Arr.take(full, 2))).toBeNull();
     const key = pairsKey(answers, full);
@@ -101,14 +101,12 @@ describe("pairsKey and keyWithoutPart", () => {
     expect(pairsKey([entry], full)).toBeNull();
   });
 
-  it("keeps the key when a removed statement leaves the rest paired, and clears it when an answer leaves", () => {
-    const key = pairsKey(answers, full);
+  it("keeps the pairs of parts the match still holds, and none for answers that hold no match", () => {
     const fewer = withPartRemoved(answers, "source-3");
-    expect(keyWithoutPart(fewer, key, "source-3")).toEqual([
-      { interaction: "match", kind: "match", pairs: Arr.take(full, 2) },
-    ]);
-    expect(
-      keyWithoutPart(withPartRemoved(answers, "target-2"), key, "target-2")
-    ).toBeNull();
+    expect(livePairs(fewer, full)).toEqual(Arr.take(full, 2));
+    expect(livePairs(withPartRemoved(answers, "target-2"), full)).toEqual(
+      Arr.drop(full, 1)
+    );
+    expect(livePairs([entry], full)).toEqual([]);
   });
 });

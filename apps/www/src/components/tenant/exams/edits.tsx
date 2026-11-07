@@ -7,6 +7,7 @@ import type {
 } from "@repo/backend/confect/assessment/response";
 import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import { asTemplate } from "@repo/backend/confect/exams/template";
+import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Match } from "effect";
 import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -17,7 +18,14 @@ import {
   markedOptions,
   toggledKey,
 } from "@/components/tenant/exams/answer";
-import { pairsKey } from "@/components/tenant/exams/match";
+import {
+  keyPairs,
+  livePairs,
+  type MatchSide,
+  pairsKey,
+  withPartAdded,
+  withPartRemoved,
+} from "@/components/tenant/exams/match";
 import {
   type NumberSetting,
   withNumber,
@@ -101,6 +109,9 @@ export function useQuestionEditing(question: Question) {
   // applies its edit to the draft the last click left on screen, and the render shows again once every save of
   // this question has settled.
   const [shown, setShown] = useState<QuestionDraft | null>(null);
+  // The pairs the teacher drew that pair fewer statements than the match holds, which the paper and the key show until
+  // the key takes them.
+  const [partial, setPartial] = useState<readonly ExamPair[] | null>(null);
   const shownRef = useRef<QuestionDraft | null>(null);
   const unsettled = useRef(0);
   const current = () => shownRef.current ?? rendered();
@@ -207,17 +218,66 @@ export function useQuestionEditing(question: Question) {
   const setNumber = (setting: NumberSetting) =>
     saveAnswers((base) => ({ ...base, ...withNumber(base.answers, setting) }));
 
-  /** Sets the pairs of a matching question's key, which saves at once once they pair every statement (`pairsKey`). */
-  const setPairs = (pairs: readonly ExamPair[]) =>
-    saveAnswers((base) => ({ ...base, key: pairsKey(base.answers, pairs) }));
+  /** The pairs of a matching question the page shows: those the teacher drew that wait, or the key's. */
+  const pairs = livePairs(
+    (shown ?? question).answers,
+    partial ?? keyPairs((shown ?? question).key)
+  );
+
+  /** Keeps pairs that pair fewer statements than the match holds on screen, and drops them once the key takes them. */
+  const keepPairs = (
+    answers: QuestionDraft["answers"],
+    kept: readonly ExamPair[]
+  ) => setPartial(pairsKey(answers, kept) === null ? kept : null);
+
+  /**
+   * Draws the pairs of a matching question's key. Pairs that pair every statement save at once (`pairsKey`). Fewer wait
+   * on screen, and take away the key the server holds, so it never keeps a line the teacher removed.
+   */
+  const setPairs = (next: readonly ExamPair[]) => {
+    const base = current();
+    keepPairs(base.answers, next);
+    if (pairsKey(base.answers, next) !== null || base.key !== null) {
+      saveAnswers((draft) => ({
+        ...draft,
+        key: pairsKey(draft.answers, next),
+      }));
+    }
+  };
+
+  /** Adds an empty statement or answer at the end of its side, keeping every line, which a new statement waits on. */
+  const addPart = (side: MatchSide) => {
+    const unique = Effect.runSync(randomUuid);
+    keepPairs(withPartAdded(current().answers, side, unique), pairs);
+    saveAnswers((draft) => {
+      const answers = withPartAdded(draft.answers, side, unique);
+      return { ...draft, answers, key: pairsKey(answers, pairs) };
+    });
+  };
+
+  /** Takes a statement or an answer away with its line, keeping every other line, which waits for every statement. */
+  const removePart = (partId: string) => {
+    const kept = Arr.filter(
+      pairs,
+      (pair) => pair.source !== partId && pair.target !== partId
+    );
+    keepPairs(withPartRemoved(current().answers, partId), kept);
+    saveAnswers((draft) => {
+      const answers = withPartRemoved(draft.answers, partId);
+      return { ...draft, answers, key: pairsKey(answers, kept) };
+    });
+  };
 
   /** Sets the cells of a true or false table's key, which saves at once once they mark every statement (`cellsKey`). */
   const setCells = (cells: readonly ExamCell[]) =>
     saveAnswers((base) => ({ ...base, key: cellsKey(base.answers, cells) }));
 
   return {
+    addPart,
     displayed: shown ?? question,
     markOption,
+    pairs,
+    removePart,
     saveAnswers,
     setAccepted,
     setCells,

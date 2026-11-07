@@ -5,7 +5,6 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-  FieldTitle,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -104,9 +103,10 @@ function CommitText({
 }
 
 /**
- * The key of a numeric answer, as a calculator question's settings read: the correct number, how far a
- * student's number may stray from it, whether a fraction counts, and the unit shown beside the student's
- * field. A number or a tolerance is saved only when the contract grades it (`withNumber`); any other is kept
+ * The key of a numeric answer, as a calculator question's settings read, one field for each setting so the panel's
+ * rhythm runs through them: the correct number, how far a student's number may stray from it, the unit shown beside
+ * the student's field, and whether a fraction counts. Each field shows its short name, and its name for assistive
+ * technology carries the question's number. A number or a tolerance is saved only when the contract grades it (`withNumber`); any other is kept
  * in its field with the reason, and a blank number clears the key. The tolerance waits for the number, and a
  * tolerance chosen with no distance yet keeps the key exact until its distance is written.
  */
@@ -140,25 +140,24 @@ export function NumberKey({
   };
 
   return (
-    <Field>
-      <FieldTitle>{t("number-key")}</FieldTitle>
+    <>
       <Field>
-        <FieldLabel htmlFor={`${id}-value`}>
-          {t("number-value-of", { number })}
-        </FieldLabel>
+        <FieldLabel htmlFor={`${id}-value`}>{t("number-key")}</FieldLabel>
         <CommitText
           disabled={!editable}
           id={`${id}-value`}
           inputMode="decimal"
+          label={t("number-value-of", { number })}
           onCommit={(value) => save({ ...setting, value })}
           placeholder={t("number-value-placeholder")}
           refusal={t("number-refused")}
           text={setting.value}
         />
+        <FieldDescription>{t("number-hint")}</FieldDescription>
       </Field>
       <Field>
         <FieldLabel htmlFor={`${id}-tolerance`}>
-          {t("number-tolerance-of", { number })}
+          {t("number-tolerance")}
         </FieldLabel>
         <Select
           items={Arr.map(ToleranceKind.literals, (value) => ({
@@ -179,6 +178,7 @@ export function NumberKey({
           value={kind}
         >
           <SelectTrigger
+            aria-label={t("number-tolerance-of", { number })}
             className="w-full"
             disabled={!editable || setting.value === ""}
             id={`${id}-tolerance`}
@@ -220,6 +220,18 @@ export function NumberKey({
           />
         )}
       </Field>
+      <Field>
+        <FieldLabel htmlFor={`${id}-unit`}>{t("number-unit")}</FieldLabel>
+        <CommitText
+          disabled={!editable}
+          id={`${id}-unit`}
+          inputMode="text"
+          onCommit={(unit) => save({ ...setting, unit })}
+          placeholder={t("number-unit-placeholder")}
+          refusal=""
+          text={setting.unit}
+        />
+      </Field>
       <Field orientation="horizontal">
         <Checkbox
           checked={setting.acceptsFractions}
@@ -233,19 +245,6 @@ export function NumberKey({
           {t("number-fractions")}
         </FieldLabel>
       </Field>
-      <Field>
-        <FieldLabel htmlFor={`${id}-unit`}>{t("number-unit")}</FieldLabel>
-        <CommitText
-          disabled={!editable}
-          id={`${id}-unit`}
-          inputMode="text"
-          onCommit={(unit) => save({ ...setting, unit })}
-          placeholder={t("number-unit-placeholder")}
-          refusal=""
-          text={setting.unit}
-        />
-      </Field>
-      <FieldDescription>{t("number-hint")}</FieldDescription>
-    </Field>
+    </>
   );
 }

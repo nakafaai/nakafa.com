@@ -1,29 +1,20 @@
-import {
-  letterScript,
-  optionLetter,
-} from "@repo/backend/confect/exams/letters";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Array as Arr, Option } from "effect";
+import { optionLetters } from "@repo/backend/confect/exams/letters";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
+import {
+  LinesColumn,
+  LinesItem,
+  LinesProvider,
+} from "@/components/exams/lines/board";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
-import {
-  type MatchPart,
-  pairedWith,
-} from "@/components/exams/sitting/response";
+import type { MatchPart } from "@/components/exams/sitting/response";
 
 /**
- * A matching question as a paper lays it out: the answers in one column, each named by its letter, and
- * the statements in the other, each numbered, with the letter the student pairs it with. Choosing a
- * letter that another statement holds moves it to this statement, since each answer pairs one statement.
+ * A matching question as a paper sets it: the statements in one column, each numbered, the answers in the other,
+ * each named by its letter, and a line from each statement to the answer the student joins it to, drawn by a
+ * drag, two presses, or the keyboard. Joining an answer another statement holds moves its line here, since each
+ * answer pairs one statement, and a line taken away leaves its statement open again.
  */
 export function SittingPairs({
   labelledBy,
@@ -34,7 +25,7 @@ export function SittingPairs({
   /** The id of the heading that names the question. */
   readonly labelledBy: string;
   readonly match: MatchPart;
-  /** Saves the pairs once the student pairs one statement. */
+  /** Saves the pairs each time the student draws, moves, or takes away a line. */
   readonly onPair: (
     pairs: readonly { readonly source: string; readonly target: string }[]
   ) => void;
@@ -46,75 +37,48 @@ export function SittingPairs({
 }) {
   const disabled = usePaperLocked();
   const t = useTranslations("Exams");
-  // The answers are named in the script of their labels, as the teacher's paper names them: أ, ب, ج for
-  // answers written in Arabic.
-  const script = letterScript(Arr.map(match.targets, (part) => part.label));
-  const letterOf = (index: number) => optionLetter(index, script);
-  const items = Arr.map(match.targets, (target, index) => ({
-    label: letterOf(index),
-    value: target.id,
-  }));
+  // The answers are named in the script of their labels, as the teacher's paper names them: أ, ب, ج for answers
+  // written in Arabic.
+  const letterOf = optionLetters(Arr.map(match.targets, (part) => part.label));
 
   return (
-    <fieldset
-      aria-labelledby={labelledBy}
-      className="grid min-w-0 gap-6 md:grid-cols-2"
-    >
-      <ol className="grid content-start gap-3">
-        {Arr.map(match.sources, (source, index) => (
-          <li className="grid gap-2" key={source.id}>
-            <div className="flex min-w-0 items-start gap-3">
-              <span className="font-medium tabular-nums">{index + 1}.</span>
-              <SittingDocument document={source.label} size="line" />
-            </div>
-            <Select
-              items={items}
-              onValueChange={(target) => {
-                if (target !== null) {
-                  onPair(
-                    pairedWith(match.sources, pairs, {
-                      source: source.id,
-                      target,
-                    })
-                  );
-                }
-              }}
-              value={Option.getOrNull(
-                Option.map(
-                  Arr.findFirst(pairs, (pair) => pair.source === source.id),
-                  (pair) => pair.target
-                )
-              )}
+    <fieldset aria-labelledby={labelledBy} className="grid min-w-0 gap-3">
+      <LinesProvider
+        disabled={disabled}
+        match={match}
+        onPairs={onPair}
+        pairs={pairs}
+        size="paper"
+        stretch
+      >
+        <LinesColumn side="sources">
+          {Arr.map(match.sources, (source, index) => (
+            <LinesItem
+              id={source.id}
+              key={source.id}
+              name={String(index + 1)}
+              side="sources"
             >
-              <SelectTrigger
-                aria-label={t("pair-statement", { number: index + 1 })}
-                className="w-32"
-                disabled={disabled}
-              >
-                <SelectValue placeholder={t("pair-choose")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>{t("answer-placeholder")}</SelectLabel>
-                  {Arr.map(items, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </li>
-        ))}
-      </ol>
-      <ol className="grid content-start gap-3">
-        {Arr.map(match.targets, (target, index) => (
-          <li className="flex min-w-0 items-start gap-3" key={target.id}>
-            <span className="font-medium">{letterOf(index)}.</span>
-            <SittingDocument document={target.label} size="line" />
-          </li>
-        ))}
-      </ol>
+              <SittingDocument document={source.label} size="line" />
+            </LinesItem>
+          ))}
+        </LinesColumn>
+        <LinesColumn side="targets">
+          {Arr.map(match.targets, (target, index) => (
+            <LinesItem
+              id={target.id}
+              key={target.id}
+              name={letterOf(index)}
+              side="targets"
+            >
+              <SittingDocument document={target.label} size="line" />
+            </LinesItem>
+          ))}
+        </LinesColumn>
+      </LinesProvider>
+      {disabled ? null : (
+        <p className="text-muted-foreground text-sm">{t("pair-hint")}</p>
+      )}
     </fieldset>
   );
 }
