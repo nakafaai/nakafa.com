@@ -22,14 +22,14 @@ const backend = Effect.gen(function* () {
  * `brew` command it was asked for.
  */
 const brewAs = Effect.fn("NodeTest.brewAs")(function* (
-  answer: (formula: string) => ChildProcess.Command
+  answer: () => ChildProcess.Command
 ) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const asked = MutableList.make<readonly string[]>();
+  const asked = MutableList.make<ChildProcess.StandardCommand["args"]>();
   const service = ChildProcessSpawner.make((command) => {
     if (ChildProcess.isStandardCommand(command) && command.command === "brew") {
       MutableList.append(asked, command.args);
-      return spawner.spawn(answer(command.args.at(-1) ?? ""));
+      return spawner.spawn(answer());
     }
     return spawner.spawn(command);
   });
