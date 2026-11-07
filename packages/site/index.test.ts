@@ -6,6 +6,12 @@ import {
 import { Array as Arr, Option } from "effect";
 
 /** Matches the origin that serves Google's Picker script, inside the script sources. */
+/** The R2 endpoint in the connect directive, where a browser sends a file. */
+const R2_CONNECT = /connect-src [^;]*https:\/\/\*\.r2\.cloudflarestorage\.com/u;
+
+/** The R2 endpoint in the media directive, where a browser plays an exam's audio. */
+const R2_MEDIA = /media-src [^;]*https:\/\/\*\.r2\.cloudflarestorage\.com/u;
+
 const PICKER_SCRIPT_SOURCE = /script-src [^;]*https:\/\/apis\.google\.com/u;
 
 /** Matches the origin of the frame Google's Picker opens, inside the frame sources. */
@@ -47,6 +53,18 @@ describe("createSecurityHeaders", () => {
     expect(csp?.value).not.toContain("https://raw.githubusercontent.com");
     expect(csp?.value).toContain("media-src 'self'");
     expect(csp?.value).not.toContain("posthog.com");
+  });
+
+  it("lets a browser upload to the bucket's presigned addresses and play audio from them", () => {
+    const csp = Option.getOrUndefined(
+      Arr.findFirst(
+        createSecurityHeaders(),
+        (header) => header.key === "Content-Security-Policy"
+      )
+    );
+
+    expect(csp?.value).toMatch(R2_CONNECT);
+    expect(csp?.value).toMatch(R2_MEDIA);
   });
 
   it("lets Google's Picker load its script and open its frame", () => {

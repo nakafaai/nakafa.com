@@ -24,7 +24,7 @@ import {
   readRecentContext,
 } from "@repo/backend/confect/nina/sealed/context";
 import { Output } from "ai";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema, Stream } from "effect";
 
 /**
  * Messages the follow-up suggestions look back on, answers included: eight
@@ -39,6 +39,32 @@ class NinaPresentationError extends Schema.TaggedError<NinaPresentationError>()(
   "NinaPresentationError",
   { operation: Schema.Literals(["suggestions", "title"]) }
 ) {}
+
+/** The failure of the follow-ups, which the turn logs and goes on without. */
+const suggestionsUnavailable = () =>
+  new NinaPresentationError({ operation: "suggestions" });
+
+/** The follow-ups the model returns, as one object so the output can be parsed while it streams. */
+const suggestionsOutput = createEffectSchema(
+  Schema.Struct({ suggestions: NinaSuggestions })
+);
+
+/** A partial output that has begun its list of follow-ups. */
+const PartialSuggestions = Schema.Struct({
+  suggestions: Schema.Array(Schema.Unknown),
+});
+
+/**
+ * The follow-ups of a partial output that the model has finished writing: every
+ * one before the last, which may still grow. They are kept only when they hold
+ * as saved follow-ups, so a learner never sees half a question.
+ */
+const readWrittenSuggestions = (partial: unknown) =>
+  Schema.decodeUnknownOption(PartialSuggestions)(partial).pipe(
+    Option.flatMap(({ suggestions }) =>
+      Schema.decodeUnknownOption(NinaSuggestions)(Arr.dropRight(suggestions, 1))
+    )
+  );
 
 /**
  * Small Agent generations take their input from the sealed module, which reads
@@ -65,54 +91,81 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
       recentMessages: SUGGESTION_MESSAGES,
       threadId: turn.threadId,
     }).pipe(
-      Effect.mapError(
-        () => new NinaPresentationError({ operation: "suggestions" })
-      ),
+      Effect.mapError(suggestionsUnavailable),
       Effect.flatMap((context) =>
-        Effect.tryPromise({
-          try: (signal) =>
-            new Agent(components.nina, {
-              name: "suggestions" satisfies UsageAgent,
-              languageModel: suggestion.model,
-              usageHandler,
-              instructions: nakafaSuggestions({ locale }),
-              contextOptions: { recentMessages: 0 },
-              // The completed turn is the newest history; the request is the new turn.
-              contextHandler: () =>
-                Promise.resolve(
-                  assembleContext({
-                    current: [
-                      {
-                        role: "user",
-                        content:
-                          "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
-                      },
-                    ],
-                    history: splitTurns([
-                      ...context.recent,
-                      ...context.inputPrompt,
-                      ...context.existingResponses,
-                    ]),
-                  })
-                ),
-            })
-              .generateText(
+        Effect.gen(function* () {
+          // A provider that refuses the call closes the partial stream and
+          // never settles `output`, so the stream's own error is the signal.
+          let failed = false;
+          const result = yield* Effect.tryPromise({
+            try: (signal) =>
+              new Agent(components.nina, {
+                name: "suggestions" satisfies UsageAgent,
+                languageModel: suggestion.model,
+                usageHandler,
+                instructions: nakafaSuggestions({ locale }),
+                contextOptions: { recentMessages: 0 },
+                // The completed turn is the newest history; the request is the new turn.
+                contextHandler: () =>
+                  Promise.resolve(
+                    assembleContext({
+                      current: [
+                        {
+                          role: "user",
+                          content:
+                            "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
+                        },
+                      ],
+                      history: splitTurns([
+                        ...context.recent,
+                        ...context.inputPrompt,
+                        ...context.existingResponses,
+                      ]),
+                    })
+                  ),
+              }).streamText(
                 ctx,
                 { threadId: turn.threadId, userId: turn.userId },
                 {
                   promptMessageId: turn.promptMessageId,
                   abortSignal: signal,
-                  output: Output.object({
-                    schema: createEffectSchema(
-                      Schema.Struct({ suggestions: NinaSuggestions })
-                    ),
-                  }),
+                  output: Output.object({ schema: suggestionsOutput }),
                   timeout: suggestion.timeout,
+                  onError: () => {
+                    failed = true;
+                  },
                 },
                 options
-              )
-              .then((result) => result.output),
-          catch: () => new NinaPresentationError({ operation: "suggestions" }),
+              ),
+            catch: suggestionsUnavailable,
+          });
+          // Each follow-up is saved once the model has moved on to the next
+          // one, so the learner reads them arrive one by one through the turn's
+          // own query; the last one is whole only when the model has finished.
+          yield* Stream.fromAsyncIterable(
+            result.partialOutputStream,
+            suggestionsUnavailable
+          ).pipe(
+            Stream.map(readWrittenSuggestions),
+            Stream.filter(Option.isSome),
+            Stream.map((written) => written.value),
+            Stream.changesWith(
+              (before, after) => before.length === after.length
+            ),
+            Stream.runForEach((suggestions) =>
+              mutate(ninaInternal.presentation.save, {
+                turnId: turn._id,
+                suggestions,
+              })
+            )
+          );
+          if (failed) {
+            return yield* suggestionsUnavailable();
+          }
+          return yield* Effect.tryPromise({
+            try: () => result.output,
+            catch: suggestionsUnavailable,
+          });
         })
       ),
       Effect.flatMap((output) =>
