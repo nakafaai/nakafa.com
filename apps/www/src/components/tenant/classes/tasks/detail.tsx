@@ -98,8 +98,7 @@ export function TaskDetail({ rows }: { rows: readonly ClassTask[] }) {
  * One task, read live by its address. The row the list holds draws it at once, so a press shows
  * the task in the same frame, and the read keeps it current. A task the class does not hold shows
  * the missing state, a failed read its sentence and Try again, and a viewer who lost the school's
- * access is sent to the refused page. Its teacher reads the work handed in and edits it; a student
- * of the class hands work in; anyone else reads the task alone.
+ * access is sent to the refused page.
  */
 function OpenTask({
   address,
@@ -108,7 +107,7 @@ function OpenTask({
   address: string;
   listed: Option.Option<ClassTask>;
 }) {
-  const { can, classId, slug } = useClassScope();
+  const { classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const read = useQuery(
     classroom.tasks.get,
@@ -138,23 +137,33 @@ function OpenTask({
   return (
     <OpenTaskContext value={task.value}>
       <TaskHeader />
-      {task.value.exam === null ? null : <ExamTask />}
-      {task.value.exam === null && Arr.contains(can, "task.manage") ? (
-        <TeacherTask />
-      ) : null}
-      {task.value.exam === null &&
-      Arr.contains(can, "task.submit") &&
-      !Arr.contains(can, "task.manage") ? (
-        <HandIn />
-      ) : null}
-      {task.value.exam !== null ||
-      Arr.contains(can, "task.manage") ||
-      Arr.contains(can, "task.submit") ? null : (
-        <PaneBody>
-          <TaskInfo />
-        </PaneBody>
-      )}
+      <TaskBody />
     </OpenTaskContext>
+  );
+}
+
+/**
+ * What the pane holds under its header: a task built from an exam opens the exam player, its
+ * teacher reads the work handed in, a student of the class hands work in, and anyone else reads
+ * the task alone.
+ */
+function TaskBody() {
+  const task = useOpenTask();
+  const { can } = useClassScope();
+
+  if (task.exam !== null) {
+    return <ExamTask />;
+  }
+  if (Arr.contains(can, "task.manage")) {
+    return <TeacherTask />;
+  }
+  if (Arr.contains(can, "task.submit")) {
+    return <HandIn />;
+  }
+  return (
+    <PaneBody>
+      <TaskInfo />
+    </PaneBody>
   );
 }
 
