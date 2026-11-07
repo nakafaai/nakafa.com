@@ -84,7 +84,7 @@ test("a member with no class sees no Classes group in the sidebar", async ({
   await context.close();
 });
 
-test("every settings group lists its sections under its own name, so a section opens without a fold and the sidebar does not move under the pointer", async ({
+test("the settings sidebar stands the profile and billing alone with their icons, and folds every other group under its name, open while it holds the page", async ({
   browser,
   baseURL,
 }) => {
@@ -97,28 +97,42 @@ test("every settings group lists its sections under its own name, so a section o
   await page.goto(address("/settings/profile"));
 
   const sidebar = page.locator('[data-slot="sidebar-content"]');
-  const profile = sidebar.getByRole("link", { name: "Profile", exact: true });
-  await expect(profile).toBeVisible();
-  // No group folds: each one's name labels the sections below it.
-  for (const group of ["School", "People", "Integrations", "Security"]) {
-    await expect(
-      sidebar.locator('[data-sidebar="group-label"]', { hasText: group })
-    ).toHaveText(group);
+  for (const alone of ["Profile", "Billing"]) {
+    const link = sidebar.getByRole("link", { exact: true, name: alone });
+    await expect(link).toBeVisible();
+    await expect(link.locator("svg")).toHaveCount(1);
   }
-  await expect(sidebar.getByRole("button", { name: "People" })).toHaveCount(0);
-  const members = sidebar.getByRole("link", { name: "Members", exact: true });
-  await waitUntilTakenOver(members);
-  // Every settings item carries its icon beside its name.
-  await expect(members.locator("svg")).toHaveCount(1);
-  await expect(profile.locator("svg")).toHaveCount(1);
+  // Every other group folds under its own name and icon, and none holds the profile, so each stays shut.
+  for (const group of ["Academics", "People", "Integrations", "Security"]) {
+    const fold = sidebar.getByRole("button", { exact: true, name: group });
+    await expect(fold).toHaveAttribute("aria-expanded", "false");
+    await expect(fold.locator("svg")).toHaveCount(2);
+  }
+  const members = sidebar.getByRole("link", { exact: true, name: "Members" });
+  await expect(members).toBeHidden();
+  const people = sidebar.getByRole("button", { exact: true, name: "People" });
+  await waitUntilTakenOver(people);
+  await people.click();
+  await expect(people).toHaveAttribute("aria-expanded", "true");
+  await expect(members).toBeVisible();
+  // A section folded under its group reads by its name alone.
+  await expect(members.locator("svg")).toHaveCount(0);
   const before = await members.boundingBox();
   await members.click();
 
   await expect(page).toHaveURL(address("/settings/members"));
   await expect(members).toHaveAttribute("data-active", "true");
-  // Every group stays as it was, so Members keeps its place.
-  await expect(profile).toBeVisible();
+  // The open group stays open, so Members keeps its place under the pointer.
+  await expect(people).toHaveAttribute("aria-expanded", "true");
   expect((await members.boundingBox())?.y).toBe(before?.y);
+
+  // A hard load opens the group that holds the page, and only that one.
+  await page.reload();
+  await expect(people).toHaveAttribute("aria-expanded", "true");
+  await expect(members).toHaveAttribute("data-active", "true");
+  await expect(
+    sidebar.getByRole("button", { exact: true, name: "Academics" })
+  ).toHaveAttribute("aria-expanded", "false");
   await context.close();
 });
 
@@ -140,10 +154,10 @@ test("no two entries of the settings sidebar draw the same icon", async ({
     .locator('[data-sidebar="menu-button"]')
     .filter({ visible: true });
   await expect(
-    sidebar.getByRole("link", { name: "Audit trail", exact: true })
+    sidebar.getByRole("button", { name: "Security", exact: true })
   ).toBeVisible();
 
-  // Each entry's first icon is its own: the way back, then every section of every group.
+  // Each entry's first icon is its own: the way back, the profile and billing, then every group.
   const icons = await entries.evaluateAll((nodes) =>
     nodes.map((node) => node.querySelector("svg")?.innerHTML ?? "")
   );
