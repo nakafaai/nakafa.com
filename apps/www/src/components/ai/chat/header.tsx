@@ -36,7 +36,10 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useChat } from "@/components/ai/chat/context";
-import { ChatDeletion } from "@/components/ai/chat/deletion";
+import {
+  ChatDeletionDialog,
+  useChatPageDeletion,
+} from "@/components/ai/chat/deletion";
 import { handleTitleKeyDown } from "@/components/ai/chat/rename";
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { readChatTitle, useChatRename } from "@/components/ai/chat/title";
@@ -85,6 +88,9 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
   const tCommon = useTranslations("Common");
   const t = useTranslations("Ai");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteFromPage = useChatPageDeletion(chat, () =>
+    setConfirmDelete(false)
+  );
   const [confirmShare, setConfirmShare] = useState(false);
   // The share link is read once the reader shows intent on the share item.
   const [shareWarmed, setShareWarmed] = useState(false);
@@ -215,10 +221,11 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
         open={confirmShare}
         warmed={shareWarmed}
       />
-      <ChatDeletion
+      <ChatDeletionDialog
         chat={chat}
-        onOpenChange={setConfirmDelete}
+        onDelete={deleteFromPage}
         open={confirmDelete}
+        setOpen={setConfirmDelete}
       />
     </>
   );

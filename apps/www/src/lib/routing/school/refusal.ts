@@ -5,7 +5,6 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Data, Duration, Effect, Option, Schema } from "effect";
-import { readSessionCookie } from "@/lib/auth/cookie.server";
 import { readStoreEntry, writeStoreEntry } from "@/lib/content/store/entry";
 import { httpSingleAttemptLayer } from "@/lib/convex/http";
 import { readSchoolSlug } from "@/lib/routing/school/host";
@@ -23,7 +22,7 @@ export const SCHOOL_REFUSAL_TAG = "school-refusal";
  * How long an isolate keeps a school's answer. Scanners try hundreds of addresses
  * on invented hosts, and each one would otherwise reach Convex, so a minute bounds
  * the reads to one a minute per host and isolate. A visitor of a school opened
- * within that minute can see not found once; a member's session never asks.
+ * within that minute can see not found once.
  */
 const SCHOOL_REFUSAL_LIFETIME = Duration.seconds(60);
 
@@ -58,9 +57,11 @@ const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
  * (ADR 0026). The answer is the locale of the not-found page, negotiated from the
  * request, or none when the school tree answers. A request whose host names no
  * school has none, and so has a method that is not a document read: only a GET or
- * HEAD request is a page. A request with a session reads nothing here: the
- * page's own gate reads the viewer in the browser and draws the refusal, so a
- * signed-in page gets the school shell at once instead of after two reads.
+ * HEAD request is a page. A signed-in visitor is asked the same question, because
+ * the school's existence does not depend on who asks: a host that names no school
+ * answers the real not-found page to everyone, never a cached shell that draws the
+ * refusal later. The answer is kept per host and isolate for a minute, so a member
+ * of a real school pays the read once a minute at most.
  *
  * The whole gate waits at most NETWORK_ATTEMPT_DEADLINE, so a school that does not
  * answer holds the page for that long at most (ADR 0026). A failed or late read
@@ -74,8 +75,7 @@ export const readSchoolRefusal = Effect.fn("www.routing.school.pageRefusal")(
     if (
       Option.isNone(slug) ||
       isSharedPath(url.pathname) ||
-      (request.method !== "GET" && request.method !== "HEAD") ||
-      readSessionCookie(request) !== null
+      (request.method !== "GET" && request.method !== "HEAD")
     ) {
       return Option.none();
     }

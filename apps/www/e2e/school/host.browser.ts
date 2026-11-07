@@ -24,13 +24,19 @@ test("the school tree answers not found on the main host", async ({
   expect(response?.status()).toBe(404);
 });
 
-test("a school path without a locale answers not found on the main host", async ({
+test("a school path without a locale moves to the school's own host", async ({
   page,
   baseURL,
 }) => {
-  const response = await page.goto(new URL("/school/harapan", baseURL).href);
+  const response = await page.request.get(
+    new URL("/school/harapan", baseURL).href,
+    { maxRedirects: 0 }
+  );
 
-  expect(response?.status()).toBe(404);
+  expect(response.status()).toBe(307);
+  expect(response.headers().location).toBe(
+    hostAddress(baseURL, "harapan.localhost", "/")
+  );
 });
 
 test("an encoded school path answers not found on the main host, even to a Flight request", async ({

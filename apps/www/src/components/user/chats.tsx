@@ -17,19 +17,19 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
+import { ChatDeletionDialog } from "@/components/ai/chat/deletion";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
 import { readChatTitle } from "@/components/ai/chat/title";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";
 import { SignedInIsland } from "@/components/providers/island";
-import { formatShortAge } from "@/components/user/age";
+import { formatAge } from "@/components/user/age";
 import { useAgeClock, useAgeNow } from "@/components/user/ages";
 import type { AgeClock } from "@/components/user/clock";
 import {
@@ -197,7 +197,7 @@ function ChatRow({ chat }: { chat: ChatView }) {
         <FeedHeader>
           <FeedName>{profile.name}</FeedName>
           <FeedAge at={chat.updatedAt}>
-            {formatShortAge(chat.updatedAt, now, locale)}
+            {formatAge(chat.updatedAt, now, locale)}
           </FeedAge>
           <HugeIcons
             aria-label={tAi(isPrivate ? "private" : "public")}
@@ -226,7 +226,6 @@ function ChatRow({ chat }: { chat: ChatView }) {
 /** Render owner actions for one profile chat row. */
 function UserChatsListActions({ chat }: { chat: ChatView }) {
   const t = useTranslations("Common");
-  const tAi = useTranslations("Ai");
   const deleteChat = useDeleteChatMutation();
   const forgetChat = useAi((state) => state.forgetChat);
   const recallChat = useAi((state) => state.recallChat);
@@ -295,17 +294,11 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <ResponsiveDialog
-        description={tAi("delete-chat-description")}
-        footer={
-          <Button onClick={handleDelete} variant="destructive">
-            <HugeIcons icon={Delete02Icon} />
-            {tAi("confirm")}
-          </Button>
-        }
+      <ChatDeletionDialog
+        chat={chat}
+        onDelete={handleDelete}
         open={confirmDelete}
         setOpen={setConfirmDelete}
-        title={tAi("delete-chat")}
       />
     </>
   );

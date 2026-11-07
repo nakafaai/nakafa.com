@@ -222,7 +222,7 @@ export function NinaInput({
               size="icon"
               tooltip={stopping ? t("stop-response") : t("send-message")}
               type={stopping ? "button" : "submit"}
-              variant="default"
+              variant="secondary"
             >
               <HugeIcons icon={stopping ? StopIcon : ArrowUp02Icon} />
             </InputGroupButton>

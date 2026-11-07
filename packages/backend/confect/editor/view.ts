@@ -74,3 +74,28 @@ export const SinceReply = Schema.Union([
     client: ClientRecordView,
   }),
 ]);
+
+/**
+ * The answer to a submit (ADR 0028). `Accepted` says the batch landed, now or under its id
+ * before. Every other member is an outcome that the editor's sync decides for itself, so a
+ * concurrent edit or a fold is an answer and never a failed call, and none of them writes
+ * anything. `VersionStale` names the head the batch missed: the client waits for the steps it
+ * lacks and rebases its own. `DocumentInvalid` and `DocumentTooLarge` say that the document the
+ * batch makes breaks the contract, with the bytes and the limit of a document too large: the
+ * client halves the batch, and drops a step that the document refuses alone. `FoldPending` says
+ * that the steps the snapshot lacks are more than one read holds: a fold of them is already due,
+ * so the client sends the batch again under its id.
+ */
+export const SubmitReply = Schema.Union([
+  Schema.TaggedStruct("Accepted", {}),
+  Schema.TaggedStruct("VersionStale", {
+    baseVersion: VersionSchema,
+    head: VersionSchema,
+  }),
+  Schema.TaggedStruct("DocumentInvalid", {}),
+  Schema.TaggedStruct("DocumentTooLarge", {
+    bytes: Schema.Int,
+    limit: Schema.Int,
+  }),
+  Schema.TaggedStruct("FoldPending", {}),
+]);
