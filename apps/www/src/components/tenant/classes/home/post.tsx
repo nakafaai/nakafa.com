@@ -3,6 +3,7 @@ import {
   Archive02Icon,
   ArrowTurnBackwardIcon,
   Delete02Icon,
+  Megaphone01Icon,
   PencilEdit02Icon,
   PinIcon,
   PinOffIcon,
@@ -16,6 +17,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -53,6 +55,7 @@ import {
   restorePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
 import { PostPoll } from "@/components/tenant/classes/home/poll";
+import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
 
 /**
@@ -188,6 +191,7 @@ function PostActions({
                     {t("message-edit")}
                   </DropdownMenuItem>
                 ) : null}
+                <DropdownMenuSeparator />
                 {post.archived ? (
                   <DropdownMenuItem
                     onClick={() =>
@@ -225,7 +229,10 @@ function PostActions({
                     {t("post-archive")}
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => setRemoving(true)}>
+                <DropdownMenuItem
+                  onClick={() => setRemoving(true)}
+                  variant="destructive"
+                >
                   <HugeIcons icon={Delete02Icon} />
                   {t("post-remove")}
                 </DropdownMenuItem>
@@ -249,7 +256,9 @@ function PostActions({
         open={removing}
         setOpen={setRemoving}
         title={t("post-remove-title")}
-      />
+      >
+        <LossItem icon={Megaphone01Icon} name={post.text} />
+      </ResponsiveDialog>
     </ItemActions>
   );
 }

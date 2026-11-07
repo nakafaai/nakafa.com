@@ -1711,6 +1711,7 @@
     "task-remove": "Aufgabe löschen",
     "task-remove-title": "Diese Aufgabe löschen",
     "task-remove-description": "Die abgegebenen Arbeiten werden mit gelöscht, und das lässt sich nicht rückgängig machen.",
+    "task-remove-work": "{count, plural, =0 {Noch nichts abgegeben} one {# Abgabe wird mit gelöscht} other {# Abgaben werden mit gelöscht}}",
     "library-download": "Herunterladen",
     "library-move": "Verschieben",
     "library-move-title": "Verschieben nach",

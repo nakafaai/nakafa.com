@@ -14,6 +14,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
@@ -127,6 +128,7 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
               <HugeIcons icon={PencilEdit02Icon} />
               {t("message-edit")}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() =>
                 runForumCall(

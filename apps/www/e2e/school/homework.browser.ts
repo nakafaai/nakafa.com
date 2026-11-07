@@ -173,11 +173,25 @@ test("a teacher publishes a task from an exam, a student does it in the exam pla
     timeout: readinessTimeoutMilliseconds,
   });
   await views.getByRole("button", { name: "Active" }).click();
-  await rowAction(tasks, "Delete task");
+  // The menu reads label, main actions, a separator, then Archive and Delete last.
   await tasks
-    .getByRole("dialog", { name: "Delete this task" })
-    .getByRole("button", { name: "Delete task" })
+    .getByRole("row")
+    .filter({ hasText: "Ulangan Harian" })
+    .getByRole("button", { name: "More actions" })
     .click();
+  const menu = tasks.getByRole("menu");
+  await expect(menu.getByRole("separator")).toHaveCount(1);
+  await expect(menu.getByRole("menuitem").last()).toHaveText("Delete task");
+  await tasks.screenshot({ path: info.outputPath("homework-menu.png") });
+  await menu
+    .getByRole("menuitem", { exact: true, name: "Delete task" })
+    .click();
+  // The confirmation's body shows the task it deletes, and its footer holds Cancel and the action.
+  const confirm = tasks.getByRole("dialog", { name: "Delete this task" });
+  await expect(confirm.getByText("Ulangan Harian")).toBeVisible();
+  await expect(confirm.getByRole("button", { name: "Cancel" })).toBeVisible();
+  await tasks.screenshot({ path: info.outputPath("homework-delete.png") });
+  await confirm.getByRole("button", { name: "Delete task" }).click();
   await expect(tasks.getByText("No task yet")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

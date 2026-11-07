@@ -9,7 +9,10 @@ import {
   StarIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
@@ -117,6 +120,7 @@ export function MoveAndTrash({
         <HugeIcons icon={FolderTransferIcon} />
         {t("library-move")}
       </DropdownMenuItem>
+      <DropdownMenuSeparator />
       <DropdownMenuItem onClick={onTrash} variant="destructive">
         <HugeIcons icon={Delete02Icon} />
         {t("library-trash")}
