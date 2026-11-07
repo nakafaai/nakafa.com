@@ -37,7 +37,7 @@ type StreamPart =
  * tokens at the public rates when it reported none. A call whose tokens are
  * not reported either costs its whole hold, because nothing shows it cost less.
  */
-export function callCost(
+function callCost(
   usage: Generated["usage"],
   metadata: Generated["providerMetadata"],
   held: number

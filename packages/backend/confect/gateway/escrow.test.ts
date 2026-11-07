@@ -93,6 +93,30 @@ describe("gateway/escrow", () => {
     ]);
   });
 
+  it("reads cache counts a provider leaves out as none", async () => {
+    const { meter, model } = meteredModel({
+      doGenerate: {
+        content: [{ type: "text", text: "Hello" }],
+        finishReason,
+        usage: {
+          inputTokens: {
+            total: 10_000,
+            noCache: undefined,
+            cacheRead: undefined,
+            cacheWrite: undefined,
+          },
+          outputTokens: { total: 1000, text: undefined, reasoning: undefined },
+        },
+        warnings: [],
+      },
+    });
+    await model.doGenerate({ prompt });
+    expect(meter.calls()).toEqual([
+      `hold chat ${CHAT}`,
+      `settle ${languageCost({ input: 10_000, output: 1000, cacheRead: 0, cacheWrite: 0 })}`,
+    ]);
+  });
+
   it("settles an answer that reports no tokens to its whole hold", async () => {
     const { meter, model } = meteredModel({
       doGenerate: {

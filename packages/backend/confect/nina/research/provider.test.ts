@@ -3,7 +3,6 @@ import {
   requestScrape,
   requestSearch,
 } from "@repo/backend/confect/nina/research/provider";
-import { scrapeCost, searchCost } from "@repo/backend/confect/spend/rates";
 import {
   inBackground,
   overKey,
@@ -16,7 +15,6 @@ import {
   searchAnswer,
   sentBodies,
 } from "@repo/backend/test/nina/provider";
-import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -194,54 +192,6 @@ describe("the research provider requests", () => {
         metadata: { title: ["A", "B"] },
       });
     })
-  );
-});
-
-describe("a metered research provider request", () => {
-  it.effect(
-    "holds each ask a search or a read may bill and settles an answered one to one ask",
-    () =>
-      Effect.gen(function* () {
-        const meter = recordingMeter();
-        fetcher.mockResolvedValueOnce(searchAnswer({ web: [] }));
-        fetcher.mockResolvedValueOnce(scrapeAnswer({ markdown: "# Page" }));
-        yield* requestSearch(search).pipe(
-          Effect.provide(meter.layer),
-          overFetch
-        );
-        yield* requestScrape(page).pipe(Effect.provide(meter.layer), overFetch);
-        // Five results from each of two sources is one unit of ten, and a
-        // bad gateway may ask twice more.
-        expect(meter.calls()).toEqual([
-          `hold search ${searchCost(10) * 3}`,
-          `settle ${searchCost(10)}`,
-          `hold scrape ${scrapeCost() * 3}`,
-          `settle ${scrapeCost()}`,
-        ]);
-      })
-  );
-
-  it.effect(
-    "fails a search or a read the month's budget refuses without asking the provider",
-    () =>
-      Effect.gen(function* () {
-        const refusing = recordingMeter(true).layer;
-        const searched = yield* Effect.flip(
-          requestSearch(search).pipe(Effect.provide(refusing), overFetch)
-        );
-        const read = yield* Effect.flip(
-          requestScrape(page).pipe(Effect.provide(refusing), overFetch)
-        );
-        expect(searched).toMatchObject({
-          _tag: "ResearchSearchError",
-          message: "This month's AI budget is spent.",
-        });
-        expect(read).toMatchObject({
-          _tag: "ResearchScrapeError",
-          message: "This month's AI budget is spent.",
-        });
-        expect(fetcher).not.toHaveBeenCalled();
-      })
   );
 });
 

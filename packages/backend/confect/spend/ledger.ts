@@ -90,7 +90,7 @@ const learnerBudget = Effect.fn("spend.learnerBudget")(function* (
  * spend. A member's work goes to their school while its plan grants AI
  * credits, and to their own account otherwise.
  */
-export const payerOf = Effect.fn("spend.payerOf")(function* (
+const payerOf = Effect.fn("spend.payerOf")(function* (
   claim: Claim,
   now: number
 ) {
@@ -126,7 +126,7 @@ export const payerOf = Effect.fn("spend.payerOf")(function* (
 });
 
 /** The vendor rows of one payer's month. */
-export const monthRows = Effect.fn("spend.monthRows")(function* (
+const monthRows = Effect.fn("spend.monthRows")(function* (
   payer: Payer,
   month: string
 ) {

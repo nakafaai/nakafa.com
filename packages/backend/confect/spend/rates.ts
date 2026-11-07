@@ -65,7 +65,7 @@ const BUFFER_BASIS_POINTS = 12_500;
  *   rounded up per 10, and 1 credit per page read. A credit is priced at the
  *   Hobby plan's extra credits, $5 per 1,000, the dearest way Nakafa buys one.
  */
-export const rates = {
+const rates = {
   haiku: {
     input: 100_000,
     output: 500_000,
@@ -115,7 +115,7 @@ function tokenCost(tokens: number, rate: number) {
 }
 
 /** The tokens of one language model call, as the AI SDK reports them. */
-export const LanguageTokens = Schema.Struct({
+const LanguageTokens = Schema.Struct({
   /** Every prompt token, the cached ones included. */
   input: Schema.Int,
   output: Schema.Int,
