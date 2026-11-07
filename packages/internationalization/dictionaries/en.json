@@ -1239,7 +1239,7 @@
     "logins-empty": "No login card issued yet.",
     "logins-search": "Find a student",
     "members-empty": "No one has joined the school yet.",
-    "members-empty-description": "Invite a teacher or an admin. Students join through Student accounts.",
+    "members-empty-description": "Invite a teacher or an admin, and students join through Student accounts.",
     "members-search": "Find a name",
     "member-name": "Name",
     "member-status": "Status",
@@ -3212,7 +3212,7 @@
       "description": "Move its students out first, or archive the cohort."
     },
     "school-refusal-cohort-in-use-homeroom": {
-      "title": "This cohort still has a homeroom teacher.",
+      "title": "This cohort has a homeroom teacher.",
       "description": "Remove the teacher first, or archive the cohort."
     },
     "school-refusal-cohort-in-use-classes": {
