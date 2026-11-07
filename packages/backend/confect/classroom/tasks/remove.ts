@@ -1,4 +1,7 @@
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { classTask } from "@repo/backend/confect/classroom/tasks/views";
 import { cancelTaskNotices } from "@repo/backend/confect/notifications/tasks";
 import { Effect } from "effect";
@@ -14,7 +17,7 @@ export const removeTask = Effect.fn("classroom.tasks.remove")(function* (
   const found = yield* classTask(address, "task.manage");
   yield* cancelTaskNotices(found);
   const writer = yield* DatabaseWriter;
-  const work = yield* writer
+  const work = yield* (yield* DatabaseReader)
     .table("classroomSubmissions")
     .index("by_taskId_and_personId", (query) => query.eq("taskId", found._id))
     .collect()

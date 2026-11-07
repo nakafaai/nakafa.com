@@ -56,9 +56,10 @@ const WORK_PAGE_SIZE = 30;
 const workColumns = tableColumns<TaskWork>();
 
 /**
- * The work handed in for a task, as its teacher reads it: each student, the work, whether it came
- * late, and its points, which the teacher gives in place. The next page loads as the end of the
- * table comes into view. The header's search reads the work of the students whose names match it,
+ * The work handed in for a task, as its teacher reads it in the task's pane, one row each: the
+ * student, whether the work came late, and its points, which the teacher gives in place; the row's
+ * menu opens the whole work to read. The next page loads as the end of the table comes into view.
+ * The pane's search reads the work of the students whose names match it,
  * on the server, and the work already shown stays while a new search's first page loads. A task
  * with no work yet shows its empty state, and a search that matches no work says so once the list
  * ends.

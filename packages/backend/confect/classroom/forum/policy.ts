@@ -7,11 +7,14 @@ import { Effect } from "effect";
  * Whether the caller manages a class's forum: a subject teacher of the class, the school's Admin, or
  * any Owner, as `forum.manage` rules it. A locked class refuses the write, so nobody manages its forum.
  */
-export const managesForum = (row: ClassesDoc) =>
-  classAuthority.check("forum.manage", row).pipe(
+export const managesForum = Effect.fn("classroom.forum.manages")(function* (
+  row: ClassesDoc
+) {
+  return yield* classAuthority.check("forum.manage", row).pipe(
     Effect.as(true),
     Effect.catchTag("AccessDenied", () => Effect.succeed(false))
   );
+});
 
 /**
  * Whether a member who writes in a class's forum may open a discussion there: whoever manages the
