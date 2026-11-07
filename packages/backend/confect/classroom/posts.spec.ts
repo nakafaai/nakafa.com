@@ -30,7 +30,11 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
-      args: () => ({ classId: Id("classes"), slug: TenantSlug }),
+      args: () => ({
+        archived: Schema.optionalKey(Schema.Boolean),
+        classId: Id("classes"),
+        slug: TenantSlug,
+      }),
       item: () => PostView,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "forum.read", arg: "classId" })
@@ -108,6 +112,30 @@ export default GroupSpec.make()
         text: PostText,
       }),
       returns: () => PostView,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "post.publish", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "archive",
+      args: () => ({
+        classId: Id("classes"),
+        postId: Id("classroomPosts"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "post.publish", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({
+        classId: Id("classes"),
+        postId: Id("classroomPosts"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "post.publish", arg: "classId" })
   )

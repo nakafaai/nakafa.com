@@ -19,6 +19,7 @@ import {
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import { EMOJI, QUICK_EMOJI } from "@/components/tenant/classes/forum/emoji";
+import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import {
   useChannelScope,
@@ -164,6 +165,7 @@ export function EmojiGrid({ onPick }: { onPick: (emoji: string) => void }) {
 /**
  * Gives a message an emoji: the six a chat reaches for most, one press each, and the whole grid
  * under them. With a mouse it shows on the message's hover or focus; a touch screen always shows it.
+ * A message the server is still saving takes no emoji yet, since it has no ID to give one to.
  */
 export function ReactButton({ message }: { message: ForumMessage }) {
   const t = useTranslations("Classroom");
@@ -183,6 +185,7 @@ export function ReactButton({ message }: { message: ForumMessage }) {
           <Button
             aria-label={t("reaction-add")}
             className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100 pointer-fine:data-popup-open:opacity-100"
+            disabled={isPending(message)}
             size="icon-xs"
             title={t("reaction-add")}
             variant="ghost"

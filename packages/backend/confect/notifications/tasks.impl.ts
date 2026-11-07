@@ -100,7 +100,7 @@ const noticeGuardians = Effect.fn("notifications.tasks.guardians")(function* (
 
 /**
  * Writes one page of a task's notice: each student the task goes to who reads it and has not handed in gets the reminder,
- * or each of their guardians gets the late-task notice. A task that is gone or a unit that is archived sends nothing,
+ * or each of their guardians gets the late-task notice. A task that is gone or archived, or a unit that is archived, sends nothing,
  * and the next run reads the next page.
  */
 const run = FunctionImpl.make(
@@ -113,7 +113,8 @@ const run = FunctionImpl.make(
       .table("classroomTasks")
       .get(taskId)
       .pipe(Effect.option);
-    if (Option.isNone(task)) {
+    // A task that is gone or archived sends nothing.
+    if (Option.isNone(task) || task.value.archivedAt !== undefined) {
       return null;
     }
     const klass = yield* reader

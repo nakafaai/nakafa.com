@@ -36,6 +36,7 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import { useTally } from "@/components/tenant/classes/forum/tallies";
@@ -64,7 +65,8 @@ const pollChoice = cva(
 );
 
 /**
- * A message's poll, as WhatsApp shows one (`PollCard`). A leader who reads the class sees the votes and takes none.
+ * A message's poll, as WhatsApp shows one (`PollCard`). A leader who reads the class sees the votes and takes none,
+ * and a poll the server is still saving takes no vote yet, since its message has no ID to vote on.
  */
 export function MessagePoll({ message }: { message: ForumMessage }) {
   const { canPost, classId, slug } = useChannelScope();
@@ -76,7 +78,7 @@ export function MessagePoll({ message }: { message: ForumMessage }) {
   }
   return (
     <PollCard
-      disabled={!canPost}
+      disabled={!canPost || isPending(message)}
       onChoose={(options) =>
         runForumCall(
           forumCall(() =>

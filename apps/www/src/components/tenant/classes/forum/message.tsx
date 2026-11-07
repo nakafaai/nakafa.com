@@ -51,6 +51,7 @@ import {
   DiscussionReplies,
   DiscussionTitle,
 } from "@/components/tenant/classes/forum/discussion";
+import { isPending } from "@/components/tenant/classes/forum/marks";
 import { MessageMedia } from "@/components/tenant/classes/forum/media";
 import { mentionSegments } from "@/components/tenant/classes/forum/mentions";
 import {
@@ -223,7 +224,8 @@ function useMessageRights({ discussion, mine, poll }: ForumMessage) {
 /**
  * The menu of a message: Edit on the viewer's own message, Hide for whoever manages the forum, and
  * Rename on the message that opens a discussion, for whoever opened it or a teacher who writes in
- * the class, as the server allows.
+ * the class, as the server allows. A message the server is still saving keeps its controls in place,
+ * pressed by nobody, since it has no ID to act on yet.
  */
 function MessageActions({
   message,
@@ -236,6 +238,7 @@ function MessageActions({
   const scope = useChannelScope();
   const { classSlug } = useClassScope();
   const { editable, hasMenu, threads } = useMessageRights(message);
+  const pending = isPending(message);
   const common = useTranslations("Common");
   const navigate = useNavigate();
   const start = useMutation(classroom.forum.threads.start);
@@ -274,6 +277,7 @@ function MessageActions({
         <Button
           aria-label={t("reply-thread")}
           className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100"
+          disabled={pending}
           onClick={startThread}
           size="icon-xs"
           title={t("reply-thread")}
@@ -290,6 +294,7 @@ function MessageActions({
               <Button
                 aria-label={common("more-actions")}
                 className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100 pointer-fine:data-popup-open:opacity-100"
+                disabled={pending}
                 size="icon-xs"
                 variant="ghost"
               >

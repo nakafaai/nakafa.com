@@ -49,6 +49,7 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({
         ...classArgs,
+        archived: Schema.optionalKey(Schema.Boolean),
         standing: Schema.optionalKey(TaskStanding),
       }),
       item: () => TaskView,
@@ -99,6 +100,22 @@ export default GroupSpec.make()
       }),
       returns: () => TaskView,
       error: () => Schema.Union([AccessDenied, TaskPointsFixed]),
+    }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "archive",
+      args: () => ({ ...classArgs, task: TaskAddress }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({ ...classArgs, task: TaskAddress }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
   )
   .addFunction(

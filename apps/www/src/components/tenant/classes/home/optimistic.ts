@@ -117,6 +117,38 @@ export const pinPostUpdate =
     }
   };
 
+/** Takes an announcement off the class home and its pins at once; a refusal brings it back. */
+const leaveHome = (
+  localStore: LocalStore.OptimisticLocalStore,
+  classId: Id<"classes">,
+  postId: Id<"classroomPosts">
+) => {
+  changePages(localStore, classId, (page) =>
+    Arr.some(page, (post) => post.id === postId)
+      ? Option.some(Arr.filter(page, (post) => post.id !== postId))
+      : Option.none()
+  );
+  for (const query of localStore.getAllQueries(pinned)) {
+    if (Option.isSome(query.value) && query.args.classId === classId) {
+      localStore.setQuery(
+        pinned,
+        query.args,
+        Option.some(Arr.filter(query.value.value, (post) => post.id !== postId))
+      );
+    }
+  }
+};
+
+/** Takes an archived announcement off the class home and its pins at once. */
+export const archivePostUpdate: OptimisticUpdate<
+  typeof classroom.posts.archive
+> = (localStore, args) => leaveHome(localStore, args.classId, args.postId);
+
+/** Takes a restored announcement off the archived ones at once. */
+export const restorePostUpdate: OptimisticUpdate<
+  typeof classroom.posts.restore
+> = (localStore, args) => leaveHome(localStore, args.classId, args.postId);
+
 /** Shows the viewer's choices in a poll at once, in every read that holds its post. */
 export const votePostUpdate: OptimisticUpdate<typeof classroom.posts.vote> = (
   localStore,

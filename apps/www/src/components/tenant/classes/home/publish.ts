@@ -31,6 +31,7 @@ export const publishPost = Effect.fn("classroom.posts.publish")(function* <E>(
   return yield* forumCall(() =>
     publish(
       publishUpdate({
+        archived: false,
         author,
         clientKey: args.clientKey,
         createdAt,

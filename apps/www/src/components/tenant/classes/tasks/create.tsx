@@ -3,7 +3,6 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
-import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -21,7 +20,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -36,16 +35,15 @@ import {
   EMPTY_DRAFT,
 } from "@/components/tenant/classes/tasks/draft";
 import { TaskFields } from "@/components/tenant/classes/tasks/fields";
+import {
+  examOfChoice,
+  WRITTEN,
+} from "@/components/tenant/classes/tasks/questions";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { useClockZone } from "@/components/tenant/settings/time";
 
 /** How many of the school's exams the picker offers. */
 const EXAM_PAGE_SIZE = 50;
-
-/** The value of the picker's first choice: a task the students answer in writing. */
-const WRITTEN = "written";
-
-const decodeExamId = Schema.decodeUnknownOption(Id("exams"));
 
 /**
  * Publishes a task to the class: its title, what it asks, its deadline in the browser's own time,
@@ -76,7 +74,7 @@ export function NewTask() {
             ...checked.value,
             classId,
             clientKey,
-            examId: Option.getOrNull(decodeExamId(exam)),
+            examId: examOfChoice(exam),
             slug,
           })
         )

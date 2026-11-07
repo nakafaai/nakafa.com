@@ -4,12 +4,14 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
+  archiveThreadUpdate,
   editUpdate,
   type ForumMessage,
   hideUpdate,
   markUpdate,
   openUpdate,
   replyUpdate,
+  restoreThreadUpdate,
   sendUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
 
@@ -420,6 +422,68 @@ describe("markUpdate", () => {
             { ...own, discussion: { ...summary(1, 1, 10), unread: false } },
           ],
         }),
+      ],
+    ]);
+  });
+});
+
+describe("archiveThreadUpdate and restoreThreadUpdate", () => {
+  it("take a discussion out of the class's list it leaves, and leave other lists as they were", () => {
+    const discussion = (number: number) => ({
+      archived: false,
+      channelId: general,
+      discussion: {
+        lastReplyAt: null,
+        number,
+        replies: 0,
+        title: `Bab ${number}`,
+        unread: false,
+      },
+    });
+    const listArgs = {
+      classId,
+      paginationOpts: { cursor: null, numItems: 20 },
+      slug,
+    };
+    const lists = () =>
+      storeOf([
+        {
+          args: listArgs,
+          value: Option.some({
+            isDone: true,
+            page: [discussion(2), discussion(1)],
+          }),
+        },
+        {
+          args: {
+            ...listArgs,
+            classId: Schema.decodeUnknownSync(Id("classes"))("class-2"),
+          },
+          value: Option.some({ isDone: true, page: [discussion(1)] }),
+        },
+        { args: listArgs, value: Option.none() },
+      ]);
+    const archived = lists();
+    archiveThreadUpdate(archived.localStore, { classId, number: 1, slug });
+    const restored = lists();
+    restoreThreadUpdate(restored.localStore, { classId, number: 2, slug });
+    expect([
+      archived.setQuery.mock.calls,
+      restored.setQuery.mock.calls,
+    ]).toEqual([
+      [
+        [
+          classroom.forum.threads.list,
+          listArgs,
+          Option.some({ isDone: true, page: [discussion(2)] }),
+        ],
+      ],
+      [
+        [
+          classroom.forum.threads.list,
+          listArgs,
+          Option.some({ isDone: true, page: [discussion(1)] }),
+        ],
       ],
     ]);
   });
