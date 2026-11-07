@@ -89,6 +89,23 @@ describe("billing/grants", () => {
     expect(result).toEqual({ plan: "pro", userPlan: "pro" });
   });
 
+  it("ends the grant of a subscription that cancels at its period end, with no renewal grace", async () => {
+    const t = createBillingTestConvex();
+    const grants = await t.run(async (ctx) => {
+      const { accountId } = await insertPerson(ctx);
+      const applied = await runInMutation(
+        ctx,
+        applySubscriptionState({
+          ...proState(accountId),
+          cancelAtPeriodEnd: true,
+        })
+      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
+      return await ctx.db.query("billingGrants").collect();
+    });
+    expect(grants).toMatchObject([{ validFrom: START, validTo: PERIOD_END }]);
+  });
+
   it("renews the same grant when the subscription writes a new period", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
