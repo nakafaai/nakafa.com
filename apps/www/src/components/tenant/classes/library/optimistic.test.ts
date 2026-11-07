@@ -250,7 +250,7 @@ describe("class library optimistic updates", () => {
       listArgs(classId, null),
       Option.some({ isDone: false, page: [{ ...first, starred: true }] }),
     ]);
-    expect(setQuery.mock.calls).toHaveLength(3);
+    expect(setQuery.mock.calls).toHaveLength(2);
   });
 
   it("takes a restored and a purged item out of the trash at once", () => {

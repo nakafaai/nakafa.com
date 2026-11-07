@@ -157,7 +157,8 @@ export const bucketStandIn = (directory: string) =>
     if (request.method === "OPTIONS") {
       return answer(204);
     }
-    const url = new URL(request.url, "http://127.0.0.1");
+    // The signature binds the host with its port, which only the Host header carries here.
+    const url = new URL(request.url, `http://${request.headers.host}`);
     const fs = yield* FileSystem.FileSystem;
     const root = `${directory}/bucket`;
     yield* fs.makeDirectory(root, { recursive: true });

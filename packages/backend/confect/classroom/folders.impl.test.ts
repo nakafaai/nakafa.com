@@ -312,6 +312,22 @@ describe("classroom/folders", () => {
           parentId: top.id,
           slug: nf,
         });
+        yield* teacher.mutation(folders.trash, {
+          classId,
+          folderId: grandchild.id,
+          slug: nf,
+        });
+        yield* teacher.mutation(folders.restore, {
+          classId,
+          folderId: grandchild.id,
+          slug: nf,
+        });
+        expect(
+          Arr.findFirst(
+            yield* teacher.query(folders.list, { classId, slug: nf }),
+            (folder) => folder.id === grandchild.id
+          )
+        ).toMatchObject({ value: { parentId: top.id, trashedAt: null } });
         const link = yield* teacher.mutation(library.addLink, {
           address: "https://youtu.be/satu",
           classId,
@@ -347,6 +363,7 @@ describe("classroom/folders", () => {
           });
         yield* star({ itemId: link.id, kind: "item" }, true);
         yield* star({ itemId: link.id, kind: "item" }, true);
+        yield* star({ folderId: top.id, kind: "folder" }, true);
         yield* star({ folderId: top.id, kind: "folder" }, true);
         expect(
           Arr.map(
@@ -424,6 +441,11 @@ describe("classroom/folders", () => {
           starred: true,
           target: { folderId: child.id, kind: "folder" },
         });
+        expect(
+          yield* fixture
+            .as("student")
+            .query(library.search, { classId, slug: nf, text: "Berkas" })
+        ).toMatchObject([{ id: file.id }]);
         yield* teacher.mutation(folders.trash, {
           classId,
           folderId: top.id,

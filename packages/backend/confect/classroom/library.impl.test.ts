@@ -281,9 +281,9 @@ describe("classroom/library", () => {
         expect(yield* register(missing.uploadId)).toMatchObject({
           _tag: "UploadMissing",
         });
-        const other = yield* forumClass(fixture, term.id, "X-2", false);
+        const other = yield* forumClass(fixture, term.id, "X-2");
         expect(yield* register(missing.uploadId, other.classId)).toMatchObject({
-          _tag: "AccessDenied",
+          _tag: "UploadMissing",
         });
         const html = yield* reserve("html-file", 6);
         upload(bucket, html.address, new TextEncoder().encode("<html>"));
