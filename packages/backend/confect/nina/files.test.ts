@@ -9,6 +9,9 @@ import {
 } from "@repo/backend/test/nina/message";
 import { ConfigProvider, Effect } from "effect";
 
+/** A presigned address of another bucket, which stays as it is. */
+const FOREIGN = "https://elsewhere.test/x?X-Amz-Signature=abc";
+
 /** The bucket as a deployment configures it. */
 const configured = ConfigProvider.layer(
   ConfigProvider.fromUnknown({
@@ -45,6 +48,11 @@ describe("nina/files", () => {
                   mediaType: "application/pdf",
                   type: "file",
                 },
+                {
+                  data: FOREIGN,
+                  mediaType: "application/pdf",
+                  type: "file",
+                },
                 ...learnerParts,
               ],
               role: "user",
@@ -57,13 +65,14 @@ describe("nina/files", () => {
         if (typeof content === "string" || content === undefined) {
           return yield* Effect.die("The learner's turn has parts.");
         }
-        const [image, file, ...rest] = content;
+        const [image, file, foreign, ...rest] = content;
         expect(image).toMatchObject({ type: "image" });
         expect(image?.type === "image" && image.image).not.toBe(stale);
         expect(image?.type === "image" && String(image.image)).toContain(
           "/files/files/accounts/sent?"
         );
         expect(file?.type === "file" && file.data).not.toBe(stale);
+        expect(foreign?.type === "file" && foreign.data).toBe(FOREIGN);
         expect(rest).toEqual(learnerParts);
         const replied = storedRow(answer, MESSAGE_IDENTITY);
         expect(yield* freshRow(replied)).toBe(replied);

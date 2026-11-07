@@ -1,7 +1,7 @@
 import type { MessageDoc } from "@convex-dev/agent/validators";
 import { readAddress } from "@repo/backend/confect/bucket/file";
 import { objectKeyOf } from "@repo/backend/confect/bucket/sign";
-import { Effect, Option } from "effect";
+import { Effect, Option, String as Str } from "effect";
 
 /** A learner's stored message, the only kind that carries the files the learner sent. */
 type UserMessage = Extract<
@@ -17,12 +17,15 @@ type PartData =
   | Extract<UserPart, { type: "file" }>["data"]
   | Extract<UserPart, { type: "image" }>["image"];
 
+/** The query field every presigned address carries, so an address without it is never the bucket's. */
+const isPresigned = Str.includes("X-Amz-Signature=");
+
 /**
  * The data of one stored part, signed again when it is an address of the bucket, so a part sent hours ago reads its
- * file at an address that is live now. Bytes and any other address stay as they are.
+ * file at an address that is live now. Bytes and any other address stay as they are, and read no setting.
  */
 const freshData = Effect.fn("nina.files.data")(function* (data: PartData) {
-  if (typeof data !== "string") {
+  if (typeof data !== "string" || !isPresigned(data)) {
     return data;
   }
   const key = yield* objectKeyOf(data);
