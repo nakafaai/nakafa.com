@@ -4,11 +4,11 @@ import { Array as Arr, Effect, FileSystem, Order, Path } from "effect";
 import { Program, Snapshot } from "tsrs/sync";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import {
+  apiMethods,
   fixture,
   PROJECT,
   PROJECT_CONFIG,
   ROOT,
-  spyOnMethod,
   withProject,
 } from "#scripts/check/fixture";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
@@ -215,11 +215,13 @@ describe("array findings by project", () => {
       Effect.gen(function* () {
         const cause = new Error("native snapshot unavailable");
         const failure = yield* judgmentFailure(() => {
-          spyOnMethod(Snapshot.prototype, "update").mockImplementationOnce(
-            () => {
-              throw cause;
-            }
-          );
+          vi.spyOn(
+            apiMethods(Snapshot.prototype),
+            "update",
+            "get"
+          ).mockImplementationOnce(() => {
+            throw cause;
+          });
         });
         assert.deepStrictEqual(
           [failure._tag, failure.cause, failure.message],
@@ -253,9 +255,10 @@ describe("array findings by project", () => {
       Effect.gen(function* () {
         const cause = new Error("native program disconnected");
         const failure = yield* judgmentFailure(() => {
-          spyOnMethod(
-            Program.prototype,
-            "getSourceFile"
+          vi.spyOn(
+            apiMethods(Program.prototype),
+            "getSourceFile",
+            "get"
           ).mockImplementationOnce(() => {
             throw cause;
           });

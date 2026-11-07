@@ -2,7 +2,7 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { API, Checker, Snapshot } from "tsrs/sync";
 import { effectFindings, effectTestViolations } from "#scripts/check/effect";
-import { spyOnMethod } from "#scripts/check/fixture";
+import { apiMethods } from "#scripts/check/fixture";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
 const FILE = "packages/example/src/program.test.ts";
@@ -22,7 +22,7 @@ afterEach(() => vi.restoreAllMocks());
 describe("Effect test policy", () => {
   it.effect("closes the compiler after an isolated batch", () =>
     Effect.gen(function* () {
-      const close = spyOnMethod(API.prototype, "close");
+      const close = vi.spyOn(apiMethods(API.prototype), "close", "get");
       const violations = yield* effectTestViolations([
         { file: FILE, sourceText: "const Effect = client;" },
         {
@@ -79,10 +79,11 @@ describe("Effect test policy", () => {
   it.effect("closes the compiler and preserves native failures", () =>
     Effect.gen(function* () {
       const cause = new Error("native compiler disconnected");
-      const close = spyOnMethod(API.prototype, "close");
-      spyOnMethod(
-        Checker.prototype,
-        "getSymbolAtLocation"
+      const close = vi.spyOn(apiMethods(API.prototype), "close", "get");
+      vi.spyOn(
+        apiMethods(Checker.prototype),
+        "getSymbolAtLocation",
+        "get"
       ).mockImplementationOnce(() => {
         throw cause;
       });

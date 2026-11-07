@@ -35,15 +35,17 @@ const SpiedMethod = Schema.Literals([
 ]);
 
 /**
- * Spies on the reads of one tsrs API method. tsrs defines each method as a
- * prototype getter that caches the method on its instance at the first read,
- * so a test counts that read, or replaces the method it returns.
+ * Views a tsrs API prototype through the methods the tests spy on. tsrs defines
+ * each method as a prototype getter that caches the method on its instance at
+ * the first read, so a test spies on that read with
+ * `vi.spyOn(apiMethods(X.prototype), method, "get")`, which this view types.
  */
-export function spyOnMethod(
-  prototype: { readonly [Name in typeof SpiedMethod.Type]?: unknown },
-  method: typeof SpiedMethod.Type
+export function apiMethods(
+  prototype: {
+    readonly [Name in typeof SpiedMethod.Type]?: unknown;
+  }
 ) {
-  return vi.spyOn(prototype, method, "get");
+  return prototype;
 }
 
 /**

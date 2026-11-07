@@ -3,8 +3,8 @@ import { Array as Arr, Effect, Record as Rec } from "effect";
 import { Checker, type Project } from "tsrs/sync";
 import { arrayCall } from "#scripts/check/calls";
 import {
+  apiMethods,
   ROOT,
-  spyOnMethod,
   typedProject,
   withProject,
 } from "#scripts/check/fixture";
@@ -184,11 +184,13 @@ describe("array receivers by declared type", () => {
             ARRAYS["scripts/verdicts/declared.ts"],
         })
       );
-      spyOnMethod(Checker.prototype, "isArrayLikeType").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      vi.spyOn(
+        apiMethods(Checker.prototype),
+        "isArrayLikeType",
+        "get"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* verdicts(project, [
         "scripts/verdicts/declared.ts",
       ]).pipe(Effect.flip);
