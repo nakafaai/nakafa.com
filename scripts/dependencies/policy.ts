@@ -28,7 +28,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
 export const NODE_RUNTIME_VERSION = "26.13.0";
 const CONTRACT_PACKAGE_VERSION = "4.1.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.1.0";
+export const EFFECT_COHORT_VERSION = "4.1.2";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
@@ -41,7 +41,7 @@ export const EFFECT_COHORT_OVERRIDES = [
   "@effect/platform-node-shared",
 ] as const;
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
-export const VITEST_COHORT_VERSION = "5.0.5";
+export const VITEST_COHORT_VERSION = "5.1.0";
 /**
  * The AI SDK core and the Convex AI gateway provider move as one catalog
  * cohort, and each bump rechecks the gateway module's provider contracts
@@ -51,24 +51,18 @@ export const VITEST_COHORT_VERSION = "5.0.5";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.159",
+  ai: "7.0.164",
 } as const;
 /**
- * Alchemy's packages, pinned by content-addressed tarball to the preview build of
- * commit 9d0709d22a. Its npm release 2.0.0-beta.84 imports `effect/Crypto`, which
- * Effect 4.1 deletes, and the fix (alchemy-run/alchemy#2754) is in no release yet.
- * The first release past beta.84 replaces these pins: `bun run bump-deps` reports
- * it through the `alchemy@latest` review.
+ * Alchemy's packages move as one exact cohort. Alchemy 2 is a beta whose releases
+ * break interfaces, so each manifest names the exact release, and every package of
+ * the cohort is the same release.
  */
 export const ALCHEMY_COHORT = {
-  "@alchemy.run/cloudflare":
-    "https://pkg.alchemy.run/@alchemy.run/cloudflare/-/7ab6a6e898217421d56affee30688194eb4a9ce22abc21660634c8afe977eebf.tgz",
-  "@alchemy.run/cloudflare-runtime":
-    "https://pkg.alchemy.run/@alchemy.run/cloudflare-runtime/-/1476c7860e9faaf0d7e0363d7e182a4268e09ae4fed607acf43dcc32ff9e28b9.tgz",
-  "@alchemy.run/github":
-    "https://pkg.alchemy.run/@alchemy.run/github/-/36f7e327dbfc312bb76540bd5b32eeb8410dc87e741000caa69423afe350565c.tgz",
-  alchemy:
-    "https://pkg.alchemy.run/alchemy/-/e7670ec4be7543453ff4dfb68321d9a4a1bb4450a5608fb20731df35d0523bfa.tgz",
+  "@alchemy.run/cloudflare": "2.0.0-beta.85",
+  "@alchemy.run/cloudflare-runtime": "2.0.0-beta.85",
+  "@alchemy.run/github": "2.0.0-beta.85",
+  alchemy: "2.0.0-beta.85",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
@@ -77,7 +71,7 @@ export const ALCHEMY_COHORT = {
  * manifest that pins the cohort: the policy test reports each declaration that still
  * holds the old version, so none is missed.
  */
-const TIPTAP_COHORT_VERSION = "3.32.2";
+const TIPTAP_COHORT_VERSION = "3.33.0";
 /**
  * The Tiptap packages each manifest declares. The editor package holds the schema of
  * an assessment document, the design system holds the Memory editor, and the web app
@@ -137,9 +131,8 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
   ],
 ];
 /**
- * Confect moves with the Effect cohort: 10.5.0 admits only effect ~4.1.0, so every
- * Confect package stays on 10.4.1 until the cohort reaches 4.1 (#1524). The catalog
- * holds `@confect/core`, and each manifest pins the rest exactly.
+ * Confect moves with the Effect cohort: 10.5.0 admits only effect ~4.1.0. The
+ * catalog holds `@confect/core`, and each manifest pins the rest exactly.
  */
 const CONFECT_COHORT_VERSION = "10.5.0";
 /** The Confect packages each manifest pins: the web app's client and the backend's server, CLI and tests. */
@@ -174,7 +167,7 @@ function exactCohortHolds(
 
 /**
  * Eight transitive overrides in the root `package.json` hold a version for a reason
- * that no manifest states. `seroval` and `seroval-plugins` 1.7.6 are one copy each
+ * that no manifest states. `seroval` 1.7.10 and `seroval-plugins` 1.7.8 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
  * kept their nested 1.6.8 copies, which GHSA-9wx9-5pv9-3349 and GHSA-f86p-h4j2-7qgj
@@ -192,9 +185,9 @@ function exactCohortHolds(
  * micromark-extension-math 3.1.0, its latest release, declares: every 0.16 release is
  * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. `glob` 14.0.3 and `minimatch`
  * 11.0.3 replace the 13.0.6 and 10.2.6 that GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249
- * affect: react-email declares glob ^13.0.6, and the root sigstore reaches glob through
- * make-fetch-happen's cacache and minimatch through tuf-js's @tufjs/models, so one copy of
- * each serves every dependent. The other transitive versions come from their
+ * affect: the root sigstore reaches glob through make-fetch-happen's cacache, which pins
+ * glob 13.0.6 exactly, and minimatch through tuf-js's @tufjs/models, so one copy of each
+ * serves every dependent, react-email's glob ^14.0.3 included. The other transitive versions come from their
  * dependents' own ranges.
  */
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
@@ -282,7 +275,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
-  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.32.2 does not
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.33.0 does not
   // ship it. It is MIT, depends on prosemirror-state alone, and its last
   // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
   // design system installs its extension, and the sync loop of the web app
@@ -296,7 +289,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-collab",
   },
   // The model and the transform that the server folds stored steps with (ADR
-  // 0028). They are the versions that `@tiptap/pm` 3.32.2 resolves in
+  // 0028). They are the versions that `@tiptap/pm` 3.33.0 resolves in
   // `bun.lock` (the transform through its root override), so the server applies
   // a step with the code the editors run.
   {

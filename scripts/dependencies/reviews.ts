@@ -8,63 +8,67 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
 export const REGISTRY_REVIEWS = [
   [
     "alchemy@latest",
-    "2.0.0-beta.84",
-    "Alchemy's latest release does not run on Effect 4.1, so ALCHEMY_COHORT pins the preview build of the fix. The first release past this one replaces the pins.",
+    "2.0.0-beta.85",
+    "2.0.0-beta.85 is the first release past beta.84 and runs on Effect 4.1, so ALCHEMY_COHORT names it in place of the preview tarballs. Its breaking changes touch AWS, GCP, the Domain platform, Cloudflare.state options and GitHub Ruleset props, none of which the Nakafa stack uses in the changed form. Checked 7 November 2026.",
   ],
   [
     "effect@latest",
-    "4.1.1",
-    "Effect 4.1.1 is the latest release and is reviewed here, but the cohort stays on 4.1.0 (EFFECT_COHORT_VERSION), the exact peer of the contracts. 4.1 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. alchemy 2.0.0-beta.84, the latest Alchemy release, imports the removed effect/Crypto in its OAuthFlow, so @alchemy.run/cloudflare cannot load and alchemy deploy fails on 4.1; the fix is merged upstream (alchemy-run/alchemy#2754) and unreleased. #1524 moves the cohort with contracts 3.x and Confect 10.5.0 once Alchemy releases it. Checked 31 October 2026.",
+    "4.1.2",
+    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 4.1.1 peers effect 4.1.2 exactly. Checked 7 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
-    "4.1.1",
-    "@effect/platform-node follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
+    "4.1.2",
+    "@effect/platform-node follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
   ],
   [
     "@effect/platform-node-shared@latest",
-    "4.1.1",
-    "@effect/platform-node-shared follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
+    "4.1.2",
+    "@effect/platform-node-shared follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
   ],
   [
     "@effect/vitest@latest",
-    "4.1.1",
-    "@effect/vitest follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
+    "4.1.2",
+    "@effect/vitest follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
   ],
   [
     "@effect/ai-openai-compat@latest",
-    "4.1.1",
-    "@effect/ai-openai-compat follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
+    "4.1.2",
+    "@effect/ai-openai-compat follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
   ],
   [
     "@effect/ai-openrouter@latest",
-    "4.1.1",
-    "@effect/ai-openrouter follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
+    "4.1.2",
+    "@effect/ai-openrouter follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
   ],
   [
     "@effect/platform-bun@latest",
-    "4.1.1",
-    "@effect/platform-bun follows the Effect cohort. Its 4.1 releases peer effect ^4.1, so it moves with effect@latest and stays on 4.1.0 until the cohort moves.",
+    "4.1.2",
+    "@effect/platform-bun follows the Effect cohort and moves with effect@latest; 4.1.2 is the adopted release.",
   ],
   [
     "@confect/core@latest",
     "10.5.0",
-    "Confect moves with the Effect cohort (CONFECT_COHORT_VERSION). 10.5.0 fixes confect codegen and dev on Effect 4.1 (rjdellecese/confect#882), and its core, server, client, CLI and test packages admit only effect ~4.1.0, so every Confect package stays on 10.4.1 until #1524 moves the cohort.",
+    "Confect moves with the Effect cohort (CONFECT_COHORT_VERSION). 10.5.0 is the latest release and the adopted one: its core, server, client, CLI and test packages admit effect ~4.1.0, which holds 4.1.2.",
   ],
   [
     "@effect/tsgo@latest",
-    "0.63.0",
-    "Compiler patching moves with TypeScript and Effect. Every rule is decided in packages/typescript-config/base.json, and docs/adr/0021-rules.md records each decision. 0.57 adds the experimental tsrs build and 0.59 adds the effect-tsgo tsc, tsrs and oxlint proxy commands, which this repository does not use: it patches the installed compiler. 0.61 adds flatMapIdentityToFlatten, 0.62 mapConstToAs, and 0.63 failCauseToConstructor and manualMetricTapToTrack, each a style suggestion by default that base.json sets to error, and the opt-in mapMapErrorToMapBoth, which base.json keeps off as upstream does. 0.63 also names the catch variant in two messages and builds quick-fix references from the file's imports. 0.63.0 is the latest release and supports TypeScript 7.0.2.",
+    "0.67.4",
+    "Compiler patching moves with TypeScript and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). The patch stays on 0.63.0: 0.64 and 0.65 add the brandedSchemaClasses option and new diagnostics (effectSucceedWithUndefined, matchToResultOrOption, matchBooleanToIsSuccess, resultMatchToFromResult, mapSomeCatchNoSuchElement, suspendFailToFailSync, effectTryWithoutCatch, globalJson, provideMergeAllToArray, typeUnionToSchemaUnion, yieldInCallArgument), each of which base.json decides in both repositories in one change. 0.66 and 0.67 add CLI proxy commands this repository does not use. Checked 7 November 2026.",
   ],
-  ["vitest@latest", "5.0.5", "The Effect 4 test adapter requires Vitest 5."],
+  [
+    "vitest@latest",
+    "5.1.0",
+    "The Effect 4 test adapter requires Vitest 5; @effect/vitest 4.1.2 admits >=5.0.0 <6.0.0.",
+  ],
   [
     "@vitest/coverage-istanbul@latest",
-    "5.0.5",
+    "5.1.0",
     "Coverage must match the supported Vitest runner.",
   ],
   [
     "@vitest/ui@latest",
-    "5.0.5",
+    "5.1.0",
     "The test UI must match the supported Vitest runner.",
   ],
   [
@@ -75,8 +79,8 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "ai@latest",
-    "7.0.159",
-    "AI SDK packages move as one reviewed cohort. 7.0.159 is the latest release and the adopted one: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424), 7.0.158 repairs partial JSON and extends the experimental sandbox session, which Nakafa does not use, and the gateway module (confect/gateway) typechecks against 7.0.159. Checked 31 October 2026.",
+    "7.0.164",
+    "AI SDK packages move as one reviewed cohort. 7.0.164 is the latest release and the adopted one: @convex-dev/agent 0.7.9 peers ai ^7.0.129, and the gateway module (confect/gateway) typechecks against it. Checked 7 November 2026.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -85,13 +89,13 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "better-auth@latest",
-    "1.7.14",
-    "@convex-dev/better-auth 0.12.6, the latest adapter, still declares the peer range >=1.6.11 <1.7.0 (checked 30 October 2026), so runtime stays on the latest 1.6 patch (1.6.33) until the adapter opens 1.7. Its optional Vitest peer stops at 4, but only unused test-utils import Vitest; Nakafa auth runtime tests pass on 5.",
+    "1.7.18",
+    "Runtime stays on the latest 1.6 patch (1.6.33) while @convex-dev/better-auth stays on 0.12.6, the last adapter that admits it. 1.7 needs adapter 0.13, whose route handler rewrites the request origin, so it moves together with that adapter. Checked 7 November 2026.",
   ],
   [
     "@convex-dev/better-auth@latest",
-    "0.12.6",
-    "The adapter defines the accepted Better Auth peer range. 0.12.6 keeps >=1.6.11 <1.7.0 and convex-helpers ^0.1.128.",
+    "0.13.0",
+    "The adapter stays on 0.12.6. 0.12.7 and 0.13.0 rewrite x-forwarded-host on every auth request to an exact trusted origin or CONVEX_SITE_URL, while the school hosts reach Better Auth only through the x-forwarded-host the web app's auth proxy sends (confect/auth/host.ts, ADR 0026). The move to 0.13 changes that proxy to x-better-auth-forwarded-host and the trusted origins to the exact origin of each request in one change, together with Better Auth 1.7. Checked 7 November 2026.",
   ],
   [
     "@types/node@24",
