@@ -16,6 +16,7 @@ import {
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   args,
   cancel,
@@ -32,6 +33,16 @@ import { showsText } from "@repo/backend/test/seal";
 import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Duration, Effect } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
 
 vi.mock("@repo/backend/confect/nina/capacity", async (load) => {
   const actual =
@@ -229,7 +240,7 @@ describe("native Nina admission", () => {
     );
     expect(receipt.prompt.text).toBe(text);
 
-    const stored = await storedRowsIn(t, receipt.threadId, []);
+    const stored = await storedRowsIn(t, receipt.threadId);
     expect(storedTextOf(stored)).not.toContain(PLANTED_PROMPT);
     expect(
       await t.query((ctx) =>

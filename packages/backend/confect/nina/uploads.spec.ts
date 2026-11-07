@@ -14,16 +14,28 @@ const NinaFilename = Schema.NonEmptyString.check(
   Schema.isMaxCodePoints(NINA_FILENAME_LENGTH)
 );
 
+/**
+ * A learner's file waiting for its message: its name sealed for the learner at reservation (ADR 0024), and once its
+ * bytes are in the bucket, the file that holds them (ADR 0028).
+ */
 export const NinaUpload = Schema.Struct({
   userId: Id("users"),
   expiresAt: Schema.Finite,
-  // True when the upload sealed its file name at reservation (ADR 0024). An upload
-  // reserved before sealing has no such field, so its name is read as it is.
-  nameSealed: Schema.optionalKey(Schema.Literal(true)),
+  name: Schema.String,
   state: Schema.Union([
     Schema.Struct({ status: Schema.Literal("uploading") }),
-    Schema.Struct({ status: Schema.Literal("ready"), fileId: Schema.String }),
+    Schema.Struct({
+      status: Schema.Literal("ready"),
+      fileId: Id("bucketFiles"),
+    }),
   ]),
+});
+
+/** A file a learner sent in a chat, kept until the chat is deleted, so every later turn can read it again. */
+export const NinaFile = Schema.Struct({
+  chatId: Id("chats"),
+  fileId: Id("bucketFiles"),
+  messageId: Schema.String,
 });
 
 export default GroupSpec.make()
@@ -47,23 +59,19 @@ export default GroupSpec.make()
       error: () => Schema.Union([AuthFailure, NinaUploadError]),
     }).middleware(Session)
   )
-  // Reserves a place for an upload, and seals the name its file is stored under.
+  // Reserves a place for an upload, and seals the name of its file.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "reserve",
       args: () => ({ filename: NinaFilename }),
-      returns: () =>
-        Schema.Struct({
-          storedFilename: Schema.String,
-          uploadId: Id("ninaUploads"),
-        }),
+      returns: () => Id("ninaUploads"),
       error: () => Schema.Union([AuthFailure, NinaUploadError]),
     }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.internalMutation({
       name: "complete",
-      args: () => ({ uploadId: Id("ninaUploads"), fileId: Schema.String }),
+      args: () => ({ uploadId: Id("ninaUploads"), fileId: Id("bucketFiles") }),
       returns: () => Schema.Null,
       error: () => Schema.Union([AuthFailure, NinaUploadError]),
     }).middleware(Session)

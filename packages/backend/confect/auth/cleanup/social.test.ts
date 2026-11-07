@@ -154,6 +154,7 @@ it("retires the learner's upload grants a batch at a time and keeps another lear
     for (const userId of [owner, retained]) {
       await ctx.db.insert("ninaUploads", {
         expiresAt: Date.UTC(2026, 8, 28),
+        name: "nakafa.sealed.v1:name",
         state: { status: "uploading" },
         userId,
       });

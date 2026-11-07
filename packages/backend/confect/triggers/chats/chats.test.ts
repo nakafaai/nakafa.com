@@ -13,9 +13,20 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { contextFor } from "@repo/backend/test/nina/admission";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { Array as Arr, Effect } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -254,7 +265,8 @@ describe("native Nina deletion lifecycle", () => {
         userId: identity.userId,
         paginationOpts: { cursor: null, numItems: 10 },
       }),
-      file: await ctx.runQuery(components.nina.files.get, { fileId }),
+      file: await ctx.db.get("bucketFiles", fileId),
+      kept: await ctx.db.query("ninaFiles").collect(),
       ledger: await ctx.db.query("creditTransactions").collect(),
       user: await ctx.db.get("users", identity.userId),
     }));
@@ -263,7 +275,9 @@ describe("native Nina deletion lifecycle", () => {
     expect(state.summaries).toEqual([]);
     expect(state.messages.page).toEqual([]);
     expect(state.threads.page).toEqual([]);
-    expect(state.file).toMatchObject({ refcount: 0 });
+    // The file the learner sent leaves the bucket with the chat.
+    expect(state.file).toBeNull();
+    expect(state.kept).toEqual([]);
     expect(
       Arr.filter(state.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);

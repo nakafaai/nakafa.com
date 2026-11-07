@@ -2,7 +2,10 @@ import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import schema from "@repo/backend/confect/_generated/schema";
 import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { requestFingerprint } from "@repo/backend/confect/nina/fingerprint";
-import { readFile, sealFileName } from "@repo/backend/confect/nina/sealed/file";
+import {
+  openFileName,
+  sealFileName,
+} from "@repo/backend/confect/nina/sealed/file";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
 import {
@@ -145,57 +148,18 @@ export function messageFailureIn(
   );
 }
 
-/**
- * Reads one stored file for `owner`, in a mutation of the test deployment, and
- * returns the name and the part a model reads. `sealed` says whether the upload
- * sealed the name. A URL is not a Convex value, so the part keeps its name, its
- * media type and its kind only.
- */
-export function readFileIn(
-  t: Deployment,
-  owner: Owner,
-  fileId: string,
-  sealed: boolean
-) {
+/** Opens a sealed upload name for `owner`, in a mutation of the test deployment: the name, or the vault's failure. */
+export function openedNameIn(t: Deployment, owner: Owner, sealed: string) {
   return t.mutation((ctx) =>
     Effect.runPromise(
-      readFile(ctx, readLearnerKeys(owner), fileId, sealed).pipe(
-        Effect.map((saved) => ({
-          filename: saved.file.filename,
-          filePart: {
-            filename:
-              "filename" in saved.filePart
-                ? saved.filePart.filename
-                : undefined,
-            mediaType: saved.filePart.mediaType,
-            type: saved.filePart.type,
-          },
-        })),
-        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-      )
-    )
-  );
-}
-
-/**
- * The failure of one read of a file for `owner`: its tag, and for a vault failure
- * the reason that the vault gives. `sealed` says whether the upload sealed the name.
- * A value of the test runs as plain data.
- */
-export function fileFailureIn(
-  t: Deployment,
-  owner: Owner,
-  fileId: string,
-  sealed: boolean
-) {
-  return t.mutation((ctx) =>
-    Effect.runPromise(
-      readFile(ctx, readLearnerKeys(owner), fileId, sealed).pipe(
-        Effect.flip,
-        Effect.map((failure) => ({
-          reason: failure._tag === "VaultError" ? failure.reason : undefined,
-          tag: failure._tag,
-        })),
+      openFileName(readLearnerKeys(owner), sealed).pipe(
+        Effect.match({
+          onFailure: (failure) => ({
+            reason: failure.reason,
+            tag: failure._tag,
+          }),
+          onSuccess: (name) => ({ name }),
+        }),
         Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
       )
     )
