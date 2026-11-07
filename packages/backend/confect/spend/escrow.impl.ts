@@ -8,8 +8,8 @@ const hold = FunctionImpl.make(
   databaseSchema,
   spec,
   "hold",
-  Effect.fn("spend.escrow.hold")(function* ({ claim, held, work }) {
-    return yield* holdSpend(claim, work, held);
+  Effect.fn("spend.escrow.hold")(function* ({ ceiling, claim, work }) {
+    return yield* holdSpend(claim, work, ceiling);
   })
 );
 

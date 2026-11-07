@@ -10,15 +10,15 @@ import { Context, Effect, Exit, Layer } from "effect";
 
 /**
  * The escrow of one action's calls, for the claim the action works for. Every
- * model call and every web call holds its ceiling before it runs and settles
- * to what it cost after it, so no call spends past the payer's budget.
+ * model call and every web call holds up to its ceiling before it runs and
+ * settles to what it cost after it, as `holdSpend` bounds it.
  */
 export class Meter extends Context.Service<
   Meter,
   {
     readonly hold: (
       work: Work,
-      held: number
+      ceiling: number
     ) => Effect.Effect<Escrow, SpendRefused>;
     readonly settle: (escrow: Escrow, spent: number) => Effect.Effect<void>;
   }
@@ -30,8 +30,8 @@ export const meterOf = (claim: Claim) =>
     Meter,
     Effect.map(MutationRunner, ({ runMutation }) =>
       Meter.of({
-        hold: (work, held) =>
-          runMutation(spendInternal.escrow.hold, { claim, held, work }).pipe(
+        hold: (work, ceiling) =>
+          runMutation(spendInternal.escrow.hold, { ceiling, claim, work }).pipe(
             Effect.catchTag("SchemaError", Effect.die)
           ),
         settle: (escrow, spent) =>
@@ -44,22 +44,22 @@ export const meterOf = (claim: Claim) =>
   );
 
 /**
- * Runs `call` inside an escrow of `held` micro-dollars. A call that succeeds
- * settles to `cost` of its result. A call that fails or is interrupted settles
- * to the whole hold, because the vendor may have billed it and nothing says
- * how much, so a retry never spends the same budget twice.
+ * Runs `call` inside an escrow of up to `ceiling` micro-dollars. A call that
+ * succeeds settles to `cost` of its result. A call that fails or is
+ * interrupted settles to the whole ceiling, because the vendor may have billed
+ * it and nothing says how much, so a retry never spends the same budget twice.
  */
 export const metered = Effect.fn("spend.metered")(function* <A, E, R>(
   work: Work,
-  held: number,
+  ceiling: number,
   call: Effect.Effect<A, E, R>,
   cost: (result: A) => number
 ) {
   const meter = yield* Meter;
   return yield* Effect.acquireUseRelease(
-    meter.hold(work, held),
+    meter.hold(work, ceiling),
     () => call,
     (escrow, exit) =>
-      meter.settle(escrow, Exit.isSuccess(exit) ? cost(exit.value) : held)
+      meter.settle(escrow, Exit.isSuccess(exit) ? cost(exit.value) : ceiling)
   );
 });
