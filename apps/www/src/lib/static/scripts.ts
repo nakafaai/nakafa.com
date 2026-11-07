@@ -3,7 +3,7 @@ import {
   UNTOUCHED_WAIT,
 } from "@repo/design-system/lib/settle";
 import { Array as Arr, Duration, Result, Schema } from "effect";
-import { SIGNED_IN_ATTRIBUTE } from "@/lib/auth/hint";
+import { SIGNED_IN_ATTRIBUTE } from "#www/src/lib/auth/hint";
 
 /** Every link that preloads a JavaScript module. */
 export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;
