@@ -5,8 +5,9 @@ import {
 } from "@repo/backend/scripts/content/acceptance/analytics";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { isPortOccupied, occupyPort } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 
 const LOOPBACK_ORIGIN = /^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/u;
@@ -24,6 +25,7 @@ describe("acceptance analytics stand-in", () => {
 
       const replies = yield* withAnalyticsSink(
         origin,
+        "/tmp/unused",
         Effect.gen(function* () {
           const capture = yield* HttpClient.post(`${origin}/e/?retry_count=1`, {
             body: HttpBody.jsonUnsafe({ event: "$pageview" }),
@@ -40,7 +42,7 @@ describe("acceptance analytics stand-in", () => {
 
       expect(replies).toEqual([200, { status: 1 }, "*", 200]);
       expect(yield* isListening(origin)).toBe(false);
-    }).pipe(Effect.provide(FetchClient))
+    }).pipe(Effect.provide(Layer.mergeAll(FetchClient, nodePlatform)))
   );
 
   it.live(
@@ -51,13 +53,14 @@ describe("acceptance analytics stand-in", () => {
 
         const preflight = yield* withAnalyticsSink(
           origin,
+          "/tmp/unused",
           HttpClient.options(`${origin}/e/`)
         );
 
         expect(preflight.status).toBe(204);
         expect(preflight.headers["access-control-allow-origin"]).toBe("*");
         expect(yield* preflight.text).toBe("");
-      }).pipe(Effect.provide(FetchClient))
+      }).pipe(Effect.provide(Layer.mergeAll(FetchClient, nodePlatform)))
   );
 
   it.live("stops when the start fails", () =>
@@ -66,10 +69,14 @@ describe("acceptance analytics stand-in", () => {
       const failure = acceptanceRuntimeError("test start failure");
 
       expect(
-        yield* withAnalyticsSink(origin, Effect.fail(failure)).pipe(Effect.flip)
+        yield* withAnalyticsSink(
+          origin,
+          "/tmp/unused",
+          Effect.fail(failure)
+        ).pipe(Effect.flip)
       ).toBe(failure);
       expect(yield* isListening(origin)).toBe(false);
-    }).pipe(Effect.provide(FetchClient))
+    }).pipe(Effect.provide(Layer.mergeAll(FetchClient, nodePlatform)))
   );
 
   it.live("refuses an occupied port and leaves its listener running", () =>
@@ -79,12 +86,14 @@ describe("acceptance analytics stand-in", () => {
       yield* occupyPort(port);
 
       expect(
-        yield* withAnalyticsSink(origin, Effect.void).pipe(Effect.flip)
+        yield* withAnalyticsSink(origin, "/tmp/unused", Effect.void).pipe(
+          Effect.flip
+        )
       ).toMatchObject({
         _tag: "AcceptanceRuntimeError",
         message: `The saved analytics stand-in port at ${origin} is occupied; its process is preserved.`,
       });
       expect(yield* isPortOccupied(port)).toBe(true);
-    }).pipe(Effect.scoped)
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 });

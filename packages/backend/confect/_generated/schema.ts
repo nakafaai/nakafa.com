@@ -18,6 +18,7 @@ import billingGrants from "./tables/billingGrants";
 import billingInvoices from "./tables/billingInvoices";
 import billingPayments from "./tables/billingPayments";
 import billingSubscriptions from "./tables/billingSubscriptions";
+import bucketUse from "./tables/bucketUse";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classGrades from "./tables/classGrades";
@@ -27,12 +28,14 @@ import classroomChannels from "./tables/classroomChannels";
 import classroomFileUse from "./tables/classroomFileUse";
 import classroomFolders from "./tables/classroomFolders";
 import classroomLibrary from "./tables/classroomLibrary";
+import classroomLibraryUploads from "./tables/classroomLibraryUploads";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPassages from "./tables/classroomPassages";
 import classroomPostVotes from "./tables/classroomPostVotes";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
 import classroomScheduled from "./tables/classroomScheduled";
+import classroomStars from "./tables/classroomStars";
 import classroomSubmissions from "./tables/classroomSubmissions";
 import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
@@ -189,6 +192,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly billingInvoices: typeof billingInvoices;
   readonly billingPayments: typeof billingPayments;
   readonly billingSubscriptions: typeof billingSubscriptions;
+  readonly bucketUse: typeof bucketUse;
   readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
   readonly classGrades: typeof classGrades;
@@ -198,12 +202,14 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classroomFileUse: typeof classroomFileUse;
   readonly classroomFolders: typeof classroomFolders;
   readonly classroomLibrary: typeof classroomLibrary;
+  readonly classroomLibraryUploads: typeof classroomLibraryUploads;
   readonly classroomMessages: typeof classroomMessages;
   readonly classroomPassages: typeof classroomPassages;
   readonly classroomPostVotes: typeof classroomPostVotes;
   readonly classroomPosts: typeof classroomPosts;
   readonly classroomReads: typeof classroomReads;
   readonly classroomScheduled: typeof classroomScheduled;
+  readonly classroomStars: typeof classroomStars;
   readonly classroomSubmissions: typeof classroomSubmissions;
   readonly classroomTallies: typeof classroomTallies;
   readonly classroomTasks: typeof classroomTasks;
@@ -359,6 +365,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   billingInvoices,
   billingPayments,
   billingSubscriptions,
+  bucketUse,
   chatShares,
   chats,
   classGrades,
@@ -368,12 +375,14 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classroomFileUse,
   classroomFolders,
   classroomLibrary,
+  classroomLibraryUploads,
   classroomMessages,
   classroomPassages,
   classroomPostVotes,
   classroomPosts,
   classroomReads,
   classroomScheduled,
+  classroomStars,
   classroomSubmissions,
   classroomTallies,
   classroomTasks,

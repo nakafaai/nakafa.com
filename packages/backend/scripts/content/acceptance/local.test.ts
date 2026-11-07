@@ -166,6 +166,13 @@ describe("owned signed acceptance runtime", () => {
             ),
           })
         );
+        expect(mocks.command).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            stdin: expect.stringContaining(
+              `R2_ENDPOINT=${yield* encodeJson(`${runtime.analytics}/r2`)}`
+            ),
+          })
+        );
         expect(yield* readLocalRuntime(root)).toEqual(runtime);
         expect(localApplicationEnvironment(runtime)).toMatchObject({
           SITE_URL: "http://localhost:3100",

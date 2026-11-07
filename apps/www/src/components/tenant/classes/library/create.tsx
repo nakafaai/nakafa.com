@@ -15,7 +15,6 @@ import {
   TabsList,
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
-import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useId, useReducer, useRef, useState } from "react";
@@ -29,7 +28,6 @@ import {
   addLibraryLink,
   pickFromDrive,
   sendLibraryFile,
-  uploadLibraryFile,
 } from "@/components/tenant/classes/library/add";
 import {
   AddMode,
@@ -48,27 +46,13 @@ import {
   useLibraryFolder,
   useLibraryUploads,
 } from "@/components/tenant/classes/library/scope";
+import {
+  fileRefusals,
+  useFileSender,
+} from "@/components/tenant/classes/library/sender";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
-
-/** Tells the teacher that a file larger than the library keeps was not added. */
-const refuseLargeFile = () =>
-  Effect.sync(() =>
-    toast.error({
-      description: "library-file-size.description",
-      title: "library-file-size.title",
-    })
-  );
-
-/** Tells the teacher that a file whose bytes name no PDF or image was not added. */
-const refuseOtherFile = () =>
-  Effect.sync(() =>
-    toast.error({
-      description: "library-file-type.description",
-      title: "library-file-type.title",
-    })
-  );
 
 /** The library row's kind for a file's type. */
 const kindOf = (type: string) =>
@@ -91,8 +75,7 @@ export function AddToLibrary() {
   const folderId = useLibraryFolder();
   const offered = useQuery(connectors.google.offered, {});
   const addLink = useMutation(classroom.library.addLink);
-  const requestUrl = useMutation(classroom.library.uploadUrl);
-  const register = useAction(classroom.library.register);
+  const sendDeviceFile = useFileSender();
   const importDrive = useAction(classroom.library.importDrive);
   const pickerToken = useAction(connectors.drive.pickerToken);
   const [open, setOpen] = useState(false);
@@ -157,36 +140,6 @@ export function AddToLibrary() {
     );
   };
 
-  /** Shows the file at once, sends and registers it, and takes its row away when the server refuses it. */
-  const sendFile = (author: string, chosen: File) => {
-    runForumCall(
-      sendLibraryFile(
-        uploads.getState(),
-        { author, kind: kindOf(chosen.type), title: heading },
-        (clientKey) =>
-          uploadLibraryFile(
-            chosen,
-            () => requestUrl({ classId, slug }),
-            (storageId) =>
-              register({
-                classId,
-                clientKey,
-                folderId,
-                slug,
-                storageId,
-                title: heading,
-              })
-          )
-      ).pipe(
-        Effect.catchTags({
-          FileSizeRefused: refuseLargeFile,
-          FileTypeRefused: refuseOtherFile,
-        })
-      ),
-      toastForumFailure
-    );
-  };
-
   /** Shows the Drive file at once, has the server import it, and takes its row away when the server refuses it. */
   const sendDrive = (author: string, picked: DriveFile) => {
     runForumCall(
@@ -204,12 +157,7 @@ export function AddToLibrary() {
               title: heading,
             })
           )
-      ).pipe(
-        Effect.catchTags({
-          FileSizeRefused: refuseLargeFile,
-          FileTypeRefused: refuseOtherFile,
-        })
-      ),
+      ).pipe(Effect.catchTags(fileRefusals)),
       toastForumFailure
     );
   };
@@ -230,7 +178,7 @@ export function AddToLibrary() {
       return;
     }
     if (file !== null) {
-      sendFile(author, file);
+      sendDeviceFile(author, file, heading);
     }
   };
 
