@@ -37,6 +37,7 @@ import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectMenuSource } from "#scripts/check/menus";
+import { inspectMenuOrder } from "#scripts/check/order";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
@@ -107,6 +108,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectReactSource(file, sourceFile),
         inspectDrillingSource(file, sourceFile),
         inspectMenuSource(file, sourceFile),
+        inspectMenuOrder(file, sourceFile),
         inspectGroupSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
