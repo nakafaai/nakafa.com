@@ -353,6 +353,8 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   await expect(archivedRow.getByText("Archived")).toBeVisible();
   await saved(changes, archivedBefore);
   await page.getByRole("link", { name: "7B" }).click();
+  // The list's rows hold menus too, so the archived cohort's own page must have opened first.
+  await page.waitForURL(COHORT_PAGE);
   const leaving = page.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(leaving);
   await leaving.click();
