@@ -2,47 +2,13 @@ import { RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { metered, meterOf } from "@repo/backend/confect/spend/meter";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { createBillingTestConvex } from "@repo/backend/test/billing";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { recordingMeter } from "@repo/backend/test/spend";
 import { Array as Arr, Effect, Fiber, Layer } from "effect";
 
 /** When the test learner's credits were last reset. */
 const NOW = Date.UTC(2026, 10, 7, 10);
-
-/**
- * Holds one answered chat call and one the learner's month cannot hold, inside
- * a Confect action of the test deployment, over the escrow mutations.
- */
-function chatInAction(
-  t: ReturnType<typeof createBillingTestConvex>,
-  userId: Id<"users">
-) {
-  return t.action((ctx) =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const answered = yield* metered(
-          "chat",
-          45_625,
-          Effect.succeed("answer"),
-          () => 1875
-        );
-        const refused = yield* Effect.flip(
-          metered("chat", 10_000_000, Effect.succeed("never"), () => 0)
-        );
-        return { answered, refused: refused._tag };
-      }).pipe(
-        Effect.provide(
-          Layer.provide(
-            meterOf({ kind: "learner", userId }),
-            RegisteredFunction.actionLayer(confectSchema, ctx)
-          )
-        )
-      )
-    )
-  );
-}
 
 describe("spend/meter", () => {
   it.effect("settles a call that succeeds to the cost of its result", () =>
@@ -84,7 +50,7 @@ describe("spend/meter", () => {
   );
 
   it("holds and settles through the escrow mutations of the claim", async () => {
-    const t = createBillingTestConvex();
+    const t = createConvexTestWithBetterAuth();
     const userId = await t.run((ctx) =>
       ctx.db.insert("users", {
         authId: "auth-meter",
@@ -96,7 +62,29 @@ describe("spend/meter", () => {
         plan: "free",
       })
     );
-    const outcome = await chatInAction(t, userId);
+    const outcome = await t.action((ctx) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const answered = yield* metered(
+            "chat",
+            45_625,
+            Effect.succeed("answer"),
+            () => 1875
+          );
+          const refused = yield* Effect.flip(
+            metered("chat", 10_000_000, Effect.succeed("never"), () => 0)
+          );
+          return { answered, refused: refused._tag };
+        }).pipe(
+          Effect.provide(
+            Layer.provide(
+              meterOf({ kind: "learner", userId }),
+              RegisteredFunction.actionLayer(confectSchema, ctx)
+            )
+          )
+        )
+      )
+    );
     expect(outcome).toEqual({ answered: "answer", refused: "SpendRefused" });
     const rows = await t.run((ctx) => ctx.db.query("vendorSpend").collect());
     expect(
