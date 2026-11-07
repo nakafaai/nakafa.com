@@ -10,13 +10,17 @@ import {
 } from "@/components/tenant/classes/library/add";
 import { pickDriveFile } from "@/components/tenant/classes/library/drive";
 import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
-import { putLibraryFile } from "@/components/tenant/classes/library/send";
+import {
+  putLibraryFile,
+  UploadFailed,
+} from "@/components/tenant/classes/library/send";
 
 vi.mock("@/components/tenant/classes/library/drive", () => ({
   pickDriveFile: vi.fn(),
 }));
 
-vi.mock("@/components/tenant/classes/library/send", () => ({
+vi.mock("@/components/tenant/classes/library/send", async (load) => ({
+  ...(await load<typeof import("@/components/tenant/classes/library/send")>()),
   putLibraryFile: vi.fn(),
 }));
 
@@ -139,6 +143,26 @@ describe("uploadLibraryFile", () => {
           progress
         ).pipe(Effect.flip);
         expect(refusal).toEqual({ _tag: "FileTypeRefused" });
+      })
+  );
+
+  it.effect(
+    "frees the reservation through its registration when the send fails, and fails with the send's error",
+    () =>
+      Effect.gen(function* () {
+        const failed = new UploadFailed({ status: 0 });
+        vi.mocked(putLibraryFile).mockReturnValue(Effect.fail(failed));
+        const register = vi.fn((_uploadId: unknown) =>
+          Promise.resolve(Result.fail({ _tag: "FileTypeRefused" }))
+        );
+        const refusal = yield* uploadLibraryFile(
+          new File(["%PDF-1.7"], "modul.pdf", { type: "application/pdf" }),
+          reserve,
+          register,
+          vi.fn()
+        ).pipe(Effect.flip);
+        expect(refusal).toBe(failed);
+        expect(register).toHaveBeenCalledExactlyOnceWith(uploadId);
       })
   );
 });
