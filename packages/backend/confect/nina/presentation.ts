@@ -91,70 +91,83 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
         () => new NinaPresentationError({ operation: "suggestions" })
       ),
       Effect.flatMap((context) =>
-        Effect.tryPromise({
-          try: (signal) =>
-            new Agent(components.nina, {
-              name: "suggestions" satisfies UsageAgent,
-              languageModel: suggestion.model,
-              usageHandler,
-              instructions: nakafaSuggestions({ locale }),
-              contextOptions: { recentMessages: 0 },
-              // The completed turn is the newest history; the request is the new turn.
-              contextHandler: () =>
-                Promise.resolve(
-                  assembleContext({
-                    current: [
-                      {
-                        role: "user",
-                        content:
-                          "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
-                      },
-                    ],
-                    history: splitTurns([
-                      ...context.recent,
-                      ...context.inputPrompt,
-                      ...context.existingResponses,
-                    ]),
-                  })
-                ),
-            }).streamText(
-              ctx,
-              { threadId: turn.threadId, userId: turn.userId },
-              {
-                promptMessageId: turn.promptMessageId,
-                abortSignal: signal,
-                output: Output.object({ schema: suggestionsOutput }),
-                timeout: suggestion.timeout,
-              },
-              options
+        Effect.gen(function* () {
+          // A provider that refuses the call closes the partial stream and
+          // never settles `output`, so the stream's own error is the signal.
+          let failed = false;
+          const result = yield* Effect.tryPromise({
+            try: (signal) =>
+              new Agent(components.nina, {
+                name: "suggestions" satisfies UsageAgent,
+                languageModel: suggestion.model,
+                usageHandler,
+                instructions: nakafaSuggestions({ locale }),
+                contextOptions: { recentMessages: 0 },
+                // The completed turn is the newest history; the request is the new turn.
+                contextHandler: () =>
+                  Promise.resolve(
+                    assembleContext({
+                      current: [
+                        {
+                          role: "user",
+                          content:
+                            "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
+                        },
+                      ],
+                      history: splitTurns([
+                        ...context.recent,
+                        ...context.inputPrompt,
+                        ...context.existingResponses,
+                      ]),
+                    })
+                  ),
+              }).streamText(
+                ctx,
+                { threadId: turn.threadId, userId: turn.userId },
+                {
+                  promptMessageId: turn.promptMessageId,
+                  abortSignal: signal,
+                  output: Output.object({ schema: suggestionsOutput }),
+                  timeout: suggestion.timeout,
+                  onError: () => {
+                    failed = true;
+                  },
+                },
+                options
+              ),
+            catch: () =>
+              new NinaPresentationError({ operation: "suggestions" }),
+          });
+          // Each follow-up is saved once the model has moved on to the next
+          // one, so the learner reads them arrive one by one through the turn's
+          // own query; the last one is whole only when the model has finished.
+          yield* Stream.fromAsyncIterable(
+            result.partialOutputStream,
+            () => new NinaPresentationError({ operation: "suggestions" })
+          ).pipe(
+            Stream.map(readWrittenSuggestions),
+            Stream.filter(Option.isSome),
+            Stream.map((written) => written.value),
+            Stream.changesWith(
+              (before, after) => before.length === after.length
             ),
-          catch: () => new NinaPresentationError({ operation: "suggestions" }),
-        })
-      ),
-      // Each follow-up is saved once the model has moved on to the next one, so
-      // the learner reads them arrive one by one through the turn's own query;
-      // the last one is whole only when the model has finished.
-      Effect.tap((result) =>
-        Stream.fromAsyncIterable(
-          result.partialOutputStream,
-          () => new NinaPresentationError({ operation: "suggestions" })
-        ).pipe(
-          Stream.map(readWrittenSuggestions),
-          Stream.filter(Option.isSome),
-          Stream.map((written) => written.value),
-          Stream.changesWith((before, after) => before.length === after.length),
-          Stream.runForEach((suggestions) =>
-            mutate(ninaInternal.presentation.save, {
-              turnId: turn._id,
-              suggestions,
-            })
-          )
-        )
-      ),
-      Effect.flatMap((result) =>
-        Effect.tryPromise({
-          try: () => result.output,
-          catch: () => new NinaPresentationError({ operation: "suggestions" }),
+            Stream.runForEach((suggestions) =>
+              mutate(ninaInternal.presentation.save, {
+                turnId: turn._id,
+                suggestions,
+              })
+            )
+          );
+          if (failed) {
+            return yield* new NinaPresentationError({
+              operation: "suggestions",
+            });
+          }
+          return yield* Effect.tryPromise({
+            try: () => result.output,
+            catch: () =>
+              new NinaPresentationError({ operation: "suggestions" }),
+          });
         })
       ),
       Effect.flatMap((output) =>
