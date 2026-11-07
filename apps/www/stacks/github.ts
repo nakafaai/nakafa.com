@@ -181,10 +181,7 @@ const writeFilesCredentials = Effect.fn("GitHubStack.writeFilesCredentials")(
       name: "R2_SECRET_ACCESS_KEY",
       value: token.value.pipe(
         mapOutputEffect((value) =>
-          sha256Hex(Redacted.value(value)).pipe(
-            Effect.map(Redacted.make),
-            Effect.orDie
-          )
+          sha256Hex(Redacted.value(value)).pipe(Effect.map(Redacted.make))
         )
       ),
     });
