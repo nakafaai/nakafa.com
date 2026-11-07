@@ -25,11 +25,13 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { firstDay } from "@/components/tenant/classes/tasks/deadline";
 import type { TaskDraft } from "@/components/tenant/classes/tasks/draft";
+import { useClockZone } from "@/components/tenant/settings/time";
 
 /** Who a task can go to. */
 const REACHES = ["class", "some"] as const;
@@ -50,6 +52,7 @@ export function TaskFields({
 }) {
   const t = useTranslations("Classroom");
   const id = useId();
+  const timeZone = useClockZone();
   const policies = Arr.map(LatePolicy.literals, (policy) => ({
     label: t(`task-late-${policy}`),
     value: policy,
@@ -85,6 +88,8 @@ export function TaskFields({
         <DateTimePicker
           dayPlaceholder={t("task-day-placeholder")}
           id={`${id}-deadline`}
+          // A deadline falls on today or later on the school's clock, so no past day is offered.
+          min={firstDay(DateTime.toEpochMillis(DateTime.nowUnsafe()), timeZone)}
           onValueChange={(deadline) => onChange({ ...draft, deadline })}
           timePlaceholder={t("task-time-placeholder")}
           value={draft.deadline}

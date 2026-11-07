@@ -1,5 +1,6 @@
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Data, Effect, type Result } from "effect";
+import { classRefusalCopy } from "@/components/tenant/classes/refusals";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** A forum call that did not complete at all: the network failed, or the call was rejected before the server answered. */
@@ -25,13 +26,13 @@ export const forumCall = <A, E>(send: () => Promise<Result.Result<A, E>>) =>
  */
 export const runForumCall = <A, E>(
   call: Effect.Effect<A, E>,
-  onFailure: () => void
+  onFailure: (error: E) => void
 ) =>
   Effect.runPromise(
     call.pipe(
       Effect.asVoid,
       Effect.catch((error) =>
-        Effect.sync(onFailure).pipe(
+        Effect.sync(() => onFailure(error)).pipe(
           Effect.andThen(
             reportClientException(error, {
               source: "components/tenant/classes/forum",
@@ -43,9 +44,6 @@ export const runForumCall = <A, E>(
     )
   );
 
-/** Says that a change of the forum failed, in the toast every School action uses. */
-export const toastForumFailure = () =>
-  toast.error({
-    description: "action-error.description",
-    title: "action-error.title",
-  });
+/** Says why a change of the class failed, in the toast every School action uses: the refusal's own copy, or the generic one. */
+export const toastForumFailure = (error?: unknown) =>
+  toast.error(classRefusalCopy(error));
