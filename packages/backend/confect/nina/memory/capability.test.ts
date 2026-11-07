@@ -9,7 +9,7 @@ import {
   MEMORY_PAUSED,
   runMemory,
 } from "@repo/backend/confect/nina/memory/tool";
-import { GatewayTest } from "@repo/backend/test/gateway";
+import { GatewayIsolated } from "@repo/backend/test/gateway";
 import type { createNinaTest } from "@repo/backend/test/nina";
 import {
   finalAnswer,
@@ -18,6 +18,7 @@ import {
 } from "@repo/backend/test/nina/capability";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { specialistRequest } from "@repo/backend/test/nina/specialist";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect, type Layer, MutableHashMap, MutableRef, Option } from "effect";
@@ -68,7 +69,8 @@ async function search(
           : turn.pipe(Effect.provide(read));
       }).pipe(
         Effect.provide([
-          GatewayTest,
+          GatewayIsolated,
+          recordingMeter().layer,
           RegisteredFunction.actionLayer(schema, ctx),
         ])
       )

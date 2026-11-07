@@ -10,7 +10,7 @@ import {
   decides,
   decidesLast,
   decidesTogether,
-  GatewayTest,
+  GatewayIsolated,
   provider,
   textOf,
 } from "@repo/backend/test/gateway";
@@ -146,7 +146,7 @@ describe("memory decision about candidates", () => {
         for (const request of requests()) {
           expect(askedOf(request)).toEqual(["ownNote", "private"]);
         }
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -160,7 +160,7 @@ describe("memory decision about candidates", () => {
         );
         expect(yield* judgeCandidates(candidates)).toEqual(candidates);
         expect(MutableRef.get(opened)).toBe(Arr.length(candidates));
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -182,7 +182,7 @@ describe("memory decision about candidates", () => {
           Option.some(noteText(candidates[0]))
         );
         expect(kept).toEqual(candidates);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -191,7 +191,7 @@ describe("memory decision about candidates", () => {
       Effect.gen(function* () {
         judging({ notOwn: [candidates[0], candidates[2]] });
         expect(yield* judgeCandidates(candidates)).toEqual([candidates[1]]);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -203,7 +203,7 @@ describe("memory decision about candidates", () => {
           privates: [candidates[1], candidates[2]],
         });
         expect(yield* judgeCandidates(candidates)).toEqual([]);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -212,14 +212,14 @@ describe("memory decision about candidates", () => {
       Effect.gen(function* () {
         judging({});
         expect(yield* judgeCandidates(candidates)).toEqual(candidates);
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect("asks nothing about no candidate", () =>
     Effect.gen(function* () {
       expect(yield* judgeCandidates([])).toEqual([]);
       expect(provider.decisionModel).not.toHaveBeenCalled();
-    }).pipe(Effect.provide(GatewayTest))
+    }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -233,7 +233,7 @@ describe("memory decision about candidates", () => {
           operation: "judge",
           rejected: false,
         });
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 
   it.effect(
@@ -261,6 +261,6 @@ describe("memory decision about candidates", () => {
           gateway: { reason: "unavailable", status: 503 },
           operation: "judge",
         });
-      }).pipe(Effect.provide(GatewayTest))
+      }).pipe(Effect.provide(GatewayIsolated))
   );
 });

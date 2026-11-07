@@ -1,5 +1,6 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { Claim } from "@repo/backend/confect/spend/schema";
 import { Array as Arr, Schema } from "effect";
 
 /** The credits one reply of Nina draws from the school's pool (ADR 0025). */
@@ -13,6 +14,8 @@ export const NINA_NAME = "Nina";
 
 /** What one question gives Nina: the class, its language, the question, and the messages before it. */
 export const NinaAsk = Schema.Struct({
+  /** Who the reply's model calls are held against: the asker in the school whose pool holds the credits. */
+  claim: Claim,
   classId: Id("classes"),
   className: Schema.String,
   history: Schema.Array(

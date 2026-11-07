@@ -1,11 +1,13 @@
 import { convexGateway } from "@convex-dev/ai-sdk-provider";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";
+import { Meter } from "@repo/backend/confect/spend/meter";
 import { getServiceToken } from "convex/server";
 import { Effect, Layer } from "effect";
 
 /**
- * The production adapter: the Convex AI gateway. The deployment's service
+ * The production adapter: the Convex AI gateway, metered by the `Meter` of the
+ * action that provides it. The deployment's service
  * token is read once per action, before any request; the provider reads it
  * again for each request. A decision model is the provider's evaluation model,
  * made with the options the handle gives it, among them the zero retention
@@ -21,19 +23,22 @@ import { Effect, Layer } from "effect";
  */
 export const GatewayLive = Layer.effect(
   Gateway,
-  Effect.as(
-    Effect.tryPromise({
+  Effect.gen(function* () {
+    yield* Effect.tryPromise({
       try: () => getServiceToken("ai-gateway"),
       catch: () =>
         new GatewayConfigurationError({
           message: "The AI gateway is not available on this deployment.",
         }),
-    }),
-    make({
-      decisionModel: (modelId, options) =>
-        convexGateway.evaluationModel(modelId, options),
-      embeddingModel: convexGateway.embeddingModel,
-      languageModel: convexGateway,
-    })
-  )
+    });
+    return make(
+      {
+        decisionModel: (modelId, options) =>
+          convexGateway.evaluationModel(modelId, options),
+        embeddingModel: convexGateway.embeddingModel,
+        languageModel: convexGateway,
+      },
+      yield* Meter
+    );
+  })
 );

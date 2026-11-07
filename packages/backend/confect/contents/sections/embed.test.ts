@@ -7,7 +7,11 @@ import {
 import type { SectionDraft } from "@repo/backend/confect/contents/sections/schema";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
-import { failures, GatewayTest, provider } from "@repo/backend/test/gateway";
+import {
+  failures,
+  GatewayIsolated,
+  provider,
+} from "@repo/backend/test/gateway";
 import { MockEmbeddingModelV4 } from "ai/test";
 import {
   Array as Arr,
@@ -68,7 +72,7 @@ function embedder(
 }
 
 const embed = (drafts: readonly SectionDraft[]) =>
-  embedBatch(drafts).pipe(Effect.provide(GatewayTest));
+  embedBatch(drafts).pipe(Effect.provide(GatewayIsolated));
 
 /** A layer that keeps each log line that is written, with its level, message, and annotations. */
 const keepingLogs = (logged: MutableRef.MutableRef<readonly unknown[]>) =>
@@ -88,7 +92,7 @@ const embedLogged = (drafts: readonly SectionDraft[]) => {
   const logged = MutableRef.make<readonly unknown[]>([]);
   return Effect.map(
     embedBatch(drafts).pipe(
-      Effect.provide(Layer.mergeAll(GatewayTest, keepingLogs(logged)))
+      Effect.provide(Layer.mergeAll(GatewayIsolated, keepingLogs(logged)))
     ),
     (found) => ({ found, logged: MutableRef.get(logged) })
   );
@@ -103,7 +107,7 @@ const failedLogged = (drafts: readonly SectionDraft[]) => {
   return Effect.map(
     Effect.flip(
       embedBatch(drafts).pipe(
-        Effect.provide(Layer.mergeAll(GatewayTest, keepingLogs(logged)))
+        Effect.provide(Layer.mergeAll(GatewayIsolated, keepingLogs(logged)))
       )
     ),
     (failure) => ({ failure, logged: MutableRef.get(logged) })
@@ -141,7 +145,7 @@ describe("section embedding", () => {
       Effect.gen(function* () {
         embedder(() => undefined);
         yield* embedBatch([draft("abc")], "qwen/qwen3-embedding-8b").pipe(
-          Effect.provide(GatewayTest)
+          Effect.provide(GatewayIsolated)
         );
         expect(provider.embeddingModel).toHaveBeenLastCalledWith(
           "qwen/qwen3-embedding-8b",

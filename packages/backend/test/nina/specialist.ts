@@ -15,12 +15,14 @@ import type {
   ResearchAgentData,
   TaskAgentData,
 } from "@repo/backend/confect/nina/contract/agent";
+import type { Meter } from "@repo/backend/confect/spend/meter";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { GatewayTest } from "@repo/backend/test/gateway";
+import { GatewayIsolated } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
+import { recordingMeter } from "@repo/backend/test/spend";
 import type { MockLanguageModelV4 } from "ai/test";
 import { DateTime, Effect, MutableList } from "effect";
 
@@ -50,7 +52,11 @@ export const researchRequest = {
 export async function runSpecialist<A, E>(
   program: (
     userId: Docs["users"]["_id"]
-  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner | VectorSearch>
+  ) => Effect.Effect<
+    A,
+    E,
+    ActionCtx | Gateway | Meter | QueryRunner | VectorSearch
+  >
 ) {
   const t = createConvexTestWithBetterAuth();
   const { userId } = await t.mutation((ctx) =>
@@ -64,7 +70,8 @@ export async function runSpecialist<A, E>(
     Effect.runPromise(
       program(userId).pipe(
         Effect.provide([
-          GatewayTest,
+          GatewayIsolated,
+          recordingMeter().layer,
           RegisteredFunction.actionLayer(schema, ctx),
         ])
       )

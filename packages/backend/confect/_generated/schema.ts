@@ -166,6 +166,8 @@ import tryoutSetProgress from "./tables/tryoutSetProgress";
 import userLearningRecents from "./tables/userLearningRecents";
 import users from "./tables/users";
 import vaultKeys from "./tables/vaultKeys";
+import vendorEscrows from "./tables/vendorEscrows";
+import vendorSpend from "./tables/vendorSpend";
 import welcomeEmailIntents from "./tables/welcomeEmailIntents";
 
 const databaseSchema: $DatabaseSchema.DatabaseSchema<{
@@ -335,6 +337,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly userLearningRecents: typeof userLearningRecents;
   readonly users: typeof users;
   readonly vaultKeys: typeof vaultKeys;
+  readonly vendorEscrows: typeof vendorEscrows;
+  readonly vendorSpend: typeof vendorSpend;
   readonly welcomeEmailIntents: typeof welcomeEmailIntents;
 }> = $DatabaseSchema.make({
   accountConsentDecisions,
@@ -503,6 +507,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   userLearningRecents,
   users,
   vaultKeys,
+  vendorEscrows,
+  vendorSpend,
   welcomeEmailIntents,
 });
 

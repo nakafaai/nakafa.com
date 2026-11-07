@@ -14,6 +14,7 @@ import {
   scrapeAnswer,
   sentBodies,
 } from "@repo/backend/test/nina/provider";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
@@ -80,6 +81,22 @@ function readLink(
     Effect.map((output) => ({ output, parts }))
   );
 }
+
+describe("a page read past the month's budget", () => {
+  it.effect("asks the provider nothing", () =>
+    Effect.gen(function* () {
+      readsPage({ markdown: "# Page" });
+      const { publish } = createProgress();
+      const url = "https://example.com/page";
+      yield* scrapeUrl({ toolCallId: "scrape", url, publish }).pipe(
+        Effect.provide(recordingMeter(true).layer),
+        overFetch,
+        Effect.exit
+      );
+      expect(requested()).not.toContain(providerScrapeUrl.href);
+    })
+  );
+});
 
 describe("research scrape tool", () => {
   beforeEach(() => {

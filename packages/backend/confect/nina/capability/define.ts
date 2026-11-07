@@ -23,6 +23,7 @@ import {
   deniedCapabilityResult,
   type OfferContext,
 } from "@repo/backend/confect/nina/policy/capability";
+import type { Meter } from "@repo/backend/confect/spend/meter";
 import type { Locale } from "@repo/contents/content";
 import type { FlexibleSchema, ModelMessage, Tool } from "ai";
 import {
@@ -53,7 +54,7 @@ export class CapabilityTurn extends Context.Service<
 >()("@repo/backend/confect/nina/capability/define/CapabilityTurn") {}
 
 /** The services that a capability's run may use. */
-type RunServices = ActionCtx | Gateway | QueryRunner | VectorSearch;
+type RunServices = ActionCtx | Gateway | Meter | QueryRunner | VectorSearch;
 
 /** The services a tool runs in: those of its run, the turn, and the chat step that holds it. */
 type ToolServices = RunServices | CapabilityTurn | ChatStep;
