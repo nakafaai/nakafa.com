@@ -28,6 +28,14 @@ import { pageRowVariants } from "@/components/shared/content/width";
  * Agent supplies messages; shadcn preserves the reader's position. This is the
  * one place that reads the streamed messages, so a streamed batch renders it
  * and its rows, and nothing else in the chat.
+ *
+ * The scroller follows the end of the chat only while a turn runs. A chat opens
+ * on its last question (`last-anchor`), and where what follows that question
+ * fits the screen, the scroller stands at the end instead. The answer then draws
+ * more once its Markdown, pictures and fonts arrive, and an end it followed
+ * would push the question, and the picture it attaches, above the screen. So a
+ * settled chat keeps its place while it grows, and a new turn still anchors its
+ * question at the top.
  */
 export function NinaTranscript() {
   const busy = useChat((state) => state.busy);
@@ -50,7 +58,7 @@ export function NinaTranscript() {
   }, []);
 
   return (
-    <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
+    <Primitive.Provider autoScroll={busy} defaultScrollPosition="last-anchor">
       <MessageScroller className="flex-1">
         <MessageScrollerViewport aria-label={t("messages")}>
           <MessageScrollerContent
