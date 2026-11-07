@@ -25,6 +25,8 @@ import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import {
   admission,
   attachment,
+  chatFiles,
+  looseFile,
   readyFileIdIn,
   reserve,
   reserved,
@@ -62,24 +64,6 @@ vi.mock("@convex-dev/agent", async (load) => {
 const release = Ref.getFunctionReference(refs.public.nina.uploads.release);
 const complete = Ref.getFunctionReference(refs.internal.nina.uploads.complete);
 const discard = Ref.getFunctionReference(refs.internal.nina.uploads.discard);
-
-type Deployment = Awaited<ReturnType<typeof uploadFixture>>["t"];
-
-/** A stored file of the bucket that no upload holds, for a call that names a file. */
-const looseFile = (t: Deployment) =>
-  t.mutation((ctx) =>
-    ctx.db.insert("bucketFiles", {
-      byteSize: 1,
-      contentType: "image/png",
-      createdAt: NOW,
-      objectKey: "files/accounts/loose",
-      state: "stored",
-    })
-  );
-
-/** The files a chat keeps for the prompts its learner sent. */
-const chatFiles = (t: Deployment) =>
-  t.query((ctx) => ctx.db.query("ninaFiles").collect());
 
 beforeEach(() => {
   vi.useFakeTimers();

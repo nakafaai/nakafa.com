@@ -89,3 +89,22 @@ export const started = async (owner: Owner, args: FunctionArgs<typeof start>) =>
     refs.public.nina.turns.start,
     await owner.mutation(start, args)
   );
+
+/** A test deployment of the backend. */
+type Deployment = ReturnType<typeof createConvexTestWithBetterAuth>;
+
+/** A stored file of the bucket that no upload holds, for a call that names a file. */
+export const looseFile = (t: Deployment) =>
+  t.mutation((ctx) =>
+    ctx.db.insert("bucketFiles", {
+      byteSize: 1,
+      contentType: "image/png",
+      createdAt: NOW,
+      objectKey: "files/accounts/loose",
+      state: "stored",
+    })
+  );
+
+/** The files a chat keeps for the prompts its learner sent. */
+export const chatFiles = (t: Deployment) =>
+  t.query((ctx) => ctx.db.query("ninaFiles").collect());

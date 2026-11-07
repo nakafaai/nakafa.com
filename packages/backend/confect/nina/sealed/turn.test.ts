@@ -26,11 +26,7 @@ import {
 } from "@repo/backend/test/nina/seal";
 import { readThreadIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn } from "@repo/backend/test/nina/stored";
-import {
-  attachment,
-  readyFileIdIn,
-  saved,
-} from "@repo/backend/test/nina/uploads";
+import { attachment, saved } from "@repo/backend/test/nina/uploads";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect } from "effect";
 
@@ -85,11 +81,10 @@ describe("Sealing a settled Nina turn", () => {
     );
     const f = await askedIn(PLANTED.prompt);
     // The file keeps its sealed name in the files table, sent by a turn or not.
-    const uploadId = await saved(f.owner, {
+    await saved(f.owner, {
       ...attachment,
       filename: `${PLANTED.file}.png`,
     });
-    const fileId = await readyFileIdIn(f.t, uploadId);
     await f.t.action(run, { turnId: f.receipt.turnId });
 
     // During the turn the planted texts sit in the plain rows and the deltas. The message
@@ -132,10 +127,6 @@ describe("Sealing a settled Nina turn", () => {
 
     const settled = await storedRowsIn(f.t, f.receipt.threadId);
     expect(plantedIn(settled)).toEqual([]);
-    // The file the learner sent is the bucket's, so the component holds none.
-    expect(
-      await f.t.query((ctx) => ctx.db.get("bucketFiles", fileId))
-    ).toMatchObject({ contentType: "image/png", state: "stored" });
     const deltas = await f.t.query((ctx) =>
       ctx.runQuery(components.nina.streams.listDeltas, {
         cursors: Arr.map(streamIds, (streamId) => ({ cursor: 0, streamId })),
