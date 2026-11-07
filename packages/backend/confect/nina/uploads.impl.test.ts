@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { BUCKET_BYTE_LIMIT } from "@repo/backend/confect/bucket/use";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
@@ -41,6 +42,7 @@ vi.stubGlobal("fetch", fetcher);
 const bucket = makeBucket();
 
 beforeEach(() => {
+  bucket.state.objects = {};
   fetcher.mockImplementation((input, init) => bucket.answer(input, init));
   stubBucket();
 });
@@ -247,6 +249,20 @@ describe("native Nina attachment ownership", () => {
     expect(
       await t.query((ctx) => ctx.db.query("ninaUploads").collect())
     ).toEqual([]);
+  });
+
+  it("refuses an upload once the bucket holds all it may, and keeps no upload", async () => {
+    const { t, owner } = await uploadFixture();
+    await t.mutation((ctx) =>
+      ctx.db.insert("bucketUse", { bytes: BUCKET_BYTE_LIMIT })
+    );
+    await expect(owner.action(save, attachment)).rejects.toMatchObject({
+      data: { code: "NINA_UPLOAD_LIMIT" },
+    });
+    expect(
+      await t.query((ctx) => ctx.db.query("ninaUploads").collect())
+    ).toEqual([]);
+    expect(bucket.state.objects).toEqual({});
   });
 
   it("does not complete expired or account-deleted grants and discards them idempotently", async () => {
