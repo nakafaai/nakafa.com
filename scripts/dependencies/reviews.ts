@@ -90,12 +90,12 @@ export const REGISTRY_REVIEWS = [
   [
     "better-auth@latest",
     "1.7.18",
-    "Runtime stays on the latest 1.6 patch (1.6.33). 1.7 removes the in-core mcp() and oidcProvider plugins, and the agent sign-in (confect/auth/oauth.ts) is built on mcp(). Its 1.7 replacement, @better-auth/oauth-provider, declares compound unique indexes, which @convex-dev/better-auth 0.13.0 refuses in schema generation and in the adapter, so the agent OAuth flow has no 1.7 path on the Convex adapter yet. Checked 7 November 2026.",
+    "Runtime stays on the latest 1.6 patch (1.6.34, which fixes stateless OAuth linking and SAML, neither used here). 1.7 moves the MCP plugin that the agent sign-in uses (confect/auth/oauth.ts) to @better-auth/mcp, which depends on @better-auth/oauth-provider. That provider's schema declares a compound unique index, oauthClientResource [clientId, resourceId], and mergeSchema lets a plugin option rename a model or its fields but not drop an index. @convex-dev/better-auth 0.13.0, the only adapter that admits 1.7, throws on any unique index of more than one field (assertNoCompoundUniqueIndexes in src/client/adapter-utils.ts, called from create-schema.ts and withTableLevelUniqueFields), and its 0.13 upgrade guide states that apps can no longer act as an OAuth provider for that reason. So the agent sign-in has no supported 1.7 path on Convex until the adapter enforces compound unique indexes, which convex/better-auth#470 tracks. Checked 7 November 2026.",
   ],
   [
     "@convex-dev/better-auth@latest",
     "0.13.0",
-    "The adapter stays on 0.12.6, the last release that admits Better Auth 1.6. 0.13.0 peers better-auth >=1.7.16 and rejects compound unique indexes, so the agent OAuth flow cannot move with it (see better-auth@latest). 0.12.7 also rewrites x-forwarded-host on every auth request to an exact trusted origin or CONVEX_SITE_URL, while the school hosts reach Better Auth through the x-forwarded-host that the web app's auth proxy sends (confect/auth/host.ts, ADR 0026); a move sends x-better-auth-forwarded-host instead and trusts the exact origin of each request. Checked 7 November 2026.",
+    "The adapter stays on 0.12.6, the last release that admits Better Auth 1.6. 0.13.0 peers better-auth >=1.7.16 and refuses compound unique indexes, which @better-auth/oauth-provider declares, so the agent sign-in cannot move with it (see better-auth@latest). 0.12.7 also rewrites x-forwarded-host on every auth request to an exact trusted origin or CONVEX_SITE_URL, while the school hosts reach Better Auth through the x-forwarded-host that the web app's auth proxy sends (confect/auth/host.ts, ADR 0026); a move sends x-better-auth-forwarded-host instead and trusts the exact origin of each request. Checked 7 November 2026.",
   ],
   [
     "@types/node@26",
