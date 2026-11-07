@@ -12,6 +12,7 @@ import {
   failQueriesIn,
   isMutation,
   later,
+  leavesOpen,
   momentOf,
 } from "@/e2e/support/frames";
 
@@ -399,16 +400,16 @@ describe("the frames of the realtime connection", () => {
     );
   });
 
-  it("decodes the FoldPending frame as a refused MutationResponse that stored no moment", () => {
-    // The frame the server sends when a batch waits for a fold: nothing was written, so the
-    // `ts` is null, and the typed failure is the one the editor decides on.
-    const folding = decodeGiven(
+  it("decodes a refused submit frame as a refused MutationResponse that stored no moment", () => {
+    // The frame the server sends when it refuses a batch on a frozen exam: nothing was written,
+    // so the `ts` is null, and the typed failure is the one the editor reports.
+    const frozen = decodeGiven(
       encodeJsonText({
         errorData: {
-          _tag: "FoldPending",
-          code: "FOLD_PENDING",
+          _tag: "ExamFrozen",
+          code: "EXAM_FROZEN",
           message:
-            "The steps of this document are being folded. Send the batch again shortly.",
+            "A sitting of this exam has finished, so its questions can no longer change.",
         },
         logLines: [],
         requestId: 12,
@@ -419,12 +420,34 @@ describe("the frames of the realtime connection", () => {
       })
     );
 
-    expect(Option.getOrUndefined(folding)).toEqual({
+    expect(Option.getOrUndefined(frozen)).toEqual({
       requestId: 12,
       success: false,
       ts: null,
       type: "MutationResponse",
     });
+  });
+
+  it("keeps a change open while the server refused it or the editor's batch did not land, and settles it once it landed", () => {
+    const submit = Option.some("editor/steps:submit");
+
+    expect(leavesOpen(submit, false, "Uncaught ConvexError")).toBe(true);
+    expect(leavesOpen(submit, true, { _tag: "FoldPending" })).toBe(true);
+    expect(
+      leavesOpen(submit, true, {
+        _tag: "VersionStale",
+        baseVersion: 1,
+        head: 2,
+      })
+    ).toBe(true);
+    expect(leavesOpen(submit, true, { _tag: "Accepted" })).toBe(false);
+    // Another function's answer is settled by its success alone, whatever it returns.
+    expect(
+      leavesOpen(Option.some("exams/questions:remove"), true, {
+        _tag: "FoldPending",
+      })
+    ).toBe(false);
+    expect(leavesOpen(Option.none(), true, null)).toBe(false);
   });
 
   it("reads the success of an action's answer, so a refused action is a refusal", () => {

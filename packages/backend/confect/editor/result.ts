@@ -4,7 +4,6 @@ import type {
   EditorStepsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { storedDocument } from "@repo/backend/confect/editor/document";
-import { FoldPending } from "@repo/backend/confect/editor/errors";
 import {
   FOLD_STEP_LIMIT,
   foldSteps,
@@ -13,9 +12,10 @@ import {
 import { assessmentModel } from "@repo/backend/confect/editor/model";
 import { decodeStep, type Step } from "@repo/backend/confect/editor/step";
 import { stepsAfter } from "@repo/backend/confect/editor/store";
+import type { SubmitReply } from "@repo/backend/confect/editor/view";
 import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /**
  * The text of the document that a snapshot and the steps after it make, checked with the
@@ -48,10 +48,11 @@ export const foldedText = Effect.fn("editor.result.folded")(function* (
 });
 
 /**
- * The steps that a snapshot lacks, as one read of `FOLD_STEP_LIMIT` steps holds them. A
- * backlog that one read does not hold fails with `FoldPending`: a submit checks the document
- * with every step the snapshot lacks, and a fold of them is already due, so the client sends
- * its batch again (ADR 0028). A submit therefore applies at most one read and one batch.
+ * The steps that a snapshot lacks, as one read of `FOLD_STEP_LIMIT` steps holds them, or none
+ * when one read does not hold them. A submit checks the document with every step the snapshot
+ * lacks, and a fold of a backlog that one read does not hold is already due, so the submit
+ * answers `FoldPending` and the client sends its batch again (ADR 0028). A submit therefore
+ * applies at most one read and one batch.
  */
 export const pendingRows = Effect.fn("editor.result.pending")(function* (
   documentId: GenericId.GenericId<"editorDocuments">,
@@ -59,10 +60,41 @@ export const pendingRows = Effect.fn("editor.result.pending")(function* (
   head: number
 ) {
   const rows = yield* stepsAfter(documentId, snapshotVersion, FOLD_STEP_LIMIT);
-  if (rows.length < head - snapshotVersion) {
-    return yield* new FoldPending();
-  }
-  return rows;
+  return rows.length < head - snapshotVersion
+    ? Option.none()
+    : Option.some(rows);
+});
+
+/**
+ * The answer that refuses a batch for the document it makes, or none when the contract takes
+ * that document (ADR 0028). The batch is applied after the steps the snapshot lacks, as the fold
+ * applies them, so a batch that the submit accepts makes the document that the fold stores. A
+ * document that the contract refuses answers `DocumentInvalid` or `DocumentTooLarge`. So does a
+ * batch step that nests the document past the bound, so the log holds no step that every editor
+ * would skip for its depth. A step that the schema cannot read, or that ProseMirror does not
+ * apply, is stored and skipped, as every editor skips it.
+ */
+export const batchRefusal = Effect.fn("editor.result.refusal")(function* (
+  documentId: GenericId.GenericId<"editorDocuments">,
+  snapshot: Pick<EditorSnapshotsDoc, "content" | "version">,
+  head: number,
+  pending: readonly EditorStepsDoc[],
+  batch: readonly Step[]
+) {
+  const steps = Arr.appendAll(yield* decodedSteps(pending), batch);
+  return yield* foldedText(documentId, snapshot, steps).pipe(
+    Effect.map(
+      (folded): Option.Option<typeof SubmitReply.Type> =>
+        Arr.some(folded.tooDeep, (version) => version > head)
+          ? Option.some({ _tag: "DocumentInvalid" })
+          : Option.none()
+    ),
+    Effect.catchTags({
+      DocumentInvalid: () => Effect.succeedSome({ _tag: "DocumentInvalid" }),
+      DocumentTooLarge: ({ bytes, limit }) =>
+        Effect.succeedSome({ _tag: "DocumentTooLarge", bytes, limit }),
+    })
+  );
 });
 
 /** The steps that a list of stored rows holds, decoded in order. A stored step that does not read back is a defect. */

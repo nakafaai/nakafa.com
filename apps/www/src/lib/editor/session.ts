@@ -1,21 +1,13 @@
-import type { VersionStale } from "@repo/backend/confect/editor/batch";
-import type {
-  DocumentInvalid,
-  DocumentTooLarge,
-} from "@repo/backend/confect/editor/document";
-import type {
-  ClientTaken,
-  FoldPending,
-} from "@repo/backend/confect/editor/errors";
 import type {
   OpenedDocument,
   SinceReply,
+  SubmitReply,
 } from "@repo/backend/confect/editor/view";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
 import { type Effect, type Ref, Schema, type Semaphore } from "effect";
 
-/** A call to the server that failed for a reason the loop does not decide: the network, a denied access, or a refused read. */
+/** A call to the server that failed for a reason the loop does not decide: the network, a denied access, a refused read, or a refused batch. */
 export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
   reason: Schema.String,
 }) {}
@@ -69,7 +61,11 @@ export class EditorClosed extends Schema.TaggedError<EditorClosed>()(
   {}
 ) {}
 
-/** The server calls the loop makes. Each one wraps a Convex function, and maps the failures the loop does not decide to `SyncFailed`. */
+/**
+ * The server calls the loop makes. Each one wraps a Convex function, and maps every failure to
+ * `SyncFailed`, since the loop decides none of them. A submit answers the outcomes the loop does
+ * decide, a stale version, a document the contract refuses, and a fold, with its reply.
+ */
 export interface SyncTransport {
   readonly open: (
     clientId: string
@@ -80,15 +76,7 @@ export interface SyncTransport {
   ) => Effect.Effect<typeof SinceReply.Type, SyncFailed>;
   readonly submit: (
     batch: string
-  ) => Effect.Effect<
-    null,
-    | SyncFailed
-    | VersionStale
-    | ClientTaken
-    | DocumentInvalid
-    | DocumentTooLarge
-    | FoldPending
-  >;
+  ) => Effect.Effect<typeof SubmitReply.Type, SyncFailed>;
 }
 
 /**

@@ -16,7 +16,6 @@ import { Effect, Schema } from "effect";
  * is at version 0, and each batch moves it up by the number of its steps.
  */
 export const VersionSchema = Schema.Natural;
-type Version = typeof VersionSchema.Type;
 
 /**
  * Most characters in a client or batch id. A v4 UUID from `randomUuid`
@@ -41,7 +40,7 @@ export const ClientIdSchema = Schema.String.check(
 /**
  * The id of one batch, which the client makes with `randomUuid` for each batch
  * and keeps when it sends the batch again. The server answers a repeat of an
- * accepted batch with its version, and writes nothing (ADR 0028).
+ * accepted batch as accepted, and writes nothing (ADR 0028).
  */
 export const BatchIdSchema = Schema.String.check(
   Schema.isNonEmpty(),
@@ -74,19 +73,6 @@ export class BatchTooLarge extends Schema.TaggedError<BatchTooLarge>()(
   {
     bytes: Schema.Int,
     limit: Schema.Int,
-  }
-) {}
-
-/**
- * The batch names a version other than the document's head. Its steps were made
- * on another version, so the client waits for the steps it is missing, rebases
- * its own, and sends again. The head is the version the document is at now.
- */
-export class VersionStale extends Schema.TaggedError<VersionStale>()(
-  "VersionStale",
-  {
-    baseVersion: VersionSchema,
-    head: VersionSchema,
   }
 ) {}
 
@@ -159,21 +145,4 @@ export const decodeBatch = Effect.fn("editor.batch.decode")(function* (
   return yield* Schema.decodeEffect(BatchTextSchema)(text, {
     onExcessProperty: "error",
   });
-});
-
-/**
- * Checks that a decoded batch names the document's head, and returns the batch
- * with the version after its steps. A batch applies only on the version it names,
- * so any other version refuses it with `VersionStale`. It applies nothing: the
- * caller writes the steps it gets back, and the version counts up by the number
- * of steps.
- */
-export const admitBatch = Effect.fn("editor.batch.admit")(function* (
-  head: Version,
-  batch: Batch
-) {
-  if (batch.baseVersion !== head) {
-    return yield* new VersionStale({ baseVersion: batch.baseVersion, head });
-  }
-  return { batch, version: head + batch.steps.length };
 });

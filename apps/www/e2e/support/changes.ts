@@ -24,6 +24,7 @@ import {
   isCall,
   isMutation,
   later,
+  leavesOpen,
   momentOf,
   type SentSchema,
 } from "@/e2e/support/frames";
@@ -49,9 +50,10 @@ export const ANSWER_MILLISECONDS = 15_000;
  * change was stored at, and `told` the latest the page was told of.
  *
  * A refusal the server sends holds a save open until an accepted answer follows it
- * (`refusalOpen`), because the page sends a refused batch again when the server is
- * folding its steps. A refusal the test injects with `failNext` is the answer the test
- * asks for, so it settles the change at once.
+ * (`refusalOpen`), and so does a reply of the editor's submit that says its batch did
+ * not land, because the page sends that batch again once it has the steps it lacks or
+ * the server has folded its steps (`leavesOpen`). A refusal the test injects with
+ * `failNext` is the answer the test asks for, so it settles the change at once.
  *
  * Every frame passes through this route, so a step can also hold the server's
  * answers back: after `hold` the page gets nothing from the server until
@@ -92,8 +94,9 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     /** The HTTP origin of the backend the page talks to; empty until its connection opened. */
     origin: "",
     /**
-     * Whether the server refused a change and no accepted answer has followed it yet.
-     * A save waits for that answer. An injected refusal does not set it.
+     * Whether the server refused a change, or answered that the editor's batch did not
+     * land, and no accepted answer has followed it yet. A save waits for that answer. An
+     * injected refusal does not set it.
      */
     refusalOpen: false,
     /** The query whose answers are changed, and how. */
@@ -191,13 +194,19 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
               changes.answered += 1;
               changes.refusalOpen = success === false;
             },
-            MutationResponse: ({ requestId, success, ts }) => {
+            MutationResponse: ({ requestId, result, success, ts }) => {
+              const sent = MutableHashMap.get(waiting, requestId);
+              const udfPath = Option.map(
+                Option.filter(Option.flatMap(sent, decodeSent), isMutation),
+                (call) => call.udfPath
+              );
+              const open = leavesOpen(udfPath, success, result);
               changes.answered += 1;
-              changes.refusalOpen = !success;
+              changes.refusalOpen = open;
               if (ts) {
                 changes.stored = later(changes.stored, momentOf(ts));
               }
-              if (success) {
+              if (!open) {
                 MutableList.appendAll(
                   taken,
                   Option.toArray(MutableHashMap.get(waiting, requestId))

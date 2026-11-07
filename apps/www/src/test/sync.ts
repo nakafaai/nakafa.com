@@ -1,13 +1,10 @@
-import {
-  type Batch,
-  decodeBatch,
-  VersionStale,
-} from "@repo/backend/confect/editor/batch";
-import type { DocumentInvalid } from "@repo/backend/confect/editor/document";
-import { FoldPending } from "@repo/backend/confect/editor/errors";
+import { type Batch, decodeBatch } from "@repo/backend/confect/editor/batch";
 import { foldSteps, snapshotNode } from "@repo/backend/confect/editor/fold";
 import { decodeStep, encodeStep } from "@repo/backend/confect/editor/step";
-import type { SinceReply } from "@repo/backend/confect/editor/view";
+import type {
+  SinceReply,
+  SubmitReply,
+} from "@repo/backend/confect/editor/view";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
@@ -90,16 +87,27 @@ const clientOf = (current: typeof FakeLog.Type, clientId: string) =>
 
 /**
  * A check that the fake server runs on a batch after the version rule, as the server runs its
- * contract check before it writes. It fails the way the server refuses the batch: with
+ * contract check before it writes. It answers the way the server refuses the batch: with
  * `DocumentInvalid` for a document that breaks the contract, or with `FoldPending` for a backlog
- * that waits for a fold (ADR 0028).
+ * that waits for a fold (ADR 0028). None lets the batch land.
  */
 export type Refusal = (
   batch: Batch
-) => Effect.Effect<void, DocumentInvalid | FoldPending>;
+) => Effect.Effect<Option.Option<typeof SubmitReply.Type>>;
 
 /** The check that accepts every batch, which a server with no refusal runs. */
-const acceptAll: Refusal = () => Effect.void;
+const acceptAll: Refusal = () => Effect.succeedNone;
+
+/** The answer to a batch that landed, now or under its id before. */
+const ACCEPTED: typeof SubmitReply.Type = { _tag: "Accepted" };
+
+/** The answer of the fake server to a batch that waits for a fold. */
+export const FOLD_PENDING: typeof SubmitReply.Type = { _tag: "FoldPending" };
+
+/** The answer of the fake server to a batch whose document breaks the contract. */
+export const DOCUMENT_INVALID: typeof SubmitReply.Type = {
+  _tag: "DocumentInvalid",
+};
 
 /**
  * A fake of the Convex functions that the loop calls. It applies the version rule
@@ -159,15 +167,19 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         const current = yield* Ref.get(log);
         const record = clientOf(current, batch.clientId);
         if (record !== null && record.batch === batch.batch) {
-          return null;
+          return ACCEPTED;
         }
         if (batch.baseVersion !== current.head) {
-          return yield* new VersionStale({
+          return {
+            _tag: "VersionStale",
             baseVersion: batch.baseVersion,
             head: current.head,
-          });
+          } satisfies typeof SubmitReply.Type;
         }
-        yield* refuse(batch);
+        const refusal = yield* refuse(batch);
+        if (Option.isSome(refusal)) {
+          return refusal.value;
+        }
         const stored = yield* Effect.forEach(batch.steps, (step) =>
           encodeStep(step).pipe(Effect.orDie)
         );
@@ -192,7 +204,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
           ],
           submits: state.submits + 1,
         }));
-        return null;
+        return ACCEPTED;
       }),
   };
 
@@ -355,7 +367,7 @@ export const silentEditor = (
 });
 
 /**
- * A server that folds for `folds` batches: it refuses each batch with `FoldPending` until
+ * A server that folds for `folds` batches: it answers each batch with `FoldPending` until
  * the folds are used up, and it keeps the id of every batch it is given. `folding` holds the
  * folds still to come, so a test can end the fold.
  */
@@ -369,8 +381,8 @@ export const foldingServer = Effect.fn("test.sync.folding")(function* (
       Effect.andThen(
         Ref.getAndUpdate(folding, (left) => Math.max(left - 1, 0))
       ),
-      Effect.flatMap((left) =>
-        left > 0 ? Effect.fail(new FoldPending()) : Effect.void
+      Effect.map((left) =>
+        left > 0 ? Option.some(FOLD_PENDING) : Option.none()
       )
     );
   const server = yield* makeServer(undefined, refuse);

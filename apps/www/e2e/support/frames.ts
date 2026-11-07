@@ -1,3 +1,4 @@
+import { SubmitReply } from "@repo/backend/confect/editor/view";
 import { Array as Arr, Option, Schema } from "effect";
 
 /** What a mutation and an action share: the function they call, and the `requestId` the server answers with. */
@@ -83,12 +84,14 @@ const TransitionSchema = Schema.Struct({
 /**
  * The frames the server sends that a step waits on. A `ts` is a moment of the
  * database, which the protocol writes as eight bytes in Base64. A refused mutation
- * stored nothing, so its `ts` is null. An action's answer may carry `success`, and
- * it is false when the server refused the action.
+ * stored nothing, so its `ts` is null. A mutation's `result` is what the function
+ * returned, or the message of its refusal. An action's answer may carry `success`,
+ * and it is false when the server refused the action.
  */
 export const GivenSchema = Schema.Union([
   Schema.Struct({
     requestId: Schema.Finite,
+    result: Schema.optionalKey(Schema.Unknown),
     success: Schema.Boolean,
     ts: Schema.optionalKey(Schema.NullOr(Schema.Uint8ArrayFromBase64)),
     type: Schema.Literal("MutationResponse"),
@@ -143,6 +146,28 @@ export const momentOf = (bytes: Uint8Array) =>
 /** The later of two moments. */
 export const later = (one: bigint, other: bigint) =>
   one > other ? one : other;
+
+/** The editor's submit, whose reply says whether its batch landed (ADR 0028). */
+const EDITOR_SUBMIT = "editor/steps:submit";
+
+/** A reply of the editor's submit. */
+const isSubmitReply = Schema.is(SubmitReply);
+
+/**
+ * Whether the answer to a change leaves it open: the server refused the change, or the
+ * editor's submit answered that its batch did not land (a stale version, a document the
+ * contract refuses, or a fold), so the page sends the batch again (ADR 0028). `udfPath`
+ * names the function of the change, when the change is known.
+ */
+export const leavesOpen = (
+  udfPath: Option.Option<string>,
+  success: boolean,
+  result: unknown
+) =>
+  !success ||
+  (Option.contains(udfPath, EDITOR_SUBMIT) &&
+    isSubmitReply(result) &&
+    result._tag !== "Accepted");
 
 /**
  * A transition with every field it carries kept, so a step can change one

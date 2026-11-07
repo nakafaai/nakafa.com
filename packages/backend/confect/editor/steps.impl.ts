@@ -8,15 +8,13 @@ import {
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Document } from "@repo/backend/confect/editor/access";
 import { documentAccess } from "@repo/backend/confect/editor/authority";
-import { admitBatch, decodeBatch } from "@repo/backend/confect/editor/batch";
+import { decodeBatch } from "@repo/backend/confect/editor/batch";
 import { checkContent } from "@repo/backend/confect/editor/content";
-import { DocumentInvalid } from "@repo/backend/confect/editor/document";
 import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
 import { foldDue } from "@repo/backend/confect/editor/fold";
 import { encodeStoredStep } from "@repo/backend/confect/editor/log";
 import {
-  decodedSteps,
-  foldedText,
+  batchRefusal,
   pendingRows,
   stepBytes,
 } from "@repo/backend/confect/editor/result";
@@ -32,6 +30,7 @@ import {
   clientView,
   type SinceReply,
   type StepView,
+  type SubmitReply,
   stepView,
 } from "@repo/backend/confect/editor/view";
 import { requireDocumentUnfrozen } from "@repo/backend/confect/exams/freeze";
@@ -85,24 +84,29 @@ const since = FunctionImpl.make(
   })
 );
 
+/** The answer to a batch that landed, now or under its id before. */
+const ACCEPTED: typeof SubmitReply.Type = { _tag: "Accepted" };
+
 /**
- * Accepts a batch of steps made on the document's head. A batch the session has
- * had accepted before is answered without a write, so a retried batch is idempotent.
- * A session id that belongs to another author is refused with `ClientTaken`. A batch on the
- * prompt of a question whose exam froze at its first sitting's close is refused with `ExamFrozen`,
- * after a retried batch is answered (ADR 0031). Any other batch is checked against the bounds, the
- * content the contract accepts, and the head.
- * The batch is then applied to the document as the server knows it, the snapshot with
- * the steps it lacks, with the model and the contract check that the fold uses. A result
- * the contract refuses fails with `DocumentInvalid` or `DocumentTooLarge`. So does a batch
- * step that nests the document past the bound, so the log holds no such step (ADR 0028).
- * A backlog that one read does not hold fails with `FoldPending`. Each step is then written
- * as one row at the version it produces, the head moves by the number of steps, and the
- * session's record takes the batch. All of it is one transaction, so two clients never win
- * one version: a stale batch writes nothing and fails with `VersionStale`. When the steps the
- * snapshot lacks reach a fold
- * limit with this batch, the batch also schedules the fold that writes the snapshot, so
- * the client never writes a snapshot (ADR 0028).
+ * Accepts a batch of steps made on the document's head. A batch the session has had
+ * accepted before is answered `Accepted` without a write, so a retried batch is idempotent.
+ * A session id that belongs to another author fails with `ClientTaken`. A batch on the prompt
+ * of a question whose exam froze at its first sitting's close fails with `ExamFrozen`, after a
+ * retried batch is answered (ADR 0031). Any other batch is checked against the bounds and the
+ * content the contract accepts, and those refusals fail too, because the editor never sends
+ * such a batch.
+ *
+ * The outcomes that the editor's sync decides for itself are answers, not failures (ADR 0028),
+ * and each is decided before any write, so an answer that refuses the batch writes nothing. A
+ * batch on another version than the head is answered `VersionStale`. A backlog that one read
+ * does not hold is answered `FoldPending`. The batch is then applied to the document as the
+ * server knows it, the snapshot with the steps it lacks, with the model and the contract check
+ * that the fold uses, and a result that the contract refuses is answered `DocumentInvalid` or
+ * `DocumentTooLarge` (`batchRefusal`). Each step is then written as one row at the version it
+ * produces, the head moves by the number of steps, and the session's record takes the batch.
+ * All of it is one transaction, so two clients never win one version. When the steps the
+ * snapshot lacks reach a fold limit with this batch, the batch also schedules the fold that
+ * writes the snapshot, so the client never writes a snapshot (ADR 0028).
  */
 const submit = FunctionImpl.make(
   databaseSchema,
@@ -120,34 +124,43 @@ const submit = FunctionImpl.make(
       return yield* new ClientTaken();
     }
     if (Option.isSome(record) && record.value.batch === batch.batch) {
-      return null;
+      return ACCEPTED;
     }
     yield* requireDocumentUnfrozen(document._id);
-    const admitted = yield* admitBatch(document.head, batch);
-    const rows = yield* Effect.forEach(admitted.batch.steps, (step) =>
-      encodeStoredStep({
-        author: appUser._id,
-        clientId: admitted.batch.clientId,
-        step,
-      }).pipe(Effect.orDie)
-    );
+    if (batch.baseVersion !== document.head) {
+      return {
+        _tag: "VersionStale",
+        baseVersion: batch.baseVersion,
+        head: document.head,
+      } satisfies typeof SubmitReply.Type;
+    }
     const snapshot = yield* snapshotOf(document._id);
     const pending = yield* pendingRows(
       document._id,
       snapshot.version,
       document.head
     );
-    const folded = yield* foldedText(
+    if (Option.isNone(pending)) {
+      return { _tag: "FoldPending" } satisfies typeof SubmitReply.Type;
+    }
+    const refusal = yield* batchRefusal(
       document._id,
       snapshot,
-      Arr.appendAll(yield* decodedSteps(pending), admitted.batch.steps)
+      document.head,
+      pending.value,
+      batch.steps
     );
-    // A batch step that nests the document past the bound is refused, so the log holds no step
-    // that every editor would skip for its depth (ADR 0028). A step that the schema cannot read,
-    // or that ProseMirror does not apply, is stored and skipped, as every editor skips it.
-    if (Arr.some(folded.tooDeep, (version) => version > document.head)) {
-      return yield* new DocumentInvalid();
+    if (Option.isSome(refusal)) {
+      return refusal.value;
     }
+    const version = document.head + batch.steps.length;
+    const rows = yield* Effect.forEach(batch.steps, (step) =>
+      encodeStoredStep({
+        author: appUser._id,
+        clientId: batch.clientId,
+        step,
+      }).pipe(Effect.orDie)
+    );
     const writer = yield* DatabaseWriter;
     yield* Effect.forEach(
       rows,
@@ -164,7 +177,7 @@ const submit = FunctionImpl.make(
     );
     yield* writer
       .table("editorDocuments")
-      .patch(document._id, { head: admitted.version })
+      .patch(document._id, { head: version })
       .pipe(Effect.orDie);
     if (Option.isNone(record)) {
       yield* writer
@@ -174,25 +187,22 @@ const submit = FunctionImpl.make(
           batch: batch.batch,
           clientId: batch.clientId,
           documentId: document._id,
-          version: admitted.version,
+          version,
         })
         .pipe(Effect.orDie);
     } else {
       yield* writer
         .table("editorClients")
-        .patch(record.value._id, {
-          batch: batch.batch,
-          version: admitted.version,
-        })
+        .patch(record.value._id, { batch: batch.batch, version })
         .pipe(Effect.orDie);
     }
     const before = {
-      bytes: stepBytes(pending),
+      bytes: stepBytes(pending.value),
       steps: document.head - snapshot.version,
     };
     const after = {
       bytes: before.bytes + stepBytes(rows),
-      steps: admitted.version - snapshot.version,
+      steps: version - snapshot.version,
     };
     if (foldDue({ after, before })) {
       yield* (yield* Scheduler).runAfter(
@@ -201,7 +211,7 @@ const submit = FunctionImpl.make(
         { documentId: document._id }
       );
     }
-    return null;
+    return ACCEPTED;
   })
 );
 

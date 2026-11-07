@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { DocumentInvalid } from "@repo/backend/confect/editor/document";
 import { Effect, Fiber, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import { reportClientException } from "@/lib/analytics/client";
@@ -7,6 +6,7 @@ import { closeEditor } from "@/lib/editor/close";
 import { SyncFailed, type SyncTransport } from "@/lib/editor/session";
 import { startSync } from "@/lib/editor/sync";
 import {
+  DOCUMENT_INVALID,
   foldingServer,
   makePort,
   makeServer,
@@ -123,7 +123,7 @@ describe("closeEditor", () => {
     () =>
       Effect.gen(function* () {
         vi.mocked(reportClientException).mockClear();
-        const refuseAll: Refusal = () => Effect.fail(new DocumentInvalid());
+        const refuseAll: Refusal = () => Effect.succeedSome(DOCUMENT_INVALID);
         const server = yield* makeServer(undefined, refuseAll);
         const { port, state } = yield* makePort();
         const session = yield* startSync(port, server.transport);
