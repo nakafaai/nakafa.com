@@ -1057,6 +1057,90 @@ export const retryTransient: {
 )
 
 /**
+ * Fails requests that do not receive a response within the given duration.
+ *
+ * **When to use**
+ *
+ * Use to configure a timeout once on the client, for example when providing
+ * the `HttpClient` service, while keeping the standard `HttpClientError` error
+ * model.
+ *
+ * **Details**
+ *
+ * A timed out request is interrupted and fails with an `HttpClientError` whose
+ * reason is a `TransportError` with a `Cause.TimeoutError` cause.
+ * `retryTransient` treats it as transient. Interrupting a request aborts the
+ * underlying transport, unless the request is attached to a scope with
+ * `withScope`, in which case it stays open until the scope closes.
+ *
+ * The timer starts after request preprocessing and covers everything the
+ * wrapped client does to produce a response. For a plain client this ends when
+ * the response headers arrive, but response middleware applied before
+ * `timeout`, such as `tap` or `retryTransient`, runs inside the budget,
+ * including any body reads it performs. Composition order therefore decides
+ * how it interacts with retries: applying `timeout` before `retryTransient`
+ * gives each attempt its own budget, while applying it after bounds the whole
+ * retry loop.
+ *
+ * **Gotchas**
+ *
+ * Body reads outside the timed client are not covered, including those made
+ * by response middleware applied after `timeout` and by consumers of the
+ * `HttpClient` service. Apply a separate timeout to body reads such as
+ * `response.json` or `response.stream` when needed.
+ *
+ * **Example** (Timing out each attempt)
+ *
+ * ```ts
+ * import { Effect, Layer } from "effect"
+ * import { FetchHttpClient, HttpClient } from "effect/http"
+ *
+ * const TimedHttpClient = Layer.effect(
+ *   HttpClient.HttpClient,
+ *   Effect.map(
+ *     HttpClient.HttpClient,
+ *     HttpClient.timeout("5 seconds")
+ *   )
+ * ).pipe(Layer.provide(FetchHttpClient.layer))
+ *
+ * const program = Effect.gen(function*() {
+ *   const client = (yield* HttpClient.HttpClient).pipe(
+ *     HttpClient.retryTransient({ times: 3 })
+ *   )
+ *   return yield* client.get("https://example.com")
+ * }).pipe(Effect.provide(TimedHttpClient))
+ * ```
+ *
+ * @stability unstable
+ * @category error handling
+ * @since 4.1.0
+ */
+export const timeout: {
+  (duration: Duration.Input): <E, R>(self: HttpClient.With<E, R>) => HttpClient.With<E | Error.HttpClientError, R>
+  <E, R>(self: HttpClient.With<E, R>, duration: Duration.Input): HttpClient.With<E | Error.HttpClientError, R>
+} = dual(
+  2,
+  <E, R>(self: HttpClient.With<E, R>, duration: Duration.Input): HttpClient.With<E | Error.HttpClientError, R> => {
+    const decoded = Duration.fromInputUnsafe(duration)
+    const description = `timed out after ${Duration.format(decoded)}`
+    return transform(self, (effect, request) =>
+      Effect.timeoutOrElse(effect, {
+        duration: decoded,
+        orElse: () =>
+          Effect.fail(
+            new Error.HttpClientError({
+              reason: new Error.TransportError({
+                request,
+                cause: new Cause.TimeoutError(`Operation ${description}`),
+                description
+              })
+            })
+          )
+      }))
+  }
+)
+
+/**
  * Namespace containing configuration types for `withRateLimiter`.
  *
  * @stability unstable
@@ -1362,7 +1446,7 @@ export const withRateLimiter: {
  * Namespace containing configuration types for `withCircuitBreaker`.
  *
  * @stability experimental
- * @since 4.0.6
+ * @since 4.0.7
  */
 export declare namespace WithCircuitBreaker {
   /**
@@ -1370,7 +1454,7 @@ export declare namespace WithCircuitBreaker {
    *
    * @stability experimental
    * @category circuit breaking
-   * @since 4.0.6
+   * @since 4.0.7
    */
   export interface Options<E, R2 = never> {
     /**
@@ -1385,13 +1469,10 @@ export declare namespace WithCircuitBreaker {
     readonly key?: string | ((request: HttpClientRequest.HttpClientRequest) => string) | undefined
     /**
      * Classifies the `Exit` of each request that the breaker admitted.
+     * `context.probe` is `true` when the request is the HalfOpen probe.
      * Defaults to `circuitBreakerClassifier`.
      */
-    readonly classify?:
-      | ((
-        exit: Exit.Exit<HttpClientResponse.HttpClientResponse, E>
-      ) => CircuitBreaker.Outcome | Effect.Effect<CircuitBreaker.Outcome, never, R2>)
-      | undefined
+    readonly classify?: CircuitBreaker.Classifier<HttpClientResponse.HttpClientResponse, E, R2> | undefined
   }
 }
 
@@ -1512,7 +1593,7 @@ export declare namespace WithCircuitBreaker {
  *
  * @stability experimental
  * @category circuit breaking
- * @since 4.0.6
+ * @since 4.0.7
  */
 export const withCircuitBreaker: {
   <E, R2 = never>(options: WithCircuitBreaker.Options<E, R2>): <R>(
@@ -1567,7 +1648,7 @@ const requestOrigin = (request: HttpClientRequest.HttpClientRequest): string =>
  *
  * @stability experimental
  * @category circuit breaking
- * @since 4.0.6
+ * @since 4.0.7
  */
 export const circuitBreakerClassifier = <E>(
   exit: Exit.Exit<HttpClientResponse.HttpClientResponse, E>
@@ -1876,9 +1957,11 @@ export const tapRequest: {
  * **Details**
  *
  * Response cookies are merged into the ref with `Cookies.mergeIntoArray` for
- * the response URL. Before each request, `Cookies.toRequestCookieHeader` selects
- * the cookies for the request URL and sets them as the `cookie` header. Expiry
- * uses the current `Clock`.
+ * the response URL. When a request is sent, `Cookies.toRequestCookieHeader`
+ * selects the cookies for its final URL, after later transformations such as
+ * `HttpClientRequest.prependUrl`, and sets them as the `cookie` header. With
+ * `followRedirects` applied after `withCookiesRef`, this runs for every hop.
+ * Expiry uses the current `Clock`.
  *
  * @stability unstable
  * @category cookies
@@ -1892,21 +1975,27 @@ export const withCookiesRef: {
   <E, R>(
     self: HttpClient.With<E, R>,
     ref: Ref.Ref<ReadonlyArray<Cookies.Cookie>>
-  ): HttpClient.With<E, R> =>
-    makeWith(
+  ): HttpClient.With<E, R> => {
+    const now = () => Fiber.getCurrent()!.getRef(Clock).currentTimeMillisUnsafe()
+    const addCookies = (request: HttpClientRequest.HttpClientRequest) =>
+      Effect.map(Ref.get(ref), (cookies) => {
+        const header = Cookies.toRequestCookieHeader(cookies, request.url, now())
+        if (header === undefined) return request
+        const withCookies = HttpClientRequest.setHeader(request, "cookie", header)
+        // setHeader returns a new request, so carry over the withScope controller
+        const controller = scopedRequests.get(request)
+        if (controller !== undefined) scopedRequests.set(withCookies, controller)
+        return withCookies
+      })
+    return makeWith(
       (request: Effect.Effect<HttpClientRequest.HttpClientRequest, E, R>) =>
-        Effect.tap(self.postprocess(request), (response) => {
-          const now = Fiber.getCurrent()!.getRef(Clock).currentTimeMillisUnsafe()
-          return Ref.update(ref, Cookies.mergeIntoArray(response.url, response.cookies, now))
-        }),
-      (request) =>
-        Effect.flatMap(self.preprocess(request), (request) =>
-          Effect.map(Ref.get(ref), (cookies) => {
-            const now = Fiber.getCurrent()!.getRef(Clock).currentTimeMillisUnsafe()
-            const header = Cookies.toRequestCookieHeader(cookies, request.url, now)
-            return header === undefined ? request : HttpClientRequest.setHeader(request, "cookie", header)
-          }))
+        Effect.tap(
+          self.postprocess(Effect.flatMap(request, addCookies)),
+          (response) => Ref.update(ref, Cookies.mergeIntoArray(response.url, response.cookies, now()))
+        ),
+      self.preprocess
     )
+  }
 )
 
 /**

@@ -14,6 +14,7 @@ import {
   Ref,
   Schedule,
   Schema,
+  Scope,
   Stream
 } from "effect"
 import { Cookies, HttpClient, HttpClientError, HttpClientRequest, HttpClientResponse, UrlParams } from "effect/http"
@@ -899,6 +900,73 @@ Missing key
           strictEqual((yield* Fiber.join(fiber)).status, 200)
         })
     )
+  })
+
+  describe("timeout", () => {
+    it.effect("fails with a TransportError and aborts the request", () =>
+      Effect.gen(function*() {
+        let signal: AbortSignal | undefined
+        const client = HttpClient.make((_request, _url, requestSignal) => {
+          signal = requestSignal
+          return Effect.never
+        }).pipe(HttpClient.timeout("5 seconds"))
+
+        const fiber = yield* client.get("http://test/").pipe(Effect.forkChild({ startImmediately: true }))
+        yield* TestClock.adjust("5 seconds")
+        const exit = yield* Fiber.await(fiber)
+
+        assert.isTrue(Exit.isFailure(exit))
+        const error = Cause.squash((exit as Exit.Failure<unknown, unknown>).cause)
+        assert.instanceOf(error, HttpClientError.HttpClientError)
+        strictEqual(error.reason._tag, "TransportError")
+        strictEqual(error.request.url, "http://test/")
+        assert.isTrue(Cause.isTimeoutError(error.cause))
+        assert.include(error.message, "timed out")
+        assert.isTrue(signal!.aborted)
+      }))
+
+    it.effect("gives each retryTransient attempt a fresh budget", () =>
+      Effect.gen(function*() {
+        const attempts = yield* Ref.make(0)
+        const client = HttpClient.make((request) =>
+          Effect.flatMap(Ref.getAndUpdate(attempts, (n) => n + 1), (n) =>
+            n === 0
+              ? Effect.never
+              : Effect.as(Effect.sleep("900 millis"), HttpClientResponse.fromWeb(request, new Response(null))))
+        ).pipe(HttpClient.timeout("1 second"), HttpClient.retryTransient({ times: 1 }))
+
+        const fiber = yield* client.get("http://test/").pipe(Effect.forkChild({ startImmediately: true }))
+        yield* TestClock.adjust("1 second")
+        strictEqual(yield* Ref.get(attempts), 2)
+        yield* TestClock.adjust("900 millis")
+        strictEqual((yield* Fiber.join(fiber)).status, 200)
+      }))
+
+    it.effect("bounds the whole retry loop when applied after retryTransient", () =>
+      Effect.gen(function*() {
+        const attempts = yield* Ref.make(0)
+        const client = HttpClient.make((request) =>
+          Effect.flatMap(Ref.getAndUpdate(attempts, (n) => n + 1), (n) =>
+            n === 0
+              ? Effect.andThen(
+                Effect.sleep("600 millis"),
+                Effect.fail(
+                  new HttpClientError.HttpClientError({ reason: new HttpClientError.TransportError({ request }) })
+                )
+              )
+              : Effect.as(Effect.sleep("900 millis"), HttpClientResponse.fromWeb(request, new Response(null))))
+        ).pipe(HttpClient.retryTransient({ times: 1 }), HttpClient.timeout("1 second"))
+
+        const fiber = yield* client.get("http://test/").pipe(Effect.forkChild({ startImmediately: true }))
+        yield* TestClock.adjust("1 second")
+        const exit = fiber.pollUnsafe()
+
+        strictEqual(yield* Ref.get(attempts), 2)
+        assert.isTrue(exit !== undefined && Exit.isFailure(exit))
+        const error = Cause.squash((exit as Exit.Failure<unknown, unknown>).cause)
+        assert.instanceOf(error, HttpClientError.HttpClientError)
+        assert.isTrue(Cause.isTimeoutError(error.cause))
+      }))
   })
 
   describe("stream", () => {
@@ -2260,6 +2328,78 @@ Missing key
       )
       assert.strictEqual(Cookies.toRequestCookieHeader(stored, "https://api.example.com/start", now), undefined)
       assert.strictEqual(Cookies.toRequestCookieHeader(stored, "https://login.example.com/other", now), undefined)
+    }))
+
+  it.effect("sends stored cookies when the URL is prepended after withCookiesRef", () =>
+    Effect.gen(function*() {
+      const jar = yield* Ref.make<ReadonlyArray<Cookies.Cookie>>([])
+      const seen: Array<string | undefined> = []
+      const client = HttpClient.make((request) => {
+        seen.push(request.headers.cookie)
+        return Effect.succeed(HttpClientResponse.fromWeb(
+          request,
+          new Response(null, { status: 200, headers: { "set-cookie": "session=abc; Path=/" } })
+        ))
+      }).pipe(
+        HttpClient.withCookiesRef(jar),
+        HttpClient.mapRequest(HttpClientRequest.prependUrl("https://api.example.com"))
+      )
+
+      yield* client.post("/login")
+      yield* client.get("/me")
+
+      assert.deepStrictEqual(seen, [undefined, "session=abc"])
+    }))
+
+  it.effect("selects stored cookies for each redirect hop", () =>
+    Effect.gen(function*() {
+      const jar = yield* Ref.make<ReadonlyArray<Cookies.Cookie>>([])
+      yield* Ref.update(jar, Cookies.mergeIntoArray("https://b.test/", Cookies.fromSetCookie(["b=1"]), 0))
+      const redirects: Record<string, Record<string, string>> = {
+        "https://a.test/start": { location: "https://a.test/next", "set-cookie": "a=1" },
+        "https://a.test/next": { location: "https://b.test/final" }
+      }
+      const seen: Array<string | undefined> = []
+      const client = HttpClient.make((request) => {
+        seen.push(request.headers.cookie)
+        const headers = redirects[request.url]
+        return Effect.succeed(
+          HttpClientResponse.fromWeb(request, new Response(null, { status: headers ? 302 : 200, headers }))
+        )
+      }).pipe(
+        HttpClient.withCookiesRef(jar),
+        HttpClient.followRedirects()
+      )
+
+      yield* client.get("https://a.test/start")
+
+      assert.deepStrictEqual(seen, [undefined, "a=1", "b=1"])
+    }))
+
+  it.effect("keeps withScope aborting a request that withCookiesRef adds cookies to", () =>
+    Effect.gen(function*() {
+      const jar = yield* Ref.make<ReadonlyArray<Cookies.Cookie>>([])
+      yield* Ref.update(
+        jar,
+        Cookies.mergeIntoArray("https://api.example.com/", Cookies.fromSetCookie(["session=abc"]), 0)
+      )
+      const started = yield* Deferred.make<AbortSignal>()
+      const client = HttpClient.make((request, _url, signal) =>
+        Effect.andThen(
+          Deferred.succeed(started, signal),
+          Effect.never.pipe(Effect.as(HttpClientResponse.fromWeb(request, new Response(null))))
+        )
+      ).pipe(
+        HttpClient.withCookiesRef(jar),
+        HttpClient.withScope
+      )
+
+      const scope = yield* Scope.make()
+      yield* client.get("https://api.example.com/slow").pipe(Scope.provide(scope), Effect.forkChild)
+      const signal = yield* Deferred.await(started)
+      assert.isFalse(signal.aborted)
+      yield* Scope.close(scope, Exit.void)
+      assert.isTrue(signal.aborted)
     }))
 
   it("reads cookies when Headers has no getSetCookie", () => {
