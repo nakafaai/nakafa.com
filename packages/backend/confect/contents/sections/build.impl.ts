@@ -15,8 +15,9 @@ const run = FunctionImpl.make(
     // and its logged position resumes it.
     // Embedding the published lessons is Nakafa's own work, on its own budget.
     return yield* runStep(args).pipe(
-      Effect.provide(GatewayLive),
-      Effect.provide(meterOf({ kind: "nakafa" })),
+      Effect.provide(
+        Layer.provideMerge(GatewayLive, meterOf({ kind: "nakafa" }))
+      ),
       Effect.orDie
     );
   })

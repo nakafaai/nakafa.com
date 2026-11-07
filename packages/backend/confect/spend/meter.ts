@@ -22,7 +22,7 @@ export class Meter extends Context.Service<
     ) => Effect.Effect<Escrow, SpendRefused>;
     readonly settle: (escrow: Escrow, spent: number) => Effect.Effect<void>;
   }
->()("@repo/backend/confect/spend/meter/Meter") {}
+>()("@repo/backend/confect/spend/meter") {}
 
 /** The meter of an action that works for `claim`, over the escrow mutations. */
 export const meterOf = (claim: Claim) =>

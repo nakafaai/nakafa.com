@@ -311,8 +311,7 @@ const answerOf = (ask: typeof NinaAsk.Type, sources: string) =>
     );
     return output.unsure ? null : output.text;
   }).pipe(
-    Effect.provide(GatewayLive),
-    Effect.provide(meterOf(ask.claim)),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(ask.claim))),
     Effect.orElseSucceed(() => null)
   );
 
@@ -333,8 +332,7 @@ const libraryOf = (ask: typeof NinaAsk.Type) =>
       ids: Arr.map(Arr.flatten(found), ({ _id }) => _id),
     });
   }).pipe(
-    Effect.provide(GatewayLive),
-    Effect.provide(meterOf(ask.claim)),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(ask.claim))),
     Effect.orElseSucceed(() => [])
   );
 
@@ -357,8 +355,7 @@ const reply = FunctionImpl.make(
       offset: 0,
       queries: [ask.question],
     }).pipe(
-      Effect.provide(GatewayLive),
-      Effect.provide(meterOf(ask.claim)),
+      Effect.provide(Layer.provideMerge(GatewayLive, meterOf(ask.claim))),
       Effect.map((found) => found.text),
       Effect.orElseSucceed(() => "")
     );

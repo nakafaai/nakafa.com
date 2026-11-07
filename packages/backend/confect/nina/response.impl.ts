@@ -42,9 +42,8 @@ const present = FunctionImpl.make(
       { concurrency: "unbounded" }
     ).pipe(
       Effect.flatMap(Exit.asVoidAll),
-      Effect.provide(GatewayLive),
       // The follow-up work of a turn is held against the turn's payer.
-      Effect.provide(meterOf(turnClaim(turn))),
+      Effect.provide(Layer.provideMerge(GatewayLive, meterOf(turnClaim(turn)))),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.logWarning("Nina presentation configuration unavailable", {
           turnId: turn._id,

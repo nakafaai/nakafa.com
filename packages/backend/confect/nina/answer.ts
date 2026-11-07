@@ -12,7 +12,7 @@ import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
 import { makeTiming } from "@repo/backend/confect/nina/timing";
 import { meterOf } from "@repo/backend/confect/spend/meter";
 import { turnClaim } from "@repo/backend/confect/spend/schema";
-import { type Cause, Effect, Exit, Option } from "effect";
+import { type Cause, Effect, Exit, Layer, Option } from "effect";
 
 /**
  * Notes that a generation ended because its turn was halted, whichever of the
@@ -48,9 +48,8 @@ export const answerTurn = Effect.fn("nina.response.run")(function* (args: {
   const halt = yield* watchHalt(turn._id);
   const timing = yield* makeTiming(turn);
   yield* generateResponse(turn, halt, timing).pipe(
-    Effect.provide(GatewayLive),
     // Every model and web call of the turn is held against its payer.
-    Effect.provide(meterOf(turnClaim(turn))),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(turnClaim(turn)))),
     Effect.catchTag("GatewayConfigurationError", () =>
       Effect.fail(new NinaGenerationError({ reason: "service-configuration" }))
     ),

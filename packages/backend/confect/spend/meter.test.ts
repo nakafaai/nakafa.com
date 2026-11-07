@@ -5,7 +5,7 @@ import { metered, meterOf } from "@repo/backend/confect/spend/meter";
 import { createBillingTestConvex } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { recordingMeter } from "@repo/backend/test/spend";
-import { Array as Arr, Effect, Fiber } from "effect";
+import { Array as Arr, Effect, Fiber, Layer } from "effect";
 
 /** When the test learner's credits were last reset. */
 const NOW = Date.UTC(2026, 10, 7, 10);
@@ -76,8 +76,12 @@ describe("spend/meter", () => {
           );
           return { answered, refused: refused._tag };
         }).pipe(
-          Effect.provide(meterOf({ kind: "learner", userId })),
-          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          Effect.provide(
+            Layer.provide(
+              meterOf({ kind: "learner", userId }),
+              RegisteredFunction.actionLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     );

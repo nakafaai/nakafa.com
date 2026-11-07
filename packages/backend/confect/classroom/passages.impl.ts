@@ -88,8 +88,7 @@ const textOf = (file: Blob, contentType: string, claim: Claim) =>
     );
     return text;
   }).pipe(
-    Effect.provide(GatewayLive),
-    Effect.provide(meterOf(claim)),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(claim))),
     Effect.orElseSucceed(() => "")
   );
 
@@ -102,8 +101,7 @@ const embedded = (passages: readonly string[], claim: Claim) =>
       text,
     }));
   }).pipe(
-    Effect.provide(GatewayLive),
-    Effect.provide(meterOf(claim)),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(claim))),
     Effect.orElseSucceed(() => [])
   );
 

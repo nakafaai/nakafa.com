@@ -115,30 +115,27 @@ export function make(
 ): Gateway["Service"] {
   // A refused hold reads as the payer's exhausted quota, as `classify` reads it
   // for a language call.
-  const metering = <A, E>(effect: Effect.Effect<A, E, Meter>) =>
-    Effect.provideService(effect, Meter, meter).pipe(
-      Effect.catchTag("SpendRefused", () =>
-        Effect.fail(new GatewayFailure({ reason: "quota" }))
-      )
-    );
+  const quota = () => Effect.fail(new GatewayFailure({ reason: "quota" }));
   return Gateway.of({
     decide: (state, questions) => {
       // The request's text bounds its tokens, and each ask may be billed.
       const held =
         decisionCost(tokenBound(encodeJsonText({ questions, state }))) *
         DECISION_ASKS;
-      return metering(
-        metered(
-          "decision",
-          held,
-          decideWith(
-            provider.decisionModel(decisionModelId, { zdr: retention.zdr }),
-            state,
-            questions
-          ),
-          ({ input }) => (input === undefined ? held : decisionCost(input))
-        )
-      ).pipe(Effect.map(({ answers }) => answers));
+      return metered(
+        "decision",
+        held,
+        decideWith(
+          provider.decisionModel(decisionModelId, { zdr: retention.zdr }),
+          state,
+          questions
+        ),
+        ({ input }) => (input === undefined ? held : decisionCost(input))
+      ).pipe(
+        Effect.provideService(Meter, meter),
+        Effect.catchTag("SpendRefused", quota),
+        Effect.map(({ answers }) => answers)
+      );
     },
     language: (purpose) => {
       const { effort, timeout } = purposes[purpose];
@@ -172,32 +169,33 @@ export function make(
       const held = embeddingCost(
         Arr.reduce(texts, 0, (total, text) => total + tokenBound(text))
       );
-      const { embeddings } = yield* metering(
-        metered(
-          "embedding",
-          held,
-          Effect.tryPromise({
-            try: (signal) =>
-              embedMany({
-                abortSignal: signal,
-                model: provider.embeddingModel(model, { zdr: retention.zdr }),
-                providerOptions: {
-                  openaiCompatible: { dimensions: embeddingDimensions },
-                },
-                values: Arr.fromIterable(texts),
-              }),
-            catch: classify,
-          }).pipe(
-            Effect.timeoutOrElse({
-              duration: Duration.millis(embeddingTimeoutMs),
-              orElse: () =>
-                Effect.fail(new GatewayFailure({ reason: "timeout" })),
-            })
-          ),
-          // A reply that reports no tokens costs its whole hold.
-          ({ usage }) =>
-            Number.isInteger(usage.tokens) ? embeddingCost(usage.tokens) : held
-        )
+      const { embeddings } = yield* metered(
+        "embedding",
+        held,
+        Effect.tryPromise({
+          try: (signal) =>
+            embedMany({
+              abortSignal: signal,
+              model: provider.embeddingModel(model, { zdr: retention.zdr }),
+              providerOptions: {
+                openaiCompatible: { dimensions: embeddingDimensions },
+              },
+              values: Arr.fromIterable(texts),
+            }),
+          catch: classify,
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: Duration.millis(embeddingTimeoutMs),
+            orElse: () =>
+              Effect.fail(new GatewayFailure({ reason: "timeout" })),
+          })
+        ),
+        // A reply that reports no tokens costs its whole hold.
+        ({ usage }) =>
+          Number.isInteger(usage.tokens) ? embeddingCost(usage.tokens) : held
+      ).pipe(
+        Effect.provideService(Meter, meter),
+        Effect.catchTag("SpendRefused", quota)
       );
       // A reply that does not match the request is not a vector the index
       // can hold.

@@ -142,8 +142,7 @@ const readPart = (content: UserContent, claim: Claim) =>
     });
     return output;
   }).pipe(
-    Effect.provide(GatewayLive),
-    Effect.provide(meterOf(claim)),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(claim))),
     Effect.catchTag("GatewayConfigurationError", () =>
       Effect.fail(new ImportUnread())
     )

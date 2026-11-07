@@ -12,9 +12,10 @@ const run = FunctionImpl.make(
   "run",
   Effect.fn("nina.portrait.run")(function* ({ userId }) {
     yield* buildPortrait(userId).pipe(
-      Effect.provide(GatewayLive),
       // A learner's portrait is upkeep of their own account.
-      Effect.provide(meterOf({ kind: "learner", userId })),
+      Effect.provide(
+        Layer.provideMerge(GatewayLive, meterOf({ kind: "learner", userId }))
+      ),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.logWarning("Nina portrait configuration unavailable")
       )

@@ -210,8 +210,7 @@ const answerOf = (from: typeof DraftSource.Type) =>
     );
     return output.unsure ? null : output.text;
   }).pipe(
-    Effect.provide(GatewayLive),
-    Effect.provide(meterOf(from.claim)),
+    Effect.provide(Layer.provideMerge(GatewayLive, meterOf(from.claim))),
     Effect.orElseSucceed(() => null)
   );
 

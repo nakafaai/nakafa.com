@@ -15,13 +15,14 @@ export function recordingMeter(refuse = false) {
         ? Effect.fail(
             new SpendRefused({ budget: 0, held, used: 0, vendor: "anthropic" })
           )
-        : Effect.sync(() => {
-            MutableRef.update(calls, Arr.append(`hold ${work} ${held}`));
-            return Schema.decodeUnknownSync(Escrow)({
-              escrowId: "escrow",
-              held,
-            });
-          }),
+        : Effect.sync(() =>
+            MutableRef.update(calls, Arr.append(`hold ${work} ${held}`))
+          ).pipe(
+            Effect.andThen(
+              Schema.decodeUnknownEffect(Escrow)({ escrowId: "escrow", held })
+            ),
+            Effect.orDie
+          ),
     settle: (_escrow, spent) =>
       Effect.sync(() =>
         MutableRef.update(calls, Arr.append(`settle ${spent}`))

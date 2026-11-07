@@ -22,9 +22,10 @@ const measure = FunctionImpl.make(
   "measure",
   Effect.fn("nina.judgment.measure")(function* ({ names, texts }) {
     return yield* measureTexts(names, texts).pipe(
-      Effect.provide(GatewayLive),
       // Measuring the catalog is Nakafa's own work, on its own budget.
-      Effect.provide(meterOf({ kind: "nakafa" })),
+      Effect.provide(
+        Layer.provideMerge(GatewayLive, meterOf({ kind: "nakafa" }))
+      ),
       Effect.map((rows) => ({
         judgments: Rec.map(
           Struct.pick(judgments, names),

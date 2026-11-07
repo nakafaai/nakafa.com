@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/spend/rates";
 import type { Escrow } from "@repo/backend/confect/spend/schema";
 import type { LanguageModelMiddleware } from "ai";
-import { Effect, Exit, Function as Fn } from "effect";
+import { Effect, Exit } from "effect";
 
 type Meters = Meter["Service"];
 
@@ -74,11 +74,10 @@ function settling(meter: Meters, escrow: Escrow, source: Streamed["stream"]) {
     {
       pull: (controller) =>
         Effect.runPromise(
-          Effect.tryPromise({
-            try: () => reader.read(),
-            catch: Fn.identity,
-          }).pipe(
-            Effect.tapError(() => meter.settle(escrow, escrow.held)),
+          // The provider's own failure passes through untouched, as a defect,
+          // so the AI SDK reads and retries it as it would without the escrow.
+          Effect.promise(() => reader.read()).pipe(
+            Effect.onError(() => meter.settle(escrow, escrow.held)),
             Effect.flatMap((read) => {
               if (read.done) {
                 return Effect.andThen(
@@ -112,8 +111,10 @@ function settling(meter: Meters, escrow: Escrow, source: Streamed["stream"]) {
 /**
  * Escrows every call of one purpose's language model: its ceiling is held
  * before the provider is called, and the call settles to what it cost. The AI
- * SDK calls a middleware through Promises, so this is its framework boundary.
- * A refused hold fails the call before any token is bought.
+ * SDK calls a middleware through Promises, so this is its framework boundary:
+ * the provider's call runs as `Effect.promise`, so a rejection reaches the SDK
+ * as the very error the provider raised, which its retries and `classify`
+ * read. A refused hold fails the call before any token is bought.
  */
 export function escrowed(
   meter: Meters,
@@ -124,21 +125,15 @@ export function escrowed(
     specificationVersion: "v4",
     wrapGenerate: ({ doGenerate }) =>
       Effect.runPromise(
-        metered(
-          purpose,
-          held,
-          Effect.tryPromise({ try: doGenerate, catch: Fn.identity }),
-          (result) => callCost(result.usage, result.providerMetadata, held)
+        metered(purpose, held, Effect.promise(doGenerate), (result) =>
+          callCost(result.usage, result.providerMetadata, held)
         ).pipe(Effect.provideService(Meter, meter))
       ),
     wrapStream: ({ doStream }) =>
       Effect.runPromise(
         Effect.gen(function* () {
           const escrow = yield* meter.hold(purpose, held);
-          const result = yield* Effect.tryPromise({
-            try: doStream,
-            catch: Fn.identity,
-          }).pipe(
+          const result = yield* Effect.promise(doStream).pipe(
             Effect.onExit((exit) =>
               Exit.isSuccess(exit) ? Effect.void : meter.settle(escrow, held)
             )
