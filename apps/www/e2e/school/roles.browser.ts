@@ -1,5 +1,6 @@
 import { type Browser, expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { seedGuardianCode } from "@/e2e/support/guardian";
 import { giveRole } from "@/e2e/support/roles";
 import {
@@ -135,6 +136,7 @@ async function signInParent(
   const email = `ibu.${school.slug}@example.com`;
   await Effect.runPromise(seedCard(school.slug));
   const settings = await school.owner.newPage();
+  const changes = await Effect.runPromise(trackChanges(settings, []));
   await settings.goto(new URL("/settings/guardians", school.home).href);
   const link = settings
     .locator("header")
@@ -146,10 +148,13 @@ async function signInParent(
   await settings.getByRole("option", { name: CARD_STUDENT }).click();
   await dialog.getByLabel("Parent's name").fill("Ibu Uji");
   await dialog.getByLabel("Parent email").fill(email);
+  const linkedBefore = changes.sent;
   await dialog.getByRole("button", { name: "Link a parent" }).click();
   await expect(
     settings.getByRole("row").filter({ hasText: CARD_STUDENT })
   ).toContainText("Pending");
+  // The row shows at once; closing the page would drop the link still on its way, so it waits for the server.
+  await saved(changes, linkedBefore);
   await settings.close();
 
   const page = await context.newPage();
