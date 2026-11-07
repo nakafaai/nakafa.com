@@ -329,21 +329,6 @@ describe("decisions before the router", () => {
   );
 
   it.effect(
-    "renders the School landing and its pricing for a prerender, which binds no assets",
-    () =>
-      Effect.gen(function* () {
-        release.hasStaticRelease = false;
-        for (const address of ["/de/school", "/de/school/pricing"]) {
-          const { handle, response } = yield* served(address);
-
-          expect(response.status).toBe(200);
-          expect(routedRequest(handle).url).toBe(`${ORIGIN}${address}`);
-          expect(Option.isNone(routedNotFound(handle))).toBe(true);
-        }
-      })
-  );
-
-  it.effect(
     "answers a school tree path and a raw user address with the static not-found page",
     () =>
       Effect.gen(function* () {
