@@ -9,6 +9,7 @@ import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import {
   useAttemptSignIn,
+  useKeptLearnerRead,
   useLearnerSet,
 } from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
@@ -93,7 +94,9 @@ function TryoutSetVisitor() {
 function TryoutSetLearner() {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
-  const learner = useLearnerSet({ page: route.page, search });
+  const learner = useKeptLearnerRead(
+    useLearnerSet({ page: route.page, search })
+  );
   return (
     <>
       <ShellLockCarry pending={learner.kind === "pending"} />

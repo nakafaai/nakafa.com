@@ -47,6 +47,18 @@ type LearnerRead<Value> =
   | { readonly kind: "pending" }
   | { readonly kind: "visitor" };
 
+/**
+ * Keeps the attempt on screen while the next one's read is pending, so a move between a set's attempts
+ * blanks nothing. A page of another set or section mounts a new read, which keeps nothing.
+ */
+export function useKeptLearnerRead<Value>(read: LearnerRead<Value>) {
+  const [kept, setKept] = useState<LearnerRead<Value> | null>(null);
+  if (read.kind === "attempt" && read !== kept) {
+    setKept(read);
+  }
+  return read.kind === "pending" && kept !== null ? kept : read;
+}
+
 /** The attempt a URL names, if it names one. */
 function attemptOf(search: TryoutAttemptSearch) {
   return Option.getOrUndefined(

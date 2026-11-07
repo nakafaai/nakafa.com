@@ -2423,6 +2423,7 @@
     "score-label-estimated": "Estimated score",
     "score-label-standard": "Score",
     "correct-answers-label": "Correct answers",
+    "finished-panel": "Your result",
     "attempt-menu-label": "History",
     "attempt-menu-search-placeholder": "Search attempts...",
     "attempt-menu-empty": "No matching attempts found.",

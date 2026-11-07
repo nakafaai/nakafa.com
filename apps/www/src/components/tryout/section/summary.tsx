@@ -26,7 +26,7 @@ export type TryoutSummarySection = typeof TryoutSummarySectionSchema.Type;
  * reader's, so they wait until the page holds its client too. A session that could not be read
  * answers nothing, so they then show.
  */
-function useFactsWaiting(pending: boolean) {
+export function useFactsWaiting(pending: boolean) {
   const hasClient = useLiveSession((state) => Option.isSome(state.client));
   const failed = useLiveSession((state) => state.hasError);
   return !failed && (pending || !hasClient);
@@ -44,9 +44,10 @@ export function TryoutSectionSummary({
   };
 }) {
   const { pending, score, section } = value;
+  const waiting = useFactsWaiting(pending);
 
   return (
-    <TryoutPartSummary>
+    <TryoutPartSummary waiting={waiting}>
       <TryoutSectionMetrics pending={pending} score={score} section={section} />
     </TryoutPartSummary>
   );
@@ -86,7 +87,7 @@ function TryoutSectionMetrics({
  * Renders a section's time limit as one summary metric, before a start and
  * beside a score, with the digits the caller composed.
  */
-export function TryoutTimeLimitStat({ children }: { children: ReactNode }) {
+function TryoutTimeLimitStat({ children }: { children: ReactNode }) {
   const tTryouts = useTranslations("Tryouts");
 
   return (

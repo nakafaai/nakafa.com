@@ -1,23 +1,26 @@
 import type { ReactNode } from "react";
 import type { PlayerMode } from "@/components/player/mode";
-import { PlayerDigits, PlayerTimer } from "@/components/player/timer";
+import { PlayerTimer } from "@/components/player/timer";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import {
   TryoutPlayerOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
+import {
+  TryoutFinishedFacts,
+  TryoutFinishedPanel,
+  TryoutFinishedPanes,
+  TryoutFinishedPlace,
+} from "@/components/tryout/review/panes";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
 import {
   isTryoutRuntimeRunning,
   type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
-import { TryoutAttemptResults } from "@/components/tryout/score/history";
+import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { TryoutSummaryAction } from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
-import {
-  TryoutSectionSummary,
-  TryoutTimeLimitStat,
-} from "@/components/tryout/section/summary";
+import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type {
   LoadedRuntime,
@@ -78,65 +81,41 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
         page={value.page}
         returnPath={value.returnPath}
       >
+        <TryoutAttemptPicker
+          attempt={value.actionAttempt}
+          locale={value.route.locale}
+          set={value.page.set}
+        />
         <TryoutEntryAction value={value} />
       </TryoutSetPageHeader>
-      <TryoutPageBody>
-        <TryoutEntryResult value={value} />
-        {state.kind === "review" ? children : null}
-      </TryoutPageBody>
+      {value.actionAttempt?.score ? (
+        <TryoutFinishedPanes
+          panel={
+            <TryoutFinishedPanel
+              runtime={state.kind === "review" ? state.runtime : null}
+            >
+              <TryoutFinishedFacts
+                score={value.actionAttempt.score}
+                seconds={value.entrySection.timeLimitSeconds}
+              />
+            </TryoutFinishedPanel>
+          }
+        >
+          {state.kind === "review" ? children : null}
+        </TryoutFinishedPanes>
+      ) : (
+        <TryoutPageBody>
+          <TryoutSectionSummary
+            value={{
+              pending: value.actionAttempt === undefined,
+              score: null,
+              section: value.entrySection,
+            }}
+          />
+          <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
+        </TryoutPageBody>
+      )}
     </TryoutPage>
-  );
-}
-
-/**
- * Renders the one card of a direct-entry set: the attempt's score beside the
- * time limit once it has one, and the catalog's facts (the number of questions
- * and the time) before that. The score already says how many questions there
- * were, so the facts never sit in a second card beside it. The server renders
- * whichever applies, so the card never swaps after the first paint.
- */
-function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
-  const attempt = value.actionAttempt;
-
-  if (!attempt?.score) {
-    return (
-      <TryoutSectionSummary
-        value={{
-          pending: attempt === undefined,
-          score: null,
-          section: value.entrySection,
-        }}
-      />
-    );
-  }
-
-  return (
-    <TryoutAttemptResults
-      value={{
-        attempt: {
-          attemptId: attempt.attemptId,
-          attemptNumber: attempt.attemptNumber,
-          score: attempt.score,
-          startedAt: attempt.startedAt,
-          status: attempt.status,
-        },
-        identity: {
-          countryKey: value.page.set.countryKey,
-          examKey: value.page.set.examKey,
-          locale: value.route.locale,
-          setKey: value.page.set.setKey,
-          trackKey: value.page.set.trackKey,
-        },
-        publicPath: value.page.set.publicPath,
-      }}
-    >
-      <TryoutTimeLimitStat>
-        <PlayerDigits
-          seconds={value.entrySection.timeLimitSeconds}
-          size="metric"
-        />
-      </TryoutTimeLimitStat>
-    </TryoutAttemptResults>
   );
 }
 
