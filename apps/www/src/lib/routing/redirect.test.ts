@@ -7,7 +7,6 @@ import {
   it,
   onTestFinished,
 } from "@effect/vitest";
-import { LOCALE_VARY } from "@repo/internationalization/src/redirect";
 import { Effect, Option } from "effect";
 import {
   readBareRedirect,
@@ -357,37 +356,6 @@ describe("readMainSiteRedirect", () => {
     expect(found.headers.get("location")).toBe(
       "https://nakafa.com/en/curriculum?page=2"
     );
-  });
-
-  it("opens the School landing in the negotiated locale from the home of the School host", () => {
-    const found = Option.getOrThrow(
-      readMainSiteRedirect(
-        new Request("https://school.nakafa.com/?ref=ad", {
-          headers: {
-            "accept-language": "id-ID,id;q=0.9",
-            host: "school.nakafa.com",
-          },
-        })
-      )
-    );
-
-    expect(found.status).toBe(307);
-    expect(found.headers.get("location")).toBe(
-      "https://nakafa.com/id/school?ref=ad"
-    );
-    expect(found.headers.get("vary")).toBe(LOCALE_VARY);
-  });
-
-  it("sends another path of the School host to the same path on the main site", () => {
-    const found = Option.getOrThrow(
-      readMainSiteRedirect(
-        new Request("https://school.nakafa.com/en/pricing", {
-          headers: { host: "school.nakafa.com" },
-        })
-      )
-    );
-
-    expect(found.headers.get("location")).toBe("https://nakafa.com/en/pricing");
   });
 
   it("keeps a path that starts with two slashes on the main site", () => {

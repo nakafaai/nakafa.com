@@ -37,7 +37,7 @@ test("The School entry leads a learner with no school to the form", async ({
         yield* withObservedPageErrors(
           page,
           Effect.promise(async () => {
-            await page.goto("/en/school/enter", { waitUntil: "load" });
+            await page.goto("/en/school", { waitUntil: "load" });
             await expect(
               page.getByRole("heading", { name: ENTRY["entry-title"] })
             ).toBeVisible({ timeout: SESSION_WAIT });

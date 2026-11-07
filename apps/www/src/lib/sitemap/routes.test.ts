@@ -172,8 +172,6 @@ describe("sitemap route pages", () => {
         "/curricula",
         "/pricing",
         "/quran",
-        "/school",
-        "/school/pricing",
         "/search",
         "/try-out",
       ]);
@@ -292,8 +290,6 @@ describe("sitemap route pages", () => {
         { lastModified: "2026-10-02", path: "/curricula" },
         { path: "/pricing" },
         { lastModified: "2026-10-03", path: "/quran" },
-        { path: "/school" },
-        { path: "/school/pricing" },
         { path: "/search" },
         { lastModified: "2026-10-01", path: "/try-out" },
       ]);
