@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-start/server";
 import { Effect, Option } from "effect";
 import { answerStaleFunction } from "@/lib/chunks/stale.server";
+import { answerNotFoundDocument } from "@/lib/llms/negotiate.server";
 import { answerRequest } from "@/lib/routing/answer.server";
 import { answerFailedDocument } from "@/lib/routing/failed.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
@@ -59,6 +60,7 @@ export default createServerEntry({
         Effect.flatMap((response) => answerStaleFunction(request, response)),
         Effect.flatMap((response) => answerFailedDocument(request, response)),
         Effect.flatMap((response) => attachStaticCalls(request, response)),
+        Effect.flatMap((response) => answerNotFoundDocument(request, response)),
         Effect.map((response) => withPageHeaders(request, response))
       )
     );

@@ -425,7 +425,9 @@ describe("locale redirects", () => {
 
         expect(response.status).toBe(307);
         expect(response.headers.get("location")).toBe("/id");
-        expect(response.headers.get("vary")).toBe("Accept-Language, Cookie");
+        expect(response.headers.get("vary")).toBe(
+          "Accept-Language, Cookie, Accept"
+        );
         expect(handle).not.toHaveBeenCalled();
       })
   );

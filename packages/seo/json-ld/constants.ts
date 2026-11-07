@@ -28,6 +28,8 @@ export const ORGANIZATION: EducationalOrganizationLeaf = {
     "@type": "Person",
     name: COMPANY_IDENTITY.representative.name,
     jobTitle: COMPANY_IDENTITY.representative.role,
+    description: `${COMPANY_IDENTITY.representative.role} of ${COMPANY_IDENTITY.legalName}, the company that publishes ${COMPANY_IDENTITY.brandName}.`,
+    url: new URL("/en/legal-notice", COMPANY_IDENTITY.url).href,
   },
   address: {
     "@type": "PostalAddress",
@@ -61,5 +63,6 @@ export const ORGANIZATION: EducationalOrganizationLeaf = {
 export const FOUNDER: Person = {
   "@type": "Person",
   name: "Nabil Akbarazzima Fatih",
+  description: `Founder of ${COMPANY_IDENTITY.brandName}.`,
   url: new URL("/en/contributor", COMPANY_IDENTITY.url).href,
 };

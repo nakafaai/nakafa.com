@@ -27,6 +27,15 @@ describe("organization JSON-LD", () => {
     });
   });
 
+  it("describes the company's representative with a page that names them", () => {
+    expect(ORGANIZATION.employee).toMatchObject({
+      description:
+        "Director of PT NAKAFA TEKNO KREATIF, the company that publishes Nakafa.",
+      name: COMPANY_IDENTITY.representative.name,
+      url: "https://nakafa.com/en/legal-notice",
+    });
+  });
+
   it("references the one canonical organization graph node", () => {
     expect(ORGANIZATION["@id"]).toBe(ORGANIZATION_ID);
     expect(ORGANIZATION_REFERENCE).toStrictEqual({ "@id": ORGANIZATION_ID });

@@ -7,8 +7,9 @@ import { Array as Arr, Effect } from "effect";
 
 const NAKAFA_SKILL_NAME = "nakafa";
 const NAKAFA_SKILL_DESCRIPTION =
-  "Use Nakafa to retrieve multilingual educational lessons, Quran references, article context, and try-out catalog pages through agent-friendly markdown and MCP tools.";
-const NAKAFA_AGENT_SKILL_PATH = "/.well-known/agent-skills/nakafa/SKILL.md";
+  "Use when a user asks to learn a school or university subject, needs a lesson, article, Quran verse or exam try-out in Indonesian, English or German, and wants an answer cited from a source page. Retrieves Nakafa pages as Markdown and through MCP tools.";
+/** The one address that serves the skill guide, the `/skill.md` route. */
+const NAKAFA_AGENT_SKILL_PATH = "/skill.md";
 
 /** Builds the public Nakafa skill.md capability guide. */
 export function getNakafaSkillText() {

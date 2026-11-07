@@ -41,6 +41,9 @@ describe("public llms discovery indexes", () => {
     expect(text).toContain(
       "- Model training is reserved: https://nakafa.com/.well-known/tdmrep.json\n"
     );
+    expect(text).toContain(
+      "\n## When to use\n\n- A learner asks about a school or university subject:"
+    );
   });
 
   it("derives localized nested indexes from canonical route surfaces", () => {
