@@ -18,7 +18,7 @@ import {
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, DateTime, Effect, Schema } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Schema } from "effect";
 
 /** Reads a raw account the way Confect reads it, so its animal is decoded. */
 const decodeUser = Schema.decodeUnknownSync(usersTable.Doc);
@@ -440,6 +440,51 @@ export function ninaRecallModel(query: string, answers: number) {
   });
 }
 
+/** The follow-up the test model writes after an answer. */
+export const NINA_SUGGESTIONS = ["How does this relate to continuity?"];
+
+/** The text a follow-up object starts with, before its first question. */
+const SUGGESTIONS_OPENING = '{"suggestions":[';
+
+/**
+ * The parts of a follow-up stream that writes `suggestions` as one JSON object
+ * in two deltas, so a stream reads it before it ends. With two or more
+ * questions the first delta ends a few letters into the second, the point at
+ * which a reader knows the first is finished. With `failAfter`, the stream
+ * fails after its first delta.
+ */
+export function ninaSuggestionStream(
+  suggestions: readonly string[] = NINA_SUGGESTIONS,
+  failAfter = false
+) {
+  const text = encodeJsonText({ suggestions });
+  const [first = "", second] = suggestions;
+  const middle =
+    second === undefined
+      ? Math.floor(text.length / 2)
+      : SUGGESTIONS_OPENING.length + encodeJsonText(first).length + 4;
+  return ninaStream([
+    { type: "stream-start", warnings: [] },
+    { type: "text-start", id: "suggestions" },
+    { type: "text-delta", id: "suggestions", delta: text.slice(0, middle) },
+    ...(failAfter
+      ? [{ type: "error" as const, error: new Error("Provider unavailable") }]
+      : [
+          {
+            type: "text-delta" as const,
+            id: "suggestions",
+            delta: text.slice(middle),
+          },
+          { type: "text-end" as const, id: "suggestions" },
+          {
+            type: "finish" as const,
+            usage: ninaUsage,
+            finishReason: { unified: "stop" as const, raw: "stop" },
+          },
+        ]),
+  ]);
+}
+
 export function ninaModel(
   withTool = false,
   failed = false,
@@ -450,34 +495,45 @@ export function ninaModel(
       ? [{ type: "error", error: new Error("Provider unavailable") }]
       : ninaAnswer
   );
+  const answers = withTool
+    ? [
+        ninaStream([
+          { type: "stream-start", warnings: [] },
+          {
+            type: "tool-call",
+            toolCallId: "read-1",
+            toolName: "nakafa",
+            input: encodeJsonText(input),
+          },
+          {
+            type: "finish",
+            usage: ninaUsage,
+            finishReason: { unified: "tool-calls", raw: "tool-calls" },
+          },
+        ]),
+        final,
+      ]
+    : [final];
+  let answered = 0;
   return new MockLanguageModelV4({
-    doStream: withTool
-      ? [
-          ninaStream([
-            { type: "stream-start", warnings: [] },
-            {
-              type: "tool-call",
-              toolCallId: "read-1",
-              toolName: "nakafa",
-              input: encodeJsonText(input),
-            },
-            {
-              type: "finish",
-              usage: ninaUsage,
-              finishReason: { unified: "tool-calls", raw: "tool-calls" },
-            },
-          ]),
-          final,
-        ]
-      : final,
+    // The follow-ups ask for JSON and stream on their own; every other call
+    // takes the next answer, and the last answer once they are used up.
+    doStream: (options) => {
+      if (options.responseFormat?.type === "json") {
+        return Promise.resolve(ninaSuggestionStream());
+      }
+      const answer = Option.getOrThrow(
+        Arr.get(answers, Math.min(answered, answers.length - 1))
+      );
+      answered += 1;
+      return Promise.resolve(answer);
+    },
     doGenerate: ({ responseFormat, prompt }) => {
       let text = "Understanding A Function Limit";
       if (encodeJsonText(prompt).includes("Repair the arguments for")) {
         text = encodeJsonText(ninaToolInput);
       } else if (responseFormat?.type === "json") {
-        text = encodeJsonText({
-          suggestions: ["How does this relate to continuity?"],
-        });
+        text = encodeJsonText({ suggestions: NINA_SUGGESTIONS });
       }
       return Promise.resolve({
         content: [{ type: "text", text }],

@@ -292,24 +292,18 @@ describe("The Nina response among its follow-up work", () => {
   });
 
   /**
-   * A model for a whole turn: it answers the capture call with `level` and
-   * answers the suggestions and the title as `ninaModel` does.
+   * A model for a whole turn: it answers the capture call with `level`, and
+   * streams the suggestions and answers the title as `ninaModel` does.
    */
   function turnModel() {
     const model = ninaModel();
-    const generate = vi.fn<MockLanguageModelV4["doGenerate"]>(
-      ({ prompt, responseFormat }) => {
-        let text = "Understanding A Function Limit";
-        if (encodeJsonText(prompt).includes("# Learner Message")) {
-          text = encodeJsonText({ memories: [level] });
-        } else if (responseFormat?.type === "json") {
-          text = encodeJsonText({
-            suggestions: ["How does this relate to continuity?"],
-          });
-        }
-        return Promise.resolve(providerStep([{ type: "text", text }]));
+    const generate = vi.fn<MockLanguageModelV4["doGenerate"]>(({ prompt }) => {
+      let text = "Understanding A Function Limit";
+      if (encodeJsonText(prompt).includes("# Learner Message")) {
+        text = encodeJsonText({ memories: [level] });
       }
-    );
+      return Promise.resolve(providerStep([{ type: "text", text }]));
+    });
     model.doGenerate = generate;
     provider.languageModel.mockReturnValue(model);
     return generate;
@@ -320,7 +314,7 @@ describe("The Nina response among its follow-up work", () => {
     const generate = turnModel();
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    expect(generate).toHaveBeenCalledTimes(3);
+    expect(generate).toHaveBeenCalledTimes(2);
     expect(await f.turn()).toMatchObject({
       remembered: 1,
       state: { status: "complete" },
@@ -344,8 +338,8 @@ describe("The Nina response among its follow-up work", () => {
     const generate = turnModel();
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    // The capture, the suggestions and the fold each asked the model once.
-    expect(generate).toHaveBeenCalledTimes(3);
+    // The capture and the fold each asked the model once; the suggestions streamed.
+    expect(generate).toHaveBeenCalledTimes(2);
     const agents = Arr.map((await f.turn())?.usage ?? [], ({ agent }) => agent);
     expect(Arr.sort(agents, Order.String)).toEqual([
       "memory",
@@ -367,7 +361,7 @@ describe("The Nina response among its follow-up work", () => {
     );
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    expect(generate).toHaveBeenCalledTimes(3);
+    expect(generate).toHaveBeenCalledTimes(2);
     expect(await f.turn()).toMatchObject({
       remembered: 1,
       suggestions: ["How does this relate to continuity?"],
@@ -392,7 +386,7 @@ describe("The Nina response among its follow-up work", () => {
     vi.stubEnv("VAULT_ROOT_KEYS", "");
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    expect(generate).toHaveBeenCalledTimes(3);
+    expect(generate).toHaveBeenCalledTimes(2);
     expect(await f.turn()).toMatchObject({
       state: { status: "complete" },
       suggestions: ["How does this relate to continuity?"],

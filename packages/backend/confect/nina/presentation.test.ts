@@ -10,6 +10,9 @@ import {
   createNinaTest,
   fireDueJobs,
   ninaModel,
+  ninaStream,
+  ninaSuggestionStream,
+  ninaUsage,
 } from "@repo/backend/test/nina";
 import { sealThreadIn, writtenThreadIn } from "@repo/backend/test/nina/seal";
 import { providerStep } from "@repo/backend/test/nina/specialist";
@@ -37,6 +40,14 @@ const rename = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatTitle
 );
 
+/** The model calls that wrote follow-ups: they ask for JSON and stream. */
+function followUpCalls(model: ReturnType<typeof ninaModel>) {
+  return Arr.filter(
+    model.doStreamCalls,
+    (call) => call.responseFormat?.type === "json"
+  );
+}
+
 /** The title the owner reads for the chat, opened the way every reader opens it. */
 async function readTitle(f: Awaited<ReturnType<typeof createNinaTest>>) {
   return (await f.owner.query(getChat, { chatId: f.chatId })).title;
@@ -53,6 +64,24 @@ describe("Nina presentation after an answer", () => {
         failure === "provider"
           ? () => Promise.reject(new Error("Private provider diagnostic"))
           : () => Promise.resolve(providerStep([{ type: "text", text: "" }]));
+      const answer = model.doStream;
+      model.doStream = (options) => {
+        if (options.responseFormat?.type !== "json") {
+          return answer(options);
+        }
+        return failure === "provider"
+          ? Promise.reject(new Error("Private provider diagnostic"))
+          : Promise.resolve(
+              ninaStream([
+                { type: "stream-start", warnings: [] },
+                {
+                  type: "finish",
+                  usage: ninaUsage,
+                  finishReason: { unified: "stop", raw: "stop" },
+                },
+              ])
+            );
+      };
       provider.languageModel.mockReturnValue(model);
       await f.t.action(run, { turnId: f.turnId });
       await f.t.finishAllScheduledFunctions(fireDueJobs);
@@ -85,8 +114,9 @@ describe("Nina presentation after an answer", () => {
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    expect(model.doGenerateCalls).toHaveLength(1);
-    const prompt = model.doGenerateCalls[0]?.prompt ?? [];
+    expect(followUpCalls(model)).toHaveLength(1);
+    expect(model.doGenerateCalls).toHaveLength(0);
+    const prompt = followUpCalls(model)[0]?.prompt ?? [];
     expect(Option.getOrThrow(Arr.last(prompt)).role).toBe("user");
     expect(Option.getOrThrow(Arr.get(prompt, prompt.length - 2))).toMatchObject(
       {
@@ -125,6 +155,32 @@ describe("Nina presentation after an answer", () => {
     ).toEqual(["How does this relate to continuity?"]);
   });
 
+  it("saves each follow-up the model has finished while it writes the next one", async () => {
+    const f = await createNinaTest();
+    const model = ninaModel();
+    const answer = model.doStream;
+    // The follow-up stream fails halfway through its second question, so only
+    // a question saved while the stream ran can reach the turn.
+    model.doStream = (options) =>
+      options.responseFormat?.type === "json"
+        ? Promise.resolve(
+            ninaSuggestionStream(
+              [
+                "What is a one-sided limit?",
+                "How does this relate to continuity?",
+              ],
+              true
+            )
+          )
+        : answer(options);
+    provider.languageModel.mockReturnValue(model);
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
+    expect(
+      (await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId)))?.suggestions
+    ).toEqual(["What is a one-sided limit?"]);
+  });
+
   /**
    * The model calls of one answered turn with its follow-up, and the input of each.
    * With `copy` other than plain, the rows of the chat are written by the writers
@@ -146,7 +202,10 @@ describe("Nina presentation after an answer", () => {
       await sealThreadIn(f.t, f.threadId, f.identity.userId);
     }
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    return Arr.map(model.doGenerateCalls, (call) => call.prompt);
+    return Arr.map(
+      [...followUpCalls(model), ...model.doGenerateCalls],
+      (call) => call.prompt
+    );
   }
 
   it("sends the model the same follow-up input for a sealed chat as for a plain one", async () => {
@@ -191,7 +250,12 @@ describe("Nina presentation after an answer", () => {
     });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(
-      encodeJsonText(Arr.map(model.doGenerateCalls, (call) => call.prompt))
+      encodeJsonText(
+        Arr.map(
+          [...followUpCalls(model), ...model.doGenerateCalls],
+          (call) => call.prompt
+        )
+      )
     ).not.toContain("Generate follow-up suggestions");
     expect(await readTitle(f)).toBe(titleBefore);
     expect((await f.inspect()).turn?.state.status).toBe("complete");
@@ -203,7 +267,7 @@ describe("Nina presentation after an answer", () => {
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    const prompt = model.doGenerateCalls[0]?.prompt ?? [];
+    const prompt = followUpCalls(model)[0]?.prompt ?? [];
     // Sixteen messages are eight exchanges, the one just answered included,
     // and the request for suggestions is one more message of the learner. The
     // call read all 50 messages it was allowed before, which made 26.
@@ -218,6 +282,7 @@ describe("Nina presentation after an answer", () => {
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     expect(model.doGenerateCalls).toHaveLength(0);
+    expect(followUpCalls(model)).toHaveLength(0);
     expect(
       (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.activeTurnId
     ).toBeUndefined();
@@ -235,7 +300,8 @@ describe("Nina presentation after an answer", () => {
       })
     );
     await f.t.finishAllScheduledFunctions(fireDueJobs);
-    const [suggestions, title] = model.doGenerateCalls;
+    const [suggestions] = followUpCalls(model);
+    const [title] = model.doGenerateCalls;
     expect(encodeJsonText(suggestions?.prompt)).toContain("Explain a limit.");
     expect(encodeJsonText(suggestions?.prompt)).toContain(
       "A limit describes the value approached."

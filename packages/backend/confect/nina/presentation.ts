@@ -24,7 +24,7 @@ import {
   readRecentContext,
 } from "@repo/backend/confect/nina/sealed/context";
 import { Output } from "ai";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema, Stream } from "effect";
 
 /**
  * Messages the follow-up suggestions look back on, answers included: eight
@@ -39,6 +39,28 @@ class NinaPresentationError extends Schema.TaggedError<NinaPresentationError>()(
   "NinaPresentationError",
   { operation: Schema.Literals(["suggestions", "title"]) }
 ) {}
+
+/** The follow-ups the model returns, as one object so the output can be parsed while it streams. */
+const suggestionsOutput = createEffectSchema(
+  Schema.Struct({ suggestions: NinaSuggestions })
+);
+
+/** A partial output that has begun its list of follow-ups. */
+const PartialSuggestions = Schema.Struct({
+  suggestions: Schema.Array(Schema.Unknown),
+});
+
+/**
+ * The follow-ups of a partial output that the model has finished writing: every
+ * one before the last, which may still grow. They are kept only when they hold
+ * as saved follow-ups, so a learner never sees half a question.
+ */
+const readWrittenSuggestions = (partial: unknown) =>
+  Schema.decodeUnknownOption(PartialSuggestions)(partial).pipe(
+    Option.flatMap(({ suggestions }) =>
+      Schema.decodeUnknownOption(NinaSuggestions)(Arr.dropRight(suggestions, 1))
+    )
+  );
 
 /**
  * Small Agent generations take their input from the sealed module, which reads
@@ -95,23 +117,43 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
                     ]),
                   })
                 ),
+            }).streamText(
+              ctx,
+              { threadId: turn.threadId, userId: turn.userId },
+              {
+                promptMessageId: turn.promptMessageId,
+                abortSignal: signal,
+                output: Output.object({ schema: suggestionsOutput }),
+                timeout: suggestion.timeout,
+              },
+              options
+            ),
+          catch: () => new NinaPresentationError({ operation: "suggestions" }),
+        })
+      ),
+      // Each follow-up is saved once the model has moved on to the next one, so
+      // the learner reads them arrive one by one through the turn's own query;
+      // the last one is whole only when the model has finished.
+      Effect.tap((result) =>
+        Stream.fromAsyncIterable(
+          result.partialOutputStream,
+          () => new NinaPresentationError({ operation: "suggestions" })
+        ).pipe(
+          Stream.map(readWrittenSuggestions),
+          Stream.filter(Option.isSome),
+          Stream.map((written) => written.value),
+          Stream.changesWith((before, after) => before.length === after.length),
+          Stream.runForEach((suggestions) =>
+            mutate(ninaInternal.presentation.save, {
+              turnId: turn._id,
+              suggestions,
             })
-              .generateText(
-                ctx,
-                { threadId: turn.threadId, userId: turn.userId },
-                {
-                  promptMessageId: turn.promptMessageId,
-                  abortSignal: signal,
-                  output: Output.object({
-                    schema: createEffectSchema(
-                      Schema.Struct({ suggestions: NinaSuggestions })
-                    ),
-                  }),
-                  timeout: suggestion.timeout,
-                },
-                options
-              )
-              .then((result) => result.output),
+          )
+        )
+      ),
+      Effect.flatMap((result) =>
+        Effect.tryPromise({
+          try: () => result.output,
           catch: () => new NinaPresentationError({ operation: "suggestions" }),
         })
       ),
