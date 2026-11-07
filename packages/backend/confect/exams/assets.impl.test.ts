@@ -190,46 +190,44 @@ describe("exams/assets", () => {
       })
   );
 
-  it.effect(
-    "refuses an image and a clip whose bytes never arrived",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const teacher = fixture.as("teacher");
-        const made = yield* newExam(fixture);
-        const reserved = (kind: "audio" | "image") =>
-          teacher.mutation(reserve, {
-            byteSize: 8,
-            contentType: kind === "image" ? "image/png" : "audio/mpeg",
+  it.effect("refuses an image and a clip whose bytes never arrived", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const teacher = fixture.as("teacher");
+      const made = yield* newExam(fixture);
+      const reserved = (kind: "audio" | "image") =>
+        teacher.mutation(reserve, {
+          byteSize: 8,
+          contentType: kind === "image" ? "image/png" : "audio/mpeg",
+          examId: made.id,
+          kind,
+          slug: nf,
+        });
+      const image = yield* reserved("image");
+      const clip = yield* reserved("audio");
+      const refusals = yield* Effect.all([
+        teacher
+          .action(register, {
             examId: made.id,
-            kind,
+            fileId: image.fileId,
+            height: 1,
             slug: nf,
-          });
-        const image = yield* reserved("image");
-        const clip = yield* reserved("audio");
-        const refusals = yield* Effect.all([
-          teacher
-            .action(register, {
-              examId: made.id,
-              fileId: image.fileId,
-              height: 1,
-              slug: nf,
-              width: 1,
-            })
-            .pipe(Effect.flip),
-          teacher
-            .action(registerAudio, {
-              examId: made.id,
-              fileId: clip.fileId,
-              slug: nf,
-            })
-            .pipe(Effect.flip),
-        ]);
-        expect(refusals).toMatchObject([
-          { _tag: "AssetTypeRefused" },
-          { _tag: "AudioTypeRefused" },
-        ]);
-      })
+            width: 1,
+          })
+          .pipe(Effect.flip),
+        teacher
+          .action(registerAudio, {
+            examId: made.id,
+            fileId: clip.fileId,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+      ]);
+      expect(refusals).toMatchObject([
+        { _tag: "AssetTypeRefused" },
+        { _tag: "AudioTypeRefused" },
+      ]);
+    })
   );
 
   it.effect(

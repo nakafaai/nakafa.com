@@ -51,10 +51,7 @@ export const inspectFile = Effect.fn("bucket.file.inspect")(function* (
 export const readFile = Effect.fn("bucket.file.read")(function* (
   objectKey: string
 ) {
-  return yield* readObject(objectKey).pipe(
-    Effect.retry(RETRY),
-    Effect.orDie
-  );
+  return yield* readObject(objectKey).pipe(Effect.retry(RETRY), Effect.orDie);
 }, Effect.provide(FetchClient));
 
 /** Stores bytes the server made itself, such as a drawn PDF, and answers the stored file. */
