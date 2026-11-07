@@ -125,16 +125,26 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
   });
 }
 
-test("search and chat answer noindex, so no engine indexes a learner's screen", async ({
+test("chat and a search with a query answer noindex, so no engine indexes a learner's screen or a result list", async ({
   page,
 }) => {
-  for (const path of ["/en/search", "/en/chat"]) {
+  for (const path of ["/en/search?q=fraction", "/en/chat"]) {
     await page.goto(path);
     await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
       "content",
       NOINDEX
     );
   }
+});
+
+test("the bare search page stays open to search engines, since it names no query and no learner", async ({
+  page,
+}) => {
+  await page.goto("/en/search");
+  await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute(
+    "content",
+    NOINDEX
+  );
 });
 
 test("sign-in stays open to search, so a learner who looks for it finds it", async ({
