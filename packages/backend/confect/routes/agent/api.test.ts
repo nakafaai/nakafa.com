@@ -424,8 +424,17 @@ describe("public agent API routes", () => {
     vi.setSystemTime(now);
     const test = createConvexTestWithBetterAuth();
     for (let index = 0; index < 30; index += 1) {
-      expect((await fetchApi(test, "/search")).status).toBe(200);
-      expect((await fetchApi(test, "/health")).status).toBe(200);
+      const read = await fetchApi(test, "/search");
+      const health = await fetchApi(test, "/health");
+      expect(read.status).toBe(200);
+      expect(read.headers.get("ratelimit")).toContain(
+        `"public-read";r=${29 - index};t=`
+      );
+      expect(read.headers.get("ratelimit-policy")).toBe(
+        '"public-read";q=30;w=15'
+      );
+      expect(health.status).toBe(200);
+      expect(health.headers.get("ratelimit")).toBeNull();
     }
     const limited = await fetchApi(test, "/search");
     await expectProblem(limited, {
@@ -433,6 +442,7 @@ describe("public agent API routes", () => {
       status: 429,
     });
     expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(limited.headers.get("ratelimit")).toBe('"public-read";r=0;t=15');
 
     // Two reads per second restore one token after half a second. The burst's
     // last reads ran a millisecond past the frozen clock, since convex-test runs
