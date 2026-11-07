@@ -26,7 +26,7 @@ import {
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactNode, useId, useState } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useSchoolPeriod } from "@/components/marketing/school/period";
 import { SchoolAmount } from "@/components/marketing/school/price";
 import { formatStorage } from "@/lib/pricing/school";
@@ -60,6 +60,7 @@ function readTier(value: string) {
 export function SchoolCalculator() {
   const t = useTranslations("SchoolSite");
   const locale = useLocale();
+  const format = useFormatter();
   const inputId = useId();
   const period = useSchoolPeriod((state) => state.period);
   const [tier, setTier] = useState<SchoolPaidTierKey>("pro");
@@ -137,10 +138,10 @@ export function SchoolCalculator() {
         </div>
         <dl aria-live="polite" className="grid grid-cols-2 content-start gap-6">
           <Result label={t("calculator-accounts")}>
-            {new Intl.NumberFormat(locale).format(idr.accounts)}
+            {format.number(idr.accounts)}
           </Result>
           <Result label={t("calculator-credits")}>
-            {new Intl.NumberFormat(locale).format(idr.credits)}
+            {format.number(idr.credits)}
           </Result>
           <Result label={t("calculator-storage")}>
             {formatStorage(idr.storageMegabytes, locale)}

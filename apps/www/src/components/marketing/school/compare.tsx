@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/confect/billing/tiers";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Match } from "effect";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { SchoolAmount } from "@/components/marketing/school/price";
 import { formatStorage } from "@/lib/pricing/school";
 
@@ -49,13 +49,12 @@ function Included() {
 function CompareValue({ row, tier }: { row: CompareRow; tier: SchoolTierKey }) {
   const t = useTranslations("SchoolSite");
   const locale = useLocale();
+  const format = useFormatter();
   const plan = schoolTiers[tier];
   const free = tier === "free";
 
   return Match.value(row).pipe(
-    Match.when("accounts", () =>
-      new Intl.NumberFormat(locale).format(plan.accounts)
-    ),
+    Match.when("accounts", () => format.number(plan.accounts)),
     Match.when("credits", () =>
       t(plan.creditsRenew ? "value-month" : "value-once", {
         count: plan.credits,
