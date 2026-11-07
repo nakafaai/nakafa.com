@@ -4,8 +4,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { type makeBucket, uploadReserved } from "@repo/backend/test/bucket";
 import { nf } from "@repo/backend/test/editor";
-import { storeFile } from "@repo/backend/test/logo";
 import type { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -23,28 +23,47 @@ export const questionRows = Effect.flatMap(DatabaseReader, (reader) =>
 type ExamFixture = Effect.Success<typeof tenancyFixture>;
 
 const { create, open } = refs.public.exams.exams;
-const { register } = refs.public.exams.assets;
+const { register, reserve } = refs.public.exams.assets;
 
 /** A PNG file of twelve bytes: the eight a PNG starts with, which the server reads as an image, and four more. */
-export const png = () =>
-  new Blob(
-    [
-      Uint8Array.from([
-        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0,
-      ]),
-    ],
-    { type: "image/png" }
+export const PNG = Uint8Array.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0,
+]);
+
+/**
+ * Reserves one file of an exam as the teacher and uploads `bytes` to it as the browser does, answering the file's
+ * ID. `byteSize` is the size reserved, which a test of the server's own check may set apart from the bytes sent.
+ */
+export const examFile = (
+  bucket: ReturnType<typeof makeBucket>,
+  fixture: ExamFixture,
+  examId: GenericId.GenericId<"exams">,
+  bytes: Uint8Array,
+  kind: "audio" | "image" = "image",
+  byteSize = bytes.byteLength
+) =>
+  uploadReserved(
+    bucket,
+    fixture.as("teacher").mutation(reserve, {
+      byteSize,
+      contentType: kind === "image" ? "image/png" : "audio/mpeg",
+      examId,
+      kind,
+      slug: nf,
+    }),
+    bytes
   );
 
 /** An image of an exam, 40 by 30 pixels, uploaded and registered by the teacher. */
 export const examImage = Effect.fn("test.exams.image")(function* (
+  bucket: ReturnType<typeof makeBucket>,
   fixture: ExamFixture,
   examId: GenericId.GenericId<"exams">
 ) {
-  const storageId = yield* storeFile(fixture.convex, png());
+  const fileId = yield* examFile(bucket, fixture, examId, PNG);
   return yield* fixture
     .as("teacher")
-    .action(register, { examId, height: 30, slug: nf, storageId, width: 40 });
+    .action(register, { examId, fileId, height: 30, slug: nf, width: 40 });
 });
 
 /** The accounts that write an exam in the tests: the teacher, or the school's Admin. */

@@ -1,5 +1,6 @@
-import { BlobNotFoundError, FunctionImpl, GroupImpl } from "@confect/server";
-import { Id } from "@repo/backend/confect/_generated/id";
+import type { GenericId } from "@confect/core";
+import { FunctionImpl, GroupImpl } from "@confect/server";
+import bucketInternal from "@repo/backend/confect/_generated/refs/bucket.server";
 import examsPublic from "@repo/backend/confect/_generated/refs/exams";
 import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
@@ -7,14 +8,14 @@ import {
   DatabaseReader,
   DatabaseWriter,
   MutationRunner,
-  QueryCtx,
   QueryRunner,
   Scheduler,
-  StorageActionWriter,
-  StorageWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { deleteFile, reserveUpload } from "@repo/backend/confect/bucket/file";
+import { inspectFile } from "@repo/backend/confect/bucket/stored";
+import { Exam } from "@repo/backend/confect/exams/access";
 import { addressesOf } from "@repo/backend/confect/exams/addresses";
 import {
   AssetSizeRefused,
@@ -33,23 +34,41 @@ import {
 import { playableMedia } from "@repo/backend/confect/exams/questions/media";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { Array as Arr, Clock, Duration, Effect, Layer, Option } from "effect";
 
-/** The ID of an uploaded file in Convex storage. */
-const storageIdSchema = Id("_storage");
-type StorageId = typeof storageIdSchema.Type;
+/** A file of the bucket that an image or a clip names. */
+type FileId = GenericId.GenericId<"bucketFiles">;
 
 /** The bytes at the start of a file that `imageTypeOf` reads, which covers every signature. */
 const HEAD_BYTES = 16;
 
-/** The address that the file of an image is uploaded to. The upload answers with the storage ID that `register` names. */
-const uploadUrl = FunctionImpl.make(
+/**
+ * Reserves the file of an image or a clip before any byte moves: a file over its kind's limit is refused, and any
+ * other charges the exam's school and answers the R2 address it is uploaded to, which binds its length and type.
+ */
+const reserve = FunctionImpl.make(
   databaseSchema,
   spec,
-  "uploadUrl",
-  Effect.fn("exams.assets.uploadUrl")(function* () {
-    return yield* (yield* StorageWriter).generateUploadUrl;
+  "reserve",
+  Effect.fn("exams.assets.reserve")(function* ({
+    byteSize,
+    contentType,
+    kind,
+  }) {
+    const exam = yield* Exam;
+    if (kind === "image" && byteSize > IMAGE_BYTE_LIMIT) {
+      return yield* new AssetSizeRefused();
+    }
+    if (kind === "audio" && byteSize > AUDIO_BYTE_LIMIT) {
+      return yield* new AudioSizeRefused();
+    }
+    return yield* reserveUpload({
+      byteSize,
+      contentType,
+      tenantId: exam.tenantId,
+    });
   })
 );
 
@@ -65,33 +84,24 @@ const canAdd = FunctionImpl.make(
  * Deletes an uploaded file that the server refuses, so a refused file is never stored. The
  * refusal is the typed error the caller answers with, and the delete commits before it.
  */
-const refuse = (storageId: StorageId) =>
+const refuse = (fileId: FileId) =>
   Effect.gen(function* () {
     const { runMutation } = yield* MutationRunner;
-    yield* runMutation(examsInternal.assets.discard, { storageId });
+    yield* runMutation(bucketInternal.discard, { fileId });
   });
 
-/**
- * The size of an uploaded file, read from the storage system table in a query. The size comes
- * before the download, so `register` refuses an oversize file without reading its bytes. A file
- * that the storage no longer holds is a defect, because the upload that named it has finished.
- */
-const stored = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "stored",
-  Effect.fn("exams.assets.stored")(function* ({ storageId }) {
-    const ctx = yield* QueryCtx;
-    const metadata = yield* Effect.tryPromise(() =>
-      ctx.db.system.get("_storage", storageId)
-    ).pipe(Effect.orDie);
-    return yield* Option.match(Option.fromNullishOr(metadata), {
-      onNone: () =>
-        Effect.die(new BlobNotFoundError.BlobNotFoundError({ id: storageId })),
-      onSome: (file) => Effect.succeed({ size: file.size }),
-    });
-  })
-);
+/** The teacher's right to add a file to the exam, asked of the exam's own check; one who is no member is refused. */
+const mayAdd = Effect.fn("exams.assets.mayAdd")(function* (
+  examId: GenericId.GenericId<"exams">,
+  slug: TenantSlug
+) {
+  const { runQuery } = yield* QueryRunner;
+  yield* runQuery(examsPublic.assets.canAdd, { examId, slug }).pipe(
+    Effect.catchTag("NotMember", () =>
+      Effect.fail(new AccessDenied({ action: "exam.edit", reason: "role" }))
+    )
+  );
+});
 
 /**
  * Registers an uploaded file as an image of the exam. The teacher's right to add an image is
@@ -105,45 +115,31 @@ const register = FunctionImpl.make(
   spec,
   "register",
   Effect.fn("exams.assets.register")(
-    function* ({ examId, height, slug, storageId, width }) {
+    function* ({ examId, fileId, height, slug, width }) {
       const { appUser } = yield* requireAuth();
-      const { runQuery } = yield* QueryRunner;
-      yield* runQuery(examsPublic.assets.canAdd, { examId, slug }).pipe(
-        Effect.catchTag("NotMember", () =>
-          Effect.fail(new AccessDenied({ action: "exam.edit", reason: "role" }))
-        )
-      );
-      const { size } = yield* runQuery(examsInternal.assets.stored, {
-        storageId,
-      }).pipe(Effect.orDie);
-      if (size > IMAGE_BYTE_LIMIT) {
-        yield* refuse(storageId);
+      yield* mayAdd(examId, slug);
+      const stored = yield* inspectFile(fileId, HEAD_BYTES);
+      if (Option.isNone(stored)) {
+        return yield* new AssetTypeRefused();
+      }
+      if (stored.value.byteSize > IMAGE_BYTE_LIMIT) {
+        yield* refuse(fileId);
         return yield* new AssetSizeRefused();
       }
-      const blob = yield* (yield* StorageActionWriter)
-        .get(storageId)
-        .pipe(Effect.orDie);
-      const head = new Uint8Array(
-        yield* Effect.promise(() => blob.slice(0, HEAD_BYTES).arrayBuffer())
-      );
-      return yield* Option.match(imageTypeOf(head), {
-        onNone: () =>
-          refuse(storageId).pipe(
-            Effect.andThen(Effect.fail(new AssetTypeRefused()))
-          ),
-        onSome: (contentType) =>
-          Effect.gen(function* () {
-            const { runMutation } = yield* MutationRunner;
-            return yield* runMutation(examsInternal.assets.commit, {
-              byteSize: size,
-              contentType,
-              examId,
-              height,
-              storageId,
-              userId: appUser._id,
-              width,
-            });
-          }),
+      const contentType = imageTypeOf(stored.value.head);
+      if (Option.isNone(contentType)) {
+        yield* refuse(fileId);
+        return yield* new AssetTypeRefused();
+      }
+      const { runMutation } = yield* MutationRunner;
+      return yield* runMutation(examsInternal.assets.commit, {
+        byteSize: stored.value.byteSize,
+        contentType: contentType.value,
+        examId,
+        fileId,
+        height,
+        userId: appUser._id,
+        width,
       });
     },
     Effect.catchTag("SchemaError", Effect.die)
@@ -160,42 +156,29 @@ const registerAudio = FunctionImpl.make(
   spec,
   "registerAudio",
   Effect.fn("exams.assets.registerAudio")(
-    function* ({ examId, slug, storageId }) {
+    function* ({ examId, fileId, slug }) {
       const { appUser } = yield* requireAuth();
-      const { runQuery } = yield* QueryRunner;
-      yield* runQuery(examsPublic.assets.canAdd, { examId, slug }).pipe(
-        Effect.catchTag("NotMember", () =>
-          Effect.fail(new AccessDenied({ action: "exam.edit", reason: "role" }))
-        )
-      );
-      const { size } = yield* runQuery(examsInternal.assets.stored, {
-        storageId,
-      }).pipe(Effect.orDie);
-      if (size > AUDIO_BYTE_LIMIT) {
-        yield* refuse(storageId);
+      yield* mayAdd(examId, slug);
+      const stored = yield* inspectFile(fileId, HEAD_BYTES);
+      if (Option.isNone(stored)) {
+        return yield* new AudioTypeRefused();
+      }
+      if (stored.value.byteSize > AUDIO_BYTE_LIMIT) {
+        yield* refuse(fileId);
         return yield* new AudioSizeRefused();
       }
-      const blob = yield* (yield* StorageActionWriter)
-        .get(storageId)
-        .pipe(Effect.orDie);
-      const head = new Uint8Array(
-        yield* Effect.promise(() => blob.slice(0, HEAD_BYTES).arrayBuffer())
-      );
-      return yield* Option.match(audioTypeOf(head), {
-        onNone: () =>
-          refuse(storageId).pipe(
-            Effect.andThen(Effect.fail(new AudioTypeRefused()))
-          ),
-        onSome: (contentType) =>
-          Effect.flatMap(MutationRunner, ({ runMutation }) =>
-            runMutation(examsInternal.assets.commitAudio, {
-              byteSize: size,
-              contentType,
-              examId,
-              storageId,
-              userId: appUser._id,
-            })
-          ),
+      const contentType = audioTypeOf(stored.value.head);
+      if (Option.isNone(contentType)) {
+        yield* refuse(fileId);
+        return yield* new AudioTypeRefused();
+      }
+      const { runMutation } = yield* MutationRunner;
+      return yield* runMutation(examsInternal.assets.commitAudio, {
+        byteSize: stored.value.byteSize,
+        contentType: contentType.value,
+        examId,
+        fileId,
+        userId: appUser._id,
       });
     },
     Effect.catchTag("SchemaError", Effect.die)
@@ -221,7 +204,7 @@ const commitAudio = FunctionImpl.make(
         createdAt,
         createdBy: args.userId,
         examId: args.examId,
-        storageId: args.storageId,
+        fileId: args.fileId,
         tenantId: exam.tenantId,
       })
       .pipe(Effect.orDie);
@@ -272,23 +255,12 @@ const commit = FunctionImpl.make(
         createdBy: args.userId,
         examId: args.examId,
         height: args.height,
-        storageId: args.storageId,
+        fileId: args.fileId,
         tenantId: exam.tenantId,
         width: args.width,
       })
       .pipe(Effect.orDie);
     return { id };
-  })
-);
-
-/** Deletes a refused or abandoned file. */
-const discard = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "discard",
-  Effect.fn("exams.assets.discard")(function* ({ storageId }) {
-    yield* (yield* StorageWriter).delete(storageId).pipe(Effect.orDie);
-    return {};
   })
 );
 
@@ -308,21 +280,21 @@ const urls = FunctionImpl.make(
 
 /** Deletes a stored file that no row names any more: a duplicate's rows name the files of the exam it came from. */
 const deleteUnsharedFile = Effect.fn("exams.assets.deleteUnshared")(function* (
-  storageId: StorageId
+  fileId: FileId
 ) {
   const reader = yield* DatabaseReader;
   const pictures = yield* reader
     .table("examAssets")
-    .index("by_storageId", (query) => query.eq("storageId", storageId))
+    .index("by_fileId", (query) => query.eq("fileId", fileId))
     .take(1)
     .pipe(Effect.orDie);
   const clips = yield* reader
     .table("examAudio")
-    .index("by_storageId", (query) => query.eq("storageId", storageId))
+    .index("by_fileId", (query) => query.eq("fileId", fileId))
     .take(1)
     .pipe(Effect.orDie);
   if (Arr.isReadonlyArrayEmpty(pictures) && Arr.isReadonlyArrayEmpty(clips)) {
-    yield* (yield* StorageWriter).delete(storageId).pipe(Effect.orDie);
+    yield* deleteFile(fileId);
   }
 });
 
@@ -347,10 +319,7 @@ const sweep = FunctionImpl.make(
         writer
           .table("examAssets")
           .delete(asset._id)
-          .pipe(
-            Effect.orDie,
-            Effect.andThen(deleteUnsharedFile(asset.storageId))
-          ),
+          .pipe(Effect.orDie, Effect.andThen(deleteUnsharedFile(asset.fileId))),
       { discard: true }
     );
     const clips = yield* (yield* DatabaseReader)
@@ -364,10 +333,7 @@ const sweep = FunctionImpl.make(
         writer
           .table("examAudio")
           .delete(clip._id)
-          .pipe(
-            Effect.orDie,
-            Effect.andThen(deleteUnsharedFile(clip.storageId))
-          ),
+          .pipe(Effect.orDie, Effect.andThen(deleteUnsharedFile(clip.fileId))),
       { discard: true }
     );
     if (assets.length < MAX_ASSET_READS && clips.length < MAX_ASSET_READS) {
@@ -383,16 +349,14 @@ const sweep = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(uploadUrl),
+  Layer.provide(reserve),
   Layer.provide(canAdd),
   Layer.provide(register),
   Layer.provide(registerAudio),
   Layer.provide(commit),
   Layer.provide(commitAudio),
   Layer.provide(media),
-  Layer.provide(discard),
   Layer.provide(sweep),
-  Layer.provide(stored),
   Layer.provide(urls),
   Layer.provide(session),
   Layer.provide(member),

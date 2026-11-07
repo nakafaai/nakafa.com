@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -7,10 +7,16 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { PlacedQuestion } from "@repo/backend/confect/exams/import";
 import { encodeKey } from "@repo/backend/confect/exams/question";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { nf } from "@repo/backend/test/editor";
 import { examImage, teacherExam } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 const { keys, place } = refs.public.exams.imports;
 
@@ -97,6 +103,16 @@ const toPlace = (
 });
 
 describe("exams/imports place and keys", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
@@ -199,7 +215,7 @@ describe("exams/imports place and keys", () => {
         const fixture = yield* tenancyFixture;
         const exam = yield* teacherExam(fixture, "PTS Matematika");
         const other = yield* teacherExam(fixture, "PTS Matematika");
-        const foreign = yield* examImage(fixture, other.id);
+        const foreign = yield* examImage(bucket, fixture, other.id);
         const send = (
           account: "student" | "teacher",
           questions: readonly ReturnType<typeof toPlace>[]

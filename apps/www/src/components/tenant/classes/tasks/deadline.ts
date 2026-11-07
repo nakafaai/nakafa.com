@@ -17,3 +17,7 @@ export const localDeadline = (epoch: number, timeZone: string) =>
     0,
     16
   );
+
+/** The day of `now` on the school's clock, as a day key, the first day a deadline may fall on. */
+export const firstDay = (now: number, timeZone: string) =>
+  localDeadline(now, timeZone).slice(0, 10);

@@ -3,8 +3,8 @@ import type { ClassroomMessagesDoc } from "@repo/backend/confect/_generated/docs
 import {
   DatabaseReader,
   DatabaseWriter,
-  StorageWriter,
 } from "@repo/backend/confect/_generated/services";
+import { deleteFile } from "@repo/backend/confect/bucket/file";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { UploadGone } from "@repo/backend/confect/classroom/forum/errors";
 import type { messageField } from "@repo/backend/confect/classroom/forum/message";
@@ -12,7 +12,6 @@ import {
   type PollDraft,
   pollField,
 } from "@repo/backend/confect/classroom/forum/poll";
-import { refundBytes } from "@repo/backend/confect/classroom/forum/use";
 import type { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { sealText } from "@repo/backend/confect/vault/text";
@@ -88,25 +87,19 @@ export const sealPoll = Effect.fn("classroom.forum.attach.poll")(function* (
 
 /**
  * Deletes everything a hidden message carried: its files, which revokes their
- * addresses (ADR 0028), with their bytes given back to the school, and its tally.
+ * addresses (ADR 0028) and gives their bytes back to the school, and its tally.
  */
 export const dropCarried = Effect.fn("classroom.forum.attach.drop")(function* (
   message: ClassroomMessagesDoc
 ) {
-  const storage = yield* StorageWriter;
-  const files = message.attachments ?? [];
   yield* Effect.forEach(
-    Arr.flatMap(files, (file) =>
+    Arr.flatMap(message.attachments ?? [], (file) =>
       Arr.appendAll(
-        [file.storageId],
+        [file.fileId],
         file.thumbnailId === undefined ? [] : [file.thumbnailId]
       )
     ),
-    (storageId) => storage.delete(storageId).pipe(Effect.orDie)
-  );
-  yield* refundBytes(
-    message.tenantId,
-    Arr.reduce(files, 0, (bytes, file) => bytes + file.byteSize)
+    deleteFile
   );
   const tally = yield* (yield* DatabaseReader)
     .table("classroomTallies")

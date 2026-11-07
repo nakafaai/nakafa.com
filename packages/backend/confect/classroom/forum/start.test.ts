@@ -1,5 +1,10 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  makeBucket,
+  stubBucket,
+  uploadReserved,
+} from "@repo/backend/test/bucket";
 import {
   denied,
   forumClass,
@@ -7,20 +12,30 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { png } from "@repo/backend/test/exams";
-import { storeFile } from "@repo/backend/test/logo";
+import { PNG } from "@repo/backend/test/library";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 const { get, reply, start } = refs.public.classroom.forum.threads;
 const { hide, send } = refs.public.classroom.forum.messages;
-const { register } = refs.public.classroom.forum.files;
+const { register, reserve } = refs.public.classroom.forum.files;
 const { setPolicy } = refs.public.tenancy.settings;
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 describe("classroom/forum start", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it.effect(
@@ -137,7 +152,16 @@ describe("classroom/forum start", () => {
               height: 1,
               name,
               slug: nf,
-              storageId: yield* storeFile(fixture.convex, png()),
+              fileId: yield* uploadReserved(
+                bucket,
+                teacher.mutation(reserve, {
+                  byteSize: PNG.byteLength,
+                  classId: forum.classId,
+                  contentType: "image/png",
+                  slug: nf,
+                }),
+                PNG
+              ),
               thumbnailId: null,
               width: 1,
             });

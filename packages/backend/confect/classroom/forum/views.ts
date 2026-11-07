@@ -3,10 +3,8 @@ import type {
   ClassroomMessagesDoc,
   ClassroomThreadsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import {
-  DatabaseReader,
-  StorageReader,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { fileAddress } from "@repo/backend/confect/bucket/file";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { attachmentField } from "@repo/backend/confect/classroom/forum/attachment";
 import { readMark } from "@repo/backend/confect/classroom/forum/mark";
@@ -66,29 +64,25 @@ type SchoolKeys = Effect.Success<ReturnType<typeof schoolKeys>>;
 
 /**
  * The files of a message for the viewer: each name opened with the school key,
- * and each address read for this read alone (ADR 0028). A file the storage no
- * longer holds shows without an address.
+ * and each R2 address signed for the hour after the access check (ADR 0028). A
+ * file the bucket no longer holds shows without an address.
  */
 const attachmentViews = Effect.fn("classroom.forum.views.attachments")(
   function* (message: ClassroomMessagesDoc, keys: SchoolKeys) {
-    const storage = yield* StorageReader;
-    const addressOf = (storageId: GenericId.GenericId<"_storage">) =>
-      storage.getUrl(storageId).pipe(
-        Effect.map((url) => url.href),
-        Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null))
-      );
+    const addressOf = (fileId: GenericId.GenericId<"bucketFiles">) =>
+      fileAddress(fileId).pipe(Effect.map(Option.getOrNull));
     return yield* Effect.forEach(message.attachments ?? [], (file) =>
       Effect.gen(function* () {
         const name = yield* openText(
           keys,
           attachmentField({
             classId: message.classId,
-            storageId: file.storageId,
+            fileId: file.fileId,
           }),
           file.sealedName
         );
         return {
-          address: yield* addressOf(file.storageId),
+          address: yield* addressOf(file.fileId),
           byteSize: file.byteSize,
           height: file.height ?? null,
           kind: file.kind,

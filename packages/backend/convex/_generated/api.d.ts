@@ -845,11 +845,11 @@ export declare const api: {
           "public",
           {
             classId: Id<"classes">;
+            fileId: Id<"bucketFiles">;
             height: number | null;
             name: string;
             slug: string;
-            storageId: Id<"_storage">;
-            thumbnailId: Id<"_storage"> | null;
+            thumbnailId: Id<"bucketFiles"> | null;
             width: number | null;
           },
           {
@@ -858,11 +858,16 @@ export declare const api: {
             kind: "document" | "image";
           }
         >;
-        uploadUrl: FunctionReference<
+        reserve: FunctionReference<
           "mutation",
           "public",
-          { classId: Id<"classes">; slug: string },
-          string
+          {
+            byteSize: number;
+            classId: Id<"classes">;
+            contentType: string;
+            slug: string;
+          },
+          { address: string; fileId: Id<"bucketFiles"> }
         >;
         withdraw: FunctionReference<
           "mutation",
@@ -4439,9 +4444,9 @@ export declare const api: {
         "public",
         {
           examId: Id<"exams">;
+          fileId: Id<"bucketFiles">;
           height: number;
           slug: string;
-          storageId: Id<"_storage">;
           width: number;
         },
         { id: Id<"examAssets"> }
@@ -4449,14 +4454,20 @@ export declare const api: {
       registerAudio: FunctionReference<
         "action",
         "public",
-        { examId: Id<"exams">; slug: string; storageId: Id<"_storage"> },
+        { examId: Id<"exams">; fileId: Id<"bucketFiles">; slug: string },
         { id: Id<"examAudio"> }
       >;
-      uploadUrl: FunctionReference<
+      reserve: FunctionReference<
         "mutation",
         "public",
-        { examId: Id<"exams">; slug: string },
-        string
+        {
+          byteSize: number;
+          contentType: string;
+          examId: Id<"exams">;
+          kind: "image" | "audio";
+          slug: string;
+        },
+        { address: string; fileId: Id<"bucketFiles"> }
       >;
       urls: FunctionReference<
         "query",
@@ -7951,7 +7962,7 @@ export declare const api: {
           source:
             | {
                 kind: "pages";
-                pages: Array<{ image: Id<"_storage">; text: string }>;
+                pages: Array<{ image: Id<"bucketFiles">; text: string }>;
               }
             | { images: Array<Id<"examAssets">>; kind: "text"; text: string };
         },
@@ -12886,22 +12897,23 @@ export declare const api: {
     };
     logo: {
       remove: FunctionReference<"mutation", "public", { slug: string }, {}>;
-      set: FunctionReference<
+      reserve: FunctionReference<
         "mutation",
         "public",
         {
+          byteSize: number;
           contentType: "image/png" | "image/svg+xml";
           slug: string;
-          storageId: Id<"_storage">;
         },
-        | { _tag: "LogoSet"; logo: string }
-        | { _tag: "LogoRefused"; reason: "size" }
+        | { _tag: "LogoReserved"; address: string; fileId: Id<"bucketFiles"> }
+        | { _tag: "LogoRefused"; reason: "size" | "file" }
       >;
-      uploadUrl: FunctionReference<
+      set: FunctionReference<
         "mutation",
         "public",
-        { slug: string },
-        string
+        { fileId: Id<"bucketFiles">; slug: string },
+        | { _tag: "LogoSet"; logo: string }
+        | { _tag: "LogoRefused"; reason: "size" | "file" }
       >;
     };
     memberships: {
@@ -16318,6 +16330,44 @@ export declare const internal: {
       };
     };
   };
+  bucket: {
+    discard: FunctionReference<
+      "mutation",
+      "internal",
+      { fileId: Id<"bucketFiles"> },
+      null
+    >;
+    file: FunctionReference<
+      "query",
+      "internal",
+      { fileId: Id<"bucketFiles"> },
+      {
+        byteSize: number;
+        contentType: string;
+        objectKey: string;
+        tenantId: Id<"tenants"> | null;
+      } | null
+    >;
+    markStored: FunctionReference<
+      "mutation",
+      "internal",
+      { fileId: Id<"bucketFiles"> },
+      null
+    >;
+    removeObjects: FunctionReference<
+      "action",
+      "internal",
+      { keys: Array<string> },
+      null
+    >;
+    reserveStored: FunctionReference<
+      "mutation",
+      "internal",
+      { byteSize: number; contentType: string; tenantId: Id<"tenants"> | null },
+      { fileId: Id<"bucketFiles">; objectKey: string }
+    >;
+    sweep: FunctionReference<"mutation", "internal", {}, null>;
+  };
   classroom: {
     forum: {
       channels: {
@@ -16337,18 +16387,18 @@ export declare const internal: {
             byteSize: number;
             classId: Id<"classes">;
             contentType: string;
+            fileId: Id<"bucketFiles">;
             height: number | null;
             kind: "document" | "image";
             name: string;
-            storageId: Id<"_storage">;
-            thumbnailId: Id<"_storage"> | null;
+            thumbnailId: Id<"bucketFiles"> | null;
             width: number | null;
           },
           {
             byteSize: number;
             id: Id<"classroomUploads">;
             kind: "document" | "image";
-          } | null
+          }
         >;
         sweep: FunctionReference<
           "mutation",
@@ -18790,8 +18840,8 @@ export declare const internal: {
           byteSize: number;
           contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
           examId: Id<"exams">;
+          fileId: Id<"bucketFiles">;
           height: number;
-          storageId: Id<"_storage">;
           userId: Id<"users">;
           width: number;
         },
@@ -18804,22 +18854,10 @@ export declare const internal: {
           byteSize: number;
           contentType: "audio/mp4" | "audio/mpeg" | "audio/ogg" | "audio/wav";
           examId: Id<"exams">;
-          storageId: Id<"_storage">;
+          fileId: Id<"bucketFiles">;
           userId: Id<"users">;
         },
         { id: Id<"examAudio"> }
-      >;
-      discard: FunctionReference<
-        "mutation",
-        "internal",
-        { storageId: Id<"_storage"> },
-        {}
-      >;
-      stored: FunctionReference<
-        "query",
-        "internal",
-        { storageId: Id<"_storage"> },
-        { size: number }
       >;
       sweep: FunctionReference<
         "mutation",
@@ -18832,14 +18870,14 @@ export declare const internal: {
       discard: FunctionReference<
         "mutation",
         "internal",
-        { images: Array<Id<"_storage">> },
+        { images: Array<Id<"bucketFiles">> },
         {}
       >;
       pictures: FunctionReference<
         "query",
         "internal",
         { assets: Array<Id<"examAssets">>; examId: Id<"exams"> },
-        Array<{ storageId: Id<"_storage"> }>
+        Array<{ fileId: Id<"bucketFiles"> }>
       >;
     };
     seed: {
@@ -20427,7 +20465,7 @@ export declare const internal: {
       lock: FunctionReference<
         "mutation",
         "internal",
-        { letterId: Id<"graduationLetters">; storageId: Id<"_storage"> },
+        { fileId: Id<"bucketFiles">; letterId: Id<"graduationLetters"> },
         null
       >;
       printable: FunctionReference<
@@ -20459,7 +20497,7 @@ export declare const internal: {
       lock: FunctionReference<
         "mutation",
         "internal",
-        { reportId: Id<"reportCards">; storageId: Id<"_storage"> },
+        { fileId: Id<"bucketFiles">; reportId: Id<"reportCards"> },
         null
       >;
       printable: FunctionReference<

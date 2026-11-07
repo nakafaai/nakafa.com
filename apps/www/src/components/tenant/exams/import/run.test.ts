@@ -6,9 +6,7 @@ import {
   ImportUnread,
 } from "@repo/backend/confect/exams/import";
 import type { ImportSource } from "@repo/backend/confect/exams/reads.spec";
-import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, MutableList, Result, Schema } from "effect";
-import { FetchHttpClient } from "effect/http";
 import { strToU8, zipSync } from "fflate";
 import type { ImportProgress } from "@/components/tenant/exams/import/run";
 import { runImport } from "@/components/tenant/exams/import/run";
@@ -45,15 +43,12 @@ const ASSET = Schema.decodeUnknownSync(Id("examAssets"))("asset-1");
 const FIRST = Schema.decodeUnknownSync(Id("examQuestions"))("question-1");
 const SECOND = Schema.decodeUnknownSync(Id("examQuestions"))("question-2");
 
-/** One file-level fetch double for every upload, as AGENTS.md asks: each upload answers its storage ID. */
-const fetcher = vi.fn<typeof fetch>(() =>
-  Promise.resolve(
-    new Response(encodeJsonText({ storageId: "stored-1" }), {
-      headers: { "content-type": "application/json" },
-      status: 200,
-    })
-  )
-);
+/** The upload to R2, which every test answers without a network. */
+const putFile = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/files/put", () => ({ putFile }));
+
+/** The file every reservation answers. */
+const FILE = Schema.decodeUnknownSync(Id("bucketFiles"))("file-1");
 
 /** The calls of an import against a fake backend, with Nina's reads given in order. */
 const backend = (reads: readonly (typeof ImportedRead.Type)[]) => {
@@ -82,8 +77,10 @@ const backend = (reads: readonly (typeof ImportedRead.Type)[]) => {
     ),
     read,
     register: vi.fn(() => Promise.resolve(Result.succeed({ id: ASSET }))),
-    requestUrl: () =>
-      Promise.resolve(Result.succeed(new URL("https://upload.test/file"))),
+    reserve: () =>
+      Promise.resolve(
+        Result.succeed({ address: "https://r2.test/file", fileId: FILE })
+      ),
   };
 };
 
@@ -129,7 +126,8 @@ const progressLog = () => {
 
 describe("runImport", () => {
   beforeEach(() => {
-    fetcher.mockClear();
+    putFile.mockReset();
+    putFile.mockReturnValue(Effect.void);
     vi.stubGlobal(
       "createImageBitmap",
       vi.fn(() => Promise.resolve({ close: vi.fn(), height: 30, width: 40 }))
@@ -184,7 +182,7 @@ describe("runImport", () => {
           ...calls,
           file: wordFile(),
           onProgress: log.onProgress,
-        }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
+        });
         expect(calls.read).toHaveBeenCalledWith({
           images: [ASSET],
           kind: "text",
@@ -250,11 +248,11 @@ describe("runImport", () => {
           ...calls,
           file: new Blob(["%PDF-1.7\n"]),
           onProgress: () => undefined,
-        }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
+        });
         expect(calls.read).toHaveBeenNthCalledWith(1, {
           kind: "pages",
           pages: Arr.map([1, 2, 3, 4, 5], (number) => ({
-            image: "stored-1",
+            image: "file-1",
             text: `Halaman ${number}`,
           })),
         });
@@ -284,10 +282,7 @@ describe("runImport", () => {
         ...calls,
         file: wordFile(),
         onProgress: () => undefined,
-      }).pipe(
-        Effect.provideService(FetchHttpClient.Fetch, fetcher),
-        Effect.flip
-      );
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(ImportUnread);
       expect(calls.place).not.toHaveBeenCalled();
     })

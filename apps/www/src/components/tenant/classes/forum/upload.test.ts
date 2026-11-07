@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { LIBRARY_BYTE_LIMIT } from "@repo/backend/confect/classroom/library/file";
-import { Effect, Option, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableRef,
+  Option,
+  Result,
+  Schema,
+} from "effect";
 import {
   FileTooLarge,
   fitted,
@@ -11,10 +18,10 @@ import {
   uploadAttachment,
 } from "@/components/tenant/classes/forum/upload";
 
-const storage = Schema.decodeUnknownSync(Id("_storage"));
+const bucketFile = Schema.decodeUnknownSync(Id("bucketFiles"));
 
-const sendStorageFile = vi.hoisted(() => vi.fn());
-vi.mock("@/components/tenant/exams/image", () => ({ sendStorageFile }));
+const putFile = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/files/put", () => ({ putFile }));
 
 /** What this browser encodes: `webp` false stands for a browser that answers PNG for WebP. */
 const paintable = (webp: boolean) => {
@@ -47,7 +54,7 @@ const paintable = (webp: boolean) => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  sendStorageFile.mockReset();
+  putFile.mockReset();
 });
 
 describe("shownFile", () => {
@@ -133,41 +140,62 @@ describe("shrinkPhoto", () => {
 });
 
 describe("uploadAttachment", () => {
-  const url = new URL("https://upload.example.test");
-  const requestUrl = () => Promise.resolve(Result.succeed(url));
+  /** Each reservation answers the next file of the bucket at its own address. */
+  const reserveFiles = (...ids: string[]) => {
+    const next = MutableRef.make(0);
+    return vi.fn((bytes: Blob) =>
+      Promise.resolve(
+        Result.succeed({
+          address: `https://r2.test/${bytes.size}`,
+          fileId: bucketFile(
+            Option.getOrElse(
+              Arr.get(ids, MutableRef.getAndIncrement(next)),
+              () => "file-x"
+            )
+          ),
+        })
+      )
+    );
+  };
 
   it.effect("sends a document as it is, with nothing a photo carries", () =>
     Effect.gen(function* () {
-      sendStorageFile.mockReturnValue(Effect.succeed(storage("file-1")));
+      putFile.mockReturnValue(Effect.void);
       const register = vi.fn(() => Promise.resolve(Result.succeed("kept")));
       const file = new File(["%PDF"], "soal.pdf", { type: "application/pdf" });
-      const answer = yield* uploadAttachment(file, requestUrl, register);
+      const answer = yield* uploadAttachment(
+        file,
+        reserveFiles("file-1"),
+        register
+      );
       expect(answer).toEqual({ height: null, registered: "kept", width: null });
       expect(register).toHaveBeenCalledWith({
+        fileId: "file-1",
         height: null,
-        storageId: "file-1",
         thumbnailId: null,
         width: null,
       });
-      expect(sendStorageFile).toHaveBeenCalledWith(url, file);
+      expect(putFile).toHaveBeenCalledWith("https://r2.test/4", file);
     })
   );
 
   it.effect("sends a photo shrunk, with its small copy and its size", () =>
     Effect.gen(function* () {
       paintable(true);
-      sendStorageFile
-        .mockReturnValueOnce(Effect.succeed(storage("file-1")))
-        .mockReturnValueOnce(Effect.succeed(storage("file-2")));
+      putFile.mockReturnValue(Effect.void);
       const register = vi.fn(() => Promise.resolve(Result.succeed("kept")));
       const file = new File([new Uint8Array(5000)], "foto.jpg", {
         type: "image/jpeg",
       });
-      const answer = yield* uploadAttachment(file, requestUrl, register);
+      const answer = yield* uploadAttachment(
+        file,
+        reserveFiles("file-1", "file-2"),
+        register
+      );
       expect(answer).toEqual({ height: 1200, registered: "kept", width: 1600 });
       expect(register).toHaveBeenCalledWith({
+        fileId: "file-1",
         height: 1200,
-        storageId: "file-1",
         thumbnailId: "file-2",
         width: 1600,
       });
@@ -179,12 +207,12 @@ describe("uploadAttachment", () => {
       const file = new File([], "video.pdf");
       Object.defineProperty(file, "size", { value: LIBRARY_BYTE_LIMIT + 1 });
       const failure = yield* Effect.flip(
-        uploadAttachment(file, requestUrl, () =>
+        uploadAttachment(file, reserveFiles(), () =>
           Promise.resolve(Result.succeed("kept"))
         )
       );
       expect(failure).toBeInstanceOf(FileTooLarge);
-      expect(sendStorageFile).not.toHaveBeenCalled();
+      expect(putFile).not.toHaveBeenCalled();
     })
   );
 });

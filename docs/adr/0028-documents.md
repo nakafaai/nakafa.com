@@ -377,9 +377,9 @@ Drive copies come through the Drive connector (ADR 0015).
 The owner chose Cloudflare R2 for the bytes and Convex for everything else
 (`Nakafa-School-FINAL.md`, "R2 untuk file, Convex untuk sistem sekolah"): R2 stores
 a file for half of Convex's price and serves it with no egress charge. The class
-library is the first owner on R2; the forum, the school logo, exam images and
-audio, record PDFs, imports, and Nina's attachments move in later changes, each
-in one step.
+library moved first; the forum's files, the school logo, exam images and audio,
+the page images of an import, and the record PDFs followed in one step. Nina's
+attachments stay in the Agent component's storage until their own change.
 
 - Two private buckets, `nakafa-files` for production and `nakafa-files-staging` for
   the dev deployment that staging and local development share, declared in the
@@ -402,6 +402,14 @@ in one step.
 - The bucket's in-code guards keep it inside R2's free tier: 8 GB stored over all
   schools (`BUCKET_BYTE_LIMIT`), and 30,000 writes and 300,000 reads signed a day,
   every school counted (`confect/bucket/use.ts`).
+- Every other owner holds a `bucketFiles` row where a Convex storage ID stood
+  (`confect/bucket/file.ts`). A browser upload reserves the file the same way and
+  registers it once its bytes arrived; a PDF the server draws is reserved and
+  written by the action itself (`confect/bucket/stored.ts`). A stored file reads at
+  an address signed from the start of the hour for two hours, so a query answers
+  one address for an hour and its cached answer stays valid. Deleting a file frees
+  its bytes and removes its object right after, and the daily sweep frees a file
+  reserved for an upload that never arrived after two hours.
 - The library is a Drive for the class: folders nest at any depth, items and
   folders move, star for each reader, and go to the trash, which keeps them and
   their bytes until a restore, a deletion forever, or thirty days.

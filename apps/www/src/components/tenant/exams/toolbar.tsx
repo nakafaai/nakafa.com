@@ -55,7 +55,7 @@ export function ExamToolbar() {
   const pictures = useExamEditing((state) => state.pictures);
   const queuePicture = useExamEditing((state) => state.queuePicture);
   const shiftPicture = useExamEditing((state) => state.shiftPicture);
-  const requestUrl = useMutation(exams.assets.uploadUrl);
+  const reserve = useMutation(exams.assets.reserve);
   const register = useAction(exams.assets.register);
   const chosen = Option.getOrNull(Arr.head(pictures));
   const preview = useObjectUrl(chosen === null ? null : chosen.file);
@@ -84,7 +84,8 @@ export function ExamToolbar() {
     storeExamImage({
       file: picture.file,
       register: (args) => register({ examId: exam.id, slug, ...args }),
-      requestUrl: () => requestUrl({ examId: exam.id, slug }),
+      reserve: (size) =>
+        reserve({ examId: exam.id, kind: "image", slug, ...size }),
     }).pipe(
       Effect.tap((stored) =>
         Effect.sync(() => {

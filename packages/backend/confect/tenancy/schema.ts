@@ -143,15 +143,23 @@ export const LogoSet = Schema.TaggedStruct("LogoSet", {
   logo: Schema.String,
 });
 /**
- * `set` answers this, and changes nothing else, when the file is over the logo
- * limit: `size` names the reason. The file is deleted, so the answer is a value
- * and not a failure, because a failed mutation rolls its writes back.
+ * `reserve` answers this for a file over the logo limit (`size`), and `set` for a
+ * file that is not one the school reserved (`file`). Nothing changes.
  */
 export const LogoRefused = Schema.TaggedStruct("LogoRefused", {
-  reason: Schema.Literal("size"),
+  reason: Schema.Literals(["size", "file"]),
 });
 /** The answer of `set`: a logo that is set, or a file that is refused. */
 export const LogoAnswer = Schema.Union([LogoSet, LogoRefused]);
+
+/** `reserve` answers the address a logo file is uploaded to and the file it becomes. */
+export const LogoReserved = Schema.TaggedStruct("LogoReserved", {
+  address: Schema.String,
+  fileId: Id("bucketFiles"),
+});
+
+/** The answer of `reserve`: an upload address, or a file over the limit, refused before any byte moves. */
+export const LogoReservation = Schema.Union([LogoReserved, LogoRefused]);
 
 /**
  * The organisation holds its country and the currency of its contract (ADR
@@ -164,7 +172,7 @@ export const tenantValidator = Schema.Struct({
   country: CountryCodeSchema,
   currency: Currency,
   kind: TenantKind,
-  logo: Schema.optionalKey(Id("_storage")),
+  logo: Schema.optionalKey(Id("bucketFiles")),
   name: TenantName,
   policies: TenantPolicies,
   setupDoneAt: Schema.optionalKey(Schema.Finite),

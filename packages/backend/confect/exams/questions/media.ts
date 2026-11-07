@@ -5,9 +5,9 @@ import type {
 import {
   DatabaseReader,
   DatabaseWriter,
-  StorageReader,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { fileAddress } from "@repo/backend/confect/bucket/file";
 import type {
   PlayableMedia,
   QuestionMedia,
@@ -68,13 +68,11 @@ const playable = Effect.fn("exams.question.media.one")(function* (
   if (Option.isNone(clip)) {
     return Option.none();
   }
-  const url = yield* (yield* StorageReader)
-    .getUrl(clip.value.storageId)
-    .pipe(Effect.option);
-  return Option.map(url, ({ href }): typeof PlayableMedia.Type => ({
+  const url = yield* fileAddress(clip.value.fileId);
+  return Option.map(url, (address): typeof PlayableMedia.Type => ({
     alt: item.alt,
     kind: "audio",
-    url: href,
+    url: address,
   }));
 });
 

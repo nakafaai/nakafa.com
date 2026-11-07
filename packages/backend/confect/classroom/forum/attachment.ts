@@ -99,8 +99,8 @@ export const attachmentValidator = Schema.Struct({
   height: Schema.optionalKey(Schema.Int),
   kind: AttachmentKind,
   sealedName: Sealed,
-  storageId: Id("_storage"),
-  thumbnailId: Schema.optionalKey(Id("_storage")),
+  fileId: Id("bucketFiles"),
+  thumbnailId: Schema.optionalKey(Id("bucketFiles")),
   width: Schema.optionalKey(Schema.Int),
 });
 
@@ -126,9 +126,9 @@ export const AttachmentView = Schema.Struct({
 
 /** The sealed field of a file's name, bound to its class and its file, wherever the row that holds it stands. */
 export const attachmentField = (
-  row: Pick<typeof uploadValidator.Type, "classId" | "storageId">
+  row: Pick<typeof uploadValidator.Type, "classId" | "fileId">
 ) => ({
   field: "sealedName",
-  row: [row.classId, row.storageId],
+  row: [row.classId, row.fileId],
   table: "classroomUploads",
 });

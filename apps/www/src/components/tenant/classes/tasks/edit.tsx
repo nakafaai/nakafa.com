@@ -2,14 +2,16 @@ import { useMutation } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { DialogRefusal } from "@/components/shared/refusal";
 import {
   forumCall,
   runForumCall,
-  toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { classRefusalCopy } from "@/components/tenant/classes/refusals";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import {
   checkedDraft,
@@ -25,7 +27,7 @@ import { useClockZone } from "@/components/tenant/settings/time";
 
 /**
  * The dialog that edits a task: the same fields as its publish, filled in with the task. Save waits for a change
- * the server accepts, the task shows the change at once, and a refusal brings the dialog back with what was written.
+ * the server accepts, the task shows the change at once, and a refusal brings the dialog back with what was written and says why inside it.
  * Its points are fixed once work is handed in.
  */
 export function EditTaskDialog({ task }: { task: ClassTask }) {
@@ -36,6 +38,7 @@ export function EditTaskDialog({ task }: { task: ClassTask }) {
     editUpdate
   );
   const [open, setOpen] = useState(true);
+  const [refusal, setRefusal] = useState<ToastCopy | null>(null);
   // The form holds only what the teacher changed, and shows the task as it stands until then.
   const [edited, setDraft] = useState<typeof TaskDraft.Type | null>(null);
   const timeZone = useClockZone();
@@ -58,13 +61,14 @@ export function EditTaskDialog({ task }: { task: ClassTask }) {
       return;
     }
     setOpen(false);
+    setRefusal(null);
     runForumCall(
       forumCall(() =>
         edit({ ...checked.value, classId, slug, task: task.slug })
       ),
-      () => {
+      (error) => {
+        setRefusal(classRefusalCopy(error));
         setOpen(true);
-        toastForumFailure();
       }
     );
   };
@@ -86,6 +90,7 @@ export function EditTaskDialog({ task }: { task: ClassTask }) {
       setOpen={setOpen}
       title={t("task-edit")}
     >
+      {refusal === null ? null : <DialogRefusal copy={refusal} />}
       <TaskFields
         draft={draft}
         onChange={setDraft}

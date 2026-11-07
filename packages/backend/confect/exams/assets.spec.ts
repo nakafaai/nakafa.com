@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { StorageFull } from "@repo/backend/confect/bucket/errors";
 import { ExamAccess } from "@repo/backend/confect/exams/access";
 import {
   AssetAddress,
@@ -32,10 +33,23 @@ import { Schema } from "effect";
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
-      name: "uploadUrl",
-      args: () => ({ examId: Id("exams"), slug: TenantSlug }),
-      returns: () => Schema.URLFromString,
-      error: () => AccessDenied,
+      name: "reserve",
+      args: () => ({
+        byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
+        contentType: Schema.String,
+        examId: Id("exams"),
+        kind: Schema.Literals(["image", "audio"]),
+        slug: TenantSlug,
+      }),
+      returns: () =>
+        Schema.Struct({ address: Schema.String, fileId: Id("bucketFiles") }),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          AssetSizeRefused,
+          AudioSizeRefused,
+          StorageFull,
+        ]),
     })
       .middleware(Session)
       .middleware(RequireMember)
@@ -58,8 +72,8 @@ export default GroupSpec.make()
       args: () => ({
         examId: Id("exams"),
         height: Schema.Int.check(Schema.isGreaterThan(0)),
+        fileId: Id("bucketFiles"),
         slug: TenantSlug,
-        storageId: Id("_storage"),
         width: Schema.Int.check(Schema.isGreaterThan(0)),
       }),
       returns: () => Schema.Struct({ id: Id("examAssets") }),
@@ -77,8 +91,8 @@ export default GroupSpec.make()
       name: "registerAudio",
       args: () => ({
         examId: Id("exams"),
+        fileId: Id("bucketFiles"),
         slug: TenantSlug,
-        storageId: Id("_storage"),
       }),
       returns: () => Schema.Struct({ id: Id("examAudio") }),
       error: () =>
@@ -130,7 +144,7 @@ export default GroupSpec.make()
         contentType: ImageType,
         examId: Id("exams"),
         height: Schema.Int.check(Schema.isGreaterThan(0)),
-        storageId: Id("_storage"),
+        fileId: Id("bucketFiles"),
         userId: Id("users"),
         width: Schema.Int.check(Schema.isGreaterThan(0)),
       }),
@@ -144,7 +158,7 @@ export default GroupSpec.make()
         byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
         contentType: AudioType,
         examId: Id("exams"),
-        storageId: Id("_storage"),
+        fileId: Id("bucketFiles"),
         userId: Id("users"),
       }),
       returns: () => Schema.Struct({ id: Id("examAudio") }),
@@ -152,22 +166,8 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.internalMutation({
-      name: "discard",
-      args: () => ({ storageId: Id("_storage") }),
-      returns: () => Schema.Struct({}),
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalMutation({
       name: "sweep",
       args: () => ({ examId: Id("exams") }),
       returns: () => Schema.Struct({ done: Schema.Boolean }),
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalQuery({
-      name: "stored",
-      args: () => ({ storageId: Id("_storage") }),
-      returns: () => Schema.Struct({ size: Schema.Int }),
     })
   );

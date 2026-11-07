@@ -3552,6 +3552,82 @@
     "library-storage-full": {
       "title": "File tidak ditambahkan.",
       "description": "Penyimpanan sekolah penuh. Hapus file selamanya agar ada ruang."
+    },
+    "classroom-refusal-task-closed": {
+      "title": "Tugas ini sudah ditutup.",
+      "description": "Tenggatnya lewat, jadi tidak ada jawaban baru."
+    },
+    "classroom-refusal-points-fixed": {
+      "title": "Poinnya sudah tetap.",
+      "description": "Sudah ada jawaban yang dikumpulkan."
+    },
+    "classroom-refusal-score-range": {
+      "title": "Poin ini di luar batas.",
+      "description": "Beri nilai dari nol sampai poin tugas."
+    },
+    "classroom-refusal-questions-unready": {
+      "title": "Soal ujian belum siap.",
+      "description": "Lengkapi soalnya di editor ujian dulu."
+    },
+    "classroom-refusal-pin-limit": {
+      "title": "Sematan sudah penuh.",
+      "description": "Lepas sematan salah satunya dulu."
+    },
+    "classroom-refusal-scheduled-limit": {
+      "title": "Antrean pengumuman penuh.",
+      "description": "Terbitkan atau hapus yang menunggu."
+    },
+    "classroom-refusal-scheduled-past": {
+      "title": "Waktu ini sudah lewat.",
+      "description": "Pilih waktu yang belum lewat."
+    },
+    "classroom-refusal-channel-limit": {
+      "title": "Saluran sudah penuh.",
+      "description": "Arsipkan salah satu saluran dulu."
+    },
+    "classroom-refusal-channel-archived": {
+      "title": "Saluran ini diarsipkan.",
+      "description": "Pulihkan dulu untuk menulis di sini."
+    },
+    "classroom-refusal-discussions-closed": {
+      "title": "Hanya guru yang membuka diskusi.",
+      "description": "Tulis di saluran saja."
+    },
+    "classroom-refusal-mention": {
+      "title": "Ada yang tidak bisa disebut.",
+      "description": "Sebut hanya orang di kelas ini."
+    },
+    "classroom-refusal-message-empty": {
+      "title": "Pesannya kosong.",
+      "description": "Tulis sesuatu, atau tambahkan berkas."
+    },
+    "classroom-refusal-message-hidden": {
+      "title": "Pesan ini disembunyikan.",
+      "description": "Pesan ini tidak bisa diubah lagi."
+    },
+    "classroom-refusal-attachment": {
+      "title": "Berkas tidak ditambahkan.",
+      "description": "Unggah lagi, lalu kirim."
+    },
+    "classroom-refusal-reaction-limit": {
+      "title": "Reaksi sudah penuh.",
+      "description": "Pakai reaksi yang sudah ada."
+    },
+    "classroom-refusal-vote": {
+      "title": "Suara ini tidak dihitung.",
+      "description": "Polling sudah ditutup, atau pilihan ini bukan opsinya."
+    },
+    "classroom-refusal-folder-limit": {
+      "title": "Folder sudah penuh.",
+      "description": "Hapus salah satu folder dulu."
+    },
+    "classroom-refusal-folder-cycle": {
+      "title": "Folder tak bisa berisi dirinya.",
+      "description": "Pilih folder lain."
+    },
+    "classroom-refusal-file-size": {
+      "title": "Berkasnya terlalu besar.",
+      "description": "Pilih berkas yang lebih kecil."
     }
   },
   "Ai": {

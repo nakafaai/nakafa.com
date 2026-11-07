@@ -1,6 +1,7 @@
 import { CronJob, CronJobs } from "@confect/server";
 import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
+import bucketInternal from "@repo/backend/confect/_generated/refs/bucket.server";
 import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
@@ -133,6 +134,14 @@ export default CronJobs.make()
       "delete unsent chat files",
       Duration.hours(24),
       classroomInternal.forum.files.sweep,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
+      "free file uploads that never arrived",
+      Duration.hours(24),
+      bucketInternal.sweep,
       {}
     )
   )
