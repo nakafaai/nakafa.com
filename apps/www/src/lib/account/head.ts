@@ -50,7 +50,7 @@ export function searchHead(seo: ScreenSeo, query: string) {
   return {
     links: head.links,
     meta: Arr.map(head.meta, (entry) =>
-      entry.name === "robots" || entry.name === "googlebot"
+      "name" in entry && (entry.name === "robots" || entry.name === "googlebot")
         ? { ...entry, content: QUERY_ROBOTS }
         : entry
     ),
