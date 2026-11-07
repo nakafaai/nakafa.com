@@ -160,8 +160,8 @@ export function AddToLibrary() {
           )
       ).pipe(
         Effect.catchTags({
-          FileSizeRefused: refuseLargeFile,
-          FileTypeRefused: refuseOtherFile,
+          FileSizeRefused: () => refuseLargeFile,
+          FileTypeRefused: () => refuseOtherFile,
         })
       ),
       toastForumFailure

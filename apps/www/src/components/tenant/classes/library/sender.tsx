@@ -18,31 +18,28 @@ import {
 import { useClassScope } from "@/components/tenant/classes/scope";
 
 /** Tells the teacher that a file larger than the library keeps was not added. */
-export const refuseLargeFile = () =>
-  Effect.sync(() =>
-    toast.error({
-      description: "library-file-size.description",
-      title: "library-file-size.title",
-    })
-  );
+export const refuseLargeFile = Effect.sync(() =>
+  toast.error({
+    description: "library-file-size.description",
+    title: "library-file-size.title",
+  })
+);
 
 /** Tells the teacher that a file whose bytes name no PDF or image was not added. */
-export const refuseOtherFile = () =>
-  Effect.sync(() =>
-    toast.error({
-      description: "library-file-type.description",
-      title: "library-file-type.title",
-    })
-  );
+export const refuseOtherFile = Effect.sync(() =>
+  toast.error({
+    description: "library-file-type.description",
+    title: "library-file-type.title",
+  })
+);
 
 /** Tells the teacher that the school's storage, or the day's free uploads, are used up. */
-const refuseFullStorage = () =>
-  Effect.sync(() =>
-    toast.error({
-      description: "library-storage-full.description",
-      title: "library-storage-full.title",
-    })
-  );
+const refuseFullStorage = Effect.sync(() =>
+  toast.error({
+    description: "library-storage-full.description",
+    title: "library-storage-full.title",
+  })
+);
 
 /**
  * Sends files of the device to the library at the page's folder: each one's row shows at once with its progress,
@@ -59,7 +56,7 @@ export function useFileSender() {
   return (author: string, file: File, title: string) => {
     const contentType = Schema.decodeUnknownOption(LibraryFileType)(file.type);
     if (Option.isNone(contentType)) {
-      Effect.runSync(refuseOtherFile());
+      Effect.runSync(refuseOtherFile);
       return;
     }
     const kind = contentType.value === "application/pdf" ? "pdf" : "image";
@@ -85,9 +82,9 @@ export function useFileSender() {
           )
       ).pipe(
         Effect.catchTags({
-          FileSizeRefused: refuseLargeFile,
-          FileTypeRefused: refuseOtherFile,
-          StorageFull: refuseFullStorage,
+          FileSizeRefused: () => refuseLargeFile,
+          FileTypeRefused: () => refuseOtherFile,
+          StorageFull: () => refuseFullStorage,
         })
       ),
       toastForumFailure

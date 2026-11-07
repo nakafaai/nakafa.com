@@ -74,7 +74,7 @@ describe("putLibraryFile", () => {
           })
         );
         request?.uploadListeners.progress?.(new ProgressEvent("progress"));
-        if (request !== undefined) {
+        if (request !== null) {
           request.status = 200;
           request.listeners.load?.();
         }
@@ -92,7 +92,7 @@ describe("putLibraryFile", () => {
         );
         yield* Effect.yieldNow;
         const second = MutableRef.get(latest);
-        if (second !== undefined) {
+        if (second !== null) {
           second.status = 403;
           second.listeners.load?.();
         }

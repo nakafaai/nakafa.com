@@ -3,7 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -50,17 +50,14 @@ export function MoveDialog({
       ) &&
       (moving === null || !isWithin(folders, folder.id, moving))
   );
-  const ordered = Arr.sort(shown, (left, right) =>
-    Arr.join(
-      Arr.map(folderPath(folders, left.id), (folder) => folder.name),
-      "/"
-    ) <
-    Arr.join(
-      Arr.map(folderPath(folders, right.id), (folder) => folder.name),
-      "/"
+  const ordered = Arr.sort(
+    shown,
+    Order.mapInput(Order.String, (folder: LibraryFolder) =>
+      Arr.join(
+        Arr.map(folderPath(folders, folder.id), (above) => above.name),
+        "/"
+      )
     )
-      ? -1
-      : 1
   );
 
   return (
