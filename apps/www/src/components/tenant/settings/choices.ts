@@ -28,19 +28,54 @@ import {
   UserSquareIcon,
   UserStar01Icon,
 } from "@hugeicons/core-free-icons";
+import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
 import {
   COHORT_GRADE_MAX,
   COHORT_GRADE_MIN,
   CohortGrade,
 } from "@repo/backend/confect/tenancy/cohort";
 import { languages } from "@repo/internationalization/data/lang";
-import { Array as Arr, Option, Schema } from "effect";
+import { countries } from "country-flag-icons";
+import {
+  Array as Arr,
+  Option,
+  Number as Ord,
+  Order,
+  Result,
+  Schema,
+} from "effect";
 
 /** Every IANA time zone that the platform knows, as the time zone choices of a unit. */
 export const timeZoneItems = Arr.map(
   Intl.supportedValuesOf("timeZone"),
   (zone) => ({ label: zone, value: zone })
 );
+
+/**
+ * Every country a school may name: each ISO 3166-1 code the flag package draws that
+ * the platform names, so every country in the world shows with its flag, sorted by
+ * its name in the viewer's language. The package also draws subdivisions such as
+ * GB-ENG and ES-CT, which no school can save and which `Intl.DisplayNames` refuses
+ * with a RangeError, so only country codes are named.
+ */
+export function countryChoices(locale: string) {
+  const names = new Intl.DisplayNames([locale], {
+    fallback: "none",
+    type: "region",
+  });
+  const collator = new Intl.Collator(locale);
+  return Arr.sort(
+    Arr.filterMap(Arr.filter(countries, Schema.is(CountryCodeSchema)), (code) =>
+      Option.match(Option.fromNullishOr(names.of(code)), {
+        onNone: () => Result.failVoid,
+        onSome: (label) => Result.succeed({ label, value: code }),
+      })
+    ),
+    Order.make((a: { readonly label: string }, b) =>
+      Ord.sign(collator.compare(a.label, b.label))
+    )
+  );
+}
 
 /** The page languages a unit may choose, from the platform's list of languages, each with its flag. */
 export const languageItems = Arr.map(languages, (language) => ({
