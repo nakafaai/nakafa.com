@@ -315,7 +315,7 @@ describe("searchScreenHandler", () => {
     const screen = await searchScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
       name: undefined,
-      seo: { canonicalPath: "/en/search", indexable: false },
+      seo: { canonicalPath: "/en/search", indexable: true },
     });
     expect(mocks.preloadConfectQuery).not.toHaveBeenCalled();
   });

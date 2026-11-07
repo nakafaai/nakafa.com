@@ -150,10 +150,12 @@ export const searchScreenHandler = accountHandler(
           : Option.fromNullishOr(
               yield* readOptional(auth.queries.getCurrentUser, {}, token)
             );
+      // The bare search page holds no learner's data, so it may be indexed; the route's
+      // head keeps every page with a query out of indexes (searchHead).
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}/search`,
         description: t("search-description"),
-        indexable: false,
+        indexable: true,
         locale,
         title: t("search-title"),
       };
