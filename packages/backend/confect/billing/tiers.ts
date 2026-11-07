@@ -28,7 +28,6 @@ const SchoolPrices = Schema.Struct({
   IDR: Schema.Int,
   USD: Schema.Int,
 });
-type SchoolPrices = typeof SchoolPrices.Type;
 
 /** What one plan holds and what it costs a month. Storage is in megabytes, 1 GB being 1,000 MB. */
 const SchoolTier = Schema.Struct({
@@ -76,6 +75,13 @@ export const schoolPeriodDiscounts = {
   12: 5,
 } as const satisfies Record<SchoolPeriod, number>;
 
+/** What one added account costs a month and brings. */
+const SchoolAccount = Schema.Struct({
+  credits: Schema.Int,
+  monthly: SchoolPrices,
+  storageMegabytes: Schema.Int,
+});
+
 /**
  * One account added to a paid plan, from one account up: its monthly price, and
  * the AI credits a month and Drive storage it brings. Its period discount follows
@@ -85,11 +91,7 @@ export const schoolAccount = {
   credits: 6,
   monthly: { EUR: 99, IDR: 15_900, USD: 99 },
   storageMegabytes: 200,
-} as const satisfies {
-  readonly credits: number;
-  readonly monthly: SchoolPrices;
-  readonly storageMegabytes: number;
-};
+} as const satisfies typeof SchoolAccount.Type;
 
 /** The add-ons a school buys beside its plan. */
 export const SchoolAddOnKey = Schema.Literals([
