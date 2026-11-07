@@ -1,5 +1,5 @@
 import { useLocale, useTranslations } from "use-intl";
-import { formatShortAge } from "@/components/user/age";
+import { formatAge } from "@/components/user/age";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryNow } from "@/components/user/settings/memory/provider";
 import { formatEnds } from "@/components/user/settings/memory/time";
@@ -21,7 +21,7 @@ export function MemoryOrigin({ memory }: { memory: Memory }) {
   const t = useTranslations("Memory");
   const locale = useLocale();
   const now = useMemoryNow();
-  const time = formatShortAge(memory.confirmedAt, now, locale);
+  const time = formatAge(memory.confirmedAt, now, locale);
 
   return memory.author === "learner"
     ? t("written-by-you", { time })

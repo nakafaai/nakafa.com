@@ -1,4 +1,5 @@
-import { Array as Arr, Option } from "effect";
+import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
+import { Array as Arr, Option, Record as Rec } from "effect";
 
 /**
  * How often a list reads the clock again, which is the smallest unit an age is
@@ -16,23 +17,38 @@ const AGE_UNITS: ReadonlyArray<readonly [Intl.RelativeTimeFormatUnit, number]> =
     ["minute", AGE_TICK_MILLISECONDS],
   ];
 
+/** The format of a locale's ages in full words: counted units, or the word for the present moment. */
+function relativeFormat(
+  locale: Locale,
+  numeric: Intl.RelativeTimeFormatNumeric
+) {
+  return new Intl.RelativeTimeFormat(locale, { numeric, style: "long" });
+}
+
+/** The two formats of every locale, built once. */
+const FORMATS = Rec.fromEntries(
+  Arr.map(LOCALES, (locale) => [
+    locale,
+    {
+      counted: relativeFormat(locale, "always"),
+      moment: relativeFormat(locale, "auto"),
+    },
+  ])
+);
+
 /**
- * Says how long ago a row was written, in the short words of the locale, such
- * as "2h ago", as every tab of the profile and the memory list show it, so a
- * phone's row never cuts it short. The largest unit that fits is used, and a row
- * less than a minute old says "now". A moment
- * in the future also says "now", because the clocks of two devices never agree
- * exactly.
+ * Says how long ago a row was written in the locale's full words, such as "6 days ago" or "6 hari yang lalu", as
+ * every tab of the profile, the comments, the notifications and the memory list show it. A narrow style writes a day
+ * as "6 h lalu" in Indonesian, which reads as hours, and "auto" writes "selumbari" and "last mo.", so every unit is
+ * spelled out and counted. The largest unit that fits is used, and a row less than a minute old says "now". A moment
+ * in the future also says "now", because the clocks of two devices never agree exactly.
  */
-export function formatShortAge(createdAt: number, now: number, locale: string) {
-  const format = new Intl.RelativeTimeFormat(locale, {
-    numeric: "auto",
-    style: "narrow",
-  });
+export function formatAge(createdAt: number, now: number, locale: Locale) {
   const elapsed = now - createdAt;
   const unit = Arr.findFirst(AGE_UNITS, ([, size]) => elapsed >= size);
+  const { counted, moment } = FORMATS[locale];
   return Option.match(unit, {
-    onNone: () => format.format(0, "second"),
-    onSome: ([name, size]) => format.format(-Math.floor(elapsed / size), name),
+    onNone: () => moment.format(0, "second"),
+    onSome: ([name, size]) => counted.format(-Math.floor(elapsed / size), name),
   });
 }
