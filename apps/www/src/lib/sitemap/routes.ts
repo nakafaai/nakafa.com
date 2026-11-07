@@ -32,6 +32,8 @@ export const baseRoutes: readonly string[] = [
   curriculaRoute,
   "/pricing",
   quranRootRoute,
+  "/school",
+  "/school/pricing",
   "/search",
   tryoutRootRoute,
 ];

@@ -23,7 +23,7 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
   },
   info: {
     contact: {
-      email: "nakafaai@gmail.com",
+      email: "info@nakafa.com",
       name: "Nakafa Support",
       url: `${SITE_ORIGIN}/contact`,
     },

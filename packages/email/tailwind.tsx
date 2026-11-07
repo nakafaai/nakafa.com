@@ -1,23 +1,29 @@
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
+import { EMAIL_COLORS, EMAIL_FONTS } from "@repo/email/brand";
 import type { ReactNode } from "react";
 import type { TailwindConfig } from "react-email";
 import { pixelBasedPreset, Tailwind as ReactEmailTailwind } from "react-email";
 
-const emailThemeColors = THEME_COMPATIBILITY_COLORS.light;
+const { dark, light } = EMAIL_COLORS;
 
+/** One design-system color in both themes: `bg-primary` for light, `dark:bg-primary-dark` for dark. */
 const tailwindConfig = {
   presets: [pixelBasedPreset],
   theme: {
     extend: {
       colors: {
-        background: emailThemeColors.background,
-        foreground: emailThemeColors.foreground,
+        background: { DEFAULT: light.background, dark: dark.background },
+        foreground: { DEFAULT: light.foreground, dark: dark.foreground },
         primary: {
-          DEFAULT: emailThemeColors.primary,
-          foreground: emailThemeColors["primary-foreground"],
+          DEFAULT: light.primary,
+          dark: dark.primary,
+          foreground: light["primary-foreground"],
+          "foreground-dark": dark["primary-foreground"],
         },
-        "muted-foreground": emailThemeColors["muted-foreground"],
-        border: emailThemeColors.border,
+        "muted-foreground": {
+          DEFAULT: light["muted-foreground"],
+          dark: dark["muted-foreground"],
+        },
+        border: { DEFAULT: light.border, dark: dark.border },
       },
       borderRadius: {
         md: "6px",
@@ -28,21 +34,13 @@ const tailwindConfig = {
         base: "16px",
       },
       fontFamily: {
-        sans: [
-          "-apple-system",
-          "BlinkMacSystemFont",
-          '"Segoe UI"',
-          "Roboto",
-          '"Helvetica Neue"',
-          "Ubuntu",
-          "sans-serif",
-        ],
+        sans: EMAIL_FONTS,
       },
     },
   },
 } satisfies TailwindConfig;
 
-/** Applies Nakafa's shared React Email Tailwind theme. */
+/** Applies Nakafa's shared React Email Tailwind theme, light and dark. */
 export function Tailwind({ children }: { children: ReactNode }) {
   return (
     <ReactEmailTailwind config={tailwindConfig}>{children}</ReactEmailTailwind>

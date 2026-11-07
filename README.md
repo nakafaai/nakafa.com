@@ -244,4 +244,4 @@ Reference material:
 - [GitHub licensing documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
 - [PolyForm licenses](https://polyformproject.org/licenses)
 
-For commercial licensing inquiries: <nakafaai@gmail.com>
+For commercial licensing inquiries: <info@nakafa.com>

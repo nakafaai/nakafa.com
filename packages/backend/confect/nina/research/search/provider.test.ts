@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { CapabilityDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import { searchFirecrawl } from "@repo/backend/confect/nina/research/search/provider";
+import { searchCost } from "@repo/backend/confect/spend/rates";
 import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import {
   inBackground,
@@ -9,6 +10,7 @@ import {
   searchAnswer,
   sentBodies,
 } from "@repo/backend/test/nina/provider";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Duration, Effect, Fiber, Ref } from "effect";
 import { TestClock } from "effect/testing";
@@ -37,6 +39,37 @@ beforeEach(() => {
 });
 
 describe("searchFirecrawl", () => {
+  it.effect(
+    "holds each ask a search may bill, settles an answered one to one ask, and asks nothing past the budget",
+    () =>
+      Effect.gen(function* () {
+        const meter = recordingMeter();
+        fetcher.mockImplementation(nothing);
+        yield* searchFirecrawl("kurikulum").pipe(
+          Effect.provide(meter.layer),
+          overFetch
+        );
+        // Five results from each of two sources are one unit of ten, and a
+        // bad gateway may ask twice more.
+        expect(meter.calls()).toEqual([
+          `hold search ${searchCost(10) * 3}`,
+          `settle ${searchCost(10)}`,
+        ]);
+        fetcher.mockClear();
+        const refused = yield* Effect.flip(
+          searchFirecrawl("kurikulum").pipe(
+            Effect.provide(recordingMeter(true).layer),
+            overFetch
+          )
+        );
+        expect(refused).toMatchObject({
+          _tag: "ResearchSearchError",
+          message: "This month's AI budget is spent.",
+        });
+        expect(fetcher).not.toHaveBeenCalled();
+      })
+  );
+
   it.effect(
     "keeps the provider's status and never its message, which may repeat the query",
     () =>

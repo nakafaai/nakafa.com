@@ -13,7 +13,7 @@ Please ensure you are using the most up-to-date version before reporting an issu
 
 The Nakafa team takes security vulnerabilities seriously. We appreciate your efforts to responsibly disclose your findings.
 
-To report a security vulnerability, please **do not** create a public GitHub issue. Instead, email the details of your findings directly to <nakafaai@gmail.com>.
+To report a security vulnerability, please **do not** create a public GitHub issue. Instead, email the details of your findings directly to <info@nakafa.com>.
 
 Please include the following information in your report:
 

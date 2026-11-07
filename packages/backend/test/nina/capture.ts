@@ -6,7 +6,7 @@ import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
 import type { NinaMemoryClaim } from "@repo/backend/confect/nina/memory.spec";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
-import { decides, GatewayTest, provider } from "@repo/backend/test/gateway";
+import { decides, GatewayIsolated, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, type EarlierTurn } from "@repo/backend/test/nina";
 import { memoryTools } from "@repo/backend/test/nina/memory";
 import { providerStep } from "@repo/backend/test/nina/specialist";
@@ -147,7 +147,7 @@ export async function createCapturingTest(
           );
         }).pipe(
           Effect.provide([
-            GatewayTest,
+            GatewayIsolated,
             RegisteredFunction.actionLayer(schema, ctx),
             Logger.layer([
               Logger.formatStructured.pipe(
