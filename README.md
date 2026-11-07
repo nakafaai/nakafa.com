@@ -74,8 +74,7 @@ instead of the shared one. Google's client configuration must include the
 web origin under authorized JavaScript origins and
 `<web-origin>/api/auth/callback/google` under authorized
 redirect URIs. A worktree needs its exact callback registered separately;
-Google does not accept wildcard callbacks. See the
-[Portless OAuth guidance](https://github.com/vercel-labs/portless/blob/main/skills/oauth/SKILL.md).
+Google does not accept wildcard callbacks.
 Acceptance databases use inert authentication credentials. Real sign-in requires
 a development backend configured with the Google client credentials.
 

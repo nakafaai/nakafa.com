@@ -1,5 +1,5 @@
 # ADR 0021: Which Check Owns A Rule, And Which Compiler Rules Stay Off
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Next.js examples of this record describe the retired build, and the Start stack on Cloudflare owns the framework rules now.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the framework examples of this record describe the retired build, and the Start stack on Cloudflare owns the framework rules now.
 
 ## Decision
 
@@ -267,7 +267,7 @@ fixtures become Effects, the construction goes away.
 ### Promise syntax
 
 `async` and `await` are a rule only in the domain folders. Most of that code
-sits where a framework owns the Promise: Next.js pages and routes, React
+sits where a framework owns the Promise: route loaders and server functions, React
 transitions, Playwright tests, `convex-test` callbacks, and Vitest mocks.
 
 A Confect workflow handler keeps its native promise syntax, because the workflow
@@ -311,7 +311,7 @@ The fix has an order. First remove an annotation that only restates what the
 value already says (`as const` keeps a literal type). Then derive from the
 owner that exists: a Schema's `.Type`, `Parameters` or `ReturnType` of the
 function that consumes or produces the value, `FunctionArgs` of a Convex
-reference, a type that Next.js generates. A new Schema is for a real contract:
+reference, a type that the router generates. A new Schema is for a real contract:
 an exported shape, a shape that two places use, or the row type of an authored
 table. A browser module never gains a run-time import only to name a type.
 
@@ -546,6 +546,6 @@ package name in that class's key, so no two repositories can share its text.
 
 Biome excludes `packages/backend/convex/**` because Convex generates its entry
 files there, as `packages/backend/AGENTS.md` states. No use-client closure check
-exists: Next.js fails the build when a Client Component reaches a `server-only`
-module, `readEnvironment` rejects a non-public key in the browser, and the
+exists: the `.server` suffix fails the build when a Client Component reaches a
+server-only module, `readEnvironment` rejects a non-public key in the browser, and the
 JavaScript budget test measures each route's weight.
