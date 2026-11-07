@@ -11,6 +11,12 @@ test.use({ timezoneId: "Asia/Jakarta" });
 /** The name of the twelve-month period in Indonesian, which starts with its length. */
 const TWELVE_MONTHS = /^12 bulan/u;
 
+/** The structured data nodes and the Indonesian alternate that a School page's head carries. */
+const BREADCRUMB_NODE = /"@type":\s*"BreadcrumbList"/u;
+const FAQ_NODE = /"@type":\s*"FAQPage"/u;
+const PRODUCT_NODE = /"@type":\s*"Product"/u;
+const INDONESIAN_ALTERNATE = /hreflang="id"/iu;
+
 /** A rupiah price as the page writes it, with the no-break space after the symbol. */
 const rupiah = (digits: string) => `Rp ${digits}`;
 
@@ -117,8 +123,8 @@ test("the School pages stand in the first HTML with their structured data", asyn
     Arr.map(responses, (response) => response.text())
   );
 
-  expect(landing).toContain('"@type":"BreadcrumbList"');
-  expect(landing).toContain('"@type":"FAQPage"');
-  expect(pricing).toContain('"@type":"Product"');
-  expect(pricing).toContain('hreflang="id"');
+  expect(landing).toMatch(BREADCRUMB_NODE);
+  expect(landing).toMatch(FAQ_NODE);
+  expect(pricing).toMatch(PRODUCT_NODE);
+  expect(pricing).toMatch(INDONESIAN_ALTERNATE);
 });
