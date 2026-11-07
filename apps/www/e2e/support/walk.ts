@@ -64,6 +64,20 @@ function recordMoves({ key, watched }: { key: string; watched: string }) {
   const moves: string[] = [];
   Reflect.set(window, key, moves);
   const places = new WeakMap<Element, { x: number; y: number }>();
+  // A table that scrolls moves its cells, which a press on a far column does and no reader calls a shift.
+  // A cell sticky to a side holds its place through that scroll, so the scroller's distance is not part of its place.
+  const scrolledOf = (item: Element) => {
+    let scrolled = 0;
+    let pinned = false;
+    for (let node: Element | null = item; node; node = node.parentElement) {
+      scrolled += pinned || node === item ? 0 : node.scrollLeft;
+      const style = getComputedStyle(node);
+      pinned ||=
+        style.position === "sticky" &&
+        (style.left !== "auto" || style.right !== "auto");
+    }
+    return scrolled;
+  };
   const follow = () => {
     const still = document.getAnimations().length === 0;
     for (const item of document.querySelectorAll(watched)) {
@@ -79,18 +93,7 @@ function recordMoves({ key, watched }: { key: string; watched: string }) {
       ) {
         continue;
       }
-      // A table that scrolls moves its cells, which a press on a far column does and no reader calls a shift.
-      // A cell sticky to a side holds its place through that scroll, so the scroller's distance is not part of its place.
-      let scrolled = 0;
-      let pinned = false;
-      for (let node: Element | null = item; node; node = node.parentElement) {
-        scrolled += pinned || node === item ? 0 : node.scrollLeft;
-        const style = getComputedStyle(node);
-        pinned ||=
-          style.position === "sticky" &&
-          (style.left !== "auto" || style.right !== "auto");
-      }
-      const x = box.x + scrolled;
+      const x = box.x + scrolledOf(item);
       const before = places.get(item);
       places.set(item, { x, y: box.y });
       const across = Math.abs((before?.x ?? x) - x);
@@ -196,22 +199,42 @@ function readFacts() {
         crumb.clientWidth < 48
     )
     .map((crumb) => `the path cuts "${crumb.textContent}"`);
-  // A row of a data table stands on one line at every width: 48 px, the height of its menu's button with the cell's
-  // padding. A taller row is a cell whose words or badges wrapped, which a table never does.
+  // A row of a table stands on one line at every width: no cell's words wrap, and no cell stacks one line of words
+  // over another. The tops of the visible words of a cell lie within a few pixels of each other, a badge's beside a
+  // name's included; a second line sits a whole line lower. Text hidden for screen readers takes no line.
   const tall = Array.from(
-    document.querySelectorAll<HTMLTableRowElement>(
-      '[data-slot="table-body"] > tr'
+    document.querySelectorAll<HTMLTableCellElement>(
+      '[data-slot="table-body"] > tr > td'
     )
   )
-    .filter(
-      (row) =>
-        shown(row) &&
-        row.cells.length > 1 &&
-        row.getBoundingClientRect().height > 49
-    )
+    .filter((cell) => {
+      if (!shown(cell)) {
+        return false;
+      }
+      const tops: number[] = [];
+      const words = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+      for (let node = words.nextNode(); node; node = words.nextNode()) {
+        const holder = node.parentElement;
+        if (
+          node.textContent?.trim() === "" ||
+          holder === null ||
+          holder.getBoundingClientRect().width <= 1
+        ) {
+          continue;
+        }
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const line of Array.from(range.getClientRects())) {
+          if (line.width > 0) {
+            tops.push(line.top);
+          }
+        }
+      }
+      return tops.length > 1 && Math.max(...tops) - Math.min(...tops) > 10;
+    })
     .map(
-      (row) =>
-        `the row "${row.cells[0]?.textContent?.trim().slice(0, 24)}" stands on more than one line`
+      (cell) =>
+        `the row of "${cell.parentElement?.querySelector("td")?.textContent?.trim().slice(0, 24)}" stands on more than one line`
     );
   return {
     links: Array.from(
