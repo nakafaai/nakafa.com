@@ -25,13 +25,15 @@ export const gradeKind = Kind.make("grade", "classGrades", {
     },
     "grade.release": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["subjectTeacher"],
+      roles: [],
     },
     "grade.view": {
       access: "read",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["classMember", "subjectTeacher"],
+      roles: [],
     },
   },
   changes: [
@@ -62,8 +64,9 @@ const classGrades = Kind.extend(classKind, {
   actions: {
     "grade.enter": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["subjectTeacher"],
+      roles: [],
     },
     "grade.import": {
       access: "write",
@@ -73,8 +76,9 @@ const classGrades = Kind.extend(classKind, {
     },
     "grade.list": {
       access: "read",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["subjectTeacher"],
+      roles: [],
     },
   },
   changes: [],
@@ -134,8 +138,9 @@ export const reportKind = Kind.make("report", "reportCards", {
     },
     "report.complete": {
       access: "transition",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["homeroom"],
+      roles: [],
     },
     "report.view": {
       access: "read",
@@ -169,8 +174,9 @@ const cohortReports = Kind.extend(cohort, {
     },
     "report.write": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["homeroom"],
+      roles: [],
     },
   },
   changes: [],

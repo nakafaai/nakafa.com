@@ -131,6 +131,7 @@ const publishedTask = Effect.fn("test.notifications.mail.task")(function* (
   const term = yield* period(fixture, fixture.units.smp);
   const forum = yield* forumClass(fixture, term.id, "X-1");
   const task = yield* fixture.as("teacher").mutation(tasks.publish, {
+    examId: null,
     category: null,
     classId: forum.classId,
     clientKey: "mail-task",

@@ -1239,7 +1239,7 @@
     "logins-empty": "No login card issued yet.",
     "logins-search": "Find a student",
     "members-empty": "No one has joined the school yet.",
-    "members-empty-description": "Invite a teacher or an admin. Students join through Student accounts.",
+    "members-empty-description": "Invite a teacher or an admin, and students join through Student accounts.",
     "members-search": "Find a name",
     "member-name": "Name",
     "member-status": "Status",
@@ -1704,6 +1704,12 @@
     "library-folder-rename-description": "The class sees the new name at once.",
     "library-folder-empty-description": "This folder's files and links show here, the newest first.",
     "library-kind-folder": "Folder",
+    "task-detail": "Task",
+    "task-submissions": "Handed in",
+    "task-read": "Read work",
+    "task-remove": "Delete task",
+    "task-remove-title": "Delete this task",
+    "task-remove-description": "Its work handed in goes with it, and this cannot be undone.",
     "library-download": "Download",
     "library-move": "Move",
     "library-move-title": "Move to",
@@ -1723,7 +1729,13 @@
     "library-purge-title": "Delete this forever",
     "library-purge-description": "It frees the school storage and cannot come back.",
     "library-restore": "Restore",
-    "library-path": "Folder path"
+    "library-path": "Folder path",
+    "task-exam": "Questions",
+    "task-exam-none": "A written answer",
+    "task-exam-description": "Choose an exam built in the exam editor, and the class does it in the exam player.",
+    "task-start": "Start",
+    "task-questions": "Questions",
+    "task-results": "Results"
   },
   "SchoolGrades": {
     "email": "Email",
@@ -3226,7 +3238,7 @@
       "description": "Move its students out first, or archive the cohort."
     },
     "school-refusal-cohort-in-use-homeroom": {
-      "title": "This cohort still has a homeroom teacher.",
+      "title": "This cohort has a homeroom teacher.",
       "description": "Remove the teacher first, or archive the cohort."
     },
     "school-refusal-cohort-in-use-classes": {

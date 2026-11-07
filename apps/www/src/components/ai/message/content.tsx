@@ -1,4 +1,5 @@
 import { Array as Arr } from "effect";
+import { useState } from "react";
 import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";
 import { groupMessageParts } from "@/components/ai/message/group";
@@ -56,10 +57,14 @@ export function AiChatMessageSuggestions() {
       : undefined
   );
 
+  // Follow-ups that were not there when the answer mounted arrive while the
+  // reader watches, so they write out; a chat opened later shows its own at once.
+  const [live] = useState(() => suggestions === undefined);
+
   if (!(owner && suggestions)) {
     return null;
   }
 
-  return <SuggestionsPart suggestions={suggestions} />;
+  return <SuggestionsPart live={live} suggestions={suggestions} />;
 }
 AiChatMessageSuggestions.displayName = "AiChatMessageSuggestions";

@@ -41,6 +41,7 @@ describe("classroom/tasks edit", () => {
         const teacher = fixture.as("teacher");
         const classArgs = { classId: forum.classId, slug: nf };
         const published = yield* teacher.mutation(tasks.publish, {
+          examId: null,
           targets: null,
           ...classArgs,
           ...DRAFT,

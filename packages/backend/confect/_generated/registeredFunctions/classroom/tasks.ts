@@ -11,6 +11,7 @@ export default {
 ["get"]: RegisteredConvexFunction.register({ ...definitions["get"], handler: forward(definitions["get"].handler) }),
 ["publish"]: RegisteredConvexFunction.register({ ...definitions["publish"], handler: forward(definitions["publish"].handler) }),
 ["edit"]: RegisteredConvexFunction.register({ ...definitions["edit"], handler: forward(definitions["edit"].handler) }),
+["remove"]: RegisteredConvexFunction.register({ ...definitions["remove"], handler: forward(definitions["remove"].handler) }),
 ["submit"]: RegisteredConvexFunction.register({ ...definitions["submit"], handler: forward(definitions["submit"].handler) }),
 ["submissions"]: RegisteredConvexFunction.register({ ...definitions["submissions"], handler: forward(definitions["submissions"].handler) }),
 ["missing"]: RegisteredConvexFunction.register({ ...definitions["missing"], handler: forward(definitions["missing"].handler) }),

@@ -21,6 +21,10 @@ import {
   TaskTitle,
   TaskView,
 } from "@repo/backend/confect/classroom/tasks/task";
+import {
+  QuestionsUnready,
+  ScheduleInvalid,
+} from "@repo/backend/confect/exams/sittings/errors";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
@@ -67,6 +71,7 @@ export default GroupSpec.make()
         category: Schema.NullOr(TaskCategory),
         clientKey: ClientKey,
         deadline: Schema.Finite,
+        examId: Schema.NullOr(Id("exams")),
         latePolicy: LatePolicy,
         points: TaskPoints,
         targets: Schema.NullOr(TaskTargets),
@@ -74,7 +79,8 @@ export default GroupSpec.make()
         title: TaskTitle,
       }),
       returns: () => TaskView,
-      error: () => AccessDenied,
+      error: () =>
+        Schema.Union([AccessDenied, QuestionsUnready, ScheduleInvalid]),
     }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
   )
   .addFunction(
@@ -93,6 +99,14 @@ export default GroupSpec.make()
       }),
       returns: () => TaskView,
       error: () => Schema.Union([AccessDenied, TaskPointsFixed]),
+    }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "remove",
+      args: () => ({ ...classArgs, task: TaskAddress }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
   )
   .addFunction(

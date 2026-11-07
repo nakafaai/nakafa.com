@@ -1239,7 +1239,7 @@
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
     "logins-search": "Schüler suchen",
     "members-empty": "Noch niemand ist der Schule beigetreten.",
-    "members-empty-description": "Lade Lehrkräfte oder Administratoren ein. Schüler kommen über Schülerkonten dazu.",
+    "members-empty-description": "Lade Lehrkräfte oder Administratoren ein, Schüler kommen über Schülerkonten dazu.",
     "members-search": "Name suchen",
     "member-name": "Name",
     "member-status": "Status",
@@ -1704,6 +1704,12 @@
     "library-folder-rename-description": "Die Klasse sieht den neuen Namen sofort.",
     "library-folder-empty-description": "Die Dateien und Links dieses Ordners erscheinen hier, die neuesten zuerst.",
     "library-kind-folder": "Ordner",
+    "task-detail": "Aufgabe",
+    "task-submissions": "Abgegeben",
+    "task-read": "Arbeit lesen",
+    "task-remove": "Aufgabe löschen",
+    "task-remove-title": "Diese Aufgabe löschen",
+    "task-remove-description": "Die abgegebenen Arbeiten werden mit gelöscht, und das lässt sich nicht rückgängig machen.",
     "library-download": "Herunterladen",
     "library-move": "Verschieben",
     "library-move-title": "Verschieben nach",
@@ -1723,7 +1729,13 @@
     "library-purge-title": "Endgültig löschen",
     "library-purge-description": "Das gibt Speicher der Schule frei und lässt sich nicht rückgängig machen.",
     "library-restore": "Wiederherstellen",
-    "library-path": "Ordnerpfad"
+    "library-path": "Ordnerpfad",
+    "task-exam": "Fragen",
+    "task-exam-none": "Eine schriftliche Antwort",
+    "task-exam-description": "Wähle eine Prüfung aus dem Prüfungseditor, und die Klasse bearbeitet sie im Prüfungsplayer.",
+    "task-start": "Starten",
+    "task-questions": "Fragen",
+    "task-results": "Ergebnisse"
   },
   "SchoolGrades": {
     "email": "E-Mail",
@@ -3226,7 +3238,7 @@
       "description": "Verschiebe zuerst die Lernenden, oder archiviere die Klasse."
     },
     "school-refusal-cohort-in-use-homeroom": {
-      "title": "Diese Klasse hat noch eine Klassenleitung.",
+      "title": "Die Klasse hat noch eine Leitung.",
       "description": "Entferne zuerst die Lehrkraft, oder archiviere die Klasse."
     },
     "school-refusal-cohort-in-use-classes": {
