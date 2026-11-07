@@ -6,6 +6,8 @@ import {
   checkedDraft,
   draftOf,
   EMPTY_DRAFT,
+  examOf,
+  WRITTEN_ANSWER,
 } from "@/components/tenant/classes/tasks/draft";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 
@@ -90,5 +92,13 @@ describe("task drafts", () => {
     expect(
       checkedDraft({ ...draftOf(task, ZONE), title: "   " }, ZONE)
     ).toEqual(Option.none());
+  });
+
+  it("publishes a written task with no exam, and an exam task with its exam", () => {
+    // An exam id is only a branded string, so the written choice used to reach the server as an exam id and every
+    // written task was refused there.
+    const examId = Schema.decodeUnknownSync(Id("exams"))("kd7exam");
+    expect(examOf(WRITTEN_ANSWER)).toBeNull();
+    expect(examOf(examId)).toBe(examId);
   });
 });

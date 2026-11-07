@@ -53,6 +53,18 @@ export const draftOf = (
   title: task.title,
 });
 
+/** The question choice of a task's form that asks for a written answer instead of an exam. */
+export const WRITTEN_ANSWER = "written";
+
+/**
+ * The exam a form's question choice names, or none for a written answer. An exam id is only a branded string, so
+ * the written choice would decode as one too; it is told apart by its value first.
+ */
+export const examOf = (choice: string) =>
+  choice === WRITTEN_ANSWER
+    ? null
+    : Option.getOrNull(Schema.decodeUnknownOption(Id("exams"))(choice));
+
 /** The category a field holds once trimmed: none for an empty field, and a value the server accepts. */
 const categoryOf = (category: string) => {
   const trimmed = Str.trim(category);
