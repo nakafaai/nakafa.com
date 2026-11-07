@@ -11,14 +11,17 @@ import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { SchoolAddOns } from "@/components/marketing/school/addons";
 import { SchoolCalculator } from "@/components/marketing/school/calculator";
-import { SchoolCompare } from "@/components/marketing/school/compare";
-import { SchoolFaq } from "@/components/marketing/school/faq";
+import {
+  openSchoolPricing,
+  schoolSections,
+} from "@/components/marketing/school/later";
 import { SchoolPlans } from "@/components/marketing/school/plans";
 import {
   SchoolPeriodProvider,
   SchoolPeriodSwitch,
 } from "@/components/marketing/school/switch";
 import { PageField } from "@/components/marketing/shared/field";
+import { LaterSection } from "@/components/marketing/shared/later";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 import {
@@ -38,10 +41,13 @@ import { readStaticData } from "@/lib/static/data";
  */
 export const Route = createFileRoute("/$locale/_marketing/school/pricing")({
   loader: async ({ params }) => {
-    const messages = await readStaticData(readRouteMessages, {
-      locale: params.locale,
-      namespaces: ["Common", "SchoolSite"],
-    });
+    const [, messages] = await Promise.all([
+      openSchoolPricing(),
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: ["Common", "SchoolSite"],
+      }),
+    ]);
     const t = createTranslator({
       locale: params.locale,
       messages,
@@ -187,10 +193,16 @@ function SchoolPricing() {
         <div className="relative grid grid-cols-1">
           <SchoolPricingPlans />
           <SchoolPricingExtras />
-          <SchoolCompare />
-          <SchoolFaq>
-            <FaqAccordion faqs={faqs} openFirst />
-          </SchoolFaq>
+          <LaterSection code={schoolSections.compare}>
+            {(SchoolCompare) => <SchoolCompare />}
+          </LaterSection>
+          <LaterSection code={schoolSections.faq}>
+            {(SchoolFaq) => (
+              <SchoolFaq>
+                <FaqAccordion faqs={faqs} openFirst />
+              </SchoolFaq>
+            )}
+          </LaterSection>
         </div>
       </SchoolPeriodProvider>
     </>
