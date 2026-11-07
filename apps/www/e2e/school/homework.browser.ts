@@ -153,7 +153,7 @@ test("a teacher publishes a task from an exam, a student does it in the exam pla
   });
   await tasks.screenshot({ path: info.outputPath("homework-results.png") });
 
-  // Archive takes the task off the class's list, Archived shows it, Restore brings it back, and Delete ends it.
+  // Archive takes the task off the class's list, the Archived view shows it, Restore brings it back, and Delete ends it.
   await tasks.goto(address("/classes/fisika-x-1/tasks"));
   await expect(
     tasks.getByRole("button", { name: "Ulangan Harian" })
@@ -162,10 +162,9 @@ test("a teacher publishes a task from an exam, a student does it in the exam pla
   await expect(tasks.getByText("No task yet")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await tasks
-    .locator("header")
-    .getByRole("button", { name: "Archived" })
-    .click();
+  // The list's views stand in the body above its card, never in the header.
+  const views = tasks.getByRole("group", { name: "Show tasks" });
+  await views.getByRole("button", { name: "Archived" }).click();
   await expect(
     tasks.getByRole("button", { name: "Ulangan Harian" })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
@@ -173,10 +172,7 @@ test("a teacher publishes a task from an exam, a student does it in the exam pla
   await expect(tasks.getByText("No archived task")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await tasks
-    .locator("header")
-    .getByRole("button", { name: "Archived" })
-    .click();
+  await views.getByRole("button", { name: "Active" }).click();
   await rowAction(tasks, "Delete task");
   await tasks
     .getByRole("dialog", { name: "Delete this task" })
