@@ -2,16 +2,14 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { StorageFull } from "@repo/backend/confect/bucket/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import { FileSizeRefused } from "@repo/backend/confect/classroom/errors";
 import {
   AttachmentKind,
   AttachmentName,
 } from "@repo/backend/confect/classroom/forum/attachment";
-import {
-  AttachmentRefused,
-  FileQuotaReached,
-} from "@repo/backend/confect/classroom/forum/errors";
+import { AttachmentRefused } from "@repo/backend/confect/classroom/forum/errors";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -34,19 +32,25 @@ const UploadView = Schema.Struct({
 
 /**
  * The files of a class's chats (ADR 0025, ADR 0028). Whoever writes in the class
- * uploads a file to the address, then registers it: the server reads its size and
- * leading bytes, keeps a photo, a PDF or an office document within the school's
- * bytes, and deletes any other file. A registered file waits for the message that
- * sends it, and a daily sweep deletes one that stays unsent. `commit` and `sweep`
- * are internal.
+ * reserves each file, which charges the school's bytes before any byte moves,
+ * uploads it straight to R2 at the address the reservation answers, then registers
+ * it: the server reads its size and leading bytes from R2, keeps a photo, a PDF or
+ * an office document, and deletes any other file. A registered file waits for the
+ * message that sends it, and a daily sweep deletes one that stays unsent. `commit`
+ * and `sweep` are internal.
  */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
-      name: "uploadUrl",
-      args: () => classArgs,
-      returns: () => Schema.URLFromString,
-      error: () => AccessDenied,
+      name: "reserve",
+      args: () => ({
+        ...classArgs,
+        byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
+        contentType: Schema.String,
+      }),
+      returns: () =>
+        Schema.Struct({ address: Schema.String, fileId: Id("bucketFiles") }),
+      error: () => Schema.Union([AccessDenied, FileSizeRefused, StorageFull]),
     })
       .middleware(Session)
       .middleware(RequireMember)
@@ -69,9 +73,9 @@ export default GroupSpec.make()
       args: () => ({
         ...classArgs,
         height: Schema.NullOr(Pixels),
+        fileId: Id("bucketFiles"),
         name: AttachmentName,
-        storageId: Id("_storage"),
-        thumbnailId: Schema.NullOr(Id("_storage")),
+        thumbnailId: Schema.NullOr(Id("bucketFiles")),
         width: Schema.NullOr(Pixels),
       }),
       returns: () => UploadView,
@@ -80,7 +84,6 @@ export default GroupSpec.make()
           AuthFailure,
           AccessDenied,
           AttachmentRefused,
-          FileQuotaReached,
           FileSizeRefused,
         ]),
     }).middleware(Session)
@@ -106,12 +109,12 @@ export default GroupSpec.make()
         contentType: Schema.String,
         height: Schema.NullOr(Pixels),
         kind: AttachmentKind,
+        fileId: Id("bucketFiles"),
         name: AttachmentName,
-        storageId: Id("_storage"),
-        thumbnailId: Schema.NullOr(Id("_storage")),
+        thumbnailId: Schema.NullOr(Id("bucketFiles")),
         width: Schema.NullOr(Pixels),
       }),
-      returns: () => Schema.NullOr(UploadView),
+      returns: () => UploadView,
     })
   )
   .addFunction(

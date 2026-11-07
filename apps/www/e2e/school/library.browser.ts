@@ -197,7 +197,7 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
 
   // The Move dialog sends the file to the top of the library.
   await openMenu(page, "Modul GLB");
-  await page.getByRole("menuitem", { name: "Move" }).click();
+  await page.getByRole("menuitem", { exact: true, name: "Move" }).click();
   await dialog.getByRole("button", { name: "Library" }).click();
   await dialog.getByRole("button", { name: "Move", exact: true }).click();
   await expect(page.getByRole("button", { name: "Modul GLB" })).toBeHidden();
@@ -211,7 +211,7 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
   await page.getByRole("link", { exact: true, name: "Bab 1" }).click();
   await page.waitForURL(FOLDER_ADDRESS);
   await openMenu(page, "Gerak lurus");
-  await page.getByRole("menuitem", { name: "Move" }).click();
+  await page.getByRole("menuitem", { exact: true, name: "Move" }).click();
   await dialog.getByRole("button", { name: "Library" }).click();
   await dialog.getByRole("button", { name: "Move", exact: true }).click();
   await expect(

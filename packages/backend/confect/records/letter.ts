@@ -39,7 +39,7 @@ const LetterState = Schema.Literals(["issued", "locked"]);
  * One student's SKL (surat keterangan lulus) from one class group's graduation. It keeps
  * the transcript taken at issue and its number, `{decision}/{001}`, so the PDF and its hash
  * never move when report cards or the roster change later. `hash` is the SHA-256 of the
- * letter's content, which its PDF and the PDF's QR code carry, and `storageId` holds the PDF.
+ * letter's content, which its PDF and the PDF's QR code carry, and `fileId` holds the PDF.
  */
 export const letterValidator = Schema.Struct({
   ...Transcript.fields,
@@ -53,7 +53,7 @@ export const letterValidator = Schema.Struct({
   periodId: Id("tenantPeriods"),
   personId: Id("tenantPeople"),
   state: LetterState,
-  storageId: Schema.optionalKey(Id("_storage")),
+  fileId: Schema.optionalKey(Id("bucketFiles")),
   tenantId: Id("tenants"),
   unitId: Id("tenantUnits"),
 });

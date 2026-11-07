@@ -8,6 +8,7 @@ import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { storedBytes } from "@repo/backend/confect/nina/sealed/bytes";
 import { RUN_LIFETIME_MS } from "@repo/backend/confect/nina/sealed/turn";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
 import { contextFor } from "@repo/backend/test/nina/admission";
@@ -25,13 +26,19 @@ import {
 } from "@repo/backend/test/nina/seal";
 import { readThreadIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn } from "@repo/backend/test/nina/stored";
-import {
-  attachment,
-  readyFileIdIn,
-  saved,
-} from "@repo/backend/test/nina/uploads";
+import { attachment, saved } from "@repo/backend/test/nina/uploads";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -74,16 +81,15 @@ describe("Sealing a settled Nina turn", () => {
     );
     const f = await askedIn(PLANTED.prompt);
     // The file keeps its sealed name in the files table, sent by a turn or not.
-    const uploadId = await saved(f.owner, {
+    await saved(f.owner, {
       ...attachment,
       filename: `${PLANTED.file}.png`,
     });
-    const fileId = await readyFileIdIn(f.t, uploadId);
     await f.t.action(run, { turnId: f.receipt.turnId });
 
     // During the turn the planted texts sit in the plain rows and the deltas. The message
     // is sealed at admission and the file name at upload, so neither is in a table.
-    const during = await storedRowsIn(f.t, f.receipt.threadId, [fileId]);
+    const during = await storedRowsIn(f.t, f.receipt.threadId);
     expect(plantedIn(during)).toEqual(
       expect.arrayContaining([
         PLANTED.answer,
@@ -119,11 +125,8 @@ describe("Sealing a settled Nina turn", () => {
 
     await f.t.finishAllScheduledFunctions(() => undefined);
 
-    const settled = await storedRowsIn(f.t, f.receipt.threadId, [fileId]);
+    const settled = await storedRowsIn(f.t, f.receipt.threadId);
     expect(plantedIn(settled)).toEqual([]);
-    expect(settled.files).toEqual([
-      expect.objectContaining({ mediaType: "image/png" }),
-    ]);
     const deltas = await f.t.query((ctx) =>
       ctx.runQuery(components.nina.streams.listDeltas, {
         cursors: Arr.map(streamIds, (streamId) => ({ cursor: 0, streamId })),
@@ -191,9 +194,7 @@ describe("Sealing a settled Nina turn", () => {
       sealedAt: expect.any(Number),
       state: { status: "failed" },
     });
-    expect(plantedIn(await storedRowsIn(f.t, f.receipt.threadId, []))).toEqual(
-      []
-    );
+    expect(plantedIn(await storedRowsIn(f.t, f.receipt.threadId))).toEqual([]);
     // The failure path runs the whole turn and its scheduled work: about 9 s alone
     // on a loaded machine, so it gets a budget of its own, as other convex-test suites do.
   }, 30_000);
@@ -207,7 +208,7 @@ describe("Sealing a settled Nina turn", () => {
       sealedAt: expect.any(Number),
       state: { status: "cancelled" },
     });
-    const stored = await storedRowsIn(f.t, f.receipt.threadId, []);
+    const stored = await storedRowsIn(f.t, f.receipt.threadId);
     expect(plantedIn(stored)).toEqual([]);
     expect(stored.messages.page).toEqual([
       expect.objectContaining({
@@ -226,12 +227,12 @@ describe("Sealing a settled Nina turn", () => {
     const f = await askedIn(PLANTED.prompt);
     await f.t.action(run, { turnId: f.receipt.turnId });
     await f.t.finishAllScheduledFunctions(() => undefined);
-    const first = await storedRowsIn(f.t, f.receipt.threadId, []);
+    const first = await storedRowsIn(f.t, f.receipt.threadId);
     const sealedAt = await f.sealedAt();
 
     await f.t.mutation(seal, { turnId: f.receipt.turnId });
 
-    const second = await storedRowsIn(f.t, f.receipt.threadId, []);
+    const second = await storedRowsIn(f.t, f.receipt.threadId);
     expect(Arr.map(second.messages.page, (row) => row._id)).toEqual(
       Arr.map(first.messages.page, (row) => row._id)
     );
@@ -275,7 +276,7 @@ describe("Sealing a settled Nina turn", () => {
         threadId: f.threadId,
       });
     });
-    const before = await storedRowsIn(f.t, f.threadId, []);
+    const before = await storedRowsIn(f.t, f.threadId);
     const pending = Arr.filter(
       before.messages.page,
       (row) => row.status === "pending"
@@ -289,7 +290,7 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))).toEqual(
       turn
     );
-    expect(await storedRowsIn(f.t, f.threadId, [])).toEqual(before);
+    expect(await storedRowsIn(f.t, f.threadId)).toEqual(before);
 
     // Once the pending row is gone, the next run seals the turn.
     await f.t.mutation((ctx) =>
@@ -327,7 +328,7 @@ describe("Sealing a settled Nina turn", () => {
     expect(
       await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))
     ).toMatchObject({ sealedAt: expect.any(Number) });
-    const stored = await storedRowsIn(f.t, f.threadId, []);
+    const stored = await storedRowsIn(f.t, f.threadId);
     expect(Arr.map(stored.messages.page, (row) => row.status)).not.toContain(
       "pending"
     );
@@ -355,7 +356,7 @@ describe("Sealing a settled Nina turn that the seal skips", () => {
       sealHold: "chatDeleted",
     });
     expect(await f.sealedAt()).toBeUndefined();
-    const stored = await storedRowsIn(f.t, f.receipt.threadId, []);
+    const stored = await storedRowsIn(f.t, f.receipt.threadId);
     expect(plantedIn(stored)).toEqual(
       expect.arrayContaining([PLANTED.answer, PLANTED.output])
     );
@@ -459,7 +460,7 @@ describe("The bytes that sealing a settled Nina turn counts", () => {
 
     const cost = await f.t.mutation(seal, { turnId: turn._id });
 
-    const after = await storedRowsIn(f.t, f.threadId, []);
+    const after = await storedRowsIn(f.t, f.threadId);
     const isOwn = (row: { _id: string; order: number }) =>
       row.order === turn.order && row._id !== turn.promptMessageId;
     expect(cost.bytes).toBe(

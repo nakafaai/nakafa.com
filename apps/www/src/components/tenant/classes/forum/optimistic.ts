@@ -15,6 +15,7 @@ export type ForumMessage = Ref.Returns<
 
 const { page } = classroom.forum.messages;
 const { get, replies } = classroom.forum.threads;
+const threadList = classroom.forum.threads.list;
 const channels = classroom.forum.channels;
 const reads = classroom.forum.reads;
 
@@ -252,3 +253,43 @@ export const hideUpdate: OptimisticUpdate<
     text: null,
   }));
 };
+
+/** Takes the discussion at `number` out of every list of the class's discussions that holds it. */
+const leaveThreads = (
+  localStore: LocalStore.OptimisticLocalStore,
+  classId: Id<"classes">,
+  number: number
+) => {
+  for (const query of localStore.getAllQueries(threadList)) {
+    if (
+      Option.isSome(query.value) &&
+      query.args.classId === classId &&
+      Arr.some(
+        query.value.value.page,
+        (row) => row.discussion.number === number
+      )
+    ) {
+      localStore.setQuery(
+        threadList,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.filter(
+            query.value.value.page,
+            (row) => row.discussion.number !== number
+          ),
+        })
+      );
+    }
+  }
+};
+
+/** Takes an archived discussion out of the class's list at once; a refusal brings it back. */
+export const archiveThreadUpdate: OptimisticUpdate<
+  typeof classroom.forum.threads.archive
+> = (localStore, args) => leaveThreads(localStore, args.classId, args.number);
+
+/** Takes a restored discussion out of the archived list at once; a refusal brings it back. */
+export const restoreThreadUpdate: OptimisticUpdate<
+  typeof classroom.forum.threads.restore
+> = (localStore, args) => leaveThreads(localStore, args.classId, args.number);

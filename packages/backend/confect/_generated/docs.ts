@@ -19,6 +19,7 @@ export type BillingGrantsDoc = Document.Document<typeof schemaDefinition, "billi
 export type BillingInvoicesDoc = Document.Document<typeof schemaDefinition, "billingInvoices">;
 export type BillingPaymentsDoc = Document.Document<typeof schemaDefinition, "billingPayments">;
 export type BillingSubscriptionsDoc = Document.Document<typeof schemaDefinition, "billingSubscriptions">;
+export type BucketFilesDoc = Document.Document<typeof schemaDefinition, "bucketFiles">;
 export type BucketUseDoc = Document.Document<typeof schemaDefinition, "bucketUse">;
 export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShares">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
@@ -122,6 +123,7 @@ export type LearningViewsDoc = Document.Document<typeof schemaDefinition, "learn
 export type LoginCardsDoc = Document.Document<typeof schemaDefinition, "loginCards">;
 export type MaterialBucketsDoc = Document.Document<typeof schemaDefinition, "materialBuckets">;
 export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "materialCatalog">;
+export type NinaFilesDoc = Document.Document<typeof schemaDefinition, "ninaFiles">;
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
 export type NinaMemoryKeysDoc = Document.Document<typeof schemaDefinition, "ninaMemoryKeys">;
 export type NinaMemoryPortraitsDoc = Document.Document<typeof schemaDefinition, "ninaMemoryPortraits">;
@@ -193,6 +195,7 @@ export interface Docs {
   billingInvoices: BillingInvoicesDoc;
   billingPayments: BillingPaymentsDoc;
   billingSubscriptions: BillingSubscriptionsDoc;
+  bucketFiles: BucketFilesDoc;
   bucketUse: BucketUseDoc;
   chatShares: ChatSharesDoc;
   chats: ChatsDoc;
@@ -296,6 +299,7 @@ export interface Docs {
   loginCards: LoginCardsDoc;
   materialBuckets: MaterialBucketsDoc;
   materialCatalog: MaterialCatalogDoc;
+  ninaFiles: NinaFilesDoc;
   ninaMemories: NinaMemoriesDoc;
   ninaMemoryKeys: NinaMemoryKeysDoc;
   ninaMemoryPortraits: NinaMemoryPortraitsDoc;

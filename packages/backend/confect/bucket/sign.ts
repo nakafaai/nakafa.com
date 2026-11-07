@@ -5,6 +5,7 @@ import {
   DateTime,
   Effect,
   Layer,
+  Option,
   Order,
   Record as Rec,
   Redacted,
@@ -169,6 +170,7 @@ const ObjectAddress = Schema.Struct({
   headers: Schema.optionalKey(PresignRequest.fields.headers),
   method: ObjectMethod,
   query: Schema.optionalKey(PresignRequest.fields.query),
+  signedAt: Schema.optionalKey(Schema.Finite),
 });
 
 /**
@@ -198,7 +200,38 @@ export const objectAddress = Effect.fn("bucket.objectAddress")(function* (
     query: address.query ?? {},
     region: R2_REGION,
     secretAccessKey: config.secretAccessKey,
-    signedAt: yield* Clock.currentTimeMillis,
+    signedAt: address.signedAt ?? (yield* Clock.currentTimeMillis),
     url,
   });
+});
+
+/**
+ * The object key that an address of the configured bucket names, or none for any other address. It reads back the
+ * path `objectAddress` writes, so an address kept in a stored message can be signed again for its object.
+ */
+export const objectKeyOf = Effect.fn("bucket.objectKeyOf")(function* (
+  address: string
+) {
+  const config = yield* bucketConfig.pipe(Effect.orDie);
+  const base = new URL(config.endpoint);
+  const prefix = `${Str.replace(TRAILING_SLASHES, "")(base.pathname)}/${encodeStrict(config.bucket)}/`;
+  const url = yield* Effect.option(Effect.try(() => new URL(address)));
+  if (
+    Option.isNone(url) ||
+    url.value.origin !== base.origin ||
+    !Str.startsWith(prefix)(url.value.pathname)
+  ) {
+    return Option.none<string>();
+  }
+  return yield* Effect.option(
+    Effect.try(() =>
+      Arr.join(
+        Arr.map(
+          Str.split(url.value.pathname.slice(prefix.length), "/"),
+          decodeURIComponent
+        ),
+        "/"
+      )
+    )
+  );
 });

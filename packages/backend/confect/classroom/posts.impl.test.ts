@@ -14,7 +14,7 @@ import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 
-const { edit, list, pin, pinned, publish, remove } =
+const { archive, edit, list, pin, pinned, publish, remove, restore } =
   refs.public.classroom.posts;
 
 describe("classroom/posts", () => {
@@ -271,5 +271,55 @@ describe("classroom/posts", () => {
       ]);
       expect(refusals).toMatchObject([denied("role"), denied("resource")]);
     })
+  );
+
+  it.effect(
+    "archives an announcement out of the class home and its pins for its author, restores it, and keeps the archived ones from students",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-8");
+        const teacher = fixture.as("teacher");
+        const args = { classId: forum.classId, slug: nf };
+        const post = yield* teacher.mutation(publish, {
+          ...args,
+          clientKey: "archived-post",
+          email: false,
+          poll: null,
+          text: "Kelas besok dimulai pukul tujuh.",
+        });
+        yield* teacher.mutation(pin, {
+          ...args,
+          pinned: true,
+          postId: post.id,
+        });
+        const texts = (archived: boolean) =>
+          Effect.map(
+            teacher.query(list, { ...args, ...firstPage, archived }),
+            (listed) => Arr.map(listed.page, (row) => [row.text, row.archived])
+          );
+
+        expect(
+          yield* teacher.mutation(archive, { ...args, postId: post.id })
+        ).toBeNull();
+        expect(yield* texts(false)).toEqual([]);
+        expect(yield* texts(true)).toEqual([
+          ["Kelas besok dimulai pukul tujuh.", true],
+        ]);
+        expect(yield* teacher.query(pinned, args)).toEqual([]);
+        const refused = yield* fixture
+          .as("student")
+          .query(list, { ...args, ...firstPage, archived: true })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("role"));
+
+        expect(
+          yield* teacher.mutation(restore, { ...args, postId: post.id })
+        ).toBeNull();
+        expect(yield* texts(false)).toEqual([
+          ["Kelas besok dimulai pukul tujuh.", false],
+        ]);
+      })
   );
 });

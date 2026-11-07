@@ -36,7 +36,7 @@ import {
  * School pricing report of 2 November 2026 keeps for upkeep, errors and
  * retries on top of the foreground work the credits pay for.
  */
-const BUDGET_PER_CREDIT = (CREDIT_UNIT_MICRO_USD * 12_500) / 10_000;
+export const BUDGET_PER_CREDIT = (CREDIT_UNIT_MICRO_USD * 12_500) / 10_000;
 
 /**
  * Nakafa's own monthly budget, for work that belongs to no account: embedding
@@ -180,15 +180,36 @@ const holdOnRow = Effect.fn("spend.holdOnRow")(function* (
 });
 
 /**
- * Holds `held` micro-dollars for one call before it runs, in the transaction
- * that checks the payer's month: what the month spent and holds, with this
- * hold, stays within the budget the payer's plan grants, or the call is
- * refused and nothing is written.
+ * Holds up to `ceiling` micro-dollars for one call before it runs, in the
+ * transaction that checks the payer's month. The hold is the ceiling, or what
+ * the month has left of its budget when that is less, so a payer can spend the
+ * whole budget its credits grant: a language call's ceiling is a full prompt
+ * and its whole output cap (`languageCeiling`), about 18 credits for a chat
+ * call, which a small pool could otherwise never hold. A call that fits wholly
+ * always runs. A call that does not needs at least one credit of budget left,
+ * as a turn needs one credit in `reserveCredits`, or it is refused and nothing
+ * is written.
+ *
+ * Nakafa never loses more than this rule admits: a call settles to what it
+ * measured, so a month passes its budget only when a call held less than its
+ * ceiling and cost more than it held. Each open call adds at most its ceiling
+ * less its hold, and an open call that holds the rest of the month leaves
+ * nothing for the next one. The credit ledger accepts the same gap, a turn
+ * that holds its balance when that is less than the most one response may cost.
+ *
+ * Calls of one payer that run at once retry against each other: a hold reads
+ * every vendor row of the payer's month to check the one budget they share,
+ * and writes one of them, so a concurrent hold or settle of the same payer
+ * writes what it read. Convex Insights on 7 Nov 2026 showed 10 OCC retries of
+ * `spend/escrow:hold` and 2 of `settle` in 72 hours, on two `vendorSpend`
+ * rows, and every retry succeeded. Sharding the rows would not remove them,
+ * because a hold must read every shard to check the total. Two payers never
+ * share a row, so the contention stays within one payer's own calls.
  */
 export const holdSpend = Effect.fn("spend.hold")(function* (
   claim: Claim,
   work: Work,
-  held: number
+  ceiling: number
 ) {
   const now = yield* Clock.currentTimeMillis;
   const { budget, payer } = yield* payerOf(claim, now);
@@ -196,8 +217,9 @@ export const holdSpend = Effect.fn("spend.hold")(function* (
   const vendor = vendorOf(work);
   const rows = yield* monthRows(payer, month);
   const used = usedOf(rows);
-  if (used + held > budget) {
-    return yield* new SpendRefused({ vendor, budget, used, held });
+  const held = Math.min(ceiling, budget - used);
+  if (held < Math.min(ceiling, BUDGET_PER_CREDIT)) {
+    return yield* new SpendRefused({ vendor, budget, used, held: ceiling });
   }
   const spendId = yield* holdOnRow(rows, payer, month, vendor, held);
   const escrowId = yield* (yield* DatabaseWriter)

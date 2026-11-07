@@ -10,6 +10,7 @@ export default {
 ["list"]: RegisteredConvexFunction.register({ ...definitions["list"], handler: forward(definitions["list"].handler) }),
 ["students"]: RegisteredConvexFunction.register({ ...definitions["students"], handler: forward(definitions["students"].handler) }),
 ["teachers"]: RegisteredConvexFunction.register({ ...definitions["teachers"], handler: forward(definitions["teachers"].handler) }),
+["unplaced"]: RegisteredConvexFunction.register({ ...definitions["unplaced"], handler: forward(definitions["unplaced"].handler) }),
 ["create"]: RegisteredConvexFunction.register({ ...definitions["create"], handler: forward(definitions["create"].handler) }),
 ["rename"]: RegisteredConvexFunction.register({ ...definitions["rename"], handler: forward(definitions["rename"].handler) }),
 ["remove"]: RegisteredConvexFunction.register({ ...definitions["remove"], handler: forward(definitions["remove"].handler) }),

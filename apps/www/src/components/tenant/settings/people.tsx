@@ -132,14 +132,24 @@ function SchoolPersonSelect() {
 
 /**
  * Renders the picker of the students of the school: the active members who hold a student
- * grant. A student is chosen by ID, and the list loads more students as its end comes into view.
+ * grant. For a cohort it offers only the students of the cohort's unit who hold no placement in
+ * its period, so a student placed elsewhere is moved from that cohort instead. A student is chosen
+ * by ID, and the list loads more students as its end comes into view.
  */
-export function SchoolStudentPicker(field: PickerField) {
+export function SchoolStudentPicker({
+  cohortId,
+  ...field
+}: PickerField & {
+  /** The live cohort the student joins, which narrows the list to who it may place. */
+  cohortId?: CohortDetail["id"] | undefined;
+}) {
   return (
     <PickerFieldContext value={field}>
-      <ReadBoundary>
-        <SchoolStudentSelect />
-      </ReadBoundary>
+      <PickerCohortContext value={cohortId ?? null}>
+        <ReadBoundary>
+          <SchoolStudentSelect />
+        </ReadBoundary>
+      </PickerCohortContext>
     </PickerFieldContext>
   );
 }
@@ -204,7 +214,10 @@ function NoPerson({
   empty,
   typed,
 }: {
-  empty?: "student-picker-empty" | "teacher-picker-empty";
+  empty?:
+    | "cohort-picker-empty"
+    | "student-picker-empty"
+    | "teacher-picker-empty";
   typed: string;
 }) {
   const t = useTranslations("SchoolSettings");
@@ -220,12 +233,19 @@ function NoPerson({
 /** The picker's list of students, read a page at a time. */
 function SchoolStudentSelect() {
   const { slug } = useTenant();
+  const cohortId = use(PickerCohortContext);
   const { search, setTyped, typed } = usePickerSearch();
-  const pagination = usePaginatedQuery(
+  const school = usePaginatedQuery(
     tenancy.people.students,
-    { slug, ...search },
+    cohortId === null ? { slug, ...search } : "skip",
     { initialNumItems: PICKER_SIZE }
   );
+  const cohort = usePaginatedQuery(
+    tenancy.people.unplaced,
+    cohortId === null ? "skip" : { cohortId, slug, ...search },
+    { initialNumItems: PICKER_SIZE }
+  );
+  const pagination = cohortId === null ? school : cohort;
 
   return (
     <>
@@ -242,7 +262,12 @@ function SchoolStudentSelect() {
         ) : null}
         {PaginatedQueryResult.isExhausted(pagination) &&
         !Arr.isReadonlyArrayNonEmpty(pagination.results) ? (
-          <NoPerson empty="student-picker-empty" typed={typed} />
+          <NoPerson
+            empty={
+              cohortId === null ? "student-picker-empty" : "cohort-picker-empty"
+            }
+            typed={typed}
+          />
         ) : null}
       </PersonSelect>
     </>

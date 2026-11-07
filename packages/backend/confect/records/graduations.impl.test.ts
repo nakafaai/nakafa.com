@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   classOf,
   denied,
@@ -26,6 +27,11 @@ import {
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Exit, Option } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 const graduations = refs.public.records.graduations;
 const checks = refs.public.records.checks;
@@ -76,6 +82,16 @@ const setup = Effect.fn("test.graduations.setup")(function* (fixture: Fixture) {
 });
 
 describe("records/graduations", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it.effect(
     "lists what is missing, issues the SKL once nothing is, locks it with its PDF, and answers its hash",
     () =>

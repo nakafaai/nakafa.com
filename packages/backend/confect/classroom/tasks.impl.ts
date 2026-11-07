@@ -13,6 +13,7 @@ import {
   TaskClosed,
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { shelveTask } from "@repo/backend/confect/classroom/tasks/archive";
 import { editTask } from "@repo/backend/confect/classroom/tasks/edit";
 import { runTaskExam } from "@repo/backend/confect/classroom/tasks/exam";
 import { removeTask } from "@repo/backend/confect/classroom/tasks/remove";
@@ -41,15 +42,20 @@ import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
- * One page of the class's tasks by deadline, the soonest first, leaving out for a student the tasks that go to other
- * students of the class, so a page can hold fewer tasks than it read. A `standing` keeps the tasks where the reader's own
+ * One page of the class's tasks by deadline, the soonest first: the live tasks, or the archived ones when `archived` asks,
+ * leaving out for a student every archived task and the tasks that go to other students of the class, so a page can hold
+ * fewer tasks than it read. A `standing` keeps the tasks where the reader's own
  * work stands so (`standingOf`), so a page can hold fewer tasks than it read.
  */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("classroom.tasks.list")(function* ({ paginationOpts, standing }) {
+  Effect.fn("classroom.tasks.list")(function* ({
+    archived = false,
+    paginationOpts,
+    standing,
+  }) {
     const { person } = yield* Member;
     const row = yield* Class;
     const found = yield* (yield* DatabaseReader)
@@ -57,11 +63,18 @@ const list = FunctionImpl.make(
       .index("by_classId_and_deadline", (query) => query.eq("classId", row._id))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    const narrowed = Arr.some(found.page, (task) => !reaches(task, person._id));
-    const reached =
-      narrowed && (yield* readsAsStudent())
-        ? Arr.filter(found.page, (task) => reaches(task, person._id))
-        : found.page;
+    const shelf = Arr.filter(
+      found.page,
+      (task) => (task.archivedAt !== undefined) === archived
+    );
+    const student = yield* readsAsStudent();
+    // A student reads neither an archived task nor one for other students.
+    const reached = student
+      ? Arr.filter(
+          shelf,
+          (task) => task.archivedAt === undefined && reaches(task, person._id)
+        )
+      : shelf;
     const views = yield* Effect.forEach(reached, taskView);
     return Struct.assign(found, {
       page:
@@ -117,6 +130,28 @@ const edit = FunctionImpl.make(
     return yield* taskView(
       yield* editTask(Struct.omit(args, ["classId", "slug"]))
     );
+  })
+);
+
+/** Archives a task of the class for its teacher, so it leaves the class's list and its students. */
+const archive = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "archive",
+  Effect.fn("classroom.tasks.archive")(function* ({ task }) {
+    yield* shelveTask(task, true);
+    return null;
+  })
+);
+
+/** Restores an archived task of the class, with its work and its run as they stood. */
+const restore = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "restore",
+  Effect.fn("classroom.tasks.restore")(function* ({ task }) {
+    yield* shelveTask(task, false);
+    return null;
   })
 );
 
@@ -347,6 +382,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(get),
   Layer.provide(publish),
   Layer.provide(edit),
+  Layer.provide(archive),
+  Layer.provide(restore),
   Layer.provide(remove),
   Layer.provide(submit),
   Layer.provide(submissions),

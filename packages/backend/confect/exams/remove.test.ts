@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { fileRows, makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { documentRows, nf } from "@repo/backend/test/editor";
 import {
   examImage,
@@ -8,7 +9,6 @@ import {
   questionRows,
   teacherExam,
 } from "@repo/backend/test/exams";
-import { storageUrl } from "@repo/backend/test/logo";
 import {
   CLOSES_AT,
   keyedExam,
@@ -19,6 +19,11 @@ import {
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
 const { remove } = refs.public.exams.exams;
 const { add } = refs.public.exams.questions;
 
@@ -28,6 +33,16 @@ const assetRows = Effect.flatMap(DatabaseReader, (reader) =>
 );
 
 describe("exams/remove", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
@@ -49,12 +64,9 @@ describe("exams/remove", () => {
           examId: exam.id,
           slug: nf,
         });
-        const image = yield* examImage(fixture, exam.id);
-        const { storageId } = yield* fixture.run(
-          Effect.flatMap(DatabaseReader, (reader) =>
-            reader.table("examAssets").get(image.id).pipe(Effect.orDie)
-          )
-        );
+        const image = yield* examImage(bucket, fixture, exam.id);
+        expect(image.id).toBeDefined();
+        expect(yield* fixture.run(fileRows)).toHaveLength(1);
         expect(
           yield* teacher.mutation(remove, { examId: exam.id, slug: nf })
         ).toBeNull();
@@ -63,7 +75,8 @@ describe("exams/remove", () => {
         yield* fixture.finishScheduled();
         expect(yield* fixture.run(documentRows)).toEqual([]);
         expect(yield* fixture.run(assetRows)).toEqual([]);
-        expect(yield* storageUrl(fixture.convex, storageId)).toBeNull();
+        expect(yield* fixture.run(fileRows)).toEqual([]);
+        expect(bucket.state.objects).toEqual({});
       })
   );
 

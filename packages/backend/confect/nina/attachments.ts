@@ -1,3 +1,4 @@
+import type { GenericId } from "@confect/core";
 import {
   NINA_DOCUMENT_SIZE,
   NINA_DOCUMENT_SIZE_MESSAGE,
@@ -7,20 +8,17 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
+import { fileAddress } from "@repo/backend/confect/bucket/file";
 import {
   countMessageTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
-import {
-  getStoredFile,
-  readFile,
-} from "@repo/backend/confect/nina/sealed/file";
+import { openFileName } from "@repo/backend/confect/nina/sealed/file";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
-import type { ModelMessage } from "ai";
-import { Array as Arr, Clock, Effect } from "effect";
+import type { FilePart, ImagePart, ModelMessage } from "ai";
+import { Array as Arr, Clock, Effect, String as Str } from "effect";
 
 /** The keys of one learner, read by the caller once for a whole send (ADR 0024). */
 type ReadKeys = ReturnType<typeof readLearnerKeys>;
@@ -31,66 +29,52 @@ const readFailure = () =>
     message: "Unable to read this attachment.",
   });
 
-/**
- * Reads the storage entry of one stored file, and whether it is a document. The size
- * check needs no name, so a retry never opens one.
- */
+/** The facts of one file a learner sent: its size and type, and whether it is a document rather than an image. */
 const readEntry = Effect.fn("nina.attachments.entry")(function* (
-  fileId: string
+  fileId: GenericId.GenericId<"bucketFiles">
 ) {
-  const ctx = yield* MutationCtx;
-  const saved = yield* getStoredFile(ctx, fileId).pipe(
-    Effect.mapError(readFailure)
-  );
+  const file = yield* (yield* DatabaseReader)
+    .table("bucketFiles")
+    .get(fileId)
+    .pipe(Effect.mapError(readFailure));
   return {
-    document: saved.imagePart === undefined,
-    storageId: saved.file.storageId,
+    byteSize: file.byteSize,
+    contentType: file.contentType,
+    document: !Str.startsWith("image/")(file.contentType),
   };
 });
 type Entry = Effect.Success<ReturnType<typeof readEntry>>;
 
 /**
- * Reads one stored attachment for its learner: its model part, with the name the
- * learner gave it, and the storage entry that holds its bytes. The name is opened
- * only when `sealed` says that its upload sealed it.
+ * Reads one stored attachment for its learner: its model part, at a signed address of the bucket, with the name the
+ * learner gave it. A later turn reads the part again at a fresh address (`nina/files.ts`).
  */
 const readAttachment = Effect.fn("nina.attachments.read")(function* (
   readKeys: ReadKeys,
-  sealed: boolean,
-  fileId: string
+  name: string,
+  fileId: GenericId.GenericId<"bucketFiles">
 ) {
-  const ctx = yield* MutationCtx;
-  const saved = yield* readFile(ctx, readKeys, fileId, sealed).pipe(
+  const entry = yield* readEntry(fileId);
+  const address = yield* Effect.flatMap(fileAddress(fileId), (found) =>
+    Effect.fromOption(found).pipe(Effect.mapError(readFailure))
+  );
+  const filename = yield* openFileName(readKeys, name).pipe(
     Effect.mapError(readFailure)
   );
-  return {
-    fileId,
-    part: saved.imagePart ?? saved.filePart,
-    storageId: saved.file.storageId,
-    document: saved.imagePart === undefined,
-  };
+  const part: FilePart | ImagePart = entry.document
+    ? { data: address, filename, mediaType: entry.contentType, type: "file" }
+    : { image: address, mediaType: entry.contentType, type: "image" };
+  return { ...entry, fileId, part };
 });
 
 /** Refuses attachments whose documents exceed the bytes one request can carry. */
 const requireDocumentLimit = Effect.fn("nina.attachments.limit")(function* (
   files: readonly Entry[]
 ) {
-  const ctx = yield* MutationCtx;
-  // Only documents count toward the limit, so images never read their size.
-  // getFile has just read these storage entries, so their system rows exist.
-  const documentSizes = yield* Effect.forEach(
-    Arr.filter(files, (file) => file.document),
-    (file) =>
-      Effect.promise(() => ctx.db.system.get("_storage", file.storageId)).pipe(
-        Effect.flatMap(Effect.fromNullishOr),
-        Effect.map((stored) => stored.size),
-        Effect.orDie
-      )
-  );
   const documentBytes = Arr.reduce(
-    documentSizes,
+    Arr.filter(files, (file) => file.document),
     0,
-    (total, size) => total + size
+    (total, file) => total + file.byteSize
   );
   if (documentBytes > NINA_DOCUMENT_SIZE) {
     return yield* new NinaUploadError({
@@ -124,7 +108,7 @@ export const requirePromptLimit = Effect.fn("nina.attachments.prompt")(
  * sends them again. A message stored before the limit existed can exceed it.
  */
 export const requireStoredDocumentLimit = Effect.fn("nina.attachments.stored")(
-  function* (fileIds: readonly string[]) {
+  function* (fileIds: readonly GenericId.GenericId<"bucketFiles">[]) {
     yield* requireDocumentLimit(
       yield* Effect.forEach(fileIds, (fileId) => readEntry(fileId))
     );
@@ -178,7 +162,7 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
           uploadId,
           ...(yield* readAttachment(
             readKeys,
-            upload.nameSealed === true,
+            upload.name,
             upload.state.fileId
           )),
         };

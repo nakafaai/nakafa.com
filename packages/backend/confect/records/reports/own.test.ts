@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
+import {
   classOf,
   cohort,
   nf,
@@ -14,6 +19,11 @@ import {
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 /** A report hash: 64 lowercase hex digits. */
 const HASH = /^[0-9a-f]{64}$/u;
@@ -34,6 +44,16 @@ afterEach(() => {
 });
 
 describe("records/reports own", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it.effect(
     "lists a student's report card once it is locked, with its class group, period, PDF and hash, and only to that student",
     () =>
@@ -110,6 +130,23 @@ describe("records/reports own", () => {
         expect(
           yield* fixture.as("teacher").query(reports.own, { slug: nf })
         ).toEqual([]);
+        // A card whose PDF left the bucket still shows, without an address.
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const rows = yield* (yield* DatabaseReader)
+              .table("bucketFiles")
+              .index("by_creation_time")
+              .take(8);
+            const writer = yield* DatabaseWriter;
+            yield* Effect.forEach(rows, (row) =>
+              writer.table("bucketFiles").delete(row._id)
+            );
+          }).pipe(Effect.orDie)
+        );
+        const [gone] = yield* fixture
+          .as("student")
+          .query(reports.own, { slug: nf });
+        expect(gone?.file).toBe("");
       })
   );
 });

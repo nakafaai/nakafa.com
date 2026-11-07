@@ -75,7 +75,7 @@ const refuseFull = () =>
  */
 export function useUploadTray() {
   const { classId, slug } = useChannelScope();
-  const requestUrl = useMutation(classroom.forum.files.uploadUrl);
+  const reserve = useMutation(classroom.forum.files.reserve);
   const register = useAction(classroom.forum.files.register);
   const withdraw = useMutation(classroom.forum.files.withdraw);
   const [files, setFiles] = useState<readonly (typeof TrayFile.Type)[]>([]);
@@ -98,7 +98,13 @@ export function useUploadTray() {
     );
     const uploaded = uploadAttachment(
       file,
-      () => requestUrl({ classId, slug }),
+      (bytes) =>
+        reserve({
+          byteSize: bytes.size,
+          classId,
+          contentType: bytes.type,
+          slug,
+        }),
       (sent) =>
         register({
           ...sent,
@@ -131,7 +137,7 @@ export function useUploadTray() {
       ),
       Effect.catchTags({
         AttachmentRefused: refuseType,
-        FileQuotaReached: refuseFull,
+        StorageFull: refuseFull,
         FileSizeRefused: refuseLarge,
         FileTooLarge: refuseLarge,
       })

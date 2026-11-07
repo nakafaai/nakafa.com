@@ -76,7 +76,7 @@ test("an owner orders Pro with added accounts by invoice, and the school shows P
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("Pro", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Max", { exact: true })).toBeVisible();
-  await dialog.getByRole("button", { name: "+10" }).click();
+  await dialog.getByRole("button", { exact: true, name: "+10" }).click();
   // Pro for 12 months at 5 percent off, with 10 added accounts at Rp181.260 each.
   await expect(dialog.getByText(PRO_YEAR_TOTAL)).toBeVisible();
   await page.screenshot({

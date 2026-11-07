@@ -12,10 +12,12 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
+import { DialogRefusal } from "@/components/shared/refusal";
 import { RowItems } from "@/components/shared/table/menu";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import {
@@ -41,7 +43,7 @@ type CohortId = Cohort["id"];
  * button, ready from the first paint, and the dialog it opens for one student. The dialog
  * waits for the cohort: Save holds until the cohort is read, and an archived cohort says to
  * restore it first. The dialog closes as the placement is sent, and its student clears once
- * the server accepts it.
+ * the server accepts it; a refusal opens the dialog again with its student and says why inside it.
  */
 export function SchoolPlacementAdd({
   cohortId,
@@ -61,6 +63,7 @@ export function SchoolPlacementAdd({
   );
   const [isOpen, setIsOpen] = useState(false);
   const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
+  const [refusal, setRefusal] = useState<ToastCopy | null>(null);
   // The student stays selected until the server accepts the placement, and the submit waits for it.
   const [isPending, startPlacing] = useTransition();
 
@@ -69,11 +72,16 @@ export function SchoolPlacementAdd({
       return;
     }
     setIsOpen(false);
+    setRefusal(null);
     startPlacing(() =>
       saveSchool(
         () => place({ cohortId, personId, slug }),
         SOURCE,
-        () => setPersonId(undefined)
+        () => setPersonId(undefined),
+        (copy) => {
+          setRefusal(copy);
+          setIsOpen(true);
+        }
       )
     );
   };
@@ -116,11 +124,13 @@ export function SchoolPlacementAdd({
         title={t("placement-add")}
       >
         <FieldGroup>
+          {refusal === null ? null : <DialogRefusal copy={refusal} />}
           <Field>
             <FieldLabel htmlFor={`${id}-student`}>
               {t("placement-student")}
             </FieldLabel>
             <SchoolStudentPicker
+              cohortId={status === "active" ? cohortId : undefined}
               id={`${id}-student`}
               onChoose={setPersonId}
               personId={personId}

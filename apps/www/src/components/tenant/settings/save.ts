@@ -408,7 +408,7 @@ function refusalCopyOf(error: { readonly _tag: string }): ToastCopy {
 /**
  * Runs one save of the school from a browser event. A save that the server refuses is
  * reported, and the person sees why when the refusal has copy of its own, or the generic
- * error otherwise. An optimistic change steps back by itself, because the server's answer
+ * error otherwise: in a toast, or through `onRefused` where a dialog shows it and stays open. An optimistic change steps back by itself, because the server's answer
  * replaces the store. The write starts one turn later: most callers run this in a transition,
  * and React holds every store update made in a transition's first turn until its action
  * ends, so an optimistic change made there would wait for the server's answer.
@@ -416,7 +416,8 @@ function refusalCopyOf(error: { readonly _tag: string }): ToastCopy {
 export function saveSchool<A, E extends { readonly _tag: string }>(
   write: () => Promise<Result.Result<A, E>>,
   source: string,
-  onSaved?: (answer: A) => void
+  onSaved?: (answer: A) => void,
+  onRefused?: (copy: ToastCopy) => void
 ) {
   return Effect.runPromise(
     Effect.yieldNow.pipe(
@@ -431,7 +432,12 @@ export function saveSchool<A, E extends { readonly _tag: string }>(
           reportClientException(error, { source }).pipe(
             Effect.andThen(
               Effect.sync(() => {
-                toast.error(refusalCopyOf(error));
+                const copy = refusalCopyOf(error);
+                if (onRefused === undefined) {
+                  toast.error(copy);
+                  return;
+                }
+                onRefused(copy);
               })
             )
           ),

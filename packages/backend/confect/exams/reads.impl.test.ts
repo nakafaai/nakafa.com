@@ -1,29 +1,40 @@
 import type { GenericId } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { languageCost } from "@repo/backend/confect/spend/rates";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { nf } from "@repo/backend/test/editor";
 import {
+  examFile,
   examImage,
-  png,
+  PNG,
   questionRows,
   teacherExam,
 } from "@repo/backend/test/exams";
 import { deployment, provider } from "@repo/backend/test/gateway";
-import { storeFile } from "@repo/backend/test/logo";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
 const { read } = refs.public.exams.reads;
+const { reserve } = refs.public.exams.assets;
 
 /** What Nina answers for a part: one question with a figure, and the key table of the file's end. */
 const NINA_READ = {
@@ -59,18 +70,28 @@ const ninaAnswers = (output: unknown) => {
 /** The fixture of one test: two schools with their people. */
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-/** Whether storage still holds a file. */
+/** Whether the bucket still holds a file's row. */
 const storedFile = (
   fixture: Fixture,
-  storageId: GenericId.GenericId<"_storage">
+  fileId: GenericId.GenericId<"bucketFiles">
 ) =>
-  Effect.promise(() =>
-    fixture.convex.run(
-      async (ctx) => (await ctx.storage.get(storageId)) !== null
-    )
+  fixture.run(
+    Effect.flatMap(DatabaseReader, (reader) =>
+      reader.table("bucketFiles").get(fileId)
+    ).pipe(Effect.option, Effect.map(Option.isSome))
   );
 
 describe("exams/reads read", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
@@ -88,7 +109,7 @@ describe("exams/reads read", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const exam = yield* teacherExam(fixture, "PTS Matematika");
-        const picture = yield* examImage(fixture, exam.id);
+        const picture = yield* examImage(bucket, fixture, exam.id);
         const model = ninaAnswers(NINA_READ);
         const answer = yield* fixture.as("teacher").action(read, {
           examId: exam.id,
@@ -146,7 +167,7 @@ describe("exams/reads read", () => {
         const fixture = yield* tenancyFixture;
         const exam = yield* teacherExam(fixture, "PTS Matematika");
         const model = ninaAnswers({ keys: [], questions: [] });
-        const image = yield* storeFile(fixture.convex, png());
+        const image = yield* examFile(bucket, fixture, exam.id, PNG);
         yield* fixture.as("teacher").action(read, {
           examId: exam.id,
           slug: nf,
@@ -161,23 +182,40 @@ describe("exams/reads read", () => {
   );
 
   it.effect(
-    "refuses a page that is no image, or over the image limit, without calling Nina, and deletes every page image",
+    "refuses a page that is no image, over the image limit, never uploaded, or gone, without calling Nina, and deletes every page image",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const exam = yield* teacherExam(fixture, "PTS Matematika");
         const model = ninaAnswers(NINA_READ);
-        const pdf = yield* storeFile(
-          fixture.convex,
-          new Blob(["%PDF-1.7 not an image"], { type: "image/png" })
+        const pdf = yield* examFile(
+          bucket,
+          fixture,
+          exam.id,
+          new TextEncoder().encode("%PDF-1.7 not an image")
         );
-        const huge = yield* storeFile(
-          fixture.convex,
-          new Blob([new Uint8Array(IMAGE_BYTE_LIMIT + 1)], {
-            type: "image/png",
-          })
+        const huge = yield* examFile(
+          bucket,
+          fixture,
+          exam.id,
+          new Uint8Array(IMAGE_BYTE_LIMIT + 1),
+          "audio"
         );
-        const refusals = yield* Effect.forEach([pdf, huge], (image) =>
+        const missing = yield* fixture.as("teacher").mutation(reserve, {
+          byteSize: 8,
+          contentType: "image/png",
+          examId: exam.id,
+          kind: "image",
+          slug: nf,
+        });
+        const gone = yield* examFile(bucket, fixture, exam.id, PNG);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("bucketFiles").delete(gone)
+          ).pipe(Effect.orDie)
+        );
+        const pages = [pdf, huge, missing.fileId, gone];
+        const refusals = yield* Effect.forEach(pages, (image) =>
           fixture
             .as("teacher")
             .action(read, {
@@ -187,13 +225,13 @@ describe("exams/reads read", () => {
             })
             .pipe(Effect.flip)
         );
-        expect(Arr.map(refusals, (refusal) => refusal._tag)).toEqual([
-          "ImportPageRefused",
-          "ImportPageRefused",
-        ]);
+        expect(Arr.map(refusals, (refusal) => refusal._tag)).toEqual(
+          Arr.makeBy(pages.length, () => "ImportPageRefused")
+        );
         expect(model.doGenerateCalls).toHaveLength(0);
-        expect(yield* storedFile(fixture, pdf)).toBe(false);
-        expect(yield* storedFile(fixture, huge)).toBe(false);
+        expect(
+          yield* Effect.forEach(pages, (page) => storedFile(fixture, page))
+        ).toEqual(Arr.makeBy(pages.length, () => false));
       })
   );
 
@@ -204,7 +242,7 @@ describe("exams/reads read", () => {
         const fixture = yield* tenancyFixture;
         const exam = yield* teacherExam(fixture, "PTS Matematika");
         const other = yield* teacherExam(fixture, "PTS Matematika");
-        const foreign = yield* examImage(fixture, other.id);
+        const foreign = yield* examImage(bucket, fixture, other.id);
         const model = ninaAnswers(NINA_READ);
         const text = { images: [], kind: "text" as const, text: "Soal" };
         const refusals = yield* Effect.all([

@@ -58,15 +58,6 @@ export class UploadGone extends Schema.TaggedError<UploadGone>()(
   refusal("UPLOAD_GONE", "This file is no longer here. Add it again.")
 ) {}
 
-/** A file that would pass the bytes a school's forum holds. The file is deleted. */
-export class FileQuotaReached extends Schema.TaggedError<FileQuotaReached>()(
-  "FileQuotaReached",
-  refusal(
-    "FILE_QUOTA_REACHED",
-    "This school's chats hold all the files they can."
-  )
-) {}
-
 /** A file whose bytes name no image, PDF or office document. The file is deleted. */
 export class AttachmentRefused extends Schema.TaggedError<AttachmentRefused>()(
   "AttachmentRefused",

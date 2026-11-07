@@ -18,6 +18,7 @@ import billingGrants from "./tables/billingGrants";
 import billingInvoices from "./tables/billingInvoices";
 import billingPayments from "./tables/billingPayments";
 import billingSubscriptions from "./tables/billingSubscriptions";
+import bucketFiles from "./tables/bucketFiles";
 import bucketUse from "./tables/bucketUse";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
@@ -121,6 +122,7 @@ import learningViews from "./tables/learningViews";
 import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
+import ninaFiles from "./tables/ninaFiles";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
@@ -192,6 +194,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly billingInvoices: typeof billingInvoices;
   readonly billingPayments: typeof billingPayments;
   readonly billingSubscriptions: typeof billingSubscriptions;
+  readonly bucketFiles: typeof bucketFiles;
   readonly bucketUse: typeof bucketUse;
   readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
@@ -295,6 +298,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly loginCards: typeof loginCards;
   readonly materialBuckets: typeof materialBuckets;
   readonly materialCatalog: typeof materialCatalog;
+  readonly ninaFiles: typeof ninaFiles;
   readonly ninaMemories: typeof ninaMemories;
   readonly ninaMemoryKeys: typeof ninaMemoryKeys;
   readonly ninaMemoryPortraits: typeof ninaMemoryPortraits;
@@ -365,6 +369,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   billingInvoices,
   billingPayments,
   billingSubscriptions,
+  bucketFiles,
   bucketUse,
   chatShares,
   chats,
@@ -468,6 +473,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   loginCards,
   materialBuckets,
   materialCatalog,
+  ninaFiles,
   ninaMemories,
   ninaMemoryKeys,
   ninaMemoryPortraits,

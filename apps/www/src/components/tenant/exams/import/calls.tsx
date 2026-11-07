@@ -15,7 +15,7 @@ import { importIntoExam } from "@/components/tenant/exams/import/start";
  * outlives the dialog it starts from and the page it opens, and its toast follows it.
  */
 export function useImportFile(slug: TenantSlug) {
-  const requestUrl = useMutation(exams.assets.uploadUrl);
+  const reserve = useMutation(exams.assets.reserve);
   const register = useAction(exams.assets.register);
   const read = useAction(exams.reads.read);
   const place = useMutation(exams.imports.place);
@@ -30,7 +30,7 @@ export function useImportFile(slug: TenantSlug) {
         place: (questions) => place({ examId, questions, slug }),
         read: (source) => read({ examId, slug, source }),
         register: (args) => register({ examId, slug, ...args }),
-        requestUrl: () => requestUrl({ examId, slug }),
+        reserve: (size) => reserve({ examId, kind: "image", slug, ...size }),
       })
     );
 }

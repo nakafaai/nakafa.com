@@ -187,7 +187,6 @@ function SchoolCohortPage({
             <ReadBoundary>
               <SchoolCohortMembers
                 cohortId={cohortId}
-                isArchived={detail.status === "archived"}
                 periodId={detail.periodId}
                 slug={slug}
               />

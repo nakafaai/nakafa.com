@@ -16,6 +16,7 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import {
   Array as Arr,
   Clock,
@@ -358,29 +359,22 @@ function ExamTask() {
       <PaneFooter>
         {Arr.contains(can, "task.manage") ? (
           <>
-            <Button
-              nativeButton={false}
-              render={
-                <Link params={run} to="/school/$slug/exams/$exam/edit">
-                  <HugeIcons aria-hidden="true" icon={Edit02Icon} />
-                  {t("task-questions")}
-                </Link>
-              }
-              variant="outline"
-            />
-            <Button
-              nativeButton={false}
-              render={
-                <Link
-                  params={run}
-                  to="/school/$slug/exams/$exam/sittings/$sitting/results"
-                >
-                  <HugeIcons aria-hidden="true" icon={ChartBarLineIcon} />
-                  {t("task-results")}
-                </Link>
-              }
-              variant="outline"
-            />
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={run}
+              to="/school/$slug/exams/$exam/edit"
+            >
+              <HugeIcons aria-hidden="true" icon={Edit02Icon} />
+              {t("task-questions")}
+            </Link>
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={run}
+              to="/school/$slug/exams/$exam/sittings/$sitting/results"
+            >
+              <HugeIcons aria-hidden="true" icon={ChartBarLineIcon} />
+              {t("task-results")}
+            </Link>
             <Button onClick={() => setOpenings((count) => count + 1)}>
               <HugeIcons aria-hidden="true" icon={PencilEdit02Icon} />
               {t("task-edit")}
@@ -388,19 +382,15 @@ function ExamTask() {
           </>
         ) : null}
         {Arr.contains(can, "task.submit") ? (
-          <Button
-            nativeButton={false}
-            render={
-              <Link
-                hash={task.exam.token}
-                params={{ sitting: task.exam.sittingId, slug }}
-                to="/school/$slug/sittings/$sitting"
-              >
-                <HugeIcons aria-hidden="true" icon={PlayIcon} />
-                {t("task-start")}
-              </Link>
-            }
-          />
+          <Link
+            className={buttonVariants()}
+            hash={task.exam.token}
+            params={{ sitting: task.exam.sittingId, slug }}
+            to="/school/$slug/sittings/$sitting"
+          >
+            <HugeIcons aria-hidden="true" icon={PlayIcon} />
+            {t("task-start")}
+          </Link>
         ) : null}
       </PaneFooter>
       {openings === 0 ? null : <EditTaskDialog key={openings} task={task} />}

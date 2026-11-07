@@ -57,6 +57,9 @@ export function isApplicationRouteRoot(locale: PublicLocale, root: string) {
   return Option.isSome(readPublicSurface(locale, root));
 }
 
+/** The pages under `school` that the main host serves: the landing, the account's entry, the start page and the pricing. */
+const MAIN_HOST_SCHOOL_PAGES = ["", "enter", "new", "pricing"];
+
 /**
  * Checks whether the route tree can receive one public path.
  *
@@ -119,10 +122,11 @@ export function isApplicationRoutePath(
     return isOnboardingPath(segments);
   }
 
-  // The main host serves one school page, where an account opens its own
-  // school; every other school page lives on the school's own host.
+  // The main host serves the public School landing and its pricing, the
+  // account's School entry, and the page where an account opens its own school;
+  // every other school page lives on the school's own host.
   if (root === "school") {
-    return Arr.join(segments, "/") === "new";
+    return Arr.contains(MAIN_HOST_SCHOOL_PAGES, Arr.join(segments, "/"));
   }
 
   if (root === "user") {

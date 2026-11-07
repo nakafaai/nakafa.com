@@ -7,7 +7,16 @@ import {
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Clock, DateTime, Duration, Effect, Schema } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  DateTime,
+  Duration,
+  Effect,
+  Option,
+  Schema,
+  String as Str,
+} from "effect";
 
 /** What a learner seeds: a one-month pass, or the monthly plan with its first month paid. */
 const XenditPurchase = Schema.Literals(["pass", "plan"]);
@@ -37,20 +46,16 @@ function deliveryOf(event: string, data: object, now: number) {
 }
 
 /**
- * The Xendit webhook that completes one purchase: a paid pay session, which for
- * the monthly plan also saved the buyer's channel as a payment token.
+ * The Xendit webhook that completes one pay session. A session that saved the
+ * buyer's channel, as the monthly plan's does, also carries its payment token.
  */
-function deliveryOfPaid(
-  purchase: typeof XenditPurchase.Type,
-  sessionId: string,
-  now: number
-) {
+function deliveryOfPaid(sessionId: string, now: number, saved: boolean) {
   return deliveryOf(
     "payment_session.completed",
     {
       payment_id: `py_${sessionId}`,
       payment_session_id: sessionId,
-      ...(purchase === "plan" ? { payment_token_id: `pt_${sessionId}` } : {}),
+      ...(saved ? { payment_token_id: `pt_${sessionId}` } : {}),
       reference_id: sessionId,
       session_type: "PAY",
       status: "COMPLETED",
@@ -118,7 +123,7 @@ export const seedAcceptanceXendit = Effect.fn("contentAcceptance.seedXendit")(
     const { eventId } = yield* run(
       "xendit event",
       "billing/events:record",
-      deliveryOfPaid(purchase, sessionId, now)
+      deliveryOfPaid(sessionId, now, purchase === "plan")
     ).pipe(Effect.flatMap(Schema.decodeEffect(Recorded)));
     yield* run("xendit apply", "billing/events:apply", { eventId });
   }
@@ -148,6 +153,119 @@ export const xenditMode = {
       root,
       userId,
       purchase,
+      yield* Clock.currentTimeMillis
+    );
+  }),
+} satisfies AcceptanceMode;
+
+/** The school invoices of the local runtime, newest first, as the Convex CLI prints them. */
+const InvoiceRows = Schema.fromJsonString(
+  Schema.Array(
+    Schema.Struct({
+      _id: Schema.String,
+      accountId: Schema.String,
+      dueAt: Schema.Finite,
+      number: Schema.String,
+    })
+  )
+);
+
+/** The most invoices the mode reads to find one: every school a shared runtime holds. */
+const INVOICE_LIMIT = "1000";
+
+/** What happens to a school invoice on Xendit: its hosted payment opens, or the school pays it. */
+const InvoiceStep = Schema.Literals(["open", "paid"]);
+
+/**
+ * Takes one school invoice of the running local acceptance backend through
+ * Xendit's hosted payment the way production records it. `open` stores the
+ * session Xendit answers with as the invoice's checkout and payment link, which
+ * the inert Xendit key cannot ask for, so the billing page shows Pay. `paid`
+ * has the event inbox apply the webhook Xendit posts once the school paid on
+ * that page, so the invoice is paid and its School grant written. The session
+ * takes its ID from the invoice number, so both steps name the same one.
+ */
+export const payAcceptanceInvoice = Effect.fn("contentAcceptance.payInvoice")(
+  function* (
+    root: string,
+    number: string,
+    step: typeof InvoiceStep.Type,
+    now: number
+  ) {
+    const runtime = yield* readLocalRuntime(root);
+    if (runtime === undefined) {
+      return yield* acceptanceRuntimeError(
+        "Run bun run acceptance:prepare and start acceptance before paying an invoice."
+      );
+    }
+    const run = (operation: string, path: string, args: object) =>
+      encodeArguments(args).pipe(
+        Effect.flatMap((text) =>
+          runLocalConvex(runtime, operation, ["run", path, text])
+        )
+      );
+    const sessionId = `ps_acceptance_${number}`;
+    if (step === "paid") {
+      const { eventId } = yield* run(
+        "xendit event",
+        "billing/events:record",
+        deliveryOfPaid(sessionId, now, false)
+      ).pipe(Effect.flatMap(Schema.decodeEffect(Recorded)));
+      yield* run("xendit apply", "billing/events:apply", { eventId });
+      return;
+    }
+    const invoices = yield* runLocalConvex(runtime, "invoice rows", [
+      "data",
+      "billingInvoices",
+      "--format",
+      "jsonArray",
+      "--limit",
+      INVOICE_LIMIT,
+    ]).pipe(
+      // The CLI prints nothing for a table that holds no row.
+      Effect.map((printed) => (Str.isEmpty(printed) ? "[]" : printed)),
+      Effect.flatMap(Schema.decodeEffect(InvoiceRows))
+    );
+    const invoice = Arr.findFirst(invoices, (row) => row.number === number);
+    if (Option.isNone(invoice)) {
+      return yield* acceptanceRuntimeError(
+        `The local runtime holds no invoice ${number}.`
+      );
+    }
+    yield* run("xendit invoice session", "billing/xendit/invoice:record", {
+      accountId: invoice.value.accountId,
+      expiresAt: invoice.value.dueAt,
+      invoiceId: invoice.value._id,
+      sessionId,
+      url: `https://checkout-staging.xendit.co/sessions/${sessionId}`,
+    });
+  }
+);
+
+/** The usage of the invoice mode: the invoice number, then the step on Xendit. */
+const INVOICE_USAGE = "invoice <invoice-number> <open|paid>";
+const InvoiceArguments = Schema.Tuple([Schema.String, InvoiceStep]);
+
+/**
+ * The invoice mode of the acceptance command line: opens the hosted payment of
+ * the school invoice it names, or pays it, as of the moment the command runs.
+ */
+export const invoiceMode = {
+  mode: "invoice",
+  usage: INVOICE_USAGE,
+  run: Effect.fn("contentAcceptance.runInvoice")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [number, step] = yield* decodeModeArguments(
+      INVOICE_USAGE,
+      InvoiceArguments,
+      args
+    );
+    return yield* payAcceptanceInvoice(
+      root,
+      number,
+      step,
       yield* Clock.currentTimeMillis
     );
   }),

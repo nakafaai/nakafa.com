@@ -26,8 +26,14 @@ const PHOTO_QUALITY = 0.8;
 const PHOTO_TYPE = "image/webp";
 const FALLBACK_TYPE = "image/jpeg";
 
-/** The ID of an uploaded file in Convex storage. */
-const storageId = Id("_storage");
+/** The file of the bucket that one reservation names. */
+const fileIdSchema = Id("bucketFiles");
+
+/** What a reservation answers: the presigned R2 address of the upload and the file it becomes. */
+const Reserved = Schema.Struct({
+  address: Schema.String,
+  fileId: fileIdSchema,
+});
 
 /** A file past what a message carries, which the browser refuses before it sends a byte. */
 export class FileTooLarge extends Data.TaggedError("FileTooLarge") {}
@@ -121,33 +127,37 @@ export const shrinkPhoto = Effect.fn("classroom.forum.upload.shrink")(
  * HTTP client with it, loads only now, so the page's first JavaScript does not carry it.
  */
 export const uploadAttachment = Effect.fn("classroom.forum.upload")(function* <
-  UrlError,
+  ReserveError,
   RegisterError,
   Registered,
 >(
   file: File,
-  requestUrl: () => Promise<Result.Result<URL, UrlError>>,
+  reserve: (
+    bytes: Blob
+  ) => Promise<Result.Result<typeof Reserved.Type, ReserveError>>,
   register: (sent: {
+    readonly fileId: typeof fileIdSchema.Type;
     readonly height: number | null;
-    readonly storageId: typeof storageId.Type;
-    readonly thumbnailId: typeof storageId.Type | null;
+    readonly thumbnailId: typeof fileIdSchema.Type | null;
     readonly width: number | null;
   }) => Promise<Result.Result<Registered, RegisterError>>
 ) {
   if (file.size > LIBRARY_BYTE_LIMIT) {
     return yield* new FileTooLarge();
   }
-  const { sendStorageFile } = yield* Effect.tryPromise(
-    () => import("@/components/tenant/exams/image")
-  );
+  const { putFile } = yield* Effect.tryPromise(() => import("@/lib/files/put"));
   const send = (bytes: Blob) =>
-    Effect.flatMap(forumCall(requestUrl), (url) => sendStorageFile(url, bytes));
+    Effect.flatMap(
+      forumCall(() => reserve(bytes)),
+      (reserved) =>
+        putFile(reserved.address, bytes).pipe(Effect.as(reserved.fileId))
+    );
   if (!isPhoto(file)) {
     const sent = yield* send(file);
     const registered = yield* forumCall(() =>
       register({
+        fileId: sent,
         height: null,
-        storageId: sent,
         thumbnailId: null,
         width: null,
       })
@@ -161,8 +171,8 @@ export const uploadAttachment = Effect.fn("classroom.forum.upload")(function* <
   );
   const registered = yield* forumCall(() =>
     register({
+      fileId: sent,
       height: photo.height,
-      storageId: sent,
       thumbnailId: thumbnail,
       width: photo.width,
     })

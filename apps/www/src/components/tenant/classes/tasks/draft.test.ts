@@ -14,6 +14,7 @@ const ZONE = "Asia/Jakarta";
 
 /** A task due at a whole minute, as its page reads it. */
 const task: ClassTask = {
+  archived: false,
   category: "Latihan",
   deadline: Option.getOrThrow(deadlineOf("2026-11-02T23:59", ZONE)),
   exam: null,

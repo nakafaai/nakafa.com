@@ -6,6 +6,7 @@ import { languageModel as profile } from "@repo/backend/confect/gateway/model";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
+  answerCalls,
   appendNinaTurn,
   createNinaTest,
   fundLearner,
@@ -258,12 +259,10 @@ describe("Nina generation through the real Agent component", () => {
     await f.t.finishAllScheduledFunctions(() => undefined);
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
-    expect(languageModel.doStreamCalls).toHaveLength(2);
+    const calls = answerCalls(languageModel);
+    expect(calls).toHaveLength(2);
     expect(
-      Arr.filter(
-        languageModel.doStreamCalls[1]?.prompt,
-        (message) => message.role === "tool"
-      )
+      Arr.filter(calls[1]?.prompt, (message) => message.role === "tool")
     ).toEqual([
       {
         role: "tool",

@@ -15,7 +15,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalMutation({
       name: "lock",
-      args: () => ({ reportId: Id("reportCards"), storageId: Id("_storage") }),
+      args: () => ({ reportId: Id("reportCards"), fileId: Id("bucketFiles") }),
       returns: () => Schema.Null,
     })
   );
