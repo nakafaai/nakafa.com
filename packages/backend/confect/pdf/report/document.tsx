@@ -15,6 +15,13 @@ import { REPORT_COPY } from "@repo/backend/confect/pdf/report/copy";
 import { Array as Arr, DateTime } from "effect";
 import type {} from "takumi-pdf/primitives";
 
+/** A grade as each language writes it, with up to two decimals: `67.5`, `67,5`. */
+const GRADES = {
+  de: new Intl.NumberFormat("de", { maximumFractionDigits: 2 }),
+  en: new Intl.NumberFormat("en", { maximumFractionDigits: 2 }),
+  id: new Intl.NumberFormat("id", { maximumFractionDigits: 2 }),
+} satisfies Record<keyof typeof REPORT_COPY, Intl.NumberFormat>;
+
 /**
  * The body of one report card (ADR 0033, S5): the student, the class group, the
  * period, and the approval date, one line per subject, the homeroom teacher's
@@ -27,9 +34,7 @@ export function ReportDocument({
   report: typeof ReportInput.Type;
 }) {
   const copy = REPORT_COPY[report.locale];
-  const grade = new Intl.NumberFormat(report.locale, {
-    maximumFractionDigits: 2,
-  });
+  const grade = GRADES[report.locale];
 
   return (
     <Sheet>
