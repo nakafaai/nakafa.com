@@ -1735,7 +1735,20 @@
     "task-exam-description": "Pilih ujian yang dibuat di editor ujian, lalu kelas mengerjakannya di pemutar ujian.",
     "task-start": "Mulai",
     "task-questions": "Soal",
-    "task-results": "Hasil"
+    "task-results": "Hasil",
+    "task-shelf": "Rak",
+    "task-live": "Aktif",
+    "task-archived": "Diarsipkan",
+    "task-archive": "Arsipkan",
+    "task-restore": "Pulihkan",
+    "post-archive": "Arsipkan",
+    "post-restore": "Pulihkan",
+    "posts-archived": "Diarsipkan",
+    "posts-archived-empty": "Belum ada pengumuman yang diarsipkan",
+    "posts-archived-empty-description": "Pengumuman yang kamu arsipkan menunggu di sini, dan Pulihkan mengembalikannya.",
+    "threads-archived": "Diarsipkan",
+    "discussion-archive": "Arsipkan",
+    "discussion-restore": "Pulihkan"
   },
   "SchoolGrades": {
     "email": "Email",

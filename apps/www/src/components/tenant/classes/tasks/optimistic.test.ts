@@ -4,9 +4,11 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
+  archiveUpdate,
   type ClassTask,
   editUpdate,
   removeUpdate,
+  restoreUpdate,
   scoreUpdate,
   submitUpdate,
   type TaskWork,
@@ -20,6 +22,7 @@ const personId = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 
 /** A task of the class at `address`, due at 100. */
 const task = (address: string, mine: ClassTask["mine"]): ClassTask => ({
+  archived: false,
   category: null,
   deadline: 100,
   exam: null,
@@ -254,6 +257,35 @@ describe("task optimistic updates", () => {
         pageArgs,
         Option.some({ isDone: true, page: [task("latihan", null)] }),
       ],
+    ]);
+  });
+
+  it("takes an archived or a restored task out of the list it leaves", () => {
+    const listed = () =>
+      storeByRef([
+        [
+          classroom.tasks.list,
+          [
+            {
+              args: pageArgs,
+              value: Option.some({
+                isDone: true,
+                page: [task("ringkasan", null), task("latihan", null)],
+              }),
+            },
+          ],
+        ],
+      ]);
+    const archived = listed();
+    archiveUpdate(archived.localStore, { classId, slug, task: "ringkasan" });
+    const restored = listed();
+    restoreUpdate(restored.localStore, { classId, slug, task: "latihan" });
+    expect([
+      archived.setQuery.mock.calls[0]?.[2],
+      restored.setQuery.mock.calls[0]?.[2],
+    ]).toEqual([
+      Option.some({ isDone: true, page: [task("latihan", null)] }),
+      Option.some({ isDone: true, page: [task("ringkasan", null)] }),
     ]);
   });
 });

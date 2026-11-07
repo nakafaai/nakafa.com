@@ -4,11 +4,13 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
+  archivePostUpdate,
   type ClassPost,
   editPostUpdate,
   pinPostUpdate,
   publishUpdate,
   removePostUpdate,
+  restorePostUpdate,
   votePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
 
@@ -21,6 +23,7 @@ const personId = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
 
 /** An announcement of the class, posted by the viewer. */
 const post = (id: string, text: string): ClassPost => ({
+  archived: false,
   author: { id: personId, name: "Bu Rina" },
   clientKey: `key-${id}-0000`,
   createdAt: 1,
@@ -245,5 +248,36 @@ describe("class home optimistic updates", () => {
         { postId: first.id, votes: [{ count: 1, mine: true, option: 0 }] },
       ])
     );
+  });
+
+  it("takes an archived or a restored announcement off the home and its pins of its class alone", () => {
+    const pinnedArgs = { classId, slug };
+    const homeStore = () => {
+      const store = storeOf(pages);
+      store.localStore.getAllQueries.mockImplementation((query) =>
+        query === classroom.posts.pinned
+          ? [
+              { args: pinnedArgs, value: Option.some([first]) },
+              { args: { classId: otherClass, slug }, value: Option.some([]) },
+              { args: pinnedArgs, value: Option.none() },
+            ]
+          : pages
+      );
+      return store;
+    };
+    const archived = homeStore();
+    archivePostUpdate(archived.localStore, { classId, postId: first.id, slug });
+    const restored = homeStore();
+    restorePostUpdate(restored.localStore, { classId, postId: first.id, slug });
+    for (const store of [archived, restored]) {
+      expect(store.setQuery.mock.calls).toEqual([
+        [
+          classroom.posts.list,
+          listArgs(classId, null),
+          Option.some({ isDone: false, page: [] }),
+        ],
+        [classroom.posts.pinned, pinnedArgs, Option.some([])],
+      ]);
+    }
   });
 });

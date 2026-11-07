@@ -59,8 +59,11 @@ export const TaskAddress = Schema.String.check(
  * goes to part of the class, and without it the whole class is its target.
  * `sittingId` names the run of the exam document a task is built from, when the
  * teacher built it in the exam editor, and students do it in the exam player.
+ * `archivedAt` marks a task its teacher archived: it leaves the class's list and its
+ * students, and comes back whole when restored.
  */
 export const taskValidator = Schema.Struct({
+  archivedAt: Schema.optionalKey(Schema.Finite),
   authorId: Id("tenantPeople"),
   category: Schema.optionalKey(TaskCategory),
   classId: Id("classes"),
@@ -101,6 +104,7 @@ export const submissionValidator = Schema.Struct({
  * can read and change what they handed in, whether it came late, and its points.
  */
 export const TaskView = Schema.Struct({
+  archived: Schema.Boolean,
   category: Schema.NullOr(TaskCategory),
   deadline: Schema.Finite,
   exam: Schema.NullOr(

@@ -112,18 +112,15 @@ export const scoreUpdate: OptimisticUpdate<typeof classroom.tasks.score> = (
   }
 };
 
-/**
- * Takes a deleted task out of the class's lists at once, wherever a list holds it; a refusal brings
- * it back, because Convex drops the update when the mutation fails.
- */
-export const removeUpdate: OptimisticUpdate<typeof classroom.tasks.remove> = (
-  localStore,
-  args
+/** Takes the task at `slug` out of every list of the class that holds it. */
+const leaveLists = (
+  localStore: LocalStore.OptimisticLocalStore,
+  slug: string
 ) => {
   for (const query of localStore.getAllQueries(list)) {
     if (
       Option.isSome(query.value) &&
-      Arr.some(query.value.value.page, (task) => task.slug === args.task)
+      Arr.some(query.value.value.page, (task) => task.slug === slug)
     ) {
       localStore.setQuery(
         list,
@@ -132,10 +129,31 @@ export const removeUpdate: OptimisticUpdate<typeof classroom.tasks.remove> = (
           ...query.value.value,
           page: Arr.filter(
             query.value.value.page,
-            (task) => task.slug !== args.task
+            (task) => task.slug !== slug
           ),
         })
       );
     }
   }
 };
+
+/**
+ * Takes a deleted task out of the class's lists at once, wherever a list holds it; a refusal brings
+ * it back, because Convex drops the update when the mutation fails.
+ */
+export const removeUpdate: OptimisticUpdate<typeof classroom.tasks.remove> = (
+  localStore,
+  args
+) => leaveLists(localStore, args.task);
+
+/** Takes an archived task out of the live list at once; a refusal brings it back. */
+export const archiveUpdate: OptimisticUpdate<typeof classroom.tasks.archive> = (
+  localStore,
+  args
+) => leaveLists(localStore, args.task);
+
+/** Takes a restored task out of the archived list at once; a refusal brings it back. */
+export const restoreUpdate: OptimisticUpdate<typeof classroom.tasks.restore> = (
+  localStore,
+  args
+) => leaveLists(localStore, args.task);

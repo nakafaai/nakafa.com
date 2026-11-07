@@ -1735,7 +1735,20 @@
     "task-exam-description": "Choose an exam built in the exam editor, and the class does it in the exam player.",
     "task-start": "Start",
     "task-questions": "Questions",
-    "task-results": "Results"
+    "task-results": "Results",
+    "task-shelf": "Shelf",
+    "task-live": "Live",
+    "task-archived": "Archived",
+    "task-archive": "Archive",
+    "task-restore": "Restore",
+    "post-archive": "Archive",
+    "post-restore": "Restore",
+    "posts-archived": "Archived",
+    "posts-archived-empty": "No archived announcement",
+    "posts-archived-empty-description": "Announcements you archive wait here, and Restore brings them back.",
+    "threads-archived": "Archived",
+    "discussion-archive": "Archive",
+    "discussion-restore": "Restore"
   },
   "SchoolGrades": {
     "email": "Email",

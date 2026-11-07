@@ -1,5 +1,7 @@
 import { useMutation } from "@confect/react";
 import {
+  Archive02Icon,
+  ArrowTurnBackwardIcon,
   Delete02Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
@@ -44,10 +46,12 @@ import {
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import {
+  archivePostUpdate,
   type ClassPost,
   editPostUpdate,
   pinPostUpdate,
   removePostUpdate,
+  restorePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
 import { PostPoll } from "@/components/tenant/classes/home/poll";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -118,7 +122,10 @@ function PostBody({ post }: { post: ClassPost }) {
   );
 }
 
-/** The menu of a subject teacher: Pin or Unpin, and on their own announcement Edit, and Remove after a confirmation. */
+/**
+ * The menu of a subject teacher: Pin or Unpin, and on their own announcement Edit, Archive or Restore, and Remove after a
+ * confirmation.
+ */
 function PostActions({
   onEdit,
   post,
@@ -130,6 +137,8 @@ function PostActions({
   const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const remove = useMutation(classroom.posts.remove);
+  const archive = useMutation(classroom.posts.archive);
+  const restore = useMutation(classroom.posts.restore);
   const pin = useMutation(classroom.posts.pin);
   const [removing, setRemoving] = useState(false);
 
@@ -190,6 +199,43 @@ function PostActions({
                     {t("message-edit")}
                   </DropdownMenuItem>
                 ) : null}
+                {post.archived ? (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      runForumCall(
+                        forumCall(() =>
+                          restore.withOptimisticUpdate(restorePostUpdate)({
+                            classId,
+                            postId: post.id,
+                            slug,
+                          })
+                        ),
+                        toastForumFailure
+                      )
+                    }
+                  >
+                    <HugeIcons icon={ArrowTurnBackwardIcon} />
+                    {t("post-restore")}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      runForumCall(
+                        forumCall(() =>
+                          archive.withOptimisticUpdate(archivePostUpdate)({
+                            classId,
+                            postId: post.id,
+                            slug,
+                          })
+                        ),
+                        toastForumFailure
+                      )
+                    }
+                  >
+                    <HugeIcons icon={Archive02Icon} />
+                    {t("post-archive")}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => setRemoving(true)}>
                   <HugeIcons icon={Delete02Icon} />
                   {t("post-remove")}
