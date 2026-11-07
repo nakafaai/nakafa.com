@@ -11,7 +11,7 @@ import {
   type JsxAttributes,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { tagText } from "#scripts/check/drilling";
 import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
 import { children } from "#scripts/check/source";
