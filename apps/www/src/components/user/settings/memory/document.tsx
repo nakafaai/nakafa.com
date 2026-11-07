@@ -200,7 +200,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               redo: labels("redo"),
               strike: labels("strike"),
               style: labels("style"),
-              styleMenu: labels("style-menu"),
+              styleMenu: labels("menu-style"),
               tasks: labels("tasks"),
               text: labels("text"),
               underline: labels("underline"),
@@ -244,6 +244,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
         }}
         onOpenChange={setAsking}
         open={asking}
+        title={draft.title.trim() === "" ? t("untitled") : draft.title}
       />
     </>
   );

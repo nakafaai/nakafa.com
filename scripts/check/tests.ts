@@ -16,6 +16,7 @@ import {
   sharedPackageName,
 } from "#scripts/check/compiler";
 import { inspectNativeControls } from "#scripts/check/controls";
+import { inspectDialogSource } from "#scripts/check/dialogs";
 import { inspectDictionaries } from "#scripts/check/dictionary";
 import { inspectDrillingSource } from "#scripts/check/drilling";
 import {
@@ -112,6 +113,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectMenuOrder(file, sourceFile),
         inspectGroupSource(file, sourceFile),
         inspectButtonSource(file, sourceFile),
+        inspectDialogSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),

@@ -115,14 +115,14 @@ export function ContributorGallery({
       </div>
 
       <ResponsiveDialog
-        description={t("contributor-description")}
-        footer={Option.match(card.entry, {
+        action={Option.match(card.entry, {
           onNone: () => null,
           onSome: ({ contributor }) =>
             contributor.social ? (
               <ContributorLinks social={contributor.social} />
             ) : null,
         })}
+        description={t("contributor-description")}
         open={card.open}
         setOpen={(open) => setCard((current) => ({ ...current, open }))}
         title={Option.match(card.entry, {

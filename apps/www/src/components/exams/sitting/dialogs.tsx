@@ -1,9 +1,12 @@
 import {
   Alert02Icon,
   ComputerIcon,
+  Door01Icon,
   FirstAidKitIcon,
   FlashOffIcon,
   MoreHorizontalIcon,
+  QrCodeIcon,
+  SmartPhone01Icon,
   WifiDisconnected01Icon,
 } from "@hugeicons/core-free-icons";
 import { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
@@ -16,7 +19,10 @@ import {
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -51,36 +57,27 @@ interface AttemptDialogProps {
   readonly open: boolean;
 }
 
-/** The cancel and confirm buttons that close every dialog, in its one footer row. */
-export function ConfirmActions({
+/** The confirm button of every dialog, beside the Cancel the dialog draws in its footer. */
+export function ConfirmAction({
   confirm,
   destructive = false,
   disabled = false,
-  onCancel,
   onConfirm,
 }: {
   readonly confirm: string;
   readonly destructive?: boolean;
   readonly disabled?: boolean;
-  readonly onCancel: () => void;
   readonly onConfirm: () => void;
 }) {
-  const tCommon = useTranslations("Common");
-
   return (
-    <>
-      <Button onClick={onCancel} type="button" variant="outline">
-        {tCommon("cancel")}
-      </Button>
-      <Button
-        disabled={disabled}
-        onClick={onConfirm}
-        type="button"
-        variant={destructive ? "destructive" : "default"}
-      >
-        {confirm}
-      </Button>
-    </>
+    <Button
+      disabled={disabled}
+      onClick={onConfirm}
+      type="button"
+      variant={destructive ? "destructive" : "default"}
+    >
+      {confirm}
+    </Button>
   );
 }
 
@@ -150,26 +147,31 @@ export function ChangeTokenDialog({
   readonly open: boolean;
 }) {
   const t = useTranslations("Exams");
-  const { sittingId, slug } = useSittingData();
+  const { sittingId, slug, value } = useSittingData();
   const changeToken = useChangeToken();
 
   return (
     <ResponsiveDialog
-      description={t("confirm-change-token-description")}
-      footer={
-        <ConfirmActions
+      action={
+        <ConfirmAction
           confirm={t("confirm-change-token-action")}
-          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             onOpenChange(false);
             runSittingCall(() => changeToken({ sittingId, slug }));
           }}
         />
       }
+      description={t("confirm-change-token-description")}
       open={open}
       setOpen={onOpenChange}
       title={t("confirm-change-token-title")}
-    />
+    >
+      <ResponsiveDialogSubject icon={QrCodeIcon}>
+        <span className="font-mono tracking-widest tabular-nums" translate="no">
+          {value.token}
+        </span>
+      </ResponsiveDialogSubject>
+    </ResponsiveDialog>
   );
 }
 
@@ -182,27 +184,33 @@ export function CloseSittingDialog({
   readonly open: boolean;
 }) {
   const t = useTranslations("Exams");
-  const { sittingId, slug } = useSittingData();
+  const { sittingId, slug, value } = useSittingData();
   const closeSitting = useCloseSitting();
 
   return (
     <ResponsiveDialog
-      description={t("confirm-close-description")}
-      footer={
-        <ConfirmActions
+      action={
+        <ConfirmAction
           confirm={t("confirm-close-action")}
           destructive
-          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             onOpenChange(false);
             runSittingCall(() => closeSitting({ sittingId, slug }));
           }}
         />
       }
+      description={t("confirm-close-description")}
       open={open}
       setOpen={onOpenChange}
       title={t("confirm-close-title")}
-    />
+    >
+      <ResponsiveDialogSubject
+        description={value.sitting.room}
+        icon={Door01Icon}
+      >
+        {value.sitting.examTitle}
+      </ResponsiveDialogSubject>
+    </ResponsiveDialog>
   );
 }
 
@@ -227,13 +235,11 @@ export function LockDialog({
 
   return (
     <ResponsiveDialog
-      description={t("confirm-lock-description")}
-      footer={
-        <ConfirmActions
+      action={
+        <ConfirmAction
           confirm={t("confirm-lock-action")}
           destructive
           disabled={reason === null}
-          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             if (reason === null) {
               return;
@@ -243,6 +249,7 @@ export function LockDialog({
           }}
         />
       }
+      description={t("confirm-lock-description")}
       onOpenChangeComplete={forget}
       open={open}
       setOpen={onOpenChange}
@@ -274,12 +281,10 @@ export function UnlockDialog({
 
   return (
     <ResponsiveDialog
-      description={t("confirm-unlock-description")}
-      footer={
-        <ConfirmActions
+      action={
+        <ConfirmAction
           confirm={t("confirm-unlock-action")}
           disabled={reason === null}
-          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             if (reason === null) {
               return;
@@ -291,6 +296,7 @@ export function UnlockDialog({
           }}
         />
       }
+      description={t("confirm-unlock-description")}
       onOpenChangeComplete={forget}
       open={open}
       setOpen={onOpenChange}
@@ -328,12 +334,10 @@ export function AddMinutesDialog({
 
   return (
     <ResponsiveDialog
-      description={t("confirm-add-minutes-description")}
-      footer={
-        <ConfirmActions
+      action={
+        <ConfirmAction
           confirm={t("confirm-add-minutes-action")}
           disabled={reason === null || Option.isNone(minutes)}
-          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             if (reason === null || Option.isNone(minutes)) {
               return;
@@ -351,6 +355,7 @@ export function AddMinutesDialog({
           }}
         />
       }
+      description={t("confirm-add-minutes-description")}
       onOpenChangeComplete={forget}
       open={open}
       setOpen={onOpenChange}
@@ -392,20 +397,23 @@ export function AllowDeviceDialog({
 
   return (
     <ResponsiveDialog
-      description={t("confirm-allow-device-description")}
-      footer={
-        <ConfirmActions
+      action={
+        <ConfirmAction
           confirm={t("confirm-allow-device-action")}
-          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             onOpenChange(false);
             runSittingCall(() => allowDevice({ attemptId, sittingId, slug }));
           }}
         />
       }
+      description={t("confirm-allow-device-description")}
       open={open}
       setOpen={onOpenChange}
       title={t("confirm-allow-device-title", { name })}
-    />
+    >
+      <ResponsiveDialogSubject icon={SmartPhone01Icon}>
+        {name}
+      </ResponsiveDialogSubject>
+    </ResponsiveDialog>
   );
 }

@@ -169,26 +169,17 @@ export function OpenSchoolDialog({
 
   return (
     <ResponsiveDialog
-      description={t("open-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(request)}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            {t("open")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(request)}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          {t("open")}
+        </Button>
       }
+      description={t("open-description")}
       open={open}
       setOpen={setOpen}
       title={t("open")}

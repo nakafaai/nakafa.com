@@ -2523,7 +2523,9 @@
     "reset": "Ulangi",
     "explanation": "Pembahasan",
     "prompt": "Soal",
-    "reading": "Bacaan"
+    "reading": "Bacaan",
+    "start-timer": "Waktu berjalan sejak kamu mulai",
+    "start-history": "Jawabanmu tetap di riwayat"
   },
   "Player": {
     "navigator": "Soal",
@@ -2779,12 +2781,13 @@
     "divider": "Garis pemisah",
     "more": "Lainnya",
     "style": "Gaya teks",
-    "style-menu": "Gaya",
+    "menu-style": "Gaya",
     "text": "Teks biasa",
     "insert": "Sisipkan blok",
     "subscript": "Subskrip",
     "superscript": "Superskrip",
     "table": "Tabel",
+    "menu-table": "Tabel",
     "table-actions": "Aksi tabel",
     "row-before": "Baris di atas",
     "row-after": "Baris di bawah",

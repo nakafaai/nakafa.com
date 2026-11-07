@@ -2523,7 +2523,9 @@
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
     "prompt": "Aufgabe",
-    "reading": "Lesetext"
+    "reading": "Lesetext",
+    "start-timer": "Die Zeit läuft ab dem Start",
+    "start-history": "Deine Antworten bleiben im Verlauf"
   },
   "Player": {
     "navigator": "Aufgaben",
@@ -2779,12 +2781,13 @@
     "divider": "Trennlinie",
     "more": "Mehr",
     "style": "Textstil",
-    "style-menu": "Stil",
+    "menu-style": "Stil",
     "text": "Normaler Text",
     "insert": "Block einfügen",
     "subscript": "Tiefgestellt",
     "superscript": "Hochgestellt",
     "table": "Tabelle",
+    "menu-table": "Tabelle",
     "table-actions": "Tabellenaktionen",
     "row-before": "Zeile darüber",
     "row-after": "Zeile darunter",

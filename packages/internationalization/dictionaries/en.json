@@ -2523,7 +2523,9 @@
     "reset": "Reset",
     "explanation": "Explanation",
     "prompt": "Question",
-    "reading": "Reading"
+    "reading": "Reading",
+    "start-timer": "The timer runs from the moment you start",
+    "start-history": "Your answers stay in your history"
   },
   "Player": {
     "navigator": "Questions",
@@ -2779,12 +2781,13 @@
     "divider": "Divider",
     "more": "More",
     "style": "Text style",
-    "style-menu": "Style",
+    "menu-style": "Style",
     "text": "Normal text",
     "insert": "Insert a block",
     "subscript": "Subscript",
     "superscript": "Superscript",
     "table": "Table",
+    "menu-table": "Table",
     "table-actions": "Table actions",
     "row-before": "Row above",
     "row-after": "Row below",

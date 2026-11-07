@@ -142,7 +142,11 @@ function SittingResultsContent({
                 <QuestionsAction questions={questions} />
                 <IntegrityAction />
               </ButtonGroup>
-              <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
+              <ReleaseAction
+                canRelease={canRelease}
+                releasedAt={releasedAt}
+                sitting={sitting}
+              />
             </ResultsHeader>
             <Panes id="results">
               <PanesList>

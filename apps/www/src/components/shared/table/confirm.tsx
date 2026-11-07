@@ -6,7 +6,6 @@ import {
 import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ComponentProps, type ReactNode, useState } from "react";
-import { useTranslations } from "use-intl";
 import { RowItems } from "@/components/shared/table/menu";
 
 /**
@@ -23,6 +22,7 @@ export function ConfirmRowMenu({
   disabled = false,
   icon,
   onConfirm,
+  subject,
   title,
 }: {
   readonly action: string;
@@ -34,9 +34,10 @@ export function ConfirmRowMenu({
   readonly disabled?: boolean;
   readonly icon: ComponentProps<typeof HugeIcons>["icon"];
   readonly onConfirm: () => void;
+  /** The row the action takes, the dialog's body, such as a ResponsiveDialogSubject with its name. */
+  readonly subject: ReactNode;
   readonly title: string;
 }) {
-  const common = useTranslations("Common");
   const [isConfirming, setIsConfirming] = useState(false);
 
   return (
@@ -54,32 +55,25 @@ export function ConfirmRowMenu({
         </DropdownMenuItem>
       </RowItems>
       <ResponsiveDialog
-        description={description}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsConfirming(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsConfirming(false);
-                onConfirm();
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {confirm}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              setIsConfirming(false);
+              onConfirm();
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {confirm}
+          </Button>
         }
+        description={description}
         open={isConfirming}
         setOpen={setIsConfirming}
         title={title}
-      />
+      >
+        {subject}
+      </ResponsiveDialog>
     </>
   );
 }

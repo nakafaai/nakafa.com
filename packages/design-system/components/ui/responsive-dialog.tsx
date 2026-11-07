@@ -20,7 +20,17 @@ import {
   DrawerPanel,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  HugeIcons,
+  OptionIcon,
+} from "@repo/design-system/components/ui/huge-icons";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@repo/design-system/components/ui/item";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { pressMainAction } from "@repo/design-system/lib/dialog";
 import {
@@ -32,7 +42,13 @@ import {
 import { useTranslations } from "use-intl";
 
 interface Props {
-  children?: ReactNode;
+  /**
+   * The footer's action, beside the Cancel the dialog draws itself. A dialog that only shows something has none,
+   * and its footer offers Close.
+   */
+  action?: ReactNode;
+  /** The body: what the action does or takes away, or the fields it asks for. Every dialog has one. */
+  children: ReactNode;
   /** The one sentence under the title that says what the dialog does; every dialog has one. */
   description: ReactNode;
   /**
@@ -40,7 +56,6 @@ interface Props {
    * the caller, or the element that a function returns.
    */
   finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"];
-  footer?: ReactNode;
   /** Runs after the open or close animation has finished. */
   onOpenChangeComplete?: (open: boolean) => void;
   open: boolean;
@@ -51,18 +66,19 @@ interface Props {
 }
 
 /**
- * A dialog on a wide screen and a drawer on a phone, with one anatomy on both: a header with the title, its
- * sentence and the close in the top right corner, as shadcn's dialog has it, the body, and a footer with the way
- * out beside the action.
+ * A dialog on a wide screen and a drawer on a phone, with one anatomy on both, as shadcn's dialog and alert dialog
+ * have it: a header with the title, its sentence and the close in the top right corner; a body, which every dialog
+ * has; and a footer with Cancel beside the action, or Close alone on a dialog that only shows something. The
+ * dialog draws its header, its footer's way out and its close itself, so no dialog can leave one out.
  */
 export function ResponsiveDialog({
+  action,
   open,
   setOpen,
   title,
   description,
   children,
   finalFocus,
-  footer,
   onOpenChangeComplete,
   size = "default",
 }: Props) {
@@ -72,9 +88,6 @@ export function ResponsiveDialog({
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, undefined, {
     getInitialValueInEffect: false,
   });
-  // The body is there whenever the caller gives one, also while what it holds is empty, so a message that
-  // appears inside it never adds the panel and its padding at the same time.
-  const hasBody = children !== undefined;
   const t = useTranslations("Common");
   const opened = useRef(false);
   const footerPart = useRef<HTMLDivElement>(null);
@@ -106,10 +119,11 @@ export function ResponsiveDialog({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          {hasBody ? (
-            <DialogPanel onKeyDown={pressMain}>{children}</DialogPanel>
-          ) : null}
-          {!!footer && <DialogFooter ref={footerPart}>{footer}</DialogFooter>}
+          <DialogPanel onKeyDown={pressMain}>{children}</DialogPanel>
+          <DialogFooter ref={footerPart}>
+            <ResponsiveDialogCancel action={action} setOpen={setOpen} />
+            {action}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );
@@ -124,9 +138,10 @@ export function ResponsiveDialog({
     >
       <DrawerContent finalFocus={finalFocus}>
         <DrawerClose
-          aria-label={t("close")}
           className="absolute top-2 right-2 z-10"
-          render={<Button size="icon-sm" variant="ghost" />}
+          render={
+            <Button size="icon-sm" tooltip={t("close")} variant="ghost" />
+          }
         >
           <HugeIcons icon={CancelIcon} />
         </DrawerClose>
@@ -134,11 +149,62 @@ export function ResponsiveDialog({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        {hasBody ? (
-          <DrawerPanel onKeyDown={pressMain}>{children}</DrawerPanel>
-        ) : null}
-        {!!footer && <DrawerFooter ref={footerPart}>{footer}</DrawerFooter>}
+        <DrawerPanel onKeyDown={pressMain}>{children}</DrawerPanel>
+        <DrawerFooter ref={footerPart}>
+          <ResponsiveDialogCancel action={action} setOpen={setOpen} />
+          {action}
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+/**
+ * The footer's way out, the first of its buttons: Cancel beside an action, or Close on a dialog that only shows
+ * something. The action stays the footer's last button, the one an Enter in a field presses.
+ */
+function ResponsiveDialogCancel({
+  action,
+  setOpen,
+}: {
+  action: ReactNode;
+  setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("Common");
+
+  return (
+    <Button onClick={() => setOpen(false)} type="button" variant="outline">
+      {t(action === undefined ? "close" : "cancel")}
+    </Button>
+  );
+}
+
+/**
+ * What a dialog's action is about, the body of a confirm: the icon of its kind beside its name, and a second line
+ * when one name is not enough, so the reader sees what the action changes or takes away before pressing it.
+ */
+export function ResponsiveDialogSubject({
+  children,
+  description,
+  icon,
+}: {
+  children: ReactNode;
+  description?: ReactNode;
+  icon: ComponentProps<typeof OptionIcon>["icon"];
+}) {
+  return (
+    <Item size="sm" variant="outline">
+      <ItemMedia variant="icon">
+        <OptionIcon icon={icon} />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle className="line-clamp-2">{children}</ItemTitle>
+        {description === undefined ? null : (
+          <ItemDescription className="line-clamp-2">
+            {description}
+          </ItemDescription>
+        )}
+      </ItemContent>
+    </Item>
   );
 }
