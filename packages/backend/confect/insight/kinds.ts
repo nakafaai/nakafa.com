@@ -10,8 +10,9 @@ const classInsight = Kind.extend(classKind, {
   actions: {
     "insight.teach": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["subjectTeacher"],
+      roles: [],
     },
     "insight.view": {
       access: "read",

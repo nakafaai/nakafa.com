@@ -1911,6 +1911,12 @@ export declare const api: {
           title: string;
         }
       >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string },
+        null
+      >;
       score: FunctionReference<
         "mutation",
         "public",

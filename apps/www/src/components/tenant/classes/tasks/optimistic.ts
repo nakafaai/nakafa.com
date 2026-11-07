@@ -111,3 +111,31 @@ export const scoreUpdate: OptimisticUpdate<typeof classroom.tasks.score> = (
     }
   }
 };
+
+/**
+ * Takes a deleted task out of the class's lists at once, wherever a list holds it; a refusal brings
+ * it back, because Convex drops the update when the mutation fails.
+ */
+export const removeUpdate: OptimisticUpdate<typeof classroom.tasks.remove> = (
+  localStore,
+  args
+) => {
+  for (const query of localStore.getAllQueries(list)) {
+    if (
+      Option.isSome(query.value) &&
+      Arr.some(query.value.value.page, (task) => task.slug === args.task)
+    ) {
+      localStore.setQuery(
+        list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.filter(
+            query.value.value.page,
+            (task) => task.slug !== args.task
+          ),
+        })
+      );
+    }
+  }
+};
