@@ -1,13 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { SmileIcon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
@@ -19,8 +12,8 @@ import {
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import {
-  EmojiPanel,
-  useEmojiChooser,
+  EmojiPopover,
+  EmojiTrigger,
 } from "@/components/tenant/classes/forum/chooser";
 import { QUICK_EMOJI } from "@/components/tenant/classes/forum/emoji";
 import { isPending } from "@/components/tenant/classes/forum/marks";
@@ -151,21 +144,12 @@ export function MessageReactions({ message }: { message: ForumMessage }) {
  */
 export function ReactButton({ message }: { message: ForumMessage }) {
   const t = useTranslations("Classroom");
-  const chooser = useEmojiChooser();
   const press = useReact(message.id);
 
-  /** Gives the chosen emoji and closes the popover. */
-  const pick = (emoji: string) => {
-    chooser.setOpen(false);
-    press(emoji);
-  };
-
   return (
-    <Popover onOpenChange={chooser.setOpen} open={chooser.open}>
+    <EmojiPopover onPick={press} quick={QUICK_EMOJI}>
       <IconTip label={t("reaction-add")}>
-        <PopoverTrigger
-          onFocus={chooser.warm}
-          onPointerEnter={chooser.warm}
+        <EmojiTrigger
           render={
             <Button
               aria-label={t("reaction-add")}
@@ -175,35 +159,8 @@ export function ReactButton({ message }: { message: ForumMessage }) {
               variant="ghost"
             />
           }
-        >
-          <HugeIcons icon={SmileIcon} />
-        </PopoverTrigger>
+        />
       </IconTip>
-      <PopoverContent
-        align="end"
-        className="w-80 max-w-[calc(100vw-2rem)] gap-0 p-0"
-        initialFocus={chooser.initialFocus}
-        ref={chooser.popup}
-      >
-        <div className="grid grid-cols-6 gap-1 border-b p-2">
-          {Arr.map(QUICK_EMOJI, (emoji) => (
-            <Button
-              aria-label={emoji}
-              className="w-full text-lg"
-              key={emoji}
-              onClick={() => pick(emoji)}
-              size="icon-sm"
-              variant="ghost"
-            >
-              {emoji}
-            </Button>
-          ))}
-        </div>
-        {Option.match(chooser.glyphs, {
-          onNone: () => null,
-          onSome: (glyphs) => <EmojiPanel glyphs={glyphs} onPick={pick} />,
-        })}
-      </PopoverContent>
-    </Popover>
+    </EmojiPopover>
   );
 }

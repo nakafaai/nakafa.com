@@ -1,12 +1,5 @@
 import { useMutation } from "@confect/react";
-import {
-  Add01Icon,
-  ArrowUp02Icon,
-  ChartBarLineIcon,
-  File02Icon,
-  Image01Icon,
-  SmileIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowUp02Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { MentionView } from "@repo/backend/confect/classroom/forum/mention";
@@ -16,14 +9,6 @@ import {
 } from "@repo/backend/confect/classroom/forum/message";
 import type { PollDraft } from "@repo/backend/confect/classroom/forum/poll";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
@@ -31,20 +16,16 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from "@repo/design-system/components/ui/input-group";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
+import { AttachMenu } from "@/components/tenant/classes/forum/attach";
 import { runForumCall } from "@/components/tenant/classes/forum/call";
 import {
-  EmojiPanel,
-  useEmojiChooser,
+  EmojiPopover,
+  EmojiTrigger,
 } from "@/components/tenant/classes/forum/chooser";
 import { useMentionPicker } from "@/components/tenant/classes/forum/picker";
 import { NewPoll } from "@/components/tenant/classes/forum/poll";
@@ -56,7 +37,6 @@ import {
 } from "@/components/tenant/classes/forum/send";
 import { IconTip } from "@/components/tenant/classes/forum/tip";
 import {
-  DOCUMENT_ACCEPT,
   UploadTray,
   useUploadTray,
 } from "@/components/tenant/classes/forum/tray";
@@ -89,7 +69,6 @@ const mentionArg = (mention: typeof MentionView.Type) =>
  */
 export function ForumComposer() {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { channelId, classId, discussion, slug } = useChannelScope();
   const send = useMutation(classroom.forum.messages.send);
   const reply = useMutation(classroom.forum.threads.reply);
@@ -99,11 +78,8 @@ export function ForumComposer() {
     Option.none
   );
   const field = useRef<HTMLTextAreaElement>(null);
-  const photos = useRef<HTMLInputElement>(null);
-  const documents = useRef<HTMLInputElement>(null);
   const picker = useMentionPicker(field, text, setText);
   const tray = useUploadTray();
-  const chooser = useEmojiChooser();
   const [polling, setPolling] = useState(false);
   const body = Str.trim(text);
   const placeholder = t(
@@ -199,11 +175,10 @@ export function ForumComposer() {
       () => undefined
     );
 
-  /** Puts an emoji where the caret stands, closes the chooser, and gives the field back its focus after the emoji. */
+  /** Puts an emoji where the caret stands, and gives the field back its focus. */
   const insertEmoji = (emoji: string) => {
     const at = field.current?.selectionStart ?? text.length;
     setText(`${text.slice(0, at)}${emoji}${text.slice(at)}`);
-    chooser.setOpen(false);
     field.current?.focus();
   };
 
@@ -231,69 +206,14 @@ export function ForumComposer() {
         </div>
       ) : null}
       <UploadTray files={tray.files} onRemove={tray.remove} />
-      <input
-        accept="image/*"
-        aria-hidden="true"
-        className="hidden"
-        multiple
-        onChange={(event) => {
-          tray.add(Arr.fromIterable(event.target.files ?? []));
-          event.target.value = "";
-        }}
-        ref={photos}
-        tabIndex={-1}
-        type="file"
-      />
-      <input
-        accept={DOCUMENT_ACCEPT}
-        aria-hidden="true"
-        className="hidden"
-        multiple
-        onChange={(event) => {
-          tray.add(Arr.fromIterable(event.target.files ?? []));
-          event.target.value = "";
-        }}
-        ref={documents}
-        tabIndex={-1}
-        type="file"
-      />
       <InputGroup className="bg-muted/50 text-chat rounded-3xl shadow-none">
         <InputGroupAddon align="inline-start" className="self-end pb-1.5">
-          <DropdownMenu>
-            <IconTip label={t("attach-add")}>
-              <DropdownMenuTrigger
-                render={
-                  <InputGroupButton
-                    aria-label={t("attach-add")}
-                    className="rounded-full"
-                    size="icon"
-                    variant="ghost"
-                  />
-                }
-              >
-                <HugeIcons icon={Add01Icon} />
-              </DropdownMenuTrigger>
-            </IconTip>
-            <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>{common("menu-attach")}</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => photos.current?.click()}>
-                  <HugeIcons icon={Image01Icon} />
-                  {t("attach-photo")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => documents.current?.click()}>
-                  <HugeIcons icon={File02Icon} />
-                  {t("attach-document")}
-                </DropdownMenuItem>
-                {discussion === undefined ? (
-                  <DropdownMenuItem onClick={() => setPolling(true)}>
-                    <HugeIcons icon={ChartBarLineIcon} />
-                    {t("attach-poll")}
-                  </DropdownMenuItem>
-                ) : null}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AttachMenu
+            onFiles={tray.add}
+            onPoll={
+              discussion === undefined ? () => setPolling(true) : undefined
+            }
+          />
         </InputGroupAddon>
         <InputGroupTextarea
           {...picker.fieldProps}
@@ -339,11 +259,9 @@ export function ForumComposer() {
         />
         {/* The send button stands at the end of the field's last line, as the field grows. */}
         <InputGroupAddon align="inline-end" className="self-end pb-1.5">
-          <Popover onOpenChange={chooser.setOpen} open={chooser.open}>
+          <EmojiPopover onPick={insertEmoji} side="top">
             <IconTip label={t("emoji-open")}>
-              <PopoverTrigger
-                onFocus={chooser.warm}
-                onPointerEnter={chooser.warm}
+              <EmojiTrigger
                 render={
                   <InputGroupButton
                     aria-label={t("emoji-open")}
@@ -352,25 +270,9 @@ export function ForumComposer() {
                     variant="ghost"
                   />
                 }
-              >
-                <HugeIcons icon={SmileIcon} />
-              </PopoverTrigger>
+              />
             </IconTip>
-            <PopoverContent
-              align="end"
-              className="w-80 max-w-[calc(100vw-2rem)] gap-0 p-0"
-              initialFocus={chooser.initialFocus}
-              ref={chooser.popup}
-              side="top"
-            >
-              {Option.match(chooser.glyphs, {
-                onNone: () => null,
-                onSome: (glyphs) => (
-                  <EmojiPanel glyphs={glyphs} onPick={insertEmoji} />
-                ),
-              })}
-            </PopoverContent>
-          </Popover>
+          </EmojiPopover>
           <IconTip label={t("send-message")}>
             <InputGroupButton
               aria-label={t("send-message")}

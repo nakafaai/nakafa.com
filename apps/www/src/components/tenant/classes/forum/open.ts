@@ -78,3 +78,9 @@ export const OpenRootContext = createContext<Option.Option<string>>(
 export function useIsOpenRoot(clientKey: string) {
   return Option.contains(use(OpenRootContext), clientKey);
 }
+
+/**
+ * Tells the pane that a thread drawn out of sight, while the thread before it stays on screen, holds its replies, so
+ * the pane shows it in the same frame. A thread on screen has none to tell.
+ */
+export const ThreadReadyContext = createContext<(() => void) | null>(null);

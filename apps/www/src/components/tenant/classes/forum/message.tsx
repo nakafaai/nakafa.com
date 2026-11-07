@@ -47,8 +47,6 @@ export function ForumMessageRow({
   message: ForumMessage;
   opens: boolean;
 }) {
-  const t = useTranslations("Classroom");
-  const [editing, setEditing] = useState(false);
   const scope = useChannelScope();
   const selected = useIsOpenRoot(message.clientKey);
   // Inside its own thread the opening message needs no summary: the thread is the pane.
@@ -69,46 +67,12 @@ export function ForumMessageRow({
         <MessageAvatar aria-hidden="true" className="bg-transparent" />
       )}
       <MessageContent className="gap-1.5">
-        {opens ? (
-          <MessageHeader
-            className="text-foreground block px-1 font-semibold wrap-anywhere"
-            dir="auto"
-          >
-            {message.author.nina ? t("nina-author") : message.author.name}
-          </MessageHeader>
-        ) : null}
+        {opens ? <AuthorName message={message} /> : null}
         {discussion !== null && isTitled(message) ? (
           <DiscussionTitle discussion={discussion} message={message} />
         ) : null}
         <MessageMedia message={message} />
-        {editing && message.text !== null ? (
-          <MessageEditor
-            message={message}
-            onDone={() => setEditing(false)}
-            text={message.text}
-          />
-        ) : (
-          // The actions stand on the bubble's inner side: before the viewer's own, after another's.
-          <div
-            className="flex w-full min-w-0 items-center gap-1 data-[mine=true]:flex-row-reverse"
-            data-mine={message.mine}
-          >
-            <MessagePoll message={message} />
-            {message.text === "" ? (
-              <MessageTime message={message} />
-            ) : (
-              <MessageBubble message={message} />
-            )}
-            {message.text === null ? null : (
-              <MessageActions message={message}>
-                <MessageMenu
-                  message={message}
-                  onEdit={() => setEditing(true)}
-                />
-              </MessageActions>
-            )}
-          </div>
-        )}
+        <MessageMain message={message} />
         <MessageReactions message={message} />
         {discussion !== null &&
         (discussion.replies > 0 || isTitled(message)) ? (
@@ -116,6 +80,57 @@ export function ForumMessageRow({
         ) : null}
       </MessageContent>
     </Message>
+  );
+}
+
+/** The author's name at the start of a run, or Nina's for her replies, broken anywhere when it is long. */
+function AuthorName({ message }: { message: ForumMessage }) {
+  const t = useTranslations("Classroom");
+
+  return (
+    <MessageHeader
+      className="text-foreground block px-1 font-semibold wrap-anywhere"
+      dir="auto"
+    >
+      {message.author.nina ? t("nina-author") : message.author.name}
+    </MessageHeader>
+  );
+}
+
+/**
+ * The message itself: its poll, its bubble and its actions in one row, or the edit field the viewer's own message
+ * turns into in place.
+ */
+function MessageMain({ message }: { message: ForumMessage }) {
+  const [editing, setEditing] = useState(false);
+
+  if (editing && message.text !== null) {
+    return (
+      <MessageEditor
+        message={message}
+        onDone={() => setEditing(false)}
+        text={message.text}
+      />
+    );
+  }
+  return (
+    // The actions stand on the bubble's inner side: before the viewer's own, after another's.
+    <div
+      className="flex w-full min-w-0 items-center gap-1 data-[mine=true]:flex-row-reverse"
+      data-mine={message.mine}
+    >
+      <MessagePoll message={message} />
+      {message.text === "" ? (
+        <MessageTime message={message} />
+      ) : (
+        <MessageBubble message={message} />
+      )}
+      {message.text === null ? null : (
+        <MessageActions message={message}>
+          <MessageMenu message={message} onEdit={() => setEditing(true)} />
+        </MessageActions>
+      )}
+    </div>
   );
 }
 

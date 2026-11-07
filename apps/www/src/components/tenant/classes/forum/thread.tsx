@@ -8,8 +8,9 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { threadTitle } from "@repo/backend/confect/classroom/forum/thread";
 import { useNavigate } from "@tanstack/react-router";
+import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
-import { useState } from "react";
+import { use, useLayoutEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaneHeader } from "@/components/shared/pane";
@@ -20,6 +21,7 @@ import { MESSAGE_PAGE_SIZE } from "@/components/tenant/classes/forum/channel";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import {
   type OpenedThread,
+  ThreadReadyContext,
   useOpening,
 } from "@/components/tenant/classes/forum/open";
 import {
@@ -34,6 +36,13 @@ import { schoolClassChannelTarget } from "@/lib/routing/school/target";
 
 /** The thread the pane shows. */
 type ShownThread = typeof OpenedThread.Type;
+
+/** One thread's place in the pane: on screen, or drawn out of sight in the same place until its replies are in. */
+const threadSlot = cva("flex flex-col", {
+  variants: {
+    hidden: { false: "min-h-0 flex-1", true: "invisible absolute inset-0" },
+  },
+});
 
 /**
  * The label of a thread: its number and title, the title the server gave it, or the one it takes from its opening
@@ -73,55 +82,75 @@ export function ThreadPane({
   const navigate = useNavigate();
   const { classId, classSlug, slug } = useClassScope();
   const forget = useOpening((state) => state.forget);
-  // The thread the pane showed last stays in the phone's sheet while the sheet slides away, so it never empties
-  // before it is gone.
-  const [last, setLast] = useState(thread);
-  if (
-    Option.isSome(thread) &&
-    !Option.exists(
-      last,
-      (kept) =>
-        kept.opening.clientKey === thread.value.opening.clientKey &&
-        kept.number === thread.value.number
-    )
-  ) {
-    setLast(thread);
+  const isOpen = Option.isSome(thread);
+  // The thread drawn on screen. Opening the pane draws the asked thread at once; closing it keeps the last one in the
+  // phone's sheet while the sheet slides away; and a move to another thread keeps the last one until the next holds
+  // its replies, so the pane never empties between the two.
+  const [shown, setShown] = useState({ drawn: thread, open: isOpen });
+  if (isOpen !== shown.open || (isOpen && Option.isNone(shown.drawn))) {
+    setShown({ drawn: isOpen ? thread : shown.drawn, open: isOpen });
   }
-  const shown = Option.isSome(thread) ? thread : last;
+  const changing =
+    Option.isSome(thread) &&
+    Option.isSome(shown.drawn) &&
+    shown.drawn.value.opening.clientKey !== thread.value.opening.clientKey;
+  const visible = changing
+    ? shown.drawn
+    : Option.orElse(thread, () => shown.drawn);
+  const slots = Arr.appendAll(
+    Option.toArray(visible),
+    changing ? Option.toArray(thread) : []
+  );
 
   return (
     <PanesDetail
-      label={Option.match(shown, {
+      label={Option.match(visible, {
         onNone: () => "",
         onSome: (kept) =>
           kept.opening.discussion?.title ?? threadTitle(kept.opening),
       })}
       onClose={() => {
         forget();
-        Option.map(shown, (kept) =>
+        Option.map(visible, (kept) =>
           navigate(schoolClassChannelTarget(slug, classSlug, kept.channelId))
         );
       }}
-      open={Option.isSome(thread)}
+      open={isOpen}
     >
-      {Option.match(shown, {
-        onNone: () => null,
-        onSome: (kept) => (
-          <ChannelScopeContext
-            value={{
-              canManage,
-              canPost,
-              channelId: kept.channelId,
-              classId,
-              discussion: kept.number,
-              everyone,
-              jump,
-              slug,
-            }}
+      {Arr.map(slots, (kept, at) => {
+        // The second slot is the asked thread, drawn out of sight until its replies are in.
+        const hidden = at === 1;
+        return (
+          <div
+            aria-hidden={hidden || undefined}
+            className={threadSlot({ hidden })}
+            inert={hidden}
+            key={kept.opening.clientKey}
           >
-            <ThreadContent key={kept.opening.clientKey} thread={kept} />
-          </ChannelScopeContext>
-        ),
+            <ChannelScopeContext
+              value={{
+                canManage,
+                canPost,
+                channelId: kept.channelId,
+                classId,
+                discussion: kept.number,
+                everyone,
+                jump,
+                slug,
+              }}
+            >
+              <ThreadReadyContext
+                value={
+                  hidden
+                    ? () => setShown({ drawn: Option.some(kept), open: true })
+                    : null
+                }
+              >
+                <ThreadContent thread={kept} />
+              </ThreadReadyContext>
+            </ChannelScopeContext>
+          </div>
+        );
       })}
     </PanesDetail>
   );
@@ -174,6 +203,17 @@ function ThreadReplies({ thread }: { thread: ShownThread }) {
   );
   // A thread that held no reply when it opened draws at once: nothing it waits for can stand above its opening message.
   const empty = thread.opening.discussion?.replies === 0;
+  const loading =
+    !empty &&
+    (pagination._tag === "LoadingFirstPage" || QueryResult.isLoading(read));
+  const ready = use(ThreadReadyContext);
+  // A thread drawn out of sight tells the pane once its replies are in, before the browser paints, so the move to it
+  // happens in one frame.
+  useLayoutEffect(() => {
+    if (!loading && ready !== null) {
+      ready();
+    }
+  }, [loading, ready]);
 
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -191,10 +231,7 @@ function ThreadReplies({ thread }: { thread: ShownThread }) {
       </div>
     );
   }
-  if (
-    !empty &&
-    (pagination._tag === "LoadingFirstPage" || !QueryResult.isSuccess(read))
-  ) {
+  if (loading) {
     return <div className="flex-1" />;
   }
 

@@ -14,6 +14,9 @@ const EMOJI_GRAPHEME = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
 /** The whitespace between the emoji of a message. */
 const SPACES = /\s+/gu;
 
+/** What splits a text into the characters a reader sees, whatever code points each one joins. */
+const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
 /** Whether a message is only on the page while the server saves it: its ID is still its client key. */
 export const isPending = (message: ForumMessage) =>
   message.id === message.clientKey;
@@ -152,11 +155,7 @@ export const isJumbo = (text: string | null) => {
     return false;
   }
   const graphemes = Arr.map(
-    Arr.fromIterable(
-      new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(
-        Str.replace(SPACES, "")(text)
-      )
-    ),
+    Arr.fromIterable(GRAPHEMES.segment(Str.replace(SPACES, "")(text))),
     (part) => part.segment
   );
   return (
