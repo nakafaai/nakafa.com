@@ -54,14 +54,12 @@ const wholeInView = (row: Locator) =>
     return box.top >= view.top - 1 && box.bottom <= view.bottom + 1;
   });
 
-/** Waits until the page has drawn the frames that follow a change, and a moment more. */
-const settle = (page: Page) =>
+/** Waits until the page has drawn the two frames that follow a change. */
+const nextFrames = (page: Page) =>
   page.evaluate(
     () =>
       new Promise<void>((resolve) => {
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => setTimeout(resolve, 300))
-        );
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       })
   );
 
@@ -101,11 +99,15 @@ test("opens a chat on its whole last question, picture included, while the answe
             later.style.height = "1200px";
             row.append(later);
           });
-          for (let check = 0; check < 4; check += 1) {
-            await settle(page);
-            expect(await wholeInView(question)).toBe(true);
-          }
         });
+        for (let check = 0; check < 4; check += 1) {
+          yield* Effect.promise(() => nextFrames(page));
+          yield* Effect.sleep("300 millis");
+          const whole = yield* Effect.promise(() =>
+            wholeInView(page.locator(QUESTION_ROW))
+          );
+          expect(whole).toBe(true);
+        }
       })
     )
   );

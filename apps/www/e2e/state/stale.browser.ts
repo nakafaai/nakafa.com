@@ -1,5 +1,4 @@
 import { expect, type Page, test } from "@playwright/test";
-import { GOING_ATTRIBUTE } from "@repo/design-system/lib/lazy";
 import standalone from "@repo/internationalization/dictionaries/standalone/en.json" with {
   type: "json",
 };
@@ -128,12 +127,15 @@ test("reloads a tab again that reloaded for an earlier deploy", async ({
  * A page with work the server does not hold yet asks before it goes, and the
  * reader stays. The reload for the missing chunk never happened, so the page
  * keeps its place and draws no error, and the next press reloads it into the
- * current deploy, which no longer asks.
+ * current deploy, which no longer asks. The theme button loads its menu on
+ * focus too, which starts the reload without a press, after a key the reader
+ * pressed: a browser shows that prompt only to a page the reader has used.
  */
 test("keeps a page that a prompt held through its reload, and reloads at the next press", async ({
   page,
 }) => {
   const theme = await openSignIn(page);
+  await page.keyboard.press("Shift");
   await page.evaluate(() => {
     let asked = false;
     window.addEventListener("beforeunload", (event) => {
@@ -145,13 +147,13 @@ test("keeps a page that a prompt held through its reload, and reloads at the nex
   });
   await deployUnder(page);
 
+  // Focus returns before the reload asks, so the prompt waits for this answer.
   const prompt = page.waitForEvent("dialog");
-  await theme.click();
+  await theme.focus();
   const dialog = await prompt;
   expect(dialog.type()).toBe("beforeunload");
   await dialog.dismiss();
 
-  await expect(page.locator("html")).toHaveAttribute(GOING_ATTRIBUTE, "reload");
   await expect(page.getByRole("heading", { name: TITLE })).toBeVisible();
   expect(
     await page.evaluate((mark) => sessionStorage.getItem(mark), BROKE)
