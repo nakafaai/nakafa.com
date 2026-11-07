@@ -28,6 +28,7 @@ const MARKETING_NAMESPACES = [
   "Pricing",
   "PricingPage",
   "SEO",
+  "SchoolSite",
   "SchoolStart",
   "Subject",
   "Tryouts",
