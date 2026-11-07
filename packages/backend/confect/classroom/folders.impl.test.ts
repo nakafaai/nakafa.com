@@ -280,7 +280,7 @@ describe("classroom/folders", () => {
         const add = (clientKey: string, parentId: typeof folderId | null) =>
           teacher.mutation(folders.add, {
             classId,
-            clientKey,
+            clientKey: `folder-${clientKey}`,
             name: clientKey,
             parentId,
             slug: nf,
@@ -331,7 +331,7 @@ describe("classroom/folders", () => {
         const link = yield* teacher.mutation(library.addLink, {
           address: "https://youtu.be/satu",
           classId,
-          clientKey: "tautan",
+          clientKey: "tautan-link",
           folderId: null,
           slug: nf,
           title: "Tautan",
@@ -411,7 +411,7 @@ describe("classroom/folders", () => {
         const add = (clientKey: string, parentId: typeof folderId | null) =>
           teacher.mutation(folders.add, {
             classId,
-            clientKey,
+            clientKey: `folder-${clientKey}`,
             name: clientKey,
             parentId,
             slug: nf,
@@ -423,7 +423,7 @@ describe("classroom/folders", () => {
           bucket,
           fixture,
           classId,
-          "berkas",
+          "berkas-file",
           PDF,
           "application/pdf",
           "Berkas",
@@ -517,7 +517,7 @@ describe("classroom/folders", () => {
         const teacher = fixture.as("teacher");
         const folder = yield* teacher.mutation(folders.add, {
           classId,
-          clientKey: "besar",
+          clientKey: "folder-besar",
           name: "Besar",
           parentId: null,
           slug: nf,

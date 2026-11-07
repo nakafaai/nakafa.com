@@ -281,9 +281,9 @@ describe("classroom/library", () => {
         expect(yield* register(missing.uploadId)).toMatchObject({
           _tag: "UploadMissing",
         });
-        const other = yield* forumClass(fixture, term.id, "X-2");
+        const other = yield* forumClass(fixture, term.id, "X-2", false);
         expect(yield* register(missing.uploadId, other.classId)).toMatchObject({
-          _tag: "UploadMissing",
+          _tag: "AccessDenied",
         });
         const html = yield* reserve("html-file", 6);
         upload(bucket, html.address, new TextEncoder().encode("<html>"));
@@ -316,11 +316,19 @@ describe("classroom/library", () => {
         ).toBeNull();
         expect(
           yield* fixture.internal.query(internal.upload, {
+            classId,
             uploadId: missing.uploadId,
           })
         ).toMatchObject({ byteSize: PDF.byteLength, classId });
         expect(
           yield* fixture.internal.query(internal.upload, {
+            classId: other.classId,
+            uploadId: missing.uploadId,
+          })
+        ).toBeNull();
+        expect(
+          yield* fixture.internal.query(internal.upload, {
+            classId,
             uploadId: html.uploadId,
           })
         ).toBeNull();

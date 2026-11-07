@@ -5,7 +5,7 @@ import {
   hiddenFolders,
   subtree,
 } from "@repo/backend/confect/classroom/library/tree";
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, Order } from "effect";
 
 /** A folder row as the tree reads it: its ID, the folder it sits in, and its time in the trash. */
 const folder = (id: string, parentId?: string, trashedAt?: number) => ({
@@ -27,8 +27,12 @@ describe("classroom/library tree", () => {
       "b",
       "a",
     ]);
-    expect(HashSet.toValues(hiddenFolders(folders)).sort()).toEqual(["b", "c"]);
-    expect(HashSet.toValues(subtree(folders, "b")).sort()).toEqual(["b", "c"]);
+    expect(
+      Arr.sort(Arr.fromIterable(hiddenFolders(folders)), Order.String)
+    ).toEqual(["b", "c"]);
+    expect(
+      Arr.sort(Arr.fromIterable(subtree(folders, "b")), Order.String)
+    ).toEqual(["b", "c"]);
   });
 
   it("stops a walk that meets a cycle", () => {

@@ -99,25 +99,28 @@ export const reserveImport = FunctionImpl.make(
   })
 );
 
-/** What a reservation holds that registering checks, when it still exists. */
+/** What a reservation of the class holds that registering checks, when it still exists. */
 export const upload = FunctionImpl.make(
   databaseSchema,
   spec,
   "upload",
-  Effect.fn("classroom.library.upload")(function* ({ uploadId }) {
+  Effect.fn("classroom.library.upload")(function* ({ classId, uploadId }) {
     const found = yield* (yield* DatabaseReader)
       .table("classroomLibraryUploads")
       .get(uploadId)
       .pipe(Effect.option);
-    return Option.match(found, {
-      onNone: () => null,
-      onSome: (reservation) => ({
-        byteSize: reservation.byteSize,
-        classId: reservation.classId,
-        contentType: reservation.contentType,
-        objectKey: reservation.objectKey,
-      }),
-    });
+    return Option.match(
+      Option.filter(found, (reservation) => reservation.classId === classId),
+      {
+        onNone: () => null,
+        onSome: (reservation) => ({
+          byteSize: reservation.byteSize,
+          classId: reservation.classId,
+          contentType: reservation.contentType,
+          objectKey: reservation.objectKey,
+        }),
+      }
+    );
   })
 );
 
@@ -267,9 +270,10 @@ export const register = FunctionImpl.make(
       const { runMutation } = yield* MutationRunner;
       const { runQuery } = yield* QueryRunner;
       const reservation = yield* runQuery(classroomInternal.library.upload, {
+        classId,
         uploadId,
       });
-      if (reservation === null || reservation.classId !== classId) {
+      if (reservation === null) {
         return yield* new UploadMissing();
       }
       const stored = yield* inspectObject(

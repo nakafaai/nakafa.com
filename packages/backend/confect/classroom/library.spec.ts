@@ -292,7 +292,10 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
       name: "upload",
-      args: () => ({ uploadId: Id("classroomLibraryUploads") }),
+      args: () => ({
+        classId: Id("classes"),
+        uploadId: Id("classroomLibraryUploads"),
+      }),
       returns: () =>
         Schema.NullOr(
           Schema.Struct({

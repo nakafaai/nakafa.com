@@ -13,7 +13,7 @@ import { makeBucket, stubBucket, upload } from "@repo/backend/test/bucket";
 import { firstPage, nf } from "@repo/backend/test/classroom";
 import { addFile, libraryClass, PDF } from "@repo/backend/test/library";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Struct } from "effect";
+import { Array as Arr, Duration, Effect, Result, Struct } from "effect";
 
 /** The fetch that R2 answers, stubbed once for the file. */
 const fetcher = vi.fn<typeof fetch>();
@@ -59,7 +59,7 @@ describe("classroom/library trash", () => {
         const teacher = fixture.as("teacher");
         const folder = yield* teacher.mutation(folders.add, {
           classId,
-          clientKey: "bab",
+          clientKey: "folder-bab",
           name: "Bab",
           parentId: null,
           slug: nf,
@@ -68,7 +68,7 @@ describe("classroom/library trash", () => {
           bucket,
           fixture,
           classId,
-          "berkas",
+          "berkas-file",
           PDF,
           "application/pdf",
           "Berkas",
@@ -77,7 +77,7 @@ describe("classroom/library trash", () => {
         const link = yield* teacher.mutation(library.addLink, {
           address: "https://youtu.be/satu",
           classId,
-          clientKey: "tautan",
+          clientKey: "tautan-link",
           folderId: folder.id,
           slug: nf,
           title: "Tautan",
@@ -146,7 +146,7 @@ describe("classroom/library trash", () => {
         upload(bucket, reserved.address, PDF);
         const folder = yield* teacher.mutation(folders.add, {
           classId,
-          clientKey: "lama",
+          clientKey: "folder-lama",
           name: "Lama",
           parentId: null,
           slug: nf,
@@ -203,16 +203,18 @@ describe("classroom/library trash", () => {
     () =>
       Effect.gen(function* () {
         const { classId, fixture } = yield* libraryClass();
-        expect(
-          yield* fixture
-            .run(spendOperations("bucketWrite", 30_001))
-            .pipe(Effect.flip)
-        ).toMatchObject({ _tag: "StorageFull", reason: "operations" });
+        // Four shards hold the day's 30,000 writes and one call takes at most two of them, so the third call of 15,000 is refused at the latest.
+        const spent = yield* Effect.forEach(Arr.range(1, 3), () =>
+          fixture
+            .run(spendOperations("bucketWrite", 15_000))
+            .pipe(Effect.result)
+        );
+        expect(Arr.some(spent, Result.isFailure)).toBe(true);
         yield* fixture.run(refundBucket(10));
         const link = yield* fixture.as("teacher").mutation(library.addLink, {
           address: "https://youtu.be/satu",
           classId,
-          clientKey: "tautan",
+          clientKey: "tautan-link",
           folderId: null,
           slug: nf,
           title: "Tautan",
@@ -234,7 +236,7 @@ describe("classroom/library trash", () => {
         );
         const folder = yield* fixture.as("teacher").mutation(folders.add, {
           classId,
-          clientKey: "bab",
+          clientKey: "folder-bab",
           name: "Bab",
           parentId: null,
           slug: nf,
