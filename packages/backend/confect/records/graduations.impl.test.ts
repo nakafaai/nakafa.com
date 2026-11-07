@@ -103,6 +103,7 @@ describe("records/graduations", () => {
           .as("principal")
           .query(graduations.get, args);
         expect(overview).toEqual({
+          _tag: "Graduating",
           can: ["graduation.decide", "graduation.issue"],
           cohort: {
             id: cohortId,
@@ -115,8 +116,8 @@ describe("records/graduations", () => {
           unit: { name: "SMP Nakafa", npsn: null },
         });
         expect(
-          (yield* fixture.as("admin").query(graduations.get, args)).can
-        ).toEqual([]);
+          yield* fixture.as("admin").query(graduations.get, args)
+        ).toMatchObject({ can: [] });
         const before = yield* fixture
           .as("principal")
           .query(graduations.sheet, { ...firstPage, ...args });
@@ -238,8 +239,8 @@ describe("records/graduations", () => {
           .query(graduations.readiness, { ...firstPage, ...args });
         expect(readiness.page[0]).toMatchObject({ missing: [], nisn: NISN });
         expect(
-          (yield* fixture.as("principal").query(graduations.get, args)).decision
-        ).toMatchObject({ issued: 1 });
+          yield* fixture.as("principal").query(graduations.get, args)
+        ).toMatchObject({ decision: { issued: 1 } });
         // A locked letter is printed once; another print of it is a defect.
         expect(
           Exit.hasDies(
@@ -307,7 +308,7 @@ describe("records/graduations", () => {
   );
 
   it.effect(
-    "refuses a class group outside the last grade, and a decision for a unit without one",
+    "answers that a class group outside the last grade does not graduate, and refuses its list, its letters, and a decision for a unit without one",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -316,10 +317,12 @@ describe("records/graduations", () => {
         yield* openPeriod(fixture, periodId);
         const args = { cohortId: viii.id, slug: nf };
         expect(
-          yield* Effect.flip(
-            fixture.as("principal").query(graduations.get, args)
-          )
-        ).toMatchObject({ _tag: "GraduationNotFinal" });
+          yield* fixture.as("principal").query(graduations.get, args)
+        ).toEqual({
+          _tag: "NotGraduating",
+          cohort: { grade: 8, id: viii.id, name: "VIII-A" },
+          unit: { last: 9, name: "SMP Nakafa" },
+        });
         expect(
           yield* Effect.flip(
             fixture
@@ -348,7 +351,16 @@ describe("records/graduations", () => {
         );
         const course = yield* period(fixture, other);
         yield* openPeriod(fixture, course.id);
-        yield* cohortOf(fixture, course.id, "Kelas 9", 9);
+        const nine = yield* cohortOf(fixture, course.id, "Kelas 9", 9);
+        expect(
+          yield* fixture
+            .as("owner")
+            .query(graduations.get, { cohortId: nine.id, slug: nf })
+        ).toEqual({
+          _tag: "NotGraduating",
+          cohort: { grade: 9, id: nine.id, name: "Kelas 9" },
+          unit: { last: null, name: "Kursus Nakafa" },
+        });
         expect(
           yield* Effect.flip(
             fixture.as("owner").mutation(graduations.decide, {

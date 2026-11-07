@@ -19,6 +19,7 @@ const nisn = Schema.decodeSync(Nisn)("0012345678");
 const overview = (
   decision: GraduationOverview["decision"]
 ): GraduationOverview => ({
+  _tag: "Graduating",
   can: [],
   cohort: {
     id: Schema.decodeUnknownSync(Id("tenantCohorts"))("ix-a"),

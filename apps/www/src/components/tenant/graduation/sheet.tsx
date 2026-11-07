@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import { usePaginatedQuery } from "@confect/react";
+import { QueryResult, usePaginatedQuery } from "@confect/react";
 import {
   Certificate01Icon,
   CheckmarkBadge01Icon,
@@ -15,7 +15,6 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/auth/convex";
 import { PaneOpen } from "@/components/shared/pane";
 import {
   Panes,
@@ -23,20 +22,25 @@ import {
   PanesList,
   PanesProvider,
 } from "@/components/shared/panes";
+import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { LoadFailure } from "@/components/state/failure";
 import { GraduationLineDetail } from "@/components/tenant/graduation/detail";
+import { GraduationElsewhere } from "@/components/tenant/graduation/elsewhere";
 import {
   CohortGraduationHeader,
   useCohortArgs,
+  useGraduationPage,
 } from "@/components/tenant/graduation/header";
+import { isLostAccess } from "@/components/tenant/refusal";
 import { checkAddress } from "@/components/tenant/reports/check";
 
 /** One student of a graduating class group, as the page reads them. */
@@ -88,31 +92,54 @@ const lineColumns = tableColumns<GraduationLine>();
  * average, whether a NISN is on file, their SKL, and what keeps them from it, beside the student
  * a press opens on a wide screen and in a sheet on a phone. The header holds the search, the
  * decision on graduation and the issue of the letters for the principal, and the e-Ijazah export.
+ * A class group outside its unit's last grade says so in the list's card, with the way back to
+ * the graduating class groups.
  */
 export function CohortGraduation() {
   return (
     <TableFiltersProvider>
       <PanesProvider>
         <CohortGraduationHeader />
-        <div className="flex w-full min-w-0 flex-1 flex-col">
-          <CohortGraduationBody />
-        </div>
+        <CohortGraduationBody />
       </PanesProvider>
     </TableFiltersProvider>
   );
 }
 
-/** The students of the class group, read a page at a time, beside the open student; or the empty state. */
+/**
+ * The body once the class group is read: its students for a graduating class group, or why it
+ * does not graduate. The card stands from the first frame, empty until the class group is read,
+ * and a read that failed says so in it.
+ */
 function CohortGraduationBody() {
+  const page = useGraduationPage();
+
+  if (QueryResult.isFailure(page) && isLostAccess(page.error)) {
+    throw page.error;
+  }
+  if (QueryResult.isSuccess(page) && page.value._tag === "Graduating") {
+    return <GraduationStudents />;
+  }
+  return (
+    <TablePageBody>
+      {QueryResult.isFailure(page) ? (
+        <LoadFailure onRetry={reloadPage} />
+      ) : null}
+      {QueryResult.isSuccess(page) && page.value._tag === "NotGraduating" ? (
+        <GraduationElsewhere page={page.value} />
+      ) : null}
+    </TablePageBody>
+  );
+}
+
+/** The students of a graduating class group, read a page at a time, beside the open student; or the empty state. */
+function GraduationStudents() {
   const t = useTranslations("SchoolGraduation");
   const format = useFormatter();
   const args = useCohortArgs();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
-    records.graduations.sheet,
-    isSettled ? args : "skip",
-    { initialNumItems: PAGE_SIZE }
-  );
+  const pagination = usePaginatedQuery(records.graduations.sheet, args, {
+    initialNumItems: PAGE_SIZE,
+  });
 
   const twoDecimals = (value: number) =>
     format.number(value, {
@@ -197,21 +224,23 @@ function CohortGraduationBody() {
   return (
     <Panes id="graduation">
       <PanesList>
-        <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-          <DataTable
-            columns={columns}
-            data={pagination.results}
-            empty={
-              <TableEmpty
-                act="reading"
-                description={t("students-empty-description")}
-                title={t("students-empty")}
-              />
-            }
-            rowId={(line) => line.student.id}
-            search="student"
-          />
-        </TablePages>
+        <TablePageBody>
+          <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+            <DataTable
+              columns={columns}
+              data={pagination.results}
+              empty={
+                <TableEmpty
+                  act="reading"
+                  description={t("students-empty-description")}
+                  title={t("students-empty")}
+                />
+              }
+              rowId={(line) => line.student.id}
+              search="student"
+            />
+          </TablePages>
+        </TablePageBody>
       </PanesList>
       <PanesDetail label={t("detail")}>
         <GraduationLineDetail lines={pagination.results} />

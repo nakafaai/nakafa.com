@@ -8,7 +8,10 @@ export type ReadinessRow = Ref.Returns<
 >["page"][number];
 
 /** A graduating class group's page, as the graduation page reads it. */
-export type GraduationOverview = Ref.Returns<typeof records.graduations.get>;
+export type GraduationOverview = Extract<
+  Ref.Returns<typeof records.graduations.get>,
+  { readonly _tag: "Graduating" }
+>;
 
 /** One student of a class group in the Dapodik export of report data. */
 export type LedgerRow = Ref.Returns<

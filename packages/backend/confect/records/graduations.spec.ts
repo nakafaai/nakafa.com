@@ -12,7 +12,7 @@ import {
 import {
   GraduationCohort,
   GraduationDecision,
-  GraduationOverview,
+  GraduationPage,
   GraduationView,
 } from "@repo/backend/confect/records/graduation";
 import {
@@ -47,8 +47,8 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "get",
       args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),
-      returns: () => GraduationOverview,
-      error: () => Schema.Union([AccessDenied, GraduationNotFinal]),
+      returns: () => GraduationPage,
+      error: () => AccessDenied,
     }).middleware(CohortAccess, { action: "graduation.view", arg: "cohortId" })
   )
   .addFunction(
