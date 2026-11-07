@@ -196,6 +196,15 @@ const holdOnRow = Effect.fn("spend.holdOnRow")(function* (
  * less its hold, and an open call that holds the rest of the month leaves
  * nothing for the next one. The credit ledger accepts the same gap, a turn
  * that holds its balance when that is less than the most one response may cost.
+ *
+ * Calls of one payer that run at once retry against each other: a hold reads
+ * every vendor row of the payer's month to check the one budget they share,
+ * and writes one of them, so a concurrent hold or settle of the same payer
+ * writes what it read. Convex Insights on 7 Nov 2026 showed 10 OCC retries of
+ * `spend/escrow:hold` and 2 of `settle` in 72 hours, on two `vendorSpend`
+ * rows, and every retry succeeded. Sharding the rows would not remove them,
+ * because a hold must read every shard to check the total. Two payers never
+ * share a row, so the contention stays within one payer's own calls.
  */
 export const holdSpend = Effect.fn("spend.hold")(function* (
   claim: Claim,
