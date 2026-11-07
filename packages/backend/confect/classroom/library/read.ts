@@ -1,4 +1,5 @@
 import { FunctionImpl } from "@confect/server";
+import type { ClassroomLibraryDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
@@ -84,15 +85,10 @@ export const trashed = FunctionImpl.make(
 );
 
 /** The items of the class that the reader can see: outside the trash and outside every trashed folder. */
-const visibleItems = Effect.fn("classroom.library.visible")(function* (
-  rows: readonly {
-    readonly folderId?: string | undefined;
-    readonly trashedAt?: number | undefined;
-  }[]
-) {
+const visibleItems = Effect.fn("classroom.library.visible")(function* () {
   const row = yield* Class;
   const hidden = hiddenFolders(yield* classFolders(row._id));
-  return (item: (typeof rows)[number]) =>
+  return (item: ClassroomLibraryDoc) =>
     item.trashedAt === undefined &&
     (item.folderId === undefined || !HashSet.has(hidden, item.folderId));
 });
@@ -117,7 +113,7 @@ export const starred = FunctionImpl.make(
         { concurrency: "unbounded" }
       )
     );
-    const shows = yield* visibleItems(items);
+    const shows = yield* visibleItems();
     return yield* libraryViews(
       Arr.sort(
         Arr.filter(items, shows),
@@ -140,7 +136,7 @@ export const search = FunctionImpl.make(
       .index("by_classId", (query) => query.eq("classId", row._id), "desc")
       .take(SEARCH_SCAN)
       .pipe(Effect.orDie);
-    const shows = yield* visibleItems(rows);
+    const shows = yield* visibleItems();
     const wanted = Str.toLowerCase(Str.trim(text));
     const found = yield* Effect.filter(Arr.filter(rows, shows), (item) =>
       openText(keys, libraryField(item, "sealedTitle"), item.sealedTitle).pipe(

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber } from "effect";
+import { Effect, Fiber, MutableRef } from "effect";
 import { putLibraryFile } from "@/components/tenant/classes/library/send";
 
-/** The requests the fake XMLHttpRequest made, so a test answers them. */
-const requests: FakeRequest[] = [];
+/** The last request the fake XMLHttpRequest made, so a test answers it. */
+const latest = MutableRef.make<FakeRequest | null>(null);
 
 /** An XMLHttpRequest that records what it is asked and answers when the test says so. */
 class FakeRequest {
@@ -25,7 +25,7 @@ class FakeRequest {
   url = "";
 
   constructor() {
-    requests.push(this);
+    MutableRef.set(latest, this);
   }
 
   abort() {
@@ -65,17 +65,15 @@ describe("putLibraryFile", () => {
           putLibraryFile("https://r2.test/a", file, progress)
         );
         yield* Effect.yieldNow;
-        const request = requests.at(-1);
-        request?.uploadListeners.progress?.({
-          lengthComputable: true,
-          loaded: 4,
-          total: 8,
-        } as ProgressEvent);
-        request?.uploadListeners.progress?.({
-          lengthComputable: false,
-          loaded: 0,
-          total: 0,
-        } as ProgressEvent);
+        const request = MutableRef.get(latest);
+        request?.uploadListeners.progress?.(
+          new ProgressEvent("progress", {
+            lengthComputable: true,
+            loaded: 4,
+            total: 8,
+          })
+        );
+        request?.uploadListeners.progress?.(new ProgressEvent("progress"));
         if (request !== undefined) {
           request.status = 200;
           request.listeners.load?.();
@@ -93,7 +91,7 @@ describe("putLibraryFile", () => {
           putLibraryFile("https://r2.test/b", file, progress)
         );
         yield* Effect.yieldNow;
-        const second = requests.at(-1);
+        const second = MutableRef.get(latest);
         if (second !== undefined) {
           second.status = 403;
           second.listeners.load?.();
@@ -107,7 +105,7 @@ describe("putLibraryFile", () => {
           putLibraryFile("https://r2.test/c", file, progress)
         );
         yield* Effect.yieldNow;
-        requests.at(-1)?.listeners.error?.();
+        MutableRef.get(latest)?.listeners.error?.();
         expect(yield* Fiber.join(dropped).pipe(Effect.flip)).toMatchObject({
           _tag: "UploadFailed",
           status: 0,
@@ -118,7 +116,7 @@ describe("putLibraryFile", () => {
         );
         yield* Effect.yieldNow;
         yield* Fiber.interrupt(stopped);
-        expect(requests.at(-1)?.aborted).toBe(true);
+        expect(MutableRef.get(latest)?.aborted).toBe(true);
       })
   );
 });

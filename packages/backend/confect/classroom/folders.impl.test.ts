@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -359,9 +360,7 @@ describe("classroom/folders", () => {
         });
         const student = fixture.as("student");
         const star = (
-          target:
-            | { readonly kind: "item"; readonly itemId: typeof link.id }
-            | { readonly kind: "folder"; readonly folderId: typeof top.id },
+          target: Ref.Args<typeof library.star>["target"],
           starred: boolean
         ) =>
           student.mutation(library.star, {
