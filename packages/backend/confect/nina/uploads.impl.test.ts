@@ -1,5 +1,5 @@
 import { Ref } from "@confect/core";
-import { getFile, storeFile, toModelMessage } from "@convex-dev/agent";
+import { toModelMessage } from "@convex-dev/agent";
 import { MINUTE } from "@convex-dev/rate-limiter";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
@@ -12,13 +12,14 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   cancel,
   contextFor,
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
-import { readFileIn, readMessageIn } from "@repo/backend/test/nina/sealed";
+import { readMessageIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import {
   admission,
@@ -34,6 +35,16 @@ import {
 } from "@repo/backend/test/nina/uploads";
 import { Duration } from "effect";
 
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
+
 const reserving = { filename: attachment.filename };
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -43,14 +54,30 @@ vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
   return {
     ...actual,
-    getFile: vi.fn(actual.getFile),
     toModelMessage: vi.fn(actual.toModelMessage),
-    storeFile: vi.fn(actual.storeFile),
   };
 });
 const release = Ref.getFunctionReference(refs.public.nina.uploads.release);
 const complete = Ref.getFunctionReference(refs.internal.nina.uploads.complete);
 const discard = Ref.getFunctionReference(refs.internal.nina.uploads.discard);
+
+type Deployment = Awaited<ReturnType<typeof uploadFixture>>["t"];
+
+/** A stored file of the bucket that no upload holds, for a call that names a file. */
+const looseFile = (t: Deployment) =>
+  t.mutation((ctx) =>
+    ctx.db.insert("bucketFiles", {
+      byteSize: 1,
+      contentType: "image/png",
+      createdAt: NOW,
+      objectKey: "files/accounts/loose",
+      state: "stored",
+    })
+  );
+
+/** The files a chat keeps for the prompts its learner sent. */
+const chatFiles = (t: Deployment) =>
+  t.query((ctx) => ctx.db.query("ninaFiles").collect());
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -76,13 +103,13 @@ describe("native Nina attachment ownership", () => {
         owner.action(save, { ...attachment, bytes })
       ).rejects.toMatchObject({ data: { code: "NINA_UPLOAD_INVALID" } });
     }
-    expect(storeFile).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
     expect(
       await t.query((ctx) => ctx.db.query("ninaUploads").collect())
     ).toEqual([]);
   });
 
-  it("saves original bytes with the SDK and atomically transfers the owned grant to the prompt", async () => {
+  it("saves original bytes in the bucket and atomically transfers the owned grant to the prompt", async () => {
     const { t, owner, identity } = await uploadFixture();
     const uploadId = await saved(owner);
     const fileId = await readyFileIdIn(t, uploadId);
@@ -96,16 +123,22 @@ describe("native Nina attachment ownership", () => {
     const state = await t.query(async (ctx) => ({
       grant: await ctx.db.get("ninaUploads", uploadId),
       user: await ctx.db.get("users", identity.userId),
-      file: await ctx.runQuery(components.nina.files.get, { fileId }),
+      file: await ctx.db.get("bucketFiles", fileId),
       prompt: await ctx.runQuery(components.nina.messages.getMessagesByIds, {
         messageIds: [first.promptMessageId],
       }),
     }));
     expect(state.grant).toBeNull();
     expect(state.user?.credits).toBe(0);
-    expect(state.file).toMatchObject({ refcount: 1, mediaType: "image/png" });
+    expect(state.file).toMatchObject({
+      byteSize: attachment.bytes.byteLength,
+      contentType: "image/png",
+      state: "stored",
+    });
+    expect(await chatFiles(t)).toMatchObject([
+      { chatId: first.chatId, fileId, messageId: first.promptMessageId },
+    ]);
     // The component holds the message sealed: no text, and the learner reads it back.
-    expect(state.prompt[0]).toMatchObject({ fileIds: [fileId] });
     expect(storedTextOf(state.prompt)).not.toContain(
       admission.input.prompt.text
     );
@@ -119,10 +152,12 @@ describe("native Nina attachment ownership", () => {
         ],
       },
     });
-    expect(storeFile).toHaveBeenCalledOnce();
+    expect(Object.values(bucket.state.objects)).toEqual([
+      new Uint8Array(attachment.bytes),
+    ]);
   });
 
-  it("seals an upload's name before the component stores the file, so the planted name is in no table", async () => {
+  it("seals an upload's name before it is stored, so the planted name is in no table", async () => {
     const f = await uploadFixture();
     const planted = "PLANT-Soal-Rahasia.pdf";
     const uploadId = await saved(f.owner, {
@@ -130,24 +165,17 @@ describe("native Nina attachment ownership", () => {
       filename: planted,
       mediaType: "application/pdf",
     });
-    const fileId = await readyFileIdIn(f.t, uploadId);
-
-    // The component keeps the file under a sealed name, and the learner's own read opens it.
-    const file = await f.t.query((ctx) =>
-      ctx.runQuery(components.nina.files.get, { fileId })
+    // The upload keeps the name sealed, and the sent part carries it opened.
+    const upload = await f.t.query((ctx) =>
+      ctx.db.get("ninaUploads", uploadId)
     );
-    expect(storedTextOf(file)).not.toContain(planted);
-    expect(
-      await readFileIn(f.t, f.identity.userId, fileId, true)
-    ).toMatchObject({
-      filename: planted,
-    });
+    expect(storedTextOf(upload)).not.toContain(planted);
 
     const sent = await started(f.owner, sending([uploadId]));
     expect(sent.prompt.files).toEqual([
       expect.objectContaining({ filename: planted, type: "file" }),
     ]);
-    const stored = await storedRowsIn(f.t, sent.threadId, [fileId]);
+    const stored = await storedRowsIn(f.t, sent.threadId);
     expect(storedTextOf(stored)).not.toContain(planted);
   });
 
@@ -188,13 +216,18 @@ describe("native Nina attachment ownership", () => {
   it("retires a failed upload reservation and bounds pending uploads per account", async () => {
     const { t, owner } = await uploadFixture();
     const logged = vi.spyOn(console, "error").mockImplementation(() => 0);
-    const storage = new Error("Storage unavailable");
-    vi.mocked(storeFile).mockRejectedValueOnce(storage);
+    // R2 refuses every try, so the upload fails once its retries are spent, in real time.
+    vi.useRealTimers();
+    bucket.state.failing = true;
     await expect(owner.action(save, attachment)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_FAILED" },
     });
+    bucket.state.failing = false;
+    vi.useFakeTimers();
     expect(logged).toHaveBeenCalledWith(
-      expect.objectContaining({ message: ["Nina upload failed", storage] })
+      expect.objectContaining({
+        message: expect.arrayContaining(["Nina upload failed"]),
+      })
     );
     expect(
       await t.query((ctx) => ctx.db.query("ninaUploads").collect())
@@ -218,17 +251,18 @@ describe("native Nina attachment ownership", () => {
   it("does not complete expired or account-deleted grants and discards them idempotently", async () => {
     const { t, owner, identity } = await uploadFixture();
     const uploadId = await reserved(owner);
+    const fileId = await looseFile(t);
     await t.mutation((ctx) =>
       ctx.db.patch("ninaUploads", uploadId, { expiresAt: NOW })
     );
     await expect(
-      owner.mutation(complete, { uploadId, fileId: "unclaimed" })
+      owner.mutation(complete, { uploadId, fileId })
     ).rejects.toMatchObject({ data: { code: "NINA_UPLOAD_INVALID" } });
     await t.mutation((ctx) =>
       ctx.db.patch("users", identity.userId, { deletedAt: NOW })
     );
     await expect(
-      owner.mutation(complete, { uploadId, fileId: "unclaimed" })
+      owner.mutation(complete, { uploadId, fileId })
     ).rejects.toMatchObject({ data: { code: "UNAUTHORIZED" } });
     await t.mutation(discard, { uploadId });
     await t.mutation(discard, { uploadId });
@@ -251,27 +285,19 @@ describe("native Nina attachment ownership", () => {
     expect(second.prompt).toEqual(first.prompt);
     expect(second.order).toBeGreaterThan(first.order);
     expect(resolveNinaContext).not.toHaveBeenCalled();
-    const [original, retry] = await t.query((ctx) =>
-      ctx.runQuery(components.nina.messages.getMessagesByIds, {
-        messageIds: [first.promptMessageId, second.promptMessageId],
-      })
-    );
     // Each prompt is sealed at its own place, so the messages the learner reads match.
     const read = (messageId: string) =>
       readMessageIn(t, identity.userId, messageId);
     expect((await read(second.promptMessageId))?.message).toEqual(
       (await read(first.promptMessageId))?.message
     );
-    expect(retry?.fileIds).toEqual(original?.fileIds);
-    const fileId = original?.fileIds?.[0];
-    if (!fileId) {
-      throw new Error("Expected referenced file");
-    }
-    expect(
-      await t.query((ctx) =>
-        ctx.runQuery(components.nina.files.get, { fileId })
-      )
-    ).toMatchObject({ refcount: 2 });
+    // The retried prompt keeps the original's file, recorded for its own message too.
+    const kept = await chatFiles(t);
+    expect(kept.map((file) => file.messageId)).toEqual([
+      first.promptMessageId,
+      second.promptMessageId,
+    ]);
+    expect(kept[1]?.fileId).toBe(kept[0]?.fileId);
     await owner.mutation(cancel, { chatId: first.chatId });
     await expect(
       owner.mutation(start, {
@@ -295,11 +321,12 @@ describe("native Nina attachment ownership", () => {
     ).toEqual([]);
   });
 
-  it("rejects a deleted grant and rolls back consumption when its component file is unavailable", async () => {
+  it("rejects a deleted grant and rolls back consumption when its file is unavailable", async () => {
     const f = await uploadFixture();
     const uploadId = await saved(f.owner);
+    const fileId = await readyFileIdIn(f.t, uploadId);
     const args = sending([uploadId]);
-    vi.mocked(getFile).mockRejectedValueOnce(new Error("File unavailable"));
+    await f.t.mutation((ctx) => ctx.db.delete("bucketFiles", fileId));
     await expect(f.owner.mutation(start, args)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_FAILED" },
     });
@@ -311,7 +338,7 @@ describe("native Nina attachment ownership", () => {
       data: { code: "NINA_UPLOAD_INVALID" },
     });
     await expect(
-      f.owner.mutation(complete, { uploadId, fileId: "missing" })
+      f.owner.mutation(complete, { uploadId, fileId })
     ).rejects.toMatchObject({ data: { code: "NINA_UPLOAD_INVALID" } });
     expect(
       (await f.t.query((ctx) => ctx.db.get("users", f.identity.userId)))
@@ -422,14 +449,12 @@ describe("native Nina attachment ownership", () => {
       { data: { code: "NINA_UPLOAD_INVALID" } }
     );
 
-    const state = await f.t.query(async (ctx) => ({
-      file: await ctx.runQuery(components.nina.files.get, { fileId }),
-      prompt: await ctx.runQuery(components.nina.messages.getMessagesByIds, {
-        messageIds: [sent.promptMessageId],
-      }),
-    }));
-    expect(state.file).toMatchObject({ refcount: 1 });
-    expect(state.prompt[0]).toMatchObject({ fileIds: [fileId] });
+    expect(
+      await f.t.query((ctx) => ctx.db.get("bucketFiles", fileId))
+    ).toMatchObject({ state: "stored" });
+    expect(await chatFiles(f.t)).toMatchObject([
+      { fileId, messageId: sent.promptMessageId },
+    ]);
   });
 
   it("rejects a retry whose original prompt cannot be read instead of sending a new or foreign prompt", async () => {

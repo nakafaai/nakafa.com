@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   args,
   cancel,
@@ -21,6 +22,16 @@ import {
   uploadFixture,
 } from "@repo/backend/test/nina/uploads";
 import { Array as Arr } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -164,7 +175,7 @@ describe("a retried Nina prompt", () => {
         second.promptMessageId
       );
       return {
-        fileIds: retriedRow?.fileIds,
+        fileIds: retriedRow?.fileIds ?? [],
         order: second.order,
         prompt: second.prompt,
       };

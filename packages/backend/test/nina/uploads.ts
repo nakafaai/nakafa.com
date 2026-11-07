@@ -81,7 +81,7 @@ export const reserved = async (owner: Owner) =>
   Ref.decodeReturnsSync(
     refs.internal.nina.uploads.reserve,
     await owner.mutation(reserve, { filename: attachment.filename })
-  ).uploadId;
+  );
 
 /** Starts a turn as a learner does, and returns what the server answered. */
 export const started = async (owner: Owner, args: FunctionArgs<typeof start>) =>
