@@ -55,7 +55,10 @@ async function openSchool(browser: Browser, baseURL: string | undefined) {
   return { home, owner, slug: school.slug };
 }
 
-/** Invites the school's student, gives it its grant, and seeds its sitting and graduation. */
+/**
+ * Invites the school's student, gives it its grant, and seeds its sitting and graduation. The graduation joins the
+ * school's active period, which the class teacher's seed opens, so that seed runs first.
+ */
 async function seedStudent(
   browser: Browser,
   school: Awaited<ReturnType<typeof openSchool>>
@@ -201,6 +204,12 @@ async function openRole(
     };
   }
   await signInWithRole(context, school, role === "admin" ? "Admin" : "Proctor");
+  // The class teacher's seed opens the school's active period and a class in it, which the graduation joins.
+  const teacher = await browser.newContext();
+  await Effect.runPromise(
+    signInClassTeacher(teacher, school.slug, school.home)
+  );
+  await teacher.close();
   const { examId, sittingId } = await seedStudent(browser, school);
   await school.owner.close();
   return {
