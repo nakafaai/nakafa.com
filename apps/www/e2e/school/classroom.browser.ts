@@ -215,7 +215,7 @@ test("the school's Owner writes in a class's forum and adds to its library, as a
   await context.close();
 });
 
-test("the selects of New task open with a one-word label and an icon on every option, at 1440, 768, 390 and 320 px, light and dark", async ({
+test("the selects of New task open with a one-word label and an icon on every option, and the plus of New task names itself in a tooltip, at 1440, 768, 390 and 320 px, light and dark", async ({
   baseURL,
   browser,
 }, info) => {
@@ -236,6 +236,15 @@ test("the selects of New task open with a one-word label and an icon on every op
     await page.emulateMedia({ colorScheme: scheme });
     for (const width of [1440, 768, 390, 320] as const) {
       await page.setViewportSize({ height: 900, width });
+      if (width === 390) {
+        // A phone's header shows New task as its plus alone, and its name in a tooltip.
+        await create.hover();
+        await expect(page.getByRole("tooltip")).toHaveText("New task");
+        await page.screenshot({
+          path: info.outputPath(`tooltip-new-task-${width}-${scheme}.png`),
+        });
+        await page.mouse.move(0, 0);
+      }
       await create.click();
       const dialog = page.getByRole("dialog");
       for (const choice of [

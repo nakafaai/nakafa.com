@@ -3,7 +3,6 @@ import {
   Archive02Icon,
   ArrowTurnBackwardIcon,
   Delete02Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
   PinIcon,
   PinOffIcon,
@@ -17,7 +16,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -45,6 +43,7 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   archivePostUpdate,
   type ClassPost,
@@ -159,17 +158,7 @@ function PostActions({
   return (
     <ItemActions>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
+        <PostMenuTrigger />
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>

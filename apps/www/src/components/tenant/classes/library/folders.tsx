@@ -12,6 +12,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, Effect, Schema, String as Str } from "effect";
 import { type FormEvent, type ReactNode, useId, useState } from "react";
@@ -157,22 +162,30 @@ export function NewFolder() {
 
   return (
     <>
-      <Button
-        className="@xs/header:has-[>svg]:px-4"
-        onClick={() => {
-          setOpened((count) => count + 1);
-          setOpen(true);
-        }}
-        type="button"
-        variant="outline"
-      >
-        <HugeIcons
-          aria-hidden="true"
-          className="@2xl/header:hidden"
-          icon={FolderAddIcon}
-        />
-        <HeaderLabel>{t("library-new-folder")}</HeaderLabel>
-      </Button>
+      {/* A narrow header shows the icon alone, so its name stays in the tooltip. */}
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              className="@xs/header:has-[>svg]:px-4"
+              onClick={() => {
+                setOpened((count) => count + 1);
+                setOpen(true);
+              }}
+              type="button"
+              variant="outline"
+            />
+          }
+        >
+          <HugeIcons
+            aria-hidden="true"
+            className="@2xl/header:hidden"
+            icon={FolderAddIcon}
+          />
+          <HeaderLabel>{t("library-new-folder")}</HeaderLabel>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("library-new-folder")}</TooltipContent>
+      </Tooltip>
       {opened === 0 ? null : (
         <FolderNameDialog
           action={t("library-folder-create")}
