@@ -75,7 +75,15 @@ teacher and a homeroom teacher do, and only a student's own hand-in stays theirs
 alone (owner decision, 7 November 2026: every class duty is a roles rule that
 names no role, which every Owner passes). Admins, Principals, and Deputies can
 read the posts, the forum, and the library of every class their grant covers,
-and they write nowhere in them (a roles-granted view action, ADR 0012). Counselors, Staff, Proctors,
+and they write nowhere in them (a roles-granted view action, ADR 0012).
+
+A task's work is either a written answer or an exam document built in the exam
+editor (owner decision, 7 November 2026). Publishing a task of an exam runs that
+exam for the class's cohort from the moment of publishing until the deadline, or
+a week past it when the task takes late work, and the class's students do it in
+the one exam player. That run is homework, not a proctored room, so the class's
+readers open its token and a student's Start enters with it, where ADR 0013
+keeps a proctored room's token to its proctor. Counselors, Staff, Proctors,
 Auditors, and Integrations have no access to them. A guardian does not read the
 forum. The verified parent relation opens tasks, grades, report cards, and
 announcements.

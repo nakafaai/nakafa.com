@@ -1,5 +1,11 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { PencilEdit02Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
+import {
+  ChartBarLineIcon,
+  Edit02Icon,
+  PencilEdit02Icon,
+  PlayIcon,
+  TaskEdit01Icon,
+} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskText } from "@repo/backend/confect/classroom/tasks/task";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -53,6 +59,7 @@ import { TaskStanding } from "@/components/tenant/classes/tasks/standing";
 import { TaskWorkTable } from "@/components/tenant/classes/tasks/work";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { Link } from "@/lib/routing/link";
 
 /** The task the pane shows, which every part of the pane reads. */
 const OpenTaskContext = createContext<ClassTask | null>(null);
@@ -131,11 +138,17 @@ function OpenTask({
   return (
     <OpenTaskContext value={task.value}>
       <TaskHeader />
-      {Arr.contains(can, "task.manage") ? <TeacherTask /> : null}
-      {Arr.contains(can, "task.submit") && !Arr.contains(can, "task.manage") ? (
+      {task.value.exam === null ? null : <ExamTask />}
+      {task.value.exam === null && Arr.contains(can, "task.manage") ? (
+        <TeacherTask />
+      ) : null}
+      {task.value.exam === null &&
+      Arr.contains(can, "task.submit") &&
+      !Arr.contains(can, "task.manage") ? (
         <HandIn />
       ) : null}
-      {Arr.contains(can, "task.manage") ||
+      {task.value.exam !== null ||
+      Arr.contains(can, "task.manage") ||
       Arr.contains(can, "task.submit") ? null : (
         <PaneBody>
           <TaskInfo />
@@ -308,6 +321,80 @@ function HandIn() {
           {t("task-hand-in")}
         </Button>
       </PaneFooter>
+    </>
+  );
+}
+
+/**
+ * A task built from an exam: what it asks and its facts, then for a student Start, which opens the
+ * one exam player on the task's run and enters it with the run's token, and for its teacher the
+ * exam's questions in the editor, the run's results, and Edit task.
+ */
+function ExamTask() {
+  const t = useTranslations("Classroom");
+  const task = useOpenTask();
+  const { can, slug } = useClassScope();
+  const [openings, setOpenings] = useState(0);
+
+  if (task.exam === null) {
+    return null;
+  }
+  const run = { exam: task.exam.examId, sitting: task.exam.sittingId, slug };
+
+  return (
+    <>
+      <PaneBody>
+        <TaskInfo />
+      </PaneBody>
+      <PaneFooter>
+        {Arr.contains(can, "task.manage") ? (
+          <>
+            <Button
+              nativeButton={false}
+              render={
+                <Link params={run} to="/school/$slug/exams/$exam/edit">
+                  <HugeIcons aria-hidden="true" icon={Edit02Icon} />
+                  {t("task-questions")}
+                </Link>
+              }
+              variant="outline"
+            />
+            <Button
+              nativeButton={false}
+              render={
+                <Link
+                  params={run}
+                  to="/school/$slug/exams/$exam/sittings/$sitting/results"
+                >
+                  <HugeIcons aria-hidden="true" icon={ChartBarLineIcon} />
+                  {t("task-results")}
+                </Link>
+              }
+              variant="outline"
+            />
+            <Button onClick={() => setOpenings((count) => count + 1)}>
+              <HugeIcons aria-hidden="true" icon={PencilEdit02Icon} />
+              {t("task-edit")}
+            </Button>
+          </>
+        ) : null}
+        {Arr.contains(can, "task.submit") ? (
+          <Button
+            nativeButton={false}
+            render={
+              <Link
+                hash={task.exam.token}
+                params={{ sitting: task.exam.sittingId, slug }}
+                to="/school/$slug/sittings/$sitting"
+              >
+                <HugeIcons aria-hidden="true" icon={PlayIcon} />
+                {t("task-start")}
+              </Link>
+            }
+          />
+        ) : null}
+      </PaneFooter>
+      {openings === 0 ? null : <EditTaskDialog key={openings} task={task} />}
     </>
   );
 }
