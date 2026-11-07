@@ -5,12 +5,15 @@ import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-/** Whether the first thing a picker or one of its rows draws is a flag that holds a drawing. */
+/**
+ * Whether a picker or one of its rows draws a flag that holds a drawing right before its name. Until the
+ * flags load, that place holds an empty box of the same size, and the arrow and the tick stand after the name.
+ */
 const drawsFlag = (row: Locator) =>
   row.evaluate((element) => {
-    const flag = element.querySelector("svg");
+    const flag = element.querySelector(".truncate")?.previousElementSibling;
     return (
-      flag !== null &&
+      flag instanceof SVGElement &&
       flag.getAttribute("aria-hidden") === "true" &&
       flag.childElementCount > 0 &&
       flag.getBoundingClientRect().width >= 12
