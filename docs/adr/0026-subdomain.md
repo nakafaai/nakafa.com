@@ -34,9 +34,9 @@ finds the right data.
   That is the `us` cell's domain: a cell other than `us` serves its
   organisations under a registrable domain of its own (see Data cells). One host
   serves every unit of the organisation.
-- A school host has no locale prefix. The language comes from the `NEXT_LOCALE`
-  cookie, then from Accept-Language, then from the default locale, as next-intl
-  resolves it. Sign-in sets the cookie, and changing the language in the account
+- A school host has no locale prefix. The language comes from the `NAKAFA_LOCALE`
+  cookie, then from Accept-Language, then from the default locale, as the locale
+  negotiation resolves it. Sign-in sets the cookie, and changing the language in the account
   menu sets it again.
 - One sign-in covers `nakafa.com` and every school host of the `us` cell,
   through the cross-subdomain cookies that ADR 0011 describes.
@@ -74,12 +74,12 @@ finds the right data.
   from the Host header (`apps/www/src/lib/routing/school/host.ts`): the port of the header, or the
   default port of the protocol when the header names none. Only the protocol comes
   from the request URL. Its rewrites name the request URL, the origin of the
-  server, because Next proxies a rewrite to any other origin: a
+  server, because the framework proxies a rewrite to any other origin: a
   school page is never rewritten to the visitor's host, and the school rewrite
-  reads the request URL and not `nextUrl`, which maps a loopback address to
-  `localhost`. A self-hosted run builds the request URL from the server's own
-  address, so the redirects of next-intl, such as `/` to `/en` on the main site,
-  still name that address.
+  reads the request URL and not the framework's parsed URL, which maps a loopback
+  address to `localhost`. A self-hosted run builds the request URL from the
+  server's own address, so the locale redirects, such as `/` to `/en` on the main
+  site, still name that address.
 - A school page's status is decided by the proxy before the page streams, in
   `apps/www/src/lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
   the proxy (`apps/www/src/lib/routing/public/profile.ts`). The gate reads one query,
@@ -106,7 +106,7 @@ finds the right data.
   layout still refuses a membership that has ended. A read that fails goes on to
   the school tree, and its full cause is logged, so an outage never answers with
   not found.
-- A path that next-intl cannot decode, such as `/%`, gets no rewrite and no
+- A path that the locale negotiation cannot decode, such as `/%`, gets no rewrite and no
   locale, so the request goes on unchanged for a refused visitor and an admitted
   one. A 404 for a refused visitor alone would tell the two apart, so the refusal
   does not apply to such a path.
@@ -197,7 +197,7 @@ its own change, before any school code that depends on it lands.
   created when the first school in the European Union signs, with its own budget
   (K5).
 - Each cell runs its own `www` project and its own Convex deployment. A cell's
-  project has its own `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`,
+  project has its own `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL`,
   and its deployment has its own `SITE_URL` and cookie domain. The `us` project
   serves `nakafa.com` and its school hosts, and a later cell's project serves that
   cell's domain. A request reaches its cell by the domain it names, so the proxy
@@ -302,7 +302,7 @@ A move runs in this order:
   cell exists to prevent.
 - One `www` project for every cell, with a resolver that picks the deployment by
   host. The auth handler (`apps/www/src/lib/auth/forward.server.ts`) takes both
-  `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`, the session token
+  `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL`, the session token
   read in the same file takes the site URL, and the Convex provider
   (`apps/www/src/components/providers/app.tsx`) takes the query URL, besides the
   readers of signed content and try-outs. A resolver would have to replace every
