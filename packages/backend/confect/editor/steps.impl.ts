@@ -87,6 +87,9 @@ const since = FunctionImpl.make(
 /** The answer to a batch that landed, now or under its id before. */
 const ACCEPTED: typeof SubmitReply.Type = { _tag: "Accepted" };
 
+/** The answer to a batch on a backlog that one read does not hold. */
+const FOLD_PENDING: typeof SubmitReply.Type = { _tag: "FoldPending" };
+
 /**
  * Accepts a batch of steps made on the document's head. A batch the session has had
  * accepted before is answered `Accepted` without a write, so a retried batch is idempotent.
@@ -128,11 +131,12 @@ const submit = FunctionImpl.make(
     }
     yield* requireDocumentUnfrozen(document._id);
     if (batch.baseVersion !== document.head) {
-      return {
+      const stale: typeof SubmitReply.Type = {
         _tag: "VersionStale",
         baseVersion: batch.baseVersion,
         head: document.head,
-      } satisfies typeof SubmitReply.Type;
+      };
+      return stale;
     }
     const snapshot = yield* snapshotOf(document._id);
     const pending = yield* pendingRows(
@@ -141,7 +145,7 @@ const submit = FunctionImpl.make(
       document.head
     );
     if (Option.isNone(pending)) {
-      return { _tag: "FoldPending" } satisfies typeof SubmitReply.Type;
+      return FOLD_PENDING;
     }
     const refusal = yield* batchRefusal(
       document._id,

@@ -422,6 +422,7 @@ describe("the frames of the realtime connection", () => {
 
     expect(Option.getOrUndefined(frozen)).toEqual({
       requestId: 12,
+      result: "Uncaught ConvexError",
       success: false,
       ts: null,
       type: "MutationResponse",

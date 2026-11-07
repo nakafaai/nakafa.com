@@ -170,11 +170,12 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
           return ACCEPTED;
         }
         if (batch.baseVersion !== current.head) {
-          return {
+          const stale: typeof SubmitReply.Type = {
             _tag: "VersionStale",
             baseVersion: batch.baseVersion,
             head: current.head,
-          } satisfies typeof SubmitReply.Type;
+          };
+          return stale;
         }
         const refusal = yield* refuse(batch);
         if (Option.isSome(refusal)) {

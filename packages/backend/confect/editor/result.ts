@@ -82,17 +82,25 @@ export const batchRefusal = Effect.fn("editor.result.refusal")(function* (
   batch: readonly Step[]
 ) {
   const steps = Arr.appendAll(yield* decodedSteps(pending), batch);
+  const invalid = Option.some<typeof SubmitReply.Type>({
+    _tag: "DocumentInvalid",
+  });
   return yield* foldedText(documentId, snapshot, steps).pipe(
-    Effect.map(
-      (folded): Option.Option<typeof SubmitReply.Type> =>
-        Arr.some(folded.tooDeep, (version) => version > head)
-          ? Option.some({ _tag: "DocumentInvalid" })
-          : Option.none()
+    Effect.map((folded) =>
+      Arr.some(folded.tooDeep, (version) => version > head)
+        ? invalid
+        : Option.none<typeof SubmitReply.Type>()
     ),
     Effect.catchTags({
-      DocumentInvalid: () => Effect.succeedSome({ _tag: "DocumentInvalid" }),
+      DocumentInvalid: () => Effect.succeed(invalid),
       DocumentTooLarge: ({ bytes, limit }) =>
-        Effect.succeedSome({ _tag: "DocumentTooLarge", bytes, limit }),
+        Effect.succeed(
+          Option.some<typeof SubmitReply.Type>({
+            _tag: "DocumentTooLarge",
+            bytes,
+            limit,
+          })
+        ),
     })
   );
 });
