@@ -10,14 +10,14 @@ describe("search query planning", () => {
           "  React 19 Server Components  ",
           "   ",
           "REACT 19 SERVER COMPONENTS",
-          "Cache Components 移行ガイド",
+          "Concurrent Rendering 移行ガイド",
           "react.dev blog react-19",
           "React 19 リリースノート",
         ],
       })
     ).toEqual([
       "React 19 Server Components",
-      "Cache Components 移行ガイド",
+      "Concurrent Rendering 移行ガイド",
       "react.dev blog react-19",
     ]);
   });
