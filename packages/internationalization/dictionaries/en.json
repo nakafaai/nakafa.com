@@ -1587,9 +1587,6 @@
     "library-kind-link": "Link",
     "library-kind-pdf": "PDF",
     "library-kind-image": "Image",
-    "library-remove": "Remove",
-    "library-remove-title": "Remove this item",
-    "library-remove-description": "It leaves the library for everyone, and it cannot come back.",
     "tabs-tasks": "Tasks",
     "tabs-people": "People",
     "people-search": "Search people",
@@ -1705,11 +1702,28 @@
     "library-folder-create": "Create",
     "library-folder-rename": "Rename",
     "library-folder-rename-description": "The class sees the new name at once.",
-    "library-folder-remove": "Delete",
-    "library-folder-remove-title": "Delete this folder",
-    "library-folder-remove-description": "Its files stay in the library.",
     "library-folder-empty-description": "This folder's files and links show here, the newest first.",
-    "library-kind-folder": "Folder"
+    "library-kind-folder": "Folder",
+    "library-download": "Download",
+    "library-move": "Move",
+    "library-move-title": "Move to",
+    "library-move-description": "Choose the folder it goes to.",
+    "library-top": "Library",
+    "library-star": "Star",
+    "library-unstar": "Remove star",
+    "library-trash": "Move to trash",
+    "library-uploading": "{percent}%",
+    "library-view-files": "Files",
+    "library-view-starred": "Starred",
+    "library-view-trash": "Trash",
+    "library-trashed": "Trashed",
+    "library-trash-empty": "The trash is empty",
+    "library-trash-empty-description": "Trashed files and folders wait here 30 days, then they are deleted.",
+    "library-purge": "Delete forever",
+    "library-purge-title": "Delete this forever",
+    "library-purge-description": "It frees the school storage and cannot come back.",
+    "library-restore": "Restore",
+    "library-path": "Folder path"
   },
   "SchoolGrades": {
     "email": "Email",
@@ -3509,6 +3523,10 @@
     "school-refusal-channel-fixed": {
       "title": "The general channel keeps its name.",
       "description": "Rename a topic channel instead."
+    },
+    "library-storage-full": {
+      "title": "The file was not added.",
+      "description": "The school storage is full. Delete files forever to make room."
     }
   },
   "Ai": {

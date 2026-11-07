@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { MAX_READ_BYTES } from "@repo/backend/confect/classroom/passages";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   forumClass,
   keyedFixture,
@@ -12,7 +13,7 @@ import {
   period,
 } from "@repo/backend/test/classroom";
 import { conceptEmbedder, provider } from "@repo/backend/test/gateway";
-import { storeFile } from "@repo/backend/test/logo";
+import { addFile, PDF } from "@repo/backend/test/library";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
 import { MockLanguageModelV4 } from "ai/test";
@@ -28,9 +29,10 @@ const library = refs.public.classroom.library;
 const { build, open, source } = refs.internal.classroom.passages;
 const { setPolicy } = refs.public.tenancy.settings;
 
-/** The leading bytes of a PDF, which the library keeps. */
-const pdf = () =>
-  new Blob(["%PDF-1.7\n1 0 obj\n"], { type: "application/pdf" });
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 /** Turns Nina on for the school. */
 const ninaOn = (fixture: Fixture) =>
@@ -55,15 +57,15 @@ const published = Effect.fn("test.passages.published")(function* (
 ) {
   const term = yield* period(fixture, fixture.units.smp);
   const { classId } = yield* forumClass(fixture, term.id, "X-1");
-  const storageId = yield* storeFile(fixture.convex, pdf());
-  const { id } = yield* fixture.as("teacher").action(library.register, {
+  const { id } = yield* addFile(
+    bucket,
+    fixture,
     classId,
-    clientKey: "modul-newton",
-    folderId: null,
-    slug: nf,
-    storageId,
-    title: "Modul Newton",
-  });
+    "modul-newton",
+    PDF,
+    "application/pdf",
+    "Modul Newton"
+  );
   return { classId, itemId: id };
 });
 
@@ -84,6 +86,8 @@ describe("classroom/passages", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
   });
 
   afterEach(() => {
@@ -121,9 +125,22 @@ describe("classroom/passages", () => {
 
         yield* fixture
           .as("teacher")
-          .mutation(library.remove, { classId, itemId, slug: nf });
+          .mutation(library.purge, { classId, itemId, slug: nf });
         expect(yield* passages(fixture)).toEqual([]);
       })
+  );
+
+  it.effect("builds nothing for a file whose object left the bucket", () =>
+    Effect.gen(function* () {
+      const fixture = yield* keyedFixture;
+      yield* ninaOn(fixture);
+      modelReads("Hukum Newton.");
+      const { itemId } = yield* published(fixture);
+      bucket.state.objects = {};
+      yield* fixture.finishScheduled();
+      expect(yield* fixture.internal.action(build, { itemId })).toBeNull();
+      expect(yield* passages(fixture)).toEqual([]);
+    })
   );
 
   it.effect("leaves a file out while the school keeps Nina off", () =>

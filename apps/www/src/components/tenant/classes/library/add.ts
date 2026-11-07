@@ -17,9 +17,6 @@ import type {
 /** The arguments of one link, as the dialog gives them. */
 type LinkArgs = Ref.Args<typeof classroom.library.addLink>;
 
-/** The ID of an uploaded file in Convex storage, as the upload address answers it. */
-const storageIdSchema = Id("_storage");
-
 /**
  * The link the teacher adds, shown at once first in the library under its client key, which is
  * its placeholder ID until the server answers. `add` is Confect's mutation with the optimistic
@@ -50,33 +47,39 @@ export const addLibraryLink = Effect.fn("classroom.library.addLink")(function* <
         folderId: args.folderId,
         id,
         kind: "link",
+        starred: false,
         title: args.title,
+        trashedAt: null,
       }),
       args
     )
   );
 });
 
+/** What a reservation answers: the presigned address of the upload and the reservation it registers. */
+type Reserved = Ref.Returns<typeof classroom.library.reserve>;
+
 /**
- * Adds one file to the library: it asks for an upload address, sends the file to it, and
- * registers the stored file, which the server checks before it keeps it. The module that sends
- * the file, and Effect's HTTP client with it, loads only now, so the page's first JavaScript does
- * not carry it.
+ * Adds one file to the library: it reserves the file's bytes, which the server charges to the school before any
+ * byte moves, sends the file straight to R2 at the address it answers, reporting progress, and registers the
+ * upload, which the server checks before it keeps it. The module that sends the file loads only now, so the page's
+ * first JavaScript does not carry it.
  */
 export const uploadLibraryFile = Effect.fn("classroom.library.upload")(
-  function* <UrlError, RegisterError, Registered>(
+  function* <ReserveError, RegisterError, Registered>(
     file: File,
-    requestUrl: () => Promise<Result.Result<URL, UrlError>>,
+    reserve: () => Promise<Result.Result<Reserved, ReserveError>>,
     register: (
-      storageId: typeof storageIdSchema.Type
-    ) => Promise<Result.Result<Registered, RegisterError>>
+      uploadId: Reserved["uploadId"]
+    ) => Promise<Result.Result<Registered, RegisterError>>,
+    onProgress: (fraction: number) => void
   ) {
-    const url = yield* forumCall(requestUrl);
-    const { sendStorageFile } = yield* Effect.tryPromise(
-      () => import("@/components/tenant/exams/image")
+    const reserved = yield* forumCall(reserve);
+    const { putLibraryFile } = yield* Effect.tryPromise(
+      () => import("@/components/tenant/classes/library/send")
     );
-    const storageId = yield* sendStorageFile(url, file);
-    return yield* forumCall(() => register(storageId));
+    yield* putLibraryFile(reserved.address, file, onProgress);
+    return yield* forumCall(() => register(reserved.uploadId));
   }
 );
 
@@ -95,7 +98,7 @@ export const sendLibraryFile = Effect.fn("classroom.library.send")(function* <
 ) {
   const clientKey = yield* randomUuid;
   const createdAt = yield* Clock.currentTimeMillis;
-  uploads.start({ ...shown, clientKey, createdAt, sent: false });
+  uploads.start({ ...shown, clientKey, createdAt, progress: 0, sent: false });
   return yield* send(clientKey).pipe(
     Effect.tap(() => Effect.sync(() => uploads.settle(clientKey))),
     Effect.tapError(() => Effect.sync(() => uploads.end(clientKey)))

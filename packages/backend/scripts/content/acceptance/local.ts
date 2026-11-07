@@ -7,6 +7,10 @@ import {
   createLocalJwks,
   LOCAL_AUTH_SECRET,
 } from "@repo/backend/scripts/content/acceptance/auth";
+import {
+  BUCKET_PATH,
+  localBucketEnvironment,
+} from "@repo/backend/scripts/content/acceptance/bucket";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import {
   acceptanceRuntimeError,
@@ -263,6 +267,8 @@ export const initializeLocalRuntime = Effect.fn(
     );
   }
   const jwks = yield* createLocalJwks();
+  // The bucket stand-in answers under the analytics stand-in's origin, so its address is known before the backend's environment is.
+  const analytics = yield* reserveAnalyticsOrigin();
   yield* retryVersionServiceStart(
     command(
       ["env", "set", "--force"],
@@ -274,6 +280,8 @@ export const initializeLocalRuntime = Effect.fn(
               AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
               AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
               AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
+              ...localBucketEnvironment,
+              R2_ENDPOINT: `${analytics}${BUCKET_PATH}`,
               SITE_URL: app,
             }),
             ([key, value]) => `${key}=${encodeJsonText(value)}`
@@ -296,7 +304,7 @@ export const initializeLocalRuntime = Effect.fn(
     ...identity,
     ...reserved,
     ...urls,
-    analytics: yield* reserveAnalyticsOrigin(),
+    analytics,
     app,
     backend,
     databaseInode: database.ino.value,

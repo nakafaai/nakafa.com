@@ -6,10 +6,17 @@ import { Effect, Option, Result, Schema } from "effect";
 import {
   addFolderUpdate,
   addLibraryFolder,
+  childFolders,
+  folderPath,
   isSavedFolder,
+  isWithin,
   type LibraryFolder,
-  removeFolderUpdate,
+  moveFolderUpdate,
+  purgeFolderUpdate,
   renameFolderUpdate,
+  restoreFolderUpdate,
+  starFolderUpdate,
+  trashFolderUpdate,
 } from "@/components/tenant/classes/library/folder";
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
@@ -19,12 +26,19 @@ const classId = classOf("class-1");
 const otherClass = classOf("class-2");
 
 /** A folder of the class library. */
-const folder = (id: string, name: string): LibraryFolder => ({
+const folder = (
+  id: string,
+  name: string,
+  parentId: LibraryFolder["parentId"] = null
+): LibraryFolder => ({
   author: "Bu Rina",
   clientKey: `key-${id}-0000`,
   createdAt: 1,
   id: folderOf(id),
   name,
+  parentId,
+  starred: false,
+  trashedAt: null,
 });
 
 const first = folder("first", "Bab 1");
@@ -60,6 +74,7 @@ describe("class library folders", () => {
       classId,
       clientKey: added.clientKey,
       name: added.name,
+      parentId: null,
       slug,
     });
     expect(adding.setQuery.mock.calls).toEqual([
@@ -86,7 +101,7 @@ describe("class library folders", () => {
     ]);
 
     const removing = storeOf();
-    removeFolderUpdate(removing.localStore, {
+    purgeFolderUpdate(removing.localStore, {
       classId,
       folderId: first.id,
       slug,
@@ -104,6 +119,7 @@ describe("class library folders", () => {
           classId,
           clientKey: "key-added-0000",
           name: "Bab 3",
+          parentId: null,
           slug,
         };
         const add = vi.fn((_update: unknown, _args: unknown) =>
@@ -126,9 +142,79 @@ describe("class library folders", () => {
               createdAt: 0,
               id: folderOf(args.clientKey),
               name: "Bab 3",
+              parentId: null,
+              starred: false,
+              trashedAt: null,
             },
           ])
         );
       })
   );
+
+  it("moves, trashes, restores and stars a folder at once, and ignores an item's star", () => {
+    const written = (
+      run: (store: ReturnType<typeof storeOf>["localStore"]) => void
+    ) => {
+      const store = storeOf();
+      run(store.localStore);
+      return store.setQuery.mock.calls[0]?.[2];
+    };
+    expect(
+      written((store) =>
+        moveFolderUpdate(store, {
+          classId,
+          folderId: second.id,
+          parentId: first.id,
+          slug,
+        })
+      )
+    ).toEqual(Option.some([first, { ...second, parentId: first.id }]));
+    expect(
+      written((store) =>
+        trashFolderUpdate(5)(store, { classId, folderId: first.id, slug })
+      )
+    ).toEqual(Option.some([{ ...first, trashedAt: 5 }, second]));
+    expect(
+      written((store) =>
+        restoreFolderUpdate(store, { classId, folderId: first.id, slug })
+      )
+    ).toEqual(Option.some([first, second]));
+    expect(
+      written((store) =>
+        starFolderUpdate(store, {
+          classId,
+          slug,
+          starred: true,
+          target: { folderId: first.id, kind: "folder" },
+        })
+      )
+    ).toEqual(Option.some([{ ...first, starred: true }, second]));
+    expect(
+      written((store) =>
+        starFolderUpdate(store, {
+          classId,
+          slug,
+          starred: true,
+          target: {
+            itemId: Schema.decodeUnknownSync(Id("classroomLibrary"))("item"),
+            kind: "item",
+          },
+        })
+      )
+    ).toBeUndefined();
+  });
+
+  it("finds a folder's children, its path from the top, and whether it sits inside another", () => {
+    const child = folder("child", "Sub", first.id);
+    const trashed = { ...folder("gone", "Lama", first.id), trashedAt: 3 };
+    const loop = folder("loop", "Lingkar", folderOf("loop"));
+    const folders = [first, second, child, trashed, loop];
+    expect(childFolders(folders, first.id)).toEqual([child]);
+    expect(folderPath(folders, child.id)).toEqual([first, child]);
+    expect(folderPath(folders, null)).toEqual([]);
+    expect(folderPath(folders, folderOf("missing"))).toEqual([]);
+    expect(folderPath(folders, loop.id)).toHaveLength(folders.length);
+    expect(isWithin(folders, child.id, first.id)).toBe(true);
+    expect(isWithin(folders, second.id, first.id)).toBe(false);
+  });
 });
