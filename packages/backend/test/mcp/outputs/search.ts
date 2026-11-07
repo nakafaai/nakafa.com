@@ -16,7 +16,6 @@ export const SEARCH_CONTENT_OUTPUT = {
       markdown_url: "https://nakafa.com/en/articles/politics/article-0.md",
       description: "",
       title: "Article 0",
-      // The excerpt starts after the row's path, as #2132 cut it.
       excerpt: "rational function grade eleven asymptote",
     },
   ],
