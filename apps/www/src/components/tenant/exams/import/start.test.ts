@@ -56,7 +56,7 @@ const importFile = () =>
     place: vi.fn(),
     read: vi.fn(),
     register: vi.fn(),
-    requestUrl: vi.fn(),
+    reserve: vi.fn(),
   });
 
 describe("importIntoExam", () => {
