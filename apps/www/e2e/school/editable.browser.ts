@@ -125,26 +125,25 @@ for (const viewport of [
     await saved(changes, beforeClient);
 
     await page.goto(address("/settings/profile"));
-    const country = page.getByRole("combobox", { name: "Country" });
+    const locale = page
+      .locator('[data-slot="card"]')
+      .filter({ hasText: "Country and currency" });
+    const country = locale.getByLabel("Country", { exact: true });
     await waitUntilTakenOver(country);
     await country.click();
     await page.getByRole("option", { name: "Singapore" }).click();
-    await expect(
-      page.getByRole("combobox", { name: "Currency" })
-    ).toContainText("SGD");
+    // The trigger reads the currency's name beside its symbol.
+    await expect(locale.getByLabel("Currency", { exact: true })).toContainText(
+      "Singapore Dollar"
+    );
     const sentBefore = changes.sent;
-    await page
-      .locator('[data-slot="card"]')
-      .filter({ hasText: "Country and currency" })
-      .getByRole("button", { name: "Save" })
-      .click();
+    await locale.getByRole("button", { name: "Save" }).click();
     // The reload waits for the server, since it would cancel a save still on its way.
     await saved(changes, sentBefore);
     await page.reload();
-    await expect(page.getByRole("combobox", { name: "Country" })).toContainText(
-      "Singapore",
-      { timeout: readinessTimeoutMilliseconds }
-    );
+    await expect(country).toContainText("Singapore", {
+      timeout: readinessTimeoutMilliseconds,
+    });
     await context.close();
   });
 

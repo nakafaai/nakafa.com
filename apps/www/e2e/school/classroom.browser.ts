@@ -34,11 +34,14 @@ const CHANNEL_PATH = /\/classes\/fisika-x-1\/forum\/[^/]+$/u;
 /**
  * How far the class's body reaches past its header's frame, on either side, and how far the page
  * scrolls sideways. The frame is the tab row, which stands in the header's frame with its gutter; the
- * body is each table card and the forum's row of panes.
+ * body is each table card and the forum's row of panes. A tab's own views, such as the library's Files, Starred
+ * and Trash, are tabs too, so the frame is the tab row that the class names.
  */
 const overflowOf = (page: Page) =>
   page.evaluate(() => {
-    const tabs = document.querySelector('main [role="tablist"]');
+    const tabs = document.querySelector(
+      'main [role="tablist"][aria-label="Class"]'
+    );
     const frame = tabs?.getBoundingClientRect();
     const parts = Array.from(
       document.querySelectorAll(
