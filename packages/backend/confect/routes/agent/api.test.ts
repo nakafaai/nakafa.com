@@ -90,6 +90,9 @@ describe("public agent API routes", () => {
       }),
     ]);
     expect(index.status).toBe(200);
+    expect(index.headers.get("ratelimit-policy")).toBe(
+      '"public-read";q=30;w=15'
+    );
     expectPublicJson(index);
     await expect(index.json()).resolves.toMatchObject({
       authentication: "none",

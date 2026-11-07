@@ -228,6 +228,7 @@ describe("Nakafa OpenAPI document", () => {
   it("documents the real edge and application rate-limit contracts", () => {
     const operations = readOperations();
     const metered = HashSet.fromIterable([
+      "getNakafaApiIndex",
       "getNakafaContent",
       "getNakafaQuranReference",
       "searchNakafaContent",

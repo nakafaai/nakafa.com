@@ -172,7 +172,7 @@ export const OPENAPI_PATHS = {
       operationId: "getNakafaApiIndex",
       responses: {
         "200": successResponse("API service index.", "ApiIndex"),
-        ...COMMON_ERRORS,
+        ...METERED_RESPONSES,
       },
       summary: "Read the API index",
     }),
