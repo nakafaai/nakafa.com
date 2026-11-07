@@ -3,7 +3,7 @@ import { entries } from "@repo/backend/confect/access/catalog";
 import { decide } from "@repo/backend/confect/access/decision";
 import type { Rule } from "@repo/backend/confect/access/schema";
 import { principal, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, HashMap, Record } from "effect";
+import { Array as Arr, Effect, HashMap, Order, Record } from "effect";
 
 /**
  * The seven people of a school the matrix walks: the role each one's grant holds over the whole
@@ -94,10 +94,13 @@ describe("classroom/kinds", () => {
       Effect.gen(function* () {
         const matrix = yield* walkMatrix;
         expect(
-          Arr.map(
-            Arr.filter(matrix, (row) => !Arr.contains(row.personas, "owner")),
-            (row) => row.action
-          ).sort()
+          Arr.sort(
+            Arr.map(
+              Arr.filter(matrix, (row) => !Arr.contains(row.personas, "owner")),
+              (row) => row.action
+            ),
+            Order.String
+          )
         ).toEqual([
           "guardian.child",
           "guardian.confirm",
