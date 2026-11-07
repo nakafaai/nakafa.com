@@ -162,7 +162,10 @@ describe("acceptance xendit", () => {
         yield* invoiceMode.run(root, ["NKF-2026-000001", "paid"]);
 
         const [read, record, event, apply] = MutableList.toArray(specs);
-        expect(read?.args.slice(1, 3)).toEqual(["data", "billingInvoices"]);
+        expect(Arr.take(Arr.drop(read?.args ?? [], 1), 2)).toEqual([
+          "data",
+          "billingInvoices",
+        ]);
         expect(record?.args[2]).toBe("billing/xendit/invoice:record");
         expect(
           yield* Schema.decodeEffect(SessionArgs)(
