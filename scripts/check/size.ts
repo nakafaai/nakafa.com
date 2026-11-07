@@ -1,5 +1,5 @@
 import { Array as Arr, String as Str } from "effect";
-import type { SourceFile } from "typescript/unstable/ast";
+import type { SourceFile } from "tsrs/ast";
 import { isGenerated } from "#scripts/check/source";
 
 /** The most lines a hand-written module may have. */

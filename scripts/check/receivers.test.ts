@@ -1,8 +1,13 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, Record as Rec } from "effect";
-import { Checker, type Project } from "typescript/unstable/sync";
+import { Checker, type Project } from "tsrs/sync";
 import { arrayCall } from "#scripts/check/calls";
-import { ROOT, typedProject, withProject } from "#scripts/check/fixture";
+import {
+  apiMethods,
+  ROOT,
+  typedProject,
+  withProject,
+} from "#scripts/check/fixture";
 import { receiverVerdicts } from "#scripts/check/receivers";
 import { descendants } from "#scripts/check/source";
 
@@ -153,22 +158,21 @@ describe("array receivers by declared type", () => {
     }).pipe(Effect.scoped)
   );
 
-  it.effect("counts a receiver the checker cannot give as an array", () =>
-    Effect.gen(function* () {
-      vi.spyOn(Checker.prototype, "getTypeAtLocation").mockReturnValueOnce([
-        undefined,
-      ]);
-      const project = yield* typedProject(
-        withProject({
-          "scripts/verdicts/untyped.ts":
-            "declare const rows: string;\nexport const doubled = rows.map(String);\n",
-        })
-      );
-      assert.deepStrictEqual(
-        yield* verdicts(project, ["scripts/verdicts/untyped.ts"]),
-        ["scripts/verdicts/untyped.ts:2 array"]
-      );
-    }).pipe(Effect.scoped)
+  it.effect(
+    "counts a receiver whose type the compiler cannot give as an array",
+    () =>
+      Effect.gen(function* () {
+        const project = yield* typedProject(
+          withProject({
+            "scripts/verdicts/untyped.ts":
+              "declare const rows: Missing;\nexport const doubled = rows.map(String);\n",
+          })
+        );
+        assert.deepStrictEqual(
+          yield* verdicts(project, ["scripts/verdicts/untyped.ts"]),
+          ["scripts/verdicts/untyped.ts:2 array"]
+        );
+      }).pipe(Effect.scoped)
   );
 
   it.effect("fails with a typed error when the checker cannot answer", () =>
@@ -180,11 +184,13 @@ describe("array receivers by declared type", () => {
             ARRAYS["scripts/verdicts/declared.ts"],
         })
       );
-      vi.spyOn(Checker.prototype, "isArrayLikeType").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      vi.spyOn(
+        apiMethods(Checker.prototype),
+        "isArrayLikeType",
+        "get"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* verdicts(project, [
         "scripts/verdicts/declared.ts",
       ]).pipe(Effect.flip);

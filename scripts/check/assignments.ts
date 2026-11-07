@@ -13,7 +13,7 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { descendants } from "#scripts/check/source";
 import { unwrapped } from "#scripts/check/wrapper";
 

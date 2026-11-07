@@ -7,6 +7,7 @@ import {
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
   PACKAGE_MANAGER,
+  TSRS_VERSION,
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
 import {
@@ -87,7 +88,7 @@ function validInput(): PolicyInput {
         "@vitest/coverage-istanbul": VITEST_COHORT_VERSION,
         "@vitest/ui": VITEST_COHORT_VERSION,
         effect: EFFECT_COHORT_VERSION,
-        typescript: "7.0.2",
+        tsrs: TSRS_VERSION,
         vitest: VITEST_COHORT_VERSION,
       },
       overrides: {
@@ -241,10 +242,9 @@ describe("dependency policy validation", () => {
       change: (input) =>
         updateWebManifest(input, (manifest) => ({
           ...manifest,
-          dependencies: { ...manifest.dependencies, typescript: "^7.0.0" },
+          dependencies: { ...manifest.dependencies, tsrs: "^0.23.0" },
         })),
-      problem:
-        "apps/www/package.json declares typescript as ^7.0.0; approved 7.0.2 or catalog: or npm:typescript@7.0.2.",
+      problem: `apps/www/package.json declares tsrs as ^0.23.0; approved ${TSRS_VERSION} or catalog:.`,
     },
     {
       name: "an obsolete Effect package",
@@ -350,15 +350,15 @@ describe("dependency policy validation", () => {
       problem: `The ${dependency} override must match Effect ${EFFECT_COHORT_VERSION}.`,
     })),
     {
-      name: "a TypeScript catalog drift",
+      name: "a tsrs catalog drift",
       change: (input) => ({
         ...input,
         workspace: {
           ...input.workspace,
-          catalog: { ...input.workspace.catalog, typescript: "7.0.1" },
+          catalog: { ...input.workspace.catalog, tsrs: "0.22.0-ts7.1.0-beta" },
         },
       }),
-      problem: "The native TypeScript catalog must be exactly 7.0.2.",
+      problem: `The tsrs catalog must be exactly ${TSRS_VERSION}, the release @effect/tsgo patches.`,
     },
     {
       name: "a Vitest cohort drift",

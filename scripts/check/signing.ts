@@ -6,7 +6,7 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { importedName, namedImports, readsOf } from "#scripts/check/imports";
 
 /** The Node crypto module, by both of its specifiers. */

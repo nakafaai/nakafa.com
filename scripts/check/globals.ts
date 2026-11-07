@@ -25,7 +25,7 @@ import {
   type PropertyAccessExpression,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { loadsImport } from "#scripts/check/kinds";
 import { candidate, type Rule } from "#scripts/check/rules";
 import type { Binding } from "#scripts/check/source";

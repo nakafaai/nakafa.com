@@ -41,8 +41,8 @@ import {
   type TypeQueryNode,
   type TypeReferenceNode,
   type VariableDeclaration,
-} from "typescript/unstable/ast";
-import type { Symbol as NativeSymbol } from "typescript/unstable/sync";
+} from "tsrs/ast";
+import type { Symbol as NativeSymbol } from "tsrs/sync";
 import { children } from "#scripts/check/source";
 
 type Origin = "client" | HashMap.HashMap<string, Origin>;
@@ -289,7 +289,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
   }
 
   function resolveCall(
-    node: import("typescript/unstable/ast").CallExpression,
+    node: import("tsrs/ast").CallExpression,
     next: readonly Node[]
   ): Origin | undefined {
     const method = effectMember(node.expression);
@@ -314,7 +314,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
   }
 
   function resolveObject(
-    node: import("typescript/unstable/ast").ObjectLiteralExpression,
+    node: import("tsrs/ast").ObjectLiteralExpression,
     next: readonly Node[]
   ): Origin {
     return HashMap.fromIterable(
@@ -349,9 +349,9 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
 
   function resolveFunction(
     node:
-      | import("typescript/unstable/ast").ArrowFunction
-      | import("typescript/unstable/ast").FunctionExpression
-      | import("typescript/unstable/ast").FunctionDeclaration,
+      | import("tsrs/ast").ArrowFunction
+      | import("tsrs/ast").FunctionExpression
+      | import("tsrs/ast").FunctionDeclaration,
     next: readonly Node[]
   ): Origin | undefined {
     const body = node.body;

@@ -5,7 +5,7 @@ import {
   isPropertyAccessExpression,
   isStringLiteralLikeNode,
   type Node,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import type { Rule } from "#scripts/check/rules";
 import { unwrapped } from "#scripts/check/wrapper";
 
