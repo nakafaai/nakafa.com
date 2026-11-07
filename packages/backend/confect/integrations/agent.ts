@@ -38,7 +38,7 @@ const SERVER_IDENTITY: McpSchema.Implementation = {
 };
 
 const SERVER_INSTRUCTIONS =
-  'Act in Nakafa as the person who signed you in: everything they can read or change in the app, and nothing else. Find a function with nakafa_list_functions, read its arguments with nakafa_describe_function, and run it with nakafa_call_function. School functions name their school in their arguments: tenancy/memberships:list gives the person\'s schools. An argument that takes a file\'s bytes takes them as {"$bytes": "<base64>"}. A function whose name ends in uploadUrl answers an address: POST the file to it, and pass the storageId it answers to the function that saves the file.';
+  'Act in Nakafa as the person who signed you in: everything they can read or change in the app, and nothing else. Find a function with nakafa_list_functions, read its arguments with nakafa_describe_function, and run it with nakafa_call_function. School functions name their school in their arguments: tenancy/memberships:list gives the person\'s schools. An argument that takes a file\'s bytes takes them as {"$bytes": "<base64>"}. A function whose name ends in reserve answers an address and a fileId: PUT the file to the address with the exact length and type you reserved, then pass the fileId to the function that registers the file.';
 
 /**
  * The largest request of a signed-in person's agent. One call carries a whole file as base64, which

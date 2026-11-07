@@ -4,8 +4,8 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   MutationRunner,
   QueryRunner,
-  StorageActionWriter,
 } from "@repo/backend/confect/_generated/services";
+import { storeFile } from "@repo/backend/confect/bucket/stored";
 import { drawLetterPdf } from "@repo/backend/confect/pdf/letter/draw";
 import { drawReportPdf } from "@repo/backend/confect/pdf/report/draw";
 import spec from "@repo/backend/confect/records/draw.spec";
@@ -13,6 +13,13 @@ import { Effect, Layer } from "effect";
 
 /** The PDF's media type. */
 const PDF_TYPE = "application/pdf";
+
+/** Stores a drawn PDF in the bucket. A record's PDF is small and charges the bucket alone; a full bucket is a defect of the run. */
+const storePdf = (bytes: Uint8Array) =>
+  storeFile(
+    { byteSize: bytes.byteLength, contentType: PDF_TYPE, tenantId: null },
+    bytes
+  ).pipe(Effect.orDie);
 
 /** Draws an approved report's PDF, stores it, and locks the report with it. */
 const report = FunctionImpl.make(
@@ -24,11 +31,9 @@ const report = FunctionImpl.make(
       .runQuery(recordsInternal.prints.printable, { reportId })
       .pipe(Effect.orDie);
     const bytes = yield* drawReportPdf(copy).pipe(Effect.orDie);
-    const storageId = yield* (yield* StorageActionWriter).store(
-      new Blob([bytes], { type: PDF_TYPE })
-    );
+    const fileId = yield* storePdf(bytes);
     yield* (yield* MutationRunner)
-      .runMutation(recordsInternal.prints.lock, { reportId, storageId })
+      .runMutation(recordsInternal.prints.lock, { fileId, reportId })
       .pipe(Effect.orDie);
     return null;
   })
@@ -44,11 +49,9 @@ const letter = FunctionImpl.make(
       .runQuery(recordsInternal.letters.printable, { letterId })
       .pipe(Effect.orDie);
     const bytes = yield* drawLetterPdf(copy).pipe(Effect.orDie);
-    const storageId = yield* (yield* StorageActionWriter).store(
-      new Blob([bytes], { type: PDF_TYPE })
-    );
+    const fileId = yield* storePdf(bytes);
     yield* (yield* MutationRunner)
-      .runMutation(recordsInternal.letters.lock, { letterId, storageId })
+      .runMutation(recordsInternal.letters.lock, { fileId, letterId })
       .pipe(Effect.orDie);
     return null;
   })

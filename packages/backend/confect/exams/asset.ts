@@ -14,7 +14,7 @@ export const examAssetValidator = Schema.Struct({
   createdBy: Id("users"),
   examId: Id("exams"),
   height: Schema.Int.check(Schema.isGreaterThan(0)),
-  storageId: Id("_storage"),
+  fileId: Id("bucketFiles"),
   tenantId: Id("tenants"),
   width: Schema.Int.check(Schema.isGreaterThan(0)),
 });

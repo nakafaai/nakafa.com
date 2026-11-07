@@ -1,10 +1,8 @@
 import type { ExamsDoc } from "@repo/backend/confect/_generated/docs";
 import type { Id } from "@repo/backend/confect/_generated/id";
-import {
-  DatabaseReader,
-  StorageReader,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { fileAddress } from "@repo/backend/confect/bucket/file";
 import { Array as Arr, Effect, Option } from "effect";
 
 /**
@@ -18,7 +16,6 @@ export const addressesOf = Effect.fn("exams.addresses")(function* (
   assets: readonly Id<"examAssets">[]
 ) {
   const reader = yield* DatabaseReader;
-  const storage = yield* StorageReader;
   const rows = yield* Effect.forEach(assets, (id) =>
     reader
       .table("examAssets")
@@ -31,9 +28,8 @@ export const addressesOf = Effect.fn("exams.addresses")(function* (
   );
   const addresses = yield* Effect.forEach(Arr.getSomes(rows), (row) =>
     row.examId === examId
-      ? storage.getUrl(row.storageId).pipe(
-          Effect.map((url) => Option.some({ id: row._id, url: url.href })),
-          Effect.catchTag("BlobNotFoundError", () => Effect.succeedNone)
+      ? fileAddress(row.fileId).pipe(
+          Effect.map(Option.map((url) => ({ id: row._id, url })))
         )
       : Effect.fail(
           new AccessDenied({ action: "exam.view", reason: "resource" })

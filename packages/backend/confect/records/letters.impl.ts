@@ -90,16 +90,16 @@ const lock = FunctionImpl.make(
   databaseSchema,
   spec,
   "lock",
-  Effect.fn("records.letters.lock")(function* ({ letterId, storageId }) {
+  Effect.fn("records.letters.lock")(function* ({ fileId, letterId }) {
     const letter = yield* issuedLetter(letterId);
     const now = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
       .table("graduationLetters")
       .replace(letterId, {
         ...Struct.omit(letter, ["_creationTime", "_id"]),
+        fileId,
         lockedAt: now,
         state: "locked",
-        storageId,
       })
       .pipe(Effect.orDie);
     const reader = yield* DatabaseReader;

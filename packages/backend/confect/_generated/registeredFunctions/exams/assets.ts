@@ -7,7 +7,7 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../exams/assets.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
-["uploadUrl"]: RegisteredConvexFunction.register({ ...definitions["uploadUrl"], handler: forward(definitions["uploadUrl"].handler) }),
+["reserve"]: RegisteredConvexFunction.register({ ...definitions["reserve"], handler: forward(definitions["reserve"].handler) }),
 ["canAdd"]: RegisteredConvexFunction.register({ ...definitions["canAdd"], handler: forward(definitions["canAdd"].handler) }),
 ["register"]: RegisteredConvexFunction.register({ ...definitions["register"], handler: forward(definitions["register"].handler) }),
 ["registerAudio"]: RegisteredConvexFunction.register({ ...definitions["registerAudio"], handler: forward(definitions["registerAudio"].handler) }),
@@ -15,7 +15,5 @@ export default {
 ["urls"]: RegisteredConvexFunction.register({ ...definitions["urls"], handler: forward(definitions["urls"].handler) }),
 ["commit"]: RegisteredConvexFunction.register({ ...definitions["commit"], handler: forward(definitions["commit"].handler) }),
 ["commitAudio"]: RegisteredConvexFunction.register({ ...definitions["commitAudio"], handler: forward(definitions["commitAudio"].handler) }),
-["discard"]: RegisteredConvexFunction.register({ ...definitions["discard"], handler: forward(definitions["discard"].handler) }),
 ["sweep"]: RegisteredConvexFunction.register({ ...definitions["sweep"], handler: forward(definitions["sweep"].handler) }),
-["stored"]: RegisteredConvexFunction.register({ ...definitions["stored"], handler: forward(definitions["stored"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../exams/assets.spec")["default"]>;

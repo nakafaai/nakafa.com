@@ -21,7 +21,7 @@ const IMAGES_PER_READ = 20;
 
 /** One page of a PDF as the teacher's browser drew it: its uploaded image and its text layer. */
 const ImportPage = Schema.Struct({
-  image: Id("_storage"),
+  image: Id("bucketFiles"),
   text: Schema.String.check(Schema.isMaxLength(MAX_PAGE_TEXT)),
 });
 
@@ -95,7 +95,7 @@ export default GroupSpec.make()
         ),
         examId: Id("exams"),
       }),
-      returns: () => Schema.Array(Schema.Struct({ storageId: Id("_storage") })),
+      returns: () => Schema.Array(Schema.Struct({ fileId: Id("bucketFiles") })),
       error: () => AccessDenied,
     })
   )
@@ -103,7 +103,7 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "discard",
       args: () => ({
-        images: Schema.Array(Id("_storage")).check(
+        images: Schema.Array(Id("bucketFiles")).check(
           Schema.isMaxLength(PAGES_PER_READ)
         ),
       }),

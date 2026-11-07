@@ -7,7 +7,7 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../tenancy/logo.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
-["uploadUrl"]: RegisteredConvexFunction.register({ ...definitions["uploadUrl"], handler: forward(definitions["uploadUrl"].handler) }),
+["reserve"]: RegisteredConvexFunction.register({ ...definitions["reserve"], handler: forward(definitions["reserve"].handler) }),
 ["set"]: RegisteredConvexFunction.register({ ...definitions["set"], handler: forward(definitions["set"].handler) }),
 ["remove"]: RegisteredConvexFunction.register({ ...definitions["remove"], handler: forward(definitions["remove"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../tenancy/logo.spec")["default"]>;

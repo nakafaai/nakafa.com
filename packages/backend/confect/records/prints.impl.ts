@@ -85,7 +85,7 @@ const lock = FunctionImpl.make(
   databaseSchema,
   spec,
   "lock",
-  Effect.fn("records.prints.lock")(function* ({ reportId, storageId }) {
+  Effect.fn("records.prints.lock")(function* ({ fileId, reportId }) {
     const report = yield* approvedReport(reportId);
     const now = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
@@ -93,8 +93,8 @@ const lock = FunctionImpl.make(
       .replace(reportId, {
         ...Struct.omit(report, ["_creationTime", "_id"]),
         lockedAt: now,
+        fileId,
         state: "locked",
-        storageId,
         updatedAt: now,
       })
       .pipe(Effect.orDie);

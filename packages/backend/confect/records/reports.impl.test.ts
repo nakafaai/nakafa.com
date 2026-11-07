@@ -5,6 +5,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   classOf,
   cohort,
@@ -22,6 +23,11 @@ import {
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Exit, Struct } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 /** A report hash: 64 lowercase hex digits. */
 const HASH = /^[0-9a-f]{64}$/u;
@@ -113,6 +119,16 @@ const reportRow = (
   );
 
 describe("records/reports", () => {
+  beforeEach(() => {
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it.effect(
     "lets the homeroom teacher write, hand in, and take back a report with the released grades",
     () =>

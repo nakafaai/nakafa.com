@@ -32,7 +32,7 @@ import { useTranslations } from "use-intl";
 import { PaperMedia } from "@/components/exams/sitting/media";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { mediaUpdate } from "@/components/tenant/exams/attached";
-import { sendStorageFile } from "@/components/tenant/exams/image";
+import { sendFile } from "@/components/tenant/exams/image";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
@@ -213,7 +213,7 @@ export function MediaField({
   const save = useMutation(exams.questions.media).withOptimisticUpdate(
     mediaUpdate
   );
-  const requestUrl = useMutation(exams.assets.uploadUrl);
+  const reserve = useMutation(exams.assets.reserve);
   const register = useAction(exams.assets.registerAudio);
 
   /** Saves the question's media with one piece more or less. */
@@ -224,10 +224,12 @@ export function MediaField({
 
   /** Uploads a clip, registers it as the exam's, and adds it to the question. */
   const addClip = (file: File, alt: string) =>
-    sentAction(() => requestUrl({ examId: exam.id, slug })).pipe(
-      Effect.flatMap((url) => sendStorageFile(url, file)),
-      Effect.flatMap((storageId) =>
-        sentAction(() => register({ examId: exam.id, slug, storageId }))
+    sendFile(
+      (size) => reserve({ examId: exam.id, kind: "audio", slug, ...size }),
+      file
+    ).pipe(
+      Effect.flatMap((fileId) =>
+        sentAction(() => register({ examId: exam.id, fileId, slug }))
       ),
       Effect.flatMap(({ id }) =>
         saveMedia([...question.media, { alt, asset: id, kind: "audio" }])
