@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
 import { MortarboardIcon } from "@hugeicons/core-free-icons";
 import type records from "@repo/backend/confect/_generated/refs/records";
-import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
