@@ -69,10 +69,9 @@ const isSigned = Effect.fn("contentAcceptance.bucket.isSigned")(function* (
     return false;
   }
   const headers = Rec.fromEntries(
-    Arr.filterMap(names, (name) =>
-      name === "host"
-        ? Option.none()
-        : Option.some([name, request.headers[name] ?? ""] as const)
+    Arr.map(
+      Arr.filter(names, (name) => name !== "host"),
+      (name) => [name, request.headers[name] ?? ""] as const
     )
   );
   const extra = Rec.filter(query, (_, name) => !Str.startsWith("X-Amz-")(name));
@@ -97,17 +96,13 @@ const isSigned = Effect.fn("contentAcceptance.bucket.isSigned")(function* (
 /** A range header of one span, as the server asks for an object's leading bytes. */
 const RANGE = /^bytes=(?<start>\d+)-(?<end>\d+)$/u;
 
-/** Stores an upload whose body has exactly the length its address bound, with the type it was sent as. */
+/** Stores an upload with the type it was sent as. Its signature already bound its length, as R2's does. */
 const store = Effect.fn("contentAcceptance.bucket.store")(function* (
   request: HttpServerRequest.HttpServerRequest,
   file: string
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const body = new Uint8Array(yield* request.arrayBuffer);
-  if (String(body.byteLength) !== request.headers["content-length"]) {
-    return answer(400);
-  }
-  yield* fs.writeFile(file, body);
+  yield* fs.writeFile(file, new Uint8Array(yield* request.arrayBuffer));
   yield* fs.writeFileString(
     `${file}.type`,
     request.headers["content-type"] ?? "application/octet-stream"

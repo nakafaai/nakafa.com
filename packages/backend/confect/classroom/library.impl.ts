@@ -111,32 +111,35 @@ const addLink = FunctionImpl.make(
   })
 );
 
-export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(list),
-  Layer.provide(trashed),
-  Layer.provide(starred),
-  Layer.provide(search),
-  Layer.provide(addLink),
-  Layer.provide(reserve),
-  Layer.provide(canAdd),
-  Layer.provide(register),
-  Layer.provide(importDrive),
-  Layer.provide(open),
-  Layer.provide(edit),
-  Layer.provide(move),
-  Layer.provide(star),
-  Layer.provide(trash),
-  Layer.provide(restore),
-  Layer.provide(purge),
-  Layer.provide(upload),
-  Layer.provide(reserveImport),
-  Layer.provide(commit),
-  Layer.provide(discard),
-  Layer.provide(removeObjects),
-  Layer.provide(purgeRest),
-  Layer.provide(sweep),
-  Layer.provide(session),
-  Layer.provide(member),
-  Layer.provide(classAccess),
-  GroupImpl.finalize
-);
+export default GroupImpl.make(databaseSchema, spec)
+  .pipe(
+    Layer.provide(list),
+    Layer.provide(trashed),
+    Layer.provide(starred),
+    Layer.provide(search),
+    Layer.provide(addLink),
+    Layer.provide(reserve),
+    Layer.provide(canAdd),
+    Layer.provide(register),
+    Layer.provide(importDrive),
+    Layer.provide(open),
+    Layer.provide(edit),
+    Layer.provide(move),
+    Layer.provide(star),
+    Layer.provide(trash),
+    Layer.provide(restore),
+    Layer.provide(purge)
+  )
+  .pipe(
+    Layer.provide(upload),
+    Layer.provide(reserveImport),
+    Layer.provide(commit),
+    Layer.provide(discard),
+    Layer.provide(removeObjects),
+    Layer.provide(purgeRest),
+    Layer.provide(sweep),
+    Layer.provide(session),
+    Layer.provide(member),
+    Layer.provide(classAccess),
+    GroupImpl.finalize
+  );

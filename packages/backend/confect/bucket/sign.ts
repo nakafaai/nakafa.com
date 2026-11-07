@@ -4,6 +4,7 @@ import {
   Config,
   DateTime,
   Effect,
+  Layer,
   Order,
   Record as Rec,
   Redacted,
@@ -27,6 +28,9 @@ export const bucketConfig = Config.all({
   endpoint: Config.URL("R2_ENDPOINT"),
   secretAccessKey: Config.Redacted("R2_SECRET_ACCESS_KEY"),
 });
+
+/** The slashes that end an endpoint's path, which the bucket's path replaces. */
+const TRAILING_SLASHES = /\/+$/u;
 
 /** The region that every R2 bucket signs with. */
 const R2_REGION = "auto";
@@ -135,10 +139,7 @@ export const presign = Effect.fn("bucket.presign")(
     const hashed = Hex.encode(
       yield* digest.digest(Digest.sha256, encoder.encode(canonical))
     );
-    const toSign = Arr.join(
-      ["AWS4-HMAC-SHA256", amzDate, scope, hashed],
-      "\n"
-    );
+    const toSign = Arr.join(["AWS4-HMAC-SHA256", amzDate, scope, hashed], "\n");
     const secret = encoder.encode(
       `AWS4${Redacted.value(request.secretAccessKey)}`
     );
@@ -149,9 +150,12 @@ export const presign = Effect.fn("bucket.presign")(
     const signature = Hex.encode(yield* hmac(signingKey, toSign));
     return `${request.url.origin}${canonicalPath(request.url)}?${query}&X-Amz-Signature=${signature}`;
   },
-  Effect.provide(Digest.layerWebCrypto),
-  Effect.provide(Mac.layerWebCrypto),
-  Effect.provide(SecureRandom.layerWebCrypto),
+  Effect.provide(
+    Layer.mergeAll(
+      Digest.layerWebCrypto,
+      Mac.layerWebCrypto.pipe(Layer.provide(SecureRandom.layerWebCrypto))
+    )
+  ),
   // Web Crypto serves every runtime Nakafa runs in, so a failed digest or MAC is a defect, as `sha256` treats it.
   Effect.orDie
 );
@@ -176,7 +180,7 @@ export const objectAddress = Effect.fn("bucket.objectAddress")(function* (
   const url = new URL(config.endpoint);
   url.pathname = Arr.join(
     [
-      Str.replace(/\/+$/u, "")(url.pathname),
+      Str.replace(TRAILING_SLASHES, "")(url.pathname),
       encodeStrict(config.bucket),
       ...Arr.map(Str.split(key, "/"), encodeStrict),
     ],

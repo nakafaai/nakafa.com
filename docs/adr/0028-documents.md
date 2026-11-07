@@ -372,6 +372,38 @@ Drive copies come through the Drive connector (ADR 0015).
   school files sit in this module.
 - A model or a person reads a file only after it has been scanned.
 
+#### Amendment of 7 November 2026: R2 keeps the bytes
+
+The owner chose Cloudflare R2 for the bytes and Convex for everything else
+(`Nakafa-School-FINAL.md`, "R2 untuk file, Convex untuk sistem sekolah"): R2 stores
+a file for half of Convex's price and serves it with no egress charge. The class
+library is the first owner on R2; the forum, the school logo, exam images and
+audio, record PDFs, imports, and Nina's attachments move in later changes, each
+in one step.
+
+- One private bucket per stage, `nakafa-files` in production, declared in
+  `apps/www/deploy/files.ts`. It has no public access and no custom domain. Its
+  CORS rule lets only the stage's own pages upload and read, and R2 aborts a
+  multipart upload left for a day.
+- Convex signs every address itself with SigV4 (`confect/bucket/sign.ts`), with a
+  bucket-scoped token that `apps/www/stacks/github.ts` mints and the deploy
+  workflow hands to the stage's deployment. Signing makes no request, so a
+  mutation signs. No byte passes through a Worker.
+- An upload reserves its bytes first (`classroomLibraryUploads`): the school's
+  limit and the bucket's are charged before the browser receives an address,
+  which lives fifteen minutes and binds the exact length and type. `register`
+  then asks R2 for the size and the leading bytes and keeps only a PDF or an
+  image; a refused file is removed and its bytes freed. The daily sweep frees a
+  reservation that never registered after two hours.
+- A file opens at an address signed for that opening alone, which lives five
+  minutes, after the access check. Lists carry no file address.
+- The bucket's in-code guards keep it inside R2's free tier: 8 GB stored over all
+  schools (`BUCKET_BYTE_LIMIT`), and 30,000 writes and 300,000 reads signed a day,
+  every school counted (`confect/bucket/use.ts`).
+- The library is a Drive for the class: folders nest at any depth, items and
+  folders move, star for each reader, and go to the trash, which keeps them and
+  their bytes until a restore, a deletion forever, or thirty days.
+
 ## What Stays Open
 
 - The scanner, the PDF page viewer, and the library that cuts a large PDF into

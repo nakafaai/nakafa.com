@@ -24,7 +24,7 @@ import {
   Array as Arr,
   Effect,
   HashSet,
-  Option,
+  Result,
   String as Str,
   Struct,
 } from "effect";
@@ -109,7 +109,7 @@ export const starred = FunctionImpl.make(
     const items = Arr.getSomes(
       yield* Effect.forEach(
         Arr.filterMap(stars, (star) =>
-          star.kind === "item" ? Option.some(star.itemId) : Option.none()
+          star.kind === "item" ? Result.succeed(star.itemId) : Result.failVoid
         ),
         (itemId) =>
           reader.table("classroomLibrary").get(itemId).pipe(Effect.option),

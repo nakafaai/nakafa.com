@@ -24,6 +24,7 @@ describe("acceptance analytics stand-in", () => {
 
       const replies = yield* withAnalyticsSink(
         origin,
+        "/tmp/unused",
         Effect.gen(function* () {
           const capture = yield* HttpClient.post(`${origin}/e/?retry_count=1`, {
             body: HttpBody.jsonUnsafe({ event: "$pageview" }),
@@ -51,6 +52,7 @@ describe("acceptance analytics stand-in", () => {
 
         const preflight = yield* withAnalyticsSink(
           origin,
+          "/tmp/unused",
           HttpClient.options(`${origin}/e/`)
         );
 
@@ -66,7 +68,11 @@ describe("acceptance analytics stand-in", () => {
       const failure = acceptanceRuntimeError("test start failure");
 
       expect(
-        yield* withAnalyticsSink(origin, Effect.fail(failure)).pipe(Effect.flip)
+        yield* withAnalyticsSink(
+          origin,
+          "/tmp/unused",
+          Effect.fail(failure)
+        ).pipe(Effect.flip)
       ).toBe(failure);
       expect(yield* isListening(origin)).toBe(false);
     }).pipe(Effect.provide(FetchClient))
@@ -79,7 +85,9 @@ describe("acceptance analytics stand-in", () => {
       yield* occupyPort(port);
 
       expect(
-        yield* withAnalyticsSink(origin, Effect.void).pipe(Effect.flip)
+        yield* withAnalyticsSink(origin, "/tmp/unused", Effect.void).pipe(
+          Effect.flip
+        )
       ).toMatchObject({
         _tag: "AcceptanceRuntimeError",
         message: `The saved analytics stand-in port at ${origin} is occupied; its process is preserved.`,

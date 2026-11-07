@@ -15,13 +15,14 @@ const upload = (clientKey: string, sent: boolean): LibraryUpload => ({
   clientKey,
   createdAt: 1,
   kind: "pdf",
+  progress: 0,
   sent,
   title: "Modul",
 });
 
 /** The library's own row of an upload. */
 const item = (clientKey: string): LibraryItem => ({
-  address: "https://files.test/modul.pdf",
+  address: null,
   author: "Bu Rina",
   byteSize: 10,
   clientKey,
@@ -29,7 +30,9 @@ const item = (clientKey: string): LibraryItem => ({
   folderId: null,
   id: Schema.decodeUnknownSync(Id("classroomLibrary"))(`item-${clientKey}`),
   kind: "pdf",
+  starred: false,
   title: "Modul",
+  trashedAt: null,
 });
 
 const first = "0b5c9d1e-4f3a-4c2b-9a8d-7e6f5a4b3c2d";
@@ -41,11 +44,13 @@ describe("library uploads", () => {
     store.getState().start(upload(first, false));
     store.getState().start(upload(second, false));
     store.getState().settle(first);
+    store.getState().advance(second, 0.5);
     expect(store.getState().uploads).toEqual([
-      upload(second, false),
+      { ...upload(second, false), progress: 0.5 },
       upload(first, true),
     ]);
     store.getState().end(second);
+    store.getState().advance(second, 1);
     expect(store.getState().uploads).toEqual([upload(first, true)]);
   });
 

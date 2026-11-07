@@ -27,7 +27,7 @@ export function LibraryPath({
   const { classSlug, slug } = useClassScope();
 
   return (
-    <Breadcrumb>
+    <Breadcrumb aria-label={t("library-path")}>
       <BreadcrumbList>
         <BreadcrumbItem>
           {Arr.isReadonlyArrayEmpty(folders) ? (

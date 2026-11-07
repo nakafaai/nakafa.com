@@ -1683,7 +1683,8 @@
     "library-purge": "Hapus selamanya",
     "library-purge-title": "Hapus ini selamanya",
     "library-purge-description": "Penyimpanan sekolah kembali kosong dan ini tidak bisa kembali.",
-    "library-restore": "Pulihkan"
+    "library-restore": "Pulihkan",
+    "library-path": "Jalur folder"
   },
   "SchoolGrades": {
     "email": "Email",

@@ -14,14 +14,16 @@ export class BucketFailed extends Schema.TaggedError<BucketFailed>()(
   { status: Schema.optionalKey(Schema.Int) }
 ) {}
 
+/** The failure of a request that R2 never answered, or whose body never arrived. */
+const unreached = () => new BucketFailed({});
+
 /** Sends one request to R2 and answers its response, refusing any status but a success or a missing object. */
 const send = Effect.fn("bucket.send")(function* (
   request: HttpClientRequest.HttpClientRequest
 ) {
-  const response = yield* (yield* HttpClient.HttpClient).execute(request).pipe(
-    Effect.timeout(BUCKET_DEADLINE),
-    Effect.mapError(() => new BucketFailed({}))
-  );
+  const response = yield* (yield* HttpClient.HttpClient)
+    .execute(request)
+    .pipe(Effect.timeout(BUCKET_DEADLINE), Effect.mapError(unreached));
   if (
     response.status !== 404 &&
     (response.status < 200 || response.status >= 300)
@@ -61,7 +63,7 @@ export const inspectObject = Effect.fn("bucket.inspect")(function* (
     ).pipe(HttpClientRequest.setHeader("range", `bytes=0-${headBytes - 1}`))
   );
   const bytes = new Uint8Array(
-    yield* range.arrayBuffer.pipe(Effect.mapError(() => new BucketFailed({})))
+    yield* range.arrayBuffer.pipe(Effect.mapError(unreached))
   );
   return Option.some({ byteSize, head: bytes.slice(0, headBytes) });
 }, Effect.scoped);
@@ -80,11 +82,7 @@ export const readObject = Effect.fn("bucket.read")(function* (key: string) {
     return Option.none();
   }
   return Option.some(
-    new Uint8Array(
-      yield* response.arrayBuffer.pipe(
-        Effect.mapError(() => new BucketFailed({}))
-      )
-    )
+    new Uint8Array(yield* response.arrayBuffer.pipe(Effect.mapError(unreached)))
   );
 }, Effect.scoped);
 

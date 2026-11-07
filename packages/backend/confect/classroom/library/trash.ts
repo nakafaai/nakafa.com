@@ -23,7 +23,15 @@ import {
   subtree,
 } from "@repo/backend/confect/classroom/library/tree";
 import spec from "@repo/backend/confect/classroom/library.spec";
-import { Array as Arr, Clock, Duration, Effect, HashSet, Option } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Duration,
+  Effect,
+  HashSet,
+  Option,
+  Result,
+} from "effect";
 
 /** How long an item or a folder waits in the trash before the daily sweep deletes it forever. */
 export const TRASH_AGE = Duration.days(30);
@@ -82,7 +90,7 @@ export const purgeItems = Effect.fn("classroom.library.purgeItems")(function* (
   );
   yield* removeLater(
     Arr.filterMap(rows, (item) =>
-      item.kind === "file" ? Option.some(item.objectKey) : Option.none()
+      item.kind === "file" ? Result.succeed(item.objectKey) : Result.failVoid
     )
   );
 });
@@ -138,7 +146,9 @@ export const purgeFolders = Effect.fn("classroom.library.purgeFolders")(
     const remaining = Arr.filterMap(
       Arr.zip(folderIds, items),
       ([folderId, found]) =>
-        found.length === PURGE_BATCH ? Option.some(folderId) : Option.none()
+        found.length === PURGE_BATCH
+          ? Result.succeed(folderId)
+          : Result.failVoid
     );
     if (remaining.length > 0) {
       yield* (yield* Scheduler).runAfter(
@@ -160,7 +170,9 @@ export const purgeTree = Effect.fn("classroom.library.purgeTree")(function* (
   yield* purgeFolders(
     classId,
     Arr.filterMap(folders, (folder) =>
-      HashSet.has(inside, folder._id) ? Option.some(folder._id) : Option.none()
+      HashSet.has(inside, folder._id)
+        ? Result.succeed(folder._id)
+        : Result.failVoid
     )
   );
 });
