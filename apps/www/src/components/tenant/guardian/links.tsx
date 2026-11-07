@@ -6,7 +6,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Option } from "effect";
-import { createContext, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -66,7 +66,7 @@ const LinksContext = createContext<readonly LinkItem[] | null>(null);
 function useLinks() {
   const links = use(LinksContext);
   if (links === null) {
-    throw new Error("useLinks must be used within GuardianLinksBody");
+    throw new Error("useLinks must be used within LinksFrame");
   }
   return links;
 }
@@ -136,42 +136,58 @@ function GuardianLinksBody() {
   }
   const failed = PaginatedQueryResult.isFailure(pagination);
   // Both reads arrive before the list draws, so a waiting request never pushes the table down.
-  const isRead =
-    Option.isSome(kept) && !PaginatedQueryResult.isLoadingFirstPage(waiting);
-  const links = Option.getOrElse(kept, () => []);
-  const isEmpty = isRead && Arr.isReadonlyArrayEmpty(links) && search === "";
+  if (Option.isNone(kept) || PaginatedQueryResult.isLoadingFirstPage(waiting)) {
+    return <LinksFrame links={[]}>{null}</LinksFrame>;
+  }
+  if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
+    return (
+      <LinksFrame links={kept.value}>
+        {failed ? (
+          <LoadFailure onRetry={reloadPage} />
+        ) : (
+          <TableEmpty
+            act="typing"
+            description={t("links-empty-description")}
+            title={t("links-empty")}
+          />
+        )}
+      </LinksFrame>
+    );
+  }
+
+  return (
+    <LinksFrame links={kept.value}>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      <WaitingRequests requests={waiting.results} />
+      {PaginatedQueryResult.isCanLoadMore(waiting) ? (
+        <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
+      ) : null}
+      <GuardianLinkTable />
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </LinksFrame>
+  );
+}
+
+/**
+ * The one card of a settings table, in the list's pane, beside the open link: the links it holds
+ * are the ones the table lists and the open link is found in.
+ */
+function LinksFrame({
+  children,
+  links,
+}: {
+  children: ReactNode;
+  links: readonly LinkItem[];
+}) {
+  const t = useTranslations("SchoolGuardians");
 
   return (
     <LinksContext value={links}>
       <Panes id="links">
         <PanesList>
-          <TablePageBody>
-            {isEmpty && failed ? <LoadFailure onRetry={reloadPage} /> : null}
-            {isEmpty && !failed ? (
-              <TableEmpty
-                act="typing"
-                description={t("links-empty-description")}
-                title={t("links-empty")}
-              />
-            ) : null}
-            {isRead && !isEmpty ? (
-              <>
-                {failed ? <DataFailure onRetry={reloadPage} /> : null}
-                <WaitingRequests requests={waiting.results} />
-                {PaginatedQueryResult.isCanLoadMore(waiting) ? (
-                  <Intersection
-                    onIntersect={() => waiting.loadMore(PAGE_SIZE)}
-                  />
-                ) : null}
-                <GuardianLinkTable />
-                {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-                  <Intersection
-                    onIntersect={() => pagination.loadMore(PAGE_SIZE)}
-                  />
-                ) : null}
-              </>
-            ) : null}
-          </TablePageBody>
+          <TablePageBody>{children}</TablePageBody>
         </PanesList>
         <PanesDetail label={t("link-detail")}>
           <GuardianLinkDetail />

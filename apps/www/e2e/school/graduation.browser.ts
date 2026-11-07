@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect, Option, String as Str } from "effect";
+import { Effect, MutableList, Option, String as Str } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -172,8 +172,8 @@ test("a class group outside the last grade answers that it does not graduate, in
   const owner = await browser.newContext();
   await Effect.runPromise(signInOwner(owner, school.slug, address("/")));
   const page = await owner.newPage();
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(String(error)));
+  const errors = MutableList.make<string>();
+  page.on("pageerror", (error) => MutableList.append(errors, String(error)));
 
   await page.goto(address("/settings/cohorts"));
   const cohort = page.getByRole("link", { exact: true, name: "X-1" });
@@ -204,6 +204,6 @@ test("a class group outside the last grade answers that it does not graduate, in
   await waitUntilTakenOver(back);
   await back.click();
   await expect(page).toHaveURL(address("/graduation"));
-  expect(errors).toEqual([]);
+  expect(MutableList.toArray(errors)).toEqual([]);
   await owner.close();
 });

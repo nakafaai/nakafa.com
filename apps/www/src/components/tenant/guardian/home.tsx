@@ -76,8 +76,7 @@ const childColumns = tableColumns<ChildItem>();
  */
 export function GuardianHome() {
   const t = useTranslations("SchoolGuardians");
-  const { slug } = useTenant();
-  const children = useQuery(guardians.family.children, { slug });
+  const children = useChildren();
 
   if (QueryResult.isFailure(children) && isLostAccess(children.error)) {
     throw children.error;
@@ -96,9 +95,7 @@ export function GuardianHome() {
               {QueryResult.isFailure(children) ? (
                 <LoadFailure onRetry={reloadPage} />
               ) : null}
-              {QueryResult.isSuccess(children) ? (
-                <GuardianChildren items={children.value} />
-              ) : null}
+              {QueryResult.isSuccess(children) ? <GuardianChildren /> : null}
             </TablePageBody>
           </PanesList>
           {QueryResult.isSuccess(children) ? (
@@ -112,10 +109,17 @@ export function GuardianHome() {
   );
 }
 
+/** The parent's linked children, which the home and its table read from one subscription. */
+function useChildren() {
+  const { slug } = useTenant();
+  return useQuery(guardians.family.children, { slug });
+}
+
 /** The linked children, each opening beside the list, or the empty state under the heads while none is linked. */
-function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
+function GuardianChildren() {
   const t = useTranslations("SchoolGuardians");
   const common = useTranslations("Common");
+  const children = useChildren();
 
   const columns = [
     childColumns.text((child) => child.student.name, {
@@ -167,7 +171,7 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   return (
     <DataTable
       columns={columns}
-      data={items}
+      data={QueryResult.isSuccess(children) ? children.value : []}
       empty={
         <TableEmpty
           act="waving"
