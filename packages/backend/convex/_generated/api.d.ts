@@ -12189,25 +12189,31 @@ export declare const api: {
         "query",
         "public",
         { cohortId: Id<"tenantCohorts">; slug: string },
-        {
-          can: Array<"graduation.decide" | "graduation.issue">;
-          cohort: {
-            id: Id<"tenantCohorts">;
-            name: string;
-            period: string;
-            periodId: Id<"tenantPeriods">;
-          };
-          decision: {
-            date: string;
-            decision: string;
-            head: string;
-            issued: number;
-            nip?: string;
-            place: string;
-          } | null;
-          suggested: string;
-          unit: { name: string; npsn: string | null };
-        }
+        | {
+            _tag: "Graduating";
+            can: Array<"graduation.decide" | "graduation.issue">;
+            cohort: {
+              id: Id<"tenantCohorts">;
+              name: string;
+              period: string;
+              periodId: Id<"tenantPeriods">;
+            };
+            decision: {
+              date: string;
+              decision: string;
+              head: string;
+              issued: number;
+              nip?: string;
+              place: string;
+            } | null;
+            suggested: string;
+            unit: { name: string; npsn: string | null };
+          }
+        | {
+            _tag: "NotGraduating";
+            cohort: { grade: number; id: Id<"tenantCohorts">; name: string };
+            unit: { last: number | null; name: string };
+          }
       >;
       issue: FunctionReference<
         "mutation",
