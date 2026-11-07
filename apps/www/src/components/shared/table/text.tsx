@@ -31,13 +31,14 @@ export function TableText({ children }: { children: ReactNode }) {
 }
 
 /**
- * A known value in a table, such as a status, a role or a unit's name: one line in the width its column holds. A badge
- * keeps its one compact size and cuts its name inside that width, whole on hover, so a long state never grows a bubble.
+ * A known value in a table, such as a status, a role or a unit's name: one line in the width its column holds, cut with
+ * an ellipsis past it and whole on hover. A badge keeps its one compact size and cuts its own name inside that width, so
+ * a long state never grows a bubble. The cut leaves room above and below for the focus ring of a badge that opens more.
  */
 export function TableValue({ children }: { children: ReactNode }) {
   return (
     <span
-      className="block w-0 min-w-full whitespace-nowrap [&_[data-slot=badge]]:max-w-full"
+      className="-my-1 block w-0 min-w-full truncate py-1 [&_[data-slot=badge]]:max-w-full"
       dir="auto"
       onPointerEnter={showWhole}
     >
