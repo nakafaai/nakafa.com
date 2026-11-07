@@ -96,8 +96,8 @@ export function WordCell({ children }: { children: ReactNode }) {
   return <span tw="w-32 shrink-0 truncate">{children}</span>;
 }
 
-/** A cell that counts rows. */
-export function IndexCell({ children }: { children: ReactNode }) {
+/** A cell that counts rows, or stands empty under the count in a closing row. */
+export function IndexCell({ children }: { children?: ReactNode }) {
   return <span tw="w-6 shrink-0">{children}</span>;
 }
 
