@@ -18,7 +18,7 @@ import {
   isVariableDeclaration,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { loadsExport, loadsImport, TEST_PATTERN } from "#scripts/check/kinds";
 import { descendants, namesModule } from "#scripts/check/source";
 

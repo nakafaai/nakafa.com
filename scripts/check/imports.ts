@@ -11,7 +11,7 @@ import {
   isStringLiteral,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { loadsImport } from "#scripts/check/kinds";
 
 /**

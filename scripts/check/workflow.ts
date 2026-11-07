@@ -9,7 +9,7 @@ import {
   isStringLiteral,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { handlerFunctions } from "#scripts/check/handler";
 
 /** The Confect module whose `workflow` export defines durable workflows. */

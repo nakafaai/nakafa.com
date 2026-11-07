@@ -1,5 +1,5 @@
 import { Match, Schema } from "effect";
-import type { Identifier, Node, SourceFile } from "typescript/unstable/ast";
+import type { Identifier, Node, SourceFile } from "tsrs/ast";
 import {
   isConfiguration,
   isReactModule,

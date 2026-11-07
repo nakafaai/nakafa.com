@@ -282,9 +282,8 @@ Promise.resolve(value);
 Map(1);
 class Failure extends Base {}
 interface Rejection extends Error {}
-function read(process: Source) {
-  return process.env.SECRET;
-}
+const parseText = parse<string>;
+const read = (process: Source) => process.env.SECRET;
 `),
         []
       );

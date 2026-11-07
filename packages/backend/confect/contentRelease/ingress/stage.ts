@@ -4,7 +4,7 @@ import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/v
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
 import type { StageArtifactBatchRequest } from "@nakafa/aksara-contracts/transport/batch";
 import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
-import type {
+import {
   StageRecoveryRequestSchema,
   StageReleaseRequestSchema,
 } from "@nakafa/aksara-contracts/transport/request";
@@ -31,11 +31,13 @@ import {
   encodeRendererJson,
   encodeRouteJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
-type ReleaseRequest =
-  | typeof StageReleaseRequestSchema.Type
-  | typeof StageRecoveryRequestSchema.Type;
+const ReleaseRequestSchema = Schema.Union([
+  StageReleaseRequestSchema,
+  StageRecoveryRequestSchema,
+]);
+type ReleaseRequest = typeof ReleaseRequestSchema.Type;
 type StageRequest = StageOperation | ReleaseRequest;
 /** Authenticates candidate and recovery artifacts against their keys. */
 const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(

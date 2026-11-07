@@ -7,7 +7,7 @@ import {
   type Node,
   type SourceFile,
   type VariableDeclaration,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { assignmentsTo } from "#scripts/check/assignments";
 import type { parseSources } from "#scripts/check/source";
 

@@ -7,7 +7,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "portless run --name email.nakafa sh -c 'email dev --port \"${PORT:-3004}\" --dir ../../packages/email/templates'",
     "export": "email export --dir ../../packages/email/templates",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsrs --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "css-tree": "3.2.1",

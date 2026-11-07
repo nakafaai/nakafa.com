@@ -18,7 +18,7 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { descendants, namesModule } from "#scripts/check/source";
 
 /** The one module that calls a model, through the Convex AI gateway provider. */

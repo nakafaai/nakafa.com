@@ -72,6 +72,30 @@ decides each one, in the same way in both repositories.
 | `manualMetricTapToTrack` | error | Fixed at its source: a tap that only updates a metric becomes `Effect.trackSuccesses`, `trackErrors`, or `trackDefects` |
 | `mapMapErrorToMapBoth` | off | Stays off, as upstream ships it. Adjacent `Effect.map` and `Effect.mapError` steps read as two separate decisions, and `matchEffectToMapBoth` already rejects the `matchEffect` spelling that `mapBoth` replaces |
 
+### Compiler rules that `@effect/tsgo` 0.64 to 0.67 add
+
+`@effect/tsgo` 0.67.5 adds twelve rules to the 0.63.0 set and patches tsrs, which
+replaces the TypeScript package. It deprecates `preferSchemaOverJson`, whose
+listing alone fails the typecheck, so `globalJsonInEffect` takes its place.
+`packages/typescript-config/base.json` decides each one, in the same way in both
+repositories. Sites were measured with every rule set to error on all 20
+typecheck targets on 7 November 2026.
+
+| Rule | Decision | Owner, or the reason it stays off |
+| --- | --- | --- |
+| `globalJsonInEffect` | error | Takes the place of `preferSchemaOverJson`: `JSON.parse` or `JSON.stringify` inside an Effect generator. No site |
+| `globalJson` | off | Owner: the source check `json` (`scripts/check/rules.ts`). Its 2 sites are code that Playwright serializes into the browser page, where no import reaches, which the source check keeps by construction |
+| `matchBooleanToIsSuccess` | error | Fixed at its source: an `Effect.match` that folds to `false` and `true` becomes `Effect.isSuccess` (3 sites) |
+| `typeUnionToSchemaUnion` | error | Fixed at its source: a type alias over Schema `.Type` types becomes a `Schema.Union` whose type is derived (4 sites) |
+| `effectSucceedWithUndefined` | error | Enforced from the start. No site |
+| `mapSomeCatchNoSuchElement` | error | Enforced from the start. No site |
+| `matchToResultOrOption` | error | Enforced from the start. No site |
+| `resultMatchToFromResult` | error | Enforced from the start. No site |
+| `suspendFailToFailSync` | error | Enforced from the start. No site |
+| `effectTryWithoutCatch` | off | Stays off, as upstream ships it, until a sweep gives each of its 147 `Effect.try` and `Effect.tryPromise` calls a typed `catch` in both repositories, which sets it to error |
+| `provideMergeAllToArray` | off | Stays off, as upstream ships it. `Effect.provide(Layer.mergeAll(...))` and an array of layers build the same layer, and 30 sites name the merged layer on purpose |
+| `yieldInCallArgument` | off | Stays off, as upstream ships it. Its 4,686 sites are mostly `assert.deepStrictEqual(yield* run(...), expected)` in tests, where a `const` per assertion adds a name and no clarity |
+
 ### Schema error brands
 
 A missing brand lets a structurally equal value pass for a Schema class instance.
@@ -517,7 +541,7 @@ The check compares each one, so a drifted copy fails the check.
 - The shared files, listed in `SHARED_FILES` in `scripts/check/shared.ts`:
   `scripts/osv` and the three verifier files in `scripts/provenance/`. A
   repository that holds one keeps the owner's exact text.
-- The Effect cohort pins: each `effect`, `typescript`, or `@effect/*` name that
+- The Effect cohort pins: each `effect`, `tsrs`, or `@effect/*` name that
   both repositories pin, in the root manifest or the default catalog. Both must
   use one version.
 

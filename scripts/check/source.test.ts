@@ -1,11 +1,8 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
-import {
-  isIdentifier,
-  type SourceFile,
-  SyntaxKind,
-} from "typescript/unstable/ast";
-import { API, Checker, Program, Snapshot } from "typescript/unstable/sync";
+import { isIdentifier, type SourceFile, SyntaxKind } from "tsrs/ast";
+import { API, Checker, Program, Snapshot } from "tsrs/sync";
+import { apiMethods } from "#scripts/check/fixture";
 import {
   descendants,
   parseSources,
@@ -60,7 +57,7 @@ afterEach(() => vi.restoreAllMocks());
 describe("repository source batch", () => {
   it.effect("parses every module in one batch and closes the compiler", () =>
     Effect.gen(function* () {
-      const close = vi.spyOn(API.prototype, "close");
+      const close = vi.spyOn(apiMethods(API.prototype), "close", "get");
       const modules = yield* Effect.scoped(
         Effect.map(
           parseSources([
@@ -193,7 +190,7 @@ describe("repository source batch failures", () => {
     Effect.gen(function* () {
       const cause = new Error("native compiler unavailable");
       vi.resetModules();
-      vi.doMock("typescript/unstable/sync", () => ({
+      vi.doMock("tsrs/sync", () => ({
         API: class {
           constructor() {
             throw cause;
@@ -217,7 +214,7 @@ describe("repository source batch failures", () => {
     }).pipe(
       Effect.ensuring(
         Effect.sync(() => {
-          vi.doUnmock("typescript/unstable/sync");
+          vi.doUnmock("tsrs/sync");
           vi.resetModules();
         })
       )
@@ -230,15 +227,23 @@ describe("repository source batch failures", () => {
       const parse = Effect.scoped(
         parseSources([{ file: FILE, sourceText: "export {};" }])
       ).pipe(Effect.flip);
-      vi.spyOn(API.prototype, "updateSnapshot").mockImplementationOnce(() => {
+      vi.spyOn(
+        apiMethods(Snapshot.prototype),
+        "update",
+        "get"
+      ).mockImplementationOnce(() => {
         throw cause;
       });
       const snapshotFailure = yield* parse;
-      vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(undefined);
-      const projectFailure = yield* parse;
-      vi.spyOn(Program.prototype, "getSourceFile").mockReturnValueOnce(
+      vi.spyOn(Snapshot.prototype, "getConfiguredProject").mockReturnValueOnce(
         undefined
       );
+      const projectFailure = yield* parse;
+      vi.spyOn(
+        apiMethods(Program.prototype),
+        "getSourceFile",
+        "get"
+      ).mockReturnValueOnce(() => undefined);
       const sourceFailure = yield* parse;
 
       assert.deepStrictEqual(
@@ -267,11 +272,13 @@ describe("repository source batch failures", () => {
   it.effect("fails binding with a typed error when the checker fails", () =>
     Effect.gen(function* () {
       const cause = new Error("native checker disconnected");
-      vi.spyOn(Checker.prototype, "getSymbolAtLocation").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      vi.spyOn(
+        apiMethods(Checker.prototype),
+        "getSymbolAtLocation",
+        "get"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* bindLast(
         [{ file: FILE, sourceText: "Map;\n" }],
         ["Map"]
@@ -286,11 +293,13 @@ describe("repository source batch failures", () => {
   it.effect("fails declaring with a typed error when the checker fails", () =>
     Effect.gen(function* () {
       const cause = new Error("native checker disconnected");
-      vi.spyOn(Checker.prototype, "getSymbolAtLocation").mockImplementationOnce(
-        () => {
-          throw cause;
-        }
-      );
+      vi.spyOn(
+        apiMethods(Checker.prototype),
+        "getSymbolAtLocation",
+        "get"
+      ).mockImplementationOnce(() => {
+        throw cause;
+      });
       const failure = yield* declareLast(
         [{ file: FILE, sourceText: "Map;\n" }],
         ["Map"]

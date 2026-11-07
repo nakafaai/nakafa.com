@@ -1,10 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, Order, Tuple } from "effect";
-import {
-  type Identifier,
-  isIdentifier,
-  type Node,
-} from "typescript/unstable/ast";
+import { type Identifier, isIdentifier, type Node } from "tsrs/ast";
 import { symbolAt, symbolTable } from "#scripts/check/convex";
 import { effectTestViolations } from "#scripts/check/effect";
 import { ROOT, typedProject, withProject } from "#scripts/check/fixture";

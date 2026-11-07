@@ -94,8 +94,8 @@ export const inspectSharedFiles = Effect.fn(
   return Arr.flatten(findings);
 });
 
-/** The Effect cohort: Effect, TypeScript, and the @effect packages, which move as one version. */
-const COHORT_NAME = /^(?:effect|typescript|@effect\/.+)$/u;
+/** The Effect cohort: Effect, the tsrs compiler, and the @effect packages, which move as one version. */
+const COHORT_NAME = /^(?:effect|tsrs|@effect\/.+)$/u;
 const CATALOG_REFERENCE = "catalog:";
 const PACKAGE_FILE = "package.json";
 
