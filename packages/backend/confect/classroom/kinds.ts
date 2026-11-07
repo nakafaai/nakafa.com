@@ -21,6 +21,10 @@ const classReaders: (typeof RuleRole.Type)[] = ["admin", "principal", "deputy"];
  * and write none (ADR 0025). Whoever manages the forum hides a message, which the
  * journal records without its text. A subject teacher adds and removes the
  * items of its library, which its forum readers read.
+ *
+ * An Owner does everything anywhere in the school, so every duty of a subject
+ * teacher is a `roles` rule that names no role: it opens to its relations and to
+ * every Owner. Only handing in a student's own work stays a `relations` rule.
  */
 export const classKind = Kind.make("class", "classes", {
   actions: {
@@ -44,8 +48,9 @@ export const classKind = Kind.make("class", "classes", {
     },
     "forum.post": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["classMember", "subjectTeacher"],
+      roles: [],
     },
     "forum.read": {
       access: "read",
@@ -55,18 +60,21 @@ export const classKind = Kind.make("class", "classes", {
     },
     "library.manage": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["subjectTeacher"],
+      roles: [],
     },
     "post.publish": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["subjectTeacher"],
+      roles: [],
     },
     "task.manage": {
       access: "write",
-      grantedBy: "relations",
+      grantedBy: "roles",
       relations: ["subjectTeacher"],
+      roles: [],
     },
     "task.submit": {
       access: "write",

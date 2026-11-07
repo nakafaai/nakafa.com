@@ -1,5 +1,9 @@
 import { createServer } from "node:http";
 import { NodeHttpServer, NodeSocketServer } from "@effect/platform-node";
+import {
+  BUCKET_PATH,
+  bucketStandIn,
+} from "@repo/backend/scripts/content/acceptance/bucket";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { Effect } from "effect";
 import { HttpServer, HttpServerRequest, HttpServerResponse } from "effect/http";
@@ -24,16 +28,21 @@ const CROSS_ORIGIN_HEADERS = {
 };
 
 /**
- * Stands in for PostHog ingestion while acceptance serves the app. The browser
- * sends analytics straight to the proxy host, which is this origin, so each
- * request is accepted and discarded. A preflight gets an empty answer that
- * permits it, so no request fails against a closed port and the browser client
- * never retries.
+ * Stands in for PostHog ingestion and for the R2 bucket while acceptance serves
+ * the app. The browser sends analytics straight to the proxy host, which is this
+ * origin, so each request is accepted and discarded. A preflight gets an empty
+ * answer that permits it, so no request fails against a closed port and the
+ * browser client never retries. Every path under `BUCKET_PATH` is the bucket's
+ * S3 API, which keeps its objects in the runtime directory.
  * @see https://posthog.com/docs/api/capture
  */
 export const withAnalyticsSink = Effect.fn(
   "contentAcceptance.withAnalyticsSink"
-)(function* <A, E, R>(origin: string, program: Effect.Effect<A, E, R>) {
+)(function* <A, E, R>(
+  origin: string,
+  directory: string,
+  program: Effect.Effect<A, E, R>
+) {
   const server = yield* NodeHttpServer.make(createServer, {
     host: "127.0.0.1",
     port: Number(new URL(origin).port),
@@ -45,8 +54,11 @@ export const withAnalyticsSink = Effect.fn(
     )
   );
   yield* server.serve(
-    Effect.flatMap(HttpServerRequest.HttpServerRequest, (request) =>
-      request.method === "OPTIONS"
+    Effect.flatMap(HttpServerRequest.HttpServerRequest, (request) => {
+      if (request.url.startsWith(`${BUCKET_PATH}/`)) {
+        return bucketStandIn(directory);
+      }
+      return request.method === "OPTIONS"
         ? Effect.succeed(
             HttpServerResponse.empty({
               headers: CROSS_ORIGIN_HEADERS,
@@ -56,8 +68,8 @@ export const withAnalyticsSink = Effect.fn(
         : HttpServerResponse.json(
             { status: 1 },
             { headers: CROSS_ORIGIN_HEADERS }
-          )
-    )
+          );
+    })
   );
   return yield* program;
 }, Effect.scoped);

@@ -6,10 +6,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
-import {
-  classAccess,
-  subjectTeacherOf,
-} from "@repo/backend/confect/classroom/authority";
+import { classAccess } from "@repo/backend/confect/classroom/authority";
 import { takeUploads } from "@repo/backend/confect/classroom/forum/attach";
 import {
   DiscussionsClosed,
@@ -29,7 +26,10 @@ import {
   checkMentions,
   noticeMentions,
 } from "@repo/backend/confect/classroom/forum/notice";
-import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
+import {
+  managesForum,
+  opensDiscussions,
+} from "@repo/backend/confect/classroom/forum/policy";
 import { start } from "@repo/backend/confect/classroom/forum/start";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
@@ -199,8 +199,8 @@ const open = FunctionImpl.make(
 
 /**
  * Renames a discussion: its title is sealed anew, and the opening message and every reader show
- * it at once. Whoever opened the discussion may rename it, and so may a subject teacher of the
- * class. Anyone else who writes in the class meets it as a missing object.
+ * it at once. Whoever opened the discussion may rename it, and so may whoever manages the class's
+ * forum. Anyone else who writes in the class meets it as a missing object.
  */
 const rename = FunctionImpl.make(
   databaseSchema,
@@ -211,8 +211,7 @@ const rename = FunctionImpl.make(
     const row = yield* Class;
     const thread = yield* classThread(number, "forum.post");
     const allowed =
-      thread.authorId === principal.person._id ||
-      (yield* subjectTeacherOf(row, principal));
+      thread.authorId === principal.person._id || (yield* managesForum(row));
     if (!allowed) {
       return yield* missing("forum.post");
     }

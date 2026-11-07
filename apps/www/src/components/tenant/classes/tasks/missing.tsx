@@ -22,8 +22,8 @@ const missingColumns = tableColumns<typeof MissingStudent.Type>();
 
 /**
  * The students a task reaches who have handed nothing in, under the work that came in, so a teacher
- * sees who to chase without reading the whole class. The header's search filters them too, and the
- * section leaves the page once every student has handed work in.
+ * sees who to chase without reading the whole class. The pane's search filters them too, and the
+ * section leaves the pane once every student has handed work in.
  */
 export function TaskMissingTable({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
@@ -70,6 +70,7 @@ export function TaskMissingTable({ task }: { task: ClassTask }) {
             )),
           ]}
           data={pagination.results}
+          plain
           rowId={(student) => student.id}
           search="name"
         />

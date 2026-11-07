@@ -1,7 +1,12 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import type { GenericId } from "@confect/core";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { FOLDER_LIMIT } from "@repo/backend/confect/classroom/library/folder";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   denied,
   firstPage,
@@ -10,10 +15,10 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { storeFile } from "@repo/backend/test/logo";
+import { addFile, PDF } from "@repo/backend/test/library";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 const { folders, library } = refs.public.classroom;
 
@@ -30,14 +35,22 @@ const folderRows = Effect.flatMap(DatabaseReader, (reader) =>
   reader.table("classroomFolders").index("by_creation_time").take(100)
 );
 
-/** The leading bytes of a PDF, which the library keeps. */
-const pdf = () =>
-  new Blob(["%PDF-1.7\n1 0 obj\n"], { type: "application/pdf" });
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 describe("classroom/folders", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
+    bucket.state.objects = {};
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it.effect(
@@ -50,6 +63,7 @@ describe("classroom/folders", () => {
           classId,
           clientKey: "folder-1",
           name: "Bab 1",
+          parentId: null,
           slug: nf,
         };
         const added = yield* teacher.mutation(folders.add, args);
@@ -89,6 +103,7 @@ describe("classroom/folders", () => {
           classId,
           clientKey: "folder-1",
           name: "Bab 1",
+          parentId: null,
           slug: nf,
         });
         const other = yield* forumClass(fixture, term.id, "X-2", false);
@@ -100,12 +115,13 @@ describe("classroom/folders", () => {
               classId,
               clientKey: "folder-liar",
               name: "Liar",
+              parentId: null,
               slug: nf,
             })
             .pipe(Effect.flip),
           fixture
             .as("student")
-            .mutation(folders.remove, { ...named, classId })
+            .mutation(folders.trash, { ...named, classId })
             .pipe(Effect.flip),
           teacher
             .mutation(folders.rename, {
@@ -115,7 +131,7 @@ describe("classroom/folders", () => {
             })
             .pipe(Effect.flip),
           teacher
-            .mutation(folders.remove, { ...named, classId: other.classId })
+            .mutation(folders.trash, { ...named, classId: other.classId })
             .pipe(Effect.flip),
         ]);
         expect(refusals).toMatchObject([
@@ -125,16 +141,22 @@ describe("classroom/folders", () => {
           denied("resource"),
         ]);
 
-        yield* Effect.forEach(
-          Arr.range(2, FOLDER_LIMIT),
-          (number) =>
-            teacher.mutation(folders.add, {
-              classId,
-              clientKey: `folder-${number}`,
-              name: `Bab ${number}`,
-              slug: nf,
-            }),
-          { discard: true }
+        const [first] = yield* fixture.run(folderRows);
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            yield* Effect.forEach(
+              Arr.range(2, FOLDER_LIMIT),
+              (number) =>
+                first === undefined
+                  ? Effect.void
+                  : writer.table("classroomFolders").insert({
+                      ...Struct.omit(first, ["_creationTime", "_id"]),
+                      clientKey: `folder-${number}`,
+                    }),
+              { discard: true }
+            );
+          }).pipe(Effect.orDie)
         );
         expect(
           yield* teacher
@@ -142,6 +164,7 @@ describe("classroom/folders", () => {
               classId,
               clientKey: "satu-lagi",
               name: "Satu lagi",
+              parentId: null,
               slug: nf,
             })
             .pipe(Effect.flip)
@@ -159,6 +182,7 @@ describe("classroom/folders", () => {
           classId,
           clientKey: "folder-1",
           name: "Bab 1",
+          parentId: null,
           slug: nf,
         });
         const inFolder = yield* teacher.mutation(library.addLink, {
@@ -178,14 +202,16 @@ describe("classroom/folders", () => {
           slug: nf,
           title: "Di atas",
         });
-        yield* teacher.action(library.register, {
+        yield* addFile(
+          bucket,
+          fixture,
           classId,
-          clientKey: "berkas-pdf",
-          folderId: folder.id,
-          slug: nf,
-          storageId: yield* storeFile(fixture.convex, pdf()),
-          title: "Berkas",
-        });
+          "berkas-pdf",
+          PDF,
+          "application/pdf",
+          "Berkas",
+          folder.id
+        );
 
         const titles = (folderId: typeof folder.id | null) =>
           teacher
@@ -218,6 +244,7 @@ describe("classroom/folders", () => {
           classId: other.classId,
           clientKey: "folder-lain",
           name: "Lain",
+          parentId: null,
           slug: nf,
         });
         expect(
@@ -245,41 +272,159 @@ describe("classroom/folders", () => {
       })
   );
 
-  it.effect("leaves a removed folder's items at the top of the library", () =>
-    Effect.gen(function* () {
-      const { classId, fixture } = yield* libraryClass();
-      const teacher = fixture.as("teacher");
-      const folder = yield* teacher.mutation(folders.add, {
-        classId,
-        clientKey: "folder-1",
-        name: "Bab 1",
-        slug: nf,
-      });
-      yield* teacher.mutation(library.addLink, {
-        address: "https://youtu.be/satu",
-        classId,
-        clientKey: "di-folder",
-        folderId: folder.id,
-        slug: nf,
-        title: "Di folder",
-      });
-      expect(
-        yield* teacher.mutation(folders.remove, {
+  it.effect(
+    "hides a trashed folder with everything inside it, restores it, and deletes a tree forever with its files",
+    () =>
+      Effect.gen(function* () {
+        const { classId, fixture } = yield* libraryClass();
+        const teacher = fixture.as("teacher");
+        const add = (
+          clientKey: string,
+          parentId: GenericId.GenericId<"classroomFolders"> | null
+        ) =>
+          teacher.mutation(folders.add, {
+            classId,
+            clientKey: `folder-${clientKey}`,
+            name: clientKey,
+            parentId,
+            slug: nf,
+          });
+        const top = yield* add("Bab", null);
+        const child = yield* add("Sub", top.id);
+        const file = yield* addFile(
+          bucket,
+          fixture,
+          classId,
+          "berkas-file",
+          PDF,
+          "application/pdf",
+          "Berkas",
+          child.id
+        );
+        yield* fixture.as("student").mutation(library.star, {
+          classId,
+          slug: nf,
+          starred: true,
+          target: { itemId: file.id, kind: "item" },
+        });
+        yield* fixture.as("student").mutation(library.star, {
+          classId,
+          slug: nf,
+          starred: true,
+          target: { folderId: child.id, kind: "folder" },
+        });
+        expect(
+          yield* fixture
+            .as("student")
+            .query(library.search, { classId, slug: nf, text: "Berkas" })
+        ).toMatchObject([{ id: file.id }]);
+        yield* teacher.mutation(folders.trash, {
+          classId,
+          folderId: top.id,
+          slug: nf,
+        });
+        expect(
+          yield* fixture
+            .as("student")
+            .query(library.starred, { classId, slug: nf })
+        ).toEqual([]);
+        expect(
+          yield* fixture
+            .as("student")
+            .query(library.search, { classId, slug: nf, text: "Berkas" })
+        ).toEqual([]);
+        yield* teacher.mutation(folders.restore, {
+          classId,
+          folderId: top.id,
+          slug: nf,
+        });
+        yield* teacher.mutation(folders.trash, {
+          classId,
+          folderId: child.id,
+          slug: nf,
+        });
+        const kept = yield* add("Lain", null);
+        yield* teacher.mutation(folders.purge, {
+          classId,
+          folderId: top.id,
+          slug: nf,
+        });
+        expect(
+          Arr.map(yield* fixture.run(folderRows), (folder) => folder._id)
+        ).toEqual([kept.id]);
+        yield* fixture.finishScheduled();
+        expect(bucket.state.objects).toEqual({});
+        const left = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            Effect.all([
+              reader
+                .table("classroomLibrary")
+                .index("by_creation_time")
+                .take(10),
+              reader.table("classroomStars").index("by_creation_time").take(10),
+            ])
+          )
+        );
+        expect(left).toEqual([[], []]);
+      })
+  );
+
+  it.effect(
+    "deletes a folder of more files than one pass holds over several passes",
+    () =>
+      Effect.gen(function* () {
+        const { classId, fixture } = yield* libraryClass();
+        const teacher = fixture.as("teacher");
+        const folder = yield* teacher.mutation(folders.add, {
+          classId,
+          clientKey: "folder-besar",
+          name: "Besar",
+          parentId: null,
+          slug: nf,
+        });
+        const link = yield* teacher.mutation(library.addLink, {
+          address: "https://youtu.be/satu",
+          classId,
+          clientKey: "tautan-0",
+          folderId: folder.id,
+          slug: nf,
+          title: "Tautan",
+        });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const writer = yield* DatabaseWriter;
+            const row = yield* reader.table("classroomLibrary").get(link.id);
+            if (row.kind !== "link") {
+              return yield* Effect.die("The fixture row is a link.");
+            }
+            yield* Effect.forEach(
+              Arr.range(1, 70),
+              (number) =>
+                writer.table("classroomLibrary").insert({
+                  ...Struct.omit(row, ["_creationTime", "_id"]),
+                  clientKey: `tautan-${number}`,
+                }),
+              { discard: true }
+            );
+          }).pipe(Effect.orDie)
+        );
+        yield* teacher.mutation(folders.purge, {
           classId,
           folderId: folder.id,
           slug: nf,
-        })
-      ).toBeNull();
-      expect(yield* teacher.query(folders.list, { classId, slug: nf })).toEqual(
-        []
-      );
-      const { page } = yield* teacher.query(library.list, {
-        ...firstPage,
-        classId,
-        folderId: null,
-        slug: nf,
-      });
-      expect(page).toMatchObject([{ folderId: null, title: "Di folder" }]);
-    })
+        });
+        yield* fixture.finishScheduled();
+        expect(
+          yield* fixture.run(
+            Effect.flatMap(DatabaseReader, (reader) =>
+              reader
+                .table("classroomLibrary")
+                .index("by_creation_time")
+                .take(10)
+            )
+          )
+        ).toEqual([]);
+      })
   );
 });

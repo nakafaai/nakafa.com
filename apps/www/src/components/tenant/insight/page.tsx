@@ -109,7 +109,8 @@ function TeacherInsight() {
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const leads = useLeadsSchool();
+  const viewer = useViewerQuery();
+  const leads = QueryResult.isSuccess(viewer) && readsEveryClass(viewer.value);
   const classes = useMyClasses();
   const school = usePaginatedQuery(
     insight.reads.classes,
@@ -128,10 +129,18 @@ function TeacherInsight() {
     label: klass.name,
     value: klass.id,
   }));
-  const chosen = Option.orElse(
-    Arr.findFirst(held, (klass) => klass.id === picked),
-    () => Arr.head(held)
-  );
+  // The first class is chosen once every read that decides it has answered: the viewer, their own classes and, for a
+  // leader, the school's first page. Choosing earlier would show one class and then swap to another.
+  const settled =
+    QueryResult.isSuccess(viewer) &&
+    QueryResult.isSuccess(classes) &&
+    !(leads && PaginatedQueryResult.isLoadingFirstPage(school));
+  const chosen = settled
+    ? Option.orElse(
+        Arr.findFirst(held, (klass) => klass.id === picked),
+        () => Arr.head(held)
+      )
+    : Option.none();
 
   return (
     <PageFrame width="page">
@@ -169,7 +178,7 @@ function TeacherInsight() {
       {PaginatedQueryResult.isCanLoadMore(school) && Option.isNone(chosen) ? (
         <Intersection onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)} />
       ) : null}
-      {QueryResult.isSuccess(classes) &&
+      {settled &&
       Arr.isReadonlyArrayEmpty(held) &&
       (!leads || PaginatedQueryResult.isExhausted(school)) ? (
         <TablePageBody>

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   createSchool,
@@ -11,20 +11,56 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** Where the dialog sends a teacher without Drive: the account's connections. */
 const CONNECTIONS_ADDRESS = /\/en\/user\/settings\/connectors$/u;
 
-/** The row of the link the test adds. */
-const VIDEO_ROW = /Video gerak lurus/u;
-
 /** The address of one folder of the class's library. */
 const FOLDER_ADDRESS = /\/classes\/fisika-x-1\/library\/[^/]+$/u;
 
+/** A presigned R2 upload: path style, with the length and type it binds. */
+const R2_UPLOAD =
+  /\/r2\/nakafa-files\/library\/.+X-Amz-SignedHeaders=content-length%3Bcontent-type%3Bhost/u;
+
 /** The leading bytes of a PDF, which the server keeps. */
 const PDF_BYTES = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n");
+
+/** Opens the menu of the row whose name holds `name`. */
+const openMenu = async (page: Page, name: string) => {
+  const more = page
+    .getByRole("row", { name: new RegExp(name, "u") })
+    .getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(more);
+  await more.click();
+};
+
+/** Adds a link to the folder the page shows. */
+const addLink = async (page: Page, title: string) => {
+  const dialog = page.getByRole("dialog");
+  await page.getByRole("button", { name: "Add to library" }).click();
+  await dialog.getByRole("tab", { name: "Link" }).click();
+  await dialog
+    .getByRole("textbox", { name: "Address" })
+    .fill(`https://example.com/${title.length}`);
+  await dialog.getByRole("textbox", { name: "Title" }).fill(title);
+  await dialog.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.getByRole("button", { name: title })).toBeVisible();
+};
+
+/** Makes a folder inside the folder the page shows. */
+const addFolder = async (page: Page, name: string) => {
+  const dialog = page.getByRole("dialog");
+  const create = page.getByRole("button", { name: "New folder" });
+  await waitUntilTakenOver(create);
+  await create.click();
+  await dialog.getByRole("textbox", { name: "Name" }).fill(name);
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(page.getByRole("link", { exact: true, name })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+};
 
 for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`a subject teacher is told to connect Drive first, adds a link and a PDF to the class library, sees a refused file leave, and removes an item, at ${viewport.width} px`, async ({
+  test(`a subject teacher is told to connect Drive first, uploads a PDF straight to R2 with its progress, opens it at a signed address, sees a refused file leave, and trashes a link, at ${viewport.width} px`, async ({
     browser,
     baseURL,
   }) => {
@@ -53,9 +89,6 @@ for (const viewport of [
     await expect(
       dialog.getByRole("link", { name: "Open connections" })
     ).toHaveAttribute("href", CONNECTIONS_ADDRESS);
-    await expect(
-      dialog.getByRole("button", { name: "Add", exact: true })
-    ).toBeDisabled();
     await dialog.getByRole("tab", { name: "Link" }).click();
     await dialog
       .getByRole("textbox", { name: "Address" })
@@ -65,14 +98,13 @@ for (const viewport of [
       .fill("Video gerak lurus");
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
     await expect(dialog).toBeHidden();
-    const video = page.getByRole("link", { name: "Video gerak lurus" });
-    await expect(video).toBeVisible();
-    await expect(video).toHaveAttribute(
-      "href",
-      "https://example.com/gerak-lurus"
-    );
-    await expect(video).toHaveAttribute("target", "_blank");
+    await expect(
+      page.getByRole("button", { name: "Video gerak lurus" })
+    ).toBeVisible();
 
+    const upload = page.waitForRequest(
+      (request) => request.method() === "PUT" && R2_UPLOAD.test(request.url())
+    );
     await add.click();
     await dialog.getByLabel("File").setInputFiles({
       buffer: PDF_BYTES,
@@ -84,10 +116,18 @@ for (const viewport of [
     );
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByText("Modul gerak lurus")).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Modul gerak lurus" })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    // The bytes go straight to the bucket, never through the Worker.
+    expect((await upload).headers()["content-type"]).toBe("application/pdf");
+    const module = page.getByRole("button", { name: "Modul gerak lurus" });
+    await expect(module).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await expect(page.getByText("100%")).toHaveCount(0, {
+      timeout: readinessTimeoutMilliseconds,
+    });
+
+    await openMenu(page, "Modul gerak lurus");
+    const download = page.waitForEvent("download");
+    await page.getByRole("menuitem", { name: "Download" }).click();
+    expect((await download).suggestedFilename()).toBe("Modul gerak lurus.pdf");
 
     await add.click();
     await dialog.getByLabel("File").setInputFiles({
@@ -101,19 +141,12 @@ for (const viewport of [
     });
     await expect(page.getByText("Catatan", { exact: true })).toBeHidden();
 
-    await page
-      .getByRole("row", { name: VIDEO_ROW })
-      .getByRole("button", { name: "More actions" })
-      .click();
-    await page.getByRole("menuitem", { name: "Remove" }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Remove" })
-      .click();
-    await expect(video).toBeHidden();
+    await openMenu(page, "Video gerak lurus");
+    await page.getByRole("menuitem", { name: "Move to trash" }).click();
     await expect(
-      page.getByRole("link", { name: "Modul gerak lurus" })
-    ).toBeVisible();
+      page.getByRole("button", { name: "Video gerak lurus" })
+    ).toBeHidden();
+    await expect(module).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth
@@ -123,7 +156,7 @@ for (const viewport of [
   });
 }
 
-test("a subject teacher makes a folder, moves a link into it, adds another inside, renames it, and deletes it, and the links stay", async ({
+test("a subject teacher nests folders, uploads into the deepest, moves the file and a folder, trashes, restores and deletes forever", async ({
   browser,
   baseURL,
 }) => {
@@ -137,87 +170,82 @@ test("a subject teacher makes a folder, moves a link into it, adds another insid
     signInClassTeacher(context, school.slug, address("/"))
   );
   const page = await context.newPage();
-  await page.goto(address("/classes/fisika-x-1/library"));
-  const create = page.getByRole("button", { name: "New folder" });
-  await waitUntilTakenOver(create);
-  await create.click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("button", { name: "Create" })).toBeDisabled();
-  await dialog.getByRole("textbox", { name: "Name" }).fill("Bab 1");
-  await dialog.getByRole("button", { name: "Create" }).click();
-  const folder = page.getByRole("link", { name: "Bab 1" });
-  await expect(folder).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-
-  const add = page.getByRole("button", { name: "Add to library" });
-  const addLink = async (title: string) => {
-    await add.click();
-    await dialog.getByRole("tab", { name: "Link" }).click();
-    await dialog
-      .getByRole("textbox", { name: "Address" })
-      .fill(`https://example.com/${title.length}`);
-    await dialog.getByRole("textbox", { name: "Title" }).fill(title);
-    await dialog.getByRole("button", { name: "Add", exact: true }).click();
-    await expect(page.getByRole("link", { name: title })).toBeVisible();
-  };
-  await addLink("Video gerak lurus");
-
-  // The link moves out of the top of the library the moment it is saved.
-  await page
-    .getByRole("row", { name: VIDEO_ROW })
-    .getByRole("button", { name: "More actions" })
-    .click();
-  await page.getByRole("menuitem", { name: "Edit" }).click();
-  await dialog.getByRole("combobox", { name: "Folder" }).click();
-  await page.getByRole("option", { name: "Bab 1" }).click();
-  await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(
-    page.getByRole("link", { name: "Video gerak lurus" })
-  ).toBeHidden();
-
-  await folder.click();
-  await page.waitForURL(FOLDER_ADDRESS);
-  await expect(
-    page.getByRole("navigation", { name: "breadcrumb" })
-  ).toContainText("Bab 1");
-  await expect(
-    page.getByRole("link", { name: "Video gerak lurus" })
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(page.getByRole("button", { name: "New folder" })).toHaveCount(0);
-  await waitUntilTakenOver(add);
-  await addLink("Soal latihan");
-
-  // An address that names no folder of the class shows the class's missing state.
-  const folderAddress = page.url();
-  await page.goto(address("/classes/fisika-x-1/library/bukan-folder"));
-  await expect(page.getByRole("link", { name: "Soal latihan" })).toHaveCount(0);
-
   await page.goto(address("/classes/fisika-x-1/library"));
-  const row = page.getByRole("row", { name: "Bab 1" });
-  const more = row.getByRole("button", { name: "More actions" });
-  await waitUntilTakenOver(more);
-  await more.click();
-  await page.getByRole("menuitem", { name: "Rename" }).click();
-  await dialog.getByRole("textbox", { name: "Name" }).fill("Gerak lurus");
-  await dialog.getByRole("button", { name: "Rename" }).click();
-  await expect(page.getByRole("link", { name: "Gerak lurus" })).toBeVisible();
+  await addFolder(page, "Bab 1");
+  await page.getByRole("link", { exact: true, name: "Bab 1" }).click();
+  await page.waitForURL(FOLDER_ADDRESS);
+  await addFolder(page, "Gerak lurus");
+  await page.getByRole("link", { exact: true, name: "Gerak lurus" }).click();
+  const path = page.getByRole("navigation", { name: "Folder path" });
+  await expect(path).toContainText("Library");
+  await expect(path).toContainText("Bab 1");
+  await expect(path).toContainText("Gerak lurus");
 
-  await page
-    .getByRole("row", { name: "Gerak lurus" })
-    .getByRole("button", { name: "More actions" })
-    .click();
-  await page.getByRole("menuitem", { name: "Delete" }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Delete" })
-    .click();
+  // A file added in the deepest folder uploads into it.
+  await page.getByRole("button", { name: "Add to library" }).click();
+  await dialog.getByLabel("File").setInputFiles({
+    buffer: PDF_BYTES,
+    mimeType: "application/pdf",
+    name: "Modul GLB.pdf",
+  });
+  await dialog.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Modul GLB" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await addLink(page, "Simulasi");
+
+  // The Move dialog sends the file to the top of the library.
+  await openMenu(page, "Modul GLB");
+  await page.getByRole("menuitem", { name: "Move" }).click();
+  await dialog.getByRole("button", { name: "Library" }).click();
+  await dialog.getByRole("button", { name: "Move", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Modul GLB" })).toBeHidden();
+
+  await path.getByRole("link", { name: "Library" }).click();
+  await expect(page.getByRole("button", { name: "Modul GLB" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  // A folder moved to the top keeps what it holds.
+  await page.getByRole("link", { exact: true, name: "Bab 1" }).click();
+  await page.waitForURL(FOLDER_ADDRESS);
+  await openMenu(page, "Gerak lurus");
+  await page.getByRole("menuitem", { name: "Move" }).click();
+  await dialog.getByRole("button", { name: "Library" }).click();
+  await dialog.getByRole("button", { name: "Move", exact: true }).click();
   await expect(
     page.getByRole("link", { exact: true, name: "Gerak lurus" })
   ).toBeHidden();
-  await expect(
-    page.getByRole("link", { name: "Video gerak lurus" })
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(page.getByRole("link", { name: "Soal latihan" })).toBeVisible();
-  await page.goto(folderAddress);
-  await expect(page.getByRole("link", { name: "Soal latihan" })).toHaveCount(0);
+  await path.getByRole("link", { name: "Library" }).click();
+  await page.getByRole("link", { exact: true, name: "Gerak lurus" }).click();
+  await expect(page.getByRole("button", { name: "Simulasi" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  // The trash keeps the file until it is restored, then deletes it forever.
+  await path.getByRole("link", { name: "Library" }).click();
+  await openMenu(page, "Modul GLB");
+  await page.getByRole("menuitem", { name: "Move to trash" }).click();
+  await expect(page.getByRole("button", { name: "Modul GLB" })).toBeHidden();
+  await page.getByRole("tab", { name: "Trash" }).click();
+  await expect(page.getByText("Modul GLB")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await openMenu(page, "Modul GLB");
+  await page.getByRole("menuitem", { name: "Restore" }).click();
+  await page.getByRole("tab", { name: "Files" }).click();
+  await expect(page.getByRole("button", { name: "Modul GLB" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await openMenu(page, "Modul GLB");
+  await page.getByRole("menuitem", { name: "Move to trash" }).click();
+  await page.getByRole("tab", { name: "Trash" }).click();
+  await openMenu(page, "Modul GLB");
+  await page.getByRole("menuitem", { name: "Delete forever" }).click();
+  await dialog.getByRole("button", { name: "Delete forever" }).click();
+  await expect(page.getByText("The trash is empty")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await context.close();
 });

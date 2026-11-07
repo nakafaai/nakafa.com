@@ -7,7 +7,11 @@ import {
   addLinkUpdate,
   editItemUpdate,
   type LibraryItem,
-  removeItemUpdate,
+  moveItemUpdate,
+  purgeItemUpdate,
+  restoreItemUpdate,
+  starItemUpdate,
+  trashItemUpdate,
 } from "@/components/tenant/classes/library/optimistic";
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
@@ -27,7 +31,9 @@ const link = (id: string, title: string): LibraryItem => ({
   folderId: null,
   id: itemOf(id),
   kind: "link",
+  starred: false,
   title,
+  trashedAt: null,
 });
 
 /** The arguments of one page of a class's library. */
@@ -92,9 +98,9 @@ describe("class library optimistic updates", () => {
     ]);
   });
 
-  it("removes one item from the page that holds it", () => {
+  it("takes an item moved to the trash out of the page that holds it", () => {
     const { localStore, setQuery } = storeOf(pages);
-    removeItemUpdate(localStore, { classId, itemId: second.id, slug });
+    trashItemUpdate(localStore, { classId, itemId: second.id, slug });
     expect(setQuery.mock.calls).toEqual([
       [
         classroom.library.list,
@@ -202,6 +208,80 @@ describe("class library optimistic updates", () => {
         classroom.library.list,
         listArgs(classId, null, folderId),
         Option.some({ isDone: true, page: [{ ...first, folderId }, held] }),
+      ],
+    ]);
+  });
+
+  it("takes a moved item out of the folder it left and leaves the folder it joins to the server", () => {
+    const folderId = folderOf("folder-1");
+    const { localStore, setQuery } = storeOf([
+      ...pages,
+      {
+        args: listArgs(classId, null, folderId),
+        value: Option.some({ isDone: true, page: [] }),
+      },
+    ]);
+    moveItemUpdate(localStore, { classId, folderId, itemId: first.id, slug });
+    expect(setQuery.mock.calls).toEqual([
+      [
+        classroom.library.list,
+        listArgs(classId, null),
+        Option.some({ isDone: false, page: [] }),
+      ],
+    ]);
+  });
+
+  it("shows an item's star at once and ignores a folder's", () => {
+    const { localStore, setQuery } = storeOf(pages);
+    starItemUpdate(localStore, {
+      classId,
+      slug,
+      starred: true,
+      target: { itemId: first.id, kind: "item" },
+    });
+    starItemUpdate(localStore, {
+      classId,
+      slug,
+      starred: true,
+      target: { folderId: folderOf("folder-1"), kind: "folder" },
+    });
+    expect(setQuery.mock.calls[0]).toEqual([
+      classroom.library.list,
+      listArgs(classId, null),
+      Option.some({ isDone: false, page: [{ ...first, starred: true }] }),
+    ]);
+    expect(setQuery.mock.calls).toHaveLength(2);
+  });
+
+  it("takes a restored and a purged item out of the trash at once", () => {
+    const trashArgs = (forClass: typeof classId) => ({
+      classId: forClass,
+      paginationOpts: { cursor: null, numItems: 20 },
+      slug,
+    });
+    const { localStore, setQuery } = storeOf([
+      {
+        args: trashArgs(classId),
+        value: Option.some({ isDone: true, page: [first, second] }),
+      },
+      {
+        args: trashArgs(otherClass),
+        value: Option.some({ isDone: true, page: [] }),
+      },
+      { args: trashArgs(classId), value: Option.none() },
+    ]);
+    restoreItemUpdate(localStore, { classId, itemId: first.id, slug });
+    purgeItemUpdate(localStore, { classId, itemId: second.id, slug });
+    expect(setQuery.mock.calls).toEqual([
+      [
+        classroom.library.trashed,
+        trashArgs(classId),
+        Option.some({ isDone: true, page: [second] }),
+      ],
+      [
+        classroom.library.trashed,
+        trashArgs(classId),
+        Option.some({ isDone: true, page: [first] }),
       ],
     ]);
   });

@@ -70,9 +70,12 @@ own address (ADR 0026).
 
 A student reads and writes in the classes they belong to, and a teacher in the
 classes they teach, through the Class member and Subject teacher relations (ADR
-0012). Owners, Admins, Principals, and Deputies can read the posts, the forum,
-and the library of every class their grant covers, and they write nowhere in
-them (a roles-granted view action, ADR 0012). Counselors, Staff, Proctors,
+0012). An Owner does everything in every class of the school, as a subject
+teacher and a homeroom teacher do, and only a student's own hand-in stays theirs
+alone (owner decision, 7 November 2026: every class duty is a roles rule that
+names no role, which every Owner passes). Admins, Principals, and Deputies can
+read the posts, the forum, and the library of every class their grant covers,
+and they write nowhere in them (a roles-granted view action, ADR 0012). Counselors, Staff, Proctors,
 Auditors, and Integrations have no access to them. A guardian does not read the
 forum. The verified parent relation opens tasks, grades, report cards, and
 announcements.
