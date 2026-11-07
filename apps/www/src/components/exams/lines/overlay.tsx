@@ -76,6 +76,8 @@ function LinePath({ pair }: { readonly pair: LinePair }) {
         animate={{ opacity: 1, pathLength: 1 }}
         className={lineStroke({ lit })}
         d={path}
+        data-line-answer={pair.target}
+        data-line-source={pair.source}
         exit={{ opacity: 0 }}
         initial={drawn ? false : { opacity: 1, pathLength: 0 }}
         strokeLinecap="round"

@@ -11,12 +11,16 @@ const LinePair = Schema.Struct({
 });
 export type LinePair = typeof LinePair.Type;
 
+/** One side of a board: its statements, whose lines start there, or its answers, whose lines end there. */
+const LineSide = Schema.Literals(["sources", "targets"]);
+export type LineSide = typeof LineSide.Type;
+
 /**
  * What every part of one board reads: the pairs it draws, the names of its parts, whether it takes changes, the
  * way it pairs and unpairs, its own state, and its element, which its dots are measured in. Functions, a store and an
  * element are no data a Schema describes, so this is a plain shape.
  */
-export interface LinesBoard {
+interface LinesBoard {
   /** Pairs a statement with an answer, taking the answer from any statement that held it. */
   readonly connect: (source: string, target: string) => void;
   /** Takes the line of a statement away. */

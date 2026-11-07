@@ -5,9 +5,7 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
-  letterScript,
   optionDirection,
-  optionLetter,
   optionLetters,
 } from "@repo/backend/confect/exams/letters";
 import {
@@ -243,46 +241,6 @@ export function OptionSketch({ label }: { label: OptionLabel }) {
 }
 
 /**
- * One column of a matching drawn without editors, as its live column draws it: its parts numbered or lettered, each
- * with its dot, and the room of the action that adds a part when it takes one.
- */
-function PartSketch({
-  letterOf,
-  parts,
-  side,
-  withControls,
-}: {
-  letterOf: (index: number) => string;
-  parts: readonly { readonly id: string; readonly label: OptionLabel }[];
-  side: "sources" | "targets";
-  withControls: boolean;
-}) {
-  const locked = useExamLocked();
-
-  return (
-    <LinesColumn
-      footer={
-        withControls && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
-          <OptionAddRoom />
-        ) : null
-      }
-      side={side}
-    >
-      {Arr.map(parts, (part, index) => (
-        <LinesItem
-          id={part.id}
-          key={part.id}
-          name={letterOf(index)}
-          side={side}
-        >
-          <OptionSketch label={part.label} />
-        </LinesItem>
-      ))}
-    </LinesColumn>
-  );
-}
-
-/**
  * A true or false table drawn without editors, as its live table draws it: the statements' heading and each
  * column's header, then each numbered statement with an empty mark under every column.
  */
@@ -312,7 +270,6 @@ function TableSketch({
 }
 
 /** The number that names a statement by its place: 1 for the first, 2 for the second, and so on. */
-const statementNumber = (index: number) => String(index + 1);
 
 /**
  * The answers of one question drawn without editors, as the student reads them, below the prompt that
@@ -332,6 +289,8 @@ export function PaperSketch({
   // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
     withControls && !locked && Option.isNone(fixedOptions(question.template));
+  // A matching's columns keep the room of the action that adds a part while the page has its controls.
+  const addsPart = withControls && !locked;
 
   return (
     <>
@@ -355,23 +314,46 @@ export function PaperSketch({
               size="paper"
               stretch={false}
             >
-              <PartSketch
-                letterOf={statementNumber}
-                parts={match.sources}
-                side="sources"
-                withControls={withControls}
-              />
-              <PartSketch
-                letterOf={(index) =>
-                  optionLetter(
-                    index,
-                    letterScript(Arr.map(match.targets, (part) => part.label))
-                  )
+              <LinesColumn
+                footer={
+                  addsPart && match.sources.length < CHOICE_OPTIONS_MAX ? (
+                    <OptionAddRoom />
+                  ) : null
                 }
-                parts={match.targets}
+                side="sources"
+              >
+                {Arr.map(match.sources, (part, index) => (
+                  <LinesItem
+                    id={part.id}
+                    key={part.id}
+                    name={String(index + 1)}
+                    side="sources"
+                  >
+                    <OptionSketch label={part.label} />
+                  </LinesItem>
+                ))}
+              </LinesColumn>
+              <LinesColumn
+                footer={
+                  addsPart && match.targets.length < CHOICE_OPTIONS_MAX ? (
+                    <OptionAddRoom />
+                  ) : null
+                }
                 side="targets"
-                withControls={withControls}
-              />
+              >
+                {Arr.map(match.targets, (part, index) => (
+                  <LinesItem
+                    id={part.id}
+                    key={part.id}
+                    name={optionLetters(
+                      Arr.map(match.targets, (target) => target.label)
+                    )(index)}
+                    side="targets"
+                  >
+                    <OptionSketch label={part.label} />
+                  </LinesItem>
+                ))}
+              </LinesColumn>
             </LinesProvider>
           </PaperPairs>
         ),

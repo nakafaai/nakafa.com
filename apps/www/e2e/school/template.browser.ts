@@ -294,7 +294,7 @@ test("a teacher turns a question into a short answer with accepted answers, and 
   await context.close();
 });
 
-test("a teacher turns a question into matching, pairs every statement in the key, and the student pairs them by letter", async ({
+test("a teacher turns a question into matching, joins every statement to its answer in the key, and the student joins one with a line", async ({
   baseURL,
   browser,
 }) => {
@@ -337,7 +337,8 @@ test("a teacher turns a question into matching, pairs every statement in the key
     await field.press("Tab");
   }
 
-  // The key takes a letter for each statement, and saves once every statement holds one.
+  // The key joins each statement to its answer with a line: a press on the statement, then one on the answer, and it
+  // saves once every statement holds one.
   const panel = page.getByRole("complementary", { name: "For teachers" });
   for (const [statement, letter] of [
     ["1", "B"],
@@ -345,29 +346,34 @@ test("a teacher turns a question into matching, pairs every statement in the key
     ["3", "A"],
   ] as const) {
     await panel
-      .getByRole("combobox", {
-        name: `Answer for statement ${statement} of question 1`,
-      })
+      .getByRole("button", { name: `Statement ${statement}, not joined` })
       .click();
-    await page.getByRole("option", { exact: true, name: letter }).click();
+    await panel
+      .getByRole("button", { exact: true, name: `Answer ${letter}` })
+      .click();
+    await expect(
+      panel.getByRole("button", {
+        name: `Statement ${statement}, joined to ${letter}`,
+      })
+    ).toBeVisible();
   }
   await expect(
     page.getByRole("region", { name: FIRST_QUESTION })
   ).not.toContainText("No key yet");
   await saved(changes, sentBefore);
 
-  // The student reads the answers by letter and picks one for each statement.
+  // The student reads the answers by letter and joins a statement to one with a line.
   const trying = await context.newPage();
   await trying.goto(page.url().replace(EDIT_SUFFIX, "/try"));
   await trying.waitForURL(TRY_PATH);
-  const first = trying.getByRole("combobox", {
-    name: "Answer for statement 1",
-  });
+  const first = trying.getByRole("button", { name: "Statement 1, not joined" });
   await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(trying.getByText("Jakarta")).toBeVisible();
   await first.click();
-  await trying.getByRole("option", { exact: true, name: "B" }).click();
-  await expect(first).toContainText("B");
+  await trying.getByRole("button", { exact: true, name: "Answer B" }).click();
+  await expect(
+    trying.getByRole("button", { name: "Statement 1, joined to B" })
+  ).toBeVisible();
   await context.close();
 });
 
