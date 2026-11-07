@@ -32,10 +32,33 @@ describe("nina/files", () => {
           method: "GET",
           signedAt: 0,
         });
-        const learnerParts =
-          typeof learnerTurn.message?.content === "string"
-            ? []
-            : (learnerTurn.message?.content ?? []);
+        // Parts the refresher leaves alone: another site's address, a provider's reference, bytes and Base64.
+        const learnerParts = [
+          {
+            image: "https://files.example.com/soal.png",
+            mediaType: "image/png",
+            type: "image" as const,
+          },
+          {
+            image: {
+              reference: { openai: "file-abc" },
+              type: "reference" as const,
+            },
+            type: "image" as const,
+          },
+          {
+            data: new TextEncoder().encode("bytes").buffer,
+            filename: "soal.txt",
+            mediaType: "text/plain",
+            type: "file" as const,
+          },
+          {
+            data: "aGVsbG8=",
+            filename: "soal.pdf",
+            mediaType: "application/pdf",
+            type: "file" as const,
+          },
+        ];
         const turn = storedRow(
           {
             ...learnerTurn,

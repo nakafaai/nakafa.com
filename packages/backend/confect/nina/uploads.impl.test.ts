@@ -36,7 +36,7 @@ import {
   started,
   uploadFixture,
 } from "@repo/backend/test/nina/uploads";
-import { Duration } from "effect";
+import { Array as Arr, Duration, Record as Rec } from "effect";
 
 /** The fetch that R2 answers, stubbed once for the file. */
 const fetcher = vi.fn<typeof fetch>();
@@ -138,7 +138,7 @@ describe("native Nina attachment ownership", () => {
         ],
       },
     });
-    expect(Object.values(bucket.state.objects)).toEqual([
+    expect(Rec.values(bucket.state.objects)).toEqual([
       new Uint8Array(attachment.bytes),
     ]);
   });
@@ -294,7 +294,7 @@ describe("native Nina attachment ownership", () => {
     );
     // The retried prompt keeps the original's file, recorded for its own message too.
     const kept = await chatFiles(t);
-    expect(kept.map((file) => file.messageId)).toEqual([
+    expect(Arr.map(kept, (file) => file.messageId)).toEqual([
       first.promptMessageId,
       second.promptMessageId,
     ]);
