@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { GrantRejected } from "@repo/backend/confect/access/errors";
+import { CohortInUse, PeriodInUse } from "@repo/backend/confect/tenancy/errors";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Result } from "effect";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -72,6 +73,35 @@ describe("saveSchool", () => {
       description: "school-refusal-last-owner.description",
       title: "school-refusal-last-owner.title",
     });
+    error.mockRestore();
+  });
+
+  it("shows what keeps a cohort or a period in use, so the person knows what to clear or to archive it", async () => {
+    const error = vi.spyOn(toast, "error");
+
+    await saveSchool(
+      () => Promise.resolve(Result.fail(new CohortInUse({ holds: "members" }))),
+      "test"
+    );
+    await saveSchool(
+      () => Promise.resolve(Result.fail(new PeriodInUse({ holds: "active" }))),
+      "test"
+    );
+
+    expect(error.mock.calls).toEqual([
+      [
+        {
+          description: "school-refusal-cohort-in-use.members.description",
+          title: "school-refusal-cohort-in-use.members.title",
+        },
+      ],
+      [
+        {
+          description: "school-refusal-period-in-use.active.description",
+          title: "school-refusal-period-in-use.active.title",
+        },
+      ],
+    ]);
     error.mockRestore();
   });
 

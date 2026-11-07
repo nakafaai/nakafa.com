@@ -12,6 +12,7 @@
     "sort-newest": "Newest",
     "no-results": "No results.",
     "searching": "Looking through the list.",
+    "more": "Show {count} more",
     "no-values": "No values yet",
     "reset": "Reset"
   },
@@ -1075,6 +1076,7 @@
         "renamed": "Cohort renamed",
         "archived": "Cohort archived",
         "restored": "Cohort restored",
+        "removed": "Cohort deleted",
         "grade": {
           "set": "Cohort grade changed"
         }
@@ -1112,6 +1114,7 @@
         "archived": "Period archived",
         "rename": "Period renamed",
         "restored": "Period restored",
+        "removed": "Period deleted",
         "rescheduled": "Period dates changed"
       },
       "person": {
@@ -1369,7 +1372,13 @@
     "invites-search": "Find a name or email",
     "units-search": "Find a school or NPSN",
     "cohort-restore": "Restore",
+    "cohort-delete-title": "Delete {name}?",
+    "cohort-delete-description": "The cohort goes for good. One that holds students, a teacher, classes or reports stays archived instead.",
+    "cohort-delete-confirm": "Delete cohort",
     "period-restore": "Restore",
+    "period-delete-title": "Delete {name}?",
+    "period-delete-description": "The period goes for good. The active one, or one that holds cohorts or classes, stays archived instead.",
+    "period-delete-confirm": "Delete period",
     "no-unit-title": "No active unit yet",
     "no-unit-description": "Restore or add a unit first, because periods and cohorts belong to one.",
     "no-unit-action": "Open units",
@@ -3031,6 +3040,9 @@
     "school-cohort-archived": {
       "title": "Class archived."
     },
+    "school-cohort-deleted": {
+      "title": "Cohort deleted."
+    },
     "school-class-archived": {
       "title": "Classroom archived."
     },
@@ -3068,6 +3080,9 @@
     },
     "school-period-archived": {
       "title": "Period archived."
+    },
+    "school-period-deleted": {
+      "title": "Period deleted."
     },
     "sitting-not-in": {
       "title": "You are not in this sitting.",
@@ -3125,6 +3140,24 @@
       "title": "This period is not active.",
       "description": "Only an active period can be archived."
     },
+    "school-refusal-period-in-use": {
+      "active": {
+        "title": "This period is active.",
+        "description": "Archive the period first, or keep it."
+      },
+      "cohorts": {
+        "title": "This period still holds cohorts.",
+        "description": "Archive the period to keep its cohorts and grades."
+      },
+      "classes": {
+        "title": "This period still holds classes.",
+        "description": "Archive the period to keep its classes and grades."
+      },
+      "promotions": {
+        "title": "A promotion uses this period.",
+        "description": "Archive the period to keep its promotion."
+      }
+    },
     "school-refusal-cohort-name-taken": {
       "title": "This cohort name is already used.",
       "description": "Choose another name for this period."
@@ -3132,6 +3165,32 @@
     "school-refusal-cohort-limit": {
       "title": "No more cohorts fit this period.",
       "description": "Add the cohort to another period instead."
+    },
+    "school-refusal-cohort-in-use": {
+      "members": {
+        "title": "This cohort still holds students.",
+        "description": "Move its students out first, or archive the cohort."
+      },
+      "homeroom": {
+        "title": "This cohort still has a homeroom teacher.",
+        "description": "Remove the teacher first, or archive the cohort."
+      },
+      "classes": {
+        "title": "This cohort still holds classes.",
+        "description": "Archive the cohort to keep its classes and grades."
+      },
+      "sittings": {
+        "title": "This cohort has exam sittings.",
+        "description": "Archive the cohort to keep its sittings and results."
+      },
+      "reports": {
+        "title": "This cohort has report cards.",
+        "description": "Archive the cohort to keep its report cards."
+      },
+      "letters": {
+        "title": "This cohort has graduation letters.",
+        "description": "Archive the cohort to keep its letters."
+      }
     },
     "school-refusal-address-invited": {
       "title": "This address already has an invite.",

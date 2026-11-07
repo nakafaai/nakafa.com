@@ -5,6 +5,7 @@ import {
   archiveCohortChange,
   createCohortChange,
   editCohortChange,
+  removeCohortChange,
   restoreCohortChange,
 } from "@/components/tenant/settings/groups";
 import { isDraft, type Period } from "@/components/tenant/settings/state";
@@ -122,6 +123,20 @@ describe("components/tenant/settings/groups", () => {
     ).toEqual([
       ["7A", "archived"],
       ["8A", "active"],
+    ]);
+  });
+
+  it("takes a deleted cohort out of its list at once, and keeps the others", () => {
+    const local = createLocalStore();
+    const term = period("ganjil", "2026-07-13", "active").id;
+    const seventh = cohort("c-7a", "7A", 7);
+    local.seed(tenancy.cohorts.list, { periodId: term, slug }, [
+      seventh,
+      cohort("c-8a", "8A", 8),
+    ]);
+    removeCohortChange(local.store, { cohortId: seventh.id, slug });
+    expect(Arr.map(cohortsOf(local, term), (item) => item.name)).toEqual([
+      "8A",
     ]);
   });
 });

@@ -135,7 +135,7 @@ const shapeOf = (address: string) =>
 
 /**
  * What the page shows that a reader sees at once: its links, neighbouring controls that touch or differ
- * in height, and a path cut to a stub. Groups draw their parts together by design, and a table scrolls.
+ * in height, a path cut to a stub, and a table row taller than one line. Groups draw their parts together by design, and a table scrolls.
  * The page serializes this function, so it holds every part it reads.
  */
 function readFacts() {
@@ -196,11 +196,28 @@ function readFacts() {
         crumb.clientWidth < 48
     )
     .map((crumb) => `the path cuts "${crumb.textContent}"`);
+  // A row of a data table stands on one line at every width: 48 px, the height of its menu's button with the cell's
+  // padding. A taller row is a cell whose words or badges wrapped, which a table never does.
+  const tall = Array.from(
+    document.querySelectorAll<HTMLTableRowElement>(
+      '[data-slot="table-body"] > tr'
+    )
+  )
+    .filter(
+      (row) =>
+        shown(row) &&
+        row.cells.length > 1 &&
+        row.getBoundingClientRect().height > 49
+    )
+    .map(
+      (row) =>
+        `the row "${row.cells[0]?.textContent?.trim().slice(0, 24)}" stands on more than one line`
+    );
   return {
     links: Array.from(
       document.querySelectorAll<HTMLAnchorElement>("a[href]")
     ).map((link) => link.href),
-    problems: [...problems, ...stubs],
+    problems: [...problems, ...stubs, ...tall],
     sideways:
       document.documentElement.scrollWidth -
       document.documentElement.clientWidth,

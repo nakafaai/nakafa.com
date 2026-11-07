@@ -29,6 +29,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableList } from "@/components/shared/table/list";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
@@ -134,11 +135,9 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     }),
     inviteColumns.list((invite) => invite.roles, {
       cell: (info) => (
-        <div className="inline-flex flex-wrap justify-center gap-1">
-          {Arr.map(info.getValue(), (role) => (
-            <RoleBadge key={role} role={role} />
-          ))}
-        </div>
+        <TableList items={info.getValue()}>
+          {(role) => <RoleBadge role={role} />}
+        </TableList>
       ),
       header: t("invite-role"),
       id: "role",

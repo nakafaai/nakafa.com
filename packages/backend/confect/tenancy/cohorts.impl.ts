@@ -25,6 +25,7 @@ import {
 } from "@repo/backend/confect/tenancy/cohort";
 import { restoreCohort } from "@repo/backend/confect/tenancy/cohort.restore";
 import { edit } from "@repo/backend/confect/tenancy/cohorts.edit";
+import { remove } from "@repo/backend/confect/tenancy/cohorts.remove";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
 import { emailOf } from "@repo/backend/confect/tenancy/email";
 import { cohortMembers } from "@repo/backend/confect/tenancy/members";
@@ -206,6 +207,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(edit),
   Layer.provide(archive),
   Layer.provide(restore),
+  Layer.provide(remove),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(tenantAccess),

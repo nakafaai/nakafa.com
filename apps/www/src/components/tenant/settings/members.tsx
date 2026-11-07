@@ -18,6 +18,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import { Email } from "@repo/backend/confect/tenancy/schema";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -32,6 +33,7 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableStatus } from "@/components/shared/table/status";
@@ -166,7 +168,15 @@ function SchoolMembersBody() {
       id: "email",
     }),
     memberColumns.list(unitsOf, {
-      cell: (info) => <span dir="auto">{Arr.join(info.getValue(), ", ")}</span>,
+      cell: (info) => (
+        <TableList items={info.getValue()}>
+          {(unit) => (
+            <Badge variant="outline">
+              <span className="truncate">{unit}</span>
+            </Badge>
+          )}
+        </TableList>
+      ),
       header: t("member-units"),
       id: "units",
       options: namedOptions(
@@ -192,11 +202,9 @@ function SchoolMembersBody() {
     }),
     memberColumns.list((member) => member.roles, {
       cell: (info) => (
-        <div className="inline-flex flex-wrap justify-center gap-1">
-          {Arr.map(info.getValue(), (role) => (
-            <RoleBadge key={role} role={role} />
-          ))}
-        </div>
+        <TableList items={info.getValue()}>
+          {(role) => <RoleBadge role={role} />}
+        </TableList>
       ),
       header: t("member-roles"),
       id: "roles",
