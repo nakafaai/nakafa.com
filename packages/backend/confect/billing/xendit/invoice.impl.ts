@@ -25,7 +25,7 @@ const open = FunctionImpl.make(
   spec,
   "open",
   Effect.fn("billing.xendit.invoice.open")(
-    function* ({ invoiceId, offer }) {
+    function* ({ invoiceId }) {
       const { runQuery } = yield* QueryRunner;
       const { runMutation } = yield* MutationRunner;
       const invoice = yield* runQuery(billingInternal.xendit.invoice.payable, {
@@ -45,7 +45,6 @@ const open = FunctionImpl.make(
         accountId: invoice.accountId,
         expiresAt: DateTime.toEpochMillis(session.expires_at),
         invoiceId,
-        offer,
         sessionId: session.payment_session_id,
         url,
       }).pipe(Effect.orDie);
@@ -93,7 +92,7 @@ const record = FunctionImpl.make(
       .table("billingCheckouts")
       .insert({
         accountId: args.accountId,
-        offer: args.offer,
+        offer: "school.invoice",
         rail: "xendit",
         sessionId: args.sessionId,
         url: args.url,

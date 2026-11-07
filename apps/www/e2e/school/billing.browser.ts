@@ -14,6 +14,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** A bank transfer opens the mail client, addressed to Nakafa. */
 const MAILTO_LINK = /^mailto:/u;
 
+/** Pro for 12 months with 10 added accounts, before tax: Rp20.406.000 and 10 times Rp181.260. */
+const PRO_YEAR_TOTAL = /22\.218\.600/u;
+
 /** The number Nakafa gives each invoice. */
 const INVOICE_NUMBER = /^NKF-\d{4}-\d{6}$/u;
 
@@ -31,7 +34,7 @@ async function picture(page: Page, state: string) {
   }
 }
 
-test("an owner upgrades a free school by invoice, and the school shows School once the transfer is recorded", async ({
+test("an owner orders Pro with added accounts by invoice, and the school shows Pro once the transfer is recorded", async ({
   baseURL,
   browser,
 }) => {
@@ -63,44 +66,42 @@ test("an owner upgrades a free school by invoice, and the school shows School on
 
   await page.goto(address("/settings/billing"));
   const planTitle = page.locator('[data-slot="card-title"]').first();
-  await expect(planTitle).toHaveText("Free");
-  await expect(
-    page.getByText("Up to 100 students, with every School feature.")
-  ).toBeVisible();
+  await expect(planTitle).toHaveText("Trial");
   await expect(page.getByText("The school has no invoice yet.")).toBeVisible();
-  await picture(page, "free");
+  await picture(page, "trial");
 
-  const upgrade = page.getByRole("button", { name: "Upgrade" });
-  await waitUntilTakenOver(upgrade);
-  await upgrade.click();
+  const choose = page.getByRole("button", { name: "Choose plan" });
+  await waitUntilTakenOver(choose);
+  await choose.click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByText("This semester")).toBeVisible();
-  await expect(dialog.getByText("This school year")).toBeVisible();
+  await expect(dialog.getByText("Pro", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Max", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "+10" }).click();
+  // Pro for 12 months at 5 percent off, with 10 added accounts at Rp181.260 each.
+  await expect(dialog.getByText(PRO_YEAR_TOTAL)).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath("billing-dialog-1440.png"),
   });
-  await dialog.getByText("This school year").click();
   await dialog.getByRole("button", { name: "Issue invoice" }).click();
 
-  const invoice = page.getByRole("cell", { name: INVOICE_NUMBER });
-  await expect(invoice).toBeVisible();
-  await picture(page, "invoice");
-  await page.getByRole("button", { name: "More actions" }).click();
   await expect(
-    page.getByRole("menuitem", { name: "Pay by transfer" })
+    page.getByRole("link", { name: "Pay by transfer" })
   ).toHaveAttribute("href", MAILTO_LINK);
+  await picture(page, "invoice");
+  await page.getByRole("button", { name: "View invoices" }).click();
+  const sheet = page.getByRole("dialog");
+  const invoice = sheet.getByRole("cell", { name: INVOICE_NUMBER });
+  await expect(invoice).toBeVisible();
   await page.screenshot({
-    path: test.info().outputPath("billing-invoice-menu-1440.png"),
+    path: test.info().outputPath("billing-invoices-1440.png"),
   });
-  await page.keyboard.press("Escape");
-
   const number = (await invoice.textContent()) ?? "";
   await Effect.runPromise(recordTransfer(number, `BCA-${school.slug}`));
-  await expect(planTitle).toHaveText("School");
-  await expect(page.getByRole("cell", { name: "Paid" })).toBeVisible();
-  await expect(page.getByText("Every student is paid for.")).toBeVisible();
-  // Two paid students hold 100 Nina credits each a month in the school's pool.
-  await expect(page.getByText("0 of 200 used")).toBeVisible();
+  await expect(sheet.getByRole("cell", { name: "Paid" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(planTitle).toHaveText("Pro");
+  // 110 paid accounts hold 6 AI credits each a month in the school's pool.
+  await expect(page.getByText("0 of 660 used this month")).toBeVisible();
   await picture(page, "paid");
   await page.emulateMedia({ colorScheme: "dark" });
   await page.setViewportSize({ height: 900, width: 1440 });

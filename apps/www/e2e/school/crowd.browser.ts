@@ -38,24 +38,27 @@ const CROWD_ROWS: (string | number | null)[][] = [
 ];
 
 /**
- * Pays the school's plan by transfer, because the free plan holds 100 students and refuses the rest of the crowd.
- * A school upgrades once it enrolls a student, so the first one comes before the crowd.
+ * Pays Max by transfer, because the trial holds 20 accounts and refuses the rest of the crowd, and Max holds 500.
+ * A school pays once it enrolls a student, so the first one comes before the crowd.
  */
 async function payForSchool(page: Page, address: (path: string) => string) {
   await page.goto(address("/settings/billing"));
-  const upgrade = page.getByRole("button", { name: "Upgrade" });
-  await waitUntilTakenOver(upgrade);
-  await upgrade.click();
+  const choose = page.getByRole("button", { name: "Choose plan" });
+  await waitUntilTakenOver(choose);
+  await choose.click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByText("This school year").click();
+  await dialog.getByText("Max", { exact: true }).click();
   await dialog.getByRole("button", { name: "Issue invoice" }).click();
-  const invoice = page.getByRole("cell", { name: INVOICE_NUMBER });
+  await page.getByRole("button", { name: "View invoices" }).click();
+  const sheet = page.getByRole("dialog");
+  const invoice = sheet.getByRole("cell", { name: INVOICE_NUMBER });
   await expect(invoice).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   const number = (await invoice.textContent()) ?? "";
   await Effect.runPromise(recordTransfer(number, `BCA-${number}`));
-  await expect(page.getByRole("cell", { name: "Paid" })).toBeVisible({
+  await expect(sheet.getByRole("cell", { name: "Paid" })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+  await page.keyboard.press("Escape");
 }
 
 for (const viewport of [

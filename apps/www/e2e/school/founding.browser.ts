@@ -55,11 +55,11 @@ for (const viewport of VIEWPORTS) {
 
     // Each size names the plan suggested for it before the founder chooses.
     await expect(
-      page.getByText("Free plan, up to 100 students.")
+      page.getByText("Free trial for 30 days, up to 20 accounts.")
     ).toBeVisible();
-    await expect(page.getByText("School plan, paid per student.")).toHaveCount(
-      2
-    );
+    await expect(
+      page.getByText("Pro or Max, every role counted as one account.")
+    ).toHaveCount(2);
     await expect(
       page.getByText("School plan, with the founder's help.")
     ).toBeVisible();

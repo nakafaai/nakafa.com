@@ -64,7 +64,9 @@ function settingsSection(
 /**
  * The one table of the school settings surface: every group, in sidebar order,
  * with the sections it holds. The sidebar, the breadcrumb header, and the section
- * metadata all derive from it, so a new section has exactly one declaration.
+ * metadata all derive from it, so a new section has exactly one declaration. The
+ * school group's sections stand alone in the sidebar; every other group folds its
+ * sections under its own name.
  */
 const SCHOOL_SETTINGS_GROUPS = [
   {
@@ -79,6 +81,20 @@ const SCHOOL_SETTINGS_GROUPS = [
             to: "/school/$slug/settings/profile",
           }) satisfies LinkTarget
       ),
+      settingsSection(
+        "billing",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/billing",
+          }) satisfies LinkTarget
+      ),
+    ],
+  },
+  {
+    key: "academic",
+    sections: [
       settingsSection(
         "periods",
         (slug) =>
@@ -122,15 +138,6 @@ const SCHOOL_SETTINGS_GROUPS = [
             from: LOCALE_ROUTE,
             params: { slug },
             to: "/school/$slug/settings/units",
-          }) satisfies LinkTarget
-      ),
-      settingsSection(
-        "billing",
-        (slug) =>
-          ({
-            from: LOCALE_ROUTE,
-            params: { slug },
-            to: "/school/$slug/settings/billing",
           }) satisfies LinkTarget
       ),
     ],

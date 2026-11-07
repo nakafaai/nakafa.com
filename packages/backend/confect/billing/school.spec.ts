@@ -4,15 +4,13 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
+import { PlanPeriod, SchoolOrder } from "@repo/backend/confect/billing/quote";
 import {
   BillingRail,
   billingInvoiceValidator,
 } from "@repo/backend/confect/billing/schema";
-import {
-  CheckoutOfferUnavailableWire,
-  SchoolSeatsPaidWire,
-} from "@repo/backend/confect/billing/spec";
-import { SchoolOffer, TermOffer } from "@repo/backend/confect/billing/term";
+import { SchoolPlanMissingWire } from "@repo/backend/confect/billing/spec";
+import { SchoolPaidTierKey } from "@repo/backend/confect/billing/tiers";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
@@ -20,21 +18,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema, Struct } from "effect";
 
 /**
- * What one School offer would cost if the school paid for it now: the students it
- * bills, each one's price, and the period it covers. An invoice term is priced for
- * its days left; a Polar subscription starts now at the catalog price.
- */
-const SchoolQuote = Schema.Struct({
-  offer: SchoolOffer,
-  seats: Schema.Int,
-  unitAmount: Schema.Int,
-  total: Schema.Int,
-  periodStart: Schema.Finite,
-  periodEnd: Schema.Finite,
-});
-
-/**
- * One invoice as the billing page lists it, with the students it pays for. The
+ * One invoice as the billing page lists it, with the accounts it pays for. The
  * number is plain text on the wire, so the page can list an invoice it has asked
  * for before the server numbers it.
  */
@@ -49,39 +33,57 @@ const InvoiceRow = Schema.Struct({
     "paymentLink",
   ]),
   number: Schema.String,
-  seats: Schema.Int,
+  accounts: Schema.Int,
 });
 
-/** The plan a school is on: free up to its limit of students (K41), or School, which pays for its seats until a date. */
-const SchoolPlan = Schema.Union([
+/** What a school's members drew from its shared AI credits this month, and what its grants hold. */
+const SchoolCredits = Schema.Struct({
+  capacity: Schema.Int,
+  used: Schema.Int,
+});
+
+/**
+ * The plan a school is on: the trial until the day it ends; Pro or Max over its
+ * period, with the accounts it added and its shared AI credits; or School seats,
+ * from an Enterprise contract or a Polar subscription, until the day they end.
+ */
+const SchoolPlanState = Schema.Union([
   Schema.Struct({
-    kind: Schema.Literal("free"),
-    limit: Schema.Int,
+    kind: Schema.Literal("trial"),
+    endsAt: Schema.Finite,
+  }),
+  Schema.Struct({
+    kind: SchoolPaidTierKey,
+    period: PlanPeriod,
+    added: Schema.Int,
+    credits: SchoolCredits,
   }),
   Schema.Struct({
     kind: Schema.Literal("school"),
-    seats: Schema.Int,
     validTo: Schema.Finite,
-    /** The school's Nina pool this month (K46): what its grants hold for the students they cover, and what its members drew. */
-    nina: Schema.Struct({ capacity: Schema.Int, used: Schema.Int }),
+    credits: SchoolCredits,
   }),
-]).pipe(Schema.toTaggedUnion("kind"));
+]);
 
-/** The school's billing as its Owner and Admin see it: the school, its plan and students, its rail and currency, the offers it can pay, and its invoices. */
+/**
+ * The school's billing as its Owner and Admin see it: its plan, the accounts it
+ * holds against the accounts it may hold, its Drive, its rail and currency, and
+ * its invoices.
+ */
 const SchoolBilling = Schema.Struct({
   tenantId: IdSchema("tenants"),
-  plan: SchoolPlan,
-  students: Schema.Int,
+  plan: SchoolPlanState,
+  accounts: Schema.Struct({ limit: Schema.Int, used: Schema.Int }),
+  driveBytes: Schema.Int,
   rail: BillingRail,
   currency: BillingCurrency,
-  quotes: Schema.Array(SchoolQuote),
   invoices: Schema.Array(InvoiceRow),
 });
 
 /**
- * The billing of a school (K31, K41, K45, K47), which only its Owner and Admin
- * see. `pay` issues the invoice of one term for the students not yet paid for,
- * and opens its hosted payment when the Indonesia rail is Xendit.
+ * The billing of a school (K31, K47), which only its Owner and Admin see. `pay`
+ * issues the invoice of one order, a plan or more accounts, and opens its hosted
+ * payment when the Indonesia rail is Xendit.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -109,13 +111,8 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "pay",
-      args: () => ({ slug: TenantSlug, offer: TermOffer }),
+      args: () => ({ slug: TenantSlug, order: SchoolOrder }),
       returns: () => Schema.Struct({ number: Schema.String }),
-      error: () =>
-        Schema.Union([
-          AccessDenied,
-          CheckoutOfferUnavailableWire,
-          SchoolSeatsPaidWire,
-        ]),
+      error: () => Schema.Union([AccessDenied, SchoolPlanMissingWire]),
     }).middleware(TenantAccess, { action: "billing.manage" })
   );

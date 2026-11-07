@@ -36,17 +36,12 @@ export const BillingOfferKey = Schema.Literals([
   "pro.pass.3",
   "pro.pass.12",
   "pro.topup",
+  "school.invoice",
   "school.seat.month",
   "school.seat.semester",
   "school.seat.year",
 ]);
 export type BillingOfferKey = typeof BillingOfferKey.Type;
-
-/**
- * The students a school on the free plan may enroll (K41). A school on the School
- * plan has no limit and pays per enrolled student (K45).
- */
-export const SCHOOL_FREE_STUDENTS = 100;
 
 /** The monthly Pro price in each currency, in minor units. The catalog and the pages both read this one fact. */
 export const proMonthlyPrices = { EUR: 899, IDR: 79_000, USD: 899 } as const;
@@ -100,6 +95,16 @@ const billingOffers = {
     product: "credits",
     rails: ["polar", "xendit"],
   },
+  // The hosted payment of a School invoice. Its invoice holds the price and the period, from `billing/quote.ts`.
+  "school.invoice": {
+    interval: "pass",
+    months: 1,
+    prices: {},
+    product: "school",
+    rails: ["xendit"],
+  },
+  // The seat offers below name checkouts and subscriptions made before the plans of November 2026, which
+  // production still holds. Nothing sells them; they go with the rows that name them.
   "school.seat.month": {
     interval: "month",
     months: 1,

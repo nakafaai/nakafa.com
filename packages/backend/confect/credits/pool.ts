@@ -5,13 +5,17 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
 import { runningSchoolGrants } from "@repo/backend/confect/billing/school";
+import { schoolAccount } from "@repo/backend/confect/billing/tiers";
 import { MAX_CREDITS_PER_RESPONSE } from "@repo/backend/confect/credits/constants";
 import type { CreditPoolDraw } from "@repo/backend/confect/credits/schema";
 import { DEFAULT_NINA_DAILY_CREDITS } from "@repo/backend/confect/tenancy/policy";
 import { Array as Arr, Clock, DateTime, Effect, Option } from "effect";
 
-/** Credits each student a School grant covers adds to the school's shared Nina pool every month (K46). */
-const POOL_CREDITS_PER_SEAT = 100;
+/**
+ * Credits each account a School grant covers adds to the school's shared Nina pool every month: Pro's 600 for 100
+ * accounts, Max's 3,000 for 500, and the same for each added account.
+ */
+const POOL_CREDITS_PER_SEAT = schoolAccount.credits;
 
 /** The most school memberships one member is read through when their pool is found. */
 const MAX_MEMBERSHIPS = 50;
@@ -41,7 +45,7 @@ export const schoolCreditsOf = Effect.fn("credits.pool.creditsOf")(function* (
 /**
  * The school pool a member draws Nina credits from (K46): a member whose Pro
  * comes from a school's School grant, not from a grant of their own, draws from
- * that school's shared pool of 100 credits per covered student a month, up to the
+ * that school's shared pool of 6 credits per covered account a month, up to the
  * school's daily cap. A member with a personal Pro grant, and a member of schools
  * whose grants carry no pool (a contract grant), draws from their own allowance.
  */
