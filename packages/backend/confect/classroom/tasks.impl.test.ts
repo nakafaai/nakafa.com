@@ -402,7 +402,12 @@ describe("classroom/tasks", () => {
         const left = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             Effect.all([
-              reader.table("classroomTasks").get(task.id).pipe(Effect.option),
+              reader
+                .table("classroomTasks")
+                .index("by_classId_and_slug", (query) =>
+                  query.eq("classId", forum.classId).eq("slug", task.slug)
+                )
+                .collect(),
               reader
                 .table("classroomSubmissions")
                 .index("by_taskId_and_personId", (query) =>
@@ -412,7 +417,7 @@ describe("classroom/tasks", () => {
             ])
           )
         );
-        expect(left[0]._tag).toBe("None");
+        expect(left[0]).toEqual([]);
         expect(left[1]).toEqual([]);
         const jobs = yield* fixture.run(scheduledJobs);
         expect(
