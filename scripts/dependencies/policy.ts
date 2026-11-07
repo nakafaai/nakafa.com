@@ -224,13 +224,13 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.63.0",
+    approved: "0.67.5",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
   {
-    allowed: ["7.0.2", "catalog:", "npm:typescript@7.0.2"],
-    dependency: "typescript",
+    allowed: ["0.23.0-ts7.1.0-beta", "catalog:"],
+    dependency: "tsrs",
     minimumDeclarations: 1,
   },
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
@@ -326,6 +326,8 @@ export const OBSOLETE_DEPENDENCIES = {
   "@effect/cluster": IN_EFFECT,
   "@effect/experimental": IN_EFFECT,
   "@effect/language-service": "@effect/tsgo, which patches the native compiler",
+  typescript:
+    "tsrs, patched by @effect/tsgo: its compiler, language server, and API (tsrs/sync, tsrs/ast) replace the TypeScript package",
   "@effect/platform": IN_EFFECT,
   "@effect/rpc": IN_EFFECT,
   "@effect/sql": IN_EFFECT,

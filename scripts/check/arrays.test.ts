@@ -1,7 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Order, Path } from "effect";
-import { API, Program, Snapshot } from "typescript/unstable/sync";
+import { Program, Snapshot } from "tsrs/sync";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import {
   fixture,
@@ -26,8 +26,8 @@ afterEach(() => vi.restoreAllMocks());
 /** Lists the array findings of fixture files as `file:line rule`, in file and line order. */
 const judge = Effect.fn("ArrayPolicyTest.judge")(
   function* (files: Readonly<Record<string, string>>) {
-    const { api, configs, modules } = yield* fixture(files);
-    const found = yield* arrayFindings(api, ROOT, configs, modules);
+    const { base, configs, modules } = yield* fixture(files);
+    const found = yield* arrayFindings(base, ROOT, configs, modules);
     return Arr.map(
       Arr.sort(found, ORDER),
       ({ file, line, rule }) => `${file}:${line} ${rule}`
@@ -40,11 +40,11 @@ const judge = Effect.fn("ArrayPolicyTest.judge")(
 /** The typed failure of judging the root project's module after `breakCompiler` has broken the compiler. */
 const judgmentFailure = Effect.fn("ArrayPolicyTest.judgmentFailure")(
   function* (breakCompiler: () => void) {
-    const { api, configs, modules } = yield* fixture(
+    const { base, configs, modules } = yield* fixture(
       withProject({ "scripts/verdicts/declared.ts": CALL })
     );
     breakCompiler();
-    return yield* arrayFindings(api, ROOT, configs, modules).pipe(Effect.flip);
+    return yield* arrayFindings(base, ROOT, configs, modules).pipe(Effect.flip);
   },
   Effect.scoped,
   Effect.provide(NodeServices.layer)
@@ -81,7 +81,7 @@ describe("array findings by project", () => {
     "judges a module in its nearest project, one project at a time",
     () =>
       Effect.gen(function* () {
-        const update = vi.spyOn(API.prototype, "updateSnapshot");
+        const open = vi.spyOn(Snapshot.prototype, "getConfiguredProject");
         assert.deepStrictEqual(
           yield* judge({
             [PROJECT_CONFIG]: PROJECT,
@@ -98,16 +98,10 @@ describe("array findings by project", () => {
         const web = `${ROOT}/scripts/web/tsconfig.json`;
         assert.deepStrictEqual(
           Arr.takeRight(
-            Arr.map(update.mock.calls, ([params]) => params),
+            Arr.map(open.mock.calls, ([config]) => config),
             2
           ),
-          [
-            { closeProjects: [], openProjects: [web] },
-            {
-              closeProjects: [web],
-              openProjects: [`${ROOT}/${PROJECT_CONFIG}`],
-            },
-          ]
+          [web, `${ROOT}/${PROJECT_CONFIG}`]
         );
       })
   );
@@ -116,7 +110,7 @@ describe("array findings by project", () => {
     "judges a module in the project above its nearest one when that one excludes it",
     () =>
       Effect.gen(function* () {
-        const update = vi.spyOn(API.prototype, "updateSnapshot");
+        const open = vi.spyOn(Snapshot.prototype, "getConfiguredProject");
         assert.deepStrictEqual(
           yield* judge({
             [PROJECT_CONFIG]: PROJECT,
@@ -129,16 +123,10 @@ describe("array findings by project", () => {
         const nested = `${ROOT}/packages/contracts/tsconfig.json`;
         assert.deepStrictEqual(
           Arr.takeRight(
-            Arr.map(update.mock.calls, ([params]) => params),
+            Arr.map(open.mock.calls, ([config]) => config),
             2
           ),
-          [
-            { closeProjects: [], openProjects: [nested] },
-            {
-              closeProjects: [nested],
-              openProjects: [`${ROOT}/${PROJECT_CONFIG}`],
-            },
-          ]
+          [nested, `${ROOT}/${PROJECT_CONFIG}`]
         );
       })
   );
@@ -147,7 +135,7 @@ describe("array findings by project", () => {
     "judges a module that the nearest project and the project above both contain once, in the nearest",
     () =>
       Effect.gen(function* () {
-        const update = vi.spyOn(API.prototype, "updateSnapshot");
+        const open = vi.spyOn(Snapshot.prototype, "getConfiguredProject");
         assert.deepStrictEqual(
           yield* judge({
             [PROJECT_CONFIG]: PROJECT,
@@ -157,18 +145,13 @@ describe("array findings by project", () => {
           ["packages/web/value.ts:2 array-method"]
         );
         // The fixture's in-memory parse opens first. The project above has nothing left to judge, so it never opens.
-        assert.strictEqual(update.mock.calls.length, 2);
+        assert.strictEqual(open.mock.calls.length, 2);
         assert.deepStrictEqual(
           Arr.takeRight(
-            Arr.map(update.mock.calls, ([params]) => params),
+            Arr.map(open.mock.calls, ([config]) => config),
             1
           ),
-          [
-            {
-              closeProjects: [],
-              openProjects: [`${ROOT}/packages/web/tsconfig.json`],
-            },
-          ]
+          [`${ROOT}/packages/web/tsconfig.json`]
         );
       })
   );
@@ -231,11 +214,9 @@ describe("array findings by project", () => {
       Effect.gen(function* () {
         const cause = new Error("native snapshot unavailable");
         const failure = yield* judgmentFailure(() => {
-          vi.spyOn(API.prototype, "updateSnapshot").mockImplementationOnce(
-            () => {
-              throw cause;
-            }
-          );
+          vi.spyOn(Snapshot.prototype, "update").mockImplementationOnce(() => {
+            throw cause;
+          });
         });
         assert.deepStrictEqual(
           [failure._tag, failure.cause, failure.message],
@@ -247,9 +228,10 @@ describe("array findings by project", () => {
   it.effect("fails when the snapshot omits a project", () =>
     Effect.gen(function* () {
       const failure = yield* judgmentFailure(() => {
-        vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(
-          undefined
-        );
+        vi.spyOn(
+          Snapshot.prototype,
+          "getConfiguredProject"
+        ).mockReturnValueOnce(undefined);
       });
       assert.deepStrictEqual(
         [failure._tag, failure.cause, failure.message],

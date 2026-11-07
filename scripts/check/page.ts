@@ -13,7 +13,7 @@ import {
   isVariableDeclaration,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { imports } from "#scripts/check/kinds";
 import { descendants, type parseSources } from "#scripts/check/source";
 import { wrapped } from "#scripts/check/wrapper";

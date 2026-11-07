@@ -53,8 +53,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.67.4",
-    "Compiler patching moves with TypeScript and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). The patch stays on 0.63.0: 0.64 and 0.65 add the brandedSchemaClasses option and new diagnostics (effectSucceedWithUndefined, matchToResultOrOption, matchBooleanToIsSuccess, resultMatchToFromResult, mapSomeCatchNoSuchElement, suspendFailToFailSync, effectTryWithoutCatch, globalJson, provideMergeAllToArray, typeUnionToSchemaUnion, yieldInCallArgument), each of which base.json decides in both repositories in one change. 0.66 and 0.67 add CLI proxy commands this repository does not use. Checked 7 November 2026.",
+    "0.67.5",
+    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.67.5 is the adopted release: it patches tsrs 0.23.0-ts7.1.0-beta, which replaces the TypeScript package, and base.json decides the twelve rules that 0.64 to 0.67 add. Checked 7 November 2026.",
   ],
   [
     "vitest@latest",
@@ -76,7 +76,11 @@ export const REGISTRY_REVIEWS = [
     "4.1.1",
     "nakafa.com declares 4.1.1, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort, 3.0.0 moved them onto effect/crypto, and 4.0.0 reads a typed number with any decimal separator and Arabic-Indic digits.",
   ],
-  ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
+  [
+    "tsrs@latest",
+    "0.23.0-ts7.1.0-beta",
+    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to the release @effect/tsgo 0.67.5 patches. Every typecheck, the language server, and the source check's compiler API run on it. A new release lands with the @effect/tsgo release that supports it. Checked 7 November 2026.",
+  ],
   [
     "ai@latest",
     "7.0.164",

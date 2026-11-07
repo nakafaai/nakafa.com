@@ -38,12 +38,12 @@ export const fixture = Effect.fn("ArrayTest.fixture")(function* (
       : Result.succeed({ file, sourceText })
   );
   const parsed = yield* parseSources(sources);
-  const api = yield* openCompiler(
+  const base = yield* openCompiler(
     virtualFiles(files),
     "Unable to start the array fixture compiler."
   );
   return {
-    api,
+    base,
     configs: Arr.filter(Rec.keys(files), isProjectConfig),
     modules: parsed.modules,
   };
@@ -56,16 +56,14 @@ export const fixture = Effect.fn("ArrayTest.fixture")(function* (
 export const typedProject = Effect.fn("ArrayTest.typedProject")(function* (
   files: Readonly<Record<string, string>>
 ) {
-  const api = yield* openCompiler(
+  const base = yield* openCompiler(
     virtualFiles(files),
     "Unable to start the array fixture compiler."
   );
   const configPath = `${ROOT}/${PROJECT_CONFIG}`;
   const snapshot = yield* Effect.acquireRelease(
-    Effect.sync(() =>
-      api.updateSnapshot({ openProjects: [configPath], closeProjects: [] })
-    ),
+    Effect.sync(() => base.update({ openProjects: [configPath] })),
     (resource) => Effect.sync(() => resource.dispose())
   );
-  return yield* Effect.fromNullishOr(snapshot.getProject(configPath));
+  return yield* Effect.fromNullishOr(snapshot.getConfiguredProject(configPath));
 });

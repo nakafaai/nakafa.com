@@ -85,10 +85,7 @@ function BillingAction() {
                 source: "pricing-google-sign-in",
               })
             ),
-            Effect.match({
-              onFailure: () => false,
-              onSuccess: () => true,
-            })
+            Effect.isSuccess
           )
         );
         if (!started) {

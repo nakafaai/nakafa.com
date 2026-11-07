@@ -1,6 +1,6 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
-import { API, Checker, Snapshot } from "typescript/unstable/sync";
+import { API, Checker, Snapshot } from "tsrs/sync";
 import { effectFindings, effectTestViolations } from "#scripts/check/effect";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
@@ -117,7 +117,7 @@ describe("native compiler startup", () => {
       Effect.gen(function* () {
         const cause = new Error("native compiler unavailable");
         vi.resetModules();
-        vi.doMock("typescript/unstable/sync", () => ({
+        vi.doMock("tsrs/sync", () => ({
           API: class {
             constructor() {
               throw cause;
@@ -141,7 +141,7 @@ describe("native compiler startup", () => {
       }).pipe(
         Effect.ensuring(
           Effect.sync(() => {
-            vi.doUnmock("typescript/unstable/sync");
+            vi.doUnmock("tsrs/sync");
             vi.resetModules();
           })
         )

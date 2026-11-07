@@ -32,7 +32,7 @@ import {
   type ParameterDeclaration,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
 import { renderDeclaration } from "#scripts/check/react";
 import { children } from "#scripts/check/source";

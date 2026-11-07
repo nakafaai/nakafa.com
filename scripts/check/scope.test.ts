@@ -6,7 +6,7 @@ import {
   isIdentifier,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { boundFunctions } from "#scripts/check/scope";
 import { descendants, parseSources } from "#scripts/check/source";
 

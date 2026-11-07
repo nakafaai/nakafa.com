@@ -1,11 +1,7 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
-import {
-  isIdentifier,
-  type SourceFile,
-  SyntaxKind,
-} from "typescript/unstable/ast";
-import { API, Checker, Program, Snapshot } from "typescript/unstable/sync";
+import { isIdentifier, type SourceFile, SyntaxKind } from "tsrs/ast";
+import { API, Checker, Program, Snapshot } from "tsrs/sync";
 import {
   descendants,
   parseSources,
@@ -193,7 +189,7 @@ describe("repository source batch failures", () => {
     Effect.gen(function* () {
       const cause = new Error("native compiler unavailable");
       vi.resetModules();
-      vi.doMock("typescript/unstable/sync", () => ({
+      vi.doMock("tsrs/sync", () => ({
         API: class {
           constructor() {
             throw cause;
@@ -217,7 +213,7 @@ describe("repository source batch failures", () => {
     }).pipe(
       Effect.ensuring(
         Effect.sync(() => {
-          vi.doUnmock("typescript/unstable/sync");
+          vi.doUnmock("tsrs/sync");
           vi.resetModules();
         })
       )
@@ -230,11 +226,13 @@ describe("repository source batch failures", () => {
       const parse = Effect.scoped(
         parseSources([{ file: FILE, sourceText: "export {};" }])
       ).pipe(Effect.flip);
-      vi.spyOn(API.prototype, "updateSnapshot").mockImplementationOnce(() => {
+      vi.spyOn(Snapshot.prototype, "update").mockImplementationOnce(() => {
         throw cause;
       });
       const snapshotFailure = yield* parse;
-      vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(undefined);
+      vi.spyOn(Snapshot.prototype, "getConfiguredProject").mockReturnValueOnce(
+        undefined
+      );
       const projectFailure = yield* parse;
       vi.spyOn(Program.prototype, "getSourceFile").mockReturnValueOnce(
         undefined

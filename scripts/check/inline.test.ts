@@ -144,7 +144,7 @@ export function shadowed<Item>(rows: { keys: { [Item in Keys]: Item }; id: strin
       Effect.gen(function* () {
         assert.deepStrictEqual(
           yield* shapes(`import { type Color, Vector3 } from "three";
-import type { CallExpression, PropertyAccessExpression } from "typescript/unstable/ast";
+import type { CallExpression, PropertyAccessExpression } from "tsrs/ast";
 let particles: { readonly position: Vector3; readonly id: string }[];
 export function isPainted(value: unknown): value is { readonly color: Color } {
   return check(value);

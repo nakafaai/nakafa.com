@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, Order, Result } from "effect";
-import { isIdentifier, type Node } from "typescript/unstable/ast";
+import { isIdentifier, type Node } from "tsrs/ast";
 import { descendants, parseSources } from "#scripts/check/source";
 import { isVariable, variableValues } from "#scripts/check/variables";
 

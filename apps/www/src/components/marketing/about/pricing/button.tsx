@@ -113,10 +113,7 @@ async function startVisitorSignIn(
         Effect.tapError((error) =>
           reportClientException(error, { source: "pricing-google-sign-in" })
         ),
-        Effect.match({
-          onFailure: () => false,
-          onSuccess: () => true,
-        })
+        Effect.isSuccess
       )
   );
 }
