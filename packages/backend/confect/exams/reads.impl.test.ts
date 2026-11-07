@@ -2,6 +2,7 @@ import type { GenericId } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { languageCost } from "@repo/backend/confect/spend/rates";
 import { nf } from "@repo/backend/test/editor";
 import {
   examImage,
@@ -108,6 +109,33 @@ describe("exams/reads read", () => {
           expect.objectContaining({ mediaType: "image/png", type: "file" }),
         ]);
         expect(yield* fixture.run(questionRows)).toHaveLength(1);
+        // The read was held against the teacher before the model was called,
+        // and settled to the tokens it measured.
+        const spend = yield* Effect.promise(() =>
+          fixture.convex.run((ctx) => ctx.db.query("vendorSpend").collect())
+        );
+        expect(
+          Arr.map(spend, ({ calls, held, payer, spent, vendor }) => ({
+            calls,
+            held,
+            payer: payer.kind,
+            spent,
+            vendor,
+          }))
+        ).toEqual([
+          {
+            calls: 1,
+            held: 0,
+            payer: "learner",
+            spent: languageCost({
+              input: 12,
+              output: 4,
+              cacheRead: 0,
+              cacheWrite: 0,
+            }),
+            vendor: "anthropic",
+          },
+        ]);
       })
   );
 

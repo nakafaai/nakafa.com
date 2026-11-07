@@ -10,7 +10,7 @@ import { syncDocuments } from "@repo/backend/confect/contents/sections/sync";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { GatewayTest, provider } from "@repo/backend/test/gateway";
+import { GatewayIsolated, provider } from "@repo/backend/test/gateway";
 import {
   embedWithKnowledge,
   embedWithRefusal,
@@ -102,7 +102,7 @@ async function setup() {
   await t.mutation(seedKnowledge);
   const layer = (ctx: ActionCtx) =>
     Layer.mergeAll(
-      GatewayTest,
+      GatewayIsolated,
       RegisteredFunction.actionLayer(confectSchema, ctx)
     );
   const sync = (

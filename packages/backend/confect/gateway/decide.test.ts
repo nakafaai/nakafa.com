@@ -49,12 +49,16 @@ describe("A decision", () => {
     () =>
       Effect.gen(function* () {
         const doDecide = vi.fn<DoDecide>(() => Promise.resolve(answered));
-        const answers = yield* decideWith(
+        const decided = yield* decideWith(
           modelOf(doDecide),
           "Kelas 12 IPA.",
           questions
         );
-        expect(answers).toEqual(answered.answers);
+        // The model reported no usage, so the tokens it read are not known.
+        expect(decided).toEqual({
+          answers: answered.answers,
+          input: undefined,
+        });
         expect(doDecide).toHaveBeenCalledExactlyOnceWith(
           expect.objectContaining({
             questions,
@@ -78,7 +82,7 @@ describe("A decision", () => {
           decideWith(modelOf(doDecide), "Kelas 12 IPA.", questions)
         );
         yield* Effect.promise(() => vi.advanceTimersByTimeAsync(2000));
-        expect(yield* Fiber.join(fiber)).toEqual(answered.answers);
+        expect((yield* Fiber.join(fiber)).answers).toEqual(answered.answers);
         expect(doDecide).toHaveBeenCalledTimes(2);
       })
   );

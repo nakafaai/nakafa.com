@@ -61,7 +61,7 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "canRead",
       args: () => ({ examId: Id("exams"), slug: TenantSlug }),
-      returns: () => Schema.Struct({}),
+      returns: () => Schema.Struct({ tenantId: Id("tenants") }),
       error: () => AccessDenied,
     })
       .middleware(Session)

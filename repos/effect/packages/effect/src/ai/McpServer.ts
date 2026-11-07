@@ -14,6 +14,7 @@
 import * as Arr from "../Array.ts"
 import * as Cause from "../Cause.ts"
 import * as Context from "../Context.ts"
+import * as Digest from "../crypto/Digest.ts"
 import * as Data from "../Data.ts"
 import * as Deferred from "../Deferred.ts"
 import * as Duration from "../Duration.ts"
@@ -53,6 +54,7 @@ import * as AiError from "./AiError.ts"
 import * as McpCore from "./internal/mcpCore.ts"
 import * as McpProtocolInternal from "./internal/mcpProtocol.ts"
 import * as McpRuntime from "./internal/mcpRuntime.ts"
+import * as McpSkills from "./internal/mcpSkills.ts"
 import * as InternalStructuredOutput from "./internal/structured-output.ts"
 import type * as McpProtocol from "./McpProtocol.ts"
 import * as McpSchema from "./McpSchema.ts"
@@ -106,6 +108,8 @@ interface QueuedServerNotification {
 
 const internalState = new WeakMap<object, {
   readonly core: McpCore.McpCore
+  // Registers a skill's own file, skipping the check that reserves it for the skill.
+  readonly addSkillFile: McpServer["Service"]["addResource"]
   readonly notifications: Queue.Dequeue<QueuedServerNotification>
   readonly notificationDelivery: { consumers: number; listChangeRevision: number; requestEndpoints: number }
   readonly globalMiddleware: Array<middleware.Fn<any, any, any>>
@@ -314,6 +318,9 @@ export type MiddlewareMethod =
   | "resources/list"
   | "resources/templates/list"
   | "prompts/list"
+  | "skills/list"
+  | "skills/get"
+  | "resources/directory/read"
 
 /**
  * Request metadata passed to MCP middleware.
@@ -322,12 +329,17 @@ export type MiddlewareMethod =
  *
  * `target` is the tool name, the requested resource URI, or the prompt name.
  * For `completion/complete` it is the prompt name, or the URI template of the
- * resource template being completed. `payload` holds the request parameters.
+ * resource template being completed. For `skills/get` it is the URI of the
+ * skill's `SKILL.md`. `payload` holds the request parameters.
  *
  * On list requests, middleware runs only when it wraps a {@link visibility},
  * once for each registration it wraps. `target` is then the tool name, the
  * resource URI, the URI template or the prompt name of that registration, and
- * `payload` is `undefined`.
+ * `payload` is `undefined`. `skills/list` and `resources/directory/read` are
+ * list requests whose `target` is the `SKILL.md` URI of each skill; a
+ * directory read checks only the skills that have the directory. A skill's
+ * files are resources, checked as `resources/list` and `resources/read` with
+ * their own URIs.
  *
  * `headers` are the HTTP request headers. They are empty on stdio, on custom
  * transports and for in-process calls. `sessionId` is the `Mcp-Session-Id`
@@ -725,23 +737,48 @@ class MiddlewareImpl {
   }
 }
 
-// The innermost middleware comes first.
+// The innermost middleware comes first. Each stack keeps its own order, and
+// where that leaves the order open, stacks provided further outside, which come
+// first in the context, run further outside. Stacks that order the same
+// middleware both ways have no common order, so insertion order decides.
 const getMiddleware = (context: Context.Context<never>): ReadonlyArray<AnyMiddlewareFn> => {
-  const stacks: Array<ReadonlyArray<AnyMiddlewareFn>> = []
-  let maxLength = 0
-  for (const [key, value] of context.mapUnsafe) {
-    if (key.startsWith(middlewareKeyPrefix)) {
-      stacks.push(value)
-      maxLength = Math.max(maxLength, value.length)
+  // The middleware directly inside each middleware, and how many of those
+  // directly outside it are still unplaced.
+  const inners = new Map<AnyMiddlewareFn, Array<AnyMiddlewareFn>>()
+  const unplacedOuters = new Map<AnyMiddlewareFn, number>()
+  for (const [key, stack] of context.mapUnsafe) {
+    if (!key.startsWith(middlewareKeyPrefix)) continue
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const fn = stack[i]
+      if (!inners.has(fn)) {
+        inners.set(fn, [])
+        unplacedOuters.set(fn, 0)
+      }
+      const outer = stack[i + 1]
+      if (outer !== undefined && outer !== fn) {
+        inners.get(outer)!.push(fn)
+        unplacedOuters.set(fn, unplacedOuters.get(fn)! + 1)
+      }
     }
   }
-  const unique = new Set<AnyMiddlewareFn>()
-  for (let i = maxLength - 1; i >= 0; i--) {
-    for (const stack of stacks) {
-      if (i < stack.length) unique.add(stack[i])
+  // Repeatedly places the first middleware with nothing left to place outside it.
+  const outermostFirst: Array<AnyMiddlewareFn> = []
+  while (unplacedOuters.size > 0) {
+    let next = unplacedOuters.keys().next().value!
+    for (const [fn, count] of unplacedOuters) {
+      if (count === 0) {
+        next = fn
+        break
+      }
+    }
+    unplacedOuters.delete(next)
+    outermostFirst.push(next)
+    for (const fn of inners.get(next)!) {
+      const count = unplacedOuters.get(fn)
+      if (count !== undefined) unplacedOuters.set(fn, count - 1)
     }
   }
-  return Arr.fromIterable(unique).reverse()
+  return outermostFirst.reverse()
 }
 
 const isMcpError = (error: unknown): error is McpErrorBase =>
@@ -759,7 +796,7 @@ const internalError = new InternalError({ message: "Internal error" })
 const rejectWith = (error: McpErrorBase) =>
   Effect.fail(new McpCore.RequestRejected({ code: error.code, message: error.message, data: error.data, error }))
 
-type CallMethod = "tools/call" | "resources/read" | "prompts/get" | "completion/complete"
+type CallMethod = "tools/call" | "resources/read" | "prompts/get" | "completion/complete" | "skills/get"
 
 type ListMethod = Exclude<MiddlewareMethod, CallMethod>
 
@@ -768,6 +805,7 @@ interface NotFoundErrors {
   readonly "resources/read": McpCore.ResourceNotFound
   readonly "prompts/get": McpCore.PromptNotFound
   readonly "completion/complete": InvalidParams
+  readonly "skills/get": McpCore.SkillNotFound
 }
 
 const notFound = (method: CallMethod, target: string): NotFoundErrors[CallMethod] => {
@@ -780,6 +818,8 @@ const notFound = (method: CallMethod, target: string): NotFoundErrors[CallMethod
       return new McpCore.PromptNotFound({ name: target })
     case "completion/complete":
       return new InvalidParams({ message: "Unknown completion reference or argument" })
+    case "skills/get":
+      return new McpCore.SkillNotFound({ uri: target })
   }
 }
 
@@ -1127,6 +1167,38 @@ export class McpServer extends Context.Service<McpServer, {
         ))
     })
 
+    // Checking skill ownership and both writes happen in one synchronous step,
+    // so a skill cannot claim the URI in between. Skill files skip the check.
+    const addResource = (
+      options: Parameters<McpServer["Service"]["addResource"]>[0],
+      checkOwnership: boolean
+    ): Effect.Effect<void> =>
+      Effect.suspend(() => {
+        if (checkOwnership && internalCore.skills.ownsFile(options.resource.uri)) {
+          return Effect.die(
+            new Cause.IllegalArgumentError(`Resource ${options.resource.uri} is a file of a registered skill`)
+          )
+        }
+        const existingIndex = resources.findIndex(({ resource }) => resource.uri === options.resource.uri)
+        if (existingIndex === -1) {
+          resources.push(options)
+        } else {
+          resources[existingIndex] = options
+        }
+        const { invoke, visible } = makeInvoke(options.services, globalMiddleware)
+        internalCore.resources.register({
+          descriptor: options.resource,
+          visible: visible("resources/list", options.resource.uri),
+          isVisible: isEnabled(options.annotations),
+          read: (invocation) =>
+            invoke(options.handle, invocation, {
+              method: "resources/read",
+              target: options.resource.uri,
+              payload: { uri: options.resource.uri }
+            })
+        })
+        return notifications.client["notifications/resources/list_changed"]({})
+      })
     const service = McpServer.of({
       notifications: notifications.client,
       notifyElicitationComplete: ({ clientId, elicitationId }) =>
@@ -1222,27 +1294,7 @@ export class McpServer extends Context.Service<McpServer, {
       get resourceTemplates() {
         return resourceTemplates
       },
-      addResource: Effect.fnUntraced(function*(options) {
-        const existingIndex = resources.findIndex(({ resource }) => resource.uri === options.resource.uri)
-        if (existingIndex === -1) {
-          resources.push(options)
-        } else {
-          resources[existingIndex] = options
-        }
-        const { invoke, visible } = makeInvoke(options.services, globalMiddleware)
-        yield* internalCore.resources.register({
-          descriptor: options.resource,
-          visible: visible("resources/list", options.resource.uri),
-          isVisible: isEnabled(options.annotations),
-          read: (invocation) =>
-            invoke(options.handle, invocation, {
-              method: "resources/read",
-              target: options.resource.uri,
-              payload: { uri: options.resource.uri }
-            })
-        })
-        yield* notifications.client["notifications/resources/list_changed"]({})
-      }),
+      addResource: (options) => addResource(options, true),
       addResourceTemplate: Effect.fnUntraced(
         function*({ annotations, completions, handle, routerPath, services, template }) {
           const existingIndex = resourceTemplates.findIndex(({ template: current }) =>
@@ -1400,6 +1452,7 @@ export class McpServer extends Context.Service<McpServer, {
     })
     internalState.set(service, {
       core: internalCore,
+      addSkillFile: (options) => addResource(options, false),
       notifications: notificationsQueue,
       notificationDelivery,
       globalMiddleware
@@ -1467,9 +1520,11 @@ export interface CacheHint {
  *
  * Each entry sets the freshness and `cacheScope` of one result kind:
  * `server/discover`, `tools/list`, `resources/list`,
- * `resources/templates/list` and `prompts/list`. Omitted entries, and
- * `resources/read` results, keep `{ ttlMs: 0, cacheScope: "private" }`.
- * Earlier protocol revisions have no cache hints and ignore this option.
+ * `resources/templates/list` and `prompts/list`. `skills` covers the Skills
+ * extension's `skills/list`, `skills/get` and `resources/directory/read`.
+ * Omitted entries, and `resources/read` results, keep
+ * `{ ttlMs: 0, cacheScope: "private" }`. Earlier protocol revisions have no
+ * cache hints and ignore this option.
  *
  * These are hints for clients. The server does not cache results, and
  * visibility and invocation checks still run on every request.
@@ -1491,6 +1546,7 @@ export interface CacheHints {
   readonly resources?: CacheHint | undefined
   readonly resourceTemplates?: CacheHint | undefined
   readonly prompts?: CacheHint | undefined
+  readonly skills?: CacheHint | undefined
 }
 
 // Converts each hint to the wire's nonnegative integer `ttlMs` once, when the server is built.
@@ -2068,7 +2124,7 @@ const runWithRuntime = Effect.fnUntraced(function*(
             const selectedProtocol = clientState?.protocol ?? runtime.protocols[0]
             const profile = reverseKey?.profile ?? clientState?.profile ?? {
               protocolVersion: selectedProtocol.protocolVersion,
-              clientCapabilities: {},
+              clientCapabilities: new McpSchema.ClientCapabilities({}),
               clientInfo: { name: "unknown", version: "unknown" }
             }
             return RcMap.get(
@@ -3050,14 +3106,40 @@ export const registerToolkit: <Tools extends Record<string, Tool.Any>>(
     const annotations = tool.annotations
     const toolMeta = Context.getOrUndefined(annotations, Tool.Meta)
     const isDeclaredFailure = Schema.is(tool.failureSchema)
-    const encodeFailure = Schema.encodeUnknownEffect(tool.failureSchema) as (
-      error: unknown
-    ) => Effect.Effect<unknown, Schema.SchemaError, Tool.HandlerServices<Tools[keyof Tools]>>
+    // MCP content is JSON, so results and declared failures go through their JSON codec.
+    const encodeJson = (schema: Schema.Constraint) => {
+      const encode = Schema.encodeUnknownEffect(Schema.toCodecJson(schema)) as (
+        value: unknown
+      ) => Effect.Effect<unknown, Schema.SchemaError, Tool.HandlerServices<Tools[keyof Tools]>>
+      return (toolResult: unknown) =>
+        Effect.mapError(encode(toolResult), (cause) =>
+          AiError.make({
+            module: "McpServer",
+            method: "registerToolkit",
+            reason: new AiError.ToolResultEncodingError({
+              toolName: tool.name,
+              toolResult,
+              description: cause.message
+            })
+          }))
+    }
+    const encodeFailure = encodeJson(tool.failureSchema)
+    // Successes and "return"-mode failures arrive already encoded by the Toolkit; only their JSON conversion runs here.
+    const encodeReturnedFailure = encodeJson(Schema.toEncoded(tool.failureSchema))
+    const encodeStructured = encodeJson(Schema.toEncoded(tool.successSchema))
+    const failureResult = (encoded: unknown) =>
+      new CallToolResult({ isError: true, content: toolResultContent(encoded) })
     const declaredFailureResult = (error: unknown) =>
       error instanceof Error && error.message !== ""
         ? Effect.succeed(toolErrorResult(error.message))
-        : Effect.map(encodeFailure(error), (encoded) =>
-          new CallToolResult({ isError: true, content: toolResultContent(encoded) }))
+        : Effect.map(encodeFailure(error), failureResult)
+    const successResult = (result: unknown) =>
+      Effect.map(encodeStructured(result), (structuredContent) =>
+        new CallToolResult({
+          isError: false,
+          structuredContent,
+          content: toolResultContent(structuredContent)
+        }))
     const handleCause = (cause: Cause.Cause<unknown>) => {
       const failure = Cause.findFail(cause)
       if (Result.isSuccess(failure)) {
@@ -3113,21 +3195,25 @@ export const registerToolkit: <Tools extends Record<string, Tool.Any>>(
           Stream.unwrap,
           Stream.runLast,
           Effect.flatMap(Effect.fromOption),
-          Effect.flatMap((result) =>
+          Effect.flatMap((result): Effect.Effect<
+            CallToolResult,
+            unknown,
+            Tool.HandlerServices<Tools[keyof Tools]>
+          > => {
+            if (!result.isFailure) {
+              // An absent result, such as `Schema.Void`, has no structured form.
+              return result.encodedResult === undefined
+                ? Effect.succeed(new CallToolResult({ isError: false, content: [] }))
+                : successResult(result.encodedResult)
+            }
             // Declared failures return their encoded payload; anything else is classified by origin.
-            result.isFailure && result.failureOrigin !== "handler"
-              ? Effect.failCause(Cause.annotate(
+            return result.failureOrigin === "handler"
+              ? Effect.map(encodeReturnedFailure(result.encodedResult), failureResult)
+              : Effect.failCause(Cause.annotate(
                 Cause.fail(result.result),
                 Context.make(Toolkit.FailureOrigin, result.failureOrigin ?? "result")
               ))
-              : Effect.succeed(
-                new CallToolResult({
-                  isError: result.isFailure,
-                  structuredContent: result.isFailure ? undefined : result.encodedResult,
-                  content: toolResultContent(result.encodedResult)
-                })
-              )
-          ),
+          }),
           Effect.catchCause(handleCause)
         ) as Effect.Effect<CallToolResult, InvalidParams, never>
       },
@@ -3508,6 +3594,166 @@ export const resource: {
   const register = registerResource(...(arguments as any as [any, any]))
   return (options: any) => Layer.effectDiscard(register(options))
 } as any
+
+/**
+ * A file of a skill: its text, its bytes, or either with an explicit MIME
+ * type. Without one, the MIME type is inferred from the file extension.
+ *
+ * @stability unstable
+ * @category models
+ * @since 4.1.1
+ */
+export type SkillFile = string | Uint8Array | {
+  readonly content: string | Uint8Array
+  readonly mimeType?: string | undefined
+}
+
+/**
+ * Options for {@link registerSkill} and {@link skill}.
+ *
+ * **Details**
+ *
+ * `uri` addresses the skill's `SKILL.md`, as
+ * `skill://<skill-path>/SKILL.md`. Its last path segment is the skill's name,
+ * which must equal the frontmatter's `name`. Other schemes work the same way.
+ *
+ * `files` maps paths relative to the skill root to the skill's files,
+ * `SKILL.md` included. Files are served verbatim, and the skill's listed
+ * frontmatter is parsed from `SKILL.md`. Quote frontmatter strings that a YAML
+ * 1.1 parser reads as another type, such as `yes` or `1.0`.
+ *
+ * @stability unstable
+ * @category models
+ * @since 4.1.1
+ */
+export interface SkillOptions {
+  readonly uri: string
+  readonly files: { readonly "SKILL.md": SkillFile } & Readonly<Record<string, SkillFile>>
+  readonly annotations?: Context.Context<never> | undefined
+}
+
+const skillFileEncoder = new TextEncoder()
+
+// Bytes are copied so that later changes by the caller cannot alter what is
+// served under the listed digest. `Buffer#slice` shares memory, so copy with
+// the `Uint8Array` constructor.
+const toSkillSourceFile = (path: string, file: SkillFile): McpSkills.SourceFile => {
+  const { content, mimeType } = typeof file === "string" || file instanceof Uint8Array ? { content: file } : file
+  return {
+    path,
+    content: typeof content === "string" ? skillFileEncoder.encode(content) : new Uint8Array(content),
+    mimeType
+  }
+}
+
+/**
+ * Registers an Agent Skill under the MCP Skills extension (SEP-2640).
+ *
+ * **Details**
+ *
+ * Each file is registered as a resource, and the skill is listed by
+ * `skills/list` and `skills/get` with a manifest of every file's SHA-256
+ * digest and size, computed from the bytes served. Every directory of the
+ * skill namespace is readable with `resources/directory/read`. The server
+ * declares the extension once any skill is registered.
+ *
+ * Fails when the skill breaks the extension's rules: a name that does not
+ * match the URI, a `SKILL.md` without YAML frontmatter, frontmatter that is
+ * not valid {@link McpSchema.SkillFrontmatter}, a file path that leaves the
+ * skill, or more than 512 files or 16 MiB in all. It also fails when the
+ * skill's directory contains or lies inside another skill's, or one of its
+ * files is already registered as a resource. Registering a resource at the
+ * URI of a skill's file afterwards is a defect.
+ *
+ * SHA-256 runs on `crypto.subtle`.
+ *
+ * @see {@link skill} for the layer-based skill registration wrapper
+ *
+ * @stability unstable
+ * @category handlers
+ * @since 4.1.1
+ */
+export const registerSkill: (options: SkillOptions) => Effect.Effect<void, Cause.IllegalArgumentError, McpServer> =
+  Effect.fnUntraced(function*(options: SkillOptions) {
+    const files = Object.entries(options.files).map(([path, file]) => toSkillSourceFile(path, file))
+    const skill = yield* McpSkills.makeStaticSkill({ uri: options.uri, files }).pipe(
+      Effect.provide(Digest.layerWebCrypto)
+    )
+
+    const registry = yield* McpServer
+    const { addSkillFile, core, globalMiddleware } = internalState.get(registry)!
+    const services = yield* Effect.context<never>()
+    const annotations = options.annotations ?? Context.empty()
+    const { invoke, visible } = makeInvoke(services, globalMiddleware)
+    // Claims the skill's file URIs before they are registered as resources.
+    yield* core.skills.register({
+      entry: skill.entry,
+      isVisible: isEnabled(annotations),
+      visible: visible("skills/list", options.uri),
+      visibleInDirectories: visible("resources/directory/read", options.uri),
+      get: (invocation) =>
+        invoke(Effect.succeed(skill.entry), invocation, {
+          method: "skills/get",
+          target: options.uri,
+          payload: { uri: options.uri }
+        }),
+      directory: (uri) => skill.directories.get(uri)
+    })
+    for (const { content, resource, text } of skill.files) {
+      const { uri, mimeType } = resource
+      yield* addSkillFile({
+        resource: new Resource(resource),
+        annotations,
+        services,
+        handle: Effect.succeed({
+          contents: [text === undefined ? { uri, mimeType, blob: content } : { uri, mimeType, text }]
+        })
+      })
+    }
+  })
+
+/**
+ * Creates a layer that registers an Agent Skill under the MCP Skills extension
+ * (SEP-2640).
+ *
+ * **Example** (Publishing a skill with a supporting file)
+ *
+ * ```ts
+ * import { Layer } from "effect"
+ * import { McpProtocol, McpServer } from "effect/ai"
+ *
+ * const RefundsSkill = McpServer.skill({
+ *   uri: "skill://billing/refunds/SKILL.md",
+ *   files: {
+ *     "SKILL.md": `---
+ * name: refunds
+ * description: Process refunds using the billing tools
+ * ---
+ *
+ * Read references/policy.md before issuing a refund.
+ * `,
+ *     "references/policy.md": "Refunds above CHF 500 require manager approval.\n"
+ *   }
+ * })
+ *
+ * const ServerLayer = RefundsSkill.pipe(
+ *   Layer.provide(McpServer.layerHttp({
+ *     name: "billing",
+ *     version: "1.0.0",
+ *     path: "/mcp",
+ *     protocols: [McpProtocol.v2026_07_28, McpProtocol.v2025_11_25]
+ *   }))
+ * )
+ * ```
+ *
+ * @see {@link registerSkill} for the Effect-level skill registration API
+ *
+ * @stability unstable
+ * @category layers
+ * @since 4.1.1
+ */
+export const skill = (options: SkillOptions): Layer.Layer<never, Cause.IllegalArgumentError, McpServer> =>
+  Layer.effectDiscard(registerSkill(options))
 
 /**
  * Registers an MCP prompt from an Effect program.

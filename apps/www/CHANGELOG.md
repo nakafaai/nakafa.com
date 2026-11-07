@@ -12,7 +12,7 @@
 
 ### Patch Changes
 
-- [#662](https://github.com/nakafaai/nakafa.com/pull/662) [`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Classify the traffic behind server exceptions. Server captures carried no user agent, so PostHog filed every one under automated traffic and hid real visitor faults during triage. `captureServerException` now accepts the requesting user agent and sends it as `$raw_user_agent`. The request-scoped capture seam reads the user agent once through `next/headers`, so every route handler, metadata, and scheduled capture classifies without extra plumbing; the Next.js request-error hook and the chat stream error reporter pass the user agent from their own request headers. The redacted exception payload stays unchanged.
+- [#662](https://github.com/nakafaai/nakafa.com/pull/662) [`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Classify the traffic behind server exceptions. Server captures carried no user agent, so PostHog filed every one under automated traffic and hid real visitor faults during triage. `captureServerException` now accepts the requesting user agent and sends it as `$raw_user_agent`. The request-scoped capture seam reads the user agent once through the framework request headers, so every route handler, metadata, and scheduled capture classifies without extra plumbing; the framework request-error hook and the chat stream error reporter pass the user agent from their own request headers. The redacted exception payload stays unchanged.
 
 - [#730](https://github.com/nakafaai/nakafa.com/pull/730) [`3b02457`](https://github.com/nakafaai/nakafa.com/commit/3b024573b36e69694be1f02187ce08f27a251f07) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Preload only the fonts each page renders. The unused Geist Pixel faces leave
   the font set and theme, Amiri moves to the Quran routes that render it at its
@@ -78,7 +78,7 @@
 
 ### Patch Changes
 
-- [#521](https://github.com/nakafaai/nakafa.com/pull/521) [`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Replace the API and MCP Next.js proxy applications with frameworkless Vercel routing into the Convex-owned runtimes. Remove the orphaned private API and website MCP proxy surfaces, publish one canonical MCP endpoint, and rename the Aksara publication credential to match its owner.
+- [#521](https://github.com/nakafaai/nakafa.com/pull/521) [`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Replace the API and MCP proxy applications with frameworkless routing into the Convex-owned runtimes. Remove the orphaned private API and website MCP proxy surfaces, publish one canonical MCP endpoint, and rename the Aksara publication credential to match its owner.
 - Updated dependencies [[`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143)]:
   - @repo/backend@3.0.0
   - @repo/contents@2.0.0
@@ -171,7 +171,7 @@
 
 ### Minor Changes
 
-- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Upgrade nextjs 16.1, update polar sdk to latest, introducing class materials features, adding schema to class and implementation to add materials
+- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Upgrade the web framework to 16.1, update polar sdk to latest, introducing class materials features, adding schema to class and implementation to add materials
 
 - [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Updating polar sdk to use standalone function instead using whole sdk to fix convex ran out of memory
 

@@ -3,9 +3,18 @@ import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { languageModel, providerId } from "@repo/backend/confect/gateway/model";
+import { recordingMeter } from "@repo/backend/test/spend";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { generateText } from "ai";
-import { Array as Arr, Effect, Option, Result, Schema, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  Option,
+  Result,
+  Schema,
+  Stream,
+} from "effect";
 
 const serviceToken = vi.hoisted(() => vi.fn<() => Promise<string>>());
 vi.mock("convex/server", () => ({ getServiceToken: serviceToken }));
@@ -89,8 +98,10 @@ afterEach(() => {
   fetch.mockReset();
 });
 
-/** Runs an effect on the production layer. */
-const deployed = Effect.provide(GatewayLive);
+/** Runs an effect on the production layer, held by a recording meter. */
+const deployed = Effect.provide(
+  GatewayLive.pipe(Layer.provide(recordingMeter().layer))
+);
 
 describe("The production gateway", () => {
   it.effect(

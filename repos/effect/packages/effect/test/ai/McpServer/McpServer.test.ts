@@ -36,6 +36,7 @@ import { RequestId } from "effect/rpc/RpcMessage"
 import * as RpcServer from "effect/rpc/RpcServer"
 import * as Scheduler from "effect/Scheduler"
 import * as Schema from "effect/Schema"
+import * as SchemaGetter from "effect/SchemaGetter"
 import * as Sink from "effect/Sink"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
@@ -108,6 +109,16 @@ const ArrayResultTool = Tool.make("ArrayResultTool", {
   success: Schema.Array(Schema.String)
 })
 
+// A `Response` body can only be read once, so its encoding must run only once.
+const ConsumableResultTool = Tool.make("ConsumableResultTool", {
+  success: Schema.Struct({
+    body: Schema.String.pipe(Schema.decodeTo(Schema.instanceOf(Response), {
+      decode: SchemaGetter.transform((text) => new Response(text)),
+      encode: SchemaGetter.transformEffect((response) => Effect.promise(() => response.text()))
+    }))
+  })
+})
+
 const TestToolkit = Toolkit.make(
   OptionalStringTool,
   StrictObjectTool,
@@ -120,7 +131,8 @@ const TestToolkit = Toolkit.make(
   StructuredResultTool,
   AnnotatedVoidTool,
   NullableResultTool,
-  ArrayResultTool
+  ArrayResultTool,
+  ConsumableResultTool
 )
 type TestToolkitHandlers = Toolkit.HandlersFrom<Toolkit.Tools<typeof TestToolkit>>
 
@@ -144,6 +156,7 @@ const testToolkitHandlers = TestToolkit.of({
   AnnotatedVoidTool: () => Effect.void,
   NullableResultTool: () => Effect.succeed(null),
   ArrayResultTool: () => Effect.succeed(["first", "second"]),
+  ConsumableResultTool: () => Effect.succeed({ body: new Response("hello") }),
   UnserializableResultTool: () => Effect.succeed(1n)
 })
 
@@ -909,9 +922,17 @@ describe("McpServer", () => {
       )
     }))
 
-  it.effect("should not deliver list changes from before an HTTP session initialized", () =>
-    Effect.gen(function*() {
-      const { release, scheduler } = yield* makeHeldServerScheduler
+  it.effect("should not deliver list changes from before an HTTP session initialized", () => {
+    // EFF-3277: this test hangs rarely on Bun. Before the 5000ms test timeout, report
+    // the step it is stuck on.
+    let step = "build server"
+    return Effect.gen(function*() {
+      const { describe: schedulerState, release, scheduler } = yield* makeHeldServerScheduler
+      const watchdog = setTimeout(() => {
+        console.error(`EFF-3277: stuck at step "${step}", held scheduler ${schedulerState()}`)
+      }, 4000)
+      // Registered first, so it is cleared only after every other finalizer.
+      yield* Effect.addFinalizer(() => Effect.sync(() => clearTimeout(watchdog)))
       const holding = yield* Deferred.make<void>()
       const resume = yield* Deferred.make<void>()
       const protocol = McpProtocol.v2025_11_25
@@ -934,6 +955,7 @@ describe("McpServer", () => {
           Layer.provide(Layer.succeed(Scheduler.Scheduler, scheduler))
         )
       )
+      step = "initialize session"
       const headers = yield* initializeHttpSession(harness, protocol)
       const call = yield* harness.post({
         jsonrpc: "2.0",
@@ -941,20 +963,32 @@ describe("McpServer", () => {
         method: "tools/call",
         params: { name: "Hold" }
       }, headers).pipe(Effect.forkChild)
+      step = "await tool call"
       yield* Deferred.await(holding)
 
       // Queue the registration's list change while the session's request is in
       // flight, then emit a newer one that must follow it on the stream.
+      step = "release held list change"
       yield* release
       yield* Deferred.succeed(resume, undefined)
+      step = "join tool call response"
       const stream = makeMcpSseReader(yield* Fiber.join(call))
       yield* Effect.addFinalizer(() => stream.cancel)
+      step = "drain response stream"
       const messages = yield* stream.drain()
       assert.deepStrictEqual(messages.map((message) => message.method ?? message.id), [
         "notifications/tools/list_changed",
         "hold"
       ])
-    }))
+    }).pipe(
+      // Runs on success, failure and interruption, before the test scope's finalizers.
+      Effect.onExit(() =>
+        Effect.sync(() => {
+          step = "teardown"
+        })
+      )
+    )
+  })
 
   it.effect("should deliver notifications and results to other clients when one client stops reading", () =>
     Effect.gen(function*() {
@@ -2078,6 +2112,20 @@ describe("McpServer", () => {
         }])
       }))
 
+    it.effect("encodes a tool result once for structured content", () =>
+      Effect.gen(function*() {
+        const { client } = yield* makeToolkitTestClient()
+
+        const result = yield* client.callTool({
+          name: "ConsumableResultTool",
+          arguments: {}
+        })
+
+        assert.isFalse(result.isError)
+        assert.deepStrictEqual(result.structuredContent, { body: "hello" })
+        assert.deepStrictEqual(result.content, [{ type: "text", text: JSON.stringify({ body: "hello" }) }])
+      }))
+
     it.effect("omits structured content for null and array tool results", () =>
       Effect.gen(function*() {
         const { client } = yield* makeToolkitTestClient()
@@ -2168,10 +2216,32 @@ describe("McpServer", () => {
         assert.isUndefined(result.structuredContent)
         assert.deepStrictEqual(result.content, [{ type: "text", text: INTERNAL_TOOL_ERROR_MESSAGE }])
         assert.lengthOf(reported, 1)
-        assert.instanceOf(Cause.squash(reported[0]), TypeError)
+        const error = Cause.squash(reported[0])
+        assertTrue(AiError.isAiError(error))
+        assert.strictEqual(error.reason._tag, "ToolResultEncodingError")
         assert.lengthOf(logged, 1)
         assert.strictEqual(Cause.squash(logged[0]), Cause.squash(reported[0]))
       }))
+
+    for (const failureMode of ["error", "return"] as const) {
+      it.effect(`encodes declared failures with their JSON codec in ${failureMode} mode`, () =>
+        Effect.gen(function*() {
+          const toolkit = Toolkit.make(Tool.make("Charge", {
+            failure: Schema.Struct({ missingCents: Schema.BigInt, retryAfter: Schema.FiniteFromString }),
+            failureMode
+          }))
+          const client = yield* McpTest.makeClient(
+            Layer.effectDiscard(McpServer.registerToolkit(toolkit)).pipe(
+              Layer.provide(toolkit.toLayer({ Charge: () => Effect.fail({ missingCents: 250n, retryAfter: 5 }) }))
+            ),
+            { protocols: [McpProtocol.v2025_06_18] }
+          )
+          const result = yield* client.callTool({ name: "Charge" })
+
+          assert.isTrue(result.isError)
+          assert.strictEqual(toolResultText(result), JSON.stringify({ missingCents: "250", retryAfter: "5" }))
+        }))
+    }
 
     for (
       const [origin, failureMode] of [
@@ -2289,7 +2359,7 @@ describe("McpServer", () => {
         }))
     }
 
-    it.effect("reports response serialization defects before returning a generic message", () =>
+    it.effect("reports response serialization failures before returning a generic message", () =>
       Effect.gen(function*() {
         const { client, reported } = yield* makeToolkitTestClient()
 
@@ -2301,8 +2371,9 @@ describe("McpServer", () => {
         assert.strictEqual(result.isError, true)
         assert.strictEqual(toolResultText(result), INTERNAL_TOOL_ERROR_MESSAGE)
         assert.lengthOf(reported, 1)
-        assert.isTrue(Cause.hasDies(reported[0]))
-        assert.instanceOf(Cause.squash(reported[0]), TypeError)
+        const error = Cause.squash(reported[0])
+        assertTrue(AiError.isAiError(error))
+        assert.strictEqual(error.reason._tag, "ToolResultEncodingError")
       }))
 
     it.effect("keeps unknown tools as protocol errors", () =>
@@ -2903,7 +2974,7 @@ describe("McpServer", () => {
               ),
             supportedVersions: [McpSchema2026.protocolVersion],
             serverInfo: { name: "SubscriptionBacklogTest", version: "1.0.0" },
-            registrationPresence: Effect.succeed({ tools: true, resources: false, prompts: false })
+            registrationPresence: Effect.succeed({ tools: true, resources: false, prompts: false, skills: false })
           })
           yield* handlers["subscriptions/listen"](
             {
@@ -2977,7 +3048,7 @@ describe("McpServer", () => {
             Deferred.succeed(slowTerminated, [protocolVersion, clientId, requestId, reason]),
           supportedVersions: [McpSchema2026.protocolVersion],
           serverInfo: { name: "SubscriptionBacklogTest", version: "1.0.0" },
-          registrationPresence: Effect.succeed({ tools: true, resources: false, prompts: false })
+          registrationPresence: Effect.succeed({ tools: true, resources: false, prompts: false, skills: false })
         })
         const listen = (clientId: number, requestId: string) =>
           handlers["subscriptions/listen"](
