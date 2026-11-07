@@ -117,7 +117,12 @@ export const starred = FunctionImpl.make(
     return yield* libraryViews(
       Arr.sort(
         Arr.filter(items, shows),
-        Order.flip(Order.mapInput(Order.Number, (item) => item.createdAt))
+        Order.flip(
+          Order.mapInput(
+            Order.Number,
+            (item: ClassroomLibraryDoc) => item.createdAt
+          )
+        )
       )
     );
   })

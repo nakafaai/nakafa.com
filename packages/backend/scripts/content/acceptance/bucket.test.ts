@@ -10,7 +10,14 @@ import {
 } from "@repo/backend/scripts/content/acceptance/bucket";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Clock, ConfigProvider, Effect, FileSystem, Redacted } from "effect";
+import {
+  Clock,
+  ConfigProvider,
+  Effect,
+  FileSystem,
+  Layer,
+  Redacted,
+} from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 
 /** Signs addresses for the stand-in at an origin, as the local backend does. */
@@ -122,8 +129,7 @@ describe("acceptance bucket stand-in", () => {
         });
       }).pipe(
         Effect.scoped,
-        Effect.provide(FetchClient),
-        Effect.provide(nodePlatform)
+        Effect.provide(Layer.mergeAll(FetchClient, nodePlatform))
       )
   );
 
@@ -178,8 +184,7 @@ describe("acceptance bucket stand-in", () => {
         expect(replies).toEqual([200, "application/octet-stream", 403, 403]);
       }).pipe(
         Effect.scoped,
-        Effect.provide(FetchClient),
-        Effect.provide(nodePlatform)
+        Effect.provide(Layer.mergeAll(FetchClient, nodePlatform))
       )
   );
 });

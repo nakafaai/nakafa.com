@@ -35,7 +35,13 @@ const counts = Effect.flatMap(DatabaseReader, (reader) =>
       .table("classroomLibraryUploads")
       .index("by_creation_time")
       .take(200),
-  }).pipe(Effect.map((rows) => Struct.map(rows, (found) => found.length)))
+  }).pipe(
+    Effect.map(({ folders, items, uploads }) => ({
+      folders: folders.length,
+      items: items.length,
+      uploads: uploads.length,
+    }))
+  )
 );
 
 describe("classroom/library trash", () => {
@@ -174,6 +180,9 @@ describe("classroom/library trash", () => {
             const row = yield* (yield* DatabaseReader)
               .table("classroomLibrary")
               .get(link.id);
+            if (row.kind !== "link") {
+              return yield* Effect.die("The fixture row is a link.");
+            }
             const writer = yield* DatabaseWriter;
             yield* Effect.forEach(
               Arr.range(1, 70),

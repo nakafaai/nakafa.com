@@ -11,7 +11,7 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { HttpServerRequest, HttpServerResponse } from "effect/http";
+import { Headers, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** The path under the stand-in origin where the bucket stand-in answers, as `R2_ENDPOINT` names it. */
 export const BUCKET_PATH = "/r2";
@@ -68,9 +68,17 @@ const isSigned = Effect.fn("contentAcceptance.bucket.isSigned")(function* (
   ) {
     return false;
   }
-  const headers = Rec.filter(
-    request.headers,
-    (_, name) => name !== "host" && Arr.contains(names, name)
+  const headers = Rec.fromEntries(
+    Arr.getSomes(
+      Arr.map(
+        Arr.filter(names, (name) => name !== "host"),
+        (name) =>
+          Option.map(
+            Headers.get(request.headers, name),
+            (value) => [name, value] as const
+          )
+      )
+    )
   );
   const extra = Rec.filter(query, (_, name) => !Str.startsWith("X-Amz-")(name));
   const target = new URL(url.pathname, url.origin);

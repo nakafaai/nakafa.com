@@ -57,7 +57,7 @@ export const makeBucket = () => {
     const range = RANGE.exec(request.headers.get("range") ?? "");
     return new Response(
       range === null
-        ? stored
+        ? stored.slice()
         : stored.slice(
             Number(range.groups?.start),
             Number(range.groups?.end) + 1

@@ -1,4 +1,4 @@
-import type { Ref } from "@confect/core";
+import type { GenericId, Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -278,7 +278,10 @@ describe("classroom/folders", () => {
       Effect.gen(function* () {
         const { classId, fixture } = yield* libraryClass();
         const teacher = fixture.as("teacher");
-        const add = (clientKey: string, parentId: typeof folderId | null) =>
+        const add = (
+          clientKey: string,
+          parentId: GenericId.GenericId<"classroomFolders"> | null
+        ) =>
           teacher.mutation(folders.add, {
             classId,
             clientKey: `folder-${clientKey}`,
@@ -287,7 +290,6 @@ describe("classroom/folders", () => {
             slug: nf,
           });
         const top = yield* add("Bab", null);
-        const folderId = top.id;
         const child = yield* add("Sub", top.id);
         const grandchild = yield* add("Subsub", child.id);
         expect(grandchild.parentId).toBe(child.id);
@@ -420,7 +422,10 @@ describe("classroom/folders", () => {
       Effect.gen(function* () {
         const { classId, fixture } = yield* libraryClass();
         const teacher = fixture.as("teacher");
-        const add = (clientKey: string, parentId: typeof folderId | null) =>
+        const add = (
+          clientKey: string,
+          parentId: GenericId.GenericId<"classroomFolders"> | null
+        ) =>
           teacher.mutation(folders.add, {
             classId,
             clientKey: `folder-${clientKey}`,
@@ -429,7 +434,6 @@ describe("classroom/folders", () => {
             slug: nf,
           });
         const top = yield* add("Bab", null);
-        const folderId = top.id;
         const child = yield* add("Sub", top.id);
         const file = yield* addFile(
           bucket,
@@ -535,6 +539,9 @@ describe("classroom/folders", () => {
             const reader = yield* DatabaseReader;
             const writer = yield* DatabaseWriter;
             const row = yield* reader.table("classroomLibrary").get(link.id);
+            if (row.kind !== "link") {
+              return yield* Effect.die("The fixture row is a link.");
+            }
             yield* Effect.forEach(
               Arr.range(1, 70),
               (number) =>
