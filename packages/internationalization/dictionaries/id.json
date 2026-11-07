@@ -1587,9 +1587,6 @@
     "library-kind-link": "Tautan",
     "library-kind-pdf": "PDF",
     "library-kind-image": "Gambar",
-    "library-remove": "Hapus",
-    "library-remove-title": "Hapus isi ini",
-    "library-remove-description": "Isi ini hilang dari pustaka untuk semua orang dan tidak bisa kembali.",
     "tabs-tasks": "Tugas",
     "tabs-people": "Orang",
     "people-search": "Cari orang",
@@ -1705,11 +1702,28 @@
     "library-folder-create": "Buat",
     "library-folder-rename": "Ganti nama",
     "library-folder-rename-description": "Kelas langsung melihat nama barunya.",
-    "library-folder-remove": "Hapus",
-    "library-folder-remove-title": "Hapus folder ini",
-    "library-folder-remove-description": "Berkasnya tetap ada di pustaka.",
     "library-folder-empty-description": "Berkas dan tautan folder ini tampil di sini, yang terbaru lebih dulu.",
-    "library-kind-folder": "Folder"
+    "library-kind-folder": "Folder",
+    "library-download": "Unduh",
+    "library-move": "Pindahkan",
+    "library-move-title": "Pindahkan ke",
+    "library-move-description": "Pilih folder tujuannya.",
+    "library-top": "Pustaka",
+    "library-star": "Beri bintang",
+    "library-unstar": "Hapus bintang",
+    "library-trash": "Pindahkan ke sampah",
+    "library-uploading": "{percent}%",
+    "library-view-files": "File",
+    "library-view-starred": "Berbintang",
+    "library-view-trash": "Sampah",
+    "library-trashed": "Dibuang",
+    "library-trash-empty": "Sampah kosong",
+    "library-trash-empty-description": "File dan folder yang dibuang menunggu di sini 30 hari, lalu dihapus.",
+    "library-purge": "Hapus selamanya",
+    "library-purge-title": "Hapus ini selamanya",
+    "library-purge-description": "Penyimpanan sekolah kembali kosong dan ini tidak bisa kembali.",
+    "library-restore": "Pulihkan",
+    "library-path": "Jalur folder"
   },
   "SchoolGrades": {
     "email": "Email",
@@ -3509,6 +3523,10 @@
     "school-refusal-channel-fixed": {
       "title": "Kanal umum tetap memakai namanya.",
       "description": "Ganti nama kanal topik saja."
+    },
+    "library-storage-full": {
+      "title": "File tidak ditambahkan.",
+      "description": "Penyimpanan sekolah penuh. Hapus file selamanya agar ada ruang."
     }
   },
   "Ai": {

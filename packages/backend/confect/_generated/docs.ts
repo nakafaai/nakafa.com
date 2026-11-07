@@ -19,6 +19,7 @@ export type BillingGrantsDoc = Document.Document<typeof schemaDefinition, "billi
 export type BillingInvoicesDoc = Document.Document<typeof schemaDefinition, "billingInvoices">;
 export type BillingPaymentsDoc = Document.Document<typeof schemaDefinition, "billingPayments">;
 export type BillingSubscriptionsDoc = Document.Document<typeof schemaDefinition, "billingSubscriptions">;
+export type BucketUseDoc = Document.Document<typeof schemaDefinition, "bucketUse">;
 export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShares">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
 export type ClassGradesDoc = Document.Document<typeof schemaDefinition, "classGrades">;
@@ -28,12 +29,14 @@ export type ClassroomChannelsDoc = Document.Document<typeof schemaDefinition, "c
 export type ClassroomFileUseDoc = Document.Document<typeof schemaDefinition, "classroomFileUse">;
 export type ClassroomFoldersDoc = Document.Document<typeof schemaDefinition, "classroomFolders">;
 export type ClassroomLibraryDoc = Document.Document<typeof schemaDefinition, "classroomLibrary">;
+export type ClassroomLibraryUploadsDoc = Document.Document<typeof schemaDefinition, "classroomLibraryUploads">;
 export type ClassroomMessagesDoc = Document.Document<typeof schemaDefinition, "classroomMessages">;
 export type ClassroomPassagesDoc = Document.Document<typeof schemaDefinition, "classroomPassages">;
 export type ClassroomPostVotesDoc = Document.Document<typeof schemaDefinition, "classroomPostVotes">;
 export type ClassroomPostsDoc = Document.Document<typeof schemaDefinition, "classroomPosts">;
 export type ClassroomReadsDoc = Document.Document<typeof schemaDefinition, "classroomReads">;
 export type ClassroomScheduledDoc = Document.Document<typeof schemaDefinition, "classroomScheduled">;
+export type ClassroomStarsDoc = Document.Document<typeof schemaDefinition, "classroomStars">;
 export type ClassroomSubmissionsDoc = Document.Document<typeof schemaDefinition, "classroomSubmissions">;
 export type ClassroomTalliesDoc = Document.Document<typeof schemaDefinition, "classroomTallies">;
 export type ClassroomTasksDoc = Document.Document<typeof schemaDefinition, "classroomTasks">;
@@ -190,6 +193,7 @@ export interface Docs {
   billingInvoices: BillingInvoicesDoc;
   billingPayments: BillingPaymentsDoc;
   billingSubscriptions: BillingSubscriptionsDoc;
+  bucketUse: BucketUseDoc;
   chatShares: ChatSharesDoc;
   chats: ChatsDoc;
   classGrades: ClassGradesDoc;
@@ -199,12 +203,14 @@ export interface Docs {
   classroomFileUse: ClassroomFileUseDoc;
   classroomFolders: ClassroomFoldersDoc;
   classroomLibrary: ClassroomLibraryDoc;
+  classroomLibraryUploads: ClassroomLibraryUploadsDoc;
   classroomMessages: ClassroomMessagesDoc;
   classroomPassages: ClassroomPassagesDoc;
   classroomPostVotes: ClassroomPostVotesDoc;
   classroomPosts: ClassroomPostsDoc;
   classroomReads: ClassroomReadsDoc;
   classroomScheduled: ClassroomScheduledDoc;
+  classroomStars: ClassroomStarsDoc;
   classroomSubmissions: ClassroomSubmissionsDoc;
   classroomTallies: ClassroomTalliesDoc;
   classroomTasks: ClassroomTasksDoc;

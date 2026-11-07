@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import {
   denied,
   firstPage,
@@ -9,16 +10,17 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { storeFile } from "@repo/backend/test/logo";
+import { addFile, PDF } from "@repo/backend/test/library";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
 
 const library = refs.public.classroom.library;
 
-/** The leading bytes of a PDF, which the library keeps. */
-const pdf = () =>
-  new Blob(["%PDF-1.7\n1 0 obj\n"], { type: "application/pdf" });
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
 
 /** Every row of the class libraries, so a test reads what the server stored. */
 const libraryRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -37,6 +39,8 @@ describe("classroom/library edit", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
+    fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+    stubBucket();
   });
 
   it.effect(
@@ -111,16 +115,16 @@ describe("classroom/library edit", () => {
   it.effect("retitles a file and leaves its bytes alone", () =>
     Effect.gen(function* () {
       const { classId, fixture } = yield* libraryClass();
-      const storageId = yield* storeFile(fixture.convex, pdf());
       const teacher = fixture.as("teacher");
-      const { id } = yield* teacher.action(library.register, {
-        folderId: null,
+      const { id } = yield* addFile(
+        bucket,
+        fixture,
         classId,
-        clientKey: "edited-file",
-        slug: nf,
-        storageId,
-        title: "Modul lama",
-      });
+        "edited-file",
+        PDF,
+        "application/pdf",
+        "Modul lama"
+      );
       yield* teacher.mutation(library.edit, {
         folderId: null,
         address: "https://example.com/abaikan",

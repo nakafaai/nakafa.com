@@ -69,7 +69,7 @@ export const EMPTY_DRAFT: LibraryDraft = {
 };
 
 /** The title a file gives an item: its name without the extension, as long as a title may be. */
-const titleOf = (name: string) =>
+export const titleOf = (name: string) =>
   Str.trim(name.replace(EXTENSION, "")).slice(0, 120);
 
 /** Names the draft after a chosen file when no title was written yet. */

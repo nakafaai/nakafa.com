@@ -91,6 +91,7 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
   // claims its port first, so an occupied port fails before Convex starts.
   return yield* withAnalyticsSink(
     runtime.analytics,
+    runtime.directory,
     withLocalBackend(
       runtime,
       runBuildCommand(
