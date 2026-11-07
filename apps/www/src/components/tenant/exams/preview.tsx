@@ -21,10 +21,15 @@ import {
 } from "@repo/design-system/components/editor/frame";
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
-import { Array as Arr, Effect, HashMap, Option } from "effect";
+import { Array as Arr, Effect, Function as Fn, HashMap, Option } from "effect";
 import { useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import { DrawnDocument } from "@/components/assessment/drawn";
+import {
+  LinesColumn,
+  LinesItem,
+  LinesProvider,
+} from "@/components/exams/lines/board";
 import {
   addressesOf,
   SittingPictures,
@@ -35,7 +40,7 @@ import {
   isChoice,
   type OptionLabel,
 } from "@/components/tenant/exams/answer";
-import { matchOf } from "@/components/tenant/exams/match";
+import { keyPairs, matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
@@ -49,10 +54,7 @@ import {
   PaperField,
   PaperOption,
   PaperOptions,
-  PaperPairSelect,
   PaperPairs,
-  PaperPart,
-  PaperParts,
   PaperPartText,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
@@ -241,41 +243,42 @@ export function OptionSketch({ label }: { label: OptionLabel }) {
 }
 
 /**
- * One column of a matching or a table question drawn without editors, as its live column draws it: its
- * heading, its parts numbered or lettered, and the room of the action that adds a part when it takes one.
+ * One column of a matching drawn without editors, as its live column draws it: its parts numbered or lettered, each
+ * with its dot, and the room of the action that adds a part when it takes one.
  */
 function PartSketch({
-  adds,
   letterOf,
-  pairs,
   parts,
+  side,
   withControls,
 }: {
-  adds: boolean;
   letterOf: (index: number) => string;
-  pairs: boolean;
   parts: readonly { readonly id: string; readonly label: OptionLabel }[];
+  side: "sources" | "targets";
   withControls: boolean;
 }) {
   const locked = useExamLocked();
 
   return (
-    <div className="grid content-start gap-2">
-      <PaperParts>
-        {Arr.map(parts, (part, index) => (
-          <PaperPart
-            below={pairs ? <PaperPairSelect /> : null}
-            key={part.id}
-            name={letterOf(index)}
-          >
-            <OptionSketch label={part.label} />
-          </PaperPart>
-        ))}
-      </PaperParts>
-      {withControls && adds && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
-        <OptionAddRoom />
-      ) : null}
-    </div>
+    <LinesColumn
+      footer={
+        withControls && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
+          <OptionAddRoom />
+        ) : null
+      }
+      side={side}
+    >
+      {Arr.map(parts, (part, index) => (
+        <LinesItem
+          id={part.id}
+          key={part.id}
+          name={letterOf(index)}
+          side={side}
+        >
+          <OptionSketch label={part.label} />
+        </LinesItem>
+      ))}
+    </LinesColumn>
   );
 }
 
@@ -344,25 +347,32 @@ export function PaperSketch({
         onNone: () => null,
         onSome: (match) => (
           <PaperPairs>
-            <PartSketch
-              adds
-              letterOf={statementNumber}
-              pairs
-              parts={match.sources}
-              withControls={withControls}
-            />
-            <PartSketch
-              adds
-              letterOf={(index) =>
-                optionLetter(
-                  index,
-                  letterScript(Arr.map(match.targets, (part) => part.label))
-                )
-              }
-              pairs={false}
-              parts={match.targets}
-              withControls={withControls}
-            />
+            <LinesProvider
+              disabled
+              match={match}
+              onPairs={Fn.constVoid}
+              pairs={keyPairs(question.key)}
+              size="paper"
+              stretch={false}
+            >
+              <PartSketch
+                letterOf={statementNumber}
+                parts={match.sources}
+                side="sources"
+                withControls={withControls}
+              />
+              <PartSketch
+                letterOf={(index) =>
+                  optionLetter(
+                    index,
+                    letterScript(Arr.map(match.targets, (part) => part.label))
+                  )
+                }
+                parts={match.targets}
+                side="targets"
+                withControls={withControls}
+              />
+            </LinesProvider>
           </PaperPairs>
         ),
       })}

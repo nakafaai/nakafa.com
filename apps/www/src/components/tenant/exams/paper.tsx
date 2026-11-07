@@ -5,6 +5,7 @@ import { Array as Arr, Option } from "effect";
 import { type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { LinesProvider } from "@/components/exams/lines/board";
 import { usePaperText } from "@/components/player/held";
 import { PanePortal } from "@/components/shared/panes";
 import { isChoice } from "@/components/tenant/exams/answer";
@@ -327,24 +328,33 @@ function LivePaper({
       </PaperPrompt>
       {match === null ? null : (
         <PaperPairs>
-          <MatchColumn
-            chosen={chosen}
-            editing={editing}
-            frozen={locked}
+          <LinesProvider
+            disabled={locked}
             match={match}
-            number={number}
-            question={question}
-            side="sources"
-          />
-          <MatchColumn
-            chosen={chosen}
-            editing={editing}
-            frozen={locked}
-            match={match}
-            number={number}
-            question={question}
-            side="targets"
-          />
+            onPairs={editing.setPairs}
+            pairs={editing.pairs}
+            size="paper"
+            stretch={false}
+          >
+            <MatchColumn
+              chosen={chosen}
+              editing={editing}
+              frozen={locked}
+              match={match}
+              number={number}
+              question={question}
+              side="sources"
+            />
+            <MatchColumn
+              chosen={chosen}
+              editing={editing}
+              frozen={locked}
+              match={match}
+              number={number}
+              question={question}
+              side="targets"
+            />
+          </LinesProvider>
         </PaperPairs>
       )}
       {table === null ? null : (
