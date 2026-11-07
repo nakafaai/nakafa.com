@@ -77,6 +77,27 @@ export const studentsOf = Effect.fn("tenancy.grantees.students")(function* (
 });
 
 /**
+ * One page of the active members who learn in a unit: an active student grant over the unit, or
+ * over the whole school. These are the people a cohort of the unit may place.
+ */
+export const unitStudentsOf = Effect.fn("tenancy.grantees.unitStudents")(
+  function* (
+    tenantId: GenericId.GenericId<"tenants">,
+    unitId: GenericId.GenericId<"tenantUnits">,
+    paginationOpts: PaginationOptions,
+    search?: string
+  ) {
+    return yield* granteesOf(
+      tenantId,
+      "student",
+      paginationOpts,
+      (grant) => covers(grant.scope, [unitId]),
+      search
+    );
+  }
+);
+
+/**
  * One page of the active members who teach in a unit: an active teacher grant over the unit,
  * or over the whole school. These are the people a homeroom or a class of the unit accepts.
  */

@@ -381,7 +381,7 @@ describe("tenancy/placements move", () => {
   );
 
   it.effect(
-    "refuses to move a Person out of an archived cohort, and keeps the placement there",
+    "moves a Person out of an archived cohort into a live one, and refuses an archived cohort as the target",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -395,15 +395,19 @@ describe("tenancy/placements move", () => {
           cohortId: seventhA.id,
           slug: nf,
         });
-        const refused = yield* moveAdmin(fixture, seventhB.id, student).pipe(
+        // An archived cohort takes no one new.
+        const refused = yield* moveAdmin(fixture, seventhA.id, student).pipe(
           Effect.flip
         );
+        expect(refused).toMatchObject(denied("condition"));
+        // Its students move out into a live cohort.
+        const moved = yield* moveAdmin(fixture, seventhB.id, student);
+        expect(moved).toMatchObject({ cohortId: seventhB.id });
         const held = yield* fixture.as("admin").query(members, {
           ...firstPage,
-          cohortId: seventhA.id,
+          cohortId: seventhB.id,
           slug: nf,
         });
-        expect(refused).toMatchObject(denied("condition"));
         expect(Arr.map(held.page, (row) => row.id)).toEqual([student]);
         expect(yield* fixture.run(journal)).toMatchObject([
           { change: { type: "period.created" } },
@@ -411,6 +415,7 @@ describe("tenancy/placements move", () => {
           { change: { type: "cohort.created" } },
           { change: { type: "person.placed" } },
           { change: { type: "cohort.archived" } },
+          { change: { type: "person.moved" } },
         ]);
       })
   );

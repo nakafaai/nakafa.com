@@ -10,7 +10,8 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { create, list, students, teachers } = refs.public.tenancy.people;
+const { create, list, students, teachers, unplaced } =
+  refs.public.tenancy.people;
 const { create: createCohort } = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
@@ -173,6 +174,82 @@ describe("tenancy/people list and create", () => {
           .query(teachers, { ...firstPage, cohortId: cohort.id, slug: nf })
           .pipe(Effect.flip);
         expect(refused).toMatchObject(denied("role"));
+      })
+  );
+
+  it.effect(
+    "offers a cohort the students of its unit who hold no placement in its period, searched by name too",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const admin = fixture.as("admin");
+        const period = yield* admin.mutation(periods.create, {
+          end: "2026-12-19",
+          name: "Ganjil 2026/2027",
+          slug: nf,
+          start: "2026-07-13",
+          unitId: fixture.units.smp,
+        });
+        const seventhA = yield* admin.mutation(createCohort, {
+          grade: 7,
+          name: "7A",
+          periodId: period.id,
+          slug: nf,
+        });
+        const seventhB = yield* admin.mutation(createCohort, {
+          grade: 7,
+          name: "7B",
+          periodId: period.id,
+          slug: nf,
+        });
+        const free = yield* admin.mutation(create, { name: "Free", slug: nf });
+        const placed = yield* admin.mutation(create, {
+          name: "Placed",
+          slug: nf,
+        });
+        const elsewhere = yield* admin.mutation(create, {
+          name: "Elsewhere",
+          slug: nf,
+        });
+        const teacher = yield* admin.mutation(create, {
+          name: "Teaches",
+          slug: nf,
+        });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const nfId = fixture.tenants.nf;
+            const smp = { kind: "unit" as const, unitId: fixture.units.smp };
+            yield* grantRole(nfId, free.id, "student", smp);
+            yield* grantRole(nfId, placed.id, "student", smp);
+            yield* grantRole(nfId, elsewhere.id, "student", {
+              kind: "unit",
+              unitId: fixture.units.sd,
+            });
+            yield* grantRole(nfId, teacher.id, "teacher", smp);
+          })
+        );
+        yield* admin.mutation(refs.public.tenancy.placements.place, {
+          cohortId: seventhB.id,
+          personId: placed.id,
+          slug: nf,
+        });
+        const names = (search?: string) =>
+          Effect.map(
+            admin.query(unplaced, {
+              ...firstPage,
+              cohortId: seventhA.id,
+              slug: nf,
+              ...(search === undefined ? {} : { search }),
+            }),
+            (page) => Arr.map(page.page, (person) => person.name)
+          );
+        const offered = yield* names();
+        expect(offered).toContain("Free");
+        expect(offered).not.toContain("Placed");
+        expect(offered).not.toContain("Elsewhere");
+        expect(offered).not.toContain("Teaches");
+        expect(yield* names("Placed")).toEqual([]);
+        expect(yield* names("Free")).toEqual(["Free"]);
       })
   );
 

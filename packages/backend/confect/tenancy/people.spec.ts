@@ -74,6 +74,18 @@ export default GroupSpec.make()
     }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })
   )
   .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "unplaced",
+      args: () => ({
+        cohortId: Id("tenantCohorts"),
+        search: Schema.optionalKey(PersonName),
+        slug: TenantSlug,
+      }),
+      item: () => PersonView,
+      error: () => AccessDenied,
+    }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })
+  )
+  .addFunction(
     FunctionSpec.publicMutation({
       name: "create",
       args: () => ({ name: PersonName, slug: TenantSlug }),

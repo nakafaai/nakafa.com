@@ -1306,6 +1306,7 @@
     "person-search": "Person suchen",
     "student-picker-empty": "Füge zuerst einen Schüler unter Schülerkonten hinzu.",
     "teacher-picker-empty": "Lade zuerst eine Lehrkraft unter Einladungen ein.",
+    "cohort-picker-empty": "Kein Schüler ist in diesem Zeitraum frei. Füge einen unter Schülerkonten hinzu oder verschiebe ihn aus seiner Klasse.",
     "roles-grants-description": "Jede Rolle, die eine Person dieser Schule hat, und wofür sie gilt.",
     "grant-role": "Rolle",
     "grant-scope": "Gilt für",

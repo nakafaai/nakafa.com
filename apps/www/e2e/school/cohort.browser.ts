@@ -256,7 +256,7 @@ test("an admin opens a period, then creates a cohort of it and edits its name an
   await context.close();
 });
 
-test("an admin places a student in a cohort, moves the student to another, and sets their NISN and age flag", async ({
+test("an admin places a student in a cohort, moves the student to another, sets their NISN and age flag, and moves them out once that cohort is archived", async ({
   browser,
   baseURL,
 }) => {
@@ -340,6 +340,33 @@ test("an admin places a student in a cohort, moves the student to another, and s
     "Stored, type a new one to replace it"
   );
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveValue("");
+  await kept.getByRole("button", { name: "Cancel" }).click();
+
+  // An archived cohort takes no one new, and its student still moves out of it.
+  await page.goto(address("/settings/cohorts"));
+  const archivedRow = page.getByRole("row", { name: "7B" });
+  await archivedRow.getByRole("button", { name: "More actions" }).click();
+  const archivedBefore = changes.sent;
+  await page.getByRole("menuitem", { name: "Archive" }).click();
+  await expect(archivedRow.getByText("Archived")).toBeVisible();
+  await saved(changes, archivedBefore);
+  await page.getByRole("link", { name: "7B" }).click();
+  const leaving = page.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(leaving);
+  await leaving.click();
+  await page.getByRole("menuitem", { name: "Move" }).click();
+  const outDialog = page.getByRole("dialog");
+  await outDialog.getByRole("combobox", { name: "Move to" }).click();
+  await page.getByRole("option", { exact: true, name: "7A" }).click();
+  const leftBefore = changes.sent;
+  await outDialog.getByRole("button", { exact: true, name: "Move" }).click();
+  await expect(page.getByText("No student yet.")).toBeVisible();
+  await saved(changes, leftBefore);
+  await page.goto(address("/settings/cohorts"));
+  await page.getByRole("link", { name: "7A" }).click();
+  await expect(
+    page.getByRole("main").getByText("Acceptance Learner", { exact: true })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });
 
@@ -369,7 +396,9 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   const placing = page.getByRole("dialog");
   await placing.getByRole("combobox", { name: "Student" }).click();
   await expect(
-    page.getByText("Add a student in Student accounts first.")
+    page.getByText(
+      "No student is free this period. Add one in Student accounts, or move one from their cohort."
+    )
   ).toBeVisible();
   await page.goto(address("/settings/students"));
 
