@@ -3,8 +3,18 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
+import {
+  Copy01Icon,
+  TaskDone01Icon,
+  TimeQuarterPassIcon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons";
+import { useClipboard } from "@mantine/hooks";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskPoints } from "@repo/backend/confect/classroom/tasks/task";
+import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   NumberField,
   NumberFieldDecrement,
@@ -12,19 +22,18 @@ import {
   NumberFieldIncrement,
   NumberFieldInput,
 } from "@repo/design-system/components/ui/number";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, Option, Schema } from "effect";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
-import { RowCopy } from "@/components/shared/table/menu";
+import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { TableName } from "@/components/shared/table/title";
-import {
-  TableSearch,
-  useServerSearch,
-} from "@/components/shared/table/toolbar";
+import { useServerSearch } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
 import {
   forumCall,
@@ -43,19 +52,14 @@ import { useKeptRows } from "@/lib/data/kept";
 /** How many pieces of work the table reads each time its end comes into view. */
 const WORK_PAGE_SIZE = 30;
 
-/** The search of the work handed in, in the task page's header, for its teacher. */
-export function TaskWorkSearch() {
-  const t = useTranslations("Classroom");
-  return <TableSearch placeholder={t("task-work-search")} />;
-}
-
 /** The columns of the work handed in. */
 const workColumns = tableColumns<TaskWork>();
 
 /**
- * The work handed in for a task, as its teacher reads it: each student, the work, whether it came
- * late, and its points, which the teacher gives in place. The next page loads as the end of the
- * table comes into view. The header's search reads the work of the students whose names match it,
+ * The work handed in for a task, as its teacher reads it in the task's pane, one row each: the
+ * student, whether the work came late, and its points, which the teacher gives in place; the row's
+ * menu opens the whole work to read. The next page loads as the end of the table comes into view.
+ * The pane's search reads the work of the students whose names match it,
  * on the server, and the work already shown stays while a new search's first page loads. A task
  * with no work yet shows its empty state, and a search that matches no work says so once the list
  * ends.
@@ -101,21 +105,28 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
               header: t("task-student"),
               id: "student",
             }),
-            workColumns.text((work) => work.text, {
+            workColumns.values((work) => (work.late ? "late" : "onTime"), {
               cell: (info) => (
-                <>
-                  <p className="wrap-anywhere whitespace-pre-wrap" dir="auto">
-                    {info.getValue()}
-                  </p>
-                  {info.row.original.late ? (
-                    <p className="text-muted-foreground text-xs">
-                      {t("task-handed-in-late")}
-                    </p>
-                  ) : null}
-                </>
+                <span className="text-muted-foreground">
+                  {info.row.original.late
+                    ? t("task-handed-in-late")
+                    : t("task-handed-in")}
+                </span>
               ),
-              header: t("task-work"),
-              id: "work",
+              header: t("task-status"),
+              id: "late",
+              options: [
+                {
+                  icon: TaskDone01Icon,
+                  label: t("task-handed-in"),
+                  value: "onTime" as const,
+                },
+                {
+                  icon: TimeQuarterPassIcon,
+                  label: t("task-handed-in-late"),
+                  value: "late" as const,
+                },
+              ],
             }),
             workColumns.number((work) => work.score, {
               cell: (info) => (
@@ -124,18 +135,69 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
               header: t("task-points"),
               id: "points",
             }),
-            workColumns.menu((info) => (
-              <RowCopy value={info.row.original.text} />
-            )),
+            workColumns.menu((info) => <WorkMenu work={info.row.original} />),
           ]}
           data={Option.getOrElse(kept, Arr.empty)}
           empty={<WorkEmpty searched={search !== ""} />}
           loading={!PaginatedQueryResult.isExhausted(pagination)}
+          plain
           rowId={(work) => work.id}
         />
       </TableFrame>
       {loadMore === null ? null : <TableEnd onLoad={loadMore} />}
     </>
+  );
+}
+
+/**
+ * What a row of the work table can do: read the student's whole work in a dialog, and copy it.
+ * Each opening is a dialog of its own.
+ */
+function WorkMenu({ work }: { work: TaskWork }) {
+  const t = useTranslations("Classroom");
+  const common = useTranslations("Common");
+  const clipboard = useClipboard();
+  const [openings, setOpenings] = useState(0);
+
+  return (
+    <>
+      <RowItems>
+        <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
+          <HugeIcons icon={ViewIcon} />
+          {t("task-read")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => clipboard.copy(work.text)}>
+          <HugeIcons icon={Copy01Icon} />
+          {common("copy")}
+        </DropdownMenuItem>
+      </RowItems>
+      {openings === 0 ? null : <WorkDialog key={openings} work={work} />}
+    </>
+  );
+}
+
+/** The whole work of one student, as they handed it in, and whether it came late. */
+function WorkDialog({ work }: { work: TaskWork }) {
+  const t = useTranslations("Classroom");
+  const common = useTranslations("Common");
+  const [open, setOpen] = useState(true);
+
+  return (
+    <ResponsiveDialog
+      description={work.late ? t("task-handed-in-late") : t("task-handed-in")}
+      footer={
+        <Button onClick={() => setOpen(false)} variant="outline">
+          {common("close")}
+        </Button>
+      }
+      open={open}
+      setOpen={setOpen}
+      title={work.person.name}
+    >
+      <p className="text-sm wrap-anywhere whitespace-pre-wrap" dir="auto">
+        {work.text}
+      </p>
+    </ResponsiveDialog>
   );
 }
 

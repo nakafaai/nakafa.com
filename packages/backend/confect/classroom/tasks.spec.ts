@@ -97,6 +97,14 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
+      name: "remove",
+      args: () => ({ ...classArgs, task: TaskAddress }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
       name: "submit",
       args: () => ({ ...classArgs, task: TaskAddress, text: TaskText }),
       returns: () => TaskView,

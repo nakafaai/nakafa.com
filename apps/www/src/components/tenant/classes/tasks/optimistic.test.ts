@@ -6,6 +6,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import {
   type ClassTask,
   editUpdate,
+  removeUpdate,
   scoreUpdate,
   submitUpdate,
   type TaskWork,
@@ -221,6 +222,36 @@ describe("task optimistic updates", () => {
         classroom.tasks.submissions,
         { ...pageArgs, task: "ringkasan" },
         Option.some({ isDone: true, page: [work("a", 45), work("b", 3)] }),
+      ],
+    ]);
+  });
+
+  it("takes a deleted task out of every list that holds it, and leaves the others", () => {
+    const store = storeByRef([
+      [
+        classroom.tasks.list,
+        [
+          {
+            args: pageArgs,
+            value: Option.some({
+              isDone: true,
+              page: [task("ringkasan", null), task("latihan", null)],
+            }),
+          },
+          {
+            args: { ...pageArgs, standing: "open" },
+            value: Option.some({ isDone: true, page: [task("latihan", null)] }),
+          },
+          { args: { ...pageArgs, standing: "late" }, value: Option.none() },
+        ],
+      ],
+    ]);
+    removeUpdate(store.localStore, { classId, slug, task: "ringkasan" });
+    expect(store.setQuery.mock.calls).toEqual([
+      [
+        classroom.tasks.list,
+        pageArgs,
+        Option.some({ isDone: true, page: [task("latihan", null)] }),
       ],
     ]);
   });

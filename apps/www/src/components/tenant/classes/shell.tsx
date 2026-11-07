@@ -44,10 +44,7 @@ import {
   useClassScope,
 } from "@/components/tenant/classes/scope";
 import { ClassTabs } from "@/components/tenant/classes/tabs";
-import { EditTask } from "@/components/tenant/classes/tasks/edit";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
-import { TaskPage } from "@/components/tenant/classes/tasks/page";
-import { TaskWorkSearch } from "@/components/tenant/classes/tasks/work";
 import type { ClassView } from "@/components/tenant/classes/view";
 import {
   ClassGradebook,
@@ -326,9 +323,9 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
  * The view under the class's header, as wide as the page, each with the header's actions it
  * holds: the forum keeps the list of chats beside one chat, with New discussion for whoever the
  * server lets open one there, or one discussion beside its chat; the class's announcements, with
- * New announcement for its subject teachers, and one task scroll within it; the library and the
- * task list each draw their header and their one table card; and the gradebook shares its filters
- * and its panes between its header and its body.
+ * New announcement for its subject teachers, which scrolls within it; the library and the
+ * task list each draw their header and their one table card, the task list with the open task in
+ * its pane; and the gradebook shares its filters and its panes between its header and its body.
  */
 function ClassBody({
   archived,
@@ -404,7 +401,11 @@ function ClassBody({
     );
   }
   if (view._tag === "tasks") {
-    return <TaskList />;
+    return (
+      <PanesProvider>
+        <TaskList />
+      </PanesProvider>
+    );
   }
   if (view._tag === "people") {
     return <PeopleList />;
@@ -426,19 +427,9 @@ function ClassBody({
   }
   if (view._tag === "task") {
     return (
-      <TableFiltersProvider>
-        <ClassHeader>
-          {Arr.contains(klass.can, "task.manage") ? (
-            <>
-              <TaskWorkSearch />
-              <EditTask task={view.task} />
-            </>
-          ) : null}
-        </ClassHeader>
-        <ClassScroll>
-          <TaskPage task={view.task} />
-        </ClassScroll>
-      </TableFiltersProvider>
+      <PanesProvider opened={Option.some(view.task)}>
+        <TaskList />
+      </PanesProvider>
     );
   }
   return (
