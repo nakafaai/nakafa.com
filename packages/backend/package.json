@@ -47,6 +47,7 @@
     "@react-email/render": "catalog:",
     "@repo/analytics": "workspace:*",
     "@repo/contents": "workspace:*",
+    "@repo/design-system": "workspace:*",
     "@repo/editor": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/mascot": "workspace:*",
