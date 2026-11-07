@@ -11,8 +11,8 @@ import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import { Array as Arr, Schema } from "effect";
 
 /** The School plans, from the free trial up. Every plan holds every feature. */
-export const SchoolTierKey = Schema.Literals(["free", "pro", "max"]);
-export type SchoolTierKey = typeof SchoolTierKey.Type;
+const SchoolTierKey = Schema.Literals(["free", "pro", "max"]);
+type SchoolTierKey = typeof SchoolTierKey.Type;
 
 /** The plans a school pays for, which a custom account extends. */
 export const SchoolPaidTierKey = Schema.Literals(["pro", "max"]);
@@ -92,51 +92,6 @@ export const schoolAccount = {
   monthly: { EUR: 99, IDR: 15_900, USD: 99 },
   storageMegabytes: 200,
 } as const satisfies typeof SchoolAccount.Type;
-
-/** The add-ons a school buys beside its plan. */
-export const SchoolAddOnKey = Schema.Literals([
-  "credits",
-  "drive",
-  "driveLarge",
-]);
-export type SchoolAddOnKey = typeof SchoolAddOnKey.Type;
-
-/** One add-on: its price, whether it renews monthly, and what it adds. */
-const SchoolAddOn = Schema.Struct({
-  credits: Schema.Int,
-  price: SchoolPrices,
-  recurring: Schema.Boolean,
-  storageMegabytes: Schema.Int,
-});
-type SchoolAddOn = typeof SchoolAddOn.Type;
-
-/** The months that a bought pack of AI credits stays usable. */
-export const SCHOOL_CREDIT_PACK_MONTHS = 12;
-
-/**
- * The add-ons: a pack of 1,000 AI credits paid once, and Drive storage paid
- * monthly without a period discount.
- */
-export const schoolAddOns = {
-  credits: {
-    credits: 1000,
-    price: { EUR: 2400, IDR: 349_000, USD: 2400 },
-    recurring: false,
-    storageMegabytes: 0,
-  },
-  drive: {
-    credits: 0,
-    price: { EUR: 2900, IDR: 449_000, USD: 2900 },
-    recurring: true,
-    storageMegabytes: 100_000,
-  },
-  driveLarge: {
-    credits: 0,
-    price: { EUR: 24_900, IDR: 3_990_000, USD: 24_900 },
-    recurring: true,
-    storageMegabytes: 1_000_000,
-  },
-} as const satisfies Record<SchoolAddOnKey, SchoolAddOn>;
 
 /** Rounds a hundredth of a minor unit to the nearest minor unit, a half up. */
 function roundHundredths(hundredths: number) {

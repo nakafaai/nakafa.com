@@ -106,6 +106,7 @@ describe("test ownership policy", () => {
         "apps/web/style.test.ts":
           'import { it } from "@effect/vitest";\nimport { style } from "./style";\nit("keeps size-[4px]", () => style);\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
+        "apps/web/styles.css": "body:hover { color: inherit; }\n",
         "apps/web/tsconfig.json":
           '{"extends":"@repo/typescript-config/base.json"}\n',
         "apps/web/value.test.ts": CLEAN_TEST,

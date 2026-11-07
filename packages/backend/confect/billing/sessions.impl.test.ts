@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+// convex-test imports a function's module, and the Better Auth adapter behind it, on the first call,
+// inside that test's 5 s, and the cold graph takes about 7 s. Importing both here loads them while the
+// file is collected, so no test pays it, and a timed-out call can no longer reach the next test's mocks.
+import "@repo/backend/components/betterAuth/adapter";
+import "@repo/backend/convex/billing/sessions";
 import {
   PolarDuplicateEmailError,
   polarDuplicateEmailCode,
