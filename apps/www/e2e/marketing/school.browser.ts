@@ -8,6 +8,9 @@ import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 // rupiah prices, so every test runs in a Jakarta zone, whatever zone the machine is in.
 test.use({ timezoneId: "Asia/Jakarta" });
 
+/** The name of the twelve-month period in Indonesian, which starts with its length. */
+const TWELVE_MONTHS = /^12 bulan/u;
+
 /** A rupiah price as the page writes it, with the no-break space after the symbol. */
 const rupiah = (digits: string) => `Rp ${digits}`;
 
@@ -67,7 +70,7 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
 
     // Twelve months take 5 % off and bill the whole year at once.
     yield* Effect.promise(() =>
-      page.getByRole("button", { name: /^12 bulan/u }).click()
+      page.getByRole("button", { name: TWELVE_MONTHS }).click()
     );
     yield* Effect.promise(() => expect(max).toContainText(rupiah("7.590.500")));
     yield* Effect.promise(() =>
