@@ -195,9 +195,9 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
               changes.refusalOpen = success === false;
             },
             MutationResponse: ({ requestId, result, success, ts }) => {
-              const sent = MutableHashMap.get(waiting, requestId);
+              const asked = MutableHashMap.get(waiting, requestId);
               const udfPath = Option.map(
-                Option.filter(Option.flatMap(sent, decodeSent), isMutation),
+                Option.filter(Option.flatMap(asked, decodeSent), isMutation),
                 (call) => call.udfPath
               );
               const open = leavesOpen(udfPath, success, result);
@@ -207,10 +207,7 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
                 changes.stored = later(changes.stored, momentOf(ts));
               }
               if (!open) {
-                MutableList.appendAll(
-                  taken,
-                  Option.toArray(MutableHashMap.get(waiting, requestId))
-                );
+                MutableList.appendAll(taken, Option.toArray(asked));
               }
               MutableHashMap.remove(waiting, requestId);
             },
