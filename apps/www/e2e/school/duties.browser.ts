@@ -68,7 +68,7 @@ test("the school's Owner posts an announcement, publishes a task, enters and rel
     .locator("header")
     .getByRole("button", { name: "Add student" })
     .click();
-  const placing = page.getByRole("dialog");
+  const placing = page.getByRole("dialog", { name: "Add student" });
   await placing.getByRole("combobox", { name: "Student" }).click();
   await page.getByRole("option", { name: LEARNER }).click();
   await placing.getByRole("button", { name: "Add student" }).click();
