@@ -3,6 +3,7 @@ import {
   GatewayType,
   Seconds,
 } from "@repo/backend/confect/gateway/failure";
+import { SpendRefused } from "@repo/backend/confect/spend/schema";
 import { APICallError, NoOutputGeneratedError, RetryError } from "ai";
 import { Match, Number as Num, Option, Predicate, Schema } from "effect";
 
@@ -104,6 +105,11 @@ function gatewayType(data: unknown) {
 const failure = Match.type<unknown>().pipe(
   Match.withReturnType<GatewayFailure>(),
   Match.when(Schema.is(GatewayFailure), (classified) => classified),
+  // The payer's budget cannot hold the call, so no provider was asked.
+  Match.when(
+    Schema.is(SpendRefused),
+    () => new GatewayFailure({ reason: "quota" })
+  ),
   Match.when(APICallError.isInstance, (error) =>
     Option.match(Option.fromUndefinedOr(error.statusCode), {
       // No HTTP status: the request never reached a server.

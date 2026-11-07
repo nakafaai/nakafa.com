@@ -2,7 +2,7 @@ import { RegisteredFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { runStep } from "@repo/backend/confect/contents/sections/build";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { GatewayTest } from "@repo/backend/test/gateway";
+import { GatewayIsolated } from "@repo/backend/test/gateway";
 import {
   Array as Arr,
   Effect,
@@ -37,7 +37,7 @@ export async function failedStepLogs(
         Effect.map(({ _tag, message }) => ({ _tag, message })),
         Effect.provide(
           Layer.mergeAll(
-            GatewayTest,
+            GatewayIsolated,
             RegisteredFunction.actionLayer(confectSchema, ctx),
             Logger.layer([
               Logger.formatStructured.pipe(

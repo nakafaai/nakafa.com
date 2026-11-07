@@ -7,6 +7,7 @@ import {
   type Question,
   type State,
 } from "@repo/backend/confect/gateway/decide";
+import { escrowed } from "@repo/backend/confect/gateway/escrow";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import {
   decisionModelId,
@@ -21,6 +22,13 @@ import {
   type Purpose,
   purposes,
 } from "@repo/backend/confect/gateway/purpose";
+import { Meter, metered } from "@repo/backend/confect/spend/meter";
+import {
+  decisionCost,
+  embeddingCost,
+  tokenBound,
+} from "@repo/backend/confect/spend/rates";
+import { encodeJsonText } from "@repo/utilities/json";
 import { defaultSettingsMiddleware, embedMany, wrapLanguageModel } from "ai";
 import { Array as Arr, Context, Duration, Effect } from "effect";
 
@@ -74,6 +82,9 @@ export class Gateway extends Context.Service<
  */
 const retention = { data_collection: "deny", zdr: true };
 
+/** How many times a decision is asked at most: its first ask and the retries of `decideWith`. */
+const DECISION_ASKS = 3;
+
 /** The language model every provider hands to the AI SDK. */
 type ProviderLanguageModel = Parameters<typeof wrapLanguageModel>[0]["model"];
 
@@ -84,26 +95,48 @@ type EmbeddingModel = Parameters<typeof embedMany>[0]["model"];
  * Builds every handle over one AI SDK provider, so the production adapter
  * (`gateway/live.ts`) and deterministic models in tests set the same defaults.
  * The provider makes both kinds of model: the language model of a purpose, and
- * the decision model, which it makes with the zero retention request.
+ * the decision model, which it makes with the zero retention request. Every
+ * call goes through `meter`: it holds the call's ceiling before the provider
+ * is asked and settles to what the call cost (`confect/spend`).
  */
-export function make(provider: {
-  readonly decisionModel: (
-    modelId: string,
-    options: { readonly zdr: boolean }
-  ) => DecisionModel;
-  readonly languageModel: (modelId: string) => ProviderLanguageModel;
-  readonly embeddingModel: (
-    modelId: string,
-    options: { readonly zdr: boolean }
-  ) => EmbeddingModel;
-}): Gateway["Service"] {
+export function make(
+  provider: {
+    readonly decisionModel: (
+      modelId: string,
+      options: { readonly zdr: boolean }
+    ) => DecisionModel;
+    readonly languageModel: (modelId: string) => ProviderLanguageModel;
+    readonly embeddingModel: (
+      modelId: string,
+      options: { readonly zdr: boolean }
+    ) => EmbeddingModel;
+  },
+  meter: Meter["Service"]
+): Gateway["Service"] {
+  // A refused hold reads as the payer's exhausted quota, as `classify` reads it
+  // for a language call.
+  const quota = () => Effect.fail(new GatewayFailure({ reason: "quota" }));
   return Gateway.of({
-    decide: (state, questions) =>
-      decideWith(
-        provider.decisionModel(decisionModelId, { zdr: retention.zdr }),
-        state,
-        questions
-      ),
+    decide: (state, questions) => {
+      // The request's text bounds its tokens, and each ask may be billed.
+      const held =
+        decisionCost(tokenBound(encodeJsonText({ questions, state }))) *
+        DECISION_ASKS;
+      return metered(
+        "decision",
+        held,
+        decideWith(
+          provider.decisionModel(decisionModelId, { zdr: retention.zdr }),
+          state,
+          questions
+        ),
+        ({ input }) => (input === undefined ? held : decisionCost(input))
+      ).pipe(
+        Effect.provideService(Meter, meter),
+        Effect.catchTag("SpendRefused", quota),
+        Effect.map(({ answers }) => answers)
+      );
+    },
     language: (purpose) => {
       const { effort, timeout } = purposes[purpose];
       return {
@@ -122,6 +155,7 @@ export function make(provider: {
               },
             }),
             cachedPrefix,
+            escrowed(meter, purpose),
           ],
         }),
         timeout,
@@ -131,22 +165,37 @@ export function make(provider: {
       texts: readonly string[],
       model: EmbeddingModelId = embeddingModelId
     ) {
-      const { embeddings } = yield* Effect.tryPromise({
-        try: (signal) =>
-          embedMany({
-            abortSignal: signal,
-            model: provider.embeddingModel(model, { zdr: retention.zdr }),
-            providerOptions: {
-              openaiCompatible: { dimensions: embeddingDimensions },
-            },
-            values: Arr.fromIterable(texts),
-          }),
-        catch: classify,
-      }).pipe(
-        Effect.timeoutOrElse({
-          duration: Duration.millis(embeddingTimeoutMs),
-          orElse: () => Effect.fail(new GatewayFailure({ reason: "timeout" })),
-        })
+      // The texts bound their tokens, and the reply reports what they were.
+      const held = embeddingCost(
+        Arr.reduce(texts, 0, (total, text) => total + tokenBound(text))
+      );
+      const { embeddings } = yield* metered(
+        "embedding",
+        held,
+        Effect.tryPromise({
+          try: (signal) =>
+            embedMany({
+              abortSignal: signal,
+              model: provider.embeddingModel(model, { zdr: retention.zdr }),
+              providerOptions: {
+                openaiCompatible: { dimensions: embeddingDimensions },
+              },
+              values: Arr.fromIterable(texts),
+            }),
+          catch: classify,
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: Duration.millis(embeddingTimeoutMs),
+            orElse: () =>
+              Effect.fail(new GatewayFailure({ reason: "timeout" })),
+          })
+        ),
+        // A reply that reports no tokens costs its whole hold.
+        ({ usage }) =>
+          Number.isInteger(usage.tokens) ? embeddingCost(usage.tokens) : held
+      ).pipe(
+        Effect.provideService(Meter, meter),
+        Effect.catchTag("SpendRefused", quota)
       );
       // A reply that does not match the request is not a vector the index
       // can hold.

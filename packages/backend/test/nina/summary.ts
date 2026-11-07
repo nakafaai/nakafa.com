@@ -12,7 +12,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { GatewayTest } from "@repo/backend/test/gateway";
+import { GatewayIsolated } from "@repo/backend/test/gateway";
 import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
 import { type EarlierTurn, filler } from "@repo/backend/test/nina";
 import {
@@ -207,7 +207,7 @@ export async function createSummaryTest(
           ...(options.history ? { history: options.history } : {}),
         }).pipe(
           Effect.provide([
-            GatewayTest,
+            GatewayIsolated,
             RegisteredFunction.actionLayer(schema, counted),
           ])
         )
