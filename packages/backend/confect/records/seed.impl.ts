@@ -23,7 +23,7 @@ import {
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { cohortNameKey } from "@repo/backend/confect/tenancy/cohort";
-import { lastGradeOf } from "@repo/backend/confect/tenancy/promotion/destination";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import {
   Array as Arr,

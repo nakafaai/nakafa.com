@@ -15,10 +15,8 @@ import {
   PromotionPlanInvalid,
   type PromotionPlanIssue,
 } from "@repo/backend/confect/tenancy/errors";
-import {
-  destinationIssue,
-  lastGradeOf,
-} from "@repo/backend/confect/tenancy/promotion/destination";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
+import { destinationIssue } from "@repo/backend/confect/tenancy/promotion/destination";
 import { PROMOTION_PAGE_SIZE } from "@repo/backend/confect/tenancy/promotion/progress";
 import type {
   PromotionSource,

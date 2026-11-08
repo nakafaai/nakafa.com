@@ -41,17 +41,17 @@ describe("tenancy/cohorts edit", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const seventh = yield* cohort(fixture, period.id, "7A", 7);
-        yield* cohort(fixture, period.id, "7B", 7);
+        const seventh = yield* cohort(fixture, period.id, "7A", 10);
+        yield* cohort(fixture, period.id, "7B", 10);
         const caseOnly = yield* fixture.as("admin").mutation(edit, {
           cohortId: seventh.id,
-          grade: 7,
+          grade: 10,
           name: "7a",
           slug: nf,
         });
         const same = yield* fixture.as("admin").mutation(edit, {
           cohortId: seventh.id,
-          grade: 7,
+          grade: 10,
           name: "7a",
           slug: nf,
         });
@@ -59,7 +59,7 @@ describe("tenancy/cohorts edit", () => {
           .as("admin")
           .mutation(edit, {
             cohortId: seventh.id,
-            grade: 7,
+            grade: 10,
             name: "7b",
             slug: nf,
           })
@@ -81,31 +81,66 @@ describe("tenancy/cohorts edit", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const seventh = yield* cohort(fixture, period.id, "7A", 7);
-        yield* cohort(fixture, period.id, "8A", 8);
+        const seventh = yield* cohort(fixture, period.id, "7A", 10);
+        yield* cohort(fixture, period.id, "8A", 11);
         const moved = yield* fixture.as("admin").mutation(edit, {
           cohortId: seventh.id,
-          grade: 9,
+          grade: 12,
           name: "7A",
           slug: nf,
         });
         const listed = yield* fixture
           .as("admin")
           .query(list, { periodId: period.id, slug: nf });
-        expect(moved).toMatchObject({ grade: 9, name: "7A" });
+        expect(moved).toMatchObject({ grade: 12, name: "7A" });
         expect(Arr.map(listed, (row) => [row.name, row.grade])).toEqual([
-          ["8A", 8],
-          ["7A", 9],
+          ["8A", 11],
+          ["7A", 12],
         ]);
         expect(yield* fixture.run(journal)).toMatchObject([
           { change: { type: "period.created" } },
           { change: { type: "cohort.created" } },
           { change: { type: "cohort.created" } },
           {
-            change: { grade: 9, type: "cohort.grade.set" },
+            change: { grade: 12, type: "cohort.grade.set" },
             subject: { id: seventh.id },
           },
         ]);
+      })
+  );
+});
+
+describe("tenancy/cohorts edit grade", () => {
+  it.effect(
+    "refuses a new grade the level of the cohort's unit does not teach, and renames a cohort that keeps an older grade",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* sma(fixture);
+        const tenth = yield* cohort(fixture, period.id, "X-1", 10);
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(edit, {
+            cohortId: tenth.id,
+            grade: 7,
+            name: "X-1",
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        // A cohort written before its unit changed level keeps its grade through a rename.
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantCohorts").patch(tenth.id, { grade: 7 })
+          ).pipe(Effect.orDie)
+        );
+        const renamed = yield* fixture.as("admin").mutation(edit, {
+          cohortId: tenth.id,
+          grade: 7,
+          name: "X-2",
+          slug: nf,
+        });
+        expect(refused).toMatchObject({ _tag: "CohortGradeOutsideLevel" });
+        expect(renamed).toMatchObject({ grade: 7, name: "X-2" });
       })
   );
 });

@@ -22,10 +22,8 @@ import {
   PromotionPlanInvalid,
   PromotionState,
 } from "@repo/backend/confect/tenancy/errors";
-import {
-  destinationIssue,
-  lastGradeOf,
-} from "@repo/backend/confect/tenancy/promotion/destination";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
+import { destinationIssue } from "@repo/backend/confect/tenancy/promotion/destination";
 import spec from "@repo/backend/confect/tenancy/promotion/moves.spec";
 import { PLANNABLE, update } from "@repo/backend/confect/tenancy/promotion/row";
 import {

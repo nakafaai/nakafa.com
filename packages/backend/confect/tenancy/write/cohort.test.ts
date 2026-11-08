@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   checkCohorts,
+  gradeTaught,
   insertCohort,
 } from "@repo/backend/confect/tenancy/write/cohort";
 import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -60,6 +61,22 @@ describe("tenancy/write cohort", () => {
           )
         );
         expect(full).toBe("CohortLimit");
+      })
+  );
+
+  it.effect(
+    "refuses a grade the unit's level does not teach, and passes one it teaches",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const refused = yield* fixture.run(
+          gradeTaught(fixture.units.smp, 10).pipe(
+            Effect.flip,
+            Effect.map((error) => error._tag)
+          )
+        );
+        yield* fixture.run(gradeTaught(fixture.units.smp, 9));
+        expect(refused).toBe("CohortGradeOutsideLevel");
       })
   );
 

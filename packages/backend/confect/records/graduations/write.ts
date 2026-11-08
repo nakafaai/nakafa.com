@@ -25,8 +25,8 @@ import { LetterContent } from "@repo/backend/confect/records/letter";
 import { Cohort, Period } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { periodAuthority } from "@repo/backend/confect/tenancy/authority";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { parseCivilDate } from "@repo/backend/confect/tenancy/period";
-import { lastGradeOf } from "@repo/backend/confect/tenancy/promotion/destination";
 import { sha256Hex } from "@repo/utilities/digest";
 import {
   Array as Arr,

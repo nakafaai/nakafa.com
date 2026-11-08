@@ -3248,6 +3248,10 @@
       "title": "This cohort name is already used.",
       "description": "Choose another name for this period."
     },
+    "school-refusal-cohort-grade": {
+      "title": "This grade is not taught here.",
+      "description": "Choose a grade that this school's level teaches."
+    },
     "school-refusal-cohort-limit": {
       "title": "No more cohorts fit this period.",
       "description": "Add the cohort to another period instead."

@@ -3,7 +3,7 @@ import { Array as Arr, Option } from "effect";
 import {
   chosenGrade,
   countryChoices,
-  gradeItems,
+  gradeItemsOf,
   languageItems,
   timeZoneItems,
 } from "@/components/tenant/settings/choices";
@@ -42,13 +42,20 @@ describe("components/tenant/settings/choices", () => {
     );
   });
 
-  it("offers each school year a cohort may hold, from the lowest to the highest", () => {
-    expect(Arr.map(gradeItems, (item) => item.value)).toEqual(
-      Arr.makeBy(13, (index) => String(index + 1))
-    );
-    expect(Arr.every(gradeItems, (item) => item.label === item.value)).toBe(
-      true
-    );
+  it("offers a cohort the school years of its unit's level, from the lowest to the highest", () => {
+    expect(Arr.map(gradeItemsOf("sd"), (item) => item.value)).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+    ]);
+    expect(Arr.map(gradeItemsOf("sma"), (item) => item.label)).toEqual([
+      "10",
+      "11",
+      "12",
+    ]);
   });
 
   it("reads the school year a grade choice holds, and none for no choice or one out of range", () => {

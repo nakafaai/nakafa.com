@@ -14,12 +14,14 @@ import {
 } from "@repo/backend/confect/tenancy/cohort";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
 import { CohortNameTaken } from "@repo/backend/confect/tenancy/errors";
+import { gradeTaught } from "@repo/backend/confect/tenancy/write/cohort";
 import { Effect, Option, Struct } from "effect";
 
 /**
- * Sets the name and the school year of one cohort, which its creation chose. The name stays unique within its
- * period, and a name that only differs in case from the cohort's own is not taken by the cohort itself. Each value
- * that changes is recorded on its own, and values already stored write and record nothing.
+ * Sets the name and the school year of one cohort, which its creation chose. A new school year is one the level of
+ * the cohort's unit teaches, and a cohort keeps the one it holds when only its name changes. The name stays unique
+ * within its period, and a name that only differs in case from the cohort's own is not taken by the cohort itself.
+ * Each value that changes is recorded on its own, and values already stored write and record nothing.
  */
 export const edit = FunctionImpl.make(
   databaseSchema,
@@ -30,6 +32,9 @@ export const edit = FunctionImpl.make(
     const cohort = yield* Cohort;
     if (cohort.grade === grade && cohort.name === name) {
       return cohortView(cohort);
+    }
+    if (cohort.grade !== grade) {
+      yield* gradeTaught(cohort.unitId, grade);
     }
     const nameKey = cohortNameKey(name);
     const sameName = yield* (yield* DatabaseReader)

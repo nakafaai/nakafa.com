@@ -103,6 +103,15 @@ export class PeriodNotActive extends Schema.TaggedError<PeriodNotActive>()(
   refusal("PERIOD_NOT_ACTIVE", "Only an active period can be archived.")
 ) {}
 
+/** A grade that the level of the cohort's unit does not teach (`gradesOf`). */
+export class CohortGradeOutsideLevel extends Schema.TaggedError<CohortGradeOutsideLevel>()(
+  "CohortGradeOutsideLevel",
+  refusal(
+    "COHORT_GRADE_OUTSIDE_LEVEL",
+    "This school's level does not teach this grade."
+  )
+) {}
+
 /** A cohort name that another cohort of its period already uses, compared without case. */
 export class CohortNameTaken extends Schema.TaggedError<CohortNameTaken>()(
   "CohortNameTaken",

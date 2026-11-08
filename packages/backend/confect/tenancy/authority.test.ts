@@ -40,11 +40,12 @@ const plannedPeriod = (
 const cohort = (
   fixture: Fixture,
   periodId: GenericId.GenericId<"tenantPeriods">,
-  name: string
+  name: string,
+  grade: number
 ) =>
   fixture
     .as("admin")
-    .mutation(cohorts.create, { grade: 7, name, periodId, slug: nf });
+    .mutation(cohorts.create, { grade, name, periodId, slug: nf });
 
 /** Enrols the fixture's student in the SMA unit, so a cohort of that unit may hold them. */
 const enrolInSma = (fixture: Fixture) =>
@@ -102,7 +103,7 @@ describe("tenancy/authority homeroom relation", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* plannedPeriod(fixture, fixture.units.smp);
-        const made = yield* cohort(fixture, period.id, "7A");
+        const made = yield* cohort(fixture, period.id, "7A", 7);
         const teacher = fixture.people.teacher.personId;
         const before = yield* mayView(fixture, made.id, teacher);
         yield* fixture.as("admin").mutation(assign, {
@@ -127,8 +128,8 @@ describe("tenancy/authority cohortMember relation", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* plannedPeriod(fixture, fixture.units.sma);
-        const seventhA = yield* cohort(fixture, period.id, "7A");
-        const seventhB = yield* cohort(fixture, period.id, "7B");
+        const seventhA = yield* cohort(fixture, period.id, "7A", 10);
+        const seventhB = yield* cohort(fixture, period.id, "7B", 10);
         yield* enrolInSma(fixture);
         yield* placeAdmin(
           fixture,
@@ -149,7 +150,7 @@ describe("tenancy/authority cohortMember relation", () => {
           .as("student")
           .mutation(edit, {
             cohortId: seventhA.id,
-            grade: 7,
+            grade: 10,
             name: "Saya",
             slug: nf,
           })
@@ -176,7 +177,7 @@ describe("tenancy/authority cohortMember relation", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* plannedPeriod(fixture, fixture.units.sma);
-        const seventhA = yield* cohort(fixture, period.id, "7A");
+        const seventhA = yield* cohort(fixture, period.id, "7A", 10);
         const teacherReads = yield* fixture
           .as("teacher")
           .query(members, { ...firstPage, cohortId: seventhA.id, slug: nf })

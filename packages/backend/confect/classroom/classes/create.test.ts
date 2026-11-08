@@ -193,7 +193,7 @@ describe("classroom/classes create", () => {
         yield* classOf(fixture, x1.id, "Fisika");
         yield* fixture.as("admin").mutation(cohorts.edit, {
           cohortId: x1.id,
-          grade: 10,
+          grade: 7,
           name: "X-2",
           slug: nf,
         });
