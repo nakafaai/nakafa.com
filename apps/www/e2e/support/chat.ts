@@ -102,7 +102,7 @@ const encodeRow = Schema.encodeSync(ChatRow);
  * which the local backend cannot answer and a learner may start only a few of
  * a minute, so a test starts a few chats this way and imports the rest.
  */
-const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
+export const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
   page: Page,
   baseURL: string,
   origin: string

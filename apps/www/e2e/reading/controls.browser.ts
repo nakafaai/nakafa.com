@@ -1,4 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Deferred, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -73,7 +76,11 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       })
     );
     yield* Effect.sync(() => expect(interLoaded).toBe(true));
-    const summary = page.locator("header").filter({ has: title }).locator("p");
+    // The summary follows the title, apart from the byline's author and dates.
+    const summary = page
+      .locator("header")
+      .filter({ has: title })
+      .locator("h1 + p");
     if (href === routes[0]) {
       yield* Effect.promise(() => expect(summary).toHaveCount(0));
     } else {
@@ -241,7 +248,9 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     const menu = page.getByRole("menu");
     yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
     yield* Effect.promise(() =>
-      expect(menu.getByText("More", { exact: true })).toBeVisible()
+      expect(
+        menu.getByText(en.Common["menu-actions"], { exact: true })
+      ).toBeVisible()
     );
     yield* Effect.promise(() =>
       expect(menu.getByRole("menuitem")).toHaveCount(3)

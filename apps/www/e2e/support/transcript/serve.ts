@@ -3,7 +3,9 @@ import type { chatViewValidator } from "@repo/backend/confect/chats/view";
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import {
   Array as Arr,
+  Deferred,
   Effect,
+  Exit,
   MutableHashMap,
   MutableHashSet,
   MutableRef,
@@ -36,8 +38,16 @@ class NoConnection extends Schema.TaggedError<NoConnection>()("NoConnection", {
   message: Schema.String,
 }) {}
 
-/** The id of the fixture chat. The page takes any string for the id of a chat. */
-export const CHAT = "e2e-evidence-chat";
+/**
+ * The chat whose conversation the fixture serves: a real chat of the signed-in
+ * learner, because the chat page reads the chat on the server before its
+ * connection opens and answers a chat that does not exist as not found.
+ */
+export const FixtureChat = Schema.Struct({
+  chatId: Schema.String,
+  userId: Schema.String,
+});
+export type FixtureChat = typeof FixtureChat.Type;
 
 /** The fixture writes no answer while the page watches, so a stream is empty. */
 const NOTHING_WRITTEN: Writing = { chunks: [], order: null };
@@ -71,7 +81,10 @@ type Conversation = Schema.Struct<{
  * The turn comes from the messages that answer it, whose facts the messages
  * query does not tell.
  */
-function conversationOf(messages: readonly ServedMessage[]): Conversation {
+function conversationOf(
+  messages: readonly ServedMessage[],
+  chat: FixtureChat
+): Conversation {
   const last = Arr.findLast(
     messages,
     (message) => message.role === "assistant"
@@ -79,12 +92,12 @@ function conversationOf(messages: readonly ServedMessage[]): Conversation {
   return {
     chat: {
       _creationTime: 0,
-      _id: CHAT,
+      _id: chat.chatId,
       threadId: THREAD,
       title: "Evidence",
       type: "study",
       updatedAt: 0,
-      userId: "e2e-learner",
+      userId: chat.userId,
       visibility: "private",
     },
     turn: Option.getOrNull(
@@ -100,7 +113,8 @@ function conversationOf(messages: readonly ServedMessage[]): Conversation {
  */
 function noticeConversations(
   conversations: MutableHashSet.MutableHashSet<number>,
-  frame: typeof SentSchema.Type
+  frame: typeof SentSchema.Type,
+  chatId: Option.Option<string>
 ) {
   if (frame.type !== "ModifyQuerySet") {
     return;
@@ -117,7 +131,7 @@ function noticeConversations(
       Option.flatMap(Arr.head),
       Option.flatMap(decodeChatArgs)
     );
-    if (Option.isSome(chat) && chat.value.chatId === CHAT) {
+    if (Option.isSome(chat) && Option.contains(chatId, chat.value.chatId)) {
       MutableHashSet.add(conversations, modification.queryId);
     }
   }
@@ -143,8 +157,11 @@ const readsMessages = (asked: AskedQueries) =>
 export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
   function* (
     page: Page,
-    shown: MutableRef.MutableRef<readonly ServedMessage[]>
+    shown: MutableRef.MutableRef<readonly ServedMessage[]>,
+    chat: MutableRef.MutableRef<Option.Option<FixtureChat>>
   ) {
+    /** The HTTP origin of the backend, once the page's connection opened. */
+    const origin = yield* Deferred.make<string>();
     /** The socket of the latest connection of the page, which a stream writes to. */
     const socket = MutableRef.make<Option.Option<Socket>>(Option.none());
     /** What the queries of that connection ask for, as `noticeQueries` records it. */
@@ -155,6 +172,9 @@ export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
     yield* Effect.promise(() =>
       page.routeWebSocket(CONVEX_SOCKET, (route) => {
         const server = route.connectToServer();
+        const address = new URL(route.url());
+        address.protocol = address.protocol === "wss:" ? "https:" : "http:";
+        Deferred.doneUnsafe(origin, Exit.succeed(address.origin));
         /** What each message and turn query of this connection asks for, and the conversation queries. */
         const queries: AskedQueries = MutableHashMap.empty();
         const conversations = MutableHashSet.empty<number>();
@@ -171,7 +191,9 @@ export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
             );
           }
           if (MutableHashSet.has(conversations, queryId)) {
-            return Option.some(conversationOf(shown.current));
+            return Option.map(MutableRef.get(chat), (served) =>
+              conversationOf(shown.current, served)
+            );
           }
           return Option.none();
         };
@@ -180,7 +202,11 @@ export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
           const sent = decodeSent(message.toString());
           if (Option.isSome(sent)) {
             noticeQueries(queries, sent.value);
-            noticeConversations(conversations, sent.value);
+            noticeConversations(
+              conversations,
+              sent.value,
+              Option.map(MutableRef.get(chat), (served) => served.chatId)
+            );
           }
           server.send(message);
         });
@@ -198,6 +224,8 @@ export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
     );
 
     return {
+      /** The HTTP origin of the backend, which the page's first connection tells. */
+      origin: Deferred.await(origin),
       /**
        * Puts `messages` in front of the page as the new answer of its chat, the
        * way Agent does while a turn streams. Every query the page asked of its

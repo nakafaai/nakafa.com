@@ -68,7 +68,7 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
                 // the visitor decides, and the next lesson's link sits there.
                 yield* seedAnalyticsConsent(page, "denied");
                 yield* Effect.promise(() => page.goto(href));
-                const pagination = paginationNavigation(page);
+                const pagination = paginationNavigation(page, locale);
                 const next = pagination.locator("a[href]:visible").last();
                 yield* Effect.promise(() => expect(next).toBeVisible());
                 const destination = yield* Effect.promise(() =>

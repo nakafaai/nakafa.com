@@ -1,13 +1,17 @@
 import type { OptimisticLocalStore } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import {
+  type ExamResponse,
+  isAnswered,
+} from "@repo/backend/confect/assessment/response";
 import type {
   PaperView,
   SavedView,
 } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, HashMap, Option, Schema, Tuple } from "effect";
+import type { PlayerCellModel } from "@/components/player/model";
 
 /** What a student saved on the paper of an open attempt, as the server reads it. */
 export type SavedValue = typeof SavedView.Type;
@@ -89,6 +93,17 @@ export type PaperValue = ReturnType<typeof mergePaper>;
 
 /** One question of the paper, with its interactions and its saved response. */
 export type PaperQuestion = PaperValue["questions"][number];
+
+/**
+ * A question of the paper as the navigator and the finish's review mark it: answered once the student saved
+ * at least one option of it, or text that is not blank, and flagged as the paper says, so an answer or a flag
+ * shows as soon as the student makes it.
+ */
+export const paperCell = (question: PaperQuestion): PlayerCellModel => ({
+  answered: question.response !== null && isAnswered(question.response),
+  flagged: question.flagged,
+  key: question.id,
+});
 
 /**
  * What the student saved with the response of one question replaced, numbered with `version`. The screen shows

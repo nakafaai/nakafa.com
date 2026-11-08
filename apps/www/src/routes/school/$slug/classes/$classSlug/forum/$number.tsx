@@ -1,9 +1,9 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
 import { ClassShell } from "@/components/tenant/classes/shell";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readClassAddress, readDiscussionNumber } from "@/lib/tenant/params";
 
 /** The reply of the discussion to bring into view, such as the one a mention points to. */
@@ -20,16 +20,14 @@ export const Route = createFileRoute(
   "/school/$slug/classes/$classSlug/forum/$number"
 )({
   validateSearch: Schema.toStandardSchemaV1(DiscussionSearch),
-  beforeLoad: ({ params }) => {
-    const classAddress = readClassAddress(params.classSlug);
-    const number = readDiscussionNumber(params.number);
-    if (Option.isNone(classAddress) || Option.isNone(number)) {
-      throw notFound();
-    }
-    return { classAddress: classAddress.value, discussion: number.value };
-  },
+  ...guardSchoolPage({
+    reads: (params: { readonly classSlug: string; readonly number: string }) =>
+      Option.all({
+        classAddress: readClassAddress(params.classSlug),
+        discussion: readDiscussionNumber(params.number),
+      }),
+  }),
   component: SchoolClassDiscussionPage,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolClassDiscussionPage(): ReactElement {

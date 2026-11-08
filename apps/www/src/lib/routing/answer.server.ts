@@ -7,11 +7,11 @@ import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { answerRootDocument } from "@/lib/llms/negotiate.server";
 import { isRawProfileAddress } from "@/lib/profile/gate";
 import { readBrowserPage } from "@/lib/routing/browser.server";
+import { readBareAddress } from "@/lib/routing/locale/bare";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 import {
-  readBareRedirect,
   readMainSiteRedirect,
   readMigrationResponse,
   readMovedResponse,
@@ -20,7 +20,7 @@ import {
   readSlashRedirectResponse,
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
-import { isBareRoutePath, isRenderedRoutePath } from "@/lib/routing/rendered";
+import { isRenderedRoutePath } from "@/lib/routing/rendered";
 import {
   answerRouted,
   type RouterHandler,
@@ -91,8 +91,7 @@ function namesUnrenderedPage(request: Request) {
 /**
  * Answers a request that no address decision answered: the not-found page of a
  * document that the projection does not own, then the root's locale redirect, then
- * the locale redirect of a bare page address, then the static shell of a school
- * page, or else the router's page. A path that no Worker route renders answers the
+ * the static shell of a school page, or else the router's page. A path that no Worker route renders answers the
  * static not-found page before the router runs.
  */
 const answerRouter = Effect.fn("www.routing.answer.router")(function* (
@@ -112,12 +111,6 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
   if (Option.isSome(root)) {
     return yield* answerRootDocument(request, root.value);
   }
-  if (isBareRoutePath(url)) {
-    const bare = readBareRedirect(request);
-    if (Option.isSome(bare)) {
-      return bare.value;
-    }
-  }
   if (!isRenderedRoutePath(url)) {
     return yield* answerUnmatchedRequest(request);
   }
@@ -135,11 +128,13 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * in the browser, such as a learner's home or settings, answers the browser shell.
  * A visitor's try-out track, set or section answers the page that the build wrote
  * for every visitor, before any content read. A removed address answers not found, and a migrated or moved
- * address moves to its successor. A raw user address answers the static
+ * address moves to its successor. Any other address that names no locale, the main
+ * host's School pages included, moves to the negotiated locale (`locale/bare.ts`),
+ * so a typed address without a locale never answers not found. A raw user address answers the static
  * not-found page, its Markdown spelling included. A page in
  * a locale that no Worker route renders answers the static not-found page before
  * any content read, and a document that the source does not own answers not found
- * (ADR 0026). The root and a bare page address then move to the negotiated locale.
+ * (ADR 0026). The root then moves to the negotiated locale.
  * The router answers the rest only for a path that a Worker route renders: every
  * other path, a probe for a file included, answers the static not-found page.
  * Every not-found answer is that static page unless a Worker route renders the
@@ -209,6 +204,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   const moved = readMovedResponse(request);
   if (Option.isSome(moved)) {
     return moved.value;
+  }
+
+  const bare = readBareAddress(request);
+  if (Option.isSome(bare)) {
+    return bare.value;
   }
 
   if (isRawProfileAddress(request)) {

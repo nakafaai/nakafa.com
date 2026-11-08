@@ -25,7 +25,7 @@ import {
 import { getCurriculumLooks } from "@/lib/curriculum/look";
 import { readRuntimeCurriculumCatalog } from "@/lib/curriculum/model";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
