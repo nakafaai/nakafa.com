@@ -5,6 +5,7 @@ import {
   ArrowTurnBackwardIcon,
   Delete02Icon,
   PencilEdit02Icon,
+  Task01Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
@@ -20,6 +21,7 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
 import {
@@ -64,8 +66,48 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
     <>
       <ConfirmRowMenu
         action={t("task-remove")}
+        body={
+          <LossItem
+            detail={t("task-remove-work", { count: task.handedIn })}
+            icon={Task01Icon}
+            name={task.title}
+          />
+        }
         confirm={t("task-remove")}
         description={t("task-remove-description")}
+        footer={
+          task.archived ? (
+            <DropdownMenuItem
+              onClick={() => {
+                leave();
+                runForumCall(
+                  forumCall(() =>
+                    restore.withOptimisticUpdate(restoreUpdate)(args)
+                  ),
+                  toastForumFailure
+                );
+              }}
+            >
+              <HugeIcons icon={ArrowTurnBackwardIcon} />
+              {t("task-restore")}
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              onClick={() => {
+                leave();
+                runForumCall(
+                  forumCall(() =>
+                    archive.withOptimisticUpdate(archiveUpdate)(args)
+                  ),
+                  toastForumFailure
+                );
+              }}
+            >
+              <HugeIcons icon={Archive02Icon} />
+              {t("task-archive")}
+            </DropdownMenuItem>
+          )
+        }
         icon={Delete02Icon}
         onConfirm={() => {
           leave();
@@ -81,37 +123,6 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
           <HugeIcons icon={PencilEdit02Icon} />
           {t("task-edit")}
         </DropdownMenuItem>
-        {task.archived ? (
-          <DropdownMenuItem
-            onClick={() => {
-              leave();
-              runForumCall(
-                forumCall(() =>
-                  restore.withOptimisticUpdate(restoreUpdate)(args)
-                ),
-                toastForumFailure
-              );
-            }}
-          >
-            <HugeIcons icon={ArrowTurnBackwardIcon} />
-            {t("task-restore")}
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem
-            onClick={() => {
-              leave();
-              runForumCall(
-                forumCall(() =>
-                  archive.withOptimisticUpdate(archiveUpdate)(args)
-                ),
-                toastForumFailure
-              );
-            }}
-          >
-            <HugeIcons icon={Archive02Icon} />
-            {t("task-archive")}
-          </DropdownMenuItem>
-        )}
       </ConfirmRowMenu>
       {openings === 0 ? null : <EditTaskDialog key={openings} task={task} />}
     </>
