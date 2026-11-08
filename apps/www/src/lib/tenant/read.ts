@@ -15,10 +15,10 @@ import {
 } from "@/lib/tenant/frame";
 
 /** A school read that the backend did not answer: a network failure, or an answer that did not decode. */
-export class SchoolReadFailed extends Schema.TaggedError<SchoolReadFailed>()(
-  "SchoolReadFailed",
-  { cause: Schema.Unknown }
-) {}
+export class SchoolReadFailed extends Schema.TaggedError<
+  SchoolReadFailed,
+  { readonly brand: unique symbol }
+>()("SchoolReadFailed", { cause: Schema.Unknown }) {}
 
 /**
  * Why a signed-in visitor's view of a school refuses it: the school denies the

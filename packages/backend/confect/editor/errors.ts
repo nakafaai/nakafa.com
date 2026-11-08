@@ -5,7 +5,10 @@ import { Schema } from "effect";
  * A batch whose client id belongs to another person's editor session. The server
  * writes nothing, so a co-editor cannot send steps under another editor's id.
  */
-export class ClientTaken extends Schema.TaggedError<ClientTaken>()(
+export class ClientTaken extends Schema.TaggedError<
+  ClientTaken,
+  { readonly brand: unique symbol }
+>()(
   "ClientTaken",
   refusal(
     "CLIENT_TAKEN",
@@ -20,7 +23,10 @@ export class ClientTaken extends Schema.TaggedError<ClientTaken>()(
  * answers its own backlog with the `FoldPending` reply instead (`SubmitReply`), because the
  * editor's sync decides that outcome for itself. The server writes nothing.
  */
-export class FoldPending extends Schema.TaggedError<FoldPending>()(
+export class FoldPending extends Schema.TaggedError<
+  FoldPending,
+  { readonly brand: unique symbol }
+>()(
   "FoldPending",
   refusal(
     "FOLD_PENDING",
@@ -29,7 +35,10 @@ export class FoldPending extends Schema.TaggedError<FoldPending>()(
 ) {}
 
 /** A batch of steps that is not JSON, or that the step schema refuses. It names no part of the batch. */
-export class BatchInvalid extends Schema.TaggedError<BatchInvalid>()(
+export class BatchInvalid extends Schema.TaggedError<
+  BatchInvalid,
+  { readonly brand: unique symbol }
+>()(
   "BatchInvalid",
   refusal("BATCH_INVALID", "This batch of steps is not one the editor accepts.")
 ) {}

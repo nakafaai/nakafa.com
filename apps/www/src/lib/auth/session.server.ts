@@ -32,13 +32,13 @@ import { serverHandler } from "@/lib/server/fn";
 import { CONVEX_SITE_URL } from "@/lib/server/runtime";
 
 /** The session of one request could not be read: a network failure, an error status, a missed deadline or an unreadable answer. */
-export class SessionUnavailable extends Schema.TaggedError<SessionUnavailable>()(
-  "SessionUnavailable",
-  {
-    reason: Schema.Literals(["body", "deadline", "fetch", "status"]),
-    status: Schema.optionalKey(Schema.Int),
-  }
-) {}
+export class SessionUnavailable extends Schema.TaggedError<
+  SessionUnavailable,
+  { readonly brand: unique symbol }
+>()("SessionUnavailable", {
+  reason: Schema.Literals(["body", "deadline", "fetch", "status"]),
+  status: Schema.optionalKey(Schema.Int),
+}) {}
 
 /** The session of one request on the server: what a page may see, the Convex token when there is one, and every Set-Cookie value to send back. */
 const RequestSession = Schema.Struct({

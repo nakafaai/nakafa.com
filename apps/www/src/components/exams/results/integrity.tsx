@@ -21,9 +21,10 @@ import {
 import { AwayCell } from "@/components/exams/results/students";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /** The signals a report counts beside the exits, in the order a row names them. */
@@ -78,9 +79,9 @@ function IntegrityRows() {
   const { rows, students } = report.value;
   if (Arr.isReadonlyArrayEmpty(rows)) {
     return (
-      <TableEmpty
-        act="reading"
+      <EmptyState
         description={t("integrity-empty")}
+        scene={<EmptyNina act="reading" />}
         title={t("integrity-empty-title")}
       />
     );

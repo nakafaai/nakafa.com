@@ -16,10 +16,10 @@ import { CONVEX_URL } from "@/lib/server/runtime";
  * A Convex read that failed without one of the query's typed refusals: the
  * network, the deployment, or an answer whose shape does not decode.
  */
-export class PreloadFailed extends Schema.TaggedError<PreloadFailed>()(
-  "PreloadFailed",
-  { cause: Schema.Unknown }
-) {}
+export class PreloadFailed extends Schema.TaggedError<
+  PreloadFailed,
+  { readonly brand: unique symbol }
+>()("PreloadFailed", { cause: Schema.Unknown }) {}
 
 /**
  * Reads one Confect query for one request, with the request's token. A refusal

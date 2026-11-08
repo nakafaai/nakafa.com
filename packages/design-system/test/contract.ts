@@ -66,14 +66,14 @@ const ThemeStyleSourcePathsSchema = Schema.Struct({
 type ThemeStyleSourcePaths = typeof ThemeStyleSourcePathsSchema.Type;
 
 /** Expected failure while reading or parsing a theme-owning stylesheet. */
-export class ThemeStyleSourceLoadError extends Schema.TaggedError<ThemeStyleSourceLoadError>()(
-  "ThemeStyleSourceLoadError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-    path: Schema.String,
-  }
-) {}
+export class ThemeStyleSourceLoadError extends Schema.TaggedError<
+  ThemeStyleSourceLoadError,
+  { readonly brand: unique symbol }
+>()("ThemeStyleSourceLoadError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+  path: Schema.String,
+}) {}
 
 const SIMPLE_THEME_SELECTOR_PATTERN = /^\.(?<name>[a-z0-9-]+)$/u;
 const DEFAULT_THEME_STYLE_SOURCE_PATHS: ThemeStyleSourcePaths = {
@@ -185,13 +185,13 @@ export function readCustomThemeNames(root: Root) {
 }
 
 /** Expected failure: a theme color has no numeric value for one channel. */
-export class ThemeColorChannelError extends Schema.TaggedError<ThemeColorChannelError>()(
-  "ThemeColorChannelError",
-  {
-    message: Schema.String,
-    value: Schema.String,
-  }
-) {}
+export class ThemeColorChannelError extends Schema.TaggedError<
+  ThemeColorChannelError,
+  { readonly brand: unique symbol }
+>()("ThemeColorChannelError", {
+  message: Schema.String,
+  value: Schema.String,
+}) {}
 
 /** Requires one complete color channel before numeric theme calculations. */
 function requireColorChannel(

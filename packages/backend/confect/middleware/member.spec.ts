@@ -30,7 +30,10 @@ const notMember = Schema.Literal("NOT_MEMBER");
  * The caller has no active Person in the tenant, or the tenant does not
  * exist. One answer for both, so a slug probe reveals nothing.
  */
-export class NotMember extends Schema.TaggedError<NotMember>()("NotMember", {
+export class NotMember extends Schema.TaggedError<
+  NotMember,
+  { readonly brand: unique symbol }
+>()("NotMember", {
   code: notMember.pipe(
     Schema.withConstructorDefault(Effect.succeed(notMember.literal))
   ),
