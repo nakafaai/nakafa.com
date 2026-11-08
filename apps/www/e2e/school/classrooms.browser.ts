@@ -28,13 +28,6 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   const page = await context.newPage();
 
   await page.goto(address("/settings/profile"));
-  // Classrooms sits in the Academics group, folded while the page on screen belongs to another group.
-  const academics = page.getByRole("button", {
-    exact: true,
-    name: "Academics",
-  });
-  await waitUntilTakenOver(academics);
-  await academics.click();
   await page.getByRole("link", { exact: true, name: "Classrooms" }).click();
   await expect(page).toHaveURL(address("/settings/classes"));
   const header = page.locator("header");
