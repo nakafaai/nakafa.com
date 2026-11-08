@@ -37,7 +37,6 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
         }
       }}
       open={overlay === "navigator"}
-      showSwipeHandle
     >
       <DrawerContent
         finalFocus={!waiting}

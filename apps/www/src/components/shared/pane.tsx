@@ -18,23 +18,18 @@ import { pressesRow } from "@/components/shared/row";
 import { tableCardVariants } from "@/components/shared/table/card";
 
 /** The phone's header: centred under the swipe handle, or a row from the start with a detail's icon. */
-const sheetHeaderVariants = cva("relative", {
+const sheetHeaderVariants = cva("", {
   variants: {
-    icon: { false: "px-10", true: "flex-row items-center gap-3 text-start!" },
+    icon: { false: "", true: "flex-row items-center gap-3 text-start!" },
   },
-});
-
-/** The phone's close button: in the corner of a centred header, or at the end of a header's row. */
-const sheetCloseVariants = cva("", {
-  variants: { icon: { false: "absolute end-2 top-2", true: "shrink-0" } },
 });
 
 /**
  * A detail's header: its title, and what it shows on a second line, so it holds two lines at most
  * as every header does, and a long one cuts off with its whole text on hover. A detail of a thing
  * with its own icon stands it before the title, as the thing's card does. Beside the list a row's
- * detail holds the button that closes it; an always-on detail has none. The phone's drawer holds
- * the same button, for a reader who does not swipe.
+ * detail holds the button that closes it; an always-on detail has none. The phone's drawer holds no
+ * close button: it closes as an iPhone sheet does, by its handle, a swipe or a press outside.
  */
 export function PaneHeader({
   description,
@@ -70,16 +65,6 @@ export function PaneHeader({
             </DrawerDescription>
           )}
         </div>
-        <Button
-          className={sheetCloseVariants({ icon: icon !== undefined })}
-          onClick={close}
-          size="icon-sm"
-          tooltip={t("close")}
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons icon={Cancel01Icon} />
-        </Button>
       </DrawerHeader>
     );
   }

@@ -8,7 +8,6 @@ import { type ComponentProps, createContext, use } from "react";
 const DrawerContext = createContext<{
   hasSnapPoints: boolean;
   modal: DrawerPrimitive.Root.Props["modal"];
-  showSwipeHandle: boolean;
   swipeDirection: NonNullable<DrawerPrimitive.Root.Props["swipeDirection"]>;
 } | null>(null);
 
@@ -25,24 +24,22 @@ function useDrawer() {
 
 /**
  * shadcn's Base UI drawer in its floating style: a card that stands off every edge of the
- * screen, rounded on every corner, with the swipe handle at its top, as an iPhone sheet looks.
+ * screen, rounded on every corner, with the swipe handle at its edge, as an iPhone sheet looks.
+ * A drawer closes as that sheet does, by its handle, a swipe or a press outside, so every drawer
+ * draws the handle and none draws a close button.
  * https://ui.shadcn.com/docs/components/base/drawer
  */
 function Drawer({
   modal = true,
-  showSwipeHandle = false,
   snapPoints,
   swipeDirection = "down",
   ...props
-}: DrawerPrimitive.Root.Props & {
-  showSwipeHandle?: boolean;
-}) {
+}: DrawerPrimitive.Root.Props) {
   return (
     <DrawerContext
       value={{
         hasSnapPoints: (snapPoints?.length ?? 0) > 0,
         modal,
-        showSwipeHandle,
         swipeDirection,
       }}
     >
@@ -63,10 +60,6 @@ function DrawerTrigger(props: DrawerPrimitive.Trigger.Props) {
 
 function DrawerPortal(props: DrawerPrimitive.Portal.Props) {
   return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />;
-}
-
-function DrawerClose(props: DrawerPrimitive.Close.Props) {
-  return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
 }
 
 function DrawerOverlay({
@@ -124,7 +117,7 @@ function DrawerContent({
   className,
   ...props
 }: Omit<DrawerPrimitive.Popup.Props, "ref">) {
-  const { hasSnapPoints, modal, showSwipeHandle, swipeDirection } = useDrawer();
+  const { hasSnapPoints, modal, swipeDirection } = useDrawer();
   const swipeAxis =
     swipeDirection === "down" || swipeDirection === "up" ? "y" : "x";
 
@@ -176,7 +169,7 @@ function DrawerContent({
             {...props}
             ref={recordStageScroll}
           >
-            {showSwipeHandle ? <DrawerSwipeHandle /> : null}
+            <DrawerSwipeHandle />
             <DrawerPrimitive.Content
               className="flex min-h-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] select-text group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
               data-slot="drawer-content"
@@ -265,7 +258,6 @@ function DrawerDescription({
 
 export {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,

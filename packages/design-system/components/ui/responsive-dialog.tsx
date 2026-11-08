@@ -1,4 +1,3 @@
-import { CancelIcon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -12,7 +11,6 @@ import {
 } from "@repo/design-system/components/ui/dialog";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -20,10 +18,7 @@ import {
   DrawerPanel,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
-import {
-  HugeIcons,
-  OptionIcon,
-} from "@repo/design-system/components/ui/huge-icons";
+import { OptionIcon } from "@repo/design-system/components/ui/huge-icons";
 import {
   Item,
   ItemContent,
@@ -67,9 +62,11 @@ interface Props {
 
 /**
  * A dialog on a wide screen and a drawer on a phone, with one anatomy on both, as shadcn's dialog and alert dialog
- * have it: a header with the title, its sentence and the close in the top right corner; a body, which every dialog
- * has; and a footer with Cancel beside the action, or Close alone on a dialog that only shows something. The
- * dialog draws its header, its footer's way out and its close itself, so no dialog can leave one out.
+ * have it: a header with the title and its sentence; a body, which every dialog has; and a footer with Cancel beside
+ * the action, or Close alone on a dialog that only shows something. The dialog shows its close in the top right
+ * corner; the drawer closes as an iPhone sheet does, by its handle, a swipe or a press outside, so it draws no
+ * close button. The dialog draws its header, its footer's way out and its close itself, so no dialog can leave
+ * one out.
  */
 export function ResponsiveDialog({
   action,
@@ -88,7 +85,6 @@ export function ResponsiveDialog({
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, undefined, {
     getInitialValueInEffect: false,
   });
-  const t = useTranslations("Common");
   const opened = useRef(false);
   const footerPart = useRef<HTMLDivElement>(null);
   const pressMain = (event: KeyboardEvent<HTMLDivElement>) =>
@@ -130,22 +126,9 @@ export function ResponsiveDialog({
   }
 
   return (
-    <Drawer
-      onOpenChange={change}
-      onOpenChangeComplete={complete}
-      open={open}
-      showSwipeHandle
-    >
+    <Drawer onOpenChange={change} onOpenChangeComplete={complete} open={open}>
       <DrawerContent finalFocus={finalFocus}>
-        <DrawerClose
-          className="absolute top-2 right-2 z-10"
-          render={
-            <Button size="icon-sm" tooltip={t("close")} variant="ghost" />
-          }
-        >
-          <HugeIcons icon={CancelIcon} />
-        </DrawerClose>
-        <DrawerHeader className="px-12">
+        <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
