@@ -12735,6 +12735,14 @@ export declare const api: {
         { periodId: Id<"tenantPeriods">; slug: string },
         Array<{
           classes: number;
+          hold:
+            | "classes"
+            | "homeroom"
+            | "letters"
+            | "members"
+            | "reports"
+            | "sittings"
+            | null;
           homeroom: string | null;
           id: Id<"tenantCohorts">;
           name: string;
@@ -13186,6 +13194,14 @@ export declare const api: {
           isDone: boolean;
           page: Array<{
             end: string;
+            hold:
+              | "active"
+              | "classes"
+              | "cohorts"
+              | "grades"
+              | "graduations"
+              | "promotions"
+              | null;
             id: Id<"tenantPeriods">;
             name: string;
             start: string;
