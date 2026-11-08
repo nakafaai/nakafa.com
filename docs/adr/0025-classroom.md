@@ -195,8 +195,8 @@ decisions hold it.
   the pane and the sheet. Beside the chat the pane stands from the moment the address
   asks a thread, a reload included, so the page never narrows late; the phone's sheet
   opens only once the thread's replies are in; and a move to another thread keeps the
-  last one on screen until the next holds its replies. The sheet has no close button:
-  it closes as an iPhone's does, by its handle, a swipe down or a tap outside.
+  last one on screen until the next holds its replies. The sheet has no close button,
+  like every drawer since #2202: it closes by its handle, a swipe down or a tap outside.
 - The primary fill belongs to the page's one primary button, New discussion. The
   viewer's bubbles use the secondary surface, another member's the muted one, and the
   composer, its send button and a reaction the viewer gave stay neutral or secondary.

@@ -1,4 +1,5 @@
 import { captureException } from "@repo/analytics/posthog/capture";
+import { readPageGoing } from "@repo/design-system/lib/lazy";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
@@ -8,7 +9,11 @@ import { ActionLink } from "@/components/state/action";
 import { Broken, BrokenRetry } from "@/components/state/broken";
 import { Missing } from "@/components/state/missing";
 import { Stage } from "@/components/state/stage";
-import { isStaleChunkError, reloadForStaleChunk } from "@/lib/chunks/stale";
+import {
+  isStaleChunkError,
+  reloadForStaleChunk,
+  reloadPage,
+} from "@/lib/chunks/stale";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
 
 /**
@@ -53,24 +58,29 @@ export function LocalizedNotFound({
  * Handles the failure that a route's error component caught. A chunk of an earlier deploy that a page,
  * loaded before the deploy, asked for is gone: the page reloads once at the same address and loads the
  * current chunks, and this answers true meanwhile, so the error component draws nothing and the learner
- * never sees an error for it. Every other failure, and a chunk that is still missing after its reload, is
- * reported once under its source, and this answers false.
+ * never sees an error for it. A failure of a page that is already going, because it reloads or the reader
+ * leaves it, draws nothing either. Every other failure, and a chunk that is still missing after its
+ * reload, is reported once under its source, and this answers false.
  */
 export function useRouteFailure(error: unknown, source: string) {
-  // Whether the page is reloading for a chunk of an earlier deploy. The reload
-  // writes it, from the tab's storage, so it lives in a store of its own.
+  // Whether the page is going, or reloading for a chunk of an earlier deploy.
+  // The reload writes it, from the tab's storage, so it lives in a store of its own.
   const [reload] = useState(() =>
-    createStore<boolean>()(() => isStaleChunkError(error))
+    createStore<boolean>()(
+      () => readPageGoing() !== null || isStaleChunkError(error)
+    )
   );
   const reloading = useStore(reload);
 
   useEffect(() => {
-    if (!isStaleChunkError(error)) {
+    if (readPageGoing() !== null || !isStaleChunkError(error)) {
       return;
     }
     const reloaded = Effect.runSync(
-      reloadForStaleChunk(window.location.pathname, window.sessionStorage, () =>
-        window.location.reload()
+      reloadForStaleChunk(
+        window.location.pathname,
+        window.sessionStorage,
+        reloadPage
       )
     );
     if (!reloaded) {

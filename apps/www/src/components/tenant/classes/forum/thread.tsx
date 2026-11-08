@@ -7,17 +7,13 @@ import {
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { threadTitle } from "@repo/backend/confect/classroom/forum/thread";
-import {
-  DrawerHeader,
-  DrawerTitle,
-} from "@repo/design-system/components/ui/drawer";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaneHeader } from "@/components/shared/pane";
-import { PanesDetail, usePaneMode, useWide } from "@/components/shared/panes";
+import { PanesDetail, useWide } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { LoadFailure } from "@/components/state/failure";
 import { MESSAGE_PAGE_SIZE } from "@/components/tenant/classes/forum/channel";
@@ -275,14 +271,12 @@ function ThreadContent() {
 }
 
 /**
- * The header of a thread: beside the chat, the pane's header with its close button; on a phone, the sheet's title
- * alone, since a sheet closes as an iPhone's does, by its handle, a swipe down or a tap outside. Its title is a titled
+ * The header of a thread, beside the chat with its close button and on a phone's sheet with its title alone: a titled
  * discussion's number and title, or Thread for a thread of a message, whose opening message right under the header
  * already says what a title would repeat.
  */
 function ThreadHeader() {
   const t = useTranslations("Classroom");
-  const { place } = usePaneMode();
   const label = Option.match(use(ThreadShownContext), {
     onNone: () => t("thread-title"),
     onSome: ({ thread }) =>
@@ -294,15 +288,6 @@ function ThreadHeader() {
         : t("thread-title"),
   });
 
-  if (place === "sheet") {
-    return (
-      <DrawerHeader data-pane-header="">
-        <DrawerTitle className="truncate" dir="auto" title={label}>
-          {label}
-        </DrawerTitle>
-      </DrawerHeader>
-    );
-  }
   return <PaneHeader title={label} />;
 }
 
