@@ -2545,7 +2545,6 @@
     "set-column-questions": "Soalan",
     "set-column-score": "Skor",
     "set-column-status": "Status",
-    "set-filter-label": "Tapis {column}",
     "set-filter-all": "Semua",
     "status-not-started": "Belum bermula",
     "status-in-progress": "Sedang berjalan",
@@ -2565,11 +2564,7 @@
     "set-updating": "Sedang dikemas kini...",
     "set-update-error": "Tidak dapat mengemas kini keputusan.",
     "set-offline": "Sambungan terputus.",
-    "answer": "Jawapan",
-    "statement": "Pernyataan",
     "check-answer": "Semak jawapan",
-    "correct": "Betul",
-    "incorrect": "Salah",
     "reset": "Tetapkan semula",
     "explanation": "Penyelesaian",
     "prompt": "Soalan",
@@ -2603,7 +2598,11 @@
     "legend-answered": "Dijawab",
     "legend-flagged": "Ditanda",
     "shortcut-flag": "Tandakan soalan",
-    "cell-flagged": "{state, select, answered {Soalan {number}, dijawab, ditanda untuk semakan} other {Soalan {number}, belum dijawab, ditanda untuk semakan}}"
+    "cell-flagged": "{state, select, answered {Soalan {number}, dijawab, ditanda untuk semakan} other {Soalan {number}, belum dijawab, ditanda untuk semakan}}",
+    "answer": "Jawapan",
+    "statement": "Pernyataan",
+    "correct": "Betul",
+    "incorrect": "Salah"
   },
   "Utils": {
     "clear-search": "Kosongkan carian",
