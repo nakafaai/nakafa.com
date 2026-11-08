@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Array as Arr, Effect, Schema } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { runFixture } from "@/e2e/support/acceptance";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -125,7 +126,7 @@ test("a learner sees the frame on the free plan and loses it with Pro, without t
         await expect(firstFrame(page)).toBeAttached();
       });
 
-      yield* runAcceptanceCommand("xendit", learner.userId, "pass");
+      yield* runFixture(seedXendit(learner.userId, "pass"));
       yield* Effect.promise(async () => {
         // The account follows the plan live, so the frame leaves at once.
         await expect(firstFrame(page)).toHaveCount(0);
