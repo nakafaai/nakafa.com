@@ -8,13 +8,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useExamZoom } from "@/components/tenant/exams/provider";
@@ -38,6 +36,7 @@ export function ZoomMenu({
 }: {
   readonly onZoom: (percent: number) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const drawn = useExamZoom(drawnZoom);
   const choice = useExamZoom(zoomChoice);
@@ -58,7 +57,12 @@ export function ZoomMenu({
       >
         {drawn}%
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44" side="top">
+      <DropdownMenuContent
+        align="end"
+        className="w-44"
+        label={common("menu-zoom")}
+        side="top"
+      >
         <DropdownMenuRadioGroup
           onValueChange={(value) => {
             if (value === "fit" || value === "fill") {
@@ -69,27 +73,24 @@ export function ZoomMenu({
           }}
           value={choice}
         >
-          <DropdownMenuLabel>{t("zoom")}</DropdownMenuLabel>
           <DropdownMenuGroup>
             {Arr.map(ZOOM_PRESETS, (preset) => (
               <DropdownMenuRadioItem
                 className="tabular-nums"
+                icon={ZoomIcon}
                 key={preset}
                 value={String(preset)}
               >
-                <HugeIcons icon={ZoomIcon} />
                 {preset}%
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuRadioItem value="fit">
-              <HugeIcons icon={FitToScreenIcon} />
+            <DropdownMenuRadioItem icon={FitToScreenIcon} value="fit">
               {t("zoom-fit")}
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="fill">
-              <HugeIcons icon={ArrowExpandIcon} />
+            <DropdownMenuRadioItem icon={ArrowExpandIcon} value="fill">
               {t("zoom-fill")}
             </DropdownMenuRadioItem>
           </DropdownMenuGroup>

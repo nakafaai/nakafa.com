@@ -19,6 +19,7 @@ import {
   type Unit,
   withoutItem,
 } from "@/components/tenant/settings/state";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /**
  * The optimistic changes of the school settings. Each one shows a mutation's
@@ -94,22 +95,11 @@ export function changeInviteLists(
   matches: (args: Ref.Args<typeof tenancy.invites.list>) => boolean,
   change: (page: readonly Invite[]) => Invite[]
 ) {
-  for (const query of localStore.getAllQueries(tenancy.invites.list)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.slug === slug &&
-      matches(query.args)
-    ) {
-      localStore.setQuery(
-        tenancy.invites.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, tenancy.invites.list, (value, args) =>
+    args.slug === slug && matches(args)
+      ? Option.some(withPage(value, change))
+      : Option.none()
+  );
 }
 
 /** Changes the page of every loaded list of integration clients of one school. */
@@ -118,18 +108,9 @@ export function changeClientLists(
   slug: TenantSlug,
   change: (page: readonly Client[]) => Client[]
 ) {
-  for (const query of localStore.getAllQueries(integrations.clients.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        integrations.clients.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, integrations.clients.list, (value, args) =>
+    args.slug === slug ? Option.some(withPage(value, change)) : Option.none()
+  );
 }
 
 /** Changes the page of every loaded list of the grants of one school that the matches accept. */
@@ -139,22 +120,11 @@ export function changeGrantPages(
   matches: (args: Ref.Args<typeof access.grants.list>) => boolean,
   change: (page: readonly Grant[]) => Grant[]
 ) {
-  for (const query of localStore.getAllQueries(access.grants.list)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.slug === slug &&
-      matches(query.args)
-    ) {
-      localStore.setQuery(
-        access.grants.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, access.grants.list, (value, args) =>
+    args.slug === slug && matches(args)
+      ? Option.some(withPage(value, change))
+      : Option.none()
+  );
 }
 
 /** Shows the policy the school chose at once. */
@@ -297,18 +267,9 @@ function changeWebhookLists(
   slug: TenantSlug,
   change: (page: readonly Webhook[]) => Webhook[]
 ) {
-  for (const query of localStore.getAllQueries(integrations.webhooks.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        integrations.webhooks.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, integrations.webhooks.list, (value, args) =>
+    args.slug === slug ? Option.some(withPage(value, change)) : Option.none()
+  );
 }
 
 /** Shows a webhook's new receiver and changes at once. */
@@ -341,30 +302,22 @@ export const revokeWebhookChange: OptimisticUpdate<
 export const resendDeliveryChange: OptimisticUpdate<
   typeof integrations.webhooks.resend
 > = (localStore, { deliveryId, webhookId }) => {
-  for (const query of localStore.getAllQueries(
-    integrations.webhooks.deliveries
-  )) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.webhookId === webhookId &&
-      isFirstPage(query.args)
-    ) {
-      const { page } = query.value.value;
-      const resent = Arr.findFirst(page, (item) => item.id === deliveryId);
-      if (Option.isSome(resent)) {
-        const due: (typeof page)[number] = Struct.assign(resent.value, {
-          attempt: resent.value.attempt + 1,
-          id: Schema.decodeUnknownSync(Id("integrationDeliveries"))(
-            draftText()
-          ),
-          state: { status: "due" as const },
-        });
-        localStore.setQuery(
-          integrations.webhooks.deliveries,
-          query.args,
-          Option.some({ ...query.value.value, page: [due, ...page] })
-        );
-      }
-    }
-  }
+  changeLoaded(localStore, integrations.webhooks.deliveries, (value, args) =>
+    args.webhookId === webhookId && isFirstPage(args)
+      ? Option.map(
+          Arr.findFirst(value.page, (item) => item.id === deliveryId),
+          (resent) =>
+            withPage(value, (page) => [
+              Struct.assign(resent, {
+                attempt: resent.attempt + 1,
+                id: Schema.decodeUnknownSync(Id("integrationDeliveries"))(
+                  draftText()
+                ),
+                state: { status: "due" as const },
+              }),
+              ...page,
+            ])
+        )
+      : Option.none()
+  );
 };

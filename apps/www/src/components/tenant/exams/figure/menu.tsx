@@ -4,14 +4,11 @@ import {
   FlowConnectionIcon,
   PresentationBarChart01Icon,
 } from "@hugeicons/core-free-icons";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -39,12 +36,7 @@ export function FigureMenuFrame() {
   const t = useTranslations("Exams");
 
   return (
-    <Button
-      aria-label={t("figure")}
-      size="icon-sm"
-      type="button"
-      variant="ghost"
-    >
+    <Button size="icon-sm" tooltip={t("figure")} type="button" variant="ghost">
       <HugeIcons aria-hidden="true" icon={PresentationBarChart01Icon} />
     </Button>
   );
@@ -62,42 +54,37 @@ export function FigureMenu() {
 
   return (
     <DropdownMenu>
-      <ToolHint label={t("figure")}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={t("figure")}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            />
-          }
-        >
-          <HugeIcons aria-hidden="true" icon={PresentationBarChart01Icon} />
-        </DropdownMenuTrigger>
-      </ToolHint>
-      <DropdownMenuContent align="start">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-insert")}</DropdownMenuLabel>
-          {Arr.map(FigureKind.literals, (kind) => (
-            <DropdownMenuItem
-              disabled={active === null}
-              key={kind}
-              onClick={() => {
-                if (active !== null) {
-                  openFigure({
-                    draft: emptyDraft(kind),
-                    editor: active,
-                    position: null,
-                  });
-                }
-              }}
-            >
-              <HugeIcons aria-hidden="true" icon={FIGURE_ICON[kind]} />
-              {t(FIGURE_NAME[kind])}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            size="icon-sm"
+            tooltip={t("figure")}
+            type="button"
+            variant="ghost"
+          />
+        }
+      >
+        <HugeIcons aria-hidden="true" icon={PresentationBarChart01Icon} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" label={common("menu-insert")}>
+        {Arr.map(FigureKind.literals, (kind) => (
+          <DropdownMenuItem
+            disabled={active === null}
+            icon={FIGURE_ICON[kind]}
+            key={kind}
+            onClick={() => {
+              if (active !== null) {
+                openFigure({
+                  draft: emptyDraft(kind),
+                  editor: active,
+                  position: null,
+                });
+              }
+            }}
+          >
+            {t(FIGURE_NAME[kind])}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

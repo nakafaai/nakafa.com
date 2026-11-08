@@ -1,6 +1,5 @@
 import { Analytics01Icon } from "@hugeicons/core-free-icons";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "use-intl";
 import {
   type AnalyticsConsentContextValue,
@@ -22,11 +21,11 @@ function PreferencesMenuItem({
 
   return (
     <DropdownMenuItem
+      icon={Analytics01Icon}
       onClick={() => consent.setPreferencesOpen(true)}
       onFocus={consent.warmPreferences}
       onPointerEnter={consent.warmPreferences}
     >
-      <HugeIcons icon={Analytics01Icon} />
       {t("manage")}
     </DropdownMenuItem>
   );

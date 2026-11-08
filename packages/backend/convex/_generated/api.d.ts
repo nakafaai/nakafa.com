@@ -4232,7 +4232,16 @@ export declare const api: {
           "query",
           "public",
           {},
-          null | { manifestHash: string; releaseId: string; sequence: number }
+          null | {
+            manifestHash: string;
+            releaseId: string;
+            sequence: number;
+            snapshots: {
+              assessment: string | null;
+              program: string | null;
+              quran: string | null;
+            };
+          }
         >;
       };
     };

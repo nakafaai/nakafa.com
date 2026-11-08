@@ -31,7 +31,9 @@ const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
 });
 /**
  * Reads and validates one complete published curriculum route model. The
- * content store holds the query result once for each release.
+ * content store holds the query result once for each release, not for each
+ * curriculum snapshot: its cards come from the material catalog and its
+ * alternates from the release's locales, so it depends on more than the snapshot.
  */
 export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"

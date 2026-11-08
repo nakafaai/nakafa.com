@@ -13,11 +13,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/responsive-dialog";
 import { Function as Fn } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant } from "@/components/tenant/context";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
@@ -55,41 +54,40 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
       <RowItems>
         <DropdownMenuGroup>
           <DropdownMenuItem
+            icon={PencilEdit02Icon}
             render={
-              <Link params={params} to="/school/$slug/exams/$exam/edit">
-                <HugeIcons icon={PencilEdit02Icon} />
-                {common("edit")}
-              </Link>
+              <Link params={params} to="/school/$slug/exams/$exam/edit" />
             }
-          />
+          >
+            {common("edit")}
+          </DropdownMenuItem>
           <DropdownMenuItem
-            render={
-              <Link params={params} to="/school/$slug/exams/$exam">
-                <HugeIcons icon={Calendar03Icon} />
-                {t("rooms-title")}
-              </Link>
-            }
-          />
+            icon={Calendar03Icon}
+            render={<Link params={params} to="/school/$slug/exams/$exam" />}
+          >
+            {t("rooms-title")}
+          </DropdownMenuItem>
           <DropdownMenuItem
-            render={
-              <Link params={params} to="/school/$slug/exams/$exam/try">
-                <HugeIcons icon={ViewIcon} />
-                {t("try-action")}
-              </Link>
-            }
-          />
-          <DropdownMenuItem disabled={isPending} onClick={press}>
-            <HugeIcons icon={Copy01Icon} />
+            icon={ViewIcon}
+            render={<Link params={params} to="/school/$slug/exams/$exam/try" />}
+          >
+            {t("try-action")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={isPending}
+            icon={Copy01Icon}
+            onClick={press}
+          >
             {t("duplicate-action")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem
+            icon={Delete02Icon}
             onClick={() => setIsDeleting(true)}
             variant="destructive"
           >
-            <HugeIcons icon={Delete02Icon} />
             {common("delete")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -99,7 +97,9 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
         open={isDeleting}
         setOpen={setIsDeleting}
       >
-        <ConfirmSubject icon={TaskEdit01Icon} name={exam.title} />
+        <ResponsiveDialogSubject icon={TaskEdit01Icon}>
+          {exam.title}
+        </ResponsiveDialogSubject>
       </ExamDeleteConfirm>
     </>
   );

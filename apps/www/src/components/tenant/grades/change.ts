@@ -6,6 +6,7 @@ import { gradeView } from "@repo/backend/confect/records/grade";
 import type { GradingScheme } from "@repo/backend/confect/records/scheme";
 import { Array as Arr, Option, Schema } from "effect";
 import { draftText } from "@/components/tenant/settings/state";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /** One line of a class's gradebook: a student and the grade they hold, or none yet. */
 export type SheetLine = Ref.Returns<
@@ -26,22 +27,19 @@ function changeLine(
   personId: SheetLine["student"]["id"],
   change: (grade: SheetLine["grade"]) => SheetLine["grade"]
 ) {
-  for (const query of localStore.getAllQueries(records.grades.sheet)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      localStore.setQuery(
-        records.grades.sheet,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (line) =>
-            line.student.id === personId
-              ? { ...line, grade: change(line.grade) }
-              : line
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, records.grades.sheet, (value, args) =>
+    args.classId === classId
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.map(page, (line) =>
+              line.student.id === personId
+                ? { ...line, grade: change(line.grade) }
+                : line
+            )
+          )
+        )
+      : Option.none()
+  );
 }
 
 /**
