@@ -1,14 +1,12 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { drawnIsland, expectDrawnIsland } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 /** The island page of the signed-in learner. */
 const ISLAND_PATH = "/en/island";
-
-/** The island's canvas once its first frame has drawn. */
-const drawnIsland = (page: Page) => page.locator("canvas[data-drawn]");
 
 for (const viewport of [desktopViewport, touchViewport]) {
   for (const colorScheme of ["light", "dark"] as const) {
@@ -32,7 +30,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
           Effect.promise(async () => {
             await page.goto(ISLAND_PATH);
             await expect(page.getByText("Level 1")).toBeVisible();
-            await expect(drawnIsland(page)).toBeVisible();
+            await expectDrawnIsland(page);
             await page.getByRole("button", { name: "More actions" }).click();
             await page.getByRole("menuitem", { name: "Turn right" }).click();
             await expect(

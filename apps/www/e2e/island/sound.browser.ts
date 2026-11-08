@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { drawnIsland, expectDrawnIsland } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
@@ -20,15 +21,14 @@ test("starts the island's sound on the first press and remembers the owner turni
       page,
       Effect.promise(async () => {
         await page.goto(ISLAND_PATH);
-        const island = page.locator("canvas[data-drawn]");
-        await expect(island).toBeVisible();
-        await island.click();
+        await expectDrawnIsland(page);
+        await drawnIsland(page).click();
         await page.getByRole("button", { name: "More actions" }).click();
         const sound = page.getByRole("menuitemcheckbox", { name: "Sound" });
         await expect(sound).toBeChecked();
         await sound.click();
         await page.reload();
-        await expect(page.locator("canvas[data-drawn]")).toBeVisible();
+        await expectDrawnIsland(page);
         await page.getByRole("button", { name: "More actions" }).click();
         await expect(
           page.getByRole("menuitemcheckbox", { name: "Sound" })
