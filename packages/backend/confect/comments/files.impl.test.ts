@@ -45,10 +45,18 @@ async function learners() {
 /** A learner's client, as `learners` answers it. */
 type Learner = Awaited<ReturnType<typeof learners>>["author"];
 
-/** Reserves one file as the learner and uploads its bytes as the browser does, answering the file's ID. */
-async function uploaded(learner: Learner, bytes: Uint8Array) {
+/**
+ * Reserves one file as the learner and uploads its bytes as the browser does, answering the file's ID. A
+ * smaller `declared` size stands for bytes past the length the address binds, which only the server's own
+ * reading of the stored file can catch.
+ */
+async function uploaded(
+  learner: Learner,
+  bytes: Uint8Array,
+  declared = bytes.byteLength
+) {
   const reserved = await learner.mutation(files.reserve, {
-    byteSize: bytes.byteLength,
+    byteSize: declared,
     contentType: "image/png",
   });
   upload(bucket, reserved.address, bytes);
@@ -179,7 +187,8 @@ describe("comments/files", () => {
     ).rejects.toMatchObject({ data: { code: "COMMENT_PHOTO_TOO_LARGE" } });
     const oversized = await uploaded(
       author,
-      paddedPng(COMMENT_PHOTO_BYTE_LIMIT)
+      paddedPng(COMMENT_PHOTO_BYTE_LIMIT),
+      PNG.byteLength
     );
     await expect(
       author.action(files.register, {
