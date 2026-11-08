@@ -4258,6 +4258,19 @@ export declare const api: {
             rendererJson: string;
           } | null
         >;
+        head: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          {
+            activeReleaseId: string;
+            artifactHash: string;
+            family: "article" | "material" | "page";
+            projectionHash: string;
+            projectionJson: string;
+            sourcePath: string;
+          } | null
+        >;
         read: FunctionReference<
           "query",
           "public",
