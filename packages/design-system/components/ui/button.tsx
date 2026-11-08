@@ -15,7 +15,8 @@ import { use } from "react";
 /**
  * A button. An icon size draws an icon alone, so it requires the `tooltip` that names its action in words: the
  * button shows it on hover and focus, and reads it as its accessible name. Any other button may carry one too, such
- * as a menu trigger that shows an icon and its caret. Inside a `ButtonGroup` it wears the
+ * as a menu trigger that shows an icon and its caret. A `data-slot` its caller names, such as `sidebar-trigger` or
+ * `dialog-close`, stays on the button with or without a tooltip. Inside a `ButtonGroup` it wears the
  * group's variant, whatever `variant` it names, so the page's primary never joins a group and a group never mixes
  * variants.
  */
@@ -65,10 +66,10 @@ function Button({
       <TooltipTrigger
         render={
           <ButtonPrimitive
+            data-slot="button"
             {...props}
             aria-label={tooltip}
             className={classes}
-            data-slot="button"
           />
         }
       />

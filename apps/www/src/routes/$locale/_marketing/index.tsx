@@ -30,18 +30,23 @@ import { readStaticData } from "@/lib/static/data";
  * script. The structured data is plain data that the head seam emits.
  */
 export const Route = createFileRoute("/$locale/_marketing/")({
+  // A warm of a link to this page is a preload: it takes the page's code and data, never the sections a reader
+  // reaches by scrolling, which a navigation opens here before the page commits.
+  beforeLoad: async ({ preload }) => {
+    if (!preload) {
+      await openHomeSections();
+    }
+  },
   loader: async ({ params }) => {
     // The subject menu carries its icons, and this file's loader sits in the first
     // bundle of every public page, so only this page's loader reads them.
     const [
       { getSubjectMenuHref, subjectMenu },
-      ,
       curricula,
       featuredTryout,
       messages,
     ] = await Promise.all([
       import("@/components/sidebar/data/subject"),
-      openHomeSections(),
       readStaticData(readHomeCurriculaFn, { locale: params.locale }),
       readStaticData(readHomeTryout, { locale: params.locale }),
       readStaticData(readRouteMessages, {

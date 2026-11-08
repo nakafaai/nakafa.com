@@ -127,7 +127,7 @@ for (const viewport of [
     });
     await row.hover();
     await row.getByRole("button", { name: "React" }).click();
-    // The chooser offers the six quick emoji at once, and searches the rest in the reader's language.
+    // The chooser offers the six quick emoji at once, and finds the rest by their words in Indonesian, English and German.
     const chooser = page.locator("[data-slot=emoji-panel]");
     await expect(
       chooser.getByRole("searchbox", { name: "Search emoji" })

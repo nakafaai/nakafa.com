@@ -2,18 +2,24 @@ import { describe, expect, it } from "@effect/vitest";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { convexModules } from "@repo/backend/confect/test.setup";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
+import { readActiveFrame } from "@repo/backend/content/publication/read";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { testProofRenderer } from "@repo/backend/test/content/proof";
-import { createTestPublication } from "@repo/backend/test/content/publication";
+import {
+  createTestPublication,
+  makePageRuntimeSource,
+} from "@repo/backend/test/content/publication";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import {
   itWithRuntimeRelease,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, HashMap, Schema } from "effect";
 
 const readActive = api.contentRelease.runtime.active.read;
 
@@ -51,6 +57,89 @@ describe("contentRelease/runtime/active", () => {
             quran: null,
           },
         });
+      })
+  );
+
+  it.effect(
+    "names the active release's signed frame and opens a routed artifact only by the hash its head names",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makePageRuntimeSource();
+        const published = HashMap.set(
+          HashMap.fromIterable(fixture.source),
+          "contentReleases",
+          [{ ...fixture.release, resultFamilies: ["page"] }]
+        );
+        const context = yield* createTestPublication(published);
+        expect(
+          yield* context.query(contentRelease.runtime.active.frame, {})
+        ).toEqual({
+          activeManifestHash: fixture.state.activeManifestHash,
+          activeReleaseId: fixture.release.releaseId,
+          releaseJson: fixture.release.releaseJson,
+          rendererJson: fixture.release.rendererJson,
+        });
+        const args = {
+          appLocale: fixture.projection.appLocale,
+          artifactHash: fixture.artifact.artifactHash,
+          family: "page",
+          publicPath: fixture.projection.publicPath,
+        } as const;
+        expect(
+          yield* context.query(contentRelease.runtime.active.head, {
+            appLocale: args.appLocale,
+            publicPath: args.publicPath,
+          })
+        ).toMatchObject({
+          activeReleaseId: fixture.release.releaseId,
+          artifactHash: fixture.artifact.artifactHash,
+          family: "page",
+        });
+        expect(
+          yield* context.query(contentRelease.runtime.active.artifact, args)
+        ).toEqual({ artifactJson: encodeJsonText(fixture.artifact) });
+        expect(
+          yield* context.query(contentRelease.runtime.active.artifact, {
+            ...args,
+            artifactHash: `sha256:${"0".repeat(64)}`,
+          })
+        ).toBeNull();
+
+        const empty = yield* createTestPublication([]);
+        expect(
+          yield* empty.query(contentRelease.runtime.active.frame, {})
+        ).toBeNull();
+
+        const renamed = yield* createTestPublication(
+          HashMap.set(
+            HashMap.set(published, "contentState", [
+              { ...fixture.state, activeReleaseId: "different-release" },
+            ]),
+            "contentReleases",
+            [
+              {
+                ...fixture.release,
+                releaseId: "different-release",
+                resultFamilies: ["page"],
+              },
+            ]
+          )
+        );
+        yield* renamed.run(
+          readActiveFrame().pipe(
+            Effect.flip,
+            Effect.orDie,
+            Effect.tap((error) =>
+              Effect.sync(() =>
+                expect(error).toMatchObject({
+                  code: "CONTENT_RELEASE_INTEGRITY",
+                })
+              )
+            ),
+            Effect.asVoid,
+            Effect.provide(publicationLayer)
+          )
+        );
       })
   );
 

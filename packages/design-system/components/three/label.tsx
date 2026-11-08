@@ -52,6 +52,13 @@ interface ThreeLabelProps {
 }
 
 const LABEL_BASE_FONT_SIZE = 16;
+/**
+ * The halo every label without an outline of its own draws in the card's color,
+ * in em of its font size. Half of it shows outside the glyphs, so an axis, a
+ * grid line, or an arrow that passes behind a label stops at the letters
+ * instead of striking through them.
+ */
+const LABEL_HALO_EM = 0.24;
 
 /** What the overlay content of one label draws, which it reads from its label. */
 interface LabelValues {
@@ -268,7 +275,7 @@ export function ThreeLabel({
       WebkitTextStroke:
         outlineColor && outlineWidthEm > 0
           ? `${outlineWidthEm}em ${outlineColor}`
-          : undefined,
+          : `${LABEL_HALO_EM}em var(--card)`,
       color: labelColor,
       fontFamily: "var(--font-sans)",
       fontSize: LABEL_BASE_FONT_SIZE,
