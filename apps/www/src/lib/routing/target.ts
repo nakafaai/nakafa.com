@@ -265,6 +265,15 @@ export function commentTarget(commentId: string) {
   } satisfies LinkTarget;
 }
 
+/** The typed target of one of the learner's chats with Nina, in the locale of the page on screen. */
+export function chatTarget(chatId: string) {
+  return {
+    from: LOCALE_ROUTE,
+    params: { id: chatId },
+    to: "/$locale/chat/$id",
+  } satisfies LinkTarget;
+}
+
 /** The typed target of one Quran surah, which the Quran route names by its number. */
 export function quranSurahTarget(surah: number) {
   return {
