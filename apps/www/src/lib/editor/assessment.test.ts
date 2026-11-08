@@ -316,13 +316,16 @@ describe("editor/assessment table commands", () => {
             caretAt(TABLE_DOCUMENT, "1")
           ),
         });
-        const transactions: Transaction[] = [];
-        expect(command(start, (tr) => transactions.push(tr))).toBe(true);
-        const steps = Arr.flatMap(transactions, (tr) => tr.steps);
-        const after = Arr.reduce(transactions, start, (state, tr) =>
-          state.apply(tr)
-        );
-        const decoded = yield* Effect.forEach(steps, (step) =>
+        // Each command dispatches one transaction, whose steps the editor sends.
+        let dispatched = Option.none<Transaction>();
+        expect(
+          command(start, (tr) => {
+            dispatched = Option.some(tr);
+          })
+        ).toBe(true);
+        const transaction = Option.getOrThrow(dispatched);
+        const after = start.apply(transaction);
+        const decoded = yield* Effect.forEach(transaction.steps, (step) =>
           Schema.decodeUnknownEffect(StepSchema)(step.toJSON()).pipe(
             Effect.orDie
           )
