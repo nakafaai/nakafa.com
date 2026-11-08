@@ -73,3 +73,13 @@ export const Capped = Schema.TaggedStruct("capped", {});
 
 /** Who may visit an island: only its owner, anyone with its link, or everyone. */
 export const Visibility = Schema.Literals(["private", "link", "public"]);
+
+/**
+ * An edit made against an older layout than the island holds, which another tab
+ * or device changed meanwhile (ADR 0042, D4). The browser reloads the island and
+ * the owner tries again.
+ */
+export class IslandStale extends Schema.TaggedError<
+  IslandStale,
+  { readonly brand: unique symbol }
+>()("IslandStale", { version: Schema.Int }) {}

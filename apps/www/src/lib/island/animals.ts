@@ -80,3 +80,19 @@ export const NINA_PEEK: Sprite = {
     n: ["nina", 2],
   },
 };
+
+/** A little bed of flowers that sways in the wind between frames. */
+export const FLOWERS: Sprite = {
+  fps: 1,
+  frames: [
+    [".p...y..", "pcp.yoy.", ".p.g.y.p", ".g.g..pcp", "gg.gg.gp.", ".ggg.ggg."],
+    ["..p..y..", ".pcpyoy.", "..pg.y.p", ".g.g.pcp.", "gg.gg.gp.", ".ggg.ggg."],
+  ],
+  key: {
+    c: ["glow", 3],
+    g: ["leaf", 2],
+    o: ["glow", 1],
+    p: ["petal", 2],
+    y: ["glow", 2],
+  },
+};

@@ -107,3 +107,19 @@ export function wildlifeOf(
     return pond.stage >= 1 ? [...fish, ...lively] : fish;
   });
 }
+
+/**
+ * The still sprites a layout stands up: a bed of flowers on each cell that holds
+ * one, at the middle of its cell, on the layer it stands on.
+ */
+export function floraOf(layout: readonly Placement[]) {
+  return Arr.map(
+    Arr.filter(layout, (placement) => placement.item === "flowers"),
+    (flowers) => ({
+      sprite: "flowers" as const,
+      x: flowers.x + 0.5,
+      y: flowers.z,
+      z: flowers.y + 0.5,
+    })
+  );
+}

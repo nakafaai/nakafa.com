@@ -18,6 +18,9 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import { Option } from "effect";
 import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
+import { BuildBand, BuildToggle } from "@/components/island/build";
+import { ToolsProvider } from "@/components/island/tools";
+import { useIsland } from "@/lib/island/context";
 
 /** The island's canvas and three.js, loaded only when the frame renders (ADR 0042, D14). */
 const IslandCanvas = lazy(() => import("@/components/island/canvas"));
@@ -44,47 +47,52 @@ export function IslandFrame({
   const t = useTranslations("Island");
   const [turn, setTurn] = useState(0);
   const growth = growthOf(lifetime);
+  const { owner } = useIsland();
   return (
-    <VisualCard>
-      <VisualCardHeader
-        description={t("level", { level: growth.level })}
-        title={name === undefined ? t("title") : t("name", { name })}
-      />
-      <VisualCardBody className="aspect-square sm:aspect-video">
-        <Suspense fallback={null}>
-          <IslandCanvas turn={turn} />
-        </Suspense>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardMenu>
-          <DropdownMenuItem
-            closeOnClick={false}
-            icon={RotateLeft01Icon}
-            onClick={() => setTurn((current) => (current + 3) % 4)}
-          >
-            {t("turn-left")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            closeOnClick={false}
-            icon={RotateRight01Icon}
-            onClick={() => setTurn((current) => (current + 1) % 4)}
-          >
-            {t("turn-right")}
-          </DropdownMenuItem>
-        </VisualCardMenu>
-      </VisualCardActions>
-      <VisualCardFooter>
-        <VisualCardFacts>
-          <VisualFactTabular label={t("stars")} value={stars} />
-          <VisualFactTabular
-            label={t("next")}
-            value={Option.match(growth.next, {
-              onNone: () => t("top"),
-              onSome: (next) => t("next-value", { stars: next - lifetime }),
-            })}
-          />
-        </VisualCardFacts>
-      </VisualCardFooter>
-    </VisualCard>
+    <ToolsProvider>
+      <VisualCard>
+        <VisualCardHeader
+          description={t("level", { level: growth.level })}
+          title={name === undefined ? t("title") : t("name", { name })}
+        />
+        <BuildBand />
+        <VisualCardBody className="aspect-square sm:aspect-video">
+          <Suspense fallback={null}>
+            <IslandCanvas turn={turn} />
+          </Suspense>
+        </VisualCardBody>
+        <VisualCardActions>
+          {Option.isSome(owner) ? <BuildToggle /> : null}
+          <VisualCardMenu>
+            <DropdownMenuItem
+              closeOnClick={false}
+              icon={RotateLeft01Icon}
+              onClick={() => setTurn((current) => (current + 3) % 4)}
+            >
+              {t("turn-left")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              closeOnClick={false}
+              icon={RotateRight01Icon}
+              onClick={() => setTurn((current) => (current + 1) % 4)}
+            >
+              {t("turn-right")}
+            </DropdownMenuItem>
+          </VisualCardMenu>
+        </VisualCardActions>
+        <VisualCardFooter>
+          <VisualCardFacts>
+            <VisualFactTabular label={t("stars")} value={stars} />
+            <VisualFactTabular
+              label={t("next")}
+              value={Option.match(growth.next, {
+                onNone: () => t("top"),
+                onSome: (next) => t("next-value", { stars: next - lifetime }),
+              })}
+            />
+          </VisualCardFacts>
+        </VisualCardFooter>
+      </VisualCard>
+    </ToolsProvider>
   );
 }

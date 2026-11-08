@@ -1,7 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Placement } from "@repo/backend/confect/island/layout";
 import { Array as Arr } from "effect";
-import { basinsOf, piecesOf, watersOf, wildlifeOf } from "@/lib/island/pieces";
+import {
+  basinsOf,
+  floraOf,
+  piecesOf,
+  watersOf,
+  wildlifeOf,
+} from "@/lib/island/pieces";
 
 /** One placement with the fields a test does not care about filled in. */
 const placed = (
@@ -29,9 +35,9 @@ describe("island pieces", () => {
   });
 
   it("leaves out a piece whose stage has no drawing yet", () => {
-    expect(piecesOf([placed({ item: "tree", stage: 0, x: 0, y: 0 })])).toEqual(
-      []
-    );
+    expect(
+      piecesOf([placed({ item: "flowers", stage: 0, x: 0, y: 0 })])
+    ).toEqual([]);
   });
 
   it("cuts a basin and fills water for each pond, and nothing for other pieces", () => {
@@ -57,5 +63,14 @@ describe("island pieces", () => {
       "nina",
     ]);
     expect(lively[0]?.area).toEqual({ from: [0.4, 0.4], to: [2.6, 2.6] });
+  });
+
+  it("stands a bed of flowers in the middle of its cell, on its layer", () => {
+    expect(
+      floraOf([
+        placed({ item: "flowers", stage: 0, x: 2, y: 3, z: 1 }),
+        placed({ item: "grass", stage: 0, x: 2, y: 3 }),
+      ])
+    ).toEqual([{ sprite: "flowers", x: 2.5, y: 1, z: 3.5 }]);
   });
 });

@@ -10,9 +10,9 @@ import {
   ShaderMaterial,
   Vector2,
 } from "three";
-import { DUCK, FISH, NINA_PEEK } from "@/lib/island/animals";
+import { DUCK, FISH, FLOWERS, NINA_PEEK } from "@/lib/island/animals";
 import { swimAt } from "@/lib/island/motion";
-import type { wildlifeOf } from "@/lib/island/pieces";
+import type { floraOf, wildlifeOf } from "@/lib/island/pieces";
 import { packAtlas } from "@/lib/island/sprite";
 import { pixelTexture } from "@/lib/island/texture";
 
@@ -59,7 +59,7 @@ void main() {
 `;
 
 /** The animals' sprites, packed once into one atlas. */
-const SPRITES = { duck: DUCK, fish: FISH, nina: NINA_PEEK };
+const SPRITES = { duck: DUCK, fish: FISH, flowers: FLOWERS, nina: NINA_PEEK };
 
 /** The atlas texture, the frames' places in it, and the quad every sprite draws on. */
 function useAtlas(count: number) {
@@ -103,10 +103,14 @@ function useAtlas(count: number) {
  */
 export function Wildlife({
   animals,
+  flora,
 }: {
   animals: ReturnType<typeof wildlifeOf>;
+  flora: ReturnType<typeof floraOf>;
 }) {
-  const { frames, geometry, material } = useAtlas(animals.length);
+  const { frames, geometry, material } = useAtlas(
+    animals.length + flora.length
+  );
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     material.uniforms.resolution.value.set(
@@ -132,6 +136,23 @@ export function Wildlife({
         at?.y ?? 0,
         at?.width ?? 0,
         at?.height ?? 0
+      );
+    });
+    Arr.forEach(flora, (plant, at) => {
+      const index = animals.length + at;
+      const sprite = SPRITES[plant.sprite];
+      const step = Math.floor(time * sprite.fps + at) % sprite.frames.length;
+      const placed = Arr.get(frames[plant.sprite], step).pipe(
+        Option.getOrUndefined
+      );
+      offset.setXYZ(index, plant.x, plant.y, plant.z);
+      heading.setXYZ(index, 1, 0, 0);
+      frame.setXYZW(
+        index,
+        placed?.x ?? 0,
+        placed?.y ?? 0,
+        placed?.width ?? 0,
+        placed?.height ?? 0
       );
     });
     offset.needsUpdate = true;
