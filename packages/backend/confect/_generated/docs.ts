@@ -43,7 +43,10 @@ export type ClassroomTalliesDoc = Document.Document<typeof schemaDefinition, "cl
 export type ClassroomTasksDoc = Document.Document<typeof schemaDefinition, "classroomTasks">;
 export type ClassroomThreadsDoc = Document.Document<typeof schemaDefinition, "classroomThreads">;
 export type ClassroomUploadsDoc = Document.Document<typeof schemaDefinition, "classroomUploads">;
+export type CommentCountsDoc = Document.Document<typeof schemaDefinition, "commentCounts">;
 export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
+export type CommentReportsDoc = Document.Document<typeof schemaDefinition, "commentReports">;
+export type CommentUploadsDoc = Document.Document<typeof schemaDefinition, "commentUploads">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ConnectorConnectionsDoc = Document.Document<typeof schemaDefinition, "connectorConnections">;
 export type ConnectorEventsDoc = Document.Document<typeof schemaDefinition, "connectorEvents">;
@@ -219,7 +222,10 @@ export interface Docs {
   classroomTasks: ClassroomTasksDoc;
   classroomThreads: ClassroomThreadsDoc;
   classroomUploads: ClassroomUploadsDoc;
+  commentCounts: CommentCountsDoc;
   commentLikes: CommentLikesDoc;
+  commentReports: CommentReportsDoc;
+  commentUploads: CommentUploadsDoc;
   comments: CommentsDoc;
   connectorConnections: ConnectorConnectionsDoc;
   connectorEvents: ConnectorEventsDoc;

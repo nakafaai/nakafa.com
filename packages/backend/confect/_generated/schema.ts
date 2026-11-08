@@ -42,7 +42,10 @@ import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
 import classroomThreads from "./tables/classroomThreads";
 import classroomUploads from "./tables/classroomUploads";
+import commentCounts from "./tables/commentCounts";
 import commentLikes from "./tables/commentLikes";
+import commentReports from "./tables/commentReports";
+import commentUploads from "./tables/commentUploads";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorEvents from "./tables/connectorEvents";
@@ -218,7 +221,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classroomTasks: typeof classroomTasks;
   readonly classroomThreads: typeof classroomThreads;
   readonly classroomUploads: typeof classroomUploads;
+  readonly commentCounts: typeof commentCounts;
   readonly commentLikes: typeof commentLikes;
+  readonly commentReports: typeof commentReports;
+  readonly commentUploads: typeof commentUploads;
   readonly comments: typeof comments;
   readonly connectorConnections: typeof connectorConnections;
   readonly connectorEvents: typeof connectorEvents;
@@ -393,7 +399,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classroomTasks,
   classroomThreads,
   classroomUploads,
+  commentCounts,
   commentLikes,
+  commentReports,
+  commentUploads,
   comments,
   connectorConnections,
   connectorEvents,

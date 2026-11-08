@@ -2288,11 +2288,44 @@ export declare const api: {
     };
   };
   comments: {
+    files: {
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          fileId: Id<"bucketFiles">;
+          height: number;
+          thumbnailId: Id<"bucketFiles"> | null;
+          width: number;
+        },
+        Id<"commentUploads">
+      >;
+      reserve: FunctionReference<
+        "mutation",
+        "public",
+        {
+          byteSize: number;
+          contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
+        },
+        { address: string; fileId: Id<"bucketFiles"> }
+      >;
+      withdraw: FunctionReference<
+        "mutation",
+        "public",
+        { uploadId: Id<"commentUploads"> },
+        null
+      >;
+    };
     mutations: {
       addComment: FunctionReference<
         "mutation",
         "public",
-        { parentId?: Id<"comments">; slug: string; text: string },
+        {
+          parentId?: Id<"comments">;
+          slug: string;
+          text: string;
+          uploads: Array<Id<"commentUploads">>;
+        },
         Id<"comments">
       >;
       deleteComment: FunctionReference<
@@ -2301,10 +2334,25 @@ export declare const api: {
         { commentId: Id<"comments"> },
         null
       >;
+      editComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments">; text: string },
+        null
+      >;
       likeComment: FunctionReference<
         "mutation",
         "public",
         { commentId: Id<"comments"> },
+        null
+      >;
+      reportComment: FunctionReference<
+        "mutation",
+        "public",
+        {
+          commentId: Id<"comments">;
+          reason: "spam" | "harassment" | "misleading" | "other";
+        },
         null
       >;
       unlikeComment: FunctionReference<
@@ -2322,9 +2370,16 @@ export declare const api: {
         {
           _creationTime: number;
           _id: Id<"comments">;
+          editedAt?: number;
           likeCount: number;
           liked: boolean;
           parentId?: Id<"comments">;
+          photos: Array<{
+            address: string | null;
+            height: number;
+            thumbnail: string | null;
+            width: number;
+          }>;
           replyCount: number;
           replyToUser: {
             _id: Id<"users">;
@@ -2346,6 +2401,12 @@ export declare const api: {
           } | null;
           userId: Id<"users">;
         } | null
+      >;
+      getCommentCount: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        number
       >;
       getCommentPlace: FunctionReference<
         "query",
@@ -2373,9 +2434,16 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
+            editedAt?: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
+            photos: Array<{
+              address: string | null;
+              height: number;
+              thumbnail: string | null;
+              width: number;
+            }>;
             replyCount: number;
             replyToUser: {
               _id: Id<"users">;
@@ -2414,6 +2482,7 @@ export declare const api: {
             numItems: number;
           };
           slug: string;
+          sort: "top" | "newest";
         },
         {
           continueCursor: string;
@@ -2421,9 +2490,16 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
+            editedAt?: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
+            photos: Array<{
+              address: string | null;
+              height: number;
+              thumbnail: string | null;
+              width: number;
+            }>;
             replyCount: number;
             replyToUser: {
               _id: Id<"users">;
@@ -2469,9 +2545,16 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
+            editedAt?: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
+            photos: Array<{
+              address: string | null;
+              height: number;
+              thumbnail: string | null;
+              width: number;
+            }>;
             replyCount: number;
             replyToUserId?: Id<"users">;
             slug: string;
@@ -16628,6 +16711,23 @@ export declare const internal: {
           person: Id<"tenantPeople">;
         }
       >;
+    };
+  };
+  comments: {
+    files: {
+      commit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          fileId: Id<"bucketFiles">;
+          height: number;
+          thumbnailId: Id<"bucketFiles"> | null;
+          userId: Id<"users">;
+          width: number;
+        },
+        Id<"commentUploads">
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, { deleted: number }>;
     };
   };
   connectors: {

@@ -8,7 +8,9 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["addComment"]: RegisteredConvexFunction.register({ ...definitions["addComment"], handler: forward(definitions["addComment"].handler) }),
+["editComment"]: RegisteredConvexFunction.register({ ...definitions["editComment"], handler: forward(definitions["editComment"].handler) }),
 ["likeComment"]: RegisteredConvexFunction.register({ ...definitions["likeComment"], handler: forward(definitions["likeComment"].handler) }),
 ["unlikeComment"]: RegisteredConvexFunction.register({ ...definitions["unlikeComment"], handler: forward(definitions["unlikeComment"].handler) }),
+["reportComment"]: RegisteredConvexFunction.register({ ...definitions["reportComment"], handler: forward(definitions["reportComment"].handler) }),
 ["deleteComment"]: RegisteredConvexFunction.register({ ...definitions["deleteComment"], handler: forward(definitions["deleteComment"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../comments/mutations.spec")["default"]>;

@@ -43,7 +43,10 @@ import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
 import classroomThreads from "./tables/classroomThreads";
 import classroomUploads from "./tables/classroomUploads";
+import commentCounts from "./tables/commentCounts";
 import commentLikes from "./tables/commentLikes";
+import commentReports from "./tables/commentReports";
+import commentUploads from "./tables/commentUploads";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorEvents from "./tables/connectorEvents";
@@ -219,7 +222,10 @@ export default $defineSchema({
   classroomTasks: $Table.tableDefinition(classroomTasks),
   classroomThreads: $Table.tableDefinition(classroomThreads),
   classroomUploads: $Table.tableDefinition(classroomUploads),
+  commentCounts: $Table.tableDefinition(commentCounts),
   commentLikes: $Table.tableDefinition(commentLikes),
+  commentReports: $Table.tableDefinition(commentReports),
+  commentUploads: $Table.tableDefinition(commentUploads),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),
   connectorEvents: $Table.tableDefinition(connectorEvents),
