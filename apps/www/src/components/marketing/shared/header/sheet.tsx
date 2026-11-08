@@ -71,7 +71,7 @@ export function HeaderSheet({ children }: { children: ReactNode }) {
         </SheetHeader>
         <SheetPanel>
           {Arr.map(HEADER_SECTIONS, (section) => (
-            <section className="grid gap-1" key={section.key}>
+            <section className="grid gap-2" key={section.key}>
               <h2 className="px-2 text-base font-medium">{t(section.label)}</h2>
               {Arr.map(section.groups, (group) => (
                 <nav
@@ -79,6 +79,9 @@ export function HeaderSheet({ children }: { children: ReactNode }) {
                   className="grid"
                   key={group.label}
                 >
+                  <p className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
+                    {t(group.label)}
+                  </p>
                   {Arr.map(group.links, (link) => (
                     <HeaderSheetLink key={link.label} link={link} />
                   ))}
