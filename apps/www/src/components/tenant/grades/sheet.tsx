@@ -42,12 +42,14 @@ import {
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableSearch } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import {
   correctChange,
   enterChange,
@@ -56,9 +58,7 @@ import {
 } from "@/components/tenant/grades/change";
 import { LineDialog } from "@/components/tenant/line";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/grades/sheet";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many students one page of the gradebook loads, and each page after it. */
 const GRADEBOOK_PAGE_SIZE = 50;
@@ -209,9 +209,9 @@ export function ClassGradebook({
                 columns={columns}
                 data={isRead ? pagination.results : []}
                 empty={
-                  <TableEmpty
-                    act="reading"
+                  <EmptyState
                     description={t("empty-description")}
+                    scene={<EmptyNina act="reading" />}
                     title={t("empty")}
                   />
                 }
@@ -255,15 +255,15 @@ function GradeValueField({ line }: { line: SheetLine }) {
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           enter({
             classId,
             personId: line.student.id,
             slug,
             value: value.value,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
@@ -367,7 +367,7 @@ function GradeReleaseButton({
     <Button
       onClick={() =>
         startTransition(() =>
-          saveSchool(() => release({ gradeId, slug }), SOURCE)
+          runSchoolWrite(schoolCall(() => release({ gradeId, slug })))
         )
       }
       type="button"
@@ -403,7 +403,9 @@ function GradeCorrectButton({
       return;
     }
     startTransition(() =>
-      saveSchool(() => correct({ gradeId, slug, value: next.value }), SOURCE)
+      runSchoolWrite(
+        schoolCall(() => correct({ gradeId, slug, value: next.value }))
+      )
     );
   };
 
@@ -459,7 +461,9 @@ function GradeLineMenu({ line }: { line: SheetLine }) {
         icon={SentIcon}
         onClick={() =>
           startTransition(() =>
-            saveSchool(() => release({ gradeId: grade.id, slug }), SOURCE)
+            runSchoolWrite(
+              schoolCall(() => release({ gradeId: grade.id, slug }))
+            )
           )
         }
       >

@@ -2,10 +2,10 @@ import { sha256Hex } from "@repo/utilities/digest";
 import { Array as Arr, Effect, Predicate, Schema } from "effect";
 
 /** The callback token of the request is not the deployment's token, so the request is not Xendit's. */
-export class XenditTokenRejected extends Schema.TaggedError<XenditTokenRejected>()(
-  "XenditTokenRejected",
-  {}
-) {}
+export class XenditTokenRejected extends Schema.TaggedError<
+  XenditTokenRejected,
+  { readonly brand: unique symbol }
+>()("XenditTokenRejected", {}) {}
 
 /**
  * The envelope every Xendit webhook shares. The processor decodes `data` per

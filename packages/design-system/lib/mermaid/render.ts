@@ -12,13 +12,13 @@ export type MermaidRenderConfig = Omit<
 >;
 
 /** Expected client failure while loading, configuring, or rendering Mermaid. */
-export class MermaidRenderError extends Schema.TaggedError<MermaidRenderError>()(
-  "MermaidRenderError",
-  {
-    cause: Schema.Unknown,
-    operation: Schema.Literals(["initialize", "render"]),
-  }
-) {}
+export class MermaidRenderError extends Schema.TaggedError<
+  MermaidRenderError,
+  { readonly brand: unique symbol }
+>()("MermaidRenderError", {
+  cause: Schema.Unknown,
+  operation: Schema.Literals(["initialize", "render"]),
+}) {}
 
 /**
  * `Object.groupBy` as ECMAScript 2024 defines it for the text keys Mermaid's

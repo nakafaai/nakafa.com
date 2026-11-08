@@ -2545,7 +2545,6 @@
     "set-column-questions": "Aufgaben",
     "set-column-score": "Punktzahl",
     "set-column-status": "Status",
-    "set-filter-label": "{column} filtern",
     "set-filter-all": "Alle",
     "status-not-started": "Nicht begonnen",
     "status-in-progress": "In Bearbeitung",
@@ -2565,11 +2564,7 @@
     "set-updating": "Wird aktualisiert...",
     "set-update-error": "Ergebnisse konnten nicht aktualisiert werden.",
     "set-offline": "Verbindung unterbrochen.",
-    "answer": "Antwort",
-    "statement": "Aussage",
     "check-answer": "Antwort prüfen",
-    "correct": "Richtig",
-    "incorrect": "Falsch",
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
     "prompt": "Aufgabe",
@@ -2603,7 +2598,11 @@
     "legend-answered": "Beantwortet",
     "legend-flagged": "Markiert",
     "shortcut-flag": "Aufgabe markieren",
-    "cell-flagged": "{state, select, answered {Aufgabe {number}, beantwortet, zur Überprüfung markiert} other {Aufgabe {number}, offen, zur Überprüfung markiert}}"
+    "cell-flagged": "{state, select, answered {Aufgabe {number}, beantwortet, zur Überprüfung markiert} other {Aufgabe {number}, offen, zur Überprüfung markiert}}",
+    "answer": "Antwort",
+    "statement": "Aussage",
+    "correct": "Richtig",
+    "incorrect": "Falsch"
   },
   "Utils": {
     "clear-search": "Suche löschen",

@@ -14,10 +14,10 @@ export const VectorGeometrySchema = Schema.Struct({
 });
 
 /** An authored vector cannot be represented by finite geometric coordinates. */
-export class VectorError extends Schema.TaggedError<VectorError>()(
-  "VectorError",
-  { message: Schema.String }
-) {}
+export class VectorError extends Schema.TaggedError<
+  VectorError,
+  { readonly brand: unique symbol }
+>()("VectorError", { message: Schema.String }) {}
 
 /** Preserves authored point order and attaches the label to the directed tip. */
 export const resolveVectorGeometry = Effect.fn("Vector.resolve")(function* (

@@ -32,17 +32,18 @@ type WwwHeaderOrigins = typeof WwwHeaderOriginsSchema.Type;
 const MAX_HEADERS_LINE_LENGTH = 2000;
 
 /** A `_headers` line that the static assets would refuse, so the file is never written. */
-export class WwwHeaderLineTooLong extends Schema.TaggedError<WwwHeaderLineTooLong>()(
-  "WwwHeaderLineTooLong",
-  { prefix: Schema.String }
-) {}
+export class WwwHeaderLineTooLong extends Schema.TaggedError<
+  WwwHeaderLineTooLong,
+  { readonly brand: unique symbol }
+>()("WwwHeaderLineTooLong", { prefix: Schema.String }) {}
 
 /**
  * Builds the headers of every www answer: the security policy, the agent
  * discovery links and the TDM reservation, which reserves model training on
  * every page under the content license. A loopback Convex deployment joins the
  * policy only while it runs on this machine, and the PostHog proxy host is the
- * one analytics origin.
+ * one analytics origin. A loopback analytics host is the local stand-in that
+ * also serves the bucket, so its origin may draw pictures too.
  */
 export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
   const convexOrigins = Arr.flatMap(
@@ -52,14 +53,20 @@ export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
         ? []
         : createLoopbackConnectSources(new URL(value))
   );
+  // On this machine the bucket's stand-in answers on the analytics host, so the pictures its presigned
+  // addresses draw need that loopback origin too. A deployed analytics host is never loopback.
+  const standIn = createLoopbackConnectSources(
+    new URL(origins.posthogProxyHost)
+  );
   return [
     ...createSecurityHeaders({
       additionalConnectSources: [
         ...convexOrigins,
         new URL(origins.posthogProxyHost).origin,
       ],
-      additionalImageSources: Arr.filter(convexOrigins, (source) =>
-        source.startsWith("http:")
+      additionalImageSources: Arr.filter(
+        [...convexOrigins, ...standIn],
+        (source) => source.startsWith("http:")
       ),
     }),
     ...AGENT_DISCOVERY_HEADERS,

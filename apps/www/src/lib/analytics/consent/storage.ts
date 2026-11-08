@@ -11,10 +11,12 @@ type AnalyticsConsentStorage = Pick<Storage, "getItem" | "setItem">;
 const analyticsConsentStorageFailedCode = "ANALYTICS_CONSENT_STORAGE_FAILED";
 
 /** Raised when the browser cannot retain an analytics privacy choice. */
-export class AnalyticsConsentStorageFailed extends Schema.TaggedError<AnalyticsConsentStorageFailed>()(
-  "AnalyticsConsentStorageFailed",
-  { code: Schema.Literal(analyticsConsentStorageFailedCode) }
-) {}
+export class AnalyticsConsentStorageFailed extends Schema.TaggedError<
+  AnalyticsConsentStorageFailed,
+  { readonly brand: unique symbol }
+>()("AnalyticsConsentStorageFailed", {
+  code: Schema.Literal(analyticsConsentStorageFailedCode),
+}) {}
 
 const analyticsConsentStorageFailure = () =>
   new AnalyticsConsentStorageFailed({

@@ -8,8 +8,8 @@ import {
 import { partDirection, partLetter } from "@repo/backend/confect/exams/letters";
 import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr, Option } from "effect";
-import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface";
-import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
+import { ChoiceReviewed } from "@/components/player/choice";
+import { ChoiceTable } from "@/components/player/table";
 import { optionLabelId } from "@/components/tryout/runtime/response/id";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
 
@@ -32,7 +32,7 @@ export function TryoutReviewedFields({
   if (interaction.kind === "matrix" && answer.kind === "matrix") {
     const cells = markedCells(response ?? []);
     return (
-      <TryoutChoiceTable
+      <ChoiceTable
         columns={Arr.map(interaction.columns, (column) => ({
           id: column.id,
           label: <TryoutResponseLabel document={column.label} />,
@@ -77,7 +77,7 @@ export function TryoutReviewedFields({
       {Arr.map(interaction.options, (option, index) => {
         const isCorrect = Arr.contains(answer.correct, option.id);
         return (
-          <TryoutReviewedChoice
+          <ChoiceReviewed
             checked={Arr.contains(chosen, option.id)}
             id={optionLabelId(id, option.id)}
             isCorrect={isCorrect}
@@ -88,7 +88,7 @@ export function TryoutReviewedFields({
               correctness={isCorrect}
               document={option.label}
             />
-          </TryoutReviewedChoice>
+          </ChoiceReviewed>
         );
       })}
     </div>

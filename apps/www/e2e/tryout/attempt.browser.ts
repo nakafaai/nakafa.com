@@ -6,6 +6,7 @@ import { activate, activateAncestor, visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { finishSection, waitForRunningSection } from "@/e2e/support/player";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import {
   expectStillShell,
   observeShell,
@@ -47,8 +48,8 @@ const observeStep = Effect.fn("NakafaE2E.observeAttemptStep")(function* (
     MutableList.append(urls, frame.url());
   page.on("framenavigated", record);
   yield* run;
-  // Late streamed content would still move the page, so keep observing.
-  yield* Effect.sleep("750 millis");
+  // Late streamed content would still move the page, so keep observing until it goes quiet.
+  yield* Effect.promise(() => waitForQuiet(page));
   page.off("framenavigated", record);
   const observation = yield* readShellObservation(page, since);
   yield* Effect.sync(() => expectStillShell(observation, locks));
@@ -118,7 +119,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   yield* Effect.promise(() =>
     expect(finish).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
-  yield* Effect.sleep("750 millis");
+  yield* Effect.promise(() => waitForQuiet(page));
   const reloaded = yield* readShellObservation(page, 0);
   yield* Effect.sync(() => {
     expect(reloaded.headinglessFrames).toBe(0);
@@ -183,7 +184,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
       timeout: readinessTimeoutMilliseconds,
     })
   );
-  yield* Effect.sleep("750 millis");
+  yield* Effect.promise(() => waitForQuiet(page));
   const direct = yield* readShellObservation(page, 0);
   yield* Effect.sync(() => {
     expect(new URL(page.url()).searchParams.has("attemptId")).toBe(true);

@@ -3,10 +3,10 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Config, Effect, Option, Schema } from "effect";
 
 /** The Convex deployment that the build reads holds no active content release, so the build would fail. */
-export class NoActiveContentRelease extends Schema.TaggedError<NoActiveContentRelease>()(
-  "NoActiveContentRelease",
-  {}
-) {}
+export class NoActiveContentRelease extends Schema.TaggedError<
+  NoActiveContentRelease,
+  { readonly brand: unique symbol }
+>()("NoActiveContentRelease", {}) {}
 
 /**
  * The content release that a deploy builds: the active release of the Convex

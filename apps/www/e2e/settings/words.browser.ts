@@ -10,6 +10,7 @@ import {
   openMemoryPage,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   namesAsDrawn,
@@ -73,7 +74,9 @@ const rowsOf = (page: Page) =>
 const foundBy = (page: Page, query: string) =>
   Effect.promise(async () => {
     await page.getByRole("searchbox", SEARCH).fill(query);
-    await page.waitForTimeout(400);
+    // The search waits for a pause in typing, then the list draws what the server answers.
+    await page.clock.runFor(400);
+    await waitForQuiet(page);
     return (await namesOf(page)).length;
   });
 

@@ -3,7 +3,10 @@ import { loadConfig } from "afdocs/helpers";
 import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 
 /** Expected failure while running the external AFDocs site contract. */
-class AfdocsError extends Schema.TaggedError<AfdocsError>()("AfdocsError", {
+class AfdocsError extends Schema.TaggedError<
+  AfdocsError,
+  { readonly brand: unique symbol }
+>()("AfdocsError", {
   cause: Schema.Unknown,
   message: Schema.String,
 }) {}

@@ -26,14 +26,14 @@ import {
  * A document whose sections the embedder failed to take, and the gateway's
  * failure for them. The build stops at it, and the failure names the document.
  */
-export class DocumentEmbedFailure extends Schema.TaggedError<DocumentEmbedFailure>()(
-  "DocumentEmbedFailure",
-  {
-    appLocale: localeValidator,
-    contentKey: Schema.String,
-    failure: GatewayFailure,
-  }
-) {}
+export class DocumentEmbedFailure extends Schema.TaggedError<
+  DocumentEmbedFailure,
+  { readonly brand: unique symbol }
+>()("DocumentEmbedFailure", {
+  appLocale: localeValidator,
+  contentKey: Schema.String,
+  failure: GatewayFailure,
+}) {}
 
 /** Names the row of a section among all rows of the index: its language and its place. */
 function rowKeyOf({ appLocale, contentKey, ordinal }: SectionDraft) {

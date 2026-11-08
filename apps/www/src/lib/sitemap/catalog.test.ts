@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 
-class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMaterialInventory>()(
-  "MissingSignedMaterialInventory",
-  { message: Schema.String }
-) {}
+class MissingSignedMaterialInventory extends Schema.TaggedError<
+  MissingSignedMaterialInventory,
+  { readonly brand: unique symbol }
+>()("MissingSignedMaterialInventory", { message: Schema.String }) {}
 
 const activeMocks = vi.hoisted(() => ({
   expireActiveContentIdentity: vi.fn(),

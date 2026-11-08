@@ -15,10 +15,10 @@ type ConvexConnection = Pick<
 const SOCKET_WAIT = Duration.seconds(5);
 
 /** Raised before a Convex call starts while the client is offline, so the client never queues it. */
-export class ConvexOfflineError extends Schema.TaggedError<ConvexOfflineError>()(
-  "ConvexOfflineError",
-  { message: Schema.String }
-) {}
+export class ConvexOfflineError extends Schema.TaggedError<
+  ConvexOfflineError,
+  { readonly brand: unique symbol }
+>()("ConvexOfflineError", { message: Schema.String }) {}
 
 /**
  * Whether the client had a socket or tried to get one, and has none now. A

@@ -1,105 +1,80 @@
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
-import { cn } from "cn";
-import { useState } from "react";
+  setFilterValidator,
+  setSortValidator,
+} from "@repo/backend/confect/tryouts/sets/query";
+import { Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
-import { pageRowVariants } from "@/components/shared/content/width";
-import { tableCardVariants } from "@/components/shared/table/card";
-import { useTableFilters } from "@/components/shared/table/toolbar";
-import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
-import { keptSets } from "@/components/tryout/catalog/table/keep";
-import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
+import { DataTable } from "@/components/shared/table/data";
+import { TablePageBody } from "@/components/shared/table/frame";
+import { useTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
 import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
 
 /**
- * The frame of the discovery table: its header, its rows, the trigger that loads
- * the next window and the status line. A visitor's and a learner's table render
- * this same frame, so the two variants keep one layout. The heads keep the loaded
- * rows that match, and the next window loads as the short list's end comes into
- * view, so a filter reaches the whole track.
+ * The discovery table of a track: a `DataTable` the server sorts, filters by status and reads a window at a time. A
+ * visitor's and a learner's table render this same frame, so the two variants keep one layout. The address holds the
+ * status and the sort, the heads of the name and the figures keep the sets the table has read, and the next window
+ * loads as the end of the rows comes into view, so a filter reaches the whole track. The status line says when the
+ * rows are updating, offline, or could not update.
  */
 export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
-  const { filter, sort, title } = useTryoutSetTable();
+  const { filter, onFilter, onSort, sort } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
-  const tTable = useTranslations("DataTable");
-  const chosen = useTableFilters((state) => state.chosen);
-  const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
-  const rows = keptSets(data.rows, chosen);
-  const filtered = rows.length < data.rows.length;
-  let status = "";
-  let emptyLabel = filtered ? tTable("no-results") : t("list-empty");
-  if (data.busy) {
-    status = t("set-updating");
-    emptyLabel = status;
-  }
-  if (data.offline) {
-    status = t("set-offline");
-  }
-  if (data.error) {
-    status = t("set-update-error");
-    emptyLabel = status;
-  }
-
+  const columns = useTryoutSetColumns();
+  const status = Option.match(
+    Option.firstSomeOf([
+      Option.liftPredicate("set-update-error" as const, () => data.error),
+      Option.liftPredicate("set-offline" as const, () => data.offline),
+      Option.liftPredicate("set-updating" as const, () => data.busy),
+    ]),
+    { onNone: () => "", onSome: (key) => t(key) }
+  );
   const canLoadMore =
     data.hasMore && !data.busy && !data.error && !data.offline;
+
   return (
-    <div
-      className={cn(
-        pageRowVariants(),
-        "flex min-h-0 min-w-0 flex-1 flex-col py-4"
-      )}
-    >
+    <TablePageBody>
+      {/* The rows every visitor reads hide a learner's progress marks under a signed-in hint. */}
       <div
-        aria-busy={data.busy}
-        className={cn(
-          tableCardVariants(),
-          "bg-card relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border"
-        )}
+        className="contents"
         data-catalog-snapshot={data.snapshotId}
+        data-rows={data.shared ? "shared" : undefined}
       >
-        <Table
-          className="min-w-176 table-fixed"
-          containerClassName="min-h-0 min-w-0 flex-1"
-          viewportRef={setScrollRoot}
-        >
-          <TableCaption className="sr-only">{title}</TableCaption>
-          <colgroup>
-            <col />
-            <col className="w-40" />
-            <col className="w-32" />
-            <col className="w-28" />
-            <col className="w-28" />
-            {/* The row's menu: its button and its cell's padding, or Chrome and Safari squeeze it. */}
-            <col className="w-13" />
-          </colgroup>
-          <TryoutTableHeader />
-          <TableBody data-rows={data.shared ? "shared" : undefined}>
-            <TryoutTableRows emptyLabel={emptyLabel} rows={rows} />
-            {canLoadMore && (
-              <TableRow aria-hidden="true" className="h-px">
-                <TableCell className="p-0" colSpan={6}>
-                  <Intersection
-                    className="h-px"
-                    key={`${filter}:${sort.field}:${sort.direction}:${data.rows.length}`}
-                    onIntersect={data.loadMore}
-                    root={scrollRoot}
-                  />
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <span aria-live="polite" className="sr-only" role="status">
-          {status}
-        </span>
+        <DataTable
+          columns={columns}
+          data={data.rows}
+          loading={data.busy}
+          rowId={(row) => row.publicPath}
+          server={{
+            choose: (_column, value) => {
+              if (Schema.is(setFilterValidator)(value)) {
+                onFilter(value);
+              }
+            },
+            chosen: { status: filter },
+            more: canLoadMore ? Option.some(data.loadMore) : Option.none(),
+            onSort: (column, descending) => {
+              if (Schema.is(setSortValidator.fields.field)(column)) {
+                onSort({
+                  direction: descending ? "desc" : "asc",
+                  field: column,
+                });
+              }
+            },
+            snapshot: `${filter}:${sort.field}:${sort.direction}:${data.snapshotId ?? ""}`,
+            sort:
+              sort.field === "order"
+                ? Option.none()
+                : Option.some({
+                    column: sort.field,
+                    descending: sort.direction === "desc",
+                  }),
+          }}
+        />
       </div>
-    </div>
+      <span aria-live="polite" className="sr-only" role="status">
+        {status}
+      </span>
+    </TablePageBody>
   );
 }
