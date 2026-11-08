@@ -213,6 +213,37 @@ describe("content store reads", () => {
   );
 
   it.effect(
+    "fails with the releases when nothing is active after a pinned load or a second try",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.load.mockReturnValueOnce(Effect.succeed(null));
+        expect(
+          yield* readContentStore({
+            ...input(makeLoader()),
+            release: ReleaseIdSchema.make("release-a"),
+          }).pipe(Effect.flip)
+        ).toEqual(
+          new PublishedReleaseMismatchError({
+            actualReleaseId: null,
+            expectedReleaseId: ReleaseIdSchema.make("release-a"),
+          })
+        );
+
+        activeMocks.load
+          .mockReturnValueOnce(Effect.succeed(identityOf("release-b")))
+          .mockReturnValueOnce(Effect.succeed(null));
+        expect(
+          yield* readContentStore(input(makeLoader())).pipe(Effect.flip)
+        ).toEqual(
+          new PublishedReleaseMismatchError({
+            actualReleaseId: null,
+            expectedReleaseId: ReleaseIdSchema.make("release-b"),
+          })
+        );
+      })
+  );
+
+  it.effect(
     "fails with a mismatch when no release is active after the load",
     () =>
       Effect.gen(function* () {
