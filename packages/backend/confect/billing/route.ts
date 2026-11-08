@@ -16,23 +16,23 @@ import { Array as Arr, Config, Effect, HashSet, Option, Schema } from "effect";
 const IndonesiaRail = Schema.Literals(["polar", "passes", "xendit"]);
 
 /** An offer the chosen rail or currency does not sell, so no checkout can start. */
-export class OfferUnavailable extends Schema.TaggedError<OfferUnavailable>()(
-  "OfferUnavailable",
-  {
-    offer: Schema.String,
-    rail: Schema.String,
-    currency: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class OfferUnavailable extends Schema.TaggedError<
+  OfferUnavailable,
+  { readonly brand: unique symbol }
+>()("OfferUnavailable", {
+  offer: Schema.String,
+  rail: Schema.String,
+  currency: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** A Xendit checkout was requested while this deployment holds no Xendit key. */
-export class XenditNotConfigured extends Schema.TaggedError<XenditNotConfigured>()(
-  "XenditNotConfigured",
-  {
-    message: Schema.String,
-  }
-) {}
+export class XenditNotConfigured extends Schema.TaggedError<
+  XenditNotConfigured,
+  { readonly brand: unique symbol }
+>()("XenditNotConfigured", {
+  message: Schema.String,
+}) {}
 
 /** The routed checkout: the rail that takes the money, the currency, and the amount in minor units. */
 const BillingRoute = Schema.Struct({

@@ -18,13 +18,6 @@ import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import { partLabels } from "@/components/exams/sitting/pictures";
 import { SittingReason } from "@/components/exams/sitting/reason";
-import {
-  choiceOf,
-  pairingOf,
-  reasonOf,
-  tableOf,
-  writtenOf,
-} from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
 import {
@@ -41,6 +34,13 @@ import {
   PlayerQuestionHeader,
   PlayerQuestionPrompt,
 } from "@/components/player/question";
+import {
+  choiceOf,
+  pairingOf,
+  reasonOf,
+  tableOf,
+  writtenOf,
+} from "@/components/player/response";
 import { TryPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import {

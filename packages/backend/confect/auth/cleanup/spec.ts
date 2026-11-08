@@ -3,14 +3,14 @@ import { Effect, Schema } from "effect";
 export const USER_CLEANUP_FAILED_CODE = "USER_CLEANUP_FAILED";
 
 /** Typed failure for the internal deleted-user cleanup workflow. */
-export class UserCleanupError extends Schema.TaggedError<UserCleanupError>()(
-  "UserCleanupError",
-  {
-    cause: Schema.optional(Schema.Unknown),
-    code: Schema.Literal(USER_CLEANUP_FAILED_CODE),
-    message: Schema.String,
-  }
-) {}
+export class UserCleanupError extends Schema.TaggedError<
+  UserCleanupError,
+  { readonly brand: unique symbol }
+>()("UserCleanupError", {
+  cause: Schema.optional(Schema.Unknown),
+  code: Schema.Literal(USER_CLEANUP_FAILED_CODE),
+  message: Schema.String,
+}) {}
 
 /** Converts a database or scheduler failure into the cleanup error contract. */
 export const UserCleanupErrorWire = publicFailure(UserCleanupError);

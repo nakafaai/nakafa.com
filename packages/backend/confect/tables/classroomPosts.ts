@@ -1,5 +1,5 @@
 import { Table } from "@confect/core";
-import { postValidator } from "@repo/backend/confect/classroom/posts/post";
+import { postValidator } from "@repo/backend/confect/classroom/posts/schema";
 
 /**
  * The announcements of each class, read newest first by class, the pinned ones by

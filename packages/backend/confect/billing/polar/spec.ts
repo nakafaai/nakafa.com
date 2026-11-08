@@ -52,53 +52,53 @@ const polarCustomerIdentityValidator = Schema.Struct({
 });
 export type PolarCustomerIdentity = typeof polarCustomerIdentityValidator.Type;
 
-export class PolarCheckoutError extends Schema.TaggedError<PolarCheckoutError>()(
-  "PolarCheckoutError",
-  {
-    code: Schema.Literal(polarCheckoutErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarCheckoutError extends Schema.TaggedError<
+  PolarCheckoutError,
+  { readonly brand: unique symbol }
+>()("PolarCheckoutError", {
+  code: Schema.Literal(polarCheckoutErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarCheckoutErrorCode;
   declare readonly message: string;
 }
 export const PolarCheckoutErrorWire = publicFailure(PolarCheckoutError);
 
-export class PolarCustomerError extends Schema.TaggedError<PolarCustomerError>()(
-  "PolarCustomerError",
-  {
-    code: Schema.Literal(polarCustomerErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarCustomerError extends Schema.TaggedError<
+  PolarCustomerError,
+  { readonly brand: unique symbol }
+>()("PolarCustomerError", {
+  code: Schema.Literal(polarCustomerErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarCustomerErrorCode;
   declare readonly message: string;
 }
 export const PolarCustomerErrorWire = publicFailure(PolarCustomerError);
 
-export class PolarDeleteError extends Schema.TaggedError<PolarDeleteError>()(
-  "PolarDeleteError",
-  {
-    code: Schema.Literal(polarDeleteErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarDeleteError extends Schema.TaggedError<
+  PolarDeleteError,
+  { readonly brand: unique symbol }
+>()("PolarDeleteError", {
+  code: Schema.Literal(polarDeleteErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarDeleteErrorCode;
   declare readonly message: string;
 }
 export const PolarDeleteErrorWire = publicFailure(PolarDeleteError);
 
-export class PolarDuplicateEmailError extends Schema.TaggedError<PolarDuplicateEmailError>()(
-  "PolarDuplicateEmailError",
-  {
-    code: Schema.Literal(polarDuplicateEmailCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarDuplicateEmailError extends Schema.TaggedError<
+  PolarDuplicateEmailError,
+  { readonly brand: unique symbol }
+>()("PolarDuplicateEmailError", {
+  code: Schema.Literal(polarDuplicateEmailCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarDuplicateEmailCode;
   declare readonly message: string;
 }
@@ -106,53 +106,53 @@ export const PolarDuplicateEmailErrorWire = publicFailure(
   PolarDuplicateEmailError
 );
 
-export class PolarPortalError extends Schema.TaggedError<PolarPortalError>()(
-  "PolarPortalError",
-  {
-    code: Schema.Literal(polarPortalErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarPortalError extends Schema.TaggedError<
+  PolarPortalError,
+  { readonly brand: unique symbol }
+>()("PolarPortalError", {
+  code: Schema.Literal(polarPortalErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarPortalErrorCode;
   declare readonly message: string;
 }
 export const PolarPortalErrorWire = publicFailure(PolarPortalError);
 
-export class PolarRefundError extends Schema.TaggedError<PolarRefundError>()(
-  "PolarRefundError",
-  {
-    code: Schema.Literal(polarRefundErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarRefundError extends Schema.TaggedError<
+  PolarRefundError,
+  { readonly brand: unique symbol }
+>()("PolarRefundError", {
+  code: Schema.Literal(polarRefundErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarRefundErrorCode;
   declare readonly message: string;
 }
 export const PolarRefundErrorWire = publicFailure(PolarRefundError);
 
-export class PolarUpdateError extends Schema.TaggedError<PolarUpdateError>()(
-  "PolarUpdateError",
-  {
-    code: Schema.Literal(polarUpdateErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarUpdateError extends Schema.TaggedError<
+  PolarUpdateError,
+  { readonly brand: unique symbol }
+>()("PolarUpdateError", {
+  code: Schema.Literal(polarUpdateErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarUpdateErrorCode;
   declare readonly message: string;
 }
 export const PolarUpdateErrorWire = publicFailure(PolarUpdateError);
 
-export class PolarSubscriptionListError extends Schema.TaggedError<PolarSubscriptionListError>()(
-  "PolarSubscriptionListError",
-  {
-    code: Schema.Literal(polarSubscriptionListErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class PolarSubscriptionListError extends Schema.TaggedError<
+  PolarSubscriptionListError,
+  { readonly brand: unique symbol }
+>()("PolarSubscriptionListError", {
+  code: Schema.Literal(polarSubscriptionListErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof polarSubscriptionListErrorCode;
   declare readonly message: string;
 }

@@ -38,7 +38,6 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -50,6 +49,8 @@ import {
   TableSearch,
   useServerSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { LineDialog } from "@/components/tenant/line";
@@ -68,11 +69,9 @@ import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
-
-const SOURCE = "components/tenant/settings/members";
 
 /**
  * How each member status shows, in the list and in its column's filter: an icon that fits it and that no
@@ -236,9 +235,9 @@ function SchoolMembersBody() {
         columns={columns}
         data={members}
         empty={
-          <TableEmpty
-            act="waving"
+          <EmptyState
             description={t("members-empty-description")}
+            scene={<EmptyNina act="waving" />}
             title={t("members-empty")}
           />
         }
@@ -280,15 +279,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           invite({
             email: email.value,
             locale: sendLocale,
             personId: member.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
@@ -296,7 +295,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const removeMember = () => {
     dialogs.close();
     startTransition(() =>
-      saveSchool(() => remove({ personId: member.id, slug }), SOURCE)
+      runSchoolWrite(schoolCall(() => remove({ personId: member.id, slug })))
     );
   };
 

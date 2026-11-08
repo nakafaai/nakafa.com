@@ -9,7 +9,7 @@ import { taskExam } from "@repo/backend/confect/classroom/tasks/exam";
 import {
   submissionField,
   taskField,
-} from "@repo/backend/confect/classroom/tasks/task";
+} from "@repo/backend/confect/classroom/tasks/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { openText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Effect, Option } from "effect";

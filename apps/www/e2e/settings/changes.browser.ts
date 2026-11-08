@@ -180,7 +180,7 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
       await expect(editorOf(page)).toHaveCount(0);
       await expect(row).toHaveCount(0);
       await saved(changes, before);
-      await page.waitForTimeout(1500);
+      await page.clock.runFor(1500);
       expect(changes.sent - before).toBe(1);
       await expect(page.getByText(MISSING)).toHaveCount(0);
       await expect(page.getByText(EMPTY)).toBeVisible();

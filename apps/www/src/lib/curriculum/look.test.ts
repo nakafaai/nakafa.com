@@ -14,7 +14,7 @@ import {
   testProgramClass,
   testProgramRoot,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 /** A subject route of the fixtures, with the icon key, the material domain, and the node key of the test. */
 function subjectWith(

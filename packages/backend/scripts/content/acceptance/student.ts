@@ -1,7 +1,7 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { encodeArguments } from "@repo/backend/scripts/content/acceptance/member";
+import {
+  LocalConvex,
+  localConvexLayer,
+} from "@repo/backend/scripts/content/acceptance/convex";
 import {
   type AcceptanceMode,
   decodeModeArguments,
@@ -14,22 +14,15 @@ import { Effect, Schema } from "effect";
  * The learner must already be a member of the school, as `invite` makes it, because the grant
  * is written for the member of that address.
  */
-export const createAcceptanceStudent = Effect.fn(
-  "contentAcceptance.createStudent"
-)(function* (root: string, slug: string, email: string) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
-    return yield* acceptanceRuntimeError(
-      "Run bun run acceptance:prepare and start acceptance before granting a student."
-    );
+export const seedStudent = Effect.fn("contentAcceptance.seedStudent")(
+  function* (slug: string, email: string) {
+    const { run } = yield* LocalConvex;
+    yield* run("student seed", {
+      args: { email, slug },
+      path: "tenancy/seed:student",
+    });
   }
-  const args = yield* encodeArguments({ email, slug });
-  yield* runLocalConvex(runtime, "student seed", [
-    "run",
-    "tenancy/seed:student",
-    args,
-  ]);
-});
+);
 
 /** The usage of the student mode: the school, then the learner's address. */
 const USAGE = "student <school-slug> <learner-address>";
@@ -52,6 +45,8 @@ export const studentMode = {
       StudentArguments,
       args
     );
-    return yield* createAcceptanceStudent(root, slug, address);
+    yield* seedStudent(slug, address).pipe(
+      Effect.provide(localConvexLayer(root))
+    );
   }),
 } satisfies AcceptanceMode;

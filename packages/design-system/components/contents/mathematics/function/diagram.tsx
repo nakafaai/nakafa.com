@@ -7,9 +7,9 @@ import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinates";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { LineEquation } from "@repo/design-system/components/three/line-equation";
+import { LineEquation } from "@repo/design-system/components/three/line";
 import {
   VisualCard,
   VisualCardBody,

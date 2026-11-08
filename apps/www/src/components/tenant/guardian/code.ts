@@ -86,10 +86,10 @@ export function stepSignIn(
  * A code sign-in whose request got no answer, or whose server failed. It is not a refusal:
  * a wrong code answers a status below 500, which the form reads as refused.
  */
-export class GuardianSignInUnanswered extends Schema.TaggedError<GuardianSignInUnanswered>()(
-  "GuardianSignInUnanswered",
-  {}
-) {}
+export class GuardianSignInUnanswered extends Schema.TaggedError<
+  GuardianSignInUnanswered,
+  { readonly brand: unique symbol }
+>()("GuardianSignInUnanswered", {}) {}
 
 /**
  * Reads the answer of one code sign-in from the status of its error. No error status means the

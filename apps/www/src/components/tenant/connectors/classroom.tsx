@@ -26,15 +26,11 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
+import { EmptyNina } from "@/components/state/nina";
 import {
   type Course,
   type Preview,
@@ -43,10 +39,8 @@ import {
 } from "@/components/tenant/connectors/courses";
 import { useTenant } from "@/components/tenant/context";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/connectors/classroom";
 
 /** The value of the class picker that leaves a course unlinked. */
 const UNLINKED = "none";
@@ -154,18 +148,18 @@ function CourseTable({ preview }: { preview: Preview }) {
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
     return (
-      <TableEmpty
-        act="searching"
+      <EmptyState
         description={t("courses-none")}
+        scene={<EmptyNina act="searching" />}
         title={t("courses-none-title")}
       />
     );
   }
   if (needsClass(preview)) {
     return (
-      <TableEmpty
-        act="pointing"
+      <EmptyState
         description={t("courses-no-class")}
+        scene={<EmptyNina act="pointing" />}
         title={t("courses-no-class-title")}
       />
     );
@@ -259,8 +253,8 @@ function CourseClass({
         : Schema.decodeUnknownOption(Id("classes"))(value);
     Option.map(picked, (classId) => {
       place(course.courseId, classId);
-      runForumCall(
-        forumCall(() =>
+      runSchoolWrite(
+        schoolCall(() =>
           link({
             classId,
             connectionId: preview.connectionId,
@@ -268,9 +262,10 @@ function CourseClass({
             slug,
           })
         ),
-        () => {
-          place(course.courseId, course.classId);
-          toastForumFailure();
+        {
+          onFailed: () => {
+            place(course.courseId, course.classId);
+          },
         }
       );
     });
@@ -317,10 +312,12 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
       icon={<Spinner icon={UserAdd01Icon} isLoading={isImporting} />}
       onClick={() =>
         startImporting(() =>
-          saveSchool(
-            () => importRoster({ courseId, slug }),
-            SOURCE,
-            () => toast.success({ title: "school-roster-imported.title" })
+          runSchoolWrite(
+            schoolCall(() => importRoster({ courseId, slug })),
+            {
+              onSaved: () =>
+                toast.success({ title: "school-roster-imported.title" }),
+            }
           )
         )
       }

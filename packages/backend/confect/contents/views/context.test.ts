@@ -46,12 +46,12 @@ const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
     `${FUNCTION_MATERIAL.parentPath}/function-concept-renamed`
   ),
 });
-class ObservedContextQueryFailure extends Schema.TaggedError<ObservedContextQueryFailure>()(
-  "ObservedContextQueryFailure",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class ObservedContextQueryFailure extends Schema.TaggedError<
+  ObservedContextQueryFailure,
+  { readonly brand: unique symbol }
+>()("ObservedContextQueryFailure", {
+  cause: Schema.Unknown,
+}) {}
 class UnexpectedContextTestState extends Data.TaggedError(
   "UnexpectedContextTestState"
 )<{

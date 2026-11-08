@@ -16,7 +16,7 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
@@ -24,6 +24,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   CreateExam,
@@ -230,25 +232,24 @@ function NoExamEmpty() {
 
   if (!tenant.canOpenExams) {
     return (
-      <TableEmpty
-        act="waving"
+      <EmptyState
         description={t("rooms-list-description")}
+        scene={<EmptyNina act="waving" />}
         title={t("empty")}
       />
     );
   }
   if (tenant.home.canCreate) {
     return (
-      <TableEmpty
-        act="writing"
+      <EmptyState
         description={t("create-description")}
+        scene={<EmptyNina act="writing" />}
         title={t("empty")}
       />
     );
   }
   return (
-    <TableEmpty
-      act="pointing"
+    <EmptyState
       action={
         tenant.canManage ? (
           <Link
@@ -263,6 +264,7 @@ function NoExamEmpty() {
       description={
         tenant.canManage ? t("no-unit-description") : t("no-unit-member")
       }
+      scene={<EmptyNina act="pointing" />}
       title={t("empty")}
     />
   );
