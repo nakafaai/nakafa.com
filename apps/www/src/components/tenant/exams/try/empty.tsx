@@ -1,7 +1,8 @@
 import type { Id } from "@repo/backend/confect/_generated/id";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { Link } from "@/lib/routing/link";
 
@@ -15,8 +16,7 @@ export function ExamTryEmpty({ examId }: { examId: Id<"exams"> }) {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col">
-      <TableEmpty
-        act="writing"
+      <EmptyState
         action={
           <Link
             className={buttonVariants()}
@@ -27,6 +27,7 @@ export function ExamTryEmpty({ examId }: { examId: Id<"exams"> }) {
           </Link>
         }
         description={t("try-empty-description")}
+        scene={<EmptyNina act="writing" />}
         title={t("try-empty-title")}
       />
     </main>

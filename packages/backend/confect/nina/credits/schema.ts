@@ -22,14 +22,14 @@ export const NinaCreditHold = Schema.Struct({
   pool: Schema.optionalKey(CreditPoolDraw),
 });
 
-export class NinaCreditError extends Schema.TaggedError<NinaCreditError>()(
-  "NinaCreditError",
-  {
-    code: Schema.Literals([
-      "INSUFFICIENT_CREDITS",
-      "RATE_LIMITED",
-      "NINA_CREDIT_IO_FAILED",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class NinaCreditError extends Schema.TaggedError<
+  NinaCreditError,
+  { readonly brand: unique symbol }
+>()("NinaCreditError", {
+  code: Schema.Literals([
+    "INSUFFICIENT_CREDITS",
+    "RATE_LIMITED",
+    "NINA_CREDIT_IO_FAILED",
+  ]),
+  message: Schema.String,
+}) {}

@@ -125,20 +125,20 @@ export const NinaSettledTurn = Schema.Struct({
 
 export const NinaTurn = Schema.Union([NinaActiveTurn, NinaSettledTurn]);
 
-export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
-  "NinaTurnError",
-  {
-    code: Schema.Literals([
-      "NINA_BUSY",
-      "NINA_RETRY_UNAVAILABLE",
-      "NINA_REQUEST_CONFLICT",
-      "NINA_WRITE_FAILED",
-      "NINA_CONTEXT_FAILED",
-      "NINA_MESSAGE_SIZE",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class NinaTurnError extends Schema.TaggedError<
+  NinaTurnError,
+  { readonly brand: unique symbol }
+>()("NinaTurnError", {
+  code: Schema.Literals([
+    "NINA_BUSY",
+    "NINA_RETRY_UNAVAILABLE",
+    "NINA_REQUEST_CONFLICT",
+    "NINA_WRITE_FAILED",
+    "NINA_CONTEXT_FAILED",
+    "NINA_MESSAGE_SIZE",
+  ]),
+  message: Schema.String,
+}) {}
 
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicMutation({

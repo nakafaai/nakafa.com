@@ -1,16 +1,7 @@
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
-import type { ActSchema } from "@repo/mascot/nina/act";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { tableCardVariants } from "@/components/shared/table/card";
-import { EmptyNina } from "@/components/state/empty";
 
 /**
  * A table that sits inside a part of a page, as shadcn draws one: a rounded border
@@ -76,37 +67,5 @@ export function TableNote({ children }: { children: ReactNode }) {
     <p className="text-muted-foreground shrink-0 border-t px-4 py-3 text-sm text-pretty">
       {children}
     </p>
-  );
-}
-
-/**
- * The body of a list that holds no record yet: what the list will hold, in one
- * sentence, with Nina doing what fits the list, in the middle of the body. A table
- * draws it under its column heads (`empty` on `DataTable`), which stand from the first
- * frame, and a list without heads draws it in its place. The page's action that adds
- * the first record sits in the page header.
- */
-export function TableEmpty({
-  action,
-  description,
-  title,
-  ...nina
-}: {
-  /** What Nina does in the empty state, chosen for the list. */
-  act: typeof ActSchema.Type;
-  /** The way on that fixes the empty state, when the list has one, such as a link to the page that adds the first record. */
-  action?: ReactNode;
-  description: string;
-  title: string;
-}) {
-  return (
-    <Empty className="flex-1 md:p-10">
-      <EmptyHeader>
-        <EmptyNina {...nina} />
-        <EmptyTitle className="text-base">{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-      {action === undefined ? null : <EmptyContent>{action}</EmptyContent>}
-    </Empty>
   );
 }

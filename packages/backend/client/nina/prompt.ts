@@ -29,10 +29,10 @@ export const isPromptWithinLimit = Schema.is(
   Schema.String.check(Schema.isMaxCodePoints(NINA_PROMPT_LENGTH))
 );
 /** The refusal of a prompt that is longer than the prompt limit. */
-export class NinaPromptError extends Schema.TaggedError<NinaPromptError>()(
-  "NinaPromptError",
-  {
-    code: Schema.Literal("NINA_PROMPT_LENGTH"),
-    message: Schema.String,
-  }
-) {}
+export class NinaPromptError extends Schema.TaggedError<
+  NinaPromptError,
+  { readonly brand: unique symbol }
+>()("NinaPromptError", {
+  code: Schema.Literal("NINA_PROMPT_LENGTH"),
+  message: Schema.String,
+}) {}

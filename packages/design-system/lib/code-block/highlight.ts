@@ -69,32 +69,32 @@ export type CodeHighlightOptions = typeof CodeHighlightInputSchema.Type &
   Partial<Pick<CodeOptionsMultipleThemes, "themes">>;
 
 /** Expected failure when a code block names a language outside Shiki's bundle. */
-export class UnsupportedCodeLanguageError extends Schema.TaggedError<UnsupportedCodeLanguageError>()(
-  "UnsupportedCodeLanguageError",
-  {
-    language: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class UnsupportedCodeLanguageError extends Schema.TaggedError<
+  UnsupportedCodeLanguageError,
+  { readonly brand: unique symbol }
+>()("UnsupportedCodeLanguageError", {
+  language: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** Expected failure when a code block names a theme outside Shiki's bundle. */
-export class UnsupportedCodeThemeError extends Schema.TaggedError<UnsupportedCodeThemeError>()(
-  "UnsupportedCodeThemeError",
-  {
-    message: Schema.String,
-    theme: Schema.String,
-  }
-) {}
+export class UnsupportedCodeThemeError extends Schema.TaggedError<
+  UnsupportedCodeThemeError,
+  { readonly brand: unique symbol }
+>()("UnsupportedCodeThemeError", {
+  message: Schema.String,
+  theme: Schema.String,
+}) {}
 
 /** Expected Shiki failure while rendering one supported code language. */
-export class CodeHighlightError extends Schema.TaggedError<CodeHighlightError>()(
-  "CodeHighlightError",
-  {
-    cause: Schema.Unknown,
-    language: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class CodeHighlightError extends Schema.TaggedError<
+  CodeHighlightError,
+  { readonly brand: unique symbol }
+>()("CodeHighlightError", {
+  cause: Schema.Unknown,
+  language: Schema.String,
+  message: Schema.String,
+}) {}
 
 /**
  * Drops Shiki's inline background from the `<pre>` on request, so the code takes its surface's. The

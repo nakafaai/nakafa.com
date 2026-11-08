@@ -115,6 +115,13 @@ Run the browser suites from the repository root in a second terminal:
 bun --filter www test:browser
 ```
 
+That runs every project at once, which suits one file or folder. A whole run
+selects each suite in turn with `PLAYWRIGHT_SUITE`: the parallel suites
+`runtime`, `learner`, `chat`, `visual` and `browsers` first, then the one-worker
+suites `timing` and `browser-timing`, whose specs measure latency and paint
+(`apps/www/playwright.config.ts`). A test records a trace and a video, kept
+when it fails, only with `PLAYWRIGHT_RECORD=1`, as a rerun of a failure asks.
+
 A browser test seeds its learners, schools and rows in its own process, through
 the local backend's admin HTTP API (`LocalConvex` in
 `packages/backend/scripts/content/acceptance/convex.ts`), so a fixture costs one

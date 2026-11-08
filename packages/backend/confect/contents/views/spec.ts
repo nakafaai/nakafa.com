@@ -27,14 +27,14 @@ export const recordContentViewResultValidator = Schema.Struct({
 export type RecordContentViewArgs = typeof recordContentViewArgsValidator.Type;
 
 /** Raised when Convex IO fails while recording a content view. */
-class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()(
-  "ContentViewIoError",
-  {
-    code: Schema.Literal(contentViewIoFailedCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {}
+class ContentViewIoError extends Schema.TaggedError<
+  ContentViewIoError,
+  { readonly brand: unique symbol }
+>()("ContentViewIoError", {
+  code: Schema.Literal(contentViewIoFailedCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {}
 
 /** Maps an unknown infrastructure failure into the content-view error channel. */
 export const ContentViewIoErrorWire = publicFailure(ContentViewIoError);

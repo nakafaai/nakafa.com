@@ -42,10 +42,10 @@ function themeSnapshot(theme: ThemeChoice, systemAppearance: ThemeAppearance) {
 }
 
 /** Raised when the browser refuses to read or keep the visitor's theme choice. */
-class ThemeStorageFailed extends Schema.TaggedError<ThemeStorageFailed>()(
-  "ThemeStorageFailed",
-  {}
-) {}
+class ThemeStorageFailed extends Schema.TaggedError<
+  ThemeStorageFailed,
+  { readonly brand: unique symbol }
+>()("ThemeStorageFailed", {}) {}
 
 /** Reads the stored choice. Storage that refuses the read has no stored choice. */
 const readStoredChoice = Effect.fn("designSystem.theme.readStoredChoice")(
