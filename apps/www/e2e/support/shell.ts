@@ -212,6 +212,23 @@ export function expectStillShell(
   expect(observation.markedFrames).toBe(0);
 }
 
+/**
+ * Expects the frames of one press to hold `expectStillShell` and to show two
+ * pages at most: every frame keeps the page the press leaves whole, its titles,
+ * header and frame included, until the next page renders in its place, and no
+ * frame shows a third page, such as a page under a second header. A journey of
+ * many presses observed at once holds `expectStillShell` alone.
+ */
+export function expectOnePress(
+  observation: typeof ShellObservation.Type,
+  locks: readonly boolean[],
+  shells = 1
+) {
+  expectStillShell(observation, locks, shells);
+  expect(Arr.drop(observation.outgoing, 1)).toEqual([]);
+  expect(Arr.drop(observation.titles, 2)).toEqual([]);
+}
+
 /** Summarizes the frames and layout shifts recorded since `since`. */
 export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
   function* (page: Page, since: number) {
@@ -276,10 +293,8 @@ const waitFrames = (page: Page, count: number) =>
 
 /**
  * Runs a press, waits through `arrive` for the page it opens, and expects the
- * contract of `expectStillShell` from the press on. One press shows two pages
- * at most: every frame keeps the page it leaves whole, its titles, header and
- * frame included, until the next page renders in its place, and no frame shows
- * a third page. The recorder of `observeShell` must run.
+ * contract of `expectOnePress` from the press on. The recorder of
+ * `observeShell` must run.
  */
 export const expectPressKeepsPage = Effect.fn("NakafaE2E.expectPressKeepsPage")(
   function* <PressError, PressRequirements, ArriveError, ArriveRequirements>(
@@ -293,10 +308,6 @@ export const expectPressKeepsPage = Effect.fn("NakafaE2E.expectPressKeepsPage")(
     // Frames after the next page renders, where a page left behind would show.
     yield* waitFrames(page, 10);
     const observation = yield* readShellObservation(page, since);
-    yield* Effect.sync(() => {
-      expectStillShell(observation, [false]);
-      expect(Arr.drop(observation.outgoing, 1)).toEqual([]);
-      expect(Arr.drop(observation.titles, 2)).toEqual([]);
-    });
+    yield* Effect.sync(() => expectOnePress(observation, [false]));
   }
 );
