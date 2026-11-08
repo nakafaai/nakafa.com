@@ -94,18 +94,16 @@ describe("try-out URLs from before the groups", () => {
     })
   );
 
-  it.effect(
-    "sends an exam's own address to its first group, for now",
-    () =>
-      Effect.gen(function* () {
-        expect(yield* readGroupRedirect("/id/try-out/indonesia/tka")).toEqual({
-          destination: `/id/${TKA_GRADE}`,
-          status: 307,
-        });
-        expect(
-          yield* readGroupRedirect("/id/try-out/indonesia/ujian-lain")
-        ).toBeNull();
-      })
+  it.effect("sends an exam's own address to its first group, for now", () =>
+    Effect.gen(function* () {
+      expect(yield* readGroupRedirect("/id/try-out/indonesia/tka")).toEqual({
+        destination: `/id/${TKA_GRADE}`,
+        status: 307,
+      });
+      expect(
+        yield* readGroupRedirect("/id/try-out/indonesia/ujian-lain")
+      ).toBeNull();
+    })
   );
 
   it.effect("leaves an exam without a group on its 404", () =>
@@ -139,19 +137,17 @@ describe("try-out URLs from before the groups", () => {
     })
   );
 
-  it.effect(
-    "moves a TKA track and its sets under their grade, for good",
-    () =>
-      Effect.gen(function* () {
-        expect(
-          yield* readGroupRedirect("/id/try-out/indonesia/tka/matematika-wajib")
-        ).toEqual({ destination: `/id/${TKA_TRACK}`, status: 308 });
-        expect(
-          yield* readGroupRedirect(
-            "/id/try-out/indonesia/tka/matematika-wajib/set-1"
-          )
-        ).toEqual({ destination: `/id/${TKA_TRACK}/set-1`, status: 308 });
-      })
+  it.effect("moves a TKA track and its sets under their grade, for good", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* readGroupRedirect("/id/try-out/indonesia/tka/matematika-wajib")
+      ).toEqual({ destination: `/id/${TKA_TRACK}`, status: 308 });
+      expect(
+        yield* readGroupRedirect(
+          "/id/try-out/indonesia/tka/matematika-wajib/set-1"
+        )
+      ).toEqual({ destination: `/id/${TKA_TRACK}/set-1`, status: 308 });
+    })
   );
 
   it.effect(

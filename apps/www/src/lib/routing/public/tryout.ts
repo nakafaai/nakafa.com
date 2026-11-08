@@ -1,11 +1,11 @@
 import { Effect, Option } from "effect";
+import { readGroupRedirect } from "@/lib/routing/public/tryout/group";
 import {
   readRetiredSnbtExam,
   readRetiredSnbtExamRedirect,
   readRetiredSnbtProduct,
   readRetiredSnbtProductRedirect,
 } from "@/lib/routing/public/tryout/product";
-import { readGroupRedirect } from "@/lib/routing/public/tryout/group";
 import { readRetiredSectionRedirect } from "@/lib/routing/public/tryout/section";
 import {
   readTracklessRouteRedirect,

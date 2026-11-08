@@ -63,7 +63,10 @@ export const readPublishedCountryPage = Effect.fn(
             "A try-out exam has no group."
           ),
         onSome: (group) =>
-          Effect.succeed({ ...toPublicExam(exam), entryPath: group.publicPath }),
+          Effect.succeed({
+            ...toPublicExam(exam),
+            entryPath: group.publicPath,
+          }),
       })
     ),
   };

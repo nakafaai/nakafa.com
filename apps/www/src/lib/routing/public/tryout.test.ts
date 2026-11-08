@@ -49,13 +49,15 @@ describe("retired try-out redirects", () => {
     "/en/try-out",
     "/en/try-out/indonesia",
     "/fr/try-out/snbt",
-  ])("leaves %s, which names no exam, alone without reading the catalog", (pathname) =>
-    Effect.gen(function* () {
-      expect(yield* readTryoutRedirect(pathname)).toBeNull();
-      expect(mocks.path).not.toHaveBeenCalled();
-      expect(mocks.exam).not.toHaveBeenCalled();
-      expect(mocks.section).not.toHaveBeenCalled();
-    })
+  ])(
+    "leaves %s, which names no exam, alone without reading the catalog",
+    (pathname) =>
+      Effect.gen(function* () {
+        expect(yield* readTryoutRedirect(pathname)).toBeNull();
+        expect(mocks.path).not.toHaveBeenCalled();
+        expect(mocks.exam).not.toHaveBeenCalled();
+        expect(mocks.section).not.toHaveBeenCalled();
+      })
   );
 
   it.effect.each([

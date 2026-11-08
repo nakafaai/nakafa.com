@@ -69,7 +69,10 @@ export function getTryoutPublicPathTarget(
   if (
     root !== "try-out" ||
     rest.length > 0 ||
-    Arr.some([country, exam, group, track, set, section], (segment) => segment === "")
+    Arr.some(
+      [country, exam, group, track, set, section],
+      (segment) => segment === ""
+    )
   ) {
     return Option.none();
   }

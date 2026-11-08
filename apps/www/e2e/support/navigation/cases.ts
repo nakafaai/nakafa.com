@@ -1,8 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import {
   Array as Arr,
   Duration,

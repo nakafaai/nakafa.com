@@ -1,8 +1,8 @@
+import { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import {
   type AppLocaleCode,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** One signed route identity, with the public path that each locale serves for it. */
@@ -36,16 +36,11 @@ const SectionFixtureSchema = Schema.Struct({
 });
 export type SectionFixture = typeof SectionFixtureSchema.Type;
 
-/** One test double of a catalog read. */
-type CatalogMock = ReturnType<typeof vi.fn>;
-
 /** The catalog reads that the routing rules call, each a test double. */
-type CatalogMocks = {
-  readonly exam: CatalogMock;
-  readonly group: CatalogMock;
-  readonly path: CatalogMock;
-  readonly section: CatalogMock;
-};
+type CatalogMocks = Record<
+  "exam" | "group" | "path" | "section",
+  ReturnType<typeof vi.fn>
+>;
 
 /** Finds the row a read asks for: its locale and its path. */
 function findRow<Row extends { appLocale: AppLocaleCode; publicPath: string }>(

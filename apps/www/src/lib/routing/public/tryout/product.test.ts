@@ -127,7 +127,10 @@ describe("retired try-out redirects", () => {
     );
 
     it.effect.each([
-      ["/en/try-out/snbt/2027-set-1", "/en/try-out/indonesia/snbt/2027/utbk/set-1"],
+      [
+        "/en/try-out/snbt/2027-set-1",
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1",
+      ],
       [
         "/de/try-out/snbt/2027-set-1",
         "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1",
@@ -217,7 +220,8 @@ describe("retired try-out redirects", () => {
         "/en/try-out/indonesia/snbt/2027/utbk/set-1/literacy-in-english",
         {
           appLocale: "en",
-          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1/literacy-in-english",
+          publicPath:
+            "try-out/indonesia/snbt/2027/utbk/set-1/literacy-in-english",
         },
       ],
       [
@@ -320,7 +324,8 @@ describe("retired try-out redirects", () => {
           sections: [
             {
               appLocale: "en",
-              publicPath: "try-out/indonesia/snbt/2027/utbk/set-1/matematika-wajib",
+              publicPath:
+                "try-out/indonesia/snbt/2027/utbk/set-1/matematika-wajib",
             },
           ],
         });
@@ -330,7 +335,8 @@ describe("retired try-out redirects", () => {
             "/en/try-out/snbt/2027-set-1/part/matematika-wajib"
           )
         ).toEqual({
-          destination: "/en/try-out/indonesia/snbt/2027/utbk/set-1/matematika-wajib",
+          destination:
+            "/en/try-out/indonesia/snbt/2027/utbk/set-1/matematika-wajib",
           status: 308,
         });
       })

@@ -44,30 +44,32 @@ describe("published try-out pages for routing", () => {
     runtimeQueryMock.mockReset();
   });
 
-  it.effect("reads a live exam with its groups, and a group with its tracks", () =>
-    Effect.gen(function* () {
-      const world = yield* tryoutWorld();
-      runtimeQueryMock.mockImplementation(world.visitor.query);
+  it.effect(
+    "reads a live exam with its groups, and a group with its tracks",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        runtimeQueryMock.mockImplementation(world.visitor.query);
 
-      expect(
-        yield* readPublishedTryoutExamPage({
-          appLocale: "en",
-          publicPath: "try-out/indonesia/snbt-en",
-        })
-      ).toMatchObject({
-        exam: { examKey: "snbt" },
-        groups: [{ groupKey: "2027" }],
-      });
-      expect(
-        yield* readPublishedTryoutGroupPage({
-          appLocale: "en",
-          publicPath: "try-out/indonesia/snbt/2027-en",
-        })
-      ).toMatchObject({
-        group: { groupKey: "2027" },
-        tracks: [{ trackKey: "2027" }],
-      });
-    })
+        expect(
+          yield* readPublishedTryoutExamPage({
+            appLocale: "en",
+            publicPath: "try-out/indonesia/snbt-en",
+          })
+        ).toMatchObject({
+          exam: { examKey: "snbt" },
+          groups: [{ groupKey: "2027" }],
+        });
+        expect(
+          yield* readPublishedTryoutGroupPage({
+            appLocale: "en",
+            publicPath: "try-out/indonesia/snbt/2027-en",
+          })
+        ).toMatchObject({
+          group: { groupKey: "2027" },
+          tracks: [{ trackKey: "2027" }],
+        });
+      })
   );
 
   it.effect("returns no exam page for an absent exam", () =>

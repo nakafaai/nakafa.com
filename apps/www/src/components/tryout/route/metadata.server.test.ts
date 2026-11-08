@@ -196,27 +196,31 @@ describe("readTryoutRouteHead", () => {
       })
   );
 
-  it.effect("gives a group the artwork of its exam's social image identity", () =>
-    Effect.gen(function* () {
-      publishRoute({
-        ...publishedRoute,
-        description: undefined,
-        socialImageIdentity: { examKey: "snbt", imageKey: "exam-a" },
-      });
+  it.effect(
+    "gives a group the artwork of its exam's social image identity",
+    () =>
+      Effect.gen(function* () {
+        publishRoute({
+          ...publishedRoute,
+          description: undefined,
+          socialImageIdentity: { examKey: "snbt", imageKey: "exam-a" },
+        });
 
-      const head = yield* readTryoutRouteHead({
-        kind: "group",
-        locale: "en",
-        publicPath: GROUP,
-      });
+        const head = yield* readTryoutRouteHead({
+          kind: "group",
+          locale: "en",
+          publicPath: GROUP,
+        });
 
-      expect(Option.getOrThrow(head).image).toBe("social-snbt.png");
-      expect(Option.getOrThrow(head).description).toBe(
-        "route-metadata-description Indonesia"
-      );
-      expect(catalog.resolveTryoutExamArtwork).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ examKey: "snbt", publicPath: COUNTRY })
-      );
-    })
+        expect(Option.getOrThrow(head).image).toBe("social-snbt.png");
+        expect(Option.getOrThrow(head).description).toBe(
+          "route-metadata-description Indonesia"
+        );
+        expect(
+          catalog.resolveTryoutExamArtwork
+        ).toHaveBeenCalledExactlyOnceWith(
+          expect.objectContaining({ examKey: "snbt", publicPath: COUNTRY })
+        );
+      })
   );
 });

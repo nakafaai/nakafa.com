@@ -4,8 +4,8 @@ import { Option } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
-import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
 import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
+import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
 import {
   TryoutExamSelector,
   TryoutGroupSelector,

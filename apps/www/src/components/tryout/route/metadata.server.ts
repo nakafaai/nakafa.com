@@ -75,24 +75,39 @@ const readTryoutBreadcrumbs = Effect.fn("www.tryout.route.readBreadcrumbs")(
           publicPath: Arr.join(Arr.take(segments, index + OWN_SEGMENTS), "/"),
         })
     );
-    const crumbs: { name: string; path: string }[] = [];
-    let lead = "";
-    for (const [kind, { route }] of Arr.zip(ANCESTOR_KINDS, ancestors)) {
-      if (!route) {
-        continue;
-      }
-      if (kind === "exam") {
-        lead = `${route.title} `;
-        continue;
-      }
-      crumbs.push({ name: `${lead}${route.title}`, path: `/${route.publicPath}` });
-      lead = "";
-    }
+    const nodes = Arr.zipWith(ANCESTOR_KINDS, ancestors, (kind, { route }) => ({
+      kind,
+      route,
+    }));
+    // An exam has no page of its own, so its title leads the crumb of its group.
+    const examLead = Option.getOrElse(
+      Arr.head(
+        Arr.flatMap(nodes, ({ kind, route }) =>
+          kind === "exam" && route ? [`${route.title} `] : []
+        )
+      ),
+      () => ""
+    );
+    const leadOf = (kind: string | undefined) =>
+      kind === "group" ? examLead : "";
+    const crumbs = Arr.flatMap(nodes, ({ kind, route }) =>
+      !route || kind === "exam"
+        ? []
+        : [
+            {
+              name: `${leadOf(kind)}${route.title}`,
+              path: `/${route.publicPath}`,
+            },
+          ]
+    );
     return createBreadcrumbItems(input.locale, [
       { name: labels.home, path: "" },
       { name: labels.tryOut, path: "/try-out" },
       ...crumbs,
-      { name: `${lead}${input.title}`, path: `/${input.publicPath}` },
+      {
+        name: `${leadOf(ANCESTOR_KINDS[ancestors.length])}${input.title}`,
+        path: `/${input.publicPath}`,
+      },
     ]);
   }
 );

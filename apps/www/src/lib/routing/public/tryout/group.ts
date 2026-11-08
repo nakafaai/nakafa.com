@@ -4,11 +4,11 @@ import {
   readPublishedTryoutExamPage,
   readPublishedTryoutGroupPage,
 } from "@/lib/content/tryout/catalog";
+import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import {
   permanentRedirect,
   temporaryRedirect,
 } from "@/lib/routing/public/redirect";
-import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import {
   decodeAppLocale,
   readActiveTryoutPath,
@@ -23,18 +23,18 @@ import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
  * Reads the one track of a group, none when the group is not live or holds
  * more than one track, because then a path without its track names no page.
  */
-export const readSoleTrack = Effect.fn("www.routing.publicHtml.tryoutSoleTrack")(
-  function* (appLocale: AppLocaleCode, groupPath: string) {
-    const page = yield* readPublishedTryoutGroupPage({
-      appLocale,
-      publicPath: groupPath,
-    });
-    if (page === null || page.tracks.length !== 1) {
-      return Option.none();
-    }
-    return Arr.head(page.tracks);
+export const readSoleTrack = Effect.fn(
+  "www.routing.publicHtml.tryoutSoleTrack"
+)(function* (appLocale: AppLocaleCode, groupPath: string) {
+  const page = yield* readPublishedTryoutGroupPage({
+    appLocale,
+    publicPath: groupPath,
+  });
+  if (page === null || page.tracks.length !== 1) {
+    return Option.none();
   }
-);
+  return Arr.head(page.tracks);
+});
 
 /**
  * Localizes the canonical SNBT set of one year, in the year's one track, or

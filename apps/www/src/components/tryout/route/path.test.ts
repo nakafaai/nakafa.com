@@ -121,9 +121,7 @@ describe("tryout route paths", () => {
       Option.some("/$locale/try-out/$country/$exam/$group/$track/$set")
     );
     expect(routeOf("try-out/indonesia/snbt/2027/utbk/set-1/section-1")).toEqual(
-      Option.some(
-        "/$locale/try-out/$country/$exam/$group/$track/$set/$section"
-      )
+      Option.some("/$locale/try-out/$country/$exam/$group/$track/$set/$section")
     );
     expect(Option.isNone(getTryoutPublicPathTarget("try-out//snbt"))).toBe(
       true
@@ -159,9 +157,7 @@ describe("tryout route paths", () => {
         (target) => target.to
       )
     ).toEqual(
-      Option.some(
-        "/$locale/try-out/$country/$exam/$group/$track/$set/$section"
-      )
+      Option.some("/$locale/try-out/$country/$exam/$group/$track/$set/$section")
     );
     expect(
       Option.isNone(

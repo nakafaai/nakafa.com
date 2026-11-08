@@ -27,5 +27,3 @@ export function readActiveTryoutPath(appLocale: AppLocaleCode, path: string) {
     targetAppLocale: appLocale,
   });
 }
-
-

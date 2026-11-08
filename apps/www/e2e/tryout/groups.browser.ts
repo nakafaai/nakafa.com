@@ -58,8 +58,8 @@ for (const [from, to, status] of [
     const response = await request.get(from, { maxRedirects: 0 });
 
     expect(response.status()).toBe(status);
-    expect(new URL(response.headers().location ?? "", "https://x").pathname).toBe(
-      to
-    );
+    expect(
+      new URL(response.headers().location ?? "", "https://x").pathname
+    ).toBe(to);
   });
 }

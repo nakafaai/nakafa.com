@@ -84,28 +84,30 @@ describe("try-out Markdown", () => {
     })
   );
 
-  it.effect("lists a country's exams, each opening its first group, with what each says of itself", () =>
-    Effect.gen(function* () {
-      catalog.country
-        .mockReturnValueOnce(
-          Effect.succeedSome({
-            country: COUNTRY,
-            exams: [
-              {
-                ...EXAM,
-                description: "The entrance test.",
-                entryPath: GROUP.publicPath,
-              },
-            ],
-          })
-        )
-        .mockReturnValueOnce(Effect.succeedNone);
+  it.effect(
+    "lists a country's exams, each opening its first group, with what each says of itself",
+    () =>
+      Effect.gen(function* () {
+        catalog.country
+          .mockReturnValueOnce(
+            Effect.succeedSome({
+              country: COUNTRY,
+              exams: [
+                {
+                  ...EXAM,
+                  description: "The entrance test.",
+                  entryPath: GROUP.publicPath,
+                },
+              ],
+            })
+          )
+          .mockReturnValueOnce(Effect.succeedNone);
 
-      expect(yield* text("try-out/indonesia")).toContain(
-        `- [SNBT](${BASE_URL}/en/try-out/indonesia/snbt/2027): The entrance test.`
-      );
-      expect(yield* text("try-out/nowhere")).toBeNull();
-    })
+        expect(yield* text("try-out/indonesia")).toContain(
+          `- [SNBT](${BASE_URL}/en/try-out/indonesia/snbt/2027): The entrance test.`
+        );
+        expect(yield* text("try-out/nowhere")).toBeNull();
+      })
   );
 
   it.effect("lists a group's tracks, named by its exam", () =>

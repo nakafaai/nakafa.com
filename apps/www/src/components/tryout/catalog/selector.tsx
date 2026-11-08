@@ -1,3 +1,4 @@
+import type { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import {
   Select,
   SelectContent,
@@ -11,12 +12,11 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import type { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
+import { TryoutCatalogChoice } from "@/components/tryout/catalog/choice";
 import {
   getTryoutExamIcons,
   getTryoutGroupIcons,
 } from "@/components/tryout/catalog/icons";
-import { TryoutCatalogChoice } from "@/components/tryout/catalog/choice";
 import type {
   TryoutCountrySelectorOption,
   TryoutExamSelectorOption,

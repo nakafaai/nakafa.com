@@ -106,7 +106,9 @@ describe("retired track-less set URLs", () => {
           status: 307,
         });
         expect(
-          yield* readTryoutRedirect("/de/try-out/indonesien/snbt/aufgabensatz-1")
+          yield* readTryoutRedirect(
+            "/de/try-out/indonesien/snbt/aufgabensatz-1"
+          )
         ).toEqual({
           destination: "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1",
           status: 307,
@@ -114,22 +116,24 @@ describe("retired track-less set URLs", () => {
       })
   );
 
-  it.effect("prefers the newest year that serves the set over an older one", () =>
-    Effect.gen(function* () {
-      const older = year("en", "2026");
-      serveTryoutCatalog(mocks, {
-        exams: [snbtExam("en", listed([older, EN_2027]))],
-        groups: [older, EN_2027],
-        routes: [SNBT_EXAM, SNBT_2026, SNBT_2026_SET_1],
-      });
+  it.effect(
+    "prefers the newest year that serves the set over an older one",
+    () =>
+      Effect.gen(function* () {
+        const older = year("en", "2026");
+        serveTryoutCatalog(mocks, {
+          exams: [snbtExam("en", listed([older, EN_2027]))],
+          groups: [older, EN_2027],
+          routes: [SNBT_EXAM, SNBT_2026, SNBT_2026_SET_1],
+        });
 
-      expect(
-        yield* readTryoutRedirect("/en/try-out/indonesia/snbt/set-1")
-      ).toEqual({
-        destination: "/en/try-out/indonesia/snbt/2026/utbk/set-1",
-        status: 307,
-      });
-    })
+        expect(
+          yield* readTryoutRedirect("/en/try-out/indonesia/snbt/set-1")
+        ).toEqual({
+          destination: "/en/try-out/indonesia/snbt/2026/utbk/set-1",
+          status: 307,
+        });
+      })
   );
 
   it.effect("keeps a track-less set on the 404 when the exam is not live", () =>

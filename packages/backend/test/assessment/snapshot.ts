@@ -339,7 +339,7 @@ export function fixtureSetPath(
 }
 
 /** The fixture exam's one group, the year its track belongs to. */
-export const FIXTURE_GROUP_KEY = "2027";
+const FIXTURE_GROUP_KEY = "2027";
 
 /** The catalog of one app locale: the country, the exam, its group, the track, and each set with its sections. */
 function makeCatalog(
