@@ -18,6 +18,7 @@ const PIN = {
   manifestHash: `sha256:${"1".repeat(64)}`,
   releaseId: "release-agent-taxonomy",
   sequence: 1,
+  snapshots: { assessment: null, program: null, quran: null },
 };
 const SNAPSHOT_ID = Sha256HashSchema.make(`sha256:${"2".repeat(64)}`);
 type QuranCatalog = FunctionReturnType<typeof api.contentRelease.quran.surahs>;
