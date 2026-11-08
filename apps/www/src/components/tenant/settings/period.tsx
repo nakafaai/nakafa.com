@@ -2,6 +2,7 @@ import { useMutation } from "@confect/react";
 import {
   Archive02Icon,
   ArchiveRestoreIcon,
+  Calendar03Icon,
   CheckmarkCircle02Icon,
   Delete02Icon,
   PencilEdit02Icon,
@@ -22,10 +23,13 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
-import { type ReactNode, startTransition, useId, useState } from "react";
+import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import {
+  ConfirmRowMenu,
+  ConfirmSubject,
+} from "@/components/shared/table/confirm";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Period } from "@/components/tenant/settings/state";
 import {
@@ -53,9 +57,10 @@ export function SchoolPeriodRestore({
   const restore = useMutation(tenancy.periods.restore).withOptimisticUpdate(
     restorePeriodChange
   );
+  const remove = usePeriodDelete(period, slug);
 
   return (
-    <PeriodDelete period={period} slug={slug}>
+    <ConfirmRowMenu {...remove}>
       <DropdownMenuItem
         onClick={() =>
           startTransition(() =>
@@ -66,52 +71,40 @@ export function SchoolPeriodRestore({
         <HugeIcons icon={ArchiveRestoreIcon} />
         {t("period-restore")}
       </DropdownMenuItem>
-    </PeriodDelete>
+    </ConfirmRowMenu>
   );
 }
 
 /**
- * A period's menu with Delete as its last item, under the period's other actions (`children`). Delete asks first, takes
- * the period out of the list at once, and puts it back with the reason when the server refuses: a period that holds
- * cohorts, classes or a promotion stays, archived. The active period keeps Delete in view, disabled, because it must be
- * archived first.
+ * What a period's Delete needs, for the menus that end in it: the copy, the period it removes in the confirmation's
+ * body, and whether the menu offers it at all. Delete stands only for a period nothing holds, as the list reads it with
+ * the server's own rule (the active period, or one that cohorts, classes, grades, a graduation or a promotion point at),
+ * so a menu never offers a delete the server refuses. It takes the period out of the list at once.
  */
-function PeriodDelete({
-  children,
-  period,
-  slug,
-}: {
-  children: ReactNode;
-  period: Period;
-  slug: TenantSlug;
-}) {
+function usePeriodDelete(period: Period, slug: TenantSlug) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const remove = useMutation(tenancy.periods.remove).withOptimisticUpdate(
     removePeriodChange
   );
 
-  return (
-    <ConfirmRowMenu
-      action={common("delete")}
-      confirm={t("period-delete-confirm")}
-      description={t("period-delete-description")}
-      disabled={period.status === "active"}
-      icon={Delete02Icon}
-      onConfirm={() =>
-        startTransition(() =>
-          saveSchool(
-            () => remove({ periodId: period.id, slug }),
-            SOURCE,
-            () => toast.success({ title: "school-period-deleted.title" })
-          )
+  return {
+    action: common("delete"),
+    confirm: t("period-delete-confirm"),
+    description: t("period-delete-description"),
+    icon: Delete02Icon,
+    offered: period.hold === null,
+    onConfirm: () =>
+      startTransition(() =>
+        saveSchool(
+          () => remove({ periodId: period.id, slug }),
+          SOURCE,
+          () => toast.success({ title: "school-period-deleted.title" })
         )
-      }
-      title={t("period-delete-title", { name: period.name })}
-    >
-      {children}
-    </ConfirmRowMenu>
-  );
+      ),
+    body: <ConfirmSubject icon={Calendar03Icon} name={period.name} />,
+    title: t("period-delete-title", { name: period.name }),
+  };
 }
 
 /** The name and the two dates of a period, as its dialog holds them. */
@@ -119,7 +112,7 @@ type PeriodFields = Pick<Period, "end" | "name" | "start">;
 
 /**
  * A period's row menu: it edits the period's name and dates in the dialog that adds a period, filled in, then opens a
- * planned period or archives an active one, and deletes a period nothing uses (`PeriodDelete`). An archived period
+ * planned period; under the separator it archives an active one and deletes a period nothing holds (`usePeriodDelete`). An archived period
  * takes `SchoolPeriodRestore` instead, because the server refuses every other write to it.
  */
 export function SchoolPeriodMenu({
@@ -142,12 +135,48 @@ export function SchoolPeriodMenu({
   const edit = useMutation(tenancy.periods.edit).withOptimisticUpdate(
     editPeriodChange
   );
+  const remove = usePeriodDelete(period, slug);
   // Each opening starts the dialog again from the period as it is now.
   const dialogs = useDialogs<"edit">();
 
   return (
     <>
-      <PeriodDelete period={period} slug={slug}>
+      <ConfirmRowMenu
+        {...remove}
+        footer={
+          period.status === "active" ? (
+            <DropdownMenuItem
+              onClick={() =>
+                startTransition(() =>
+                  saveSchool(
+                    () => archive({ periodId: period.id, slug }),
+                    SOURCE,
+                    () =>
+                      toast.success(
+                        { title: "school-period-archived.title" },
+                        {
+                          action: {
+                            label: "undo",
+                            onClick: () =>
+                              startTransition(() =>
+                                saveSchool(
+                                  () => restore({ periodId: period.id, slug }),
+                                  SOURCE
+                                )
+                              ),
+                          },
+                        }
+                      )
+                  )
+                )
+              }
+            >
+              <HugeIcons icon={Archive02Icon} />
+              {t("period-archive")}
+            </DropdownMenuItem>
+          ) : undefined
+        }
+      >
         <DropdownMenuItem onClick={() => dialogs.show("edit")}>
           <HugeIcons icon={PencilEdit02Icon} />
           {t("period-edit")}
@@ -164,38 +193,7 @@ export function SchoolPeriodMenu({
             {t("period-open")}
           </DropdownMenuItem>
         ) : null}
-        {period.status === "active" ? (
-          <DropdownMenuItem
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(
-                  () => archive({ periodId: period.id, slug }),
-                  SOURCE,
-                  () =>
-                    toast.success(
-                      { title: "school-period-archived.title" },
-                      {
-                        action: {
-                          label: "undo",
-                          onClick: () =>
-                            startTransition(() =>
-                              saveSchool(
-                                () => restore({ periodId: period.id, slug }),
-                                SOURCE
-                              )
-                            ),
-                        },
-                      }
-                    )
-                )
-              )
-            }
-          >
-            <HugeIcons icon={Archive02Icon} />
-            {t("period-archive")}
-          </DropdownMenuItem>
-        ) : null}
-      </PeriodDelete>
+      </ConfirmRowMenu>
       {dialogs.kind === "edit" ? (
         <PeriodDialog
           description={t("period-edit-description")}

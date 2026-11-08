@@ -5,6 +5,7 @@ import {
   AttachmentDescription,
   AttachmentMedia,
   AttachmentTitle,
+  AttachmentTrigger,
 } from "@repo/design-system/components/ui/attachment";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -14,12 +15,21 @@ import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
+import { photoRatio } from "@/components/tenant/classes/forum/photo";
 
 /** One file of a message. */
 type ForumFile = ForumMessage["attachments"][number];
 
 /** The bytes of one megabyte. */
 const BYTES_IN_MEGABYTE = 1024 * 1024;
+
+/**
+ * A document of a message: one width for every document, so a column of them lines up, with the same inset on all
+ * four sides, its name breaking anywhere, and the whole card one press.
+ */
+const documentCard = cva(
+  "w-72 max-w-full gap-3 rounded-xl has-data-[slot=attachment-content]:p-3 has-data-[slot=attachment-media]:p-3"
+);
 
 /** The photos of a message: one at its own shape, and several in equal squares, as a chat's album. */
 const photoGrid = cva("grid w-full max-w-sm gap-1", {
@@ -86,6 +96,7 @@ function MessagePhoto({
   const [open, setOpen] = useState(false);
   const height = photo.height ?? 1;
   const width = photo.width ?? 1;
+  const ratio = photoRatio(photo.width, photo.height);
 
   return (
     <>
@@ -101,7 +112,7 @@ function MessagePhoto({
           height={height}
           loading="lazy"
           src={photo.thumbnail ?? photo.address ?? undefined}
-          style={{ aspectRatio: single ? `${width} / ${height}` : "1" }}
+          style={{ aspectRatio: single ? String(ratio) : "1" }}
           width={width}
         />
       </button>
@@ -152,30 +163,31 @@ function MessagePhoto({
 
 /** One document of a message: its name and size, which open it in a new tab. */
 function MessageDocument({ document }: { document: ForumFile }) {
+  const t = useTranslations("Classroom");
   const format = useFormatter();
   const megabytes = document.byteSize / BYTES_IN_MEGABYTE;
 
   return (
-    <Attachment className="max-w-sm">
-      <AttachmentMedia variant="icon">
-        <HugeIcons icon={File02Icon} />
-      </AttachmentMedia>
-      <AttachmentContent>
-        <AttachmentTitle>
-          {document.address === null ? (
-            document.name
-          ) : (
+    <Attachment className={documentCard()}>
+      {document.address === null ? null : (
+        <AttachmentTrigger
+          aria-label={t("media-open", { name: document.name })}
+          className="rounded-xl"
+          render={
             <a
-              className="underline-offset-4 after:absolute after:inset-0 hover:underline"
               href={document.address}
               rel="noopener"
               target="_blank"
               title={document.name}
-            >
-              {document.name}
-            </a>
-          )}
-        </AttachmentTitle>
+            />
+          }
+        />
+      )}
+      <AttachmentMedia variant="icon">
+        <HugeIcons icon={File02Icon} />
+      </AttachmentMedia>
+      <AttachmentContent>
+        <AttachmentTitle dir="auto">{document.name}</AttachmentTitle>
         <AttachmentDescription>
           {format.number(megabytes < 1 ? megabytes * 1000 : megabytes, {
             maximumFractionDigits: megabytes < 1 ? 0 : 1,

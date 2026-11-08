@@ -3,15 +3,20 @@ import {
   Archive02Icon,
   ArchiveRestoreIcon,
   PencilEdit02Icon,
+  SchoolIcon,
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { startTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -69,6 +74,7 @@ export function UnitMenu({ unit }: { unit: Unit }) {
               <HugeIcons icon={PencilEdit02Icon} />
               {common("edit")}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => dialogs.show("archive")}
               variant="destructive"
@@ -102,7 +108,9 @@ export function UnitMenu({ unit }: { unit: Unit }) {
         open={dialogs.isOpen("archive")}
         setOpen={dialogs.setOpen}
         title={t("unit-archive-title")}
-      />
+      >
+        <ConfirmSubject icon={SchoolIcon} name={unit.name} />
+      </ResponsiveDialog>
     </>
   );
 }

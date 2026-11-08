@@ -174,6 +174,12 @@ describe("tenancy/periods create", () => {
         "Ganjil",
         "Sebelum",
       ]);
+      // A planned period nothing points at may be deleted, so it names no hold.
+      expect(Arr.map(names.page, (period) => period.hold)).toEqual([
+        null,
+        null,
+        null,
+      ]);
     })
   );
 
@@ -229,6 +235,16 @@ describe("tenancy/periods open and archive", () => {
           { change: { type: "period.opened" } },
           { change: { type: "period.archived" } },
           { change: { type: "period.opened" } },
+        ]);
+        // The active period is held by being active, and the archived one by nothing, so only it may be deleted.
+        const listed = yield* fixture
+          .as("admin")
+          .query(list, { ...firstPage, slug: nf, unitId: fixture.units.sma });
+        expect(
+          Arr.map(listed.page, (period) => [period.name, period.hold])
+        ).toEqual([
+          ["Genap 2026/2027", "active"],
+          ["Ganjil 2026/2027", null],
         ]);
       })
   );

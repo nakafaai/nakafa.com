@@ -22,6 +22,7 @@ const periodId = (id: string) =>
 function period(id: string, overrides: Partial<Period> = {}): Period {
   return {
     end: "2027-06-30",
+    hold: null,
     id: periodId(id),
     name: id,
     start: "2026-07-01",
@@ -68,6 +69,18 @@ describe("components/tenant/settings/state", () => {
         (item) => item.status
       )
     ).toEqual(["planned", "active"]);
+  });
+
+  it("holds a period that opens at once, and keeps a period that leaves active held until the server answers", () => {
+    const opened = setPeriodStatus(
+      [period("first")],
+      periodId("first"),
+      "active"
+    );
+    expect(opened).toMatchObject([{ hold: "active", status: "active" }]);
+    expect(
+      setPeriodStatus(opened, periodId("first"), "archived")
+    ).toMatchObject([{ hold: "active", status: "archived" }]);
   });
 
   it("places a new period by its start, the newest start first", () => {
