@@ -10,6 +10,8 @@ const EXPONENT_ROUTE =
   "/en/subjects/mathematics/exponential-logarithm/basic-concept";
 /** The readout the card keeps on its body, the count of bacteria it shows. */
 const COUNT = "[data-bacteria-count]";
+/** The card's play button, found by its accessible name. */
+const PLAY = /play/iu;
 
 const expectSketchPlays = Effect.fn("NakafaE2E.expectSketchPlays")(function* (
   page: Page
@@ -35,7 +37,7 @@ const expectSketchPlays = Effect.fn("NakafaE2E.expectSketchPlays")(function* (
     card.locator(COUNT).getAttribute("data-bacteria-count")
   );
   yield* Effect.promise(() =>
-    card.getByRole("button", { name: /play/iu }).first().click()
+    card.getByRole("button", { name: PLAY }).first().click()
   );
   // One generation passes while it plays, so the count it shows changes.
   yield* Effect.promise(() =>
