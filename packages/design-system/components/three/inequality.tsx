@@ -9,7 +9,7 @@ import {
   DEFAULT_INEQUALITY_RANGE_MAX,
   DEFAULT_INEQUALITY_RANGE_MIN,
   getAdaptiveInequalityResolution,
-} from "@repo/design-system/components/three/inequality-data";
+} from "@repo/design-system/components/three/data/inequality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { sampleInequalityBoundary } from "@repo/design-system/lib/geometry/inequality/boundary";
 import { createInequalityGeometry } from "@repo/design-system/lib/geometry/inequality/region";

@@ -1,6 +1,6 @@
 import { useLineScene } from "@repo/design-system/components/contents/mathematics/line/context";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
-import { LineEquation } from "@repo/design-system/components/three/line-equation";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinates";
+import { LineEquation } from "@repo/design-system/components/three/line";
 import { Array as Arr } from "effect";
 
 /** Renders the client-only WebGL implementation of one line scene. */

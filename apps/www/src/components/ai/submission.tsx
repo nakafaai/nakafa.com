@@ -6,7 +6,7 @@ import type {
   NinaPrompt,
 } from "@repo/backend/confect/nina/turns.spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import { encodeJsonText } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
 import { useRouter } from "@tanstack/react-router";

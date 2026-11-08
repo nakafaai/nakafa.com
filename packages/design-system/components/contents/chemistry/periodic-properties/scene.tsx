@@ -8,7 +8,7 @@ import {
   type PeriodicPropertySample,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
+import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, Option } from "effect";

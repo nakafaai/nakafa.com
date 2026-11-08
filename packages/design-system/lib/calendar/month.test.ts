@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   getCalendarDayKey,
   parseCalendarDayKey,
-} from "@repo/design-system/lib/calendar/day-key";
+} from "@repo/design-system/lib/calendar/day";
 import {
   captionChoices,
   chosenMonth,
