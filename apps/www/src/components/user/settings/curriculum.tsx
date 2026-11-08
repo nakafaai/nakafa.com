@@ -44,19 +44,19 @@ const formSchema = Schema.toStandardSchemaV1(
   })
 );
 /** Expected failure when the submitted curriculum preference is invalid. */
-class CurriculumPreferenceValidationError extends Schema.TaggedError<CurriculumPreferenceValidationError>()(
-  "CurriculumPreferenceValidationError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class CurriculumPreferenceValidationError extends Schema.TaggedError<
+  CurriculumPreferenceValidationError,
+  { readonly brand: unique symbol }
+>()("CurriculumPreferenceValidationError", {
+  cause: Schema.Unknown,
+}) {}
 /** Expected failure when Convex cannot save the selected curriculum preference. */
-class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPreferenceMutationError>()(
-  "CurriculumPreferenceMutationError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class CurriculumPreferenceMutationError extends Schema.TaggedError<
+  CurriculumPreferenceMutationError,
+  { readonly brand: unique symbol }
+>()("CurriculumPreferenceMutationError", {
+  cause: Schema.Unknown,
+}) {}
 interface UserSettingsCurriculumProps {
   initialPreference:
     | Ref.Returns<typeof learningPreferences.queries.getCurrent>

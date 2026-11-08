@@ -16,15 +16,15 @@ const acceptanceCli = new URL(
  * it arrived: the command line writes its failure to stdout, so stderr alone is
  * often empty.
  */
-class AcceptanceCommandError extends Schema.TaggedError<AcceptanceCommandError>()(
-  "AcceptanceCommandError",
-  {
-    exitCode: Schema.Finite,
-    message: Schema.String,
-    mode: Schema.String,
-    output: Schema.String,
-  }
-) {}
+class AcceptanceCommandError extends Schema.TaggedError<
+  AcceptanceCommandError,
+  { readonly brand: unique symbol }
+>()("AcceptanceCommandError", {
+  exitCode: Schema.Finite,
+  message: Schema.String,
+  mode: Schema.String,
+  output: Schema.String,
+}) {}
 
 /**
  * Runs one mode of the acceptance command line against the running local

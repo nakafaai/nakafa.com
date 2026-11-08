@@ -70,35 +70,35 @@ type LoadedJavascript = Omit<JavascriptRun, "encodedBodySize">;
 const COMPRESSION_CONCURRENCY = 8;
 
 /** A route did not return one successful document response. */
-class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
-  "JavascriptResourceResponseError",
-  {
-    href: Schema.String,
-    status: Schema.optional(Schema.Finite),
-  }
-) {}
+class JavascriptResourceResponseError extends Schema.TaggedError<
+  JavascriptResourceResponseError,
+  { readonly brand: unique symbol }
+>()("JavascriptResourceResponseError", {
+  href: Schema.String,
+  status: Schema.optional(Schema.Finite),
+}) {}
 
 /** A required JavaScript request did not complete. */
-class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResourceRequestError>()(
-  "JavascriptResourceRequestError",
-  {
-    href: Schema.String,
-    ...requestFailureFields,
-  }
-) {
+class JavascriptResourceRequestError extends Schema.TaggedError<
+  JavascriptResourceRequestError,
+  { readonly brand: unique symbol }
+>()("JavascriptResourceRequestError", {
+  href: Schema.String,
+  ...requestFailureFields,
+}) {
   get message() {
     return `JavaScript resource request failed: href=${this.href} ${formatRequestFailure(this)}`;
   }
 }
 
 /** Matching JavaScript resources continued loading beyond the fixed window. */
-class JavascriptResourceSettleTimeout extends Schema.TaggedError<JavascriptResourceSettleTimeout>()(
-  "JavascriptResourceSettleTimeout",
-  {
-    href: Schema.String,
-    timeoutMilliseconds: Schema.Finite,
-  }
-) {}
+class JavascriptResourceSettleTimeout extends Schema.TaggedError<
+  JavascriptResourceSettleTimeout,
+  { readonly brand: unique symbol }
+>()("JavascriptResourceSettleTimeout", {
+  href: Schema.String,
+  timeoutMilliseconds: Schema.Finite,
+}) {}
 
 const countJavascriptResources = Effect.fn(
   "NakafaE2E.countJavascriptResources"

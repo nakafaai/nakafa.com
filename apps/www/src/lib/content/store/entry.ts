@@ -7,23 +7,23 @@ import { readBuildEntry, writeBuildEntry } from "@/lib/content/store/build";
 import { makeMemoryStore } from "@/lib/content/store/memory";
 
 /** The digest of a key failed, or a value could not be encoded, so the store cannot answer. */
-class ContentStoreUnavailableError extends Schema.TaggedError<ContentStoreUnavailableError>()(
-  "ContentStoreUnavailableError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class ContentStoreUnavailableError extends Schema.TaggedError<
+  ContentStoreUnavailableError,
+  { readonly brand: unique symbol }
+>()("ContentStoreUnavailableError", {
+  cause: Schema.Unknown,
+}) {}
 
 /** The most bytes one entry may take as JSON, so one value never fills the isolate's store. */
 const MAX_ENTRY_BYTES = 2_000_000;
 
 /** A write that the store refuses by its limit, so it is never kept. */
-class ContentStoreLimitError extends Schema.TaggedError<ContentStoreLimitError>()(
-  "ContentStoreLimitError",
-  {
-    limit: Schema.Literals(["entry-bytes"]),
-  }
-) {}
+class ContentStoreLimitError extends Schema.TaggedError<
+  ContentStoreLimitError,
+  { readonly brand: unique symbol }
+>()("ContentStoreLimitError", {
+  limit: Schema.Literals(["entry-bytes"]),
+}) {}
 
 /**
  * Version of every stored shape. Bump it whenever a stored schema changes in a

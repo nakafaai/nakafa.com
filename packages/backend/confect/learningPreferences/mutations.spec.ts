@@ -13,13 +13,13 @@ import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { Schema } from "effect";
 export const tryoutCountryNotFoundCode = "TRYOUT_COUNTRY_NOT_FOUND";
 /** The selected try-out country is absent from the active signed catalog. */
-export class TryoutPreferenceError extends Schema.TaggedError<TryoutPreferenceError>()(
-  "TryoutPreferenceError",
-  {
-    code: Schema.Literal(tryoutCountryNotFoundCode),
-    message: Schema.String,
-  }
-) {}
+export class TryoutPreferenceError extends Schema.TaggedError<
+  TryoutPreferenceError,
+  { readonly brand: unique symbol }
+>()("TryoutPreferenceError", {
+  code: Schema.Literal(tryoutCountryNotFoundCode),
+  message: Schema.String,
+}) {}
 
 export default GroupSpec.make()
   .addFunction(

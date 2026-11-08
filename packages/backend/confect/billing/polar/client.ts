@@ -11,10 +11,10 @@ import { Config, Effect, Redacted, Schema } from "effect";
 const POLAR_REQUEST_TIMEOUT_SECONDS = 30;
 
 /** Missing deployment configuration required for a Polar request. */
-class PolarConfigError extends Schema.TaggedError<PolarConfigError>()(
-  "PolarConfigError",
-  { message: Schema.String }
-) {}
+class PolarConfigError extends Schema.TaggedError<
+  PolarConfigError,
+  { readonly brand: unique symbol }
+>()("PolarConfigError", { message: Schema.String }) {}
 
 /** The Polar server this deployment bills through, read from POLAR_SERVER, which every deployment must set. */
 export const readPolarServer = Effect.fn("polar.readServer")(function* () {

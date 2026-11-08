@@ -32,10 +32,10 @@ type WwwHeaderOrigins = typeof WwwHeaderOriginsSchema.Type;
 const MAX_HEADERS_LINE_LENGTH = 2000;
 
 /** A `_headers` line that the static assets would refuse, so the file is never written. */
-export class WwwHeaderLineTooLong extends Schema.TaggedError<WwwHeaderLineTooLong>()(
-  "WwwHeaderLineTooLong",
-  { prefix: Schema.String }
-) {}
+export class WwwHeaderLineTooLong extends Schema.TaggedError<
+  WwwHeaderLineTooLong,
+  { readonly brand: unique symbol }
+>()("WwwHeaderLineTooLong", { prefix: Schema.String }) {}
 
 /**
  * Builds the headers of every www answer: the security policy, the agent

@@ -56,10 +56,10 @@ export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
 export const FAILED = "We could not complete this action.";
 
 /** A call to the backend that did not succeed. */
-class ConvexCallError extends Schema.TaggedError<ConvexCallError>()(
-  "ConvexCallError",
-  { message: Schema.String, path: Schema.String }
-) {}
+class ConvexCallError extends Schema.TaggedError<
+  ConvexCallError,
+  { readonly brand: unique symbol }
+>()("ConvexCallError", { message: Schema.String, path: Schema.String }) {}
 
 /** How the backend's HTTP API answers one call. */
 const Answer = Schema.Union([

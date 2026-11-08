@@ -8,10 +8,10 @@ type SittingDeviceStorage = Readonly<
 >;
 
 /** Raised when the browser refuses to read or keep the device of a sitting. */
-export class SittingDeviceStorageFailed extends Schema.TaggedError<SittingDeviceStorageFailed>()(
-  "SittingDeviceStorageFailed",
-  {}
-) {}
+export class SittingDeviceStorageFailed extends Schema.TaggedError<
+  SittingDeviceStorageFailed,
+  { readonly brand: unique symbol }
+>()("SittingDeviceStorageFailed", {}) {}
 
 /** The browser storage key of the device that holds one sitting's attempt. */
 function sittingDeviceKey(sittingId: string) {

@@ -36,10 +36,10 @@ import {
 } from "react";
 
 /** MathLive, which an editor needs only when its popover opens, so no page's first JavaScript holds it. */
-class MathLiveUnavailable extends Schema.TaggedError<MathLiveUnavailable>()(
-  "MathLiveUnavailable",
-  { reason: Schema.String }
-) {}
+class MathLiveUnavailable extends Schema.TaggedError<
+  MathLiveUnavailable,
+  { readonly brand: unique symbol }
+>()("MathLiveUnavailable", { reason: Schema.String }) {}
 
 /** Loads MathLive. A failed load leaves the LaTeX tab working, so the caller takes no failure. */
 const loadMathLive = Effect.tryPromise({
