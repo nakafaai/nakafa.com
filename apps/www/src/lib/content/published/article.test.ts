@@ -9,6 +9,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import {
   TEST_PROOF_RENDERER,
   testSignedArtifact,
@@ -21,12 +22,16 @@ import {
 } from "@/lib/content/published/article";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import { previewProjection } from "@/test/manifest";
+import { makePublishedParts } from "@/test/parts";
 import {
   testArticleProjection as projection,
   testArticleSourcePath as sourcePath,
 } from "@/test/published/article";
 
+/** The verifier, which answers each test's found response. */
 const readMock = vi.hoisted(() => vi.fn());
+const headMock = vi.hoisted(() => vi.fn());
+const partsMocks = vi.hoisted(() => ({ artifact: vi.fn(), frame: vi.fn() }));
 const bodyMock = vi.hoisted(() => vi.fn());
 const releaseId = ReleaseIdSchema.make("release-article-domain");
 /** Builds the signed article found response that each delivery test reads. */
@@ -56,17 +61,14 @@ const input = {
 };
 
 vi.mock("@repo/backend/client/content/public", () => ({
-  readPublicContent: readMock,
+  verifyPublicContentFound: readMock,
 }));
-vi.mock("@repo/site/keys", () => ({
-  contentRuntimeKeys: () => ({ CONTENT_READ_TOKEN: "test-runtime-token" }),
+vi.mock("@/lib/content/store/query", () => ({
+  queryContentStore: headMock,
 }));
-// The content store on a miss: it runs the load it was given, and no read reaches Convex.
-vi.mock("@/lib/content/store/read", () => ({
-  readContentStore: ({ load }: { readonly load: unknown }) => load,
-}));
-vi.mock("@/env", () => ({
-  env: { VITE_CONVEX_SITE_URL: "https://test.convex.site" },
+vi.mock("@/lib/content/published/parts", () => ({
+  readPublicArtifact: partsMocks.artifact,
+  readReleaseFrame: partsMocks.frame,
 }));
 vi.mock("@/lib/content/renderer/manifest", () => ({
   rendererManifest: Effect.succeed(TEST_PROOF_RENDERER),
@@ -75,8 +77,23 @@ vi.mock("@/lib/content/published/body", () => ({
   readRenderedBody: bodyMock,
 }));
 
+/** The Convex answers that the found response of each test is composed from. */
+const parts = () =>
+  makeFound().pipe(Effect.map((found) => makePublishedParts(found, "article")));
+
 beforeEach(() => {
   readMock.mockReset().mockImplementation(() => makeFound());
+  headMock
+    .mockReset()
+    .mockImplementation(() => parts().pipe(Effect.map(({ head }) => head)));
+  partsMocks.frame
+    .mockReset()
+    .mockImplementation(() => parts().pipe(Effect.map(({ frame }) => frame)));
+  partsMocks.artifact
+    .mockReset()
+    .mockImplementation(() =>
+      parts().pipe(Effect.map(({ artifactJson }) => artifactJson))
+    );
   bodyMock.mockReset().mockReturnValue(Effect.succeed("cached-article-body"));
 });
 
@@ -87,13 +104,12 @@ describe("published article delivery", () => {
       const data = yield* readPublishedArticle(input);
 
       expect(bodyMock).not.toHaveBeenCalled();
-      expect(readMock).toHaveBeenCalledExactlyOnceWith(
-        {
-          siteUrl: "https://test.convex.site",
-          token: "test-runtime-token",
-        },
-        { appLocale: input.appLocale, publicPath: input.publicPath },
-        TEST_PROOF_RENDERER
+      expect(headMock).toHaveBeenCalledExactlyOnceWith(
+        contentRelease.runtime.active.head,
+        { appLocale: input.appLocale, publicPath: input.publicPath }
+      );
+      expect(partsMocks.frame).toHaveBeenCalledExactlyOnceWith(
+        found.activeReleaseId
       );
       expect(yield* renderArticleArtifact(data)).toEqual({
         activeReleaseId: found.activeReleaseId,

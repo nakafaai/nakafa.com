@@ -123,6 +123,13 @@ the one the head names, because neither an artifact's signature nor the response
 binds it to a route. A release that keeps a body reads its head again,
 never its artifact.
 
+Amended a fifth time on 8 November 2026: every other reader of one route's body (a page,
+and the Markdown twin of a page, a lesson or an article) takes the route's head
+(`contentRelease/runtime/active:head`) and composes the body from the same parts. The
+build and the Worker no longer call the authenticated runtime endpoint, which read the
+release document and the artifact again for every route of every release, so the Worker
+holds no `CONTENT_READ_TOKEN`; the endpoint stays for Aksara's own reads.
+
 ## Phase A as implemented
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the

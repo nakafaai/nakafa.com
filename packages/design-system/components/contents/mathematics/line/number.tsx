@@ -69,16 +69,11 @@ export interface NumberLineSegment {
   startLabel?: ReactNode;
 }
 
-interface NumberLineCardProps {
-  /** The card's header. A graph that builds its own title and description passes it here. */
-  header: ReactNode;
+interface NumberLineProps {
+  description: ReactNode;
   max?: number;
   min?: number;
   segments: NumberLineSegment[];
-}
-
-interface NumberLineProps extends Omit<NumberLineCardProps, "header"> {
-  description: ReactNode;
   title: ReactNode;
 }
 
@@ -330,20 +325,6 @@ export function NumberLine({
       <NumberLineFrame>
         <VisualCardHeader description={description} title={title} />
       </NumberLineFrame>
-    </NumberLineConfigContext>
-  );
-}
-
-/** Draws one number line card under a header its caller builds. */
-export function NumberLineCard({
-  header,
-  max,
-  min,
-  segments,
-}: NumberLineCardProps) {
-  return (
-    <NumberLineConfigContext value={{ max, min, segments }}>
-      <NumberLineFrame>{header}</NumberLineFrame>
     </NumberLineConfigContext>
   );
 }

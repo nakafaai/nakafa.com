@@ -1,6 +1,7 @@
 "use client";
 
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Label } from "@repo/design-system/components/ui/label";
 import {
   LineMark,
@@ -8,9 +9,14 @@ import {
   MarkedLine,
 } from "@repo/design-system/components/ui/line";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
+import { Option } from "effect";
 import type { ReactNode } from "react";
 import type { ChoiceAppearance } from "@/components/player/tone";
-import { choiceTone, getChoiceReviewedTone } from "@/components/player/tone";
+import {
+  choiceTone,
+  getChoiceReviewedTone,
+  toneMark,
+} from "@/components/player/tone";
 
 interface ChoiceRadioProps {
   readonly appearance?: ChoiceAppearance;
@@ -122,7 +128,7 @@ export function ChoiceReviewed({
 
 /**
  * The marked line of one option: a label that holds the option's circle, so a press anywhere on the line chooses it,
- * in the tone of its state.
+ * in the tone of its state, with the tone's mark at its end once the key shows.
  */
 function ChoiceLine({
   children,
@@ -135,8 +141,25 @@ function ChoiceLine({
     // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.
     <MarkedLine render={<Label />} tone={tone}>
       {children}
+      <ToneMark tone={tone} />
     </MarkedLine>
   );
+}
+
+/**
+ * The mark of an answer once its key shows, on an option's line and in a table's cell alike: a check on the key,
+ * picked or not, and a cross on a pick that misses it. The words beside it already say whether the answer is
+ * correct, so the mark is hidden from assistive technology.
+ */
+function ToneMark({ tone }: { tone: ReturnType<typeof choiceTone> }) {
+  return Option.match(toneMark(tone), {
+    onNone: () => null,
+    onSome: (icon) => (
+      <LineMark aria-hidden="true">
+        <HugeIcons icon={icon} />
+      </LineMark>
+    ),
+  });
 }
 
 /**

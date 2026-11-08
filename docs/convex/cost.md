@@ -222,6 +222,41 @@ four reads still grow with content:
 4. Every deploy reads the try-out set windows live, about 2.6 MB at production size. As
    a visitor's read they depend only on the assessment snapshot.
 
+### A compact active identity (designed, not built)
+
+Every content query starts with `loadActiveIdentity` (`content/publication/read.ts`). It
+reads `contentState` and the whole `contentReleases` row of the active release (the
+signed release document, the renderer manifest, the proof and the receipt), decodes both
+documents and checks the identity again. In #2280's first build the 1,084 uncached
+release-keyed content calls paid it: about 12.5 MB of the 35.5 MB a new release reads,
+about 0.05 GB a release at production size and 0.5 GB at ten times the content. Runtime
+queries pay it on every call too.
+
+The readers need little of the row: the release id (38 readers), its sequence and
+manifest hash, the active app locales (8), the three snapshot ids (`active:read`), and the
+Git origin (one). Only `active:frame` and the publish proofs need the signed documents.
+
+The design: the activation mutation (`activation/candidate.ts`), which already writes
+`activeReleaseId`, `activeManifestHash`, `activeSequence` and `activeContentGeneration`
+on `contentState` from the manifest it has just verified, also writes the active app
+locales, the three snapshot ids and the origin. `loadActiveIdentity` then reads
+`contentState` alone, and the frame and the proofs keep reading the row. Convex's
+authority over `contentState` is the trust that ADR 0002 already gives catalog
+membership.
+
+It lands as two changes, each in one step, because a reader cannot require fields that
+the active release's activation never wrote, and neither a fallback to the row nor a
+hand-written backfill is allowed:
+
+1. Activation writes the fields; nothing reads them yet.
+2. Once a production release has activated under the first change (dev and production
+   `contentState` both hold the fields), `loadActiveIdentity` reads them and stops
+   reading the row, with its tests pinning the documents a content query reads.
+
+Production deploys after Aksara activates a release, so the second change cannot ship
+with the first: the release that writes the fields must run on the backend that the
+first change deployed.
+
 ## Historical Post-change Evidence
 
 The dated samples below describe earlier runtime generations and preserve their

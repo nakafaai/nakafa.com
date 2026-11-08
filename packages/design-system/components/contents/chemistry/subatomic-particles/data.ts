@@ -58,7 +58,6 @@ export function getSubatomicSceneColors(resolvedTheme: string | undefined) {
     electron: PLOT_COLORS.violet,
     glass: getColor("SLATE", 300),
     gold: PLOT_COLORS.amber,
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     negative: PLOT_COLORS.pink,
     neutron: PLOT_COLORS.slate,
     nucleus: PLOT_COLORS.pink,
@@ -66,7 +65,6 @@ export function getSubatomicSceneColors(resolvedTheme: string | undefined) {
     proton: PLOT_COLORS.pink,
     ray: PLOT_COLORS.teal,
     sphereText: ORIGIN_COLOR.LIGHT,
-    skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

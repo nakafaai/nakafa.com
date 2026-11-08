@@ -74,7 +74,7 @@ describe("guardians/codes send", () => {
         expect(mail).toHaveBeenCalledTimes(1);
         const message = mail.mock.calls[0]?.[1];
         expect(message).toMatchObject({
-          subject: "Kode masuk Nakafa Anda",
+          subject: "Kode masuk Nakafa kamu",
           to: IBU,
         });
         const text =
