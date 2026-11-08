@@ -1,10 +1,10 @@
 import { Effect, Schema } from "effect";
 
 /** p5 could not be loaded, for example when the network dropped its chunks. */
-export class SketchLoadError extends Schema.TaggedError<SketchLoadError>()(
-  "SketchLoadError",
-  { cause: Schema.Unknown, message: Schema.String }
-) {}
+export class SketchLoadError extends Schema.TaggedError<
+  SketchLoadError,
+  { readonly brand: unique symbol }
+>()("SketchLoadError", { cause: Schema.Unknown, message: Schema.String }) {}
 
 /**
  * Loads p5's modular core with only the shape, color, and math addons a lesson
