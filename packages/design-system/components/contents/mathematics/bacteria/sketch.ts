@@ -1,60 +1,49 @@
-import { divisionCells } from "@repo/design-system/components/contents/mathematics/bacteria/layout";
-import { Array as Arr } from "effect";
-import type p5 from "p5";
+import { Schema } from "effect";
 
 /**
- * What the bacteria sketch reads on every frame: the cells now and in the next
- * generation, how long one generation lasts, the color they are drawn in, and
- * how to move the lesson to the next generation once a division ends.
+ * Where a dish stands in its division: the generation it shows and how far
+ * that generation has grown and divided, from 0 to 1.
  */
-export interface BacteriaFrame {
-  readonly advance: () => void;
-  readonly color: string;
-  readonly current: number;
-  readonly generation: number;
-  readonly interval: number;
-  readonly maxGenerations: number;
-  readonly next: number;
-}
+const DivisionSchema = Schema.Struct({
+  generation: Schema.Int,
+  phase: Schema.Finite,
+});
+type Division = typeof DivisionSchema.Type;
+
+/** What one frame of the sketch knows about time and the lesson. */
+const DivisionClockSchema = Schema.Struct({
+  elapsed: Schema.Finite,
+  generation: Schema.Int,
+  interval: Schema.Finite,
+  maxGenerations: Schema.Int,
+  playing: Schema.Boolean,
+});
+type DivisionClock = typeof DivisionClockSchema.Type;
+
+/** A dish that has drawn no generation yet. */
+export const NO_DIVISION: Division = { generation: -1, phase: 0 };
 
 /**
- * Draws dividing bacteria. While the card plays, each generation grows and
- * then divides over one interval, and the sketch then asks for the next one;
- * a paused card shows the generation the learner chose.
+ * Moves a dish's division on by one frame. A generation the learner newly
+ * chose starts from its growth. While the card plays, a generation grows and
+ * divides over one interval and then reports once that it has ended, so the
+ * lesson moves on; a paused card and the last generation hold still.
  */
-export function bacteriaProgram(sketch: p5, read: () => BacteriaFrame) {
-  let phase = 0;
-  let shown = -1;
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-    sketch.noStroke();
-  };
-  sketch.draw = () => {
-    const frame = read();
-    if (frame.generation !== shown) {
-      shown = frame.generation;
-      phase = 0;
-    }
-    if (sketch.isLooping() && frame.generation < frame.maxGenerations) {
-      phase += sketch.deltaTime / frame.interval;
-      if (phase >= 1) {
-        phase = 1;
-        frame.advance();
-      }
-    }
-    sketch.clear();
-    sketch.fill(frame.color);
-    Arr.forEach(
-      divisionCells(
-        frame.current,
-        frame.next,
-        phase,
-        sketch.width,
-        sketch.height
-      ),
-      ({ radius, x, y }) => {
-        sketch.circle(x, y, radius * 2);
-      }
-    );
+export function stepDivision(division: Division, clock: DivisionClock) {
+  const start =
+    clock.generation === division.generation
+      ? division
+      : { generation: clock.generation, phase: 0 };
+  if (
+    !clock.playing ||
+    clock.generation >= clock.maxGenerations ||
+    start.phase >= 1
+  ) {
+    return { division: start, ended: false };
+  }
+  const phase = Math.min(1, start.phase + clock.elapsed / clock.interval);
+  return {
+    division: { generation: start.generation, phase },
+    ended: phase >= 1,
   };
 }

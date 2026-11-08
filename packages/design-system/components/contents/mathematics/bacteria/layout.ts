@@ -1,12 +1,12 @@
 import { Array as Arr, Schema } from "effect";
 
 /** One cell drawn in a frame: its center and its radius, in canvas pixels. */
-export const CellSchema = Schema.Struct({
+const CellSchema = Schema.Struct({
   radius: Schema.Finite,
   x: Schema.Finite,
   y: Schema.Finite,
 });
-export type Cell = typeof CellSchema.Type;
+type Cell = typeof CellSchema.Type;
 
 /** Share of a generation spent growing before the cells divide. */
 export const GROWTH_SHARE = 0.6;

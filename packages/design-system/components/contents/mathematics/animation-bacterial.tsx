@@ -1,4 +1,8 @@
-import { bacteriaProgram } from "@repo/design-system/components/contents/mathematics/bacteria/sketch";
+import { divisionCells } from "@repo/design-system/components/contents/mathematics/bacteria/layout";
+import {
+  NO_DIVISION,
+  stepDivision,
+} from "@repo/design-system/components/contents/mathematics/bacteria/sketch";
 import {
   type BacteriaStore,
   createBacteriaStore,
@@ -28,7 +32,8 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
+import type p5 from "p5";
 import { createContext, use, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
@@ -54,6 +59,62 @@ interface BacterialGrowthProps {
   timeInterval?: number;
   /** The time unit label (hours, minutes, etc.). @default "h" */
   timeUnit?: string;
+}
+
+/**
+ * What the bacteria sketch reads on every frame: the cells now and in the next
+ * generation, how long one generation lasts, the color they are drawn in, and
+ * how to move the lesson to the next generation once a division ends.
+ */
+interface BacteriaFrame {
+  readonly advance: () => void;
+  readonly color: string;
+  readonly current: number;
+  readonly generation: number;
+  readonly interval: number;
+  readonly maxGenerations: number;
+  readonly next: number;
+}
+
+/**
+ * Draws dividing bacteria. Each frame moves the dish's division on, asks the
+ * lesson for the next generation once one ends, and draws the cells of that
+ * moment; a paused card shows the generation the learner chose.
+ */
+function bacteriaProgram(sketch: p5, read: () => BacteriaFrame) {
+  let division = NO_DIVISION;
+  sketch.setup = () => {
+    sketch.createCanvas(1, 1);
+    sketch.noStroke();
+  };
+  sketch.draw = () => {
+    const frame = read();
+    const step = stepDivision(division, {
+      elapsed: sketch.deltaTime,
+      generation: frame.generation,
+      interval: frame.interval,
+      maxGenerations: frame.maxGenerations,
+      playing: sketch.isLooping(),
+    });
+    division = step.division;
+    if (step.ended) {
+      frame.advance();
+    }
+    sketch.clear();
+    sketch.fill(frame.color);
+    Arr.forEach(
+      divisionCells(
+        frame.current,
+        frame.next,
+        division.phase,
+        sketch.width,
+        sketch.height
+      ),
+      ({ radius, x, y }) => {
+        sketch.circle(x, y, radius * 2);
+      }
+    );
+  };
 }
 
 /** One growth card's settings, its labels, and the store of what it shows. */

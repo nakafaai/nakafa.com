@@ -1,6 +1,6 @@
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { loadP5 } from "@repo/design-system/lib/sketch";
+import { loadP5, type SketchLoadError } from "@repo/design-system/lib/sketch";
 import { Effect, Exit } from "effect";
 import type p5 from "p5";
 import {
@@ -17,12 +17,7 @@ import { useTranslations } from "use-intl";
  * A p5 sketch in instance mode: it sets `setup` and `draw` on the instance it
  * is given, and reads the card's latest state through `read` on every frame.
  */
-export type P5Program<State> = (sketch: p5, read: () => State) => void;
-
-/** The p5 class once loaded, or the message of a load that failed. */
-type Loaded =
-  | { readonly kind: "class"; readonly value: typeof p5 }
-  | { readonly kind: "failed"; readonly message: string };
+type P5Program<State> = (sketch: p5, read: () => State) => void;
 
 /**
  * Runs one p5 sketch inside a visual card's body. p5's modular core loads
@@ -43,7 +38,7 @@ export function P5Sketch<State>({
   const t = useTranslations("Error");
   const playing = useVisualScene((card) => card.playing, false);
   const view = useVisualScene((card) => card.view, 0);
-  const [loaded, setLoaded] = useState<Loaded>();
+  const [loaded, setLoaded] = useState<Exit.Exit<typeof p5, SketchLoadError>>();
   const [node, setNode] = useState<HTMLDivElement | null>(null);
   const instance = useRef<p5>(undefined);
   const latest = useRef(state);
@@ -54,17 +49,11 @@ export function P5Sketch<State>({
   }, [state]);
 
   const load = useEffectEvent(() => {
-    if (loaded?.kind === "class") {
+    if (loaded && Exit.isSuccess(loaded)) {
       return;
     }
     Effect.runPromiseExit(loadP5()).then((exit) =>
-      startTransition(() =>
-        setLoaded(
-          Exit.isSuccess(exit)
-            ? { kind: "class", value: exit.value }
-            : { kind: "failed", message: String(exit.cause) }
-        )
-      )
+      startTransition(() => setLoaded(exit))
     );
   });
 
@@ -77,7 +66,7 @@ export function P5Sketch<State>({
   });
 
   useEffect(() => {
-    if (loaded?.kind !== "class" || !node) {
+    if (!(loaded && Exit.isSuccess(loaded) && node)) {
       return;
     }
     const sketch = new loaded.value(
@@ -112,12 +101,12 @@ export function P5Sketch<State>({
     }
   }, [playing]);
 
-  if (loaded?.kind === "failed") {
+  if (loaded && Exit.isFailure(loaded)) {
     return (
       <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 p-4 text-center">
         <p className="font-medium tracking-tight">{t("title")}</p>
         <p className="text-muted-foreground max-w-md text-sm">
-          {loaded.message}
+          {String(loaded.cause)}
         </p>
       </div>
     );
