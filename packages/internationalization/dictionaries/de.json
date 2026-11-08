@@ -4525,5 +4525,17 @@
     "faq-credits-answer": "Nina, die KI von Nakafa, verbraucht für jede Antwort Credits. Die ganze Schule teilt einen Vorrat, und ein Paket mit 1.000 weiteren hält 12 Monate.",
     "faq-change-question": "Können wir den Tarif später wechseln?",
     "faq-change-answer": "Ja. Wechsle zwischen Pro und Max oder füge jederzeit Konten hinzu, und die Änderung gilt ab der nächsten bezahlten Rechnung."
+  },
+  "Island": {
+    "title": "Insel",
+    "description": "Deine Insel wächst mit jeder Lektion und jedem Try-out.",
+    "name": "Insel von {name}",
+    "level": "Level {level}",
+    "stars": "Sterne",
+    "next": "Nächstes Level",
+    "next-value": "{stars} Sterne",
+    "top": "Höchstes Level",
+    "turn-left": "Nach links drehen",
+    "turn-right": "Nach rechts drehen"
   }
 }

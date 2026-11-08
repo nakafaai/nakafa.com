@@ -4525,5 +4525,17 @@
     "faq-credits-answer": "Nina, AI Nakafa, memakai kredit untuk setiap jawaban. Seluruh sekolah berbagi satu kuota, dan paket 1.000 kredit tambahan berlaku 12 bulan.",
     "faq-change-question": "Bisakah ganti paket nanti?",
     "faq-change-answer": "Bisa. Pindah antara Pro dan Max atau tambah akun kapan saja, dan perubahannya berlaku mulai tagihan berikutnya yang dibayar."
+  },
+  "Island": {
+    "title": "Pulau",
+    "description": "Pulaumu tumbuh di setiap materi dan try-out.",
+    "name": "Pulau {name}",
+    "level": "Level {level}",
+    "stars": "Bintang",
+    "next": "Level berikutnya",
+    "next-value": "{stars} Bintang",
+    "top": "Level tertinggi",
+    "turn-left": "Putar ke kiri",
+    "turn-right": "Putar ke kanan"
   }
 }
