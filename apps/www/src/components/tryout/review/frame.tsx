@@ -82,6 +82,7 @@ export function TryoutReviewFrame({
           <PlayerKeys locked questions={[]} />
           {header}
           <PlayerMain
+            label={t("finished-panel")}
             navigator={
               <PlayerSidebar
                 footer={whole ? <TryoutResultFooter /> : undefined}
