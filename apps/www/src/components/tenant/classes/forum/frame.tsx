@@ -6,7 +6,8 @@ import {
   pageGutterVariants,
 } from "@/components/shared/content/width";
 import { Panes, PanesList, PanesRail } from "@/components/shared/panes";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { ChatRail } from "@/components/tenant/classes/forum/rail";
 
 /** The class's chats keep the page's gutter, so its search, its tabs and its rows stand on the header's first letter. */
@@ -60,9 +61,9 @@ export function ForumPick() {
 
   return (
     <div className="flex flex-1 items-center justify-center">
-      <TableEmpty
-        act="typing"
+      <EmptyState
         description={t("chat-pick-description")}
+        scene={<EmptyNina act="typing" />}
         title={t("chat-pick")}
       />
     </div>

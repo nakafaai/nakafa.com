@@ -13,13 +13,13 @@ import {
 import type { RepositorySource } from "#scripts/check/source";
 
 /** Expected failure while reading the repository tree. */
-export class RepositoryReadError extends Schema.TaggedError<RepositoryReadError>()(
-  "RepositoryReadError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class RepositoryReadError extends Schema.TaggedError<
+  RepositoryReadError,
+  { readonly brand: unique symbol }
+>()("RepositoryReadError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Directories that hold dependencies, tool output, or caches rather than authored files. */
 const IGNORED_DIRECTORIES = HashSet.make(

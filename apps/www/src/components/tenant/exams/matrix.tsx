@@ -9,6 +9,7 @@ import { LineWords } from "@repo/design-system/components/ui/line";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
+import { ChoiceTable } from "@/components/player/table";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
 import { OptionRemove, OptionRow } from "@/components/tenant/exams/option";
 import { useQuestionPage } from "@/components/tenant/exams/page";
@@ -22,7 +23,6 @@ import {
   withStatementRemoved,
 } from "@/components/tenant/exams/table";
 import type { Unstored } from "@/components/tenant/exams/writer";
-import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 
 /** A true or false table, as the page shows it. */
 type Table = Extract<Interaction, { kind: "matrix" }>;
@@ -84,7 +84,7 @@ export function TableSheet({ table }: { readonly table: Table }) {
 
   return (
     <div className="grid min-w-0 gap-3">
-      <TryoutChoiceTable
+      <ChoiceTable
         columns={Arr.map(table.columns, (column, index) => ({
           id: column.id,
           label: (

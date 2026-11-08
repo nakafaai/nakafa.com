@@ -38,7 +38,6 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -50,6 +49,8 @@ import {
   TableSearch,
   useServerSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { LineDialog } from "@/components/tenant/line";
@@ -234,9 +235,9 @@ function SchoolMembersBody() {
         columns={columns}
         data={members}
         empty={
-          <TableEmpty
-            act="waving"
+          <EmptyState
             description={t("members-empty-description")}
+            scene={<EmptyNina act="waving" />}
             title={t("members-empty")}
           />
         }

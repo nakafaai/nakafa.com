@@ -16,14 +16,14 @@ export const getRecentlyViewedArgs = {
 export const recentLearningIoFailedCode = "RECENT_LEARNING_IO_FAILED";
 
 /** Raised when Continue Learning cannot read its ranked model. */
-export class RecentLearningIoError extends Schema.TaggedError<RecentLearningIoError>()(
-  "RecentLearningIoError",
-  {
-    code: Schema.Literal(recentLearningIoFailedCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {}
+export class RecentLearningIoError extends Schema.TaggedError<
+  RecentLearningIoError,
+  { readonly brand: unique symbol }
+>()("RecentLearningIoError", {
+  code: Schema.Literal(recentLearningIoFailedCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {}
 
 /** Maps thrown Convex IO failures into the Continue Learning error channel. */
 const RecentLearningIoErrorWire = publicFailure(RecentLearningIoError);

@@ -43,10 +43,10 @@ export function createLiveSessionStore(): LiveSessionStore {
 }
 
 /** A browser module of a signed-in page failed to load, so the page keeps its visitor state. */
-export class LiveSessionLoadFailed extends Schema.TaggedError<LiveSessionLoadFailed>()(
-  "LiveSessionLoadFailed",
-  { cause: Schema.Unknown }
-) {}
+export class LiveSessionLoadFailed extends Schema.TaggedError<
+  LiveSessionLoadFailed,
+  { readonly brand: unique symbol }
+>()("LiveSessionLoadFailed", { cause: Schema.Unknown }) {}
 
 /** A store atom that the live session follows: a value it reports to a listener until the listener is unsubscribed. */
 interface LiveAtom {

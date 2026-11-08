@@ -30,7 +30,6 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -40,6 +39,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { LineDialog } from "@/components/tenant/line";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -176,9 +177,9 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       columns={columns}
       data={invites}
       empty={
-        <TableEmpty
-          act="waving"
+        <EmptyState
           description={t("invites-footer")}
+          scene={<EmptyNina act="waving" />}
           title={t("invites-empty")}
         />
       }

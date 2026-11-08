@@ -21,10 +21,12 @@ const WORKER_PATH = "/sw.js";
 const APPLE_DEVICE = /iPad|iPhone|iPod/u;
 
 /** A step of the browser's push that failed. */
-class DevicePushFailed extends Schema.TaggedError<DevicePushFailed>()(
-  "DevicePushFailed",
-  { step: Schema.Literals(["permission", "worker", "subscribe"]) }
-) {}
+class DevicePushFailed extends Schema.TaggedError<
+  DevicePushFailed,
+  { readonly brand: unique symbol }
+>()("DevicePushFailed", {
+  step: Schema.Literals(["permission", "worker", "subscribe"]),
+}) {}
 
 /**
  * Whether this is an iPhone or iPad tab outside the Home Screen: iOS and iPadOS

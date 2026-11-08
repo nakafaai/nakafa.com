@@ -2,13 +2,13 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE } from "@repo/backend/confect/auth/deletion/constants";
 import { Record as Rec, Schema } from "effect";
 /** Raised when a browser attempt cannot prove its reversible phase was canceled. */
-export class AccountDeletionCancellationUnprovenError extends Schema.TaggedError<AccountDeletionCancellationUnprovenError>()(
-  "AccountDeletionCancellationUnprovenError",
-  {
-    code: Schema.Literal(ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE),
-    message: Schema.String,
-  }
-) {}
+export class AccountDeletionCancellationUnprovenError extends Schema.TaggedError<
+  AccountDeletionCancellationUnprovenError,
+  { readonly brand: unique symbol }
+>()("AccountDeletionCancellationUnprovenError", {
+  code: Schema.Literal(ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE),
+  message: Schema.String,
+}) {}
 
 export const accountDeletionRequestPhase = {
   deletion: "deletion",

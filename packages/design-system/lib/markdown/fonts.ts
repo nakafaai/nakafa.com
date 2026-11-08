@@ -86,12 +86,12 @@ const MATH_FONT_SHORTHANDS = {
 const CORE_MATH_FONTS: readonly MathFont[] = ["Main-Regular", "Math-Italic"];
 
 /** Expected browser failure while loading math faces early. */
-export class MathFontLoadError extends Schema.TaggedError<MathFontLoadError>()(
-  "MathFontLoadError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+export class MathFontLoadError extends Schema.TaggedError<
+  MathFontLoadError,
+  { readonly brand: unique symbol }
+>()("MathFontLoadError", {
+  cause: Schema.Unknown,
+}) {}
 
 /**
  * Loads math faces before the formulas that draw with them render: the core

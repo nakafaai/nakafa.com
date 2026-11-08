@@ -74,13 +74,13 @@ export function isElectronConfigurationSampleId(
 }
 
 /** Expected failure: the electron-configuration examples cover atomic numbers 1 to 20. */
-class SimpleShellConfigurationError extends Schema.TaggedError<SimpleShellConfigurationError>()(
-  "SimpleShellConfigurationError",
-  {
-    message: Schema.String,
-    reason: Schema.Literals(["notPositiveInteger", "aboveSupportedRange"]),
-  }
-) {}
+class SimpleShellConfigurationError extends Schema.TaggedError<
+  SimpleShellConfigurationError,
+  { readonly brand: unique symbol }
+>()("SimpleShellConfigurationError", {
+  message: Schema.String,
+  reason: Schema.Literals(["notPositiveInteger", "aboveSupportedRange"]),
+}) {}
 
 /**
  * Builds the simple shell configuration used for the first 20 elements.
