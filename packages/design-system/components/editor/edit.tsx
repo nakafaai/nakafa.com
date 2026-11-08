@@ -344,7 +344,6 @@ export function FormulaEdit({
             className="flex-1"
             onClick={() => setView("formula")}
             type="button"
-            variant={view === "formula" ? "secondary" : "outline"}
           >
             {labels.formula}
           </Button>
@@ -353,7 +352,6 @@ export function FormulaEdit({
             className="flex-1"
             onClick={() => setView("latex")}
             type="button"
-            variant={view === "latex" ? "secondary" : "outline"}
           >
             {labels.latex}
           </Button>

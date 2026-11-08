@@ -1,6 +1,245 @@
 import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { objectBar } from "@repo/design-system/components/editor/bar";
 import { altText } from "@repo/design-system/components/editor/image";
+import { RichEditorControl } from "@repo/design-system/components/editor/tools";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
+import { Input } from "@repo/design-system/components/ui/input";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  blockGapVariants,
+  pictureVariants,
+} from "@repo/design-system/lib/prose";
+import { ImageType } from "@repo/editor/upload";
+import type { Editor } from "@tiptap/core";
+import { FileHandler } from "@tiptap/extension-file-handler";
+import {
+  NodeViewWrapper,
+  type ReactNodeViewProps,
+  ReactNodeViewRenderer,
+} from "@tiptap/react";
+import { cn } from "cn";
+import { Option, Schema } from "effect";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+} from "react";
+
+/** The names of the pictures of an editor, in the reader's language. */
+const PictureLabels = Schema.Struct({
+  alt: Schema.String,
+  altHint: Schema.String,
+  cancel: Schema.String,
+  delete: Schema.String,
+  edit: Schema.String,
+  editDescription: Schema.String,
+  save: Schema.String,
+});
+type PictureLabels = typeof PictureLabels.Type;
+
+/** What the pictures of an editor need: their names, the addresses they draw from, and the start of an upload. */
+interface PictureContextValue {
+  readonly begin: (file: File) => void;
+  readonly labels: PictureLabels;
+  readonly urls: Readonly<Record<string, string>>;
+}
+
+const PictureContext = createContext<PictureContextValue | null>(null);
+
+/**
+ * Gives the pictures of the editor inside it their names and addresses, and the start of an
+ * upload. The addresses are the ones the page resolves for the document's images in one read.
+ * `begin` takes a file the teacher chose, dropped, or pasted, and opens its alt-text dialog.
+ */
+export function PicturesProvider({
+  begin,
+  children,
+  labels,
+  urls,
+}: PictureContextValue & { children: ReactNode }) {
+  const value = useMemo(() => ({ begin, labels, urls }), [begin, labels, urls]);
+  return <PictureContext value={value}>{children}</PictureContext>;
+}
+
+/** The pictures' context, from the provider above the editor, which a picture needs to draw. */
+export function usePictures(): PictureContextValue {
+  const pictures = use(PictureContext);
+  if (pictures === null) {
+    // A picture is drawn only inside its editor, so a missing provider is a composition error.
+    throw new Error("A picture requires PicturesProvider.");
+  }
+  return pictures;
+}
+
+/**
+ * The address that previews a file the teacher chose. The address is made and revoked by one effect,
+ * so it lives while the file does and goes when the file changes or the editor closes.
+ */
+export function useObjectUrl(file: File | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (file === null) {
+      setUrl(null);
+      return;
+    }
+    const address = URL.createObjectURL(file);
+    setUrl(address);
+    return () => URL.revokeObjectURL(address);
+  }, [file]);
+  return url;
+}
+
+/**
+ * The alt-text dialog of a picture, which opens while it has a `preview` to show. It starts with
+ * the picture's `alt` text, and the picture is changed once the alt text is not blank. The same
+ * dialog adds a chosen file and edits the alt text of an image that the document holds.
+ */
+export function PictureAltDialog({
+  alt,
+  description,
+  labels,
+  onCancel,
+  onConfirm,
+  preview,
+  submit,
+  title,
+}: {
+  /** The alt text the dialog starts with: empty for a new picture. */
+  readonly alt: string;
+  /** The one sentence under the title that says what the dialog does. */
+  readonly description: string;
+  readonly labels: Pick<PictureLabels, "alt" | "altHint" | "cancel">;
+  readonly onCancel: () => void;
+  readonly onConfirm: (alt: string) => void;
+  /** The address of the picture that the dialog shows, which opens the dialog when it is set. */
+  readonly preview: string | null;
+  /** The label of the button that confirms the alt text. */
+  readonly submit: string;
+  readonly title: string;
+}) {
+  const [text, setText] = useState(alt);
+  // The text starts again from the picture's alt text whenever the dialog is given another
+  // picture or another alt text. It changes only while a picture is shown, so a dialog that
+  // closes keeps its text while it animates out. The change is made while rendering, so no
+  // effect is needed.
+  const [shown, setShown] = useState({ alt, preview });
+  if (shown.alt !== alt || shown.preview !== preview) {
+    setShown({ alt, preview });
+    if (preview !== null) {
+      setText(alt);
+    }
+  }
+
+  // The picture stays while the dialog animates out, as the text does.
+  const [picture, setPicture] = useState(preview);
+  if (preview !== null && preview !== picture) {
+    setPicture(preview);
+  }
+
+  const next = altText(text);
+  const field = useId();
+  const form = useId();
+
+  return (
+    <ResponsiveDialog
+      action={
+        <Button disabled={Option.isNone(next)} form={form} type="submit">
+          {submit}
+        </Button>
+      }
+      description={description}
+      open={preview !== null}
+      setOpen={(open) => {
+        if (!open) {
+          onCancel();
+        }
+      }}
+      title={title}
+    >
+      {/* The footer's submit button belongs to this form by its id, so Enter in the field confirms too. */}
+      <form
+        id={form}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (Option.isSome(next)) {
+            onConfirm(next.value);
+          }
+        }}
+      >
+        <FieldGroup>
+          {picture === null ? null : (
+            <img
+              alt=""
+              className="max-h-64 rounded-md object-contain"
+              height={256}
+              src={picture}
+              width={256}
+            />
+          )}
+          <Field>
+            <FieldLabel htmlFor={field}>{labels.alt}</FieldLabel>
+            <Input
+              id={field}
+              onChange={(event) => setText(event.target.value)}
+              placeholder={labels.altHint}
+              value={text}
+            />
+          </Field>
+        </FieldGroup>
+      </form>
+    </ResponsiveDialog>
+  );
+}
+
+/**
+ * One image of the document, drawn at its stored aspect ratio, so the box is reserved before the
+ * image loads. A picture whose address is not resolved yet keeps its box as a placeholder. In an
+ * editable document the selected picture carries a bar above it, as a table does, which edits its
+ * alt text or deletes it, so the bar never covers the picture, however small; a reader has no bar.
+ */
+function PictureNode({
+  deleteNode,
+  editor,
+  node,
+  selected,
+  updateAttributes,
+}: ReactNodeViewProps) {
+  const { labels, urls } = usePictures();
+  const [editing, setEditing] = useState(false);
+  const { alt, asset, height, width } = node.attrs;
+  const src: string | undefined = urls[asset];
+
+  return (
+    <NodeViewWrapper
+      className={cn(blockGapVariants(), "group relative block max-w-full")}
+      contentEditable={false}
+      data-picture=""
+      style={{ aspectRatio: `${width} / ${height}`, maxWidth: `${width}px` }}
+    >
+      {src === undefined ? (
+        <div
+          aria-label={alt}
+          className={cn(pictureVariants(), "size-full")}
+          role="img"
+        />
+      ) : (
+        <img
+          alt={alt}
+          className={cn(pictureVariants(), "size-full object-contain")}
+          height={height}
+          src={src}
+          width={width}
+        />
+      )}
       {editor.isEditable && selected ? (
         <div
           aria-label={alt}
