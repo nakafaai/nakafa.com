@@ -23,13 +23,13 @@ import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { serverHandler } from "@/lib/server/fn";
 
 /** Expected failure while the messages of one locale load for a surah page. */
-class QuranMessagesUnavailableError extends Schema.TaggedError<QuranMessagesUnavailableError>()(
-  "QuranMessagesUnavailableError",
-  {
-    cause: Schema.Unknown,
-    locale: Schema.String,
-  }
-) {}
+class QuranMessagesUnavailableError extends Schema.TaggedError<
+  QuranMessagesUnavailableError,
+  { readonly brand: unique symbol }
+>()("QuranMessagesUnavailableError", {
+  cause: Schema.Unknown,
+  locale: Schema.String,
+}) {}
 
 /**
  * Reads one surah with its verses, pagination and sources on the server. A

@@ -1,56 +1,44 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { ForumFixture } from "@repo/backend/scripts/content/acceptance/fixture";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { encodeArguments } from "@repo/backend/scripts/content/acceptance/member";
+import {
+  LocalConvex,
+  localConvexLayer,
+} from "@repo/backend/scripts/content/acceptance/convex";
+import {
+  ForumFixture,
+  writeFixture,
+} from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   type AcceptanceMode,
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
-import { Effect, FileSystem, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 /** The class whose general channel a seeded history fills: the class `class-teacher` seeds. */
 const SEEDED_CLASS = "fisika-x-1";
 
 /**
  * Seeds the history of the general channel of the seeded class of a school, in the running local
- * acceptance backend: `count` messages from a classmate, named `author` when the run gives a name, a
- * minute apart and ending now, and the class teacher's read mark after the first `read` of them. The channel, the class, and the
- * messages go to `output` for a browser test to read back.
+ * acceptance backend, and answers the channel, the class, and the messages: `count` messages from
+ * a classmate, named `author` when the run gives a name, a minute apart and ending now, and the
+ * class teacher's read mark after the first `read` of them.
  */
-export const createAcceptanceForum = Effect.fn("contentAcceptance.createForum")(
-  function* (
-    root: string,
-    slug: string,
-    count: number,
-    read: number,
-    output: string,
-    author?: string
-  ) {
-    const runtime = yield* readLocalRuntime(root);
-    if (runtime === undefined) {
-      return yield* acceptanceRuntimeError(
-        "Run bun run acceptance:prepare and start acceptance before seeding a forum."
-      );
-    }
-    const args = yield* encodeArguments({
+export const seedForum = Effect.fn("contentAcceptance.seedForum")(function* (
+  slug: string,
+  count: number,
+  read: number,
+  author?: string
+) {
+  const { run } = yield* LocalConvex;
+  return yield* run("forum seed", {
+    args: {
       ...(author === undefined ? {} : { author }),
       classSlug: SEEDED_CLASS,
       count,
       read,
       slug,
-    });
-    const printed = yield* runLocalConvex(runtime, "forum seed", [
-      "run",
-      "classroom/forum/seed:history",
-      args,
-    ]);
-    const seeded = yield* Schema.decodeEffect(ForumFixture)(printed);
-    const fixture = yield* Schema.encodeEffect(ForumFixture)(seeded);
-    const fs = yield* FileSystem.FileSystem;
-    yield* fs.writeFileString(output, fixture, { flag: "wx", mode: 0o600 });
-  }
-);
+    },
+    path: "classroom/forum/seed:history",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(ForumFixture)));
+});
 
 /**
  * The usage of the forum mode: the school, the number of messages, how many are read, the file, and the classmate's
@@ -82,13 +70,9 @@ export const forumMode = {
       ForumArguments,
       args
     );
-    return yield* createAcceptanceForum(
-      root,
-      slug,
-      count,
-      read,
-      output,
-      author
+    const forum = yield* seedForum(slug, count, read, author).pipe(
+      Effect.provide(localConvexLayer(root))
     );
+    yield* writeFixture(output, ForumFixture, forum);
   }),
 } satisfies AcceptanceMode;

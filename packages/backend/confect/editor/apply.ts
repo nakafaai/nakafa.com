@@ -10,7 +10,10 @@ import { Step as ProseStep } from "prosemirror-transform";
  * true when the document the step makes nests past `MAX_DOCUMENT_DEPTH`. It is false when
  * the schema cannot read the step, or ProseMirror does not apply it.
  */
-class StepSkipped extends Schema.TaggedError<StepSkipped>()("StepSkipped", {
+class StepSkipped extends Schema.TaggedError<
+  StepSkipped,
+  { readonly brand: unique symbol }
+>()("StepSkipped", {
   reason: Schema.String,
   tooDeep: Schema.Boolean,
 }) {}

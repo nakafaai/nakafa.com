@@ -18,7 +18,7 @@ import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import { SittingKeypad } from "@/components/exams/sitting/keypad";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
-import type { Written } from "@/components/exams/sitting/response";
+import type { Written } from "@/components/player/response";
 
 /** How long the student pauses typing before the answer is saved. */
 const TYPING_PAUSE_MILLISECONDS = 800;

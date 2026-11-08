@@ -15,10 +15,10 @@ const fitsBio = Schema.is(
 );
 
 /** A bio that holds more than the limit. */
-export class BioTooLong extends Schema.TaggedError<BioTooLong>()(
-  "BioTooLong",
-  {}
-) {}
+export class BioTooLong extends Schema.TaggedError<
+  BioTooLong,
+  { readonly brand: unique symbol }
+>()("BioTooLong", {}) {}
 
 /**
  * Tidies what a person typed into a bio. Every line break becomes `\n`, each line

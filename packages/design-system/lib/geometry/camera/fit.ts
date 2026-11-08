@@ -10,14 +10,14 @@ import { type Box3, MathUtils, Matrix4, Vector3 } from "three";
 const VIEWPORT_EDGE_SPACE = 24;
 
 /** A fixed-size label cannot fit the supported viewport and content together. */
-export class CameraLabelFitError extends Schema.TaggedError<CameraLabelFitError>()(
-  "CameraLabelFitError",
-  {
-    axis: Schema.Literals(["horizontal", "vertical"]),
-    availablePixels: Schema.Finite,
-    projection: Schema.Literals(["perspective", "orthographic"]),
-  }
-) {}
+export class CameraLabelFitError extends Schema.TaggedError<
+  CameraLabelFitError,
+  { readonly brand: unique symbol }
+>()("CameraLabelFitError", {
+  axis: Schema.Literals(["horizontal", "vertical"]),
+  availablePixels: Schema.Finite,
+  projection: Schema.Literals(["perspective", "orthographic"]),
+}) {}
 
 const AxisConstraintSchema = Schema.Struct({
   lower: Schema.Struct({ offset: Schema.Finite, rate: Schema.Finite }),

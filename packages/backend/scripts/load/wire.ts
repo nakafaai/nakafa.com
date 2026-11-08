@@ -5,7 +5,10 @@ import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 import { Deferred, Effect, Schema } from "effect";
 
 /** A call that the Convex client failed, with no typed error of its function to decode. */
-export class WireFailed extends Schema.TaggedError<WireFailed>()("WireFailed", {
+export class WireFailed extends Schema.TaggedError<
+  WireFailed,
+  { readonly brand: unique symbol }
+>()("WireFailed", {
   message: Schema.String,
 }) {}
 

@@ -36,10 +36,10 @@ export const UsernameCheck = Schema.Literals([
 ]);
 
 /** A rename that was refused, with the reason a person reads. */
-export class UsernameRejected extends Schema.TaggedError<UsernameRejected>()(
-  "UsernameRejected",
-  { reason: UsernameRefusal }
-) {}
+export class UsernameRejected extends Schema.TaggedError<
+  UsernameRejected,
+  { readonly brand: unique symbol }
+>()("UsernameRejected", { reason: UsernameRefusal }) {}
 
 /**
  * Reads what a person typed as a username. Capitals are accepted and spaces

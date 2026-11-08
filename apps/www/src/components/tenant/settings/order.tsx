@@ -40,8 +40,8 @@ import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SelectField } from "@/components/tenant/settings/select";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import {
   formatBillingDate,
   formatCount,
@@ -52,8 +52,6 @@ import {
   type SchoolBilling,
   schoolPayChange,
 } from "@/lib/billing/school";
-
-const SOURCE = "components/tenant/settings/order";
 
 const isMonths = Schema.is(SchoolPeriod);
 
@@ -96,7 +94,7 @@ export function SchoolOrderDialog({
 
   const submit = () => {
     setOpen(false);
-    startPaying(() => saveSchool(() => pay({ order, slug }), SOURCE));
+    startPaying(() => runSchoolWrite(schoolCall(() => pay({ order, slug }))));
   };
 
   return (

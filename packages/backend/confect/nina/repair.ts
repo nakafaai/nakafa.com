@@ -10,10 +10,10 @@ import { JsonTextSchema } from "@repo/utilities/json";
 import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
 import { Array as Arr, Effect, Schema } from "effect";
 
-class NinaRepairError extends Schema.TaggedError<NinaRepairError>()(
-  "NinaRepairError",
-  { phase: Schema.Literals(["schema", "generation"]) }
-) {}
+class NinaRepairError extends Schema.TaggedError<
+  NinaRepairError,
+  { readonly brand: unique symbol }
+>()("NinaRepairError", { phase: Schema.Literals(["schema", "generation"]) }) {}
 
 /** Repairs known tool inputs through Agent, with every provider call accounted for. */
 export const repairToolCall = Effect.fn("nina.repair")(

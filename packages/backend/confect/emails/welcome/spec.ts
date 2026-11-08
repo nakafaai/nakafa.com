@@ -36,21 +36,21 @@ export const welcomeIntentFailedCode = "WELCOME_INTENT_FAILED";
 export const welcomeIntentDeferredCode = "WELCOME_INTENT_DEFERRED";
 
 /** Expected failure while declaring or activating one welcome intent. */
-export class WelcomeIntentError extends Schema.TaggedError<WelcomeIntentError>()(
-  "WelcomeIntentError",
-  {
-    code: Schema.Literal(welcomeIntentFailedCode),
-    message: Schema.String,
-  }
-) {}
+export class WelcomeIntentError extends Schema.TaggedError<
+  WelcomeIntentError,
+  { readonly brand: unique symbol }
+>()("WelcomeIntentError", {
+  code: Schema.Literal(welcomeIntentFailedCode),
+  message: Schema.String,
+}) {}
 
 /** Retryable pause while reversible account deletion is active. */
 
-export class WelcomeIntentDeferredError extends Schema.TaggedError<WelcomeIntentDeferredError>()(
-  "WelcomeIntentDeferredError",
-  {
-    code: Schema.Literal(welcomeIntentDeferredCode),
-    message: Schema.String,
-  }
-) {}
+export class WelcomeIntentDeferredError extends Schema.TaggedError<
+  WelcomeIntentDeferredError,
+  { readonly brand: unique symbol }
+>()("WelcomeIntentDeferredError", {
+  code: Schema.Literal(welcomeIntentDeferredCode),
+  message: Schema.String,
+}) {}
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */

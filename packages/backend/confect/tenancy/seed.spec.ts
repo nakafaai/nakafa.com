@@ -10,8 +10,9 @@ import { Schema } from "effect";
 /**
  * Seeds the people of an open school for an acceptance run: a Teacher with an invite, the
  * student grant of a learner who already holds the school's address, and the expiry of a
- * pending invite. Each is internal, so no browser can call it, and the acceptance commands
- * run them.
+ * pending invite. Two reads answer what a sign-in waits for by the ids it holds: the app user
+ * of an account, and whether the inbox holds an invitation's row. Each is internal, so no
+ * browser can call it, and the acceptance commands run them.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -45,5 +46,24 @@ export default GroupSpec.make()
       args: () => ({ email: Email, slug: TenantSlug }),
       returns: () => Schema.Null,
       error: () => Schema.Union([SeedRefused, TenantNotFound]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "user",
+      args: () => ({ authId: Schema.String }),
+      returns: () => Id("users"),
+      error: () => SeedRefused,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "invitation",
+      args: () => ({
+        invite: Id("tenantInvites"),
+        person: Id("tenantPeople"),
+      }),
+      returns: () => Schema.Boolean,
+      error: () => SeedRefused,
     })
   );
