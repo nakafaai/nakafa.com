@@ -6,6 +6,7 @@ import {
   getSchoolSettingsSection,
   openSettingsGroups,
   opensSettingsPath,
+  ownsLeafPath,
   schoolSettingsGroups,
   schoolSettingsSections,
 } from "@/lib/settings/school";
@@ -113,6 +114,21 @@ describe("school settings routes", () => {
       getSchoolSettingsSection(slug, "/school/$slug/settings/audit", ADMIN)
         .labelKey
     ).toBe("audit");
+  });
+
+  it("gives a page below a section to that section, and never a section whose name only begins the same", () => {
+    expect(
+      getSchoolSettingsSection(
+        slug,
+        "/school/$slug/settings/cohorts/$cohort",
+        ADMIN
+      ).labelKey
+    ).toBe("cohorts");
+    const cohorts = { target: { to: "/school/$slug/settings/cohorts" } };
+    expect(ownsLeafPath(cohorts, "/school/$slug/settings/cohorts")).toBe(true);
+    expect(ownsLeafPath(cohorts, "/school/$slug/settings/cohortsx")).toBe(
+      false
+    );
   });
 
   it("keeps the first section as the owner of the settings root and of any undeclared route", () => {

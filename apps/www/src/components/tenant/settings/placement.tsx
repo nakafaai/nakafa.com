@@ -41,9 +41,10 @@ type CohortId = Cohort["id"];
 /**
  * The page's action that places a student of the school in the cohort: the Add student
  * button, ready from the first paint, and the dialog it opens for one student. The dialog
- * waits for the cohort: Save holds until the cohort is read, and an archived cohort says to
- * restore it first. The dialog closes as the placement is sent, and its student clears once
- * the server accepts it; a refusal opens the dialog again with its student and says why inside it.
+ * waits for the cohort: Save holds until the cohort is read. An archived cohort takes no one
+ * new, so its page offers no Add student (`SchoolCohortPage`). The dialog closes as the placement
+ * is sent, and its student clears once the server accepts it; a refusal opens the dialog again
+ * with its student and says why inside it.
  */
 export function SchoolPlacementAdd({
   cohortId,
@@ -93,11 +94,7 @@ export function SchoolPlacementAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
-        description={
-          status === "archived"
-            ? t("placement-add-archived")
-            : t("placement-add-footer")
-        }
+        description={t("placement-add-footer")}
         footer={
           <>
             <Button

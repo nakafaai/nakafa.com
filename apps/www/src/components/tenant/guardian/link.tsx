@@ -86,6 +86,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
               )
             }
             type="button"
+            variant="outline"
           >
             <HugeIcons icon={CheckmarkBadge01Icon} />
             {t("link-verify")}

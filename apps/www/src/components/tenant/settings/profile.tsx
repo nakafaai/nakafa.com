@@ -195,6 +195,7 @@ function SchoolProfileCard({
               onClick={() => fileInput.current?.click()}
               size="sm"
               type="button"
+              variant="outline"
             >
               {t("logo-upload")}
             </Button>
@@ -238,7 +239,12 @@ function SchoolProfileCard({
         </CardContent>
         <CardSectionFooter hint={t("address-footer")}>
           <CardSectionActions>
-            <Button onClick={copyAddress} size="sm" type="button">
+            <Button
+              onClick={copyAddress}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               {t("address-copy")}
             </Button>
           </CardSectionActions>
