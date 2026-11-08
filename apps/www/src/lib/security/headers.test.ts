@@ -18,6 +18,17 @@ const production = {
 /** Matches the loopback image origin that a local Convex deployment adds to img-src. */
 const LOOPBACK_IMAGE_SOURCE = /img-src [^;]*http:\/\/127\.0\.0\.1:3210/u;
 
+/** The ad script's own origin, inside the script sources. */
+const AD_SCRIPT_SOURCE =
+  /script-src [^;]*https:\/\/\*\.googlesyndication\.com/u;
+
+/** The origin each ad draws its frame from, inside the frame sources. */
+const AD_FRAME_SOURCE = /frame-src [^;]*https:\/\/\*\.doubleclick\.net/u;
+
+/** The consent message's origin, inside the connect sources. */
+const AD_CONSENT_SOURCE =
+  /connect-src [^;]*https:\/\/fundingchoicesmessages\.google\.com/u;
+
 /** Reads one header of the list by its name. */
 function headerValue(headers: readonly WwwHeader[], key: string) {
   return Option.getOrUndefined(
@@ -56,6 +67,19 @@ describe("createWwwHeaders", () => {
 
     expect(headerValue(headers, "Content-Security-Policy")).not.toContain(
       "127.0.0.1"
+    );
+  });
+
+  it("lets the ad script, its frames and its consent message run on every page", () => {
+    const headers = createWwwHeaders(production);
+    const policy = headerValue(headers, "Content-Security-Policy") ?? "";
+
+    expect(policy).toMatch(AD_SCRIPT_SOURCE);
+    expect(policy).toMatch(AD_FRAME_SOURCE);
+    expect(policy).toMatch(AD_CONSENT_SOURCE);
+    // The policy is one line of the static assets' `_headers` file.
+    expect(Result.isSuccess(renderHeadersFile([{ headers, path: "/*" }]))).toBe(
+      true
     );
   });
 

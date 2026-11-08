@@ -14,6 +14,7 @@ import {
   ConsentActions,
   ConsentDetails,
 } from "@/components/analytics/consent/details";
+import { AD_CONSENT_ATTRIBUTE } from "@/lib/ads/consent";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 
 /** Names the prompt section, so the hide rules below can match it. */
@@ -38,6 +39,12 @@ const HIDE_PROMPT_WHILE_MARKED = `:root[${ANALYTICS_CONSENT_ROOT_ATTRIBUTE}] [${
  * once the learner leaves the paper.
  */
 const HIDE_PROMPT_WHILE_LOCKED = `:root:has([data-slot="sidebar-wrapper"][data-locked],[data-shell-lock]) [${PROMPT_ATTRIBUTE}]{display:none}`;
+
+/**
+ * Hides the prompt while Google's consent message for ads is on the screen, so
+ * the two never stand over each other. It returns once that message closes.
+ */
+const HIDE_PROMPT_WHILE_AD_CONSENT = `:root[${AD_CONSENT_ATTRIBUTE}] [${PROMPT_ATTRIBUTE}]{display:none}`;
 
 /**
  * Hides the prompt where scripts are off. Nothing runs there to record a choice,
@@ -81,7 +88,9 @@ export function AnalyticsConsentControls({
 
   return (
     <>
-      <style>{`${HIDE_PROMPT_WHILE_MARKED}${HIDE_PROMPT_WHILE_LOCKED}`}</style>
+      <style>
+        {`${HIDE_PROMPT_WHILE_MARKED}${HIDE_PROMPT_WHILE_LOCKED}${HIDE_PROMPT_WHILE_AD_CONSENT}`}
+      </style>
       <noscript>
         <style>{HIDE_PROMPT_WITHOUT_SCRIPTS}</style>
       </noscript>

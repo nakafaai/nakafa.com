@@ -3899,6 +3899,7 @@
     "pro-feature-2": "{credits, number} kredit setiap bulan untuk tanya Nina",
     "pro-feature-3": "Pembahasan lengkap semua try out, termasuk percobaan sebelumnya",
     "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
+    "pro-feature-6": "Materi dan artikel tanpa iklan",
     "pro-cta": "Ambil Pro",
     "offer-title": "Pilih cara bayar",
     "offer-description": "Paket bulanan diperpanjang otomatis, dan pass dibayar sekali.",
@@ -4093,6 +4094,18 @@
     "load-error": "Pilihanmu belum dapat dimuat, jadi pembagian data tetap nonaktif selama kami mencoba lagi.",
     "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tetap seperti semula.",
     "save-error": "Pilihanmu tidak dapat disimpan, jadi pembagian data tetap nonaktif."
+  },
+  "Ads": {
+    "label": "Iklan",
+    "footer": "Pro tanpa iklan.",
+    "why": "Kenapa ada iklan?",
+    "pro": "Lihat Pro",
+    "later": "Nanti saja",
+    "note-title": "Kenapa ada iklan di Nakafa?",
+    "note-description": "Catatan singkat dari pendiri Nakafa.",
+    "note-reason": "Nakafa dibuat supaya semua orang bisa belajar gratis. Server, Nina, dan konten baru butuh biaya setiap bulan, jadi materi dan artikel kini memuat iklan. Try-out dan Nina tetap tanpa iklan.",
+    "note-pro": "Kalau kamu ingin belajar tanpa iklan sambil membantu Nakafa terus berkembang, pertimbangkan Pro.",
+    "note-signature": "Nabil, pendiri Nakafa"
   },
   "SEO": {
     "subject": {

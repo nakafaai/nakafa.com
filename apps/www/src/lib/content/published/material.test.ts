@@ -16,7 +16,7 @@ import {
   testSignedEmptyRelease,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import {
   readPublishedMaterial,
@@ -104,7 +104,10 @@ describe("published material delivery", () => {
         input,
         TEST_PROOF_RENDERER
       );
-      expect(bodyMock).toHaveBeenCalledExactlyOnceWith(found.artifact);
+      expect(bodyMock).toHaveBeenCalledExactlyOnceWith(
+        found.artifact,
+        Option.some("material")
+      );
     })
   );
 

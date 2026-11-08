@@ -7,6 +7,7 @@ import { Record as Rec, Schema } from "effect";
  * `namespaces.ts` checks this record against the English dictionary.
  */
 const messageNamespaceFlags = {
+  Ads: true,
   AnalyticsConsent: true,
   Articles: true,
   Auth: true,

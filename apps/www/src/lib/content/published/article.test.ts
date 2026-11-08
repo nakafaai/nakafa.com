@@ -14,7 +14,7 @@ import {
   testSignedArtifact,
   testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import {
   readPublishedArticle,
   renderArticleArtifact,
@@ -110,7 +110,10 @@ describe("published article delivery", () => {
         sourcePath,
         sourceRevision: GitCommitShaSchema.make("a".repeat(40)),
       });
-      expect(bodyMock).toHaveBeenCalledExactlyOnceWith(found.artifact);
+      expect(bodyMock).toHaveBeenCalledExactlyOnceWith(
+        found.artifact,
+        Option.some("article")
+      );
       expect(readMock).toHaveBeenCalledOnce();
     })
   );

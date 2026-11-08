@@ -115,7 +115,7 @@ beforeEach(() => {
     Effect.gen(function* () {
       const resolver = yield* ContentVerificationKeyResolver;
       yield* resolver.resolve(keyId);
-      return { artifact, element: createElement("p", null, "body") };
+      return { artifact, blocks: [createElement("p", null, "body")] };
     })
   );
 });
@@ -252,7 +252,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
       executeMock.mockReturnValueOnce(
         Effect.succeed({
           artifact: newArtifact,
-          element: createElement("p", null, "body"),
+          blocks: [createElement("p", null, "body")],
         })
       );
 
@@ -397,7 +397,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
       executeMock.mockReturnValueOnce(
         Effect.succeed({
           artifact: changedArtifact,
-          element: createElement("p", null, "body"),
+          blocks: [createElement("p", null, "body")],
         })
       );
 
@@ -418,7 +418,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
         Effect.gen(function* () {
           const resolver = yield* ContentVerificationKeyResolver;
           yield* resolver.resolve(foreignKey);
-          return { artifact, element: createElement("p", null, "body") };
+          return { artifact, blocks: [createElement("p", null, "body")] };
         })
       );
 

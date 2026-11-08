@@ -1,5 +1,6 @@
+import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { untilPageSettled } from "@repo/design-system/lib/settle";
-import { Array as Arr, Deferred, Effect, Exit, Fiber, Option } from "effect";
+import { Deferred, Effect, Exit, Fiber, Option } from "effect";
 import {
   type ComponentType,
   type ReactNode,
@@ -59,18 +60,7 @@ export function LaterSection<Props extends object>({
       return;
     }
     const opening = Effect.runFork(
-      Effect.callback<void>((resume) => {
-        const watcher = new IntersectionObserver(
-          (entries) => {
-            if (Arr.some(entries, ({ isIntersecting }) => isIntersecting)) {
-              resume(Effect.void);
-            }
-          },
-          { rootMargin: `${NEAR_SCREEN} 0px` }
-        );
-        watcher.observe(target);
-        return Effect.sync(() => watcher.disconnect());
-      }).pipe(
+      untilNearScreen(target, NEAR_SCREEN).pipe(
         Effect.andThen(untilPageSettled),
         Effect.andThen(
           Effect.sync(() => {
