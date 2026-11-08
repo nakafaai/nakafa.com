@@ -43,7 +43,7 @@ export const remove = FunctionImpl.make(
         reason: "resource",
       });
     }
-    const hold = yield* cohortHold(cohort._id);
+    const hold = yield* cohortHold(cohort);
     if (Option.isSome(hold)) {
       return yield* new CohortInUse({ holds: hold.value });
     }
