@@ -1,4 +1,9 @@
-import { type Editor, Extension, findParentNode } from "@tiptap/core";
+import {
+  type CommandProps,
+  type Editor,
+  Extension,
+  findParentNode,
+} from "@tiptap/core";
 import type { Node as ProseNode } from "@tiptap/pm/model";
 import { NodeSelection, type Selection } from "@tiptap/pm/state";
 import { Array as Arr, Option, Schema } from "effect";
@@ -63,28 +68,40 @@ const objectEnd = (selection: Selection) =>
         (table) => table.pos + table.node.nodeSize
       );
 
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    objectKeys: {
+      /**
+       * Moves the caret out of the object the selection is on, into the text after it, as Escape does.
+       * A selection on no object is left alone, and the command fails.
+       */
+      leaveObject: () => ReturnType;
+    };
+  }
+}
+
 /**
  * Moves the caret out of the object the selection is on, so Escape leaves a table, a picture or a
  * formula and the next keystrokes write text. An inline formula leaves the caret just after it, in
  * its line. A block leaves it at the start of the text block that follows it, and when no text block
- * follows, an empty paragraph is made there for it. A selection on no object is left alone.
+ * follows, an empty paragraph is made there for it. It reads the selection of the transaction it
+ * runs in, so a chain that first selects a formula leaves that formula.
  */
-const leaveObject = (editor: Editor) =>
-  Option.match(objectEnd(editor.state.selection), {
+const leaveObject = ({ commands, tr }: CommandProps) =>
+  Option.match(objectEnd(tr.selection), {
     onNone: () => false,
     onSome: (end) => {
-      const $end = editor.state.doc.resolve(end);
+      const $end = tr.doc.resolve(end);
       if ($end.parent.inlineContent) {
-        return editor.commands.setTextSelection(end);
+        return commands.setTextSelection(end);
       }
       if ($end.nodeAfter?.isTextblock === true) {
-        return editor.commands.setTextSelection(end + 1);
+        return commands.setTextSelection(end + 1);
       }
-      return editor
-        .chain()
-        .insertContentAt(end, { type: "paragraph" })
-        .setTextSelection(end + 1)
-        .run();
+      return (
+        commands.insertContentAt(end, { type: "paragraph" }) &&
+        commands.setTextSelection(end + 1)
+      );
     },
   });
 
@@ -94,11 +111,14 @@ const leaveObject = (editor: Editor) =>
  * picture or formula goes with Backspace or Delete through the editor's own keys.
  */
 export const objectKeys = Extension.create({
+  addCommands() {
+    return { leaveObject: () => leaveObject };
+  },
   addKeyboardShortcuts() {
     return {
       Backspace: ({ editor }) => removeEmptyTable(editor),
       Delete: ({ editor }) => removeEmptyTable(editor),
-      Escape: ({ editor }) => leaveObject(editor),
+      Escape: ({ editor }) => editor.commands.leaveObject(),
     };
   },
   name: "objectKeys",
