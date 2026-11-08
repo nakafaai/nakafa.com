@@ -4273,6 +4273,26 @@ export declare const api: {
   contents: {
     mutations: {
       views: {
+        finishLesson: FunctionReference<
+          "mutation",
+          "public",
+          { contentId: string; locale: "en" | "id" | "de"; publicPath: string },
+          | {
+              _tag: "granted";
+              badges: Array<
+                | "explorer"
+                | "fighter"
+                | "mathematics"
+                | "physics"
+                | "chemistry"
+                | "biology"
+              >;
+              stars: number;
+            }
+          | { _tag: "duplicate" }
+          | { _tag: "capped" }
+          | { _tag: "unread" }
+        >;
         recordContentView: FunctionReference<
           "mutation",
           "public",
@@ -10367,6 +10387,66 @@ export declare const api: {
           webhookId: Id<"integrationWebhooks">;
         },
         { id: Id<"integrationWebhooks">; secret: string }
+      >;
+    };
+  };
+  island: {
+    mutations: {
+      open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
+      share: FunctionReference<
+        "mutation",
+        "public",
+        { visibility: "private" | "link" | "public" },
+        null
+      >;
+    };
+    queries: {
+      own: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          badges: Array<{
+            at: number;
+            badge:
+              | "explorer"
+              | "fighter"
+              | "mathematics"
+              | "physics"
+              | "chemistry"
+              | "biology";
+          }>;
+          layout: ArrayBuffer;
+          level: number;
+          lifetime: number;
+          stars: number;
+          timeZone: string;
+          version: number;
+          visibility: "private" | "link" | "public";
+        } | null
+      >;
+      visit: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          badges: Array<{
+            at: number;
+            badge:
+              | "explorer"
+              | "fighter"
+              | "mathematics"
+              | "physics"
+              | "chemistry"
+              | "biology";
+          }>;
+          layout: ArrayBuffer;
+          level: number;
+          mascot: string;
+          name: string;
+          timeZone: string;
+          username: string;
+        } | null
       >;
     };
   };
