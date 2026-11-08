@@ -20,12 +20,13 @@ import {
   type TrackedRequestKind,
   withRequestTracker,
 } from "@/e2e/support/requests";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const JAVASCRIPT_RESOURCE_PATTERN = /^\/assets\/.+\.js$/u;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
-// Resource settling keeps its own budget, apart from readiness.
-const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
+// Resource settling keeps its own budget, apart from readiness: as long as a served page takes, because a signed-in
+// page signs in, loads, and only then warms its tabs (`warmLinks`), whose code the graph counts too.
+const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = servedTimeoutMilliseconds;
 const RESOURCE_POLL_MILLISECONDS = 100;
 /**
  * How many Resource Timing entries a page keeps. A browser keeps 250 and drops

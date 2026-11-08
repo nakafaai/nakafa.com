@@ -65,6 +65,7 @@ function Trajectory() {
       <meshBasicMaterial
         color={LAUNCH_COLORS[motion.scenario.id]}
         opacity={0.78}
+        toneMapped={false}
         transparent
       />
     </mesh>
@@ -88,6 +89,7 @@ function GhostBalls() {
                 color={PROJECTILE_COLORS.trailGhost}
                 depthWrite={false}
                 opacity={opacity}
+                toneMapped={false}
                 transparent
               />
             </mesh>
@@ -97,6 +99,7 @@ function GhostBalls() {
                 color={LAUNCH_COLORS[motion.scenario.id]}
                 depthWrite={false}
                 opacity={0.74}
+                toneMapped={false}
                 transparent
               />
             </mesh>

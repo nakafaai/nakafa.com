@@ -114,7 +114,57 @@ describe("dictionary key policy", () => {
   );
 
   it.effect(
-    "the real repository's dictionaries name each key once",
+    "reports a value that speaks formally in its dictionary's language and accepts the casual one",
+    () =>
+      Effect.gen(function* () {
+        const DE = "packages/internationalization/dictionaries/de.json";
+        const ID = "packages/internationalization/dictionaries/id.json";
+        const MS = "packages/internationalization/dictionaries/ms.json";
+        const fixes = {
+          de: "write du, dich, dir or dein, and name the noun where a sentence opens with Sie or Ihr",
+          id: "write kamu or -mu for the reader and aku or -ku for the speaker, ask with the plain imperative, and say itu for tersebut",
+          ms: "write kamu or -mu for the reader",
+        };
+        const formal = (
+          file: string,
+          line: number,
+          keyPath: string,
+          fix: string
+        ) =>
+          `${file}:${line}: ${keyPath} speaks formally, and Nakafa talks to one learner like a teacher in every language: ${fix}.`;
+        const findings = yield* dictionaryFindings([
+          source(
+            DE,
+            '{\n  "Exams": {\n    "gone": "Diese Prüfung ist für Sie geschlossen.",\n    "delete": "Ihre Fragen werden gelöscht.",\n    "help": "Ihnen hilft die Schule.",\n    "closed": "Sie nimmt keine Antworten mehr an.",\n    "own": "Dein Ergebnis bleibt, auch wenn sie endet.",\n    "brand": "Siemens und Ihringen bleiben Namen."\n  }\n}\n'
+          ),
+          source(
+            ID,
+            '{\n  "Guardians": {\n    "note": "Catatan Anda",\n    "home": "Anak saya",\n    "retry": "Silakan coba lagi.",\n    "ask": "Mohon isi namamu.",\n    "that": "Masuk dengan akun tersebut.",\n    "class": "Kalian bisa mulai.",\n    "casual": "Catatanmu tersimpan, jadi kamu bisa lanjut kapan saja.",\n    "words": "Permohonan dari Panda sudah aku terima."\n  }\n}\n'
+          ),
+          source(
+            MS,
+            '{\n  "home": "Markah anda",\n  "casual": "Markah kamu"\n}\n'
+          ),
+          source(EN, '{\n  "gone": "Sie means she in German."\n}\n'),
+        ]);
+        assert.deepStrictEqual(findings, [
+          formal(DE, 3, "Exams.gone", fixes.de),
+          formal(DE, 4, "Exams.delete", fixes.de),
+          formal(DE, 5, "Exams.help", fixes.de),
+          formal(DE, 6, "Exams.closed", fixes.de),
+          formal(ID, 3, "Guardians.note", fixes.id),
+          formal(ID, 4, "Guardians.home", fixes.id),
+          formal(ID, 5, "Guardians.retry", fixes.id),
+          formal(ID, 6, "Guardians.ask", fixes.id),
+          formal(ID, 7, "Guardians.that", fixes.id),
+          formal(ID, 8, "Guardians.class", fixes.id),
+          formal(MS, 2, "home", fixes.ms),
+        ]);
+      })
+  );
+
+  it.effect(
+    "the real repository's dictionaries pass every rule",
     () =>
       Effect.gen(function* () {
         const { workspaces } = yield* readAuthoredTree(REPOSITORY);

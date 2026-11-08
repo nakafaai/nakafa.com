@@ -3,10 +3,7 @@ import { EvilIcon } from "@hugeicons/core-free-icons";
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { Array as Arr } from "effect";
-import {
-  getArticleCategoryIcon,
-  getArticleCategoryIcons,
-} from "@/components/articles/category";
+import { getArticleCategoryIcons } from "@/components/articles/category";
 
 const POLITICS = ArticleCategorySchema.make("politics");
 /** Categories that a content release brings in before the app knows them. */
@@ -16,24 +13,22 @@ const SCIENCE = ArticleCategorySchema.make("science");
 const FOOD = ArticleCategorySchema.make("food");
 
 describe("article category icons", () => {
-  it("keeps the established icon of politics, alone and in a list", () => {
-    expect(getArticleCategoryIcon(POLITICS)).toBe(EvilIcon);
+  it("keeps the established icon of politics", () => {
     expect(getArticleCategoryIcons([{ category: POLITICS }])).toEqual([
       EvilIcon,
     ]);
   });
 
   it("gives a category that it does not know a spare icon from its key", () => {
-    const icon = getArticleCategoryIcon(TECHNOLOGY);
+    const [icon] = getArticleCategoryIcons([{ category: TECHNOLOGY }]);
 
     expect(Arr.contains(SPARE_ICONS, icon)).toBe(true);
-    expect(getArticleCategoryIcon(TECHNOLOGY)).toBe(icon);
-    expect(getArticleCategoryIcon(SCIENCE)).not.toBe(icon);
+    expect(getArticleCategoryIcons([{ category: TECHNOLOGY }])).toEqual([icon]);
   });
 
   it("separates two categories whose keys point at the same spare icon", () => {
-    expect(getArticleCategoryIcon(FOOD)).toBe(
-      getArticleCategoryIcon(TECHNOLOGY)
+    expect(getArticleCategoryIcons([{ category: FOOD }])).toEqual(
+      getArticleCategoryIcons([{ category: TECHNOLOGY }])
     );
 
     const icons = getArticleCategoryIcons(

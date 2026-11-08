@@ -114,6 +114,8 @@ export type IntegrationWebhooksDoc = Document.Document<typeof schemaDefinition, 
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
+export type IslandAwardsDoc = Document.Document<typeof schemaDefinition, "islandAwards">;
+export type IslandsDoc = Document.Document<typeof schemaDefinition, "islands">;
 export type JournalCursorsDoc = Document.Document<typeof schemaDefinition, "journalCursors">;
 export type JournalEntriesDoc = Document.Document<typeof schemaDefinition, "journalEntries">;
 export type LearningEngagementQueueDoc = Document.Document<typeof schemaDefinition, "learningEngagementQueue">;
@@ -293,6 +295,8 @@ export interface Docs {
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
+  islandAwards: IslandAwardsDoc;
+  islands: IslandsDoc;
   journalCursors: JournalCursorsDoc;
   journalEntries: JournalEntriesDoc;
   learningEngagementQueue: LearningEngagementQueueDoc;

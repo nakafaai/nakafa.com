@@ -1,3 +1,4 @@
+import { PRESSED_ATTRIBUTE } from "@repo/design-system/hooks/press";
 import { Deferred, Effect, Exit, Option } from "effect";
 import type { ComponentType } from "react";
 
@@ -66,4 +67,15 @@ export function readWaiting<Props extends object>(code: LaterCode<Props>) {
 export function openLaterCode<Props extends object>(code: LaterCode<Props>) {
   Deferred.doneUnsafe(code.near, Exit.void);
   return readLoading(code);
+}
+
+/**
+ * Whether the reader pressed a control of the section before React took the page
+ * over. The pre-paint script marks that control, and React replays the press once
+ * the section mounts (`useMissedPress`). A browser lets a press open a file picker
+ * only for a few seconds after it, so such a section opens at once instead of
+ * waiting for the page to settle.
+ */
+export function holdsEarlyPress(box: ParentNode) {
+  return box.querySelector(`[${PRESSED_ATTRIBUTE}]`) !== null;
 }

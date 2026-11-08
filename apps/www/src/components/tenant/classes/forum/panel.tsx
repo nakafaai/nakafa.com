@@ -43,9 +43,9 @@ const CATEGORY_ICONS = {
 
 /**
  * The emoji chooser of a chat, as a command palette works: a search field that keeps the focus, the categories as
- * tabs, and the emoji in a grid under them. Typing finds emoji by their words in the reader's language and in
- * English, the arrow keys move the active emoji across the grid, Enter picks it, and Escape clears the search, then
- * closes the popover. The footer names the active emoji. A pointer picks one with a press.
+ * tabs, and the emoji in a grid under them. Typing finds emoji by their words in Indonesian, English and German,
+ * whichever the reader reads, the arrow keys move the active emoji across the grid, Enter picks it, and Escape clears
+ * the search, then closes the popover. The footer names the active emoji. A pointer picks one with a press.
  */
 export function EmojiPanel({
   glyphs,

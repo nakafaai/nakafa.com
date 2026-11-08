@@ -26,11 +26,13 @@ export function VectorConceptScene({
         color={colors.cable}
         lineWidth={2}
         points={[loadPoint, left.anchor]}
+        toneMapped={false}
       />
       <Line
         color={colors.cable}
         lineWidth={2}
         points={[loadPoint, right.anchor]}
+        toneMapped={false}
       />
       <LoadCart
         color={colors.load}

@@ -5,6 +5,7 @@ import { Videos } from "@/components/ai/home/videos";
 import { DeferredWeather } from "@/components/ai/home/weather/deferred";
 import { signedInHead } from "@/lib/account/head";
 import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
+import { getAppSocialArtwork } from "@/lib/og/app";
 
 export const Route = createFileRoute("/$locale/_main/_app/chat/")({
   loader: ({ params }) =>
@@ -18,13 +19,16 @@ export const Route = createFileRoute("/$locale/_main/_app/chat/")({
       messages: loaderData,
       namespace: "Ai",
     });
-    return signedInHead({
-      canonicalPath: `/${locale}/chat`,
-      description: t("new-chat-description"),
-      indexable: false,
-      locale,
-      title: t("new-chat-title"),
-    });
+    return signedInHead(
+      {
+        canonicalPath: `/${locale}/chat`,
+        description: t("new-chat-description"),
+        indexable: false,
+        locale,
+        title: t("new-chat-title"),
+      },
+      getAppSocialArtwork({ key: "ask-nina", locale, publicPath: "chat" })
+    );
   },
   component: ChatPage,
 });

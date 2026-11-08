@@ -18,8 +18,8 @@ import {
 import { PirateProjectileScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -34,12 +34,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
-
-const FLASH_COLOR = PLOT_COLORS.orange;
 
 interface ProjectileAnalysisLabProps {
   decimalSeparator?: DecimalSeparator;
@@ -151,28 +147,8 @@ export function ParabolicMovementAnalysisLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
-            <ambientLight intensity={0.62} />
-            <hemisphereLight
-              color={getColor("WHITE")}
-              groundColor={getColor("STONE", 600)}
-              intensity={0.68}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.35}
-              position={[-3.4, 5.8, 4.7]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
-            <pointLight
-              color={FLASH_COLOR}
-              intensity={0.45}
-              position={PROJECTILE_SCENE.launchOffset}
-            />
             <CameraControls
               cameraPosition={PROJECTILE_SCENE.cameraPosition}
               cameraTarget={PROJECTILE_SCENE.cameraTarget}
@@ -185,7 +161,7 @@ export function ParabolicMovementAnalysisLab({
             />
             <PirateProjectileScene motion={motion} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
