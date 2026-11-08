@@ -11,7 +11,7 @@ import {
 } from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
-import { COLORS } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getCos, getRadians, getSin } from "@repo/math/angles";
 import { Array as Arr } from "effect";
 import { type ComponentProps, useMemo } from "react";
@@ -132,7 +132,7 @@ export function Triangle({
 
       {/* Angle arc */}
       <Line
-        color={COLORS.VIOLET}
+        color={PLOT_COLORS.violet}
         frustumCulled
         lineWidth={2}
         points={triangleArcPoints}
@@ -174,7 +174,7 @@ export function Triangle({
         <sphereGeometry
           args={[1, GRAPH_POINT_SEGMENTS, GRAPH_POINT_SEGMENTS]}
         />
-        <meshBasicMaterial color={COLORS.SLATE} />
+        <meshBasicMaterial color={PLOT_COLORS.slate} />
         {Arr.map(triangleVertices, (vertex) => (
           <Instance
             key={vertex.key}

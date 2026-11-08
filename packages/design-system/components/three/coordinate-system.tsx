@@ -11,9 +11,10 @@ import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
-import { COLORS, getColor } from "@repo/design-system/lib/color";
+import { getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { cn } from "cn";
@@ -260,7 +261,7 @@ export function CoordinateSystem({
 
               {/* Origin */}
               <Origin
-                color={COLORS.SLATE}
+                color={PLOT_COLORS.slate}
                 {...(origin
                   ? { position: [origin.x, origin.y, origin.z] }
                   : {})}

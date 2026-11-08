@@ -1,4 +1,17 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Page } from "@playwright/test";
+import de from "@repo/internationalization/dictionaries/de.json" with {
+  type: "json",
+};
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
+import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
+
+/** The site's messages in each of its languages. */
+const MESSAGES = { de, en, id } satisfies Record<AppLocaleCode, typeof en>;
 
 /** A content card, which a lesson or a Quran page shows. */
 export const CARD = '[data-slot="card"]';
@@ -60,7 +73,9 @@ export function lineSceneCards(page: Page) {
   return page.locator(CARD).filter({ has: page.locator(LINE_SCENE) });
 }
 
-/** The pagination navigation that links a lesson to its neighbors. */
-export function paginationNavigation(page: Page) {
-  return page.getByRole("navigation", { name: "Pagination navigation" });
+/** The pagination navigation that links a lesson to its neighbors, named in the page's language. */
+export function paginationNavigation(page: Page, locale: AppLocaleCode = "en") {
+  return page.getByRole("navigation", {
+    name: MESSAGES[locale].Common["page-navigation"],
+  });
 }

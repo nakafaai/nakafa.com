@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
@@ -32,7 +33,6 @@ const BiologySceneColorsSchema = Schema.Struct({
   soil: Schema.String,
   spore: Schema.String,
   text: Schema.String,
-  warning: Schema.String,
   wood: Schema.String,
 });
 
@@ -60,27 +60,26 @@ export function getBiologySceneColors(theme?: string): BiologySceneColors {
   const isDarkTheme = getThemeAppearance(theme) === "dark";
 
   return {
-    animal: getColor("AMBER"),
+    animal: PLOT_COLORS.amber,
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    carbon: getColor("SLATE"),
-    decomposer: getColor("VIOLET"),
-    genome: getColor("AMBER"),
-    heat: getColor("ORANGE"),
-    host: getColor("TEAL"),
-    ice: getColor("CYAN"),
-    membrane: getColor("VIOLET"),
-    microbe: getColor("EMERALD"),
-    muted: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
-    nucleus: getColor("AMBER"),
-    ocean: getColor("SKY"),
-    pathogen: getColor("ROSE"),
-    plant: getColor("GREEN"),
+    carbon: PLOT_COLORS.slate,
+    decomposer: PLOT_COLORS.violet,
+    genome: PLOT_COLORS.amber,
+    heat: PLOT_COLORS.orange,
+    host: PLOT_COLORS.teal,
+    ice: getColor("SLATE", 300),
+    membrane: PLOT_COLORS.violet,
+    microbe: PLOT_COLORS.orange,
+    muted: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
+    nucleus: PLOT_COLORS.amber,
+    ocean: PLOT_COLORS.teal,
+    pathogen: PLOT_COLORS.pink,
+    plant: PLOT_COLORS.teal,
     skyLight: ORIGIN_COLOR.LIGHT,
     soil: isDarkTheme ? getColor("STONE") : getColor("ZINC"),
-    spore: getColor("FUCHSIA"),
-    grain: getColor("AMBER"),
+    spore: PLOT_COLORS.fuchsia,
+    grain: PLOT_COLORS.amber,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    warning: getColor("RED"),
     wood: getColor("STONE"),
   };
 }

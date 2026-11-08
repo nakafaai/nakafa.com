@@ -45,7 +45,7 @@ D5. Social images are one per collection or family, not one per page.
 
 D6. Content pages navigate in the browser, with no document load and no Worker request. While the build prerenders a page, the Worker records every server function call that the page's loaders make, and the build writes the answer of each call, byte for byte, as a static file. In the browser a loader reads that file and hands it to the function's own decoder through Start's per-call `fetch` option, so a navigation between prerendered pages costs one static asset read, made on intent before the press. A call that the build did not prerender, such as a later page of a list, asks the Worker. A read that depends on the reader instead of the page, such as a lesson's curriculum placement under a `?ctx=` hint, goes from the browser to Convex and never through the Worker. (Amended 25 Oct 2026: the document loads and Speculation Rules of Phase A made every press reload the page in every browser, and Safari and Firefox do not prerender. Amended 30 Oct 2026: the placement's server function cost 100 to 353 ms of CPU on a fresh isolate against the 10 ms of Workers Free, because its handler loaded Effect, Schema and the contentRelease refs.)
 
-D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy. Phase A does not declare them (see Not in Phase A).
+D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy. Phase A does not declare them (see Not in Phase A). (Amended 8 Nov 2026: no zone rule picks a locale. The Worker answers the root and every address that names no locale with one negotiation, `negotiateLocale`: the language cookie, then Accept-Language among id, en and de, then Indonesian, the owner's rule. `apps/www/src/lib/routing/locale/` owns which addresses are bare, the main host's School pages included, and the zone's redirect phase holds only the rules of `apps/www/deploy/redirect.ts`.)
 
 D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation starts deploy.yml with a workflow dispatch for stage prod and ref main, in place of the cache POST. The stack binds the active release id to the web Worker as `NAKAFA_CONTENT_RELEASE` (`apps/www/deploy/release.ts`), because Alchemy rebuilds a Vite Worker only when its files or its bindings change: without that binding, the dispatch after release legal-xendit-20261026 (26 Oct 2026, run 40418168284) planned no change on an unchanged commit and the site kept the previous release's pages. In the same change the replaced request-time paths are deleted: Accept negotiation, the nine-page prerender list, the per-page social images and their alias, and Set-Cookie on static pages. The content store, the request-time content readers and the server functions with callers stay for what the Worker still renders (search). Phase C deletes them, once Phase B moves it to the browser.
 
@@ -67,6 +67,23 @@ prerender's Worker has no file system. The content store asks it on a miss and h
 every release-keyed entry (`lasting`), never the active pointer. Only a deploy sets
 `NAKAFA_BUILD_STORE`, and `deployedWorkerBindings` never binds it. A store failure is a
 miss, so the build reads Convex.
+
+Amended on 8 November 2026: every read whose answer depends only on the content
+release goes through the content store (`apps/www/src/lib/content/store/query.ts`),
+including the article delivery that a page and its social image share, the article and
+lesson route models of the language switch, the article catalog pages, the discovery
+reads of the feed and llms files, the curriculum path and the try-out localized path.
+On 7 November, a day of 33 production deploys, those reads bypassed the store and were
+read again by every deploy, whether or not the release had changed: the article delivery
+alone made 1,337 calls (74.6 MB), and the five largest of them 147 MB of Database I/O. An operation that reads several values of one
+release passes the release it read first (`queryPinnedContentStore`), so the store keys
+each read by that release and fails with `PublishedReleaseMismatchError` instead of
+moving to another one, and the reader no longer compares releases itself. Five reads stay
+live, because their answer depends on more than the release: the content search (a free
+text query per visitor), the trending subjects (live analytics, kept an hour per isolate
+by their own entry), a try-out track's further set windows (the viewer's query, read as a
+visitor), the Quran identity that a stale snapshot is checked against, and the active
+release identity itself.
 
 ## Phase A as implemented
 

@@ -4,6 +4,7 @@ import {
   type ProjectileMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
 import {
@@ -19,9 +20,9 @@ import { Water } from "three/examples/jsm/objects/Water.js";
 const WATER_NORMALS_PATH = "/models/physics/kinematics/water/waternormals.jpg";
 
 const OCEAN_COLORS = {
-  particle: getColor("SKY", 400),
+  particle: getColor("WHITE"),
   sun: getColor("WHITE"),
-  water: getColor("TEAL", 700),
+  water: PLOT_COLORS.teal,
 } as const;
 
 const WIND_PARTICLE_COUNT = 36;

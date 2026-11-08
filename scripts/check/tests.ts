@@ -8,6 +8,7 @@ import {
 } from "effect";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import { classFindings } from "#scripts/check/classes";
+import { inspectColorSource } from "#scripts/check/colors";
 import {
   inspectCompilerConfigs,
   isCompilerConfig,
@@ -101,6 +102,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
     ),
     Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
       Arr.flatten([
+        inspectColorSource(file, sourceFile),
         inspectGatewaySource(file, sourceFile),
         inspectToastSource(file, sourceFile),
         inspectReactSource(file, sourceFile),

@@ -10,7 +10,6 @@ import {
 import { LOCALE_VARY } from "@repo/internationalization/src/redirect";
 import { Effect, Option } from "effect";
 import {
-  readBareRedirect,
   readMainSiteRedirect,
   readMigrationResponse,
   readMovedResponse,
@@ -61,65 +60,6 @@ describe("readRootRedirectResponse", () => {
         readRootRedirectResponse(request("https://nakafa.com/en/curriculum"))
       )
     ).toBe(true);
-  });
-});
-
-describe("readBareRedirect", () => {
-  it("opens a bare page address and its query in the negotiated locale, with a 307 and its Vary headers", () => {
-    const found = Option.getOrThrow(
-      readBareRedirect(
-        request("https://nakafa.com/@nobody_has_this/chat?tab=1", "id-ID")
-      )
-    );
-
-    expect(found.status).toBe(307);
-    expect(found.headers.get("location")).toBe(
-      "/id/@nobody_has_this/chat?tab=1"
-    );
-    expect(found.headers.get("vary")).toBe("Accept-Language, Cookie");
-  });
-
-  it("opens a bare address in the locale that its first segment spells, with a 308 that no request header changes", () => {
-    for (const [address, location] of [
-      [
-        "https://nakafa.com/materi/ai-ds/pemrograman-ai/fungsi-print?ctx=a",
-        "/id/materi/ai-ds/pemrograman-ai/fungsi-print?ctx=a",
-      ],
-      [
-        "https://nakafa.com/subjects/ai-ds/ai-programming/numbers",
-        "/en/subjects/ai-ds/ai-programming/numbers",
-      ],
-      ["https://nakafa.com/lehrplaene", "/de/lehrplaene"],
-    ] as const) {
-      const found = Option.getOrThrow(
-        readBareRedirect(request(address, "fr-FR"))
-      );
-
-      expect(found.status).toBe(308);
-      expect(found.headers.get("location")).toBe(location);
-      expect(found.headers.get("vary")).toBeNull();
-    }
-  });
-
-  it("opens a bare page address in English when the visitor names no served language", () => {
-    expect(
-      Option.getOrThrow(
-        readBareRedirect(request("https://nakafa.com/quran/2", "fr-FR,ja"))
-      ).headers.get("location")
-    ).toBe("/en/quran/2");
-  });
-
-  it("leaves a file and a locale-shaped first segment missing", () => {
-    for (const address of [
-      "https://nakafa.com/wp-login.php",
-      "https://nakafa.com/sitemap/missing.xml",
-      "https://nakafa.com/fr/subjects",
-      "https://nakafa.com/EN",
-    ]) {
-      expect(Option.isNone(readBareRedirect(request(address, "id")))).toBe(
-        true
-      );
-    }
   });
 });
 

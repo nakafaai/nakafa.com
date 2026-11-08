@@ -18,6 +18,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 
@@ -43,11 +44,11 @@ export function GrowthChart({ description, title, yAxisLabel }: Props) {
       ({
         growth: {
           label: yAxisLabel,
-          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+          colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
         },
         barValue: {
           label: yAxisLabel,
-          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+          colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
         },
       }) satisfies ChartConfig,
     [yAxisLabel]

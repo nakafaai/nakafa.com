@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -45,14 +45,14 @@ export function Graph({ description, title }: GraphProps) {
       data={[
         {
           points: horizontalPointsWithCenter,
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           smooth: false,
           cone: { position: "both", size: 0.5 },
         },
         {
           points: d1PointsWithCenter,
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           smooth: false,
           cone: { position: "both", size: 0.5 },
@@ -66,7 +66,7 @@ export function Graph({ description, title }: GraphProps) {
         },
         {
           points: d2PointsWithCenter,
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           smooth: false,
           cone: { position: "both", size: 0.5 },

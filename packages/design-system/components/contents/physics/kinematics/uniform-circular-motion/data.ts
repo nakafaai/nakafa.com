@@ -1,12 +1,12 @@
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
 export const UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/race.glb";
 
 export const UNIFORM_CIRCULAR_MOTION_COLORS = {
-  carBody: getColor("ORANGE", 500),
+  carBody: PLOT_COLORS.orange,
 } as const;
 
 export const UNIFORM_CIRCULAR_MOTION_PERIODS = [8, 6, 4] as const;
