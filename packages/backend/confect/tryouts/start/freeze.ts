@@ -22,19 +22,19 @@ export type FrozenPlacement = Omit<
  * one interaction, its key has no answer for it, or no rule scores it. Ingress proves a snapshot's
  * closure, so each is a snapshot the player cannot run, never a learner's mistake.
  */
-class TryoutFreezeError extends Schema.TaggedError<TryoutFreezeError>()(
-  "TryoutFreezeError",
-  {
-    code: Schema.Literals([
-      "TRYOUT_SECTION_UNPLACED",
-      "TRYOUT_ITEM_MISSING",
-      "TRYOUT_ITEM_SHAPE",
-      "TRYOUT_KEY_MISSING",
-      "TRYOUT_RULE_MISSING",
-    ]),
-    message: Schema.String,
-  }
-) {}
+class TryoutFreezeError extends Schema.TaggedError<
+  TryoutFreezeError,
+  { readonly brand: unique symbol }
+>()("TryoutFreezeError", {
+  code: Schema.Literals([
+    "TRYOUT_SECTION_UNPLACED",
+    "TRYOUT_ITEM_MISSING",
+    "TRYOUT_ITEM_SHAPE",
+    "TRYOUT_KEY_MISSING",
+    "TRYOUT_RULE_MISSING",
+  ]),
+  message: Schema.String,
+}) {}
 
 /** One item version of the paper with its key, as the snapshot holds them by the version's hash. */
 export const PlacedItem = Schema.Struct({

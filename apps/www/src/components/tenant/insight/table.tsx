@@ -25,15 +25,13 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import {
-  TableEmpty,
-  TableNote,
-  TablePageBody,
-} from "@/components/shared/table/frame";
+import { TableNote, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableTitle } from "@/components/shared/table/title";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import {
   NarrativeMenu,
@@ -171,8 +169,7 @@ export function ClassInsightTabs({
                 ]}
                 data={skillRowsOf(students)}
                 empty={
-                  <TableEmpty
-                    act="pointing"
+                  <EmptyState
                     action={
                       <Link
                         className={buttonVariants()}
@@ -183,6 +180,7 @@ export function ClassInsightTabs({
                       </Link>
                     }
                     description={t("class-empty-description")}
+                    scene={<EmptyNina act="pointing" />}
                     title={t("class-empty")}
                   />
                 }
@@ -282,8 +280,7 @@ function ClassStudents({
         ]}
         data={studentRowsOf(students)}
         empty={
-          <TableEmpty
-            act="pointing"
+          <EmptyState
             action={
               canManage ? (
                 <Link
@@ -296,6 +293,7 @@ function ClassStudents({
               ) : undefined
             }
             description={t("students-empty-description")}
+            scene={<EmptyNina act="pointing" />}
             title={t("students-empty")}
           />
         }

@@ -17,12 +17,12 @@ export type SocialSignInRequest = (input: {
 }) => Promise<SocialSignInResult>;
 
 /** Raised when the social sign-in request cannot start safely. */
-export class SocialSignInFailed extends Schema.TaggedError<SocialSignInFailed>()(
-  "SocialSignInFailed",
-  {
-    code: Schema.Literal(socialSignInFailedCode),
-  }
-) {}
+export class SocialSignInFailed extends Schema.TaggedError<
+  SocialSignInFailed,
+  { readonly brand: unique symbol }
+>()("SocialSignInFailed", {
+  code: Schema.Literal(socialSignInFailedCode),
+}) {}
 
 /** Starts Google auth and keeps transport/provider failures typed. */
 export const startGoogleSignIn = Effect.fn("www.auth.startGoogleSignIn")(

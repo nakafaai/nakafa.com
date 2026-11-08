@@ -14,10 +14,10 @@ const LineMarkerIndicesSchema = Schema.Array(
 export type LineMarkerIndices = typeof LineMarkerIndicesSchema.Type;
 
 /** A curve marker selection does not identify real authored samples. */
-export class LineMarkerError extends Schema.TaggedError<LineMarkerError>()(
-  "LineMarkerError",
-  { message: Schema.String }
-) {}
+export class LineMarkerError extends Schema.TaggedError<
+  LineMarkerError,
+  { readonly brand: unique symbol }
+>()("LineMarkerError", { message: Schema.String }) {}
 
 /** Selects exact existing point objects without a second coordinate source. */
 export const resolveLineMarkers = Effect.fn("line.resolveMarkers")(function* <

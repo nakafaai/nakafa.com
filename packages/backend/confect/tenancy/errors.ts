@@ -16,19 +16,17 @@ export const refusal = <const Code extends string>(
 const tenantNotFound = Schema.Literal("TENANT_NOT_FOUND");
 
 /** No tenant has this address. */
-export class TenantNotFound extends Schema.TaggedError<TenantNotFound>()(
-  "TenantNotFound",
-  {
-    code: tenantNotFound.pipe(
-      Schema.withConstructorDefault(Effect.succeed(tenantNotFound.literal))
-    ),
-    message: Schema.String.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed("No school has this address.")
-      )
-    ),
-  }
-) {}
+export class TenantNotFound extends Schema.TaggedError<
+  TenantNotFound,
+  { readonly brand: unique symbol }
+>()("TenantNotFound", {
+  code: tenantNotFound.pipe(
+    Schema.withConstructorDefault(Effect.succeed(tenantNotFound.literal))
+  ),
+  message: Schema.String.pipe(
+    Schema.withConstructorDefault(Effect.succeed("No school has this address."))
+  ),
+}) {}
 
 /**
  * An organisation that Nakafa refuses to open: `SLUG_TAKEN` another tenant has
@@ -37,41 +35,44 @@ export class TenantNotFound extends Schema.TaggedError<TenantNotFound>()(
  * organisation holds. `SCHOOL_NOT_FOUND` names an address that no school uses, so
  * an invite into it has no school to join.
  */
-export class ProvisionRejected extends Schema.TaggedError<ProvisionRejected>()(
-  "ProvisionRejected",
-  {
-    code: Schema.Literals([
-      "SLUG_TAKEN",
-      "SLUG_RESERVED",
-      "UNIT_REQUIRED",
-      "UNIT_LIMIT",
-      "SCHOOL_NOT_FOUND",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class ProvisionRejected extends Schema.TaggedError<
+  ProvisionRejected,
+  { readonly brand: unique symbol }
+>()("ProvisionRejected", {
+  code: Schema.Literals([
+    "SLUG_TAKEN",
+    "SLUG_RESERVED",
+    "UNIT_REQUIRED",
+    "UNIT_LIMIT",
+    "SCHOOL_NOT_FOUND",
+  ]),
+  message: Schema.String,
+}) {}
 
 /**
  * An account's own school did not open: its address is reserved or taken, the
  * account already founded as many schools as one account may, or it opened
  * schools too quickly. The questionnaire returns to the question the code names.
  */
-export class FoundingRefused extends Schema.TaggedError<FoundingRefused>()(
-  "FoundingRefused",
-  {
-    code: Schema.Literals([
-      "SLUG_TAKEN",
-      "SLUG_RESERVED",
-      "SCHOOL_LIMIT",
-      "RATE_LIMITED",
-      "LOGIN_ACCOUNT",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class FoundingRefused extends Schema.TaggedError<
+  FoundingRefused,
+  { readonly brand: unique symbol }
+>()("FoundingRefused", {
+  code: Schema.Literals([
+    "SLUG_TAKEN",
+    "SLUG_RESERVED",
+    "SCHOOL_LIMIT",
+    "RATE_LIMITED",
+    "LOGIN_ACCOUNT",
+  ]),
+  message: Schema.String,
+}) {}
 
 /** A period whose dates are not calendar dates of its school's clock, or whose start is not before its end. */
-export class PeriodDatesInvalid extends Schema.TaggedError<PeriodDatesInvalid>()(
+export class PeriodDatesInvalid extends Schema.TaggedError<
+  PeriodDatesInvalid,
+  { readonly brand: unique symbol }
+>()(
   "PeriodDatesInvalid",
   refusal(
     "PERIOD_DATES_INVALID",
@@ -80,7 +81,10 @@ export class PeriodDatesInvalid extends Schema.TaggedError<PeriodDatesInvalid>()
 ) {}
 
 /** A period that shares a day with another period of its school. */
-export class PeriodOverlaps extends Schema.TaggedError<PeriodOverlaps>()(
+export class PeriodOverlaps extends Schema.TaggedError<
+  PeriodOverlaps,
+  { readonly brand: unique symbol }
+>()(
   "PeriodOverlaps",
   refusal(
     "PERIOD_OVERLAPS",
@@ -89,7 +93,10 @@ export class PeriodOverlaps extends Schema.TaggedError<PeriodOverlaps>()(
 ) {}
 
 /** Opening a period while another period of its school is active. */
-export class PeriodActive extends Schema.TaggedError<PeriodActive>()(
+export class PeriodActive extends Schema.TaggedError<
+  PeriodActive,
+  { readonly brand: unique symbol }
+>()(
   "PeriodActive",
   refusal(
     "PERIOD_ACTIVE",
@@ -98,13 +105,19 @@ export class PeriodActive extends Schema.TaggedError<PeriodActive>()(
 ) {}
 
 /** Archiving a period that is not active. */
-export class PeriodNotActive extends Schema.TaggedError<PeriodNotActive>()(
+export class PeriodNotActive extends Schema.TaggedError<
+  PeriodNotActive,
+  { readonly brand: unique symbol }
+>()(
   "PeriodNotActive",
   refusal("PERIOD_NOT_ACTIVE", "Only an active period can be archived.")
 ) {}
 
 /** A grade that the level of the cohort's unit does not teach (`gradesOf`). */
-export class CohortGradeOutsideLevel extends Schema.TaggedError<CohortGradeOutsideLevel>()(
+export class CohortGradeOutsideLevel extends Schema.TaggedError<
+  CohortGradeOutsideLevel,
+  { readonly brand: unique symbol }
+>()(
   "CohortGradeOutsideLevel",
   refusal(
     "COHORT_GRADE_OUTSIDE_LEVEL",
@@ -113,19 +126,28 @@ export class CohortGradeOutsideLevel extends Schema.TaggedError<CohortGradeOutsi
 ) {}
 
 /** A cohort name that another cohort of its period already uses, compared without case. */
-export class CohortNameTaken extends Schema.TaggedError<CohortNameTaken>()(
+export class CohortNameTaken extends Schema.TaggedError<
+  CohortNameTaken,
+  { readonly brand: unique symbol }
+>()(
   "CohortNameTaken",
   refusal("COHORT_NAME_TAKEN", "Another cohort of this period has this name.")
 ) {}
 
 /** Creating a cohort in a period that holds the most cohorts it can. */
-export class CohortLimit extends Schema.TaggedError<CohortLimit>()(
+export class CohortLimit extends Schema.TaggedError<
+  CohortLimit,
+  { readonly brand: unique symbol }
+>()(
   "CohortLimit",
   refusal("COHORT_LIMIT", "This period holds the most cohorts it can.")
 ) {}
 
 /** Placing a Person in a cohort of a period where the Person already has one. */
-export class PersonAlreadyPlaced extends Schema.TaggedError<PersonAlreadyPlaced>()(
+export class PersonAlreadyPlaced extends Schema.TaggedError<
+  PersonAlreadyPlaced,
+  { readonly brand: unique symbol }
+>()(
   "PersonAlreadyPlaced",
   refusal(
     "PERSON_ALREADY_PLACED",
@@ -134,7 +156,10 @@ export class PersonAlreadyPlaced extends Schema.TaggedError<PersonAlreadyPlaced>
 ) {}
 
 /** Moving a Person who has no cohort in the period of the target cohort. */
-export class PersonNotPlaced extends Schema.TaggedError<PersonNotPlaced>()(
+export class PersonNotPlaced extends Schema.TaggedError<
+  PersonNotPlaced,
+  { readonly brand: unique symbol }
+>()(
   "PersonNotPlaced",
   refusal(
     "PERSON_NOT_PLACED",
@@ -143,7 +168,10 @@ export class PersonNotPlaced extends Schema.TaggedError<PersonNotPlaced>()(
 ) {}
 
 /** Placing a Person who already holds the most cohort placements the school allows. */
-export class PersonPlacementLimit extends Schema.TaggedError<PersonPlacementLimit>()(
+export class PersonPlacementLimit extends Schema.TaggedError<
+  PersonPlacementLimit,
+  { readonly brand: unique symbol }
+>()(
   "PersonPlacementLimit",
   refusal(
     "PERSON_PLACEMENT_LIMIT",
@@ -155,7 +183,10 @@ export class PersonPlacementLimit extends Schema.TaggedError<PersonPlacementLimi
  * Placing or moving a Person who holds no student grant over the cohort's unit
  * or the whole school.
  */
-export class PersonNotStudent extends Schema.TaggedError<PersonNotStudent>()(
+export class PersonNotStudent extends Schema.TaggedError<
+  PersonNotStudent,
+  { readonly brand: unique symbol }
+>()(
   "PersonNotStudent",
   refusal(
     "PERSON_NOT_STUDENT",
@@ -164,13 +195,19 @@ export class PersonNotStudent extends Schema.TaggedError<PersonNotStudent>()(
 ) {}
 
 /** Inviting a Person who already has an account. */
-export class PersonClaimed extends Schema.TaggedError<PersonClaimed>()(
+export class PersonClaimed extends Schema.TaggedError<
+  PersonClaimed,
+  { readonly brand: unique symbol }
+>()(
   "PersonClaimed",
   refusal("PERSON_CLAIMED", "This person already has an account.")
 ) {}
 
 /** An invite to an address on a domain that the school's allowed email domains do not admit. */
-export class InviteDomainRefused extends Schema.TaggedError<InviteDomainRefused>()(
+export class InviteDomainRefused extends Schema.TaggedError<
+  InviteDomainRefused,
+  { readonly brand: unique symbol }
+>()(
   "InviteDomainRefused",
   refusal(
     "INVITE_DOMAIN_REFUSED",
@@ -179,7 +216,10 @@ export class InviteDomainRefused extends Schema.TaggedError<InviteDomainRefused>
 ) {}
 
 /** Inviting a Person who already has a pending invite. */
-export class InvitePending extends Schema.TaggedError<InvitePending>()(
+export class InvitePending extends Schema.TaggedError<
+  InvitePending,
+  { readonly brand: unique symbol }
+>()(
   "InvitePending",
   refusal("INVITE_PENDING", "This person already has a pending invite.")
 ) {}
@@ -188,7 +228,10 @@ export class InvitePending extends Schema.TaggedError<InvitePending>()(
  * An address that already holds a pending invite in this school. A second Person
  * for it would leave two invites waiting on one address, so the school refuses it.
  */
-export class AddressInvited extends Schema.TaggedError<AddressInvited>()(
+export class AddressInvited extends Schema.TaggedError<
+  AddressInvited,
+  { readonly brand: unique symbol }
+>()(
   "AddressInvited",
   refusal(
     "ADDRESS_INVITED",
@@ -201,7 +244,10 @@ export class AddressInvited extends Schema.TaggedError<AddressInvited>()(
  * Person is still an active member. A second Person for it could never be claimed, so the
  * school refuses it: the member's role changes in the roles of the school instead.
  */
-export class AddressMember extends Schema.TaggedError<AddressMember>()(
+export class AddressMember extends Schema.TaggedError<
+  AddressMember,
+  { readonly brand: unique symbol }
+>()(
   "AddressMember",
   refusal(
     "ADDRESS_MEMBER",
@@ -210,7 +256,10 @@ export class AddressMember extends Schema.TaggedError<AddressMember>()(
 ) {}
 
 /** A school that would make its organisation hold more schools than `UNIT_LIMIT` allows. */
-export class UnitLimit extends Schema.TaggedError<UnitLimit>()(
+export class UnitLimit extends Schema.TaggedError<
+  UnitLimit,
+  { readonly brand: unique symbol }
+>()(
   "UnitLimit",
   refusal(
     "UNIT_LIMIT",
@@ -219,7 +268,10 @@ export class UnitLimit extends Schema.TaggedError<UnitLimit>()(
 ) {}
 
 /** Sending again an invite that is no longer waiting for a claim. */
-export class InviteNotPending extends Schema.TaggedError<InviteNotPending>()(
+export class InviteNotPending extends Schema.TaggedError<
+  InviteNotPending,
+  { readonly brand: unique symbol }
+>()(
   "InviteNotPending",
   refusal(
     "INVITE_NOT_PENDING",
@@ -228,13 +280,19 @@ export class InviteNotPending extends Schema.TaggedError<InviteNotPending>()(
 ) {}
 
 /** Sending again an invite that has expired. */
-export class InviteExpired extends Schema.TaggedError<InviteExpired>()(
+export class InviteExpired extends Schema.TaggedError<
+  InviteExpired,
+  { readonly brand: unique symbol }
+>()(
   "InviteExpired",
   refusal("INVITE_EXPIRED", "This invite has expired. Invite the person again.")
 ) {}
 
 /** Sending an invite again more often than the school may. */
-export class InviteRateLimited extends Schema.TaggedError<InviteRateLimited>()(
+export class InviteRateLimited extends Schema.TaggedError<
+  InviteRateLimited,
+  { readonly brand: unique symbol }
+>()(
   "InviteRateLimited",
   refusal(
     "INVITE_RATE_LIMITED",
@@ -243,7 +301,10 @@ export class InviteRateLimited extends Schema.TaggedError<InviteRateLimited>()(
 ) {}
 
 /** Naming a Person who is not an active teacher of the cohort's unit as a homeroom teacher. */
-export class PersonNotTeacher extends Schema.TaggedError<PersonNotTeacher>()(
+export class PersonNotTeacher extends Schema.TaggedError<
+  PersonNotTeacher,
+  { readonly brand: unique symbol }
+>()(
   "PersonNotTeacher",
   refusal(
     "PERSON_NOT_TEACHER",
@@ -252,13 +313,19 @@ export class PersonNotTeacher extends Schema.TaggedError<PersonNotTeacher>()(
 ) {}
 
 /** Assigning a homeroom teacher to a cohort that already has one. */
-export class CohortHasHomeroom extends Schema.TaggedError<CohortHasHomeroom>()(
+export class CohortHasHomeroom extends Schema.TaggedError<
+  CohortHasHomeroom,
+  { readonly brand: unique symbol }
+>()(
   "CohortHasHomeroom",
   refusal("COHORT_HAS_HOMEROOM", "This cohort already has a homeroom teacher.")
 ) {}
 
 /** Making a teacher the homeroom teacher of a second cohort of one period. */
-export class TeacherHasHomeroom extends Schema.TaggedError<TeacherHasHomeroom>()(
+export class TeacherHasHomeroom extends Schema.TaggedError<
+  TeacherHasHomeroom,
+  { readonly brand: unique symbol }
+>()(
   "TeacherHasHomeroom",
   refusal(
     "TEACHER_HAS_HOMEROOM",
@@ -267,7 +334,10 @@ export class TeacherHasHomeroom extends Schema.TaggedError<TeacherHasHomeroom>()
 ) {}
 
 /** Placing a Person who graduated from the unit of the cohort. */
-export class PersonGraduated extends Schema.TaggedError<PersonGraduated>()(
+export class PersonGraduated extends Schema.TaggedError<
+  PersonGraduated,
+  { readonly brand: unique symbol }
+>()(
   "PersonGraduated",
   refusal(
     "PERSON_GRADUATED",
@@ -276,7 +346,10 @@ export class PersonGraduated extends Schema.TaggedError<PersonGraduated>()(
 ) {}
 
 /** A promotion that the school's Admin may not create: its source period is not active. */
-export class SourcePeriodInvalid extends Schema.TaggedError<SourcePeriodInvalid>()(
+export class SourcePeriodInvalid extends Schema.TaggedError<
+  SourcePeriodInvalid,
+  { readonly brand: unique symbol }
+>()(
   "SourcePeriodInvalid",
   refusal(
     "SOURCE_PERIOD_INVALID",
@@ -285,7 +358,10 @@ export class SourcePeriodInvalid extends Schema.TaggedError<SourcePeriodInvalid>
 ) {}
 
 /** A target period that is not a planned period of the same school after the source period ends. */
-export class TargetPeriodInvalid extends Schema.TaggedError<TargetPeriodInvalid>()(
+export class TargetPeriodInvalid extends Schema.TaggedError<
+  TargetPeriodInvalid,
+  { readonly brand: unique symbol }
+>()(
   "TargetPeriodInvalid",
   refusal(
     "TARGET_PERIOD_INVALID",
@@ -294,7 +370,10 @@ export class TargetPeriodInvalid extends Schema.TaggedError<TargetPeriodInvalid>
 ) {}
 
 /** A promotion step that the promotion's current state does not allow. */
-export class PromotionState extends Schema.TaggedError<PromotionState>()(
+export class PromotionState extends Schema.TaggedError<
+  PromotionState,
+  { readonly brand: unique symbol }
+>()(
   "PromotionState",
   refusal(
     "PROMOTION_STATE",
@@ -322,19 +401,22 @@ export const PromotionPlanIssue = Schema.Literals([
 ]);
 
 /** A plan that does not fit the school, for the reason its `reason` names. */
-export class PromotionPlanInvalid extends Schema.TaggedError<PromotionPlanInvalid>()(
-  "PromotionPlanInvalid",
-  {
-    ...refusal(
-      "PROMOTION_PLAN_INVALID",
-      "The promotion plan does not fit this school's cohorts."
-    ),
-    reason: PromotionPlanIssue,
-  }
-) {}
+export class PromotionPlanInvalid extends Schema.TaggedError<
+  PromotionPlanInvalid,
+  { readonly brand: unique symbol }
+>()("PromotionPlanInvalid", {
+  ...refusal(
+    "PROMOTION_PLAN_INVALID",
+    "The promotion plan does not fit this school's cohorts."
+  ),
+  reason: PromotionPlanIssue,
+}) {}
 
 /** Undoing a step while a cohort the promotion created still holds a person, a homeroom teacher, or a class. */
-export class PromotionCohortOccupied extends Schema.TaggedError<PromotionCohortOccupied>()(
+export class PromotionCohortOccupied extends Schema.TaggedError<
+  PromotionCohortOccupied,
+  { readonly brand: unique symbol }
+>()(
   "PromotionCohortOccupied",
   refusal(
     "PROMOTION_COHORT_OCCUPIED",
@@ -343,13 +425,19 @@ export class PromotionCohortOccupied extends Schema.TaggedError<PromotionCohortO
 ) {}
 
 /** A national school number that is not eight digits. */
-export class NpsnInvalid extends Schema.TaggedError<NpsnInvalid>()(
+export class NpsnInvalid extends Schema.TaggedError<
+  NpsnInvalid,
+  { readonly brand: unique symbol }
+>()(
   "NpsnInvalid",
   refusal("NPSN_INVALID", "A national school number has eight digits.")
 ) {}
 
 /** A national school number that another unit of this school already holds. */
-export class NpsnTaken extends Schema.TaggedError<NpsnTaken>()(
+export class NpsnTaken extends Schema.TaggedError<
+  NpsnTaken,
+  { readonly brand: unique symbol }
+>()(
   "NpsnTaken",
   refusal("NPSN_TAKEN", "Another unit of this school has this number.")
 ) {}
@@ -369,16 +457,16 @@ export const PeriodHold = Schema.Literals([
 ]);
 
 /** Deleting a period that is active or that a record still points at; archiving it keeps those records whole. */
-export class PeriodInUse extends Schema.TaggedError<PeriodInUse>()(
-  "PeriodInUse",
-  {
-    ...refusal(
-      "PERIOD_IN_USE",
-      "This period is active or still holds cohorts, classes, grades, a graduation, a promotion or Insight. Archive it instead."
-    ),
-    holds: PeriodHold,
-  }
-) {}
+export class PeriodInUse extends Schema.TaggedError<
+  PeriodInUse,
+  { readonly brand: unique symbol }
+>()("PeriodInUse", {
+  ...refusal(
+    "PERIOD_IN_USE",
+    "This period is active or still holds cohorts, classes, grades, a graduation, a promotion or Insight. Archive it instead."
+  ),
+  holds: PeriodHold,
+}) {}
 
 /**
  * What keeps a cohort in use: a placed person, an active homeroom teacher, a class, an exam sitting, a report card, a
@@ -395,13 +483,13 @@ export const CohortHold = Schema.Literals([
 ]);
 
 /** Deleting a cohort that a record still points at; archiving it keeps those records whole. */
-export class CohortInUse extends Schema.TaggedError<CohortInUse>()(
-  "CohortInUse",
-  {
-    ...refusal(
-      "COHORT_IN_USE",
-      "This cohort still holds people, a homeroom teacher, classes, sittings, reports or a promotion. Archive it instead."
-    ),
-    holds: CohortHold,
-  }
-) {}
+export class CohortInUse extends Schema.TaggedError<
+  CohortInUse,
+  { readonly brand: unique symbol }
+>()("CohortInUse", {
+  ...refusal(
+    "COHORT_IN_USE",
+    "This cohort still holds people, a homeroom teacher, classes, sittings, reports or a promotion. Archive it instead."
+  ),
+  holds: CohortHold,
+}) {}

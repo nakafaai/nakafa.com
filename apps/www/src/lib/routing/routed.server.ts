@@ -1,7 +1,7 @@
-import { reportUncaughtRequestError } from "@repo/analytics/server-reporting";
+import { reportUncaughtRequestError } from "@repo/analytics/reporting";
 import { handleStartError } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
-import type { NotFoundPage } from "@/lib/routing/not-found";
+import type { NotFoundPage } from "@/lib/routing/missing";
 
 /**
  * The router's answer to one request, which may fail with the error Start throws.
@@ -14,10 +14,10 @@ export type RouterHandler = (
 ) => Promise<Response>;
 
 /** An error that escaped a decision of the server entry, kept with its original cause. */
-export class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
-  "UncaughtRequestError",
-  { cause: Schema.Unknown }
-) {}
+export class UncaughtRequestError extends Schema.TaggedError<
+  UncaughtRequestError,
+  { readonly brand: unique symbol }
+>()("UncaughtRequestError", { cause: Schema.Unknown }) {}
 
 /**
  * Routes one request to the router. A failure that escapes the router is

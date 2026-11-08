@@ -5,7 +5,7 @@ import {
   step,
   type Toy,
 } from "@repo/design-system/lib/toy/flight";
-import { createToys } from "@repo/design-system/lib/toy/toys";
+import { createToys } from "@repo/design-system/lib/toy/shelf";
 import { Array as Arr, MutableList, Option, Record as Rec } from "effect";
 
 /** The page the hands play in: a window 800 tall, scrolled and calm as a test says. */

@@ -17,13 +17,13 @@ import { useSittingData } from "@/components/exams/sitting/context";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
+import { SittingTable } from "@/components/exams/sitting/table";
 import {
   choiceOf,
   pairingOf,
   tableOf,
   writtenOf,
-} from "@/components/exams/sitting/response";
-import { SittingTable } from "@/components/exams/sitting/table";
+} from "@/components/player/response";
 
 /**
  * One student's screen in the proctor's panel (K25): the question the student's screen shows now, with

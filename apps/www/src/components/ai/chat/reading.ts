@@ -7,10 +7,10 @@ import {
 } from "@/lib/chat/reader";
 
 /** A reader's chat could not be read from the server, so the page offers to try again. */
-export class ReaderReadError extends Schema.TaggedError<ReaderReadError>()(
-  "ReaderReadError",
-  { cause: Schema.Unknown }
-) {}
+export class ReaderReadError extends Schema.TaggedError<
+  ReaderReadError,
+  { readonly brand: unique symbol }
+>()("ReaderReadError", { cause: Schema.Unknown }) {}
 
 /**
  * The messages of one page, decoded from the JSON text the server sent. A page

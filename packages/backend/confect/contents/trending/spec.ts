@@ -14,12 +14,12 @@ export type GetTrendingSubjectsArgs =
   typeof getTrendingSubjectsArgsValidator.Type;
 
 /** Raised when Convex IO fails while reading trending materials. */
-export class TrendingSubjectIoError extends Schema.TaggedError<TrendingSubjectIoError>()(
-  "TrendingSubjectIoError",
-  {
-    code: Schema.Literal(trendingSubjectIoFailedCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {}
+export class TrendingSubjectIoError extends Schema.TaggedError<
+  TrendingSubjectIoError,
+  { readonly brand: unique symbol }
+>()("TrendingSubjectIoError", {
+  code: Schema.Literal(trendingSubjectIoFailedCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {}
 export const TrendingSubjectIoErrorWire = publicFailure(TrendingSubjectIoError);

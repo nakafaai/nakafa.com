@@ -9,7 +9,10 @@ vi.mock("@effect/platform-node/NodeRuntime", () => ({
   runMain: runtime.runMain,
 }));
 
-class EntryFailure extends Schema.TaggedError<EntryFailure>()("EntryFailure", {
+class EntryFailure extends Schema.TaggedError<
+  EntryFailure,
+  { readonly brand: unique symbol }
+>()("EntryFailure", {
   message: Schema.String,
 }) {}
 

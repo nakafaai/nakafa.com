@@ -7,7 +7,7 @@ import {
   type OperationalExceptionProperties,
   operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
-import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import { isServerExceptionReportingEnabled } from "@repo/analytics/reporting";
 import { Effect, Option, Schema } from "effect";
 import { PostHog } from "posthog-node";
 
@@ -15,13 +15,13 @@ let analyticsKeys: ReturnType<typeof keys> | undefined;
 let serverAnalytics: PostHog | undefined;
 
 /** Expected failure while initializing or using server exception reporting. */
-export class ServerAnalyticsCaptureError extends Schema.TaggedError<ServerAnalyticsCaptureError>()(
-  "ServerAnalyticsCaptureError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class ServerAnalyticsCaptureError extends Schema.TaggedError<
+  ServerAnalyticsCaptureError,
+  { readonly brand: unique symbol }
+>()("ServerAnalyticsCaptureError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 function captureError(cause: unknown) {
   return new ServerAnalyticsCaptureError({

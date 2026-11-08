@@ -8,9 +8,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { Function as Fn } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { useExam } from "@/components/tenant/exams/provider";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The delete of the open draft, as Canva asks before a design goes to the trash: the editor's menu (ExamMenu) asks with
@@ -37,9 +37,9 @@ export function useDeleteExam(close: () => void) {
       replace: true,
       to: "/school/$slug/exams",
     });
-    runExamAction(
-      sentAction(() => remove({ examId, slug })),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+    runSchoolWrite(
+      schoolCall(() => remove({ examId, slug })),
+      { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
     );
   }
 

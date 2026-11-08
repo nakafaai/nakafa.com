@@ -15,12 +15,12 @@ export const IMPORT_ACCEPT =
  * is larger than 20 MB, its PDF has more than 30 pages, its Word document carries macros, or its
  * PDF needs a password.
  */
-export class ImportFileRefused extends Schema.TaggedError<ImportFileRefused>()(
-  "ImportFileRefused",
-  {
-    reason: Schema.Literals(["type", "size", "pages", "macro", "encrypted"]),
-  }
-) {}
+export class ImportFileRefused extends Schema.TaggedError<
+  ImportFileRefused,
+  { readonly brand: unique symbol }
+>()("ImportFileRefused", {
+  reason: Schema.Literals(["type", "size", "pages", "macro", "encrypted"]),
+}) {}
 
 /** The bytes a PDF starts with: `%PDF-`. */
 const PDF_HEAD = [0x25, 0x50, 0x44, 0x46, 0x2d];

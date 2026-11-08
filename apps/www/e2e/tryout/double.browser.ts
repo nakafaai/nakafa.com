@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openSurface, runFirstSection } from "@/e2e/support/player";
-
-/** Longer than the dialog's opening, so a dialog the second press closes is gone by then. */
-const OPENED_MILLISECONDS = 600;
+import { waitForAnimations } from "@/e2e/support/quiet";
 
 /**
  * The first press of a double press on Finish opens its dialog, and the second
@@ -19,7 +17,8 @@ test("a double press on finish keeps its dialog open", async ({
 
   await page.getByRole("button", { exact: true, name: "Finish" }).dblclick();
   await expect(openSurface(page)).toBeVisible();
-  await page.waitForTimeout(OPENED_MILLISECONDS);
+  // The dialog's opening has finished, and so has a closing that the second press would have started.
+  await waitForAnimations(openSurface(page));
 
   await expect(openSurface(page)).toBeVisible();
 });

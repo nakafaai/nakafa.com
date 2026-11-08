@@ -1,5 +1,5 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
+  "extends": "@repo/typescript-config/react.json",
   "compilerOptions": {
     "types": ["@repo/internationalization/i18n.d.ts", "vitest/globals"],
     "paths": {

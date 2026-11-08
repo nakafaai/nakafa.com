@@ -15,8 +15,9 @@ import {
   readingMeasureVariants,
 } from "@/components/shared/content/width";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import {
@@ -143,9 +144,9 @@ function ChannelMessages() {
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <TableEmpty
-          act="typing"
+        <EmptyState
           description={t("messages-empty-description")}
+          scene={<EmptyNina act="typing" />}
           title={t("messages-empty")}
         />
       </div>

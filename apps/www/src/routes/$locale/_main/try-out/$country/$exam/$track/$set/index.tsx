@@ -1,4 +1,4 @@
-import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
+import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { ClockProvider } from "@/components/player/now";

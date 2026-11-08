@@ -1,6 +1,6 @@
 import { ANSWER_PAGE_MAX } from "@repo/backend/confect/exams/seed/answers";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
+import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { audit, StoredAnswer } from "@repo/backend/scripts/load/ledger";
 import { readServerRun } from "@repo/backend/scripts/load/logs";
 import { type LoadPlan, scriptOf } from "@repo/backend/scripts/load/plan";
@@ -15,7 +15,6 @@ import { seedRun } from "@repo/backend/scripts/load/seed";
 import { spreadByName } from "@repo/backend/scripts/load/stats";
 import { runStudent } from "@repo/backend/scripts/load/student";
 import type { Wire } from "@repo/backend/scripts/load/wire";
-import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
   Clock,
@@ -43,16 +42,12 @@ const LOG_SETTLE = Duration.seconds(5);
  */
 const LAG_PROBE = Duration.seconds(1);
 
-/** One page of stored answers, as the acceptance seed's `answers` query prints it. */
-const StoredPage = Schema.fromJsonString(
-  Schema.Struct({
-    continueCursor: Schema.String,
-    isDone: Schema.Boolean,
-    page: Schema.Array(StoredAnswer),
-  })
-);
-
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+/** One page of stored answers, as the acceptance seed's `answers` query answers it. */
+const StoredPage = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(StoredAnswer),
+});
 
 /**
  * Every stored answer, read page by page through the acceptance seed: a 3,000-student run
@@ -60,16 +55,16 @@ const encodeArguments = Schema.encodeEffect(JsonTextSchema);
  */
 const storedAnswers = <E, R>(run: RunConvex<E, R>) =>
   Stream.paginate(Option.none<string>(), (cursor) =>
-    encodeArguments({
-      paginationOpts: {
-        cursor: Option.getOrNull(cursor),
-        numItems: ANSWER_PAGE_MAX,
+    run("Stored answers", {
+      args: {
+        paginationOpts: {
+          cursor: Option.getOrNull(cursor),
+          numItems: ANSWER_PAGE_MAX,
+        },
       },
+      path: "exams/seed:answers",
     }).pipe(
-      Effect.flatMap((args) =>
-        run("Stored answers", ["run", "exams/seed:answers", args])
-      ),
-      Effect.flatMap(Schema.decodeEffect(StoredPage)),
+      Effect.flatMap(Schema.decodeUnknownEffect(StoredPage)),
       Effect.map(
         (page) =>
           [
@@ -83,9 +78,8 @@ const storedAnswers = <E, R>(run: RunConvex<E, R>) =>
   ).pipe(Stream.runCollect);
 
 /**
- * What a run needs from the acceptance runtime: the Convex CLI that reaches it; `school`, which
- * opens a school with its Owner signed in, keeping its files in the directory it is given, and
- * returns the school's slug; `capture`, which streams the function log into a file for the
+ * What a run needs from the acceptance runtime: the Convex runner that reaches it; `school`,
+ * which opens a school with its Owner signed in and returns the school's slug; `capture`, which streams the function log into a file for the
  * scope; and `connect`, which opens one browser's connection for a seat's session token.
  */
 export interface LoadInput<E, R> {
@@ -96,7 +90,7 @@ export interface LoadInput<E, R> {
   readonly output: string;
   readonly plan: LoadPlan;
   readonly run: RunConvex<E, R>;
-  readonly school: (directory: string) => Effect.Effect<string, E, R>;
+  readonly school: Effect.Effect<string, E, R>;
 }
 
 /**
@@ -110,12 +104,7 @@ export const runLoad = Effect.fn("load.run")(function* <E, R>(
 ) {
   const fs = yield* FileSystem.FileSystem;
   const recorder = yield* Recorder;
-  const directory = yield* fs.makeTempDirectoryScoped({
-    prefix: "nakafa-load-",
-  });
-  const slug = yield* Schema.decodeEffect(TenantSlug)(
-    yield* input.school(directory)
-  );
+  const slug = yield* Schema.decodeEffect(TenantSlug)(yield* input.school);
   const seeded = yield* seedRun(input.run, input.plan, slug);
   const scripts = yield* Effect.forEach(
     Arr.makeBy(input.plan.students, (index) => index),

@@ -30,7 +30,7 @@ import {
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
 import { activateTestRelease } from "@/test/active";
-import { testPageProjection } from "@/test/content-page";
+import { testPageProjection } from "@/test/published/page";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());

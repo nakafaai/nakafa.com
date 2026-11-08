@@ -17,8 +17,8 @@ import {
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { announce } from "@repo/backend/confect/classroom/posts/announce";
-import { postField } from "@repo/backend/confect/classroom/posts/post";
 import { SCHEDULED_LIMIT } from "@repo/backend/confect/classroom/posts/scheduled";
+import { postField } from "@repo/backend/confect/classroom/posts/schema";
 import spec from "@repo/backend/confect/classroom/scheduled.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";

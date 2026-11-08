@@ -35,7 +35,8 @@ import {
   seenOffline,
 } from "@/components/exams/sitting/seat";
 import { useNow } from "@/components/player/now";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolTimeText } from "@/components/tenant/settings/clock";
 import { Link } from "@/lib/routing/link";
@@ -100,9 +101,9 @@ export function SittingSeats() {
 
   if (first.isDone && Arr.isReadonlyArrayEmpty(first.page) && noExpected) {
     return (
-      <TableEmpty
-        act="sleeping"
+      <EmptyState
         description={t("seats-empty")}
+        scene={<EmptyNina act="sleeping" />}
         title={t("seats-empty-title")}
       />
     );
@@ -115,9 +116,9 @@ export function SittingSeats() {
     !(showExpected && !noExpected)
   ) {
     return (
-      <TableEmpty
-        act="searching"
+      <EmptyState
         description={t("filter-empty")}
+        scene={<EmptyNina act="searching" />}
         title={t("seats-filter-title")}
       />
     );

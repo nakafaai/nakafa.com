@@ -8,17 +8,17 @@ import {
 } from "effect";
 
 /** Expected failure: an authored schema has no provider tool parameter form. */
-class ProviderToolSchemaError extends Schema.TaggedError<ProviderToolSchemaError>()(
-  "ProviderToolSchemaError",
-  {
-    message: Schema.String,
-    reason: Schema.Literals([
-      "unionBranchNotObject",
-      "unsupportedProperty",
-      "notObjectOrUnion",
-    ]),
-  }
-) {}
+class ProviderToolSchemaError extends Schema.TaggedError<
+  ProviderToolSchemaError,
+  { readonly brand: unique symbol }
+>()("ProviderToolSchemaError", {
+  message: Schema.String,
+  reason: Schema.Literals([
+    "unionBranchNotObject",
+    "unsupportedProperty",
+    "notObjectOrUnion",
+  ]),
+}) {}
 
 const ObjectJsonSchemaSchema = Schema.Struct({
   properties: Schema.Record(Schema.String, Schema.Unknown),

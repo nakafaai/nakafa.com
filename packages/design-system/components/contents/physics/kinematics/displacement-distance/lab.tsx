@@ -1,6 +1,6 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
+import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
 import {
   DISPLACEMENT_DISTANCE_CAR_MODEL_PATH,
   DISPLACEMENT_DISTANCE_CASE_IDS,
@@ -16,10 +16,10 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
 import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import {
   ToggleGroup,
   ToggleGroupItem,

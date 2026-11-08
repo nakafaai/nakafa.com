@@ -3,13 +3,13 @@ import { runMain } from "@effect/platform-node/NodeRuntime";
 import { Effect, FileSystem, Schema } from "effect";
 import { build } from "esbuild";
 
-class CliBuildError extends Schema.TaggedError<CliBuildError>()(
-  "CliBuildError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class CliBuildError extends Schema.TaggedError<
+  CliBuildError,
+  { readonly brand: unique symbol }
+>()("CliBuildError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 const outputDirectory = `${import.meta.dirname}/../dist/`;
 const outputFile = `${import.meta.dirname}/../dist/main.js`;
