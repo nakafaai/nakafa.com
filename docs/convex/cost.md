@@ -94,6 +94,44 @@ row had to change.
 - One-time repair and migration functions were removed after dev and production
   verification.
 
+## Deploy reads (8 November 2026)
+
+Convex production stopped at the spending limit on 8 November 2026 at about 12:49
+CET. Database I/O is driven by production builds: a build prerenders every public
+page and reads the whole active release (`contentRelease/material:lesson`,
+`contentRelease/program:placements`, `contentRelease/runtime/publication/internal:read`,
+`contentRelease/quran:page`, `contentRelease/quran:prose`, and the rest).
+
+### Before
+
+- A full pass of one deployment read about 0.55 GB: on 8 November the production
+  rows summed 0.57 GB for one pass (1,149 `material:lesson` calls, 91.4 MB; 1,149
+  `program:placements`, 92.6 MB; 1,188 `publication/internal:read`, 75.7 MB; 342
+  `quran:page`, 43.1 MB; 342 `quran:prose`, 35.4 MB), and the staging build read
+  the same again from the development deployment.
+- `deploy.yml` restored the deploy's read store (`.cache/reads`) under a key of the
+  release, the backend's dependency hash and the hash of the backend's content code.
+  On 7 November four production deploys missed (13:19, 13:32, 21:52 and 22:23 UTC),
+  which matches the four full passes in that day's usage (4,596 `material:lesson`
+  calls). Three of them kept the release `contact-20261107` and changed only the
+  dependency hash (13:32, 21:52) or the code hash (22:23): about 1.65 GB read again
+  for nothing. The next miss, 8 November 00:03, was a new release.
+- A deploy whose cache was found never saved, so what it read new was read again by
+  every later deploy until the key changed. A failed or cancelled deploy never saved
+  either.
+
+### After
+
+- The key is the stage and the release alone, with the run as its last part, and the
+  restore takes the newest save of the release. A deploy of an unchanged release reads
+  only what no earlier deploy of it read; a new release is read once.
+- Every run that added a read saves, a failed or cancelled one included, so a read
+  reaches Convex once per release and stage.
+- A change to what a query answers for the same release bumps
+  `CONTENT_STORE_VERSION` (`apps/www/src/lib/content/store/entry.ts`), which
+  re-reads the release once. A change in the answer's shape needs no bump: an entry
+  that does not decode is a miss.
+
 ## Historical Post-change Evidence
 
 The dated samples below describe earlier runtime generations and preserve their
@@ -383,6 +421,11 @@ bounded pages.
   delete the obsolete path.
 - Do not disable backups without a documented recovery-point objective and a
   tested restore procedure.
+- Read data for a question with a bounded query on the dev deployment, and cost
+  through the usage API. A snapshot export, a dashboard backup and paging through
+  tables (dashboard or `convex data`) read whole tables or the whole deployment:
+  on 7 November 2026 one lane's exports read 1.3 GB, its two backups 0.7 GB and
+  table paging 0.2 GB, more than that day's builds (`packages/backend/AGENTS.md`).
 
 ## References
 
