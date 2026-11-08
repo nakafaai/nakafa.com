@@ -15,7 +15,6 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { elementById } from "@repo/design-system/lib/element";
-import { cva } from "class-variance-authority";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
@@ -32,6 +31,7 @@ import {
   useExamSelection,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
+import { pageThumb } from "@/components/tenant/exams/thumb";
 import {
   drawnZoom,
   sliderPosition,
@@ -272,11 +272,6 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
     </footer>
   );
 }
-
-/** The frame of a page thumbnail in the strip, one width at every screen width. */
-export const pageThumb = cva(
-  "bg-muted/40 hover:border-foreground/20 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-primary relative block aspect-4/3 w-32 shrink-0 overflow-hidden rounded-lg border outline-none focus-visible:ring-3 aria-[current=true]:ring-2"
-);
 
 /** One page as a thumbnail of the strip, which a click goes to. It names its page for assistive technology. */
 function PageThumb({

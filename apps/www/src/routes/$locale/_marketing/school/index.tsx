@@ -220,7 +220,7 @@ function InAppMessages({ children }: { children: ReactNode }) {
     <IntlProvider
       locale={locale}
       messages={{ ...messages, ...inApp }}
-      timeZone={timeZone}
+      {...(timeZone === undefined ? {} : { timeZone })}
     >
       {children}
     </IntlProvider>

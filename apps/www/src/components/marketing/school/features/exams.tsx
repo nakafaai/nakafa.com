@@ -28,9 +28,9 @@ import {
   FeatureRow,
 } from "@/components/marketing/shared/feature";
 import { FigureMenuFrame } from "@/components/tenant/exams/figure/menu";
-import { pageThumb } from "@/components/tenant/exams/footer";
 import { NoteField } from "@/components/tenant/exams/layer";
 import { PaperOption, PaperOptions } from "@/components/tenant/exams/sheet";
+import { pageThumb } from "@/components/tenant/exams/thumb";
 import { useDocumentLabels } from "@/lib/editor/labels";
 
 /** The pictures a demo exam holds: none, so the toolbar's picture menu opens on an empty exam. */

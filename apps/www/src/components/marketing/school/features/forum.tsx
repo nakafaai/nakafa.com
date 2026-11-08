@@ -41,8 +41,10 @@ import { demoTime } from "@/components/marketing/school/features/clock";
 import { stepVariants } from "@/components/marketing/school/features/step";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
-import { documentCard } from "@/components/tenant/classes/forum/media";
-import { reactionChip } from "@/components/tenant/classes/forum/tallies";
+import {
+  documentCard,
+  reactionChip,
+} from "@/components/tenant/classes/forum/chips";
 
 /** One message of the class forum: the author's face beside it, their name and time above the bubble, as the forum draws a message. */
 function ForumMessage({
