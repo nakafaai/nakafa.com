@@ -5,7 +5,7 @@ import {
 } from "@mantine/hooks";
 import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, HashMap, Option, Record as Rec } from "effect";
 import { type ReactNode, useRef, useState } from "react";
 import { useStore } from "zustand";
 import {
@@ -50,7 +50,7 @@ const linesColumn = cva(
 /**
  * A matching as a paper sets it, where a line joins each statement to its answer: drag a statement's dot to an
  * answer, or press the statement and then its answer, by pointer or by keyboard, and the line draws between them.
- * An answer pairs one statement, so joining it to another moves its line. Each dot's middle is measured in the
+ * An answer pairs one statement, so joining it to another moves its line. Each dot registers with the board, and its middle is measured in the
  * board's own pixels before the board paints and again whenever a column changes size, so a line always meets its
  * dots, at any width and any zoom. The canvas, the teacher's key, and the student's paper draw this one board.
  */
@@ -77,7 +77,8 @@ export function LinesProvider({
   const [store] = useState(createLines);
   const root = useRef<HTMLDivElement>(null);
 
-  // Reads where every dot stands, in the board's own pixels, so the lines follow a zoom and a reflow alike.
+  // Reads where every dot its parts registered stands, in the board's own pixels, so the lines follow a zoom and a
+  // reflow alike.
   const measure = useCallbackRef(() => {
     const element = root.current;
     if (element === null) {
@@ -86,30 +87,17 @@ export function LinesProvider({
     const box = element.getBoundingClientRect();
     store.getState().place(
       Rec.fromEntries(
-        Arr.flatMap(
-          Arr.fromIterable(
-            element.querySelectorAll<HTMLElement>("[data-line-dot]")
-          ),
-          (dot) => {
-            const rect = dot.getBoundingClientRect();
-            return Option.match(Option.fromNullishOr(dot.dataset.lineDot), {
-              onNone: () => [],
-              onSome: (id) => [
-                [
-                  id,
-                  boardPoint(
-                    {
-                      x: rect.left + rect.width / 2,
-                      y: rect.top + rect.height / 2,
-                    },
-                    box,
-                    element.offsetWidth
-                  ),
-                ] as const,
-              ],
-            });
-          }
-        )
+        Arr.map(Arr.fromIterable(store.getState().anchors), ([id, dot]) => {
+          const rect = dot.getBoundingClientRect();
+          return [
+            id,
+            boardPoint(
+              { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+              box,
+              element.offsetWidth
+            ),
+          ] as const;
+        })
       )
     );
   });
@@ -120,6 +108,7 @@ export function LinesProvider({
   });
 
   // A column grows as a part's text or picture does, and the board as its page does, so either reads the dots again.
+  const columns = useStore(store, (state) => state.columns);
   useIsomorphicEffect(() => {
     const element = root.current;
     if (element === null) {
@@ -127,11 +116,11 @@ export function LinesProvider({
     }
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    for (const list of element.querySelectorAll("ol")) {
+    for (const list of HashMap.values(columns)) {
       observer.observe(list);
     }
     return () => observer.disconnect();
-  }, [measure]);
+  }, [columns, measure]);
 
   // Escape puts down the statement in hand, wherever the focus stands.
   useWindowEvent("keydown", (event) => {
@@ -176,9 +165,21 @@ export function LinesColumn({
   readonly footer?: ReactNode;
   readonly side: LineSide;
 }) {
+  const { store } = useLines();
+  // The list registers with its board, which follows its size, as it mounts, and leaves it as it unmounts.
+  const register = useCallbackRef((list: HTMLOListElement | null) => {
+    if (list === null) {
+      return;
+    }
+    store.getState().frame(side, list);
+    return () => store.getState().unframe(side, list);
+  });
+
   return (
     <div className={linesColumn({ side })}>
-      <ol className="grid min-w-0 content-start gap-2">{children}</ol>
+      <ol className="grid min-w-0 content-start gap-2" ref={register}>
+        {children}
+      </ol>
       {footer}
     </div>
   );

@@ -51,7 +51,9 @@ export function AiChatMessageCredits() {
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger
         onMouseEnter={() => setOpen(true)}
-        render={<Button size="icon" variant="outline" />}
+        render={
+          <Button size="icon" tooltip={t("credits-label")} variant="outline" />
+        }
       >
         <HugeIcons icon={InformationCircleIcon} />
       </PopoverTrigger>

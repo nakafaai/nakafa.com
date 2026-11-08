@@ -208,8 +208,8 @@ export function NinaRefusedAttachment({
       </AttachmentContent>
       <AttachmentActions>
         <AttachmentAction
-          aria-label={t("remove-attachment", { filename: refusal.name })}
           onClick={onRemove}
+          tooltip={t("remove-attachment", { filename: refusal.name })}
           type="button"
           variant="secondary"
         >
@@ -227,10 +227,10 @@ export function NinaAttach() {
   const t = useTranslations("Ai");
   return (
     <InputGroupButton
-      aria-label={t("attach-files")}
       className="rounded-full"
       onClick={openFileDialog}
       size="icon"
+      tooltip={t("attach-files")}
       type="button"
       variant="outline"
     >

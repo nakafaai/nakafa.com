@@ -1,7 +1,9 @@
 import {
+  Mail01Icon,
   Notification01Icon,
   NotificationOff01Icon,
   Settings01Icon,
+  SmartPhone01Icon,
 } from "@hugeicons/core-free-icons";
 import type {
   PreferenceChannel,
@@ -150,6 +152,12 @@ export function PreferenceTable({
   );
 }
 
+/** The icon of each channel: a push lands on the device, an email in the inbox. */
+const channelIcons = {
+  email: Mail01Icon,
+  push: SmartPhone01Icon,
+} as const;
+
 /** One channel of one kind in the row's menu, which saves the same choice as its switch. */
 function ChannelItem({
   channel,
@@ -170,6 +178,7 @@ function ChannelItem({
       checked={shown}
       closeOnClick={false}
       disabled={save === null}
+      icon={channelIcons[channel]}
       onCheckedChange={(next) =>
         startSaving(async () => {
           setShown(next);

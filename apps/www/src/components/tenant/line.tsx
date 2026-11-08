@@ -40,7 +40,6 @@ export function LineDialog({
   title: string;
   type?: ComponentProps<typeof Input>["type"];
 }) {
-  const common = useTranslations("Common");
   const settings = useTranslations("SchoolSettings");
   const id = useId();
   // The field holds what was typed, and the stored value until then.
@@ -59,21 +58,12 @@ export function LineDialog({
 
   return (
     <ResponsiveDialog
-      description={description}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {action ?? settings("save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {action ?? settings("save")}
+        </Button>
       }
+      description={description}
       open={open}
       setOpen={setOpen}
       title={title}
