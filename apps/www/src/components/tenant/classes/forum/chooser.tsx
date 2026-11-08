@@ -20,7 +20,6 @@ import {
 import { useTranslations } from "use-intl";
 import type { EmojiEntry } from "@/components/tenant/classes/forum/emoji";
 import { EmojiPanel } from "@/components/tenant/classes/forum/panel";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** The emoji the chat ships, once a first intent loaded them. */
 type Glyphs = readonly (typeof EmojiEntry.Type)[];
@@ -104,27 +103,25 @@ export function EmojiPopover({
       >
         <header className="flex items-center justify-between gap-2 border-b py-2 ps-3 pe-2">
           <PopoverTitle className="text-sm">{t("emoji-title")}</PopoverTitle>
-          <IconTip label={common("close")}>
-            <Button
-              aria-label={common("close")}
-              onClick={() => setOpen(false)}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <HugeIcons icon={Cancel01Icon} />
-            </Button>
-          </IconTip>
+          <Button
+            onClick={() => setOpen(false)}
+            size="icon"
+            tooltip={common("close")}
+            type="button"
+            variant="ghost"
+          >
+            <HugeIcons icon={Cancel01Icon} />
+          </Button>
         </header>
         {Arr.isReadonlyArrayEmpty(quick) ? null : (
           <div className="grid grid-cols-6 justify-items-center border-b p-2">
             {Arr.map(quick, (emoji) => (
               <Button
-                aria-label={emoji}
                 className="text-lg"
                 key={emoji}
                 onClick={() => pick(emoji)}
                 size="icon"
+                tooltip={emoji}
                 type="button"
                 variant="ghost"
               >

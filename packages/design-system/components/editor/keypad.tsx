@@ -132,11 +132,11 @@ function CommandKey({
 }) {
   return (
     <Button
-      aria-label={label}
       className="h-9"
       onClick={onPress}
       onMouseDown={(event) => event.preventDefault()}
       size="sm"
+      tooltip={label}
       type="button"
       variant="outline"
     >

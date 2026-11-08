@@ -77,16 +77,24 @@ async function answerEveryTemplate(student: Page) {
   await expect(number).toHaveValue("٠٫٧٥");
   await student.keyboard.press("Escape");
   await number.blur();
-  // Matching: Indonesia with Jakarta (B), Jepang with Tokyo (C), Jerman with Berlin (A).
+  // Matching: Indonesia with Jakarta (B), Jepang with Tokyo (C), Jerman with Berlin (A). A press on a statement's
+  // dot, then on its answer's, draws the line between them.
   for (const [statement, letter] of [
     ["1", "B"],
     ["2", "C"],
     ["3", "A"],
   ] as const) {
     await question(student, 8)
-      .getByRole("combobox", { name: `Answer for statement ${statement}` })
+      .getByRole("button", { name: `Statement ${statement}, not joined` })
       .click();
-    await student.getByRole("option", { exact: true, name: letter }).click();
+    await question(student, 8)
+      .getByRole("button", { exact: true, name: `Answer ${letter}` })
+      .click();
+    await expect(
+      question(student, 8).getByRole("button", {
+        name: `Statement ${statement}, joined to ${letter}`,
+      })
+    ).toBeVisible();
   }
   // The true or false table, one mark for each statement.
   for (const [statement, column] of [

@@ -1,18 +1,22 @@
 import { useMutation } from "@confect/react";
 import {
   CheckmarkCircle02Icon,
+  Door01Icon,
   LockKeyholeOpenIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Clock, Effect, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useResultsScope } from "@/components/exams/results/context";
 import { runSittingCall } from "@/components/exams/sitting/actions";
-import { ConfirmActions } from "@/components/exams/sitting/dialogs";
+import { ConfirmAction } from "@/components/exams/sitting/dialogs";
 
 /** The milliseconds on the device clock, for the optimistic guess that the server settles. */
 const nowMillis = () => Effect.runSync(Clock.currentTimeMillis);
@@ -46,9 +50,12 @@ function useReleaseResults() {
 export function ReleaseAction({
   canRelease,
   releasedAt,
+  sitting,
 }: {
   readonly canRelease: boolean;
   readonly releasedAt: number | null;
+  /** The sitting whose results the release shows its students. */
+  readonly sitting: { readonly examTitle: string; readonly room: string };
 }) {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
@@ -78,21 +85,24 @@ export function ReleaseAction({
         <span className="@max-3xl/header:sr-only">{t("release-action")}</span>
       </Button>
       <ResponsiveDialog
-        description={t("release-description")}
-        footer={
-          <ConfirmActions
+        action={
+          <ConfirmAction
             confirm={t("release-action")}
-            onCancel={() => setOpen(false)}
             onConfirm={() => {
               setOpen(false);
               runSittingCall(() => release({ sittingId, slug }));
             }}
           />
         }
+        description={t("release-description")}
         open={open}
         setOpen={setOpen}
         title={t("release-title")}
-      />
+      >
+        <ResponsiveDialogSubject description={sitting.room} icon={Door01Icon}>
+          {sitting.examTitle}
+        </ResponsiveDialogSubject>
+      </ResponsiveDialog>
     </>
   );
 }

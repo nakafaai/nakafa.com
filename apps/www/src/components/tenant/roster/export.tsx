@@ -6,9 +6,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -118,17 +116,17 @@ export function RosterExport() {
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-export")}</DropdownMenuLabel>
-          <DropdownMenuItem onClick={saveStudentsOfUnit}>
-            <HugeIcons icon={UserListIcon} />
-            {t("export-students")}
-          </DropdownMenuItem>
-          <GradeDownloadContext value={saveGrades}>
-            <RosterGradesExport />
-          </GradeDownloadContext>
-        </DropdownMenuGroup>
+      <DropdownMenuContent
+        align="end"
+        className="w-52"
+        label={common("menu-export")}
+      >
+        <DropdownMenuItem icon={UserListIcon} onClick={saveStudentsOfUnit}>
+          {t("export-students")}
+        </DropdownMenuItem>
+        <GradeDownloadContext value={saveGrades}>
+          <RosterGradesExport />
+        </GradeDownloadContext>
       </DropdownMenuContent>
     </DropdownMenu>
   );

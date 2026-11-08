@@ -10,9 +10,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -58,22 +56,12 @@ export function StudentPanelActions({
   return (
     <ButtonGroup className="justify-self-start">
       {state === "inProgress" ? (
-        <Button
-          onClick={() => onOpen("lock")}
-          size="sm"
-          type="button"
-          variant="destructive"
-        >
+        <Button onClick={() => onOpen("lock")} size="sm" type="button">
           <HugeIcons icon={SquareLock02Icon} />
           {t("lock")}
         </Button>
       ) : (
-        <Button
-          onClick={() => onOpen("unlock")}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
+        <Button onClick={() => onOpen("unlock")} size="sm" type="button">
           <HugeIcons icon={SquareUnlock02Icon} />
           {t("unlock")}
         </Button>
@@ -82,27 +70,31 @@ export function StudentPanelActions({
         <DropdownMenuTrigger
           render={
             <Button
-              aria-label={t("student-more", { name })}
               size="icon-sm"
+              tooltip={t("student-more", { name })}
               type="button"
-              variant={state === "inProgress" ? "destructive" : "outline"}
             />
           }
         >
           <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onOpen("add-minutes")}>
-              <HugeIcons icon={TimeQuarterPassIcon} />
-              {t("add-minutes")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onOpen("allow-device")}>
-              <HugeIcons icon={SmartPhone01Icon} />
-              {t("allow-device")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+        <DropdownMenuContent
+          align="end"
+          className="w-56"
+          label={common("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={TimeQuarterPassIcon}
+            onClick={() => onOpen("add-minutes")}
+          >
+            {t("add-minutes")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            icon={SmartPhone01Icon}
+            onClick={() => onOpen("allow-device")}
+          >
+            {t("allow-device")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>
