@@ -3,9 +3,9 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { Array as Arr } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
-import { DEMO_STRUGGLING } from "@/components/marketing/school/cast";
-import { SchoolFeatureText } from "@/components/marketing/school/row";
-import { stepVariants } from "@/components/marketing/school/step";
+import { DEMO_STRUGGLING } from "@/components/marketing/school/features/cast";
+import { stepVariants } from "@/components/marketing/school/features/step";
+import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
 
 /** The class average of each of the last six weeks, out of 100. */

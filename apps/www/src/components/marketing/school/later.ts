@@ -8,12 +8,12 @@ import { laterCode, openLaterCode } from "@/components/marketing/shared/code";
  */
 export const schoolSections = {
   addons: laterCode(() =>
-    import("@/components/marketing/school/addons").then(
+    import("@/components/marketing/school/pricing/addons").then(
       (module) => module.SchoolAddOns
     )
   ),
   calculator: laterCode(() =>
-    import("@/components/marketing/school/calculator").then(
+    import("@/components/marketing/school/pricing/calculator").then(
       (module) => module.SchoolCalculator
     )
   ),
@@ -23,12 +23,12 @@ export const schoolSections = {
     )
   ),
   compare: laterCode(() =>
-    import("@/components/marketing/school/compare").then(
+    import("@/components/marketing/school/pricing/compare").then(
       (module) => module.SchoolCompare
     )
   ),
   exams: laterCode(() =>
-    import("@/components/marketing/school/exams").then(
+    import("@/components/marketing/school/features/exams").then(
       (module) => module.SchoolExams
     )
   ),
@@ -38,37 +38,37 @@ export const schoolSections = {
     )
   ),
   forum: laterCode(() =>
-    import("@/components/marketing/school/forum").then(
+    import("@/components/marketing/school/features/forum").then(
       (module) => module.SchoolForum
     )
   ),
   graduation: laterCode(() =>
-    import("@/components/marketing/school/graduation").then(
+    import("@/components/marketing/school/features/graduation").then(
       (module) => module.SchoolGraduation
     )
   ),
   insight: laterCode(() =>
-    import("@/components/marketing/school/insight").then(
+    import("@/components/marketing/school/features/insight").then(
       (module) => module.SchoolInsight
     )
   ),
   library: laterCode(() =>
-    import("@/components/marketing/school/library").then(
+    import("@/components/marketing/school/features/library").then(
       (module) => module.SchoolLibrary
     )
   ),
   parents: laterCode(() =>
-    import("@/components/marketing/school/parents").then(
+    import("@/components/marketing/school/features/parents").then(
       (module) => module.SchoolParents
     )
   ),
   reports: laterCode(() =>
-    import("@/components/marketing/school/reports").then(
+    import("@/components/marketing/school/features/reports").then(
       (module) => module.SchoolReports
     )
   ),
   tasks: laterCode(() =>
-    import("@/components/marketing/school/tasks").then(
+    import("@/components/marketing/school/features/tasks").then(
       (module) => module.SchoolTasks
     )
   ),

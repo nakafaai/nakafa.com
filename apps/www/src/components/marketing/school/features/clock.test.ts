@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { demoTime } from "@/components/marketing/school/clock";
+import { demoTime } from "@/components/marketing/school/features/clock";
 
 describe("demoTime", () => {
   it("writes the demo's time of day the way each locale writes it", () => {

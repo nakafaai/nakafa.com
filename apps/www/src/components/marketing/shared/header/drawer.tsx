@@ -1,16 +1,16 @@
 import { Menu01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Sheet,
-  SheetClose,
-  SheetFooter,
-  SheetHeader,
-  SheetPanel,
-  SheetPopup,
-  SheetTitle,
-  SheetTrigger,
-} from "@repo/design-system/components/ui/sheet";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerPanel,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@repo/design-system/components/ui/drawer";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -21,15 +21,15 @@ import {
 import { TargetLink } from "@/lib/routing/link";
 
 /**
- * One link of the sheet, on the row a menu item draws. It is the sheet's own
+ * One link of the drawer, on the row a menu item draws. It is the drawer's own
  * close control drawn as the link, so a press opens the page and closes the
- * sheet in one.
+ * drawer in one.
  */
-function HeaderSheetLink({ link }: { link: HeaderLink }) {
+function HeaderDrawerLink({ link }: { link: HeaderLink }) {
   const t = useTranslations();
 
   return (
-    <SheetClose
+    <DrawerClose
       className="hover:bg-accent hover:text-accent-foreground hover:**:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground flex min-h-10 items-center gap-2 rounded-sm px-2 text-sm outline-hidden transition-colors"
       nativeButton={false}
       render={
@@ -41,23 +41,24 @@ function HeaderSheetLink({ link }: { link: HeaderLink }) {
     >
       <HugeIcons className="text-muted-foreground" icon={link.icon} />
       {t(link.label)}
-    </SheetClose>
+    </DrawerClose>
   );
 }
 
 /**
- * The header's sections below `lg`, in a sheet that the Menu button opens: each
- * section under its name with all of its links, and the page's call to action,
- * which the caller gives as children, in the footer: a phone's header has no
- * room for it. Each action leaves the marketing pages, so the sheet closes with
- * them.
+ * The header's sections below `lg`, in a drawer that the Menu button opens and
+ * that closes as an iPhone sheet does, by its handle, a swipe down or a tap
+ * outside, so it draws no close button: each section under its name with its
+ * groups of links, and the page's call to action, which the caller gives as
+ * children, in the footer, since a phone's header has no room for it. Each
+ * action leaves the marketing pages, so the drawer closes with them.
  */
-export function HeaderSheet({ children }: { children: ReactNode }) {
+export function HeaderDrawer({ children }: { children: ReactNode }) {
   const t = useTranslations();
 
   return (
-    <Sheet>
-      <SheetTrigger
+    <Drawer showSwipeHandle>
+      <DrawerTrigger
         render={
           <Button className="lg:hidden" variant="outline">
             <HugeIcons icon={Menu01Icon} />
@@ -65,11 +66,11 @@ export function HeaderSheet({ children }: { children: ReactNode }) {
           </Button>
         }
       />
-      <SheetPopup>
-        <SheetHeader>
-          <SheetTitle>{t("Marketing.menu")}</SheetTitle>
-        </SheetHeader>
-        <SheetPanel>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>{t("Marketing.menu")}</DrawerTitle>
+        </DrawerHeader>
+        <DrawerPanel>
           {Arr.map(HEADER_SECTIONS, (section) => (
             <section className="grid gap-2" key={section.key}>
               <h2 className="px-2 text-base font-medium">{t(section.label)}</h2>
@@ -83,15 +84,15 @@ export function HeaderSheet({ children }: { children: ReactNode }) {
                     {t(group.label)}
                   </p>
                   {Arr.map(group.links, (link) => (
-                    <HeaderSheetLink key={link.label} link={link} />
+                    <HeaderDrawerLink key={link.label} link={link} />
                   ))}
                 </nav>
               ))}
             </section>
           ))}
-        </SheetPanel>
-        <SheetFooter>{children}</SheetFooter>
-      </SheetPopup>
-    </Sheet>
+        </DrawerPanel>
+        <DrawerFooter>{children}</DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -25,7 +25,7 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { CurrencyText } from "@/components/marketing/about/pricing/currency";
-import { SchoolAmount } from "@/components/marketing/school/price";
+import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import { PricingCurrencySchema } from "@/lib/pricing/monthly";
 import { formatSchoolPrice, formatStorage } from "@/lib/pricing/school";
 import { Link } from "@/lib/routing/link";

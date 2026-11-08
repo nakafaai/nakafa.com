@@ -16,7 +16,7 @@ import { cva } from "class-variance-authority";
 import { Array as Arr, Match, Option, Result } from "effect";
 import { useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
-import { SchoolAmount } from "@/components/marketing/school/price";
+import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import { formatStorage } from "@/lib/pricing/school";
 
 /** The rows of every group, one line each; the capacity and billing rows differ by plan, the rest are in every plan. */

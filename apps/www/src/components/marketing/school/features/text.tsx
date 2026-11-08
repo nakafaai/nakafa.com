@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import type { SCHOOL_FEATURES } from "@/components/marketing/school/features";
+import type { SCHOOL_FEATURES } from "@/components/marketing/school/features/list";
 import {
   FeatureLead,
   FeatureText,

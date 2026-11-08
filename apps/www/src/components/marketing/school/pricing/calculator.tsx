@@ -24,7 +24,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactNode, useId, useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
-import { SchoolAmount } from "@/components/marketing/school/price";
+import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import {
   FeatureCard,
   FeatureLead,

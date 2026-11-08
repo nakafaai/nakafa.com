@@ -10,7 +10,7 @@ import {
   Target01Icon,
 } from "@hugeicons/core-free-icons";
 import { Array as Arr } from "effect";
-import { SCHOOL_FEATURES } from "@/components/marketing/school/features";
+import { SCHOOL_FEATURES } from "@/components/marketing/school/features/list";
 import type { LinkTarget } from "@/lib/routing/link";
 import {
   ARTICLES_TARGET,

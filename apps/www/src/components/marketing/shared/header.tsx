@@ -5,8 +5,8 @@ import {
   LogoCta,
   SchoolCta,
 } from "@/components/marketing/shared/header/cta";
+import { HeaderDrawer } from "@/components/marketing/shared/header/drawer";
 import { HeaderMenu } from "@/components/marketing/shared/header/menu";
-import { HeaderSheet } from "@/components/marketing/shared/header/sheet";
 import { Language } from "@/components/marketing/shared/language";
 import { useCurrentLocale } from "@/lib/routing/link";
 
@@ -35,7 +35,7 @@ function HeaderAction() {
  * right. The two outer columns share the rest of the width equally, so Nina
  * stands in the middle of the page, and she stands on the header's line, which
  * cuts her body. From `lg` each product is a section whose links open on hover
- * or press; below it the Menu button opens the same sections in a sheet, which
+ * or press; below it the Menu button opens the same sections in a drawer, which
  * holds the action on a phone, where only the name, Nina and the button fit.
  * The language leaves below `lg` too: the footer holds it.
  */
@@ -63,9 +63,9 @@ export function Header() {
           <span className="contents max-sm:hidden">
             <HeaderAction />
           </span>
-          <HeaderSheet>
+          <HeaderDrawer>
             <HeaderAction />
-          </HeaderSheet>
+          </HeaderDrawer>
         </div>
       </div>
     </header>

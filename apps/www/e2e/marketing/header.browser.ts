@@ -14,7 +14,7 @@ import {
 /** The School pricing page, which the School section of the header opens. */
 const SCHOOL_PRICING = /\/en\/school\/pricing$/u;
 
-/** The report cards section of the School landing, which the phone's sheet opens. */
+/** The report cards section of the School landing, which the phone's drawer opens. */
 const SCHOOL_REPORTS = /\/en\/school#reports$/u;
 
 /** Nina, the line under the header and the header's links, measured as the eye sees them. */
@@ -197,7 +197,7 @@ test.describe("the header's sections on a phone", () => {
     viewport: { height: touchViewport.height, width: touchViewport.width },
   });
 
-  test("open in the Menu sheet, which a link press closes", async ({
+  test("open in the Menu drawer, which a tap outside and a link press close", async ({
     page,
   }) => {
     await Effect.runPromise(
@@ -208,15 +208,24 @@ test.describe("the header's sections on a phone", () => {
           yield* Effect.promise(() =>
             page.locator("header").getByRole("button", { name: "Menu" }).click()
           );
-          const sheet = page.getByRole("dialog", { name: "Menu" });
+          const drawer = page.getByRole("dialog", { name: "Menu" });
           yield* Effect.promise(() =>
-            expect(sheet.getByRole("link", { name: "Subjects" })).toBeVisible()
+            expect(drawer.getByRole("link", { name: "Subjects" })).toBeVisible()
+          );
+          // The drawer draws no close button: a tap outside closes it.
+          yield* Effect.promise(() =>
+            expect(drawer.getByRole("button", { name: "Close" })).toHaveCount(0)
+          );
+          yield* Effect.promise(() => page.mouse.click(8, 8));
+          yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+          yield* Effect.promise(() =>
+            page.locator("header").getByRole("button", { name: "Menu" }).click()
           );
           yield* Effect.promise(() =>
-            sheet.getByRole("link", { name: "Report cards" }).click()
+            drawer.getByRole("link", { name: "Report cards" }).click()
           );
           yield* Effect.promise(() => expect(page).toHaveURL(SCHOOL_REPORTS));
-          yield* Effect.promise(() => expect(sheet).toHaveCount(0));
+          yield* Effect.promise(() => expect(drawer).toHaveCount(0));
         })
       )
     );

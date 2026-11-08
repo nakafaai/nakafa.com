@@ -11,8 +11,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import { SchoolFeatureText } from "@/components/marketing/school/row";
-import { stepVariants } from "@/components/marketing/school/step";
+import { stepVariants } from "@/components/marketing/school/features/step";
+import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
 
 /** One entry of the class library: the icon of its kind, its name, and what it holds or weighs. */

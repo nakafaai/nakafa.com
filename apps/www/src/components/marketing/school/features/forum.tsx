@@ -25,10 +25,10 @@ import {
   DEMO_ASKER,
   DEMO_REPLIERS,
   DEMO_TEACHER,
-} from "@/components/marketing/school/cast";
-import { demoTime } from "@/components/marketing/school/clock";
-import { SchoolFeatureText } from "@/components/marketing/school/row";
-import { stepVariants } from "@/components/marketing/school/step";
+} from "@/components/marketing/school/features/cast";
+import { demoTime } from "@/components/marketing/school/features/clock";
+import { stepVariants } from "@/components/marketing/school/features/step";
+import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
 
 /** One message of the class forum: the author's face beside it, their name and time above the bubble, as the forum draws a message. */

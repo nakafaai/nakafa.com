@@ -13,7 +13,7 @@ import {
   openSchoolPricing,
   schoolSections,
 } from "@/components/marketing/school/later";
-import { SchoolPlans } from "@/components/marketing/school/plans";
+import { SchoolPlans } from "@/components/marketing/school/pricing/plans";
 import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";

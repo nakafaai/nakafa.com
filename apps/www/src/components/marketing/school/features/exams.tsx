@@ -7,7 +7,7 @@ import {
   TryoutDemoNina,
   TryoutDemoQuestion,
 } from "@/components/marketing/about/tryout/demo";
-import { SchoolFeatureText } from "@/components/marketing/school/row";
+import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
 
 /** The id of the demo's interaction, which its key names. */

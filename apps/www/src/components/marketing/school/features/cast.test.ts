@@ -9,7 +9,7 @@ import {
   DEMO_REPORTED,
   DEMO_STRUGGLING,
   DEMO_TEACHER,
-} from "@/components/marketing/school/cast";
+} from "@/components/marketing/school/features/cast";
 
 describe("the people of the School landing", () => {
   it("give every person and every face on the page an animal no one else has", () => {

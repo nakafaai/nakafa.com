@@ -15,7 +15,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useLocale, useTranslations } from "use-intl";
-import { SchoolAmount } from "@/components/marketing/school/price";
+import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import { formatStorage } from "@/lib/pricing/school";
 

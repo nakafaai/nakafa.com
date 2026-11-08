@@ -5,9 +5,9 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { DEMO_COHORTS } from "@/components/marketing/school/cast";
-import { SchoolFeatureText } from "@/components/marketing/school/row";
-import { stepVariants } from "@/components/marketing/school/step";
+import { DEMO_COHORTS } from "@/components/marketing/school/features/cast";
+import { stepVariants } from "@/components/marketing/school/features/step";
+import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
 
 /** Each cohort that the year's end moves: its grade, the grade it moves to (none for the final year), and its size. */
