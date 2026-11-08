@@ -23,6 +23,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 
@@ -75,12 +76,12 @@ export function VisitorChart({
         library: {
           cue: VISITOR_CUES.library,
           label: seriesLabels.library,
-          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+          colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
         },
         laboratory: {
           cue: VISITOR_CUES.laboratory,
           label: seriesLabels.laboratory,
-          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+          colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
         },
       }) satisfies ChartConfig,
     [seriesLabels.laboratory, seriesLabels.library]

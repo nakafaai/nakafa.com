@@ -1,14 +1,17 @@
+import type { GenericId } from "@confect/core";
 import { useMutation } from "@confect/react";
 import { NETWORK_RETRY_SCHEDULE } from "@repo/backend/client/network";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { ExamResponse } from "@repo/backend/confect/assessment/response";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Clock, Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { finishInStore } from "@/components/exams/sitting/attempt";
-import { isFinalRefusal } from "@/components/exams/sitting/entry";
+import {
+  answerRefusalOf,
+  failureCopyOf,
+} from "@/components/exams/sitting/entry";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { keptAttempt, keptFinish } from "@/components/exams/sitting/keep";
 import {
@@ -17,7 +20,6 @@ import {
   type PaperQuestion,
   setSavedResponse,
 } from "@/components/exams/sitting/paper";
-import { settleSent } from "@/components/player/keep";
 import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -31,63 +33,43 @@ function useAnswer() {
   );
 }
 
-/**
- * One answer that the student sends, with the attempt it answers and the version it is numbered with, which the
- * browser keeps until it is settled.
- */
-const SentAnswer = Schema.Struct({
+/** The attempt an answer goes to and the device that sends it, which name its kept entry and its save. */
+const AnswerTarget = Schema.Struct({
   attemptId: Id("examAttempts"),
   deviceId: Schema.String,
-  questionId: Id("examQuestions"),
-  response: ExamResponse,
   sittingId: Id("examSittings"),
   slug: TenantSlug,
-  version: Version,
 });
-type SentAnswer = typeof SentAnswer.Type;
+type AnswerTarget = typeof AnswerTarget.Type;
 
 /**
- * Sends one answer, and settles the answer that the browser keeps for it once the server answers
- * (`settleSent`). A refusal is the server's answer, so it stays; a call that failed names no refusal, so the
- * same version goes again, because a server that failed for a moment must not lose a typed answer. The send
- * resolves to the failure that the caller tells the student about, or to none when the server took the
- * answer, so each caller shows its failures with one toast.
+ * The ledger of one attempt's kept answers, bound to the save of an answer from this device. A refusal is the
+ * server's answer (`answerRefusalOf`); a call that failed names no refusal, so the same version goes again on the
+ * network schedule, because a server that failed for a moment must not lose a typed answer.
  */
-export function useSendAnswer() {
+export function useAnswerLedger() {
   const answer = useAnswer();
 
-  return (input: SentAnswer, answeredAt: number) =>
-    settleSent(
-      Effect.tryPromise(() =>
-        answer({
-          deviceId: input.deviceId,
-          questionId: input.questionId,
-          response: input.response,
-          sittingId: input.sittingId,
-          slug: input.slug,
-          version: input.version,
-        })
-      ).pipe(
-        Effect.retry(NETWORK_RETRY_SCHEDULE),
-        Effect.flatMap(Effect.fromResult)
-      ),
-      confirmKept(input, answeredAt),
-      isFinalRefusal
-    );
-}
-
-/** Drops the kept answer of one question, and reports a browser that refuses to keep it. */
-function confirmKept(input: SentAnswer, answeredAt: number) {
-  return keptAttempt(input.sittingId, input.attemptId)
-    .confirm(input.questionId, answeredAt)
-    .pipe(
-      Effect.provide(keptStorage),
-      Effect.catchTag("KeyValueStoreError", (error) =>
-        reportClientException(error, {
-          source: "components/exams/sitting/answer",
-        })
-      )
-    );
+  return (target: AnswerTarget) =>
+    keptAttempt(target.sittingId, target.attemptId).bind({
+      copyOf: failureCopyOf,
+      refusal: answerRefusalOf,
+      send: (questionId: GenericId.GenericId<"examQuestions">, kept) =>
+        Effect.tryPromise(() =>
+          answer({
+            deviceId: target.deviceId,
+            questionId,
+            response: kept.response,
+            sittingId: target.sittingId,
+            slug: target.slug,
+            version: kept.version,
+          })
+        ).pipe(
+          Effect.retry(NETWORK_RETRY_SCHEDULE),
+          Effect.flatMap(Effect.fromResult)
+        ),
+      source: "components/exams/sitting/answer",
+    });
 }
 
 /** Finishes the student's attempt at once: the answers close, and a refused finish rolls back. */
@@ -118,12 +100,7 @@ function onKeptFinish(step: ReturnType<ReturnType<typeof keptFinish>["keep"]>) {
 export function useSendFinish() {
   const finish = useFinish();
 
-  return (input: {
-    readonly attemptId: typeof SentAnswer.Type.attemptId;
-    readonly deviceId: string;
-    readonly sittingId: typeof SentAnswer.Type.sittingId;
-    readonly slug: TenantSlug;
-  }) => {
+  return (input: AnswerTarget) => {
     const kept = keptFinish(input.sittingId, input.attemptId);
 
     return onKeptFinish(kept.keep()).pipe(
@@ -154,26 +131,24 @@ export function useSendFinish() {
 }
 
 /**
- * Keeps one response in the browser, numbered one above the saved version, and gives back the device time and
- * the version it was kept with. A typed answer is kept on every key, before its send waits for a pause, so a
- * reload or a closed tab loses no key; a later key keeps its text in place of the one kept before.
+ * Keeps one response in the browser, numbered one above the saved version. A typed answer is kept on every key,
+ * before its send waits for a pause, so a reload or a closed tab loses no key; a later key keeps its text in place
+ * of the one kept before.
  */
 export function keepResponse(input: {
-  readonly attemptId: typeof SentAnswer.Type.attemptId;
+  readonly attemptId: AnswerTarget["attemptId"];
   readonly question: PaperQuestion;
   readonly response: ExamResponse;
-  readonly sittingId: typeof SentAnswer.Type.sittingId;
+  readonly sittingId: AnswerTarget["sittingId"];
 }) {
-  const answeredAt = Effect.runSync(Clock.currentTimeMillis);
-  const version = nextVersionOf(input.question);
   Effect.runSync(
     keptAttempt(input.sittingId, input.attemptId)
       .keep(input.question.id, {
-        answeredAt,
         response: input.response,
-        version,
+        version: nextVersionOf(input.question),
       })
       .pipe(
+        Effect.asVoid,
         Effect.provide(keptStorage),
         Effect.catchTag("KeyValueStoreError", (error) =>
           reportClientException(error, {
@@ -182,43 +157,29 @@ export function keepResponse(input: {
         )
       )
   );
-  return { answeredAt, version };
 }
 
 /**
  * Chooses one response for a question: it is kept in the browser before it is sent, numbered one above the
- * saved version, so a reload or a closed tab sends it again. The send confirms or drops the kept answer, and
- * a refused send shows its toast.
+ * saved version, so a reload or a closed tab sends it again. The fiber keeps it before the press returns, the
+ * send confirms or drops the kept answer, and a refused send shows its toast.
  */
 export function useChooseAnswer() {
-  const send = useSendAnswer();
+  const ledgerOf = useAnswerLedger();
 
-  return (input: {
-    readonly attemptId: typeof SentAnswer.Type.attemptId;
-    readonly deviceId: string;
-    readonly question: PaperQuestion;
-    readonly response: ExamResponse;
-    readonly sittingId: typeof SentAnswer.Type.sittingId;
-    readonly slug: TenantSlug;
-  }) => {
-    const { answeredAt, version } = keepResponse(input);
-    Effect.runPromise(
-      send(
-        {
-          attemptId: input.attemptId,
-          deviceId: input.deviceId,
-          questionId: input.question.id,
+  return (
+    input: AnswerTarget & {
+      readonly question: PaperQuestion;
+      readonly response: ExamResponse;
+    }
+  ) => {
+    Effect.runFork(
+      ledgerOf(input)
+        .choose(input.question.id, {
           response: input.response,
-          sittingId: input.sittingId,
-          slug: input.slug,
-          version,
-        },
-        answeredAt
-      ).pipe(
-        Effect.flatMap((failure) =>
-          sittingCallFailures(Option.toArray(failure))
-        )
-      )
+          version: nextVersionOf(input.question),
+        })
+        .pipe(Effect.provide(keptStorage))
     );
   };
 }

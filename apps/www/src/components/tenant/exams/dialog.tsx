@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, SchoolIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   EXAM_TITLE_MAX_LENGTH,
@@ -20,6 +20,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -45,6 +46,7 @@ import {
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceKey,
@@ -271,11 +273,16 @@ export function CreateExam({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Arr.map(unitItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <ChoiceLabel name="unit" />
+
+                  {Arr.map(unitItems, (item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      <HugeIcons icon={SchoolIcon} />
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </Field>

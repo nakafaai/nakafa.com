@@ -10,7 +10,7 @@ import {
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { COLORS } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { ReactNode } from "react";
 
@@ -108,7 +108,7 @@ function BiologyCallout({
       </ThreeLabel>
       <ArrowHelper
         arrowSize={BIOLOGY_CALLOUT_ARROW_SIZE}
-        color={COLORS.SLATE}
+        color={PLOT_COLORS.slate}
         from={arrowStart}
         lineWidth={1.5}
         to={arrowEnd}

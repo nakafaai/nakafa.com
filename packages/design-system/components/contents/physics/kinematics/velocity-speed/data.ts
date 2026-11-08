@@ -5,6 +5,7 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import {
   Array as Arr,
   Number as Num,
@@ -62,12 +63,12 @@ const CAMERA_COMPOSITION = {
 } as const;
 
 export const VELOCITY_SPEED_COLORS = {
-  carBody: getColor("RED", 500),
+  carBody: PLOT_COLORS.pink,
   coneBand: getColor("SLATE", 50),
   coneBase: getColor("GRAY", 800),
-  coneBody: getColor("ORANGE", 500),
-  displacementGuide: getColor("VIOLET"),
-  distanceGuide: getColor("TEAL", 500),
+  coneBody: PLOT_COLORS.orange,
+  displacementGuide: PLOT_COLORS.violet,
+  distanceGuide: PLOT_COLORS.teal,
   lane: getColor("SLATE", 800),
   stripe: getColor("SLATE", 50),
 } as const;

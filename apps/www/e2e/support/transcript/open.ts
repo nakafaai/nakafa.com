@@ -6,6 +6,7 @@ import {
 } from "@playwright/test";
 import { Effect, MutableRef, Option, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
+import { learnerOf } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
@@ -14,7 +15,10 @@ import type { ServedMessage } from "@/e2e/support/query";
 import { SHEET_POPUP } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { exchange, type Part } from "@/e2e/support/transcript/message";
-import { CHAT, serveConversation } from "@/e2e/support/transcript/serve";
+import {
+  type FixtureChat,
+  serveConversation,
+} from "@/e2e/support/transcript/serve";
 import { serveIcons } from "@/e2e/support/transcript/web";
 
 /** The question that every fixture conversation starts from. */
@@ -78,6 +82,21 @@ const declineIfAsked = Effect.fn("NakafaE2E.declineIfAsked")(function* (
 });
 
 /**
+ * The chat of this worker's learner whose conversation the fixture serves. The
+ * chat page reads the chat on the server, so it is a real chat, and a learner
+ * may start only a few chats a minute, so the first test of the worker starts
+ * it and the tests after it serve their conversations in it.
+ */
+const servedChat = MutableRef.make<Option.Option<FixtureChat>>(Option.none());
+
+/** The address of the served chat on the chat page, in the language of `locale`. */
+const chatAddress = (locale: string) =>
+  Effect.map(
+    Effect.fromOption(MutableRef.get(servedChat)),
+    ({ chatId }) => `/${locale}/chat/${chatId}`
+  );
+
+/**
  * Serves the conversation that the returned reference holds, and signs a
  * learner in. Pages that open afterwards show whatever the reference holds then.
  * The `stream` it returns puts new messages in front of a page that is open.
@@ -87,17 +106,32 @@ export const startTranscript = Effect.fn("NakafaE2E.startTranscript")(
     const shown = MutableRef.make<readonly ServedMessage[]>([]);
     yield* seedAnalyticsConsent(page, "denied");
     yield* serveIcons(page);
-    const served = yield* serveConversation(page, shown);
+    const served = yield* serveConversation(page, shown, servedChat);
     const cookies = MutableRef.get(session);
     if (Option.isSome(cookies)) {
       yield* Effect.promise(() => page.context().addCookies(cookies.value));
-      return { shown, stream: served.stream };
+    } else {
+      yield* signInLearner(page.context(), baseURL);
+      MutableRef.set(
+        session,
+        Option.some(yield* Effect.promise(() => page.context().cookies()))
+      );
     }
-    yield* signInLearner(page.context(), baseURL);
-    MutableRef.set(
-      session,
-      Option.some(yield* Effect.promise(() => page.context().cookies()))
-    );
+    if (Option.isNone(MutableRef.get(servedChat))) {
+      // The new chat page opens the page's connection, whose address names the backend.
+      yield* Effect.promise(() => page.goto("/en/chat"));
+      const origin = yield* served.origin.pipe(
+        Effect.timeout(readinessTimeoutMilliseconds)
+      );
+      const learner = yield* learnerOf(page, baseURL, origin);
+      const { chatId } = yield* learner.startChat(
+        "A question the fixture replaces"
+      );
+      MutableRef.set(
+        servedChat,
+        Option.some({ chatId, userId: learner.userId })
+      );
+    }
     return { shown, stream: served.stream };
   }
 );
@@ -128,7 +162,8 @@ export const showChat = Effect.fn("NakafaE2E.showChat")(function* (
   messages: readonly ServedMessage[]
 ) {
   MutableRef.set(shown, messages);
-  yield* Effect.promise(() => page.goto(`/${locale}/chat/${CHAT}`));
+  const address = yield* chatAddress(locale);
+  yield* Effect.promise(() => page.goto(address));
   yield* Effect.promise(() =>
     page.addStyleTag({ content: OVERLAY_SCROLLBARS })
   );
@@ -152,6 +187,7 @@ const showSheet = Effect.fn("NakafaE2E.showSheet")(function* (
   messages: readonly ServedMessage[]
 ) {
   MutableRef.set(shown, messages);
+  const { chatId } = yield* Effect.fromOption(MutableRef.get(servedChat));
   yield* Effect.promise(() =>
     page.addInitScript(
       ({ chat, key }) =>
@@ -159,7 +195,7 @@ const showSheet = Effect.fn("NakafaE2E.showSheet")(function* (
           key,
           JSON.stringify({ state: { activeChatId: chat }, version: 1 })
         ),
-      { chat: CHAT, key: AI_STORAGE_KEY }
+      { chat: chatId, key: AI_STORAGE_KEY }
     )
   );
   yield* Effect.promise(() => page.goto(`/${locale}/${SHEET_PAGE}`));

@@ -20,6 +20,7 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Effect, Fiber, Schedule, Schema } from "effect";
 import {
   AnimatePresence,
@@ -223,8 +224,9 @@ export function BacterialGrowth({
                           whileHover={{ scale: SCALE_INCREASE }}
                         >
                           <div
-                            className="bg-chart-1 aspect-square h-full max-h-5 w-full max-w-5 rounded-full sm:max-h-8 sm:max-w-8"
+                            className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full sm:max-h-8 sm:max-w-8"
                             data-bacterium=""
+                            style={{ backgroundColor: PLOT_COLORS.teal }}
                           />
                         </m.div>
                       ))}

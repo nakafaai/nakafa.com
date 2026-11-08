@@ -1,9 +1,9 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import { canOpenGraduation } from "@/components/tenant/graduation/access";
 import { CohortGraduation } from "@/components/tenant/graduation/sheet";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readCohortId } from "@/lib/tenant/params";
 
 /**
@@ -11,19 +11,12 @@ import { readCohortId } from "@/lib/tenant/params";
  * who opens no graduation reads not found here, as on the graduation list, and never asks for it.
  */
 export const Route = createFileRoute("/school/$slug/graduation/$cohortId")({
-  beforeLoad: ({ context, params }) => {
-    const { school } = context;
-    const cohortId = readCohortId(params.cohortId);
-    if (
-      Option.isNone(cohortId) ||
-      (school._tag === "Member" && !canOpenGraduation(school.viewer))
-    ) {
-      throw notFound();
-    }
-    return { cohortId: cohortId.value };
-  },
+  ...guardSchoolPage({
+    opens: canOpenGraduation,
+    reads: (params: { readonly cohortId: string }) =>
+      Option.all({ cohortId: readCohortId(params.cohortId) }),
+  }),
   component: SchoolCohortGraduationPage,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolCohortGraduationPage(): ReactElement {

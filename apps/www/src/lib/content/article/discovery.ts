@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
@@ -13,12 +12,10 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import {
-  type ContentReleasePin,
-  decodeContentReleasePin,
-} from "@/lib/content/published/release";
-import { httpLayer } from "@/lib/convex/http";
+import { decodeContentRelease } from "@/lib/content/published/release";
+import { queryPinnedContentStore } from "@/lib/content/store/query";
 
 type DiscoveryItem = Ref.Returns<
   typeof contentRelease.article.latest
@@ -79,21 +76,18 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
 );
 /** Reads one complete published article partition for agent discovery. */
 export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
-  function* (
-    locale: Locale,
-    bucket: string,
-    expectedActiveReleaseId?: ContentReleasePin
-  ) {
+  function* (locale: Locale, bucket: string, release?: ActiveContentReleaseId) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contentRelease.article.bucket, {
+    const result = yield* queryPinnedContentStore(
+      release,
+      contentRelease.article.bucket,
+      {
         appLocale,
         bucket,
-      })
-    ).pipe(Effect.provide(httpLayer()));
-    const activeReleaseId = yield* decodeContentReleasePin(
+      }
+    );
+    const activeReleaseId = yield* decodeContentRelease(
       result.activeReleaseId,
-      expectedActiveReleaseId,
       {
         appLocale,
         publicPath: "articles",
@@ -122,21 +116,18 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
 );
 /** Reads a bounded newest-first article set for feed discovery. */
 export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
-  function* (
-    locale: Locale,
-    limit: number,
-    expectedActiveReleaseId?: ContentReleasePin
-  ) {
+  function* (locale: Locale, limit: number, release?: ActiveContentReleaseId) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contentRelease.article.latest, {
+    const result = yield* queryPinnedContentStore(
+      release,
+      contentRelease.article.latest,
+      {
         appLocale,
         limit,
-      })
-    ).pipe(Effect.provide(httpLayer()));
-    const activeReleaseId = yield* decodeContentReleasePin(
+      }
+    );
+    const activeReleaseId = yield* decodeContentRelease(
       result.activeReleaseId,
-      expectedActiveReleaseId,
       {
         appLocale,
         publicPath: "articles",
@@ -164,24 +155,22 @@ export const readPublishedCategoryArticles = Effect.fn(
   locale: Locale,
   category: string,
   limit: number,
-  expectedActiveReleaseId?: ContentReleasePin
+  release?: ActiveContentReleaseId
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.article.listing, {
+  const result = yield* queryPinnedContentStore(
+    release,
+    contentRelease.article.listing,
+    {
       appLocale,
       category,
       limit,
-    })
-  ).pipe(Effect.provide(httpLayer()));
-  const activeReleaseId = yield* decodeContentReleasePin(
-    result.activeReleaseId,
-    expectedActiveReleaseId,
-    {
-      appLocale,
-      publicPath: `articles/${category}`,
     }
   );
+  const activeReleaseId = yield* decodeContentRelease(result.activeReleaseId, {
+    appLocale,
+    publicPath: `articles/${category}`,
+  });
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
       appLocale,

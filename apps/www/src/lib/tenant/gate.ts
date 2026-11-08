@@ -1,73 +1,13 @@
-import {
-  decodeLocale,
-  type Locale,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
-import { Array as Arr, Option } from "effect";
+import { Option } from "effect";
+import { isSchoolTreePath, pathLocale } from "@/lib/routing/locale/address";
 import { readSchoolSlug } from "@/lib/routing/school/host";
 import { createWwwHeaders, readWwwHeaderOrigins } from "@/lib/security/headers";
 
-/** The segment of the router tree that holds every school page (ADR 0026). */
-const SCHOOL_SEGMENT = "school";
-
-/** The page of a main host where an account opens its own school. No school can take this address. */
-const SCHOOL_START_SEGMENT = "new";
-
-/**
- * The pages under `/<locale>/school` of a main host that are not a school: the
- * public pricing and the account's School entry. No school can take these
- * addresses either.
- */
-const SCHOOL_PAGE_SEGMENTS = ["enter", "pricing"];
-
 /** The request headers that choose a school's language and answer. */
 const SCHOOL_VARY_FIELDS = ["Accept-Language", "Cookie"];
-
-/** Decodes one path segment the way the router does, so an encoded segment names the same page. */
-const decodeSegment = Option.liftThrowable(decodeURI);
-
-/** The decoded segment at an index, or none when the path has no such segment or it does not decode. */
-function readSegment(segments: readonly string[], index: number) {
-  return Arr.get(segments, index).pipe(Option.flatMap(decodeSegment));
-}
-
-/** The non-empty segments of a path. */
-function pathSegments(pathname: string) {
-  return Arr.filter(pathname.split("/"), Boolean);
-}
-
-/** The locale that a path names in front, or none for a path without one. */
-function readPathLocale(segments: readonly string[]) {
-  return Option.flatMap(readSegment(segments, 0), decodeLocale);
-}
-
-/**
- * Whether a path points into the school tree, with or without a locale in front.
- * Only a school host reaches that tree, so a main host answers such a path with
- * not found. The main host's own School pages are the exceptions: the public
- * landing at `/<locale>/school`, its pricing and the account's School entry
- * under it, and the start page.
- */
-export function isSchoolTreePath(pathname: string): boolean {
-  const segments = pathSegments(pathname);
-  const startsWithLocale = Option.isSome(readPathLocale(segments));
-  const school = startsWithLocale ? 1 : 0;
-  if (!Option.contains(readSegment(segments, school), SCHOOL_SEGMENT)) {
-    return false;
-  }
-  const isLanding = startsWithLocale && segments.length === school + 1;
-  const isPage =
-    startsWithLocale &&
-    segments.length === school + 2 &&
-    Option.exists(readSegment(segments, school + 1), (segment) =>
-      Arr.contains(SCHOOL_PAGE_SEGMENTS, segment)
-    );
-  const isStart =
-    segments.length === school + 2 &&
-    Option.contains(readSegment(segments, school + 1), SCHOOL_START_SEGMENT);
-  return !(isLanding || isPage || isStart);
-}
 
 /** The hostname that the `host` header names, without its port, or none when the header names no host. */
 const readHostname = Option.liftThrowable(
@@ -102,7 +42,7 @@ export function readSchoolTreeGate(request: Request): Option.Option<Locale> {
     return Option.none();
   }
   return Option.some(
-    Option.getOrElse(readPathLocale(pathSegments(pathname)), () =>
+    Option.getOrElse(pathLocale(pathname), () =>
       negotiateLocale(request.headers)
     )
   );
