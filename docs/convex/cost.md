@@ -122,15 +122,24 @@ page and reads the whole active release (`contentRelease/material:lesson`,
 
 ### After
 
-- The key is the stage and the release alone, with the run as its last part, and the
-  restore takes the newest save of the release. A deploy of an unchanged release reads
-  only what no earlier deploy of it read; a new release is read once.
-- Every run that added a read saves, a failed or cancelled one included, so a read
-  reaches Convex once per release and stage.
+- The cache key is the stage and the release alone, with the run as its last part.
+  The restore takes the newest save of the same release, or else of any earlier
+  release of the stage. Every store entry is keyed by what its answer depends on, so
+  an entry of another release is never answered in place of this one.
+- A deploy of an unchanged release reads only what no earlier deploy of it read, and
+  a new release is read once per stage. Entries keyed by a family snapshot or an
+  artifact's hash carry over to the next release (the following changes of this
+  program).
+- Every run that added an entry saves, a failed or cancelled one included. A build
+  that finished first drops the entries it did not use, so the cache holds one
+  build's reads: the store marks an entry as used when it answers it.
 - A change to what a query answers for the same release bumps
   `CONTENT_STORE_VERSION` (`apps/www/src/lib/content/store/entry.ts`), which
   re-reads the release once. A change in the answer's shape needs no bump: an entry
   that does not decode is a miss.
+- `scripts/github/policy.ts` pins the restore and save inputs, and a test runs the
+  policy over the repository's own workflows, so a key that names the code again
+  fails the tests.
 
 ## Historical Post-change Evidence
 
