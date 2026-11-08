@@ -17,13 +17,13 @@ import {
 import { Array as Arr, Function as Fn, Option, pipe } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   readingUpdate,
   sharedReadings,
 } from "@/components/tenant/exams/attached";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The reading a new choice of the field asks for, by its value. */
 const NO_READING = "none";
@@ -85,8 +85,8 @@ export function ReadingField({
           if (Option.isNone(source) || value === held) {
             return;
           }
-          runExamAction(
-            sentAction(() =>
+          runSchoolWrite(
+            schoolCall(() =>
               save({
                 examId: exam.id,
                 questionId: question.id,
@@ -94,7 +94,7 @@ export function ReadingField({
                 source: source.value,
               })
             ),
-            { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+            { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
           );
         }}
         value={held}

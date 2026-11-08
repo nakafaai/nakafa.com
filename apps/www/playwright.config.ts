@@ -81,6 +81,54 @@ const CHROMIUM_SCHOOL_TESTS = [
   "**/school/shift.browser.ts",
 ];
 
+// The School specs that check only what the server keeps and answers: data, roles, text, addresses and
+// navigation, through plain fields, buttons and menus. Chromium runs them in the runtime suite, and another
+// engine would only repeat the same answers, so the browsers suites leave them out. Every spec that measures
+// rendering, layout, paint, fonts, focus, scroll, touch, typing into the editor, a file, a download, the
+// connection or history stays in all five engines, and so do the walks and the roles.
+const BEHAVIOUR_SCHOOL_TESTS = Arr.map(
+  [
+    "access",
+    "announcement",
+    "billing",
+    "checkout",
+    "classrooms",
+    "delete",
+    "device",
+    "duplicate",
+    "duties",
+    "entry",
+    "expired",
+    "family",
+    "forum",
+    "full",
+    "grades",
+    "grading",
+    "homework",
+    "host",
+    "icons",
+    "insight",
+    "lock",
+    "outsider",
+    "people",
+    "preferences",
+    "reports",
+    "requests",
+    "reschedule",
+    "results",
+    "revoked",
+    "room",
+    "scheme",
+    "screen",
+    "setup",
+    "status",
+    "tabs",
+    "units",
+    "webhooks",
+  ],
+  (name) => `**/school/${name}.browser.ts`
+);
+
 // The visual cards take the whole screen through the Fullscreen API on desktop,
 // Android, and iPad, and cover the viewport on iPhone, and the outline follows the
 // reader down and up a lesson, in Safari too.
@@ -161,22 +209,34 @@ const PROJECTS = {
     use: { browserName: "webkit" },
   },
   "school-firefox": {
-    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testIgnore: [
+      ...CHROMIUM_SCHOOL_TESTS,
+      ...BEHAVIOUR_SCHOOL_TESTS,
+      ...TIMING_TESTS,
+    ],
     testMatch: SCHOOL_TESTS,
     use: devices["Desktop Firefox"],
   },
   "school-safari": {
-    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testIgnore: [
+      ...CHROMIUM_SCHOOL_TESTS,
+      ...BEHAVIOUR_SCHOOL_TESTS,
+      ...TIMING_TESTS,
+    ],
     testMatch: SCHOOL_TESTS,
     use: devices["Desktop Safari"],
   },
   "school-android": {
-    testIgnore: TIMING_TESTS,
+    testIgnore: [...BEHAVIOUR_SCHOOL_TESTS, ...TIMING_TESTS],
     testMatch: SCHOOL_TESTS,
     use: devices["Pixel 7"],
   },
   "school-iphone": {
-    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testIgnore: [
+      ...CHROMIUM_SCHOOL_TESTS,
+      ...BEHAVIOUR_SCHOOL_TESTS,
+      ...TIMING_TESTS,
+    ],
     testMatch: SCHOOL_TESTS,
     use: devices["iPhone 15"],
   },
@@ -284,6 +344,15 @@ function selectedRun(suite: string | undefined): {
 
 const RUN = selectedRun(process.env.PLAYWRIGHT_SUITE);
 
+/**
+ * Whether each test records a trace and a video, which it keeps when it fails.
+ * Recording costs every test CPU on a loaded machine, and a passing test throws
+ * it away, so a run records only when PLAYWRIGHT_RECORD is 1, as a rerun of a
+ * failure asks: `PLAYWRIGHT_RECORD=1 bunx playwright test <file>`.
+ */
+const RECORDING =
+  process.env.PLAYWRIGHT_RECORD === "1" ? "retain-on-failure" : "off";
+
 export default defineConfig({
   expect: {
     timeout: 5000,
@@ -303,8 +372,8 @@ export default defineConfig({
     baseURL,
     screenshot: "only-on-failure",
     serviceWorkers: "block",
-    trace: "retain-on-failure",
-    video: "retain-on-failure",
+    trace: RECORDING,
+    video: RECORDING,
   },
   workers: RUN.workers,
 });

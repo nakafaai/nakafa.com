@@ -24,16 +24,12 @@ type UnitZone = typeof UnitZone.Type;
  * (`NO_ACTIVE_UNIT`), or the stored zone of the unit is not an IANA zone
  * (`ZONE_INVALID`).
  */
-class NoticeZoneUnresolved extends Schema.TaggedError<NoticeZoneUnresolved>()(
-  "NoticeZoneUnresolved",
-  {
-    reason: Schema.Literals([
-      "UNIT_NOT_FOUND",
-      "NO_ACTIVE_UNIT",
-      "ZONE_INVALID",
-    ]),
-  }
-) {}
+class NoticeZoneUnresolved extends Schema.TaggedError<
+  NoticeZoneUnresolved,
+  { readonly brand: unique symbol }
+>()("NoticeZoneUnresolved", {
+  reason: Schema.Literals(["UNIT_NOT_FOUND", "NO_ACTIVE_UNIT", "ZONE_INVALID"]),
+}) {}
 
 /**
  * Units by the moment they were created, and then by their id. The id breaks a

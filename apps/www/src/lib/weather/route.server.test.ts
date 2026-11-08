@@ -32,10 +32,10 @@ vi.mock("@/lib/analytics/exception.server", () => ({
 const summary = { temperature: 30, description: "clear" };
 
 /** The provider failure that the weather read reports. */
-class WeatherProviderDown extends Schema.TaggedError<WeatherProviderDown>()(
-  "WeatherProviderDown",
-  {}
-) {}
+class WeatherProviderDown extends Schema.TaggedError<
+  WeatherProviderDown,
+  { readonly brand: unique symbol }
+>()("WeatherProviderDown", {}) {}
 
 /** Posts one weather request to the route, from a visitor at the Cloudflare location given. */
 function weather(cf?: Record<string, unknown>) {

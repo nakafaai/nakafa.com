@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -82,7 +83,7 @@ test("a teacher deletes a draft from its editor and lands on the exams without a
 
   await page.waitForURL(EXAMS_PATH);
   await expect(page.getByText(TITLE)).toHaveCount(0);
-  await page.waitForTimeout(1500);
+  await waitForQuiet(page);
   const seen = await page.evaluate(() =>
     Reflect.get(window, "nakafaSeenBroken")
   );

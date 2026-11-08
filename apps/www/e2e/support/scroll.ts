@@ -1,9 +1,16 @@
 import type { Locator, Page } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
+import { waitForFrames } from "@/e2e/support/quiet";
 
 /** How far one step down a long page scrolls, and the most steps it takes. */
 const STEP_PIXELS = 300;
 const STEPS = 60;
+
+/**
+ * The frames after a scroll that its intersection observers have answered by:
+ * the browser runs them after the frame that drew the scroll.
+ */
+const OBSERVED_FRAMES = 3;
 
 /**
  * Scrolls a control of a long page to the screen step by step, as a reader does. WebKit's
@@ -25,7 +32,8 @@ export const stepTo = Effect.fn("NakafaE2E.stepTo")(function* (
     yield* Effect.promise(() =>
       page.evaluate((top) => window.scrollBy(0, top), STEP_PIXELS)
     );
-    yield* Effect.promise(() => page.waitForTimeout(50));
+    // The step is read once the page drew it and its observers answered.
+    yield* Effect.promise(() => waitForFrames(page, OBSERVED_FRAMES));
   }
 });
 
@@ -49,7 +57,7 @@ export const scrollThroughPage = Effect.fn("NakafaE2E.scrollThroughPage")(
       yield* Effect.promise(() =>
         page.evaluate((top) => window.scrollTo(0, top), offset)
       );
-      yield* Effect.promise(() => page.waitForTimeout(120));
+      yield* Effect.promise(() => waitForFrames(page, OBSERVED_FRAMES));
     }
     yield* Effect.promise(() => page.evaluate(() => window.scrollTo(0, 0)));
   }

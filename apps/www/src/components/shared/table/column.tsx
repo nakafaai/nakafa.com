@@ -20,6 +20,7 @@ import { useTranslations } from "use-intl";
 import { HeadMenuContext } from "@/components/shared/table/align";
 import type { ColumnOption } from "@/components/shared/table/columns";
 import { TableHeadButton } from "@/components/shared/table/head";
+import { RemoteChoiceContext } from "@/components/shared/table/remote";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
 /**
@@ -129,13 +130,20 @@ export function ColumnChoice({
 }) {
   const t = useTranslations("DataTable");
   const common = useTranslations("Common");
+  const server = use(RemoteChoiceContext);
   const all = useTableFilters((state) => state.chosen);
-  const chosen = Option.getOrElse(Rec.get(all, column), () => []);
   const choose = useTableFilters((state) => state.choose);
   const align = use(HeadMenuContext);
   const first = Option.map(Arr.head(options), (option) => option.value);
+  // The value other than the first, which keeps every row: the address's for a list it filters, else the page's.
+  const picked = Option.filter(
+    server === undefined
+      ? Option.flatMap(Rec.get(all, column), Arr.head)
+      : Rec.get(server.chosen, column),
+    (chosen) => !Option.contains(first, chosen)
+  );
   const value = Option.getOrElse(
-    Option.orElse(Arr.head(chosen), () => first),
+    Option.orElse(picked, () => first),
     () => ""
   );
 
@@ -144,7 +152,7 @@ export function ColumnChoice({
       <DropdownMenuTrigger
         render={
           <TableHeadButton
-            active={Arr.isReadonlyArrayNonEmpty(chosen)}
+            active={Option.isSome(picked)}
             aria-label={t("filter-by", { column: title })}
             icon={FilterIcon}
           >
@@ -158,14 +166,16 @@ export function ColumnChoice({
         label={common("menu-filter")}
       >
         <DropdownMenuRadioGroup
-          onValueChange={(next) =>
-            choose(
-              column,
-              Option.contains(first, next) || !Schema.is(Schema.String)(next)
-                ? []
-                : [next]
-            )
-          }
+          onValueChange={(next) => {
+            if (!Schema.is(Schema.String)(next)) {
+              return;
+            }
+            if (server !== undefined) {
+              server.choose(column, next);
+              return;
+            }
+            choose(column, Option.contains(first, next) ? [] : [next]);
+          }}
           value={value}
         >
           {Arr.map(options, (option) => (

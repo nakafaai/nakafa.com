@@ -9,14 +9,11 @@ import {
 } from "@repo/design-system/components/ui/line";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import type { ReactNode } from "react";
-import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
-import {
-  getTryoutPreviewChoiceTone,
-  getTryoutReviewedChoiceTone,
-} from "@/lib/tryout/appearance";
+import type { ChoiceAppearance } from "@/components/player/tone";
+import { choiceTone, getChoiceReviewedTone } from "@/components/player/tone";
 
-interface TryoutSelectableRadioOptionProps {
-  readonly appearance?: TryoutPreviewChoiceAppearance;
+interface ChoiceRadioProps {
+  readonly appearance?: ChoiceAppearance;
   checked: boolean;
   children: ReactNode;
   disabled: boolean;
@@ -26,7 +23,7 @@ interface TryoutSelectableRadioOptionProps {
 }
 
 /** One radio option: its circle on the first line of its answer, in a marked line whose label holds the circle. */
-export function TryoutSelectableRadioOption({
+export function ChoiceRadio({
   appearance = { kind: "selectable" },
   checked,
   children,
@@ -34,9 +31,9 @@ export function TryoutSelectableRadioOption({
   id,
   letter,
   value,
-}: TryoutSelectableRadioOptionProps) {
+}: ChoiceRadioProps) {
   return (
-    <ChoiceLine tone={getTryoutPreviewChoiceTone({ appearance, checked })}>
+    <ChoiceLine tone={choiceTone({ appearance, checked })}>
       <LineMark>
         <Radio
           aria-labelledby={`${id}-label`}
@@ -52,8 +49,8 @@ export function TryoutSelectableRadioOption({
   );
 }
 
-interface TryoutSelectableMultipleChoiceProps {
-  readonly appearance?: TryoutPreviewChoiceAppearance;
+interface ChoiceCheckProps {
+  readonly appearance?: ChoiceAppearance;
   checked: boolean;
   children: ReactNode;
   disabled: boolean;
@@ -63,7 +60,7 @@ interface TryoutSelectableMultipleChoiceProps {
 }
 
 /** One independently selectable option for an exact-set response, its check box on its answer's first line. */
-export function TryoutSelectableMultipleChoice({
+export function ChoiceCheck({
   appearance = { kind: "selectable" },
   checked,
   children,
@@ -71,9 +68,9 @@ export function TryoutSelectableMultipleChoice({
   id,
   letter,
   onCheckedChange,
-}: TryoutSelectableMultipleChoiceProps) {
+}: ChoiceCheckProps) {
   return (
-    <ChoiceLine tone={getTryoutPreviewChoiceTone({ appearance, checked })}>
+    <ChoiceLine tone={choiceTone({ appearance, checked })}>
       <LineMark>
         <Checkbox
           aria-labelledby={`${id}-label`}
@@ -90,7 +87,7 @@ export function TryoutSelectableMultipleChoice({
   );
 }
 
-interface TryoutReviewedChoiceProps {
+interface ChoiceReviewedProps {
   checked: boolean;
   children: ReactNode;
   id: string;
@@ -99,15 +96,15 @@ interface TryoutReviewedChoiceProps {
 }
 
 /** One locked terminal choice without a mutation Interface. */
-export function TryoutReviewedChoice({
+export function ChoiceReviewed({
   checked,
   children,
   id,
   isCorrect,
   letter,
-}: TryoutReviewedChoiceProps) {
+}: ChoiceReviewedProps) {
   return (
-    <ChoiceLine tone={getTryoutReviewedChoiceTone({ checked, isCorrect })}>
+    <ChoiceLine tone={getChoiceReviewedTone({ checked, isCorrect })}>
       <LineMark>
         <Checkbox
           aria-labelledby={`${id}-label`}
@@ -132,7 +129,7 @@ function ChoiceLine({
   tone,
 }: {
   children: ReactNode;
-  tone: ReturnType<typeof getTryoutPreviewChoiceTone>;
+  tone: ReturnType<typeof choiceTone>;
 }) {
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.

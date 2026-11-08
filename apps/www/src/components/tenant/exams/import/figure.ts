@@ -5,10 +5,10 @@ import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 const MIN_FIGURE_EDGE = 12;
 
 /** A figure the browser could not cut from its page: its box holds nothing, or the page does not decode. */
-export class FigureUncut extends Schema.TaggedError<FigureUncut>()(
-  "FigureUncut",
-  {}
-) {}
+export class FigureUncut extends Schema.TaggedError<
+  FigureUncut,
+  { readonly brand: unique symbol }
+>()("FigureUncut", {}) {}
 
 /** The box of a figure on its page, in thousandths of the page width and height from its top left corner. */
 type Box = NonNullable<ImportedQuestion["figures"][number]["box"]>;

@@ -1,8 +1,8 @@
 import { Schema } from "effect";
 import { createContext, type RefObject, use } from "react";
 import type { StoreApi } from "zustand";
-import type { lineNames } from "@/components/exams/lines/curve";
-import type { LinesStore } from "@/components/exams/lines/store";
+import type { lineNames } from "@/components/player/lines/curve";
+import type { LinesStore } from "@/components/player/lines/store";
 
 /** One pair of a board: a statement and the answer its line reaches. */
 const LinePair = Schema.Struct({

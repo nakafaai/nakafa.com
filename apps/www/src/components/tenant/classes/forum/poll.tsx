@@ -31,11 +31,6 @@ import {
 } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
@@ -45,6 +40,7 @@ import {
   shareOf,
   voteUpdate,
 } from "@/components/tenant/classes/forum/tally";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** One choice while the poll is written: its text, and an ID that keeps its field as others leave. */
 const PollChoice = Schema.Struct({ id: Schema.Int, text: Schema.String });
@@ -80,16 +76,15 @@ export function MessagePoll({ message }: { message: ForumMessage }) {
     <PollCard
       disabled={!canPost || isPending(message)}
       onChoose={(options) =>
-        runForumCall(
-          forumCall(() =>
+        runSchoolWrite(
+          schoolCall(() =>
             vote.withOptimisticUpdate(voteUpdate)({
               classId,
               messageId: message.id,
               options,
               slug,
             })
-          ),
-          toastForumFailure
+          )
         )
       }
       poll={message.poll}

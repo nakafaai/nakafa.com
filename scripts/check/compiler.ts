@@ -42,13 +42,13 @@ const PackageManifest = Schema.fromJsonString(
 );
 
 /** The repository's shared compiler configuration package cannot be named. */
-class SharedPackageError extends Schema.TaggedError<SharedPackageError>()(
-  "SharedPackageError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class SharedPackageError extends Schema.TaggedError<
+  SharedPackageError,
+  { readonly brand: unique symbol }
+>()("SharedPackageError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Whether a repository-relative path names a compiler configuration. */
 export function isCompilerConfig(file: string) {
