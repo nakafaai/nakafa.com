@@ -12,7 +12,7 @@ import {
   makeEducationalOrganizationNode,
   makeWebsiteNode,
   type WebsiteInput,
-} from "@repo/seo/json-ld/node";
+} from "@repo/seo/jsonld/node";
 import {
   createFileRoute,
   type ErrorComponentProps,

@@ -1,0 +1,54 @@
+import { describe, expect, it } from "@effect/vitest";
+import {
+  getBarSeriesCue,
+  getLineSeriesCue,
+  getPointSeriesCue,
+} from "@repo/design-system/lib/charts/cue";
+import { Array as Arr } from "effect";
+
+describe("chart series cues", () => {
+  it("assigns distinct line strokes and markers", () => {
+    expect(Arr.map([0, 1, 2], getLineSeriesCue)).toEqual([
+      {
+        activeDot: "colored-border",
+        dot: "default",
+        kind: "line",
+      },
+      {
+        activeDot: "square-border",
+        dot: "square",
+        kind: "line",
+        strokeDasharray: "8 4",
+      },
+      {
+        activeDot: "diamond-border",
+        dot: "diamond",
+        kind: "line",
+        strokeDasharray: "2 3",
+      },
+    ]);
+  });
+
+  it("assigns distinct point shapes", () => {
+    expect(Arr.map([0, 1, 2], getPointSeriesCue)).toEqual([
+      { activeDot: "colored-border", dot: "default", kind: "point" },
+      { activeDot: "square-border", dot: "square", kind: "point" },
+      { activeDot: "diamond-border", dot: "diamond", kind: "point" },
+    ]);
+  });
+
+  it("assigns solid, hatched, and rounded bar geometries", () => {
+    expect(Arr.map([0, 1, 2], getBarSeriesCue)).toEqual([
+      { kind: "bar", radius: 0, variant: "default" },
+      { kind: "bar", radius: 4, variant: "hatched" },
+      { kind: "bar", radius: 12, variant: "default" },
+    ]);
+  });
+
+  it("cycles cues safely for dynamic series", () => {
+    expect(getLineSeriesCue(4)).toEqual(getLineSeriesCue(0));
+    expect(getPointSeriesCue(-1)).toEqual(getPointSeriesCue(1));
+    expect(getBarSeriesCue(Number.NaN)).toEqual(getBarSeriesCue(0));
+    expect(getBarSeriesCue(4)).toEqual(getBarSeriesCue(0));
+  });
+});

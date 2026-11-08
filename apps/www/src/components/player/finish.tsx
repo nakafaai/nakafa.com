@@ -3,7 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
+import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";

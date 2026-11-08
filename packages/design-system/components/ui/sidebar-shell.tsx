@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { useMissedPress } from "@repo/design-system/hooks/use-press";
+import { useMissedPress } from "@repo/design-system/hooks/press";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
 import type { ComponentProps } from "react";

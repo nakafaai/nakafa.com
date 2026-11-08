@@ -23,14 +23,14 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
+import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
-import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt/boundary";
+import { usePromptInputAttachments } from "@repo/design-system/lib/prompt/context";
 import {
   type PromptInputMessage,
   submitPromptInput,
-} from "@repo/design-system/lib/prompt-input/submission";
+} from "@repo/design-system/lib/prompt/submission";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";

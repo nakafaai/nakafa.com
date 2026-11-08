@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { PIN_LIMIT } from "@repo/backend/confect/classroom/posts/post";
+import { PIN_LIMIT } from "@repo/backend/confect/classroom/posts/schema";
 import {
   denied,
   firstPage,

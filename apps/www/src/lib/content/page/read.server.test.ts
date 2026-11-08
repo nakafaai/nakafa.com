@@ -4,7 +4,7 @@ import { Effect, Option } from "effect";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { renderCurrentPublishedPage } from "@/lib/content/page/published";
 import { readLegalPageHandler } from "@/lib/content/page/read.server";
-import { testPageProjection } from "@/test/content-page";
+import { testPageProjection } from "@/test/published/page";
 
 vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.com/en/privacy-policy"),

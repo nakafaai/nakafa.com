@@ -17,9 +17,9 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { PirateProjectileScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import {
   ToggleGroup,
   ToggleGroupItem,
