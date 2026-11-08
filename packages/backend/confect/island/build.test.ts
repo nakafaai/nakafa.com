@@ -4,11 +4,17 @@ import {
   type Operation,
 } from "@repo/backend/confect/island/build";
 import type { Placement } from "@repo/backend/confect/island/layout";
+import type { Materials } from "@repo/backend/confect/island/material";
 import { STARTER_LAYOUT } from "@repo/backend/confect/island/starter";
 import { Result } from "effect";
 
-/** An island at level 2, 8 cells wide, with no badge and 200 Stars to spend. */
-const CONTEXT = { level: 2, size: 8, stars: 200 } as const;
+/** An island at level 2, 8 cells wide, with no badge, 200 Stars and no materials to spend. */
+const CONTEXT = {
+  level: 2,
+  materials: { petals: 0, wood: 0 },
+  size: 8,
+  stars: 200,
+} as const;
 
 /** A cell named by its first footprint cell. */
 const at = (x: number, y: number, z = 0) => ({ x, y, z });
@@ -26,7 +32,11 @@ const place = (
 function apply(
   operations: readonly Operation[],
   layout: readonly Placement[] = [],
-  context: Partial<{ level: number; stars: number }> = {}
+  context: Partial<{
+    level: number;
+    materials: Materials;
+    stars: number;
+  }> = {}
 ) {
   return applyOperations(layout, operations, { ...CONTEXT, ...context });
 }
@@ -46,15 +56,15 @@ function applied(...args: Parameters<typeof apply>) {
 
 describe("island/build", () => {
   it("buys an item at its stage and keeps what it paid", () => {
-    const edited = applied([place("tree", 0, 0, 0, 2), place("grass", 3, 3)]);
-    expect(edited.stars).toBe(200 - (5 + 12 + 30) - 2);
+    const edited = applied([place("pond", 0, 0, 0, 1), place("grass", 3, 3)]);
+    expect(edited.stars).toBe(200 - (40 + 60) - 2);
     expect(edited.layout).toEqual([
       {
         growth: 0,
-        item: "tree",
-        paid: 47,
+        item: "pond",
+        paid: 100,
         rotation: 0,
-        stage: 2,
+        stage: 1,
         x: 0,
         y: 0,
         z: 0,
@@ -89,12 +99,53 @@ describe("island/build", () => {
       "unsupported",
     ]);
     expect(refusal([place("tile", 0, 0)])).toEqual([0, "locked"]);
-    expect(refusal([place("tree", 0, 0, 0, 3)])).toEqual([0, "locked"]);
+    expect(refusal([place("house", 0, 0, 0, 2)])).toEqual([0, "locked"]);
     expect(refusal([place("house", 0, 0, 0, 1)], [], { stars: 10 })).toEqual([
       0,
       "unaffordable",
     ]);
     expect(refusal([place("grass", 0, 0, 0, 1)])).toEqual([0, "top"]);
+    expect(refusal([place("tree", 0, 0, 0, 1)])).toEqual([0, "top"]);
+  });
+
+  it("spends materials a stage costs, refuses without them, and returns them on removal", () => {
+    expect(refusal([place("planks", 0, 0)])).toEqual([0, "materials"]);
+    const wood = { materials: { petals: 0, wood: 2 } };
+    const built = applied([place("planks", 0, 0)], [], wood);
+    expect(built.materials).toEqual({ petals: 0, wood: 1 });
+    expect(built.stars).toBe(198);
+    const removed = applied([{ _tag: "remove", at: at(0, 0) }], built.layout, {
+      materials: built.materials,
+      stars: built.stars,
+    });
+    expect(removed.materials).toEqual({ petals: 0, wood: 2 });
+  });
+
+  it("grows a plant by watering only, and keeps a grown one in the ground", () => {
+    const tree = { ...STARTER_LAYOUT[1], paid: 5, stage: 1, growth: 2 };
+    expect(refusal([{ _tag: "upgrade", at: at(1, 1) }], [tree])).toEqual([
+      0,
+      "grows",
+    ]);
+    expect(refusal([{ _tag: "downgrade", at: at(1, 1) }], [tree])).toEqual([
+      0,
+      "grows",
+    ]);
+    expect(refusal([{ _tag: "remove", at: at(1, 1) }], [tree])).toEqual([
+      0,
+      "rooted",
+    ]);
+    const moved = applied(
+      [{ _tag: "move", from: at(1, 1), rotation: 0, to: at(4, 4) }],
+      [tree]
+    );
+    expect(moved.layout[0]).toMatchObject({ growth: 2, stage: 1, x: 4 });
+    const seed = applied([place("tree", 0, 0)]);
+    expect(
+      applied([{ _tag: "remove", at: at(0, 0) }], seed.layout, {
+        stars: seed.stars,
+      }).stars
+    ).toBe(200);
   });
 
   it("stacks blocks and stands a piece only on blocks under its whole footprint", () => {
@@ -114,7 +165,7 @@ describe("island/build", () => {
   });
 
   it("refunds what a placement paid and keeps the starter set", () => {
-    const bought = applied([place("tree", 0, 0, 0, 1)]);
+    const bought = applied([place("pond", 0, 0, 0, 1)]);
     const removed = applied([{ _tag: "remove", at: at(0, 0) }], bought.layout, {
       stars: bought.stars,
     });
@@ -158,30 +209,36 @@ describe("island/build", () => {
     ).toEqual([0, "overlap"]);
   });
 
-  it("upgrades for the next stage's price and downgrades for its refund, never below what was paid", () => {
+  it("upgrades for the next stage's price and materials and downgrades for its refund, never below what was paid", () => {
+    const wood = { petals: 0, wood: 6 };
     const upgraded = applied(
       [{ _tag: "upgrade", at: at(3, 2) }],
-      STARTER_LAYOUT
+      STARTER_LAYOUT,
+      { materials: wood }
     );
     expect(upgraded.layout[0]).toMatchObject({ paid: 150, stage: 1 });
     expect(upgraded.stars).toBe(50);
+    expect(upgraded.materials).toEqual({ petals: 0, wood: 0 });
     const back = applied(
       [{ _tag: "downgrade", at: at(3, 2) }],
       upgraded.layout,
-      {
-        stars: upgraded.stars,
-      }
+      { materials: upgraded.materials, stars: upgraded.stars }
     );
     expect(back.layout[0]).toMatchObject({ paid: 0, stage: 0 });
     expect(back.stars).toBe(200);
-    expect(
-      refusal([{ _tag: "downgrade", at: at(1, 1) }], STARTER_LAYOUT)
-    ).toEqual([0, "starter"]);
+    expect(back.materials).toEqual(wood);
+    const cameGrown = [{ ...STARTER_LAYOUT[0], stage: 1 }];
+    expect(refusal([{ _tag: "downgrade", at: at(3, 2) }], cameGrown)).toEqual([
+      0,
+      "starter",
+    ]);
     expect(
       refusal([{ _tag: "downgrade", at: at(3, 2) }], STARTER_LAYOUT)
     ).toEqual([0, "bottom"]);
     expect(
-      refusal([{ _tag: "upgrade", at: at(1, 1) }], STARTER_LAYOUT)
+      refusal([{ _tag: "upgrade", at: at(3, 2) }], STARTER_LAYOUT, {
+        level: 1,
+      })
     ).toEqual([0, "locked"]);
     expect(
       refusal([{ _tag: "upgrade", at: at(3, 2) }], STARTER_LAYOUT, {
@@ -189,14 +246,14 @@ describe("island/build", () => {
       })
     ).toEqual([0, "unaffordable"]);
     expect(
+      refusal([{ _tag: "upgrade", at: at(3, 2) }], STARTER_LAYOUT)
+    ).toEqual([0, "materials"]);
+    expect(
       refusal(
         [{ _tag: "upgrade", at: at(0, 0) }],
         applied([place("grass", 0, 0)]).layout
       )
     ).toEqual([0, "top"]);
-    expect(
-      refusal([{ _tag: "upgrade", at: at(1, 1) }], STARTER_LAYOUT, { level: 3 })
-    ).toBeUndefined();
   });
 
   it("returns the batch that puts the island back exactly as it was", () => {
@@ -207,11 +264,15 @@ describe("island/build", () => {
       { _tag: "upgrade", at: at(4, 4) },
       { _tag: "remove", at: at(0, 0, 1) },
     ];
-    const edited = applied(batch, STARTER_LAYOUT);
+    const edited = applied(batch, STARTER_LAYOUT, {
+      materials: { petals: 1, wood: 7 },
+    });
     const restored = applied(edited.undo, edited.layout, {
+      materials: edited.materials,
       stars: edited.stars,
     });
     expect(restored.stars).toBe(200);
+    expect(restored.materials).toEqual({ petals: 1, wood: 7 });
     expect(restored.layout).toEqual(
       expect.arrayContaining([...STARTER_LAYOUT])
     );

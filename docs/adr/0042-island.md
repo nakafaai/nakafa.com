@@ -89,6 +89,12 @@ D12. Build mode sends a batch of operations with the version it edited: place, m
 
 D13. Plants grow over real days. Watering takes one tap and is possible once a day, on a day the owner learned (a grant exists for that day); a plant's stage follows the days it was watered. A harvest gives building materials, never Stars, so learning stays the only source of the currency.
 
+- A plant (the tree and the flowers) is bought as a seed and grows by watering, up to its last stage. A placement's `growth` counts the watered days toward its next stage, and the stage rises once it has the days that step takes: the tree takes 2 days to a sapling, 3 more to the big tree and 4 more to fruit, and flowers open after 2. The starter tree comes as the big tree with no days counted. A plant takes no upgrade or downgrade, and once it has grown it can be moved, which keeps its growth, but not removed, so every undo stays exact.
+- `island.mutations.water` waters every plant at once. The island row keeps the last watering day, and every grant writes its day as `learned`, so watering reads that one row to know whether the owner learned today. The browser reads today only when the owner presses, so no render depends on the clock.
+- `island.mutations.harvest` takes a plant at its last stage: the tree gives 4 wood and grows back to the big tree, flowers give 3 petals and close again. The island row keeps every material its harvests ever gave.
+- Some stages cost materials besides Stars (planks 1 wood, the cottage 6 wood). Spendable materials are every harvest minus what the layout's stages cost, derived from the catalog the way spendable Stars derive from what the placements paid, so removing or downgrading returns them and undo needs nothing stored.
+- `harvested` starts at nothing on every new island, and `learned` and `watered` are absent until the first grant and the first watering.
+
 ### Renderer
 
 D14. The island draws in its own React Three Fiber canvas under `apps/www/src/components/island`, separate from the design system's visual canvas, because it needs an orthographic camera, a pixel pipeline and no anti-aliasing. That module and three.js load with `import()` on intent and never reach a route's first JavaScript.

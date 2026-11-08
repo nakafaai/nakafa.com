@@ -10434,12 +10434,24 @@ export declare const api: {
         },
         { version: number }
       >;
+      harvest: FunctionReference<
+        "mutation",
+        "public",
+        { at: { x: number; y: number; z: number }; version: number },
+        { version: number }
+      >;
       open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
       share: FunctionReference<
         "mutation",
         "public",
         { visibility: "private" | "link" | "public" },
         null
+      >;
+      water: FunctionReference<
+        "mutation",
+        "public",
+        { version: number },
+        { version: number }
       >;
     };
     queries: {
@@ -10459,12 +10471,15 @@ export declare const api: {
               | "biology";
           }>;
           layout: ArrayBuffer;
+          learned?: string;
           level: number;
           lifetime: number;
+          materials: { petals: number; wood: number };
           stars: number;
           timeZone: string;
           version: number;
           visibility: "private" | "link" | "public";
+          watered?: string;
         } | null
       >;
       visit: FunctionReference<

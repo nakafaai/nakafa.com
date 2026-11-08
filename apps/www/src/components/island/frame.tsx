@@ -1,4 +1,5 @@
 import {
+  DropletIcon,
   RotateLeft01Icon,
   RotateRight01Icon,
 } from "@hugeicons/core-free-icons";
@@ -19,17 +20,30 @@ import { Option } from "effect";
 import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { BuildBand, BuildToggle } from "@/components/island/build";
+import { useWaterIsland } from "@/components/island/farm";
 import { ToolsProvider } from "@/components/island/tools";
 import { useIsland } from "@/lib/island/context";
 
 /** The island's canvas and three.js, loaded only when the frame renders (ADR 0042, D14). */
 const IslandCanvas = lazy(() => import("@/components/island/canvas"));
 
+/** Waters the owner's garden: one press a day, on a day they learned (ADR 0042, D13). */
+function WaterItem() {
+  const t = useTranslations("Island");
+  const water = useWaterIsland();
+  return (
+    <DropdownMenuItem icon={DropletIcon} onClick={water}>
+      {t("water")}
+    </DropdownMenuItem>
+  );
+}
+
 /**
  * The owner's island in a visual card, drawn from the surrounding
  * `IslandContext`: its name and level, the island itself
- * edge to edge, full screen and a menu that turns it a quarter left or right
- * (open while the owner turns, so each turn takes one press), and what
+ * edge to edge, building as its main action, full screen and a menu that
+ * waters the garden and turns the island a quarter left or right (open while
+ * the owner turns, so each turn takes one press), and what
  * the owner can spend and the Stars the next level asks for. The canvas loads
  * with the frame and holds nothing in its place until then, since no picture of
  * the island would be the truth before it draws.
@@ -64,6 +78,7 @@ export function IslandFrame({
         <VisualCardActions>
           {Option.isSome(owner) ? <BuildToggle /> : null}
           <VisualCardMenu>
+            {Option.isSome(owner) ? <WaterItem /> : null}
             <DropdownMenuItem
               closeOnClick={false}
               icon={RotateLeft01Icon}
@@ -83,6 +98,12 @@ export function IslandFrame({
         <VisualCardFooter>
           <VisualCardFacts>
             <VisualFactTabular label={t("stars")} value={stars} />
+            {Option.isSome(owner) ? (
+              <VisualFactTabular
+                label={t("materials")}
+                value={t("materials-value", owner.value.materials)}
+              />
+            ) : null}
             <VisualFactTabular
               label={t("next")}
               value={Option.match(growth.next, {

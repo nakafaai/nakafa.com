@@ -22,5 +22,7 @@ export default Table.make(() =>
     /** Rises by one on every write of the layout, so an edit of an older layout is refused (D4). */
     version: Schema.Finite,
     visibility: Visibility,
+    /** The island's last day of watering, as an ISO date in its zone, none before the first (D13). */
+    watered: Schema.optionalKey(Schema.String),
   })
 ).index("by_userId", ["userId"]);

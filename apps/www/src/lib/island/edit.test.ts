@@ -11,6 +11,7 @@ const OWN = {
   layout: STARTER_LAYOUT,
   level: 1,
   lifetime: 20,
+  materials: { petals: 0, wood: 2 },
   stars: 20,
   timeZone: "Asia/Jakarta",
   version: 3,
@@ -27,7 +28,12 @@ const grass = {
 
 describe("island edit", () => {
   it("reads the rules' view of the owner's island", () => {
-    expect(buildContextOf(OWN)).toEqual({ level: 1, size: 6, stars: 20 });
+    expect(buildContextOf(OWN)).toEqual({
+      level: 1,
+      materials: { petals: 0, wood: 2 },
+      size: 6,
+      stars: 20,
+    });
   });
 
   it("shows an edit at once: the new layout, the Stars left and the next version", () => {

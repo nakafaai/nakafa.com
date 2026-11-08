@@ -82,6 +82,33 @@ export const NINA_PEEK: Sprite = {
 };
 
 /** A little bed of flowers that sways in the wind between frames. */
+/** Flowers on their first day: stems with closed buds that open once watered (ADR 0042, D13). */
+export const BUDS: Sprite = {
+  fps: 1,
+  frames: [
+    [
+      "..b....b.",
+      ".gbg..gb.",
+      "..g.b..g.",
+      ".g.gbg.g.",
+      "gg.gg.gg.",
+      ".ggg.ggg.",
+    ],
+    [
+      "...b...b.",
+      "..gbg.gb.",
+      "..g..b.g.",
+      ".g.gbg.g.",
+      "gg.gg.gg.",
+      ".ggg.ggg.",
+    ],
+  ],
+  key: {
+    b: ["petal", 0],
+    g: ["leaf", 2],
+  },
+};
+
 export const FLOWERS: Sprite = {
   fps: 1,
   frames: [

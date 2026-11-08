@@ -58,3 +58,37 @@ export const BIG_TREE: readonly Shape[] = [
     jitter: 0.25,
   },
 ];
+
+/** One apple: a red cube two voxels wide with a light corner, set into the crown's face. */
+function apple(x: number, y: number, z: number): readonly Shape[] {
+  return [
+    {
+      _tag: "box",
+      from: [x, y, z],
+      ramp: "roof",
+      tone: 2,
+      to: [x + 1, y + 1, z + 1],
+    },
+    {
+      _tag: "box",
+      from: [x + 1, y + 1, z + 1],
+      ramp: "roof",
+      tone: 3,
+      to: [x + 1, y + 1, z + 1],
+    },
+  ];
+}
+
+/**
+ * The big tree in fruit, its last stage (ADR 0042, D13): apples sit just inside
+ * the crown's faces that turn toward the viewer, so each one shows.
+ */
+export const FRUIT_TREE: readonly Shape[] = [
+  ...BIG_TREE,
+  ...apple(17, 19, 17),
+  ...apple(19, 21, 13),
+  ...apple(13, 22, 19),
+  ...apple(9, 22, 18),
+  ...apple(21, 22, 12),
+  ...apple(15, 27, 17),
+];

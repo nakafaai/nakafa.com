@@ -3758,6 +3758,39 @@
     },
     "island-stale": {
       "title": "Pulaumu berubah di tempat lain, jadi kami memuatnya lagi."
+    },
+    "island-refused-grows": {
+      "title": "Ini tumbuh saat kamu menyiramnya."
+    },
+    "island-refused-rooted": {
+      "title": "Ini sudah berakar, jadi pindahkan saja."
+    },
+    "island-refused-materials": {
+      "title": "Hasil kebunmu belum cukup untuk ini."
+    },
+    "island-farm-unlearned": {
+      "title": "Belajar dulu hari ini, lalu siram kebunmu."
+    },
+    "island-farm-watered": {
+      "title": "Kebunmu sudah disiram hari ini."
+    },
+    "island-farm-barren": {
+      "title": "Tanam pohon atau bunga dulu."
+    },
+    "island-farm-missing": {
+      "title": "Tanaman itu sudah tidak ada."
+    },
+    "island-farm-unripe": {
+      "title": "Ini belum siap dipanen."
+    },
+    "island-watered": {
+      "title": "Kebunmu sudah disiram."
+    },
+    "island-harvested-wood": {
+      "title": "Kamu mengumpulkan kayu."
+    },
+    "island-harvested-petals": {
+      "title": "Kamu mengumpulkan kelopak bunga."
     }
   },
   "Ai": {
@@ -4580,6 +4613,11 @@
     "item-flowers": "Bunga",
     "item-bush": "Semak",
     "item-rock": "Batu besar",
-    "item-lamp": "Lampu"
+    "item-lamp": "Lampu",
+    "water": "Siram kebun",
+    "harvest": "Panen",
+    "materials": "Kebun",
+    "materials-value": "{wood} kayu, {petals} kelopak",
+    "price-wood": "{stars} Bintang, {wood} kayu"
   }
 }
