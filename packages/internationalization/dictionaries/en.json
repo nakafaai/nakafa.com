@@ -4525,5 +4525,17 @@
     "faq-credits-answer": "Nina, Nakafa's AI, spends credits on each answer. The whole school shares one pool, and a pack of 1,000 more lasts 12 months.",
     "faq-change-question": "Can we change plans later?",
     "faq-change-answer": "Yes. Move between Pro and Max or add accounts at any time, and the change applies from the next paid invoice."
+  },
+  "Island": {
+    "title": "Island",
+    "description": "Your island grows with every lesson and try-out.",
+    "name": "{name}'s Island",
+    "level": "Level {level}",
+    "stars": "Stars",
+    "next": "Next level",
+    "next-value": "{stars} Stars",
+    "top": "Highest level",
+    "turn-left": "Turn left",
+    "turn-right": "Turn right"
   }
 }

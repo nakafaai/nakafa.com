@@ -8,21 +8,34 @@ import {
 } from "effect";
 
 /**
- * The code a stored layout writes for each item. A code lives in every saved
- * island, so it never changes and is never given to another item.
+ * Every item an island can hold: the code a stored layout writes for it, and
+ * the cells it covers, east by south, before it turns. A code lives in every
+ * saved island, so it never changes and is never given to another item.
  */
-const ITEM_CODES = {
-  house: 1,
-  tree: 2,
+const ITEMS = {
+  house: { code: 1, footprint: [2, 2] },
+  tree: { code: 2, footprint: [1, 1] },
+  pond: { code: 3, footprint: [3, 3] },
 } as const;
 
 /** Every item an island can hold. */
-export const Item = Schema.Literals(Record.keys(ITEM_CODES));
+export const Item = Schema.Literals(Record.keys(ITEMS));
 export type Item = typeof Item.Type;
 
 const ITEMS_BY_CODE = Record.fromEntries(
-  Arr.map(Record.toEntries(ITEM_CODES), ([item, code]) => [String(code), item])
+  Arr.map(Record.toEntries(ITEMS), ([item, entry]) => [
+    String(entry.code),
+    item,
+  ])
 );
+
+/** The cells an item covers, east by south, after `rotation` quarter turns. */
+export function footprintOf(item: Item, rotation: number) {
+  const [east, south] = ITEMS[item].footprint;
+  return rotation % 2 === 0
+    ? ([east, south] as const)
+    : ([south, east] as const);
+}
 
 /**
  * An item as a layout record stores it: its code on the wire and in the table,
@@ -44,7 +57,7 @@ export const ItemFromCode = Schema.Int.pipe(
               )
           )
         ),
-      encode: (item) => Effect.succeed(ITEM_CODES[item]),
+      encode: (item) => Effect.succeed(ITEMS[item].code),
     })
   )
 );

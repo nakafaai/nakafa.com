@@ -1,0 +1,60 @@
+import type { Shape } from "@/lib/island/voxel";
+
+/** The big tree: a thick trunk with root flares under a round crown of leaves. */
+export const BIG_TREE: readonly Shape[] = [
+  {
+    _tag: "cylinder",
+    bottom: 0,
+    center: [12, 12],
+    radius: 2.4,
+    ramp: "wood",
+    tone: 1,
+    top: 16,
+    jitter: 0.3,
+  },
+  { _tag: "box", from: [9, 0, 11], ramp: "wood", tone: 1, to: [10, 1, 12] },
+  { _tag: "box", from: [14, 0, 12], ramp: "wood", tone: 1, to: [15, 1, 13] },
+  { _tag: "box", from: [11, 0, 14], ramp: "wood", tone: 1, to: [12, 1, 15] },
+  { _tag: "box", from: [12, 0, 9], ramp: "wood", tone: 1, to: [13, 1, 10] },
+  { _tag: "box", from: [12, 13, 7], ramp: "wood", tone: 1, to: [13, 15, 11] },
+  {
+    _tag: "blob",
+    center: [12, 20, 12],
+    radius: [9, 6, 9],
+    ramp: "leaf",
+    tone: 2,
+    jitter: 0.3,
+  },
+  {
+    _tag: "blob",
+    center: [7, 23, 14],
+    radius: [6, 5, 6],
+    ramp: "leaf",
+    tone: 2,
+    jitter: 0.3,
+  },
+  {
+    _tag: "blob",
+    center: [17, 23, 10],
+    radius: [6, 5, 6],
+    ramp: "leaf",
+    tone: 2,
+    jitter: 0.3,
+  },
+  {
+    _tag: "blob",
+    center: [12, 26, 13],
+    radius: [6, 5, 6],
+    ramp: "leaf",
+    tone: 3,
+    jitter: 0.3,
+  },
+  {
+    _tag: "blob",
+    center: [13, 29, 11],
+    radius: [4, 3, 4],
+    ramp: "leaf",
+    tone: 3,
+    jitter: 0.25,
+  },
+];
