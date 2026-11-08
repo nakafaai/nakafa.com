@@ -71,7 +71,13 @@ test("in every kind of question, each text of the question takes the toolbar's m
           y: Math.max((box?.height ?? 8) - 4, 1),
         },
       });
+      await expect(text, `${kind}: ${name} takes the focus`).toBeFocused();
       await page.keyboard.type(` ${WORD}`);
+      await expect(text).toContainText(WORD);
+      await expect(
+        text,
+        `${kind}: ${name} keeps the focus while the teacher types`
+      ).toBeFocused();
       await selectBack(page, WORD.length);
       await pressTool(page, "Bold");
       await expect(

@@ -162,7 +162,10 @@ for (const viewport of WIDTHS) {
     await expect(prompt).toBeFocused();
     await page.keyboard.type("z");
     await expect(
-      prompt.locator("p").filter({ has: inline }).last()
+      prompt
+        .locator("p")
+        .filter({ has: page.locator('[data-formula="inline"]') })
+        .last()
     ).toContainText("z");
     await inline.getByRole("button", { name: "Edit formula" }).click();
     await page.getByRole("button", { name: "Delete formula" }).click();
@@ -224,9 +227,12 @@ for (const viewport of WIDTHS) {
     await expect(page.getByRole("menuitem", { name: "Graph" })).toBeVisible();
     await page.keyboard.press("Escape");
 
-    // Everything the controls made is saved: the editor opened again reads the same question.
-    await page.reload();
-    const reopened = page.getByRole("textbox", { name: "Question 1 text" });
+    // Everything the controls made is saved: the editor opened again reads the same question. It opens
+    // beside this page, whose saves still on their way land meanwhile, where a reload would cancel them.
+    const second = await context.newPage();
+    const secondFailures = watchFailures(second);
+    await second.goto(page.url());
+    const reopened = second.getByRole("textbox", { name: "Question 1 text" });
     await expect(reopened).toBeEditable({
       timeout: readinessTimeoutMilliseconds,
     });
@@ -242,6 +248,7 @@ for (const viewport of WIDTHS) {
     await expect(reopened.locator("[data-picture]")).toHaveCount(0);
     await expect(reopened).toContainText(ARABIC);
     expect(MutableList.toArray(failures)).toEqual([]);
+    expect(MutableList.toArray(secondFailures)).toEqual([]);
     await context.close();
   });
 }

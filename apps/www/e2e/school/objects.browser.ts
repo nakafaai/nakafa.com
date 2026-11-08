@@ -91,9 +91,12 @@ for (const viewport of WIDTHS) {
     await expect(prompt.locator("table")).not.toContainText("luar");
     await expect(prompt.locator("p").last()).toHaveText("luar");
 
-    // Every command was saved: the editor opened again holds the same table.
-    await page.reload();
-    const reopened = page.getByRole("textbox", { name: "Question 1 text" });
+    // Every command was saved: the editor opened again holds the same table. It opens beside this
+    // page, whose saves still on their way land meanwhile, where a reload would cancel them.
+    const second = await context.newPage();
+    const secondFailures = watchFailures(second);
+    await second.goto(page.url());
+    const reopened = second.getByRole("textbox", { name: "Question 1 text" });
     await expect(reopened).toBeEditable({
       timeout: readinessTimeoutMilliseconds,
     });
@@ -104,19 +107,21 @@ for (const viewport of WIDTHS) {
 
     // The bar removes the table.
     await reopened.locator("td").first().click();
-    await bar
+    await second
+      .getByRole("toolbar", { name: "Table" })
       .getByRole("button", { exact: true, name: "Delete table" })
       .click();
     await expect(reopened.locator("table")).toHaveCount(0);
 
     // A table that holds nothing goes with Backspace, and with Delete.
     for (const key of ["Backspace", "Delete"]) {
-      await pressTool(page, "Table");
+      await pressTool(second, "Table");
       await expect(reopened.locator("table")).toHaveCount(1);
-      await page.keyboard.press(key);
+      await second.keyboard.press(key);
       await expect(reopened.locator("table")).toHaveCount(0);
     }
     expect(MutableList.toArray(failures)).toEqual([]);
+    expect(MutableList.toArray(secondFailures)).toEqual([]);
     await context.close();
   });
 }

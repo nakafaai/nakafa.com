@@ -11,10 +11,11 @@ import {
 import { barLine, objectBar } from "@repo/design-system/components/editor/bar";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { type Editor, findParentNode } from "@tiptap/core";
-import type { Selection } from "@tiptap/pm/state";
+import type { EditorState, Selection } from "@tiptap/pm/state";
 import { useCurrentEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { Option } from "effect";
+import { useCallback } from "react";
 
 /** The insert control: a table of two rows and two columns, the first row a header, with the caret in its first cell. */
 export function DocumentTable({ labels }: { labels: { table: string } }) {
@@ -54,6 +55,27 @@ const tableBox = (editor: Editor) =>
     Option.getOrNull
   );
 
+/**
+ * Where the table's bar stands: on the table's top edge at its start, flipped under it or shifted
+ * into the screen when the edge has no room. The bar's options never change, so the menu never
+ * sends the editor a transaction to update them.
+ */
+const TABLE_BAR_PLACEMENT = {
+  flip: true,
+  offset: 8,
+  placement: "top-start",
+  shift: { padding: 8 },
+} as const;
+
+/** Whether the table's bar shows: while the editor takes changes and the selection is in a table. */
+const showsTableBar = ({
+  editor,
+  state,
+}: {
+  editor: Editor;
+  state: EditorState;
+}) => editor.isEditable && Option.isSome(tableAround(state.selection));
+
 /** The line between two groups of the table's bar. */
 function TableBarLine() {
   return <span aria-hidden="true" className={barLine({ space: true })} />;
@@ -81,6 +103,11 @@ export function TableBar({
   };
 }) {
   const { editor } = useCurrentEditor();
+  // The box the bar stands beside, read when the menu places itself, kept for the editor it reads.
+  const box = useCallback(
+    () => (editor === null ? null : tableBox(editor)),
+    [editor]
+  );
 
   if (editor === null) {
     return null;
@@ -91,18 +118,11 @@ export function TableBar({
       aria-label={labels.table}
       className={objectBar()}
       editor={editor}
-      getReferencedVirtualElement={() => tableBox(editor)}
-      options={{
-        flip: true,
-        offset: 8,
-        placement: "top-start",
-        shift: { padding: 8 },
-      }}
+      getReferencedVirtualElement={box}
+      options={TABLE_BAR_PLACEMENT}
       pluginKey="tableBar"
       role="toolbar"
-      shouldShow={({ editor: current, state }) =>
-        current.isEditable && Option.isSome(tableAround(state.selection))
-      }
+      shouldShow={showsTableBar}
     >
       <RichEditorControl
         icon={InsertRowUpIcon}
