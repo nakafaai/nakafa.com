@@ -42,14 +42,22 @@ const TryoutQueryValue = Schema.Union([
 ]).pipe(Schema.catchDecoding(() => Effect.succeedSome("")));
 
 /**
+ * The question the player is on, as the router parsed it from the address: a whole number from 1, which the router
+ * writes back as the same digits. Kept as text it would come back quoted (`"12"`), which names no question. Any other
+ * value names none, so the key goes and the player opens the first question.
+ */
+const TryoutQuestionNumber = Schema.Int.check(
+  Schema.isGreaterThanOrEqualTo(1)
+).pipe(Schema.catchDecoding(() => Effect.succeedNone));
+
+/**
  * The address of an attempt page: its attempt capability, its player view, and
  * the question the player is on. The first two stay raw here, because a page
- * refuses an invalid value with not found, as the attempt readers decide it; the
- * player reads the question itself and opens the first for one it does not know.
+ * refuses an invalid value with not found, as the attempt readers decide it.
  */
 export const TryoutAttemptSearch = Schema.Struct({
   attemptId: Schema.optionalKey(TryoutQueryValue),
-  question: Schema.optionalKey(TryoutQueryValue),
+  question: Schema.optionalKey(TryoutQuestionNumber),
   view: Schema.optionalKey(TryoutQueryValue),
 });
 

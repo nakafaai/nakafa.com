@@ -39,6 +39,24 @@ describe("TryoutAttemptSearch", () => {
     ).toEqual({ attemptId: "", view: "" });
   });
 
+  it("keeps the question as the number the router parsed, so the address writes it back unquoted", () => {
+    expect(Schema.decodeSync(TryoutAttemptSearch)({ question: 12 })).toEqual({
+      question: 12,
+    });
+    expect(Schema.encodeSync(TryoutAttemptSearch)({ question: 12 })).toEqual({
+      question: 12,
+    });
+  });
+
+  it("drops a question that names none, so the player opens the first", () => {
+    expect(
+      Schema.decodeUnknownSync(TryoutAttemptSearch)({ question: "abc" })
+    ).toEqual({});
+    expect(
+      Schema.decodeUnknownSync(TryoutAttemptSearch)({ question: 0 })
+    ).toEqual({});
+  });
+
   it("encodes the text it decoded back to the same text", () => {
     expect(
       Schema.encodeSync(TryoutAttemptSearch)({ attemptId: "abc", view: "list" })
