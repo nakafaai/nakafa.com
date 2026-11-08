@@ -2020,9 +2020,9 @@
       "l": "500 bis 999",
       "xl": "1.000 oder mehr"
     },
-    "plan-free": "Kostenloser Test für 30 Tage, bis {limit} Konten.",
-    "plan-school": "Pro oder Max, jede Rolle zählt als ein Konto.",
-    "plan-founder": "Tarif School, mit Hilfe des Gründers.",
+    "plan-free": "30 Tage kostenlos, bis {limit} Konten.",
+    "plan-school": "Pro oder Max, jede Rolle ein Konto.",
+    "plan-founder": "Tarif School, mit dem Gründer.",
     "founder-line": "Der Gründer hilft großen Schulen beim Start.",
     "founder-link": "Mit dem Gründer sprechen",
     "contact-label": "Kontakt und Teilen",

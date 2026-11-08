@@ -2020,9 +2020,9 @@
       "l": "500 to 999",
       "xl": "1,000 or more"
     },
-    "plan-free": "Free trial for 30 days, up to {limit} accounts.",
-    "plan-school": "Pro or Max, every role counted as one account.",
-    "plan-founder": "School plan, with the founder's help.",
+    "plan-free": "Free for 30 days, up to {limit} accounts.",
+    "plan-school": "Pro or Max, each role is one account.",
+    "plan-founder": "School plan, set up with the founder.",
     "founder-line": "The founder can help a large school set up.",
     "founder-link": "Talk to the founder",
     "contact-label": "Contact and share",
