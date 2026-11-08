@@ -3,7 +3,7 @@ import {
   GeometricDotContext,
   GeometricShape,
 } from "@repo/design-system/components/evilcharts/ui/geometric-dot";
-import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
+import type { ChartDotVariant } from "@repo/design-system/lib/charts/cue";
 import { cn } from "cn";
 import { Match, Schema } from "effect";
 import { createContext, memo, use, useId, useMemo } from "react";

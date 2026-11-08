@@ -2,7 +2,7 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { getHeadings } from "@repo/contents/toc";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
+import { makeArticleJsonLd } from "@repo/seo/jsonld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Effect, Match, Option, Schema } from "effect";

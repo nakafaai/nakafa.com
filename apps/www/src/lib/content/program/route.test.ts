@@ -7,7 +7,7 @@ import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Array as Arr, Effect, Layer } from "effect";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
 import { activateTestRelease } from "@/test/active";
-import { previewIdProjection, previewProjection } from "@/test/content-preview";
+import { previewIdProjection, previewProjection } from "@/test/manifest";
 import {
   readTestPublishedRoute,
   testCurriculumRowJson,
@@ -16,7 +16,7 @@ import {
   testProgramGroups,
   testProgramRowJson,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());

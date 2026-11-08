@@ -16,7 +16,7 @@ import {
   previewNextProjection,
   previewProjection,
   previewSourcePath,
-} from "@/test/content-preview";
+} from "@/test/manifest";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
