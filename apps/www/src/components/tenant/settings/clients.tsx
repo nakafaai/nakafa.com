@@ -22,15 +22,16 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -228,7 +229,6 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
   const issueSecret = useIssueSecret();
   const clipboard = useClipboard({ timeout: 1500 });
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const rotate = useMutation(integrations.clients.rotate);
   const revoke = useMutation(integrations.clients.revoke).withOptimisticUpdate(
     revokeClientChange
@@ -239,12 +239,15 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("edit")}
+        >
           {t("client-edit")}
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={isPending}
+          icon={Key01Icon}
           onClick={() =>
             startTransition(() =>
               saveSchool(
@@ -255,55 +258,52 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
             )
           }
         >
-          <HugeIcons icon={Key01Icon} />
           {t("client-rotate")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => clipboard.copy(client.id)}>
-          <HugeIcons icon={Copy01Icon} />
+        <DropdownMenuItem
+          icon={Copy01Icon}
+          onClick={() => clipboard.copy(client.id)}
+        >
           {t("client-id-copy")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => dialogs.show("connect")}>
-          <HugeIcons icon={CommandLineIcon} />
+        <DropdownMenuItem
+          icon={CommandLineIcon}
+          onClick={() => dialogs.show("connect")}
+        >
           {t("device-title")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          icon={Delete02Icon}
           onClick={() => dialogs.show("revoke")}
           variant="destructive"
         >
-          <HugeIcons icon={Delete02Icon} />
           {t("client-revoke")}
         </DropdownMenuItem>
       </RowItems>
       <ResponsiveDialog
-        description={t("client-revoke-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                dialogs.close();
-                startTransition(() =>
-                  saveSchool(
-                    () => revoke({ clientId: client.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("client-revoke-confirm")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              dialogs.close();
+              startTransition(() =>
+                saveSchool(() => revoke({ clientId: client.id, slug }), SOURCE)
+              );
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("client-revoke-confirm")}
+          </Button>
         }
+        description={t("client-revoke-description")}
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("client-revoke-title")}
       >
-        <ConfirmSubject icon={Key01Icon} name={client.name} />
+        <ResponsiveDialogSubject icon={Key01Icon}>
+          {client.name}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
       {dialogs.kind === "edit" ? (
         <SchoolClientEditDialog

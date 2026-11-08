@@ -458,13 +458,13 @@ function GradeLineMenu({ line }: { line: SheetLine }) {
   return (
     <RowItems>
       <DropdownMenuItem
+        icon={SentIcon}
         onClick={() =>
           startTransition(() =>
             saveSchool(() => release({ gradeId: grade.id, slug }), SOURCE)
           )
         }
       >
-        <HugeIcons icon={SentIcon} />
         {t("release")}
       </DropdownMenuItem>
     </RowItems>

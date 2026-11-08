@@ -193,8 +193,10 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => setOpen(true)}>
-          <HugeIcons icon={InformationCircleIcon} />
+        <DropdownMenuItem
+          icon={InformationCircleIcon}
+          onClick={() => setOpen(true)}
+        >
           {t("audit-details")}
         </DropdownMenuItem>
       </RowItems>

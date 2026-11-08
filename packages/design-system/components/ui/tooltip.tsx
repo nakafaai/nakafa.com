@@ -1,6 +1,7 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import type * as React from "react";
@@ -47,26 +48,28 @@ function TooltipContent({
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
   return (
-    <TooltipPrimitive.Portal container={use(PortalContainer)}>
-      <TooltipPrimitive.Positioner
-        align={align}
-        alignOffset={alignOffset}
-        className="isolate z-50"
-        side={side}
-        sideOffset={sideOffset}
-      >
-        <TooltipPrimitive.Popup
-          className={cn(
-            "data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 bg-foreground text-background duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 w-fit max-w-xs origin-(--transform-origin) rounded-md px-3 py-1.5 text-xs ease-out",
-            className
-          )}
-          data-slot="tooltip-content"
-          {...props}
+    <ButtonGroupVariant value={undefined}>
+      <TooltipPrimitive.Portal container={use(PortalContainer)}>
+        <TooltipPrimitive.Positioner
+          align={align}
+          alignOffset={alignOffset}
+          className="isolate z-50"
+          side={side}
+          sideOffset={sideOffset}
         >
-          {children}
-        </TooltipPrimitive.Popup>
-      </TooltipPrimitive.Positioner>
-    </TooltipPrimitive.Portal>
+          <TooltipPrimitive.Popup
+            className={cn(
+              "data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 bg-foreground text-background duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 w-fit max-w-xs origin-(--transform-origin) rounded-md px-3 py-1.5 text-xs ease-out",
+              className
+            )}
+            data-slot="tooltip-content"
+            {...props}
+          >
+            {children}
+          </TooltipPrimitive.Popup>
+        </TooltipPrimitive.Positioner>
+      </TooltipPrimitive.Portal>
+    </ButtonGroupVariant>
   );
 }
 

@@ -14,6 +14,7 @@ import {
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, DateTime, Match } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -42,7 +43,6 @@ import {
   restoreItemUpdate,
 } from "@/components/tenant/classes/library/optimistic";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
-import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
@@ -255,10 +255,9 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
     <ConfirmRowMenu
       action={t("library-purge")}
       body={
-        <LossItem
-          icon={KIND_ICONS[shownOf(row).kind]}
-          name={shownOf(row).title}
-        />
+        <ResponsiveDialogSubject icon={KIND_ICONS[shownOf(row).kind]}>
+          {shownOf(row).title}
+        </ResponsiveDialogSubject>
       }
       confirm={t("library-purge")}
       description={t("library-purge-description")}
@@ -266,8 +265,7 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
       onConfirm={purge}
       title={t("library-purge-title")}
     >
-      <DropdownMenuItem onClick={restore}>
-        <HugeIcons icon={RotateLeft01Icon} />
+      <DropdownMenuItem icon={RotateLeft01Icon} onClick={restore}>
         {t("library-restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>

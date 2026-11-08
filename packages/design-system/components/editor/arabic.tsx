@@ -1,5 +1,4 @@
 import { KeyboardIcon } from "@hugeicons/core-free-icons";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { ArabicKeypad } from "@repo/design-system/components/ui/arabic";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -34,23 +33,21 @@ export function EditorArabicKeyboard({ label }: { label: string }) {
       }}
       open={open}
     >
-      <ToolHint label={label}>
-        <PopoverTrigger
-          render={
-            <Button
-              aria-label={label}
-              aria-pressed={open}
-              className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-              onMouseDown={(event) => event.preventDefault()}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            />
-          }
-        >
-          <HugeIcons icon={KeyboardIcon} />
-        </PopoverTrigger>
-      </ToolHint>
+      <PopoverTrigger
+        render={
+          <Button
+            aria-pressed={open}
+            className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+            onMouseDown={(event) => event.preventDefault()}
+            size="icon-sm"
+            tooltip={label}
+            type="button"
+            variant="ghost"
+          />
+        }
+      >
+        <HugeIcons icon={KeyboardIcon} />
+      </PopoverTrigger>
       <PopoverContent
         align="end"
         className="w-auto max-w-(--available-width) p-2"

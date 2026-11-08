@@ -16,7 +16,6 @@ import {
 import records from "@repo/backend/confect/_generated/refs/records";
 import { KktpStatus } from "@repo/backend/confect/records/grade";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -144,13 +143,11 @@ function OwnGradeTable() {
     gradeColumns.menu(() => (
       <RowItems>
         <DropdownMenuItem
-          render={
-            <Link params={{ slug }} to="/school/$slug/cards">
-              <HugeIcons icon={Certificate01Icon} />
-              {t("own-open-cards")}
-            </Link>
-          }
-        />
+          icon={Certificate01Icon}
+          render={<Link params={{ slug }} to="/school/$slug/cards" />}
+        >
+          {t("own-open-cards")}
+        </DropdownMenuItem>
       </RowItems>
     )),
   ];

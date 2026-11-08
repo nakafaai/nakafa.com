@@ -14,6 +14,7 @@ import {
   Schema,
 } from "effect";
 import { forumCall } from "@/components/tenant/classes/forum/call";
+import { changeLoaded } from "@/lib/data/loaded";
 
 /** One announcement that waits for its time, as its author reads it. */
 export type WaitingPost = Ref.Returns<typeof classroom.scheduled.list>[number];
@@ -35,15 +36,11 @@ const changeWaiting = (
   classId: Id<"classes">,
   change: (posts: readonly WaitingPost[]) => readonly WaitingPost[]
 ) => {
-  for (const query of localStore.getAllQueries(list)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      localStore.setQuery(
-        list,
-        query.args,
-        Option.some(Arr.sort(change(query.value.value), bySoonest))
-      );
-    }
-  }
+  changeLoaded(localStore, list, (posts, args) =>
+    args.classId === classId
+      ? Option.some(Arr.sort(change(posts), bySoonest))
+      : Option.none()
+  );
 };
 
 /** Whether the server keeps the announcement: one just scheduled holds its client key as its ID until then. */

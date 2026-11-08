@@ -9,16 +9,13 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -250,6 +247,7 @@ function CourseClass({
   course: Course;
   preview: Preview;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Connectors");
   const { slug } = useTenant();
   const link = useMutation(connectors.classroom.link);
@@ -281,29 +279,27 @@ function CourseClass({
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <HugeIcons icon={Mortarboard01Icon} />
+      <DropdownMenuSubTrigger icon={Mortarboard01Icon}>
         {t("course-class")}
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-56">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("course-class")}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            onValueChange={pick}
-            value={course.classId ?? UNLINKED}
-          >
-            <DropdownMenuRadioItem value={UNLINKED}>
-              <HugeIcons icon={Unlink01Icon} />
-              {t("course-unlinked")}
+      <DropdownMenuSubContent className="w-56" label={common("menu-class")}>
+        <DropdownMenuRadioGroup
+          onValueChange={pick}
+          value={course.classId ?? UNLINKED}
+        >
+          <DropdownMenuRadioItem icon={Unlink01Icon} value={UNLINKED}>
+            {t("course-unlinked")}
+          </DropdownMenuRadioItem>
+          {Arr.map(preview.classes, (klass) => (
+            <DropdownMenuRadioItem
+              icon={Mortarboard01Icon}
+              key={klass.id}
+              value={klass.id}
+            >
+              {klass.name}
             </DropdownMenuRadioItem>
-            {Arr.map(preview.classes, (klass) => (
-              <DropdownMenuRadioItem key={klass.id} value={klass.id}>
-                <HugeIcons icon={Mortarboard01Icon} />
-                {klass.name}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );
@@ -319,6 +315,7 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
   return (
     <DropdownMenuItem
       disabled={isImporting}
+      icon={<Spinner icon={UserAdd01Icon} isLoading={isImporting} />}
       onClick={() =>
         startImporting(() =>
           saveSchool(
@@ -329,7 +326,6 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
         )
       }
     >
-      <Spinner icon={UserAdd01Icon} isLoading={isImporting} />
       {t("course-import")}
     </DropdownMenuItem>
   );

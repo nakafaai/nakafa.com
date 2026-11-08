@@ -2,6 +2,7 @@ import type { OptimisticUpdate } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
 import { changeDiscussion } from "@/components/tenant/classes/forum/optimistic";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 const { list } = classroom.forum.channels;
 
@@ -9,28 +10,19 @@ const { list } = classroom.forum.channels;
 export const renameChannelUpdate: OptimisticUpdate<
   typeof classroom.forum.channels.rename
 > = (localStore, args) => {
-  for (const query of localStore.getAllQueries(list)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(
-        query.value.value.page,
-        (channel) => channel.id === args.channelId
-      )
-    ) {
-      localStore.setQuery(
-        list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (channel) =>
-            channel.id === args.channelId
-              ? { ...channel, name: args.name }
-              : channel
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, list, (value) =>
+    Arr.some(value.page, (channel) => channel.id === args.channelId)
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.map(page, (channel) =>
+              channel.id === args.channelId
+                ? { ...channel, name: args.name }
+                : channel
+            )
+          )
+        )
+      : Option.none()
+  );
 };
 
 /** Shows a discussion's new title at once, on its page and on the message that opens it. */

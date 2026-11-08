@@ -3,16 +3,12 @@ import { readRowAxis } from "@/e2e/support/axis";
 import { readOverlaps } from "@/e2e/support/overlap";
 
 /**
- * What one look at a surface finds out of line between markers and their words, measured as the owner's rule of
- * 8 Nov 2026 reads ("Buttons look like buttons, at one size scale"). Every finding names the element and the distance
- * in pixels, and nothing within a pixel counts, since a font's rounding moves a line that far in every engine. The
- * page serializes this function, so it holds every part it reads.
- *
- * - A marker (a number, a letter, a radio, a check box, a dot, an icon, an icon button) stands on the first line of
- *   the text beside it: its middle on that line's middle, or its baseline on that line's baseline when both are
- *   words. A trailing control of a row with a leading marker keeps the same line, so the row reads on one axis.
- * - Rows of one list draw their markers and their text at the same distance from the row's edge, and stand the same
- *   gap apart.
+ * What one look finds out of line between markers and their words, by the owner's rule of 8 Nov 2026. A marker (a
+ * number, letter, radio, check box, dot, icon or icon button) stands on the first line of the words beside it: its
+ * middle on that line's middle, or its baseline on that line's baseline when both are words, and a trailing control of
+ * a row with a leading marker keeps that line. Rows of one list start their markers and words one distance from the
+ * row's edge and stand one gap apart. Nothing within a pixel counts, a font's rounding in every engine. The page
+ * serializes this function, so it holds every part it reads.
  */
 function readAsymmetry({
   marker,
@@ -30,13 +26,22 @@ function readAsymmetry({
   const BUTTON = "button, a, [role='button']";
   const FIELD = "input, textarea, select, [contenteditable='true']";
   const PLACEHOLDER = ".is-editor-empty[data-placeholder]";
+  /** The first line of some words: its baseline and its middle, in the page's pixels, and the words that name it. */
+  interface Line {
+    baseline: number;
+    middle: number;
+    words: string;
+  }
   const problems = new Set<string>();
   const canvas = document.createElement("canvas").getContext("2d");
   const metrics = new Map<string, { ascent: number; descent: number }>();
-  const rows = new Map<
-    Element,
-    { kinds: string[]; markers: number[]; text: Element }
-  >();
+  /** A row of the surface with a marker: what its children are, where its markers stand, and its words. */
+  interface Row {
+    kinds: string[];
+    markers: number[];
+    text: Element;
+  }
+  const rows = new Map<Element, Row>();
 
   const round = (value: number) => Math.round(value * 10) / 10;
   const spread = (values: number[]) =>
@@ -109,10 +114,7 @@ function readAsymmetry({
       .trim();
 
   /** A text's first line from its first glyph: its baseline, and its middle in the face of the words around it. */
-  const glyphLine = (
-    node: Text,
-    holder: Element
-  ): { baseline: number; middle: number; words: string } => {
+  const glyphLine = (node: Text, holder: Element): Line => {
     const text = node.textContent ?? "";
     const start = text.length - text.trimStart().length;
     const end = start + ((text.codePointAt(start) ?? 0) > 0xff_ff ? 2 : 1);
@@ -133,9 +135,7 @@ function readAsymmetry({
   };
 
   /** An empty editor's first line: its hint, which its paragraph draws in its own first line. */
-  const hintLine = (
-    empty: Element
-  ): { baseline: number; middle: number; words: string } => {
+  const hintLine = (empty: Element): Line => {
     const style = getComputedStyle(empty, "::before");
     const font = fontOf(style);
     const height =
@@ -151,9 +151,7 @@ function readAsymmetry({
   };
 
   /** A field's line: the middle of its content box, or of its first line for a text area. */
-  const fieldLine = (
-    field: Element
-  ): { baseline: number; middle: number; words: string } => {
+  const fieldLine = (field: Element): Line => {
     const box = field.getBoundingClientRect();
     const style = getComputedStyle(field);
     const top = box.top + Number.parseFloat(style.paddingTop);
@@ -172,9 +170,7 @@ function readAsymmetry({
     element.matches(selector) ? element : element.querySelector(selector);
 
   /** The first line an element draws, or none for one that draws no words. */
-  const firstLine = (
-    element: Element
-  ): { baseline: number; middle: number; words: string } | null => {
+  const firstLine = (element: Element): Line | null => {
     const node = textNodes(element).find(
       (item) => item.parentElement?.closest(CONTROL) === null
     );
@@ -279,11 +275,7 @@ function readAsymmetry({
     );
 
   /** Holds one marker to the line it should share. */
-  const holdMarker = (
-    child: Element,
-    kind: string,
-    line: { baseline: number; middle: number; words: string }
-  ) => {
+  const holdMarker = (child: Element, kind: string, line: Line) => {
     if (kind === "letter") {
       const own = firstLine(child);
       if (own !== null && Math.abs(own.baseline - line.baseline) > TOLERANCE) {
@@ -393,11 +385,27 @@ function readAsymmetry({
         box,
       ]);
     }
+    // A gap counts only between two rows with nothing of the list between them, such as a row that is not alike.
+    const others = Array.from(parent.children).map((child) =>
+      child.getBoundingClientRect()
+    );
+    const between = (above: DOMRect, below: DOMRect) =>
+      others.some(
+        (box) =>
+          box.height > 0 &&
+          box.top >= above.bottom - TOLERANCE &&
+          box.bottom <= below.top + TOLERANCE &&
+          box.left < above.right &&
+          above.left < box.right
+      );
     for (const boxes of columns.values()) {
       const sorted = [...boxes].sort((a, b) => a.top - b.top);
-      const gaps = sorted
-        .slice(1)
-        .map((box, index) => box.top - (sorted[index]?.bottom ?? box.top));
+      const gaps = sorted.slice(1).flatMap((box, index) => {
+        const above = sorted[index];
+        return above === undefined || between(above, box)
+          ? []
+          : [box.top - above.bottom];
+      });
       if (gaps.length >= 2 && spread(gaps) > TOLERANCE) {
         problems.add(
           `the rows of "${nameOf(parent)}" stand ${listed(gaps)} px apart`
@@ -460,10 +468,9 @@ function settled() {
 const SETTLE_MILLISECONDS = 5000;
 
 /**
- * Soft-expects one surface to stand symmetric and apart: every element under `scope` as `readAsymmetry`,
- * `readRowAxis` and `readOverlaps` read it, once the page's fonts are in and its animations that end have ended. Call
- * it again in each state a surface takes, hovered, focused, chosen or dragged, since a ring or a control that shows
- * only then can cover another.
+ * Soft-expects every element under `scope` to stand symmetric and apart (`readAsymmetry`, `readRowAxis`,
+ * `readOverlaps`) once fonts are in and finite animations have ended. Call it in every state a surface takes, since a
+ * ring or a control that shows only then can cover another.
  */
 export const expectSymmetric = async (
   page: Page,

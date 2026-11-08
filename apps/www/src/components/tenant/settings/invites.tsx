@@ -18,8 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -27,7 +29,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { TableList } from "@/components/shared/table/list";
 import { RowItems } from "@/components/shared/table/menu";
@@ -201,7 +202,6 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
 function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
   );
@@ -270,74 +270,69 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
       <RowItems>
         <DropdownMenuItem
           disabled={sendLocale === undefined || isResending}
+          icon={MailSend01Icon}
           onClick={() => {
             if (sendLocale !== undefined) {
               (isExpired ? sendExpired : sendPending)(sendLocale);
             }
           }}
         >
-          <HugeIcons icon={MailSend01Icon} />
           {t("invite-resend")}
         </DropdownMenuItem>
         {isExpired ? null : (
           <>
             <DropdownMenuItem
               disabled={sendLocale === undefined}
+              icon={MailEdit01Icon}
               onClick={() => dialogs.show("readdress")}
             >
-              <HugeIcons icon={MailEdit01Icon} />
               {t("invite-readdress")}
             </DropdownMenuItem>
             {cardOffered(invite.roles) ? (
-              <DropdownMenuItem onClick={() => dialogs.show("issue")}>
-                <HugeIcons icon={IdIcon} />
+              <DropdownMenuItem
+                icon={IdIcon}
+                onClick={() => dialogs.show("issue")}
+              >
                 {t("invite-card")}
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              icon={Delete02Icon}
               onClick={() => dialogs.show("revoke")}
               variant="destructive"
             >
-              <HugeIcons icon={Delete02Icon} />
               {t("invite-revoke")}
             </DropdownMenuItem>
           </>
         )}
       </RowItems>
       <ResponsiveDialog
-        description={t("invite-revoke-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                dialogs.close();
-                startTransition(() =>
-                  saveSchool(
-                    () => revoke({ inviteId: invite.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("invite-revoke-confirm")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              dialogs.close();
+              startTransition(() =>
+                saveSchool(() => revoke({ inviteId: invite.id, slug }), SOURCE)
+              );
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("invite-revoke-confirm")}
+          </Button>
         }
+        description={t("invite-revoke-description")}
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("invite-revoke-title")}
       >
-        <ConfirmSubject
-          detail={invite.email}
+        <ResponsiveDialogSubject
+          description={invite.email}
           icon={MailSend01Icon}
-          name={invite.name}
-        />
+        >
+          {invite.name}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
       <SchoolIssueCardDialog
         name={invite.name}

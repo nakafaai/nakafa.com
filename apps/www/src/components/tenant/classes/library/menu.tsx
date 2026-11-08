@@ -13,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -97,8 +96,7 @@ export function StarItem({
   const t = useTranslations("Classroom");
 
   return (
-    <DropdownMenuItem onClick={onStar}>
-      <HugeIcons icon={StarIcon} />
+    <DropdownMenuItem icon={StarIcon} onClick={onStar}>
       {t(starred ? "library-unstar" : "library-star")}
     </DropdownMenuItem>
   );
@@ -116,13 +114,15 @@ export function MoveAndTrash({
 
   return (
     <>
-      <DropdownMenuItem onClick={onMove}>
-        <HugeIcons icon={FolderTransferIcon} />
+      <DropdownMenuItem icon={FolderTransferIcon} onClick={onMove}>
         {t("library-move")}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={onTrash} variant="destructive">
-        <HugeIcons icon={Delete02Icon} />
+      <DropdownMenuItem
+        icon={Delete02Icon}
+        onClick={onTrash}
+        variant="destructive"
+      >
         {t("library-trash")}
       </DropdownMenuItem>
     </>
@@ -136,13 +136,17 @@ function OpenItems({ item }: { item: LibraryItem }) {
 
   return (
     <>
-      <DropdownMenuItem onClick={() => openItem(item, false)}>
-        <HugeIcons icon={ArrowRight01Icon} />
+      <DropdownMenuItem
+        icon={ArrowRight01Icon}
+        onClick={() => openItem(item, false)}
+      >
         {t("library-open")}
       </DropdownMenuItem>
       {item.kind === "link" ? null : (
-        <DropdownMenuItem onClick={() => openItem(item, true)}>
-          <HugeIcons icon={Download04Icon} />
+        <DropdownMenuItem
+          icon={Download04Icon}
+          onClick={() => openItem(item, true)}
+        >
           {t("library-download")}
         </DropdownMenuItem>
       )}
@@ -193,8 +197,10 @@ export function ManagerItemMenu({ item }: { item: LibraryItem }) {
           }
           starred={item.starred}
         />
-        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("edit")}
+        >
           {t("library-edit")}
         </DropdownMenuItem>
         <MoveAndTrash

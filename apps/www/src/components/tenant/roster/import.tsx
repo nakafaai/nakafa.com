@@ -184,7 +184,6 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
                 disabled={isApplying}
                 onClick={() => setPreview(undefined)}
                 type="button"
-                variant="outline"
               >
                 <HugeIcons icon={Cancel01Icon} />
                 <span className="max-sm:sr-only">{t("cancel")}</span>

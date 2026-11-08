@@ -1,6 +1,11 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -65,16 +70,23 @@ export function PaperBack({ examId }: { readonly examId?: Id<"exams"> }) {
   const tenant = useTenant();
 
   return (
-    <TargetLink
-      aria-label={tCommon("back")}
-      className={buttonVariants({ size: "icon", variant: "outline" })}
-      target={
-        examId === undefined
-          ? schoolHomeTarget(tenant.slug)
-          : schoolExamEditTarget(tenant.slug, examId)
-      }
-    >
-      <HugeIcons icon={ArrowLeft01Icon} />
-    </TargetLink>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <TargetLink
+            aria-label={tCommon("back")}
+            className={buttonVariants({ size: "icon", variant: "outline" })}
+            target={
+              examId === undefined
+                ? schoolHomeTarget(tenant.slug)
+                : schoolExamEditTarget(tenant.slug, examId)
+            }
+          >
+            <HugeIcons icon={ArrowLeft01Icon} />
+          </TargetLink>
+        }
+      />
+      <TooltipContent>{tCommon("back")}</TooltipContent>
+    </Tooltip>
   );
 }

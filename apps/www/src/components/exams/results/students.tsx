@@ -12,7 +12,6 @@ import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -123,10 +122,11 @@ function StudentName({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   return (
     <Button
       aria-pressed={chosen}
-      className="h-auto max-w-xs px-0 md:max-w-sm"
+      className="max-w-xs md:max-w-sm"
       onClick={() => (chosen ? close() : show(row.attemptId))}
+      size="sm"
       type="button"
-      variant="link"
+      variant="ghost"
     >
       <span className="truncate">{row.name}</span>
     </Button>
@@ -144,8 +144,7 @@ function StudentRowMenu({
 
   return (
     <RowItems>
-      <DropdownMenuItem onClick={() => show(attemptId)}>
-        <HugeIcons icon={ViewIcon} />
+      <DropdownMenuItem icon={ViewIcon} onClick={() => show(attemptId)}>
         {t("results-answers")}
       </DropdownMenuItem>
     </RowItems>
