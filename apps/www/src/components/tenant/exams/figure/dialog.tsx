@@ -9,13 +9,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -25,7 +23,6 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Option, Schema } from "effect";
 import { type ReactNode, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import type { PendingFigure } from "@/components/tenant/exams/editing";
 import {
   ChartMark,
@@ -97,6 +94,7 @@ function GraphFields({
   readonly draft: FigureDraft;
   readonly onChange: (change: Partial<FigureDraft>) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const id = useId();
 
@@ -118,17 +116,12 @@ function GraphFields({
           <SelectTrigger className="w-full" id={`${id}-curve`}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <ChoiceLabel name="curve" />
-
-              {Arr.map(GraphCurve.literals, (value) => (
-                <SelectItem key={value} value={value}>
-                  <HugeIcons icon={ChartLineData01Icon} />
-                  {t(CURVE_NAME[value])}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+          <SelectContent label={common("menu-curve")}>
+            {Arr.map(GraphCurve.literals, (value) => (
+              <SelectItem icon={ChartLineData01Icon} key={value} value={value}>
+                {t(CURVE_NAME[value])}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </FigureField>
@@ -195,6 +188,7 @@ function ChartFields({
   readonly draft: FigureDraft;
   readonly onChange: (change: Partial<FigureDraft>) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const id = useId();
 
@@ -242,17 +236,12 @@ function ChartFields({
           <SelectTrigger className="w-full" id={`${id}-mark`}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <ChoiceLabel name="mark" />
-
-              {Arr.map(ChartMark.literals, (value) => (
-                <SelectItem key={value} value={value}>
-                  <HugeIcons icon={ChartBubble01Icon} />
-                  {t(MARK_NAME[value])}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+          <SelectContent label={common("menu-mark")}>
+            {Arr.map(ChartMark.literals, (value) => (
+              <SelectItem icon={ChartBubble01Icon} key={value} value={value}>
+                {t(MARK_NAME[value])}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </FigureField>
@@ -269,7 +258,6 @@ function FigureForm({
   readonly pending: PendingFigure;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const id = useId();
   const [draft, setDraft] = useState(pending.draft);
   const [open, setOpen] = useState(true);
@@ -299,17 +287,12 @@ function FigureForm({
 
   return (
     <ResponsiveDialog
-      description={t("figure-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={Option.isNone(made)} onClick={save}>
-            {t("figure-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={Option.isNone(made)} onClick={save}>
+          {t("figure-save")}
+        </Button>
       }
+      description={t("figure-description")}
       onOpenChangeComplete={(next) => {
         if (!next) {
           onClose();

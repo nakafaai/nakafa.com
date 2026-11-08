@@ -16,6 +16,7 @@ import {
   type Member,
   withoutItem,
 } from "@/components/tenant/settings/state";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /**
  * The optimistic changes of the members and the student accounts. Each one shows a
@@ -31,22 +32,11 @@ function changeMemberLists(
   matches: (args: Ref.Args<typeof tenancy.roster.members>) => boolean,
   change: (page: readonly Member[]) => Member[]
 ) {
-  for (const query of localStore.getAllQueries(tenancy.roster.members)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.slug === slug &&
-      matches(query.args)
-    ) {
-      localStore.setQuery(
-        tenancy.roster.members,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, tenancy.roster.members, (value, args) =>
+    args.slug === slug && matches(args)
+      ? Option.some(withPage(value, change))
+      : Option.none()
+  );
 }
 
 /**
@@ -114,22 +104,11 @@ export const addStudentChange: OptimisticUpdate<
       name,
     },
   };
-  for (const query of localStore.getAllQueries(identity.logins.list)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.slug === slug &&
-      isFirstPage(query.args)
-    ) {
-      localStore.setQuery(
-        identity.logins.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.prepend(query.value.value.page, login),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, identity.logins.list, (value, args) =>
+    args.slug === slug && isFirstPage(args)
+      ? Option.some(withPage(value, (page) => Arr.prepend(page, login)))
+      : Option.none()
+  );
 };
 
 /** Changes the login of one person on every loaded page of the school's logins, and keeps the others as they are. */
@@ -139,20 +118,17 @@ function changeLogins(
   personId: Login["person"]["id"],
   change: (login: Login) => Login
 ) {
-  for (const query of localStore.getAllQueries(identity.logins.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        identity.logins.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (login) =>
-            login.person.id === personId ? change(login) : login
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, identity.logins.list, (value, args) =>
+    args.slug === slug
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.map(page, (login) =>
+              login.person.id === personId ? change(login) : login
+            )
+          )
+        )
+      : Option.none()
+  );
 }
 
 /**
@@ -195,20 +171,17 @@ export const renamePersonChange: OptimisticUpdate<
     ...login,
     person: { ...login.person, name },
   }));
-  for (const query of localStore.getAllQueries(guardians.links.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        guardians.links.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (link) =>
-            link.guardian.id === personId
-              ? { ...link, guardian: { ...link.guardian, name } }
-              : link
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, guardians.links.list, (value, args) =>
+    args.slug === slug
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.map(page, (link) =>
+              link.guardian.id === personId
+                ? { ...link, guardian: { ...link.guardian, name } }
+                : link
+            )
+          )
+        )
+      : Option.none()
+  );
 };

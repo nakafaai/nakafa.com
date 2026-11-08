@@ -117,8 +117,7 @@ function MessagePhoto({
         />
       </button>
       <ResponsiveDialog
-        description={t("media-description")}
-        footer={
+        action={
           photo.address === null ? null : (
             <>
               <Button
@@ -145,6 +144,7 @@ function MessagePhoto({
             </>
           )
         }
+        description={t("media-description")}
         open={open}
         setOpen={setOpen}
         title={photo.name}

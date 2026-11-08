@@ -24,8 +24,8 @@ export function SplitMenuTrigger() {
           <DropdownMenuTrigger
             render={
               <Button
-                aria-label={common("more-actions")}
                 size="icon"
+                tooltip={common("more-actions")}
                 variant="outline"
               />
             }
