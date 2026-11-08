@@ -193,6 +193,7 @@
     {
       // Three Fiber uses renderer attributes that the DOM-only rule cannot recognize.
       "includes": [
+        "apps/www/src/components/island/**/*.tsx",
         "packages/design-system/components/contents/mathematics/function/diagram.tsx",
         "packages/design-system/components/three/**/*.tsx",
         "packages/design-system/components/contents/{biology,chemistry,physics}/**/*.tsx"
