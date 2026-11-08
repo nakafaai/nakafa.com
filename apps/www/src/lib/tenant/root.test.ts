@@ -2,7 +2,7 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { VISITOR_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import { LOCALES, VISITOR_LOCALE } from "@repo/internationalization/src/locale";
 import { getRouteMessages } from "@repo/internationalization/src/messages";
 import {
   Array as Arr,
