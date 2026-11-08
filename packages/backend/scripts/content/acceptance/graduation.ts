@@ -1,43 +1,32 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { GraduationFixture } from "@repo/backend/scripts/content/acceptance/fixture";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  LocalConvex,
+  localConvexLayer,
+} from "@repo/backend/scripts/content/acceptance/convex";
+import {
+  GraduationFixture,
+  writeFixture,
+} from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   type AcceptanceMode,
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
-import { JsonTextSchema } from "@repo/utilities/json";
-import { Effect, FileSystem, Schema } from "effect";
-
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+import { Effect, Schema } from "effect";
 
 /**
- * Seeds a graduation in the running local acceptance backend (ADR 0033, S6): a class group of the
- * last grade of the school's first active unit with the learner of the address placed in it, a
- * NISN on file, the unit's NPSN, and a locked report card. The class group goes to `output` for
- * a browser test to read back. Each call seeds a new class group.
+ * Seeds a graduation in the running local acceptance backend (ADR 0033, S6) and answers its class
+ * group: a class group of the last grade of the school's first active unit with the learner of the
+ * address placed in it, a NISN on file, the unit's NPSN, and a locked report card. Each call seeds
+ * a new class group.
  */
-export const createAcceptanceGraduation = Effect.fn(
-  "contentAcceptance.createGraduation"
-)(function* (root: string, slug: string, email: string, output: string) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
-    return yield* acceptanceRuntimeError(
-      "Run bun run acceptance:prepare and start acceptance before seeding a graduation."
-    );
+export const seedGraduation = Effect.fn("contentAcceptance.seedGraduation")(
+  function* (slug: string, email: string) {
+    const { run } = yield* LocalConvex;
+    return yield* run("graduation seed", {
+      args: { email, slug },
+      path: "records/seed:graduation",
+    }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(GraduationFixture)));
   }
-  const args = yield* encodeArguments({ email, slug });
-  const printed = yield* runLocalConvex(runtime, "records/seed:graduation", [
-    "run",
-    "records/seed:graduation",
-    args,
-  ]);
-  const seeded = yield* Schema.decodeEffect(GraduationFixture)(printed);
-  const fixture = yield* Schema.encodeEffect(GraduationFixture)(seeded);
-  const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(output, fixture, { flag: "wx", mode: 0o600 });
-});
+);
 
 /** The usage of the graduation mode: the school, the learner, and the file for the class group. */
 const USAGE = "graduation <school-slug> <learner-email> <graduation-file>";
@@ -63,6 +52,9 @@ export const graduationMode = {
       GraduationArguments,
       args
     );
-    return yield* createAcceptanceGraduation(root, slug, email, output);
+    const graduation = yield* seedGraduation(slug, email).pipe(
+      Effect.provide(localConvexLayer(root))
+    );
+    yield* writeFixture(output, GraduationFixture, graduation);
   }),
 } satisfies AcceptanceMode;
