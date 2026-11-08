@@ -16,7 +16,7 @@ describe("guardian code email", () => {
       expect(email.subject.length).toBeGreaterThan(0);
     }
     expect(guardianCodeEmail({ code: "042917", locale: "id" }).subject).toBe(
-      "Kode masuk Nakafa Anda"
+      "Kode masuk Nakafa kamu"
     );
   });
 

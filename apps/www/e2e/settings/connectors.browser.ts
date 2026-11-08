@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -123,3 +123,57 @@ test("the account lists a person's services like a school's library, and a pane 
   await expect(page.getByText("No connector found")).toBeVisible();
   await context.close();
 });
+
+for (const viewport of [
+  { height: 844, width: 390 },
+  { height: 1024, width: 768 },
+  { height: 900, width: 1440 },
+]) {
+  test(`every service card keeps its name and its line on one line each, with their full words, at ${viewport.width} px`, async ({
+    browser,
+    baseURL,
+  }) => {
+    const site = baseURL ?? "";
+    const context = await browser.newContext({ viewport });
+    await Effect.runPromise(signInLearner(context, site));
+    const page = await context.newPage();
+    await page.goto(`${site}/en/user/settings/connectors`);
+    const cards = page.locator("[data-slot=card]");
+    await expect(cards).toHaveCount(2, {
+      timeout: readinessTimeoutMilliseconds,
+    });
+
+    const lines = await cards.evaluateAll((nodes) =>
+      nodes.map((card) => {
+        const name = card.querySelector("[data-slot=card-title] > button");
+        const line = card.querySelector("[data-slot=card-description]");
+        /** How many lines an element's words take, by its height over its line height. */
+        const count = (element: Element | null) =>
+          element instanceof HTMLElement
+            ? Math.round(
+                element.getBoundingClientRect().height /
+                  Number.parseFloat(getComputedStyle(element).lineHeight)
+              )
+            : 0;
+        return {
+          height: Math.round(card.getBoundingClientRect().height),
+          line: count(line),
+          lineTitle: line?.getAttribute("title") === line?.textContent,
+          name: count(name),
+          nameTitle: name?.getAttribute("title") === name?.textContent,
+        };
+      })
+    );
+    for (const card of lines) {
+      expect(card).toMatchObject({
+        line: 1,
+        lineTitle: true,
+        name: 1,
+        nameTitle: true,
+      });
+    }
+    // One size of card in the grid, whatever each one's words.
+    expect(Arr.dedupe(Arr.map(lines, (card) => card.height))).toHaveLength(1);
+    await context.close();
+  });
+}

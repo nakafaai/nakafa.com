@@ -232,6 +232,12 @@ export function Axes({
               color={axis.color}
               lineWidth={2}
               points={[axis.from, axis.to]}
+              // The grid's lines are transparent and draw after every opaque
+              // object, so an opaque axis would show the grid line at zero as a
+              // pale stripe down its middle. Drawing the axis in the same pass,
+              // after the grid, keeps it one solid line.
+              renderOrder={1}
+              transparent
             />
             {showLabels ? (
               <AxisLabel

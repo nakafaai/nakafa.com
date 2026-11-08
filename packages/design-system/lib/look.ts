@@ -152,17 +152,6 @@ function pickIcon(
 }
 
 /**
- * The icon that a tile on its own takes from its pool: the one its seed points
- * at. A list gives the same icon to a tile that has no earlier tile to avoid.
- */
-export function getTileIcon(
-  pool: Arr.NonEmptyReadonlyArray<IconSvgElement>,
-  seed: string
-) {
-  return pickIcon(pool, seed, Arr.empty());
-}
-
-/**
  * What `getTileLooks` reads of one tile: the pool of icons its key may show,
  * best known first, and its seed.
  */

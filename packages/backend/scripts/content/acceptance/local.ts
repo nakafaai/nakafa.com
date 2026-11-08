@@ -124,7 +124,6 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
     AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
     AKSARA_PUBLICATION_TOKEN: runtime.publicationToken,
-    CONTENT_READ_TOKEN: LOCAL_RUNTIME_TOKEN,
     CONVEX_AGENT_MODE: "anonymous",
     CONVEX_SITE_URL: runtime.site,
     CONVEX_URL: runtime.query,

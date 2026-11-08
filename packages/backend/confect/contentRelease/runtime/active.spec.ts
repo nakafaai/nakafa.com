@@ -41,6 +41,27 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicQuery({
+      name: "head",
+      args: () => ({
+        appLocale: appLocaleValidator,
+        publicPath: Schema.String,
+      }),
+      returns: () =>
+        Schema.NullOr(
+          Schema.Struct({
+            activeReleaseId: Schema.String,
+            artifactHash: Schema.String,
+            family: contentFamilyValidator,
+            projectionHash: Schema.String,
+            projectionJson: Schema.String,
+            sourcePath: Schema.String,
+          })
+        ),
+      error: () => ReleaseError,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
       name: "artifact",
       args: () => ({
         appLocale: appLocaleValidator,
