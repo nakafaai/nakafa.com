@@ -5,6 +5,7 @@ import { runFixture } from "@/e2e/support/acceptance";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
  * Google's ad script. The tests answer it with an empty script, so no request
@@ -54,6 +55,21 @@ async function nearFirstPlace(page: Page) {
 /** The frame of the first ad place. */
 const firstFrame = (page: Page) => page.locator("[data-ad-slot] aside").first();
 
+/**
+ * Moves the pointer until the first frame stands. The page listens for its
+ * reader only once it has hydrated and settled (ADR 0039), so a gesture made
+ * before that goes unseen, and the frame would wait for the ten seconds a page
+ * gives a reader who never moves; the pointer keeps moving until one is seen.
+ */
+async function readUntilFrame(page: Page) {
+  let step = 0;
+  await expect(async () => {
+    step += 1;
+    await page.mouse.move(8 + (step % 2) * 8, 8);
+    await expect(firstFrame(page)).toBeAttached({ timeout: 500 });
+  }).toPass({ timeout: revealTimeoutMilliseconds });
+}
+
 test("a visitor finds a frame between two sections that moves nothing and explains itself", async ({
   baseURL,
   page,
@@ -78,8 +94,8 @@ test("a visitor finds a frame between two sections that moves nothing and explai
         expect(requests()).toBe(0);
 
         await nearFirstPlace(page);
+        await readUntilFrame(page);
         const frame = firstFrame(page);
-        await expect(frame).toBeAttached();
         await expect.poll(requests).toBe(1);
 
         await frame.scrollIntoViewIfNeeded();
@@ -123,7 +139,7 @@ test("a learner sees the frame on the free plan and loses it with Pro, without t
       yield* Effect.promise(async () => {
         await page.goto(pinnedRoutes.material.en);
         await nearFirstPlace(page);
-        await expect(firstFrame(page)).toBeAttached();
+        await readUntilFrame(page);
       });
 
       yield* runFixture(seedXendit(learner.userId, "pass"));
@@ -137,8 +153,12 @@ test("a learner sees the frame on the free plan and loses it with Pro, without t
           page.getByRole("button").filter({ hasText: "Pro" }).first()
         ).toBeVisible();
         await nearFirstPlace(page);
-        // Time for the placement's code to load and the account to answer: a
+        // The page has hydrated, so a gesture after it settles is seen; then
+        // time for the placement's code to load and the account to answer: a
         // frame that would appear does so within it.
+        await page.mouse.move(8, 8);
+        await page.waitForTimeout(1500);
+        await page.mouse.move(16, 8);
         await page.waitForTimeout(3000);
         await expect(firstFrame(page)).toHaveCount(0);
         expect(requests()).toBe(before);
