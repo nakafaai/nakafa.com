@@ -20,7 +20,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -46,7 +45,6 @@ import {
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceKey,
@@ -205,21 +203,16 @@ export function CreateExam({
         <span className="@max-sm/header:sr-only">{t("create")}</span>
       </Button>
       <ResponsiveDialog
-        description={t("create-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={!(ready && isSettled) || waiting || isPending}
-              inert={isPending}
-              onClick={submit}
-            >
-              {t("create")}
-            </Button>
-          </>
+        action={
+          <Button
+            disabled={!(ready && isSettled) || waiting || isPending}
+            inert={isPending}
+            onClick={submit}
+          >
+            {t("create")}
+          </Button>
         }
+        description={t("create-description")}
         // The dialog forgets its file once it has closed, so the next exam starts without one and the
         // closing dialog keeps showing the file it sent.
         onOpenChangeComplete={(next) => {
@@ -272,17 +265,16 @@ export function CreateExam({
               <SelectTrigger className="w-full" id={`${id}-unit`}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <ChoiceLabel name="unit" />
-
-                  {Arr.map(unitItems, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      <HugeIcons icon={SchoolIcon} />
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
+              <SelectContent label={common("menu-unit")}>
+                {Arr.map(unitItems, (item) => (
+                  <SelectItem
+                    icon={SchoolIcon}
+                    key={item.value}
+                    value={item.value}
+                  >
+                    {item.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>

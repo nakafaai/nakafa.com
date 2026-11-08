@@ -7,6 +7,7 @@ import {
   type CohortMember,
   withoutItem,
 } from "@/components/tenant/settings/state";
+import { changeLoaded, findLoaded, withPage } from "@/lib/data/loaded";
 
 /**
  * The optimistic changes of one cohort's students and homeroom teacher. Each one shows a
@@ -15,25 +16,16 @@ import {
  * server's answer when no loaded list of the school's people holds that name.
  */
 
-/** The rows of every loaded page that the query of one list holds, or none while it loads. */
-function pageRows<Row>(
-  value: Option.Option<{ readonly page: readonly Row[] }>
-): readonly Row[] {
-  return Option.match(value, { onNone: () => [], onSome: (done) => done.page });
-}
-
 /** The name of the Person with this ID in the loaded lists of the school's people, if one is loaded. */
 function nameOf(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   personId: CohortMember["id"]
 ) {
-  const people = Arr.flatMap(
-    localStore.getAllQueries(tenancy.people.list),
-    (query) => pageRows(query.value)
-  );
-  return Option.map(
-    Arr.findFirst(people, (person) => person.id === personId),
-    (person) => person.name
+  return findLoaded(localStore, tenancy.people.list, (value) =>
+    Option.map(
+      Arr.findFirst(value.page, (person) => person.id === personId),
+      (person) => person.name
+    )
   );
 }
 
@@ -43,18 +35,9 @@ function changeMemberLists(
   matches: (args: Ref.Args<typeof tenancy.cohorts.members>) => boolean,
   change: (page: readonly CohortMember[]) => CohortMember[]
 ) {
-  for (const query of localStore.getAllQueries(tenancy.cohorts.members)) {
-    if (Option.isSome(query.value) && matches(query.args)) {
-      localStore.setQuery(
-        tenancy.cohorts.members,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, tenancy.cohorts.members, (value, args) =>
+    matches(args) ? Option.some(withPage(value, change)) : Option.none()
+  );
 }
 
 /** Whether a loaded list of students is the first page of its cohort, where a new row goes. */
@@ -69,11 +52,11 @@ function memberOf(
   cohortId: CohortDetail["id"],
   personId: CohortMember["id"]
 ) {
-  const members = Arr.flatMap(
-    localStore.getAllQueries(tenancy.cohorts.members),
-    (query) => (query.args.cohortId === cohortId ? pageRows(query.value) : [])
+  return findLoaded(localStore, tenancy.cohorts.members, (value, args) =>
+    args.cohortId === cohortId
+      ? Arr.findFirst(value.page, (member) => member.id === personId)
+      : Option.none()
   );
-  return Arr.findFirst(members, (member) => member.id === personId);
 }
 
 /** Changes the detail of every loaded cohort that the match accepts. */
@@ -82,15 +65,9 @@ function changeCohortDetails(
   cohortId: CohortDetail["id"],
   change: (cohort: CohortDetail) => CohortDetail
 ) {
-  for (const query of localStore.getAllQueries(tenancy.cohorts.get)) {
-    if (Option.isSome(query.value) && query.args.cohortId === cohortId) {
-      localStore.setQuery(
-        tenancy.cohorts.get,
-        query.args,
-        Option.some(change(query.value.value))
-      );
-    }
-  }
+  changeLoaded(localStore, tenancy.cohorts.get, (cohort, args) =>
+    args.cohortId === cohortId ? Option.some(change(cohort)) : Option.none()
+  );
 }
 
 /**

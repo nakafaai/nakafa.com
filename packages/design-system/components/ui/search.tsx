@@ -65,9 +65,9 @@ function SearchField({
       {value === "" ? null : (
         <InputGroupAddon align="inline-end">
           <InputGroupButton
-            aria-label={t("clear-search")}
             onClick={clear}
-            size="icon-xs"
+            size="icon-sm"
+            tooltip={t("clear-search")}
           >
             <HugeIcons icon={Cancel01Icon} />
           </InputGroupButton>

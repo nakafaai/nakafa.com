@@ -366,7 +366,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         directEntry={directEntry}
         finishedAttempt={finishedAttempt}
         kind={dialogKind}
-        onCancel={dialog.close}
         onPrimary={onPrimary}
         open={dialogOpen}
         setOpen={(open) => {

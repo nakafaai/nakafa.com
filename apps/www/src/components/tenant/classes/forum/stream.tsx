@@ -48,7 +48,6 @@ import {
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { TalliesProvider } from "@/components/tenant/classes/forum/tallies";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** How long the reader's view stays still before the read mark moves to it. */
 const MARK_DELAY_MILLISECONDS = 600;
@@ -195,9 +194,7 @@ export function MessageStream({
               })}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <IconTip label={t("scroll-to-latest")}>
-            <MessageScrollerButton aria-label={t("scroll-to-latest")} />
-          </IconTip>
+          <MessageScrollerButton label={t("scroll-to-latest")} />
         </MessageScroller>
         <ReadTracker at={at} messages={messages} />
         <JumpTo jump={jump} loadOlder={loadOlder} messages={messages} />
