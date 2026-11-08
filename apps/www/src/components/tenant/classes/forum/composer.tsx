@@ -353,7 +353,7 @@ export function ForumComposer() {
             disabled={!ready}
             size="icon"
             type="submit"
-            variant="default"
+            variant="secondary"
           >
             <HugeIcons icon={ArrowUp02Icon} />
           </InputGroupButton>

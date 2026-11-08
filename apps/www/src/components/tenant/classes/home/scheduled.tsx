@@ -2,7 +2,6 @@ import { useMutation } from "@confect/react";
 import {
   Cancel01Icon,
   Clock01Icon,
-  MoreHorizontalIcon,
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
@@ -15,7 +14,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
@@ -43,6 +42,7 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   cancelWaitingUpdate,
   editWaitingUpdate,
@@ -120,17 +120,7 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
   return (
     <ItemActions>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
+        <PostMenuTrigger />
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
@@ -138,6 +128,7 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
               <HugeIcons icon={PencilEdit02Icon} />
               {t("message-edit")}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() =>
                 runForumCall(

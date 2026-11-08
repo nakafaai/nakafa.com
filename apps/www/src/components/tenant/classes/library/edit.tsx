@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { Folder01Icon, LibraryIcon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import {
   LibraryTitle,
@@ -10,12 +11,15 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -168,11 +172,22 @@ export function LibraryEditDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Arr.map(folderItems, (choice) => (
-                  <SelectItem key={choice.value} value={choice.value}>
-                    {choice.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>{t("select-folder")}</SelectLabel>
+                  {Arr.map(folderItems, (choice) => (
+                    <SelectItem key={choice.value} value={choice.value}>
+                      <HugeIcons
+                        aria-hidden="true"
+                        icon={
+                          choice.value === NO_FOLDER
+                            ? LibraryIcon
+                            : Folder01Icon
+                        }
+                      />
+                      {choice.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </Field>

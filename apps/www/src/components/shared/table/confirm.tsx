@@ -51,51 +51,55 @@ export function ConfirmSubject({
 }
 
 /**
- * The menu of one table row, read as a header, a body and a footer: its label, the row's main actions (`children`), then
- * under a separator its archive (`archive`) and its destructive action last. The destructive action opens a confirmation
- * whose body shows what it takes away (`subject`), and `onConfirm` runs only once the viewer confirms it, so nothing is
- * removed by a single click. A row the server would refuse leaves the action out (`offered`), so the menu never offers
- * what fails.
+ * What the menu of one table row holds when its last action is destructive: the row's main actions, a separator, then the
+ * menu's footer, an archive action where the row has one and the destructive action last with its icon. The action opens
+ * a confirmation whose body shows what it loses, and `onConfirm` runs only once the viewer confirms it, so nothing is
+ * removed by a single click. A row that may not take the action now keeps it in view, disabled (`disabled`); a row the
+ * server would refuse leaves it out (`offered`), so the menu never offers what fails.
  */
 export function ConfirmRowMenu({
   action,
-  archive,
+  body,
   children,
   confirm,
   description,
+  disabled = false,
+  footer,
   icon,
   offered = true,
   onConfirm,
-  subject,
   title,
 }: {
   readonly action: string;
-  /** The row's archive, which stands in the footer above the destructive action. */
-  readonly archive?: ReactNode;
+  /** What the confirmation shows the action loses, such as the record it deletes. */
+  readonly body?: ReactNode;
   /** The row's main actions, above the separator. */
   readonly children?: ReactNode;
   readonly confirm: string;
   readonly description: string;
+  /** Whether this row may not take the destructive action. */
+  readonly disabled?: boolean;
+  /** The footer's action before the destructive one, such as Archive. */
+  readonly footer?: ReactNode;
   readonly icon: Icon;
-  /** Whether this row takes the destructive action now, as the server would. */
+  /** Whether the menu offers the destructive action at all, as the server would take it. */
   readonly offered?: boolean;
   readonly onConfirm: () => void;
-  /** What the action takes away, in the confirmation's body. */
-  readonly subject?: ComponentProps<typeof ConfirmSubject>;
   readonly title: string;
 }) {
   const common = useTranslations("Common");
   const [isConfirming, setIsConfirming] = useState(false);
-  const hasFooter = archive !== undefined || offered;
+  const hasFooter = footer !== undefined || offered;
 
   return (
     <>
       <RowItems>
         {children}
         {children !== undefined && hasFooter ? <DropdownMenuSeparator /> : null}
-        {archive}
+        {footer}
         {offered ? (
           <DropdownMenuItem
+            disabled={disabled}
             onClick={() => setIsConfirming(true)}
             variant="destructive"
           >
@@ -132,7 +136,7 @@ export function ConfirmRowMenu({
           setOpen={setIsConfirming}
           title={title}
         >
-          {subject === undefined ? undefined : <ConfirmSubject {...subject} />}
+          {body}
         </ResponsiveDialog>
       ) : null}
     </>

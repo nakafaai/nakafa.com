@@ -18,7 +18,10 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import {
+  ConfirmRowMenu,
+  ConfirmSubject,
+} from "@/components/shared/table/confirm";
 import { chosenGrade } from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
@@ -99,11 +102,13 @@ function useCohortDelete(cohort: Cohort, slug: TenantSlug) {
           () => toast.success({ title: "school-cohort-deleted.title" })
         )
       ),
-    subject: {
-      detail: t("cohort-delete-detail", { grade: cohort.grade }),
-      icon: UserGroupIcon,
-      name: cohort.name,
-    },
+    body: (
+      <ConfirmSubject
+        detail={t("cohort-delete-detail", { grade: cohort.grade })}
+        icon={UserGroupIcon}
+        name={cohort.name}
+      />
+    ),
     title: t("cohort-delete-title", { name: cohort.name }),
   };
 }
@@ -151,7 +156,7 @@ export function SchoolCohortMenu({
     <>
       <ConfirmRowMenu
         {...remove}
-        archive={
+        footer={
           <DropdownMenuItem
             onClick={() =>
               startTransition(() =>

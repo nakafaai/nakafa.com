@@ -26,7 +26,10 @@ import { Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import {
+  ConfirmRowMenu,
+  ConfirmSubject,
+} from "@/components/shared/table/confirm";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Period } from "@/components/tenant/settings/state";
 import {
@@ -99,7 +102,7 @@ function usePeriodDelete(period: Period, slug: TenantSlug) {
           () => toast.success({ title: "school-period-deleted.title" })
         )
       ),
-    subject: { icon: Calendar03Icon, name: period.name },
+    body: <ConfirmSubject icon={Calendar03Icon} name={period.name} />,
     title: t("period-delete-title", { name: period.name }),
   };
 }
@@ -140,7 +143,7 @@ export function SchoolPeriodMenu({
     <>
       <ConfirmRowMenu
         {...remove}
-        archive={
+        footer={
           period.status === "active" ? (
             <DropdownMenuItem
               onClick={() =>

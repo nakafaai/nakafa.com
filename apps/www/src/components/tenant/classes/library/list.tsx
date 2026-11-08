@@ -4,10 +4,14 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
+import {
+  Delete02Icon,
+  FolderLibraryIcon,
+  StarIcon,
+} from "@hugeicons/core-free-icons";
 import { useEventListener, useMergedRef } from "@mantine/hooks";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
@@ -19,6 +23,7 @@ import {
   TableSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { TableViews } from "@/components/shared/table/views";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { AddToLibrary } from "@/components/tenant/classes/library/create";
 import { titleOf } from "@/components/tenant/classes/library/draft";
@@ -28,7 +33,6 @@ import {
 } from "@/components/tenant/classes/library/folder";
 import { NewFolder } from "@/components/tenant/classes/library/folders";
 import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
-import { LibraryPath } from "@/components/tenant/classes/library/path";
 import { LibraryRows } from "@/components/tenant/classes/library/rows";
 import {
   useLibraryFolder,
@@ -41,16 +45,22 @@ import {
   arrivedUploads,
   pendingUploads,
 } from "@/components/tenant/classes/library/uploads";
-import {
-  type LibraryMode,
-  LibraryViews,
-} from "@/components/tenant/classes/library/views";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
 
 /** How many items the library reads each time its end comes into view. */
 const LIBRARY_PAGE_SIZE = 20;
+
+/** What the library shows: the folder of the page, what the reader starred, or the trash. */
+const LibraryMode = Schema.Literals(["files", "starred", "trash"]);
+
+/** The icon of each view of the library. */
+const VIEW_ICONS = {
+  files: FolderLibraryIcon,
+  starred: StarIcon,
+  trash: Delete02Icon,
+};
 
 /**
  * The files the teacher is adding that the library's rows do not hold yet. An upload whose row arrived is remembered
@@ -68,26 +78,48 @@ function useShownUploads(items: readonly LibraryItem[]) {
 
 /**
  * The library of a class, or one folder of it, as a Drive for the classroom: the class header with the search over
- * the titles, the Files, Starred and Trash views, and New folder and Add to library for whoever manages it; the path
- * from the top of the library; and the folders and then the items, the newest first, in the page's one table card.
- * Files dropped on the page upload into the folder it shows, and a row dropped on a folder moves into it. The files
- * being added show first with their progress from the moment they start, until their own rows arrive. A failed read
- * shows its sentence and Try again, and a viewer who lost the school's access is sent to the refused page.
+ * the titles, New folder and, standing alone, Add to library for whoever manages it, the header's path running through
+ * every folder above the open one; then, in the body, the Files, Starred and Trash views above the page's one table
+ * card, which holds the folders and then the items, the newest first. Files dropped on the page upload into the folder
+ * it shows, and a row dropped on a folder moves into it. The files being added show first with their progress from the
+ * moment they start, until their own rows arrive. A failed read shows its sentence and Try again, and a viewer who lost
+ * the school's access is sent to the refused page.
  */
 export function LibraryList() {
   const t = useTranslations("Classroom");
   const { can } = useClassScope();
-  const [view, setView] = useState<LibraryMode>("files");
+  const [view, setView] = useState<typeof LibraryMode.Type>("files");
   const manages = Arr.contains(can, "library.manage");
+  // The trash shows only to whoever manages the library.
+  const views = manages
+    ? LibraryMode.literals
+    : Arr.filter(LibraryMode.literals, (shown) => shown !== "trash");
 
   return (
     <TableFiltersProvider>
       <ClassHeader>
         <TableSearch placeholder={t("library-search")} />
-        <LibraryViews manages={manages} setView={setView} view={view} />
-        {manages && view === "files" ? <LibraryActions /> : null}
+        {manages ? (
+          <>
+            <NewFolder />
+            <AddToLibrary />
+          </>
+        ) : null}
       </ClassHeader>
-      <TablePageBody>
+      <TablePageBody
+        views={
+          <TableViews
+            label={t("library-views")}
+            onChoose={setView}
+            view={view}
+            views={Arr.map(views, (shown) => ({
+              icon: VIEW_ICONS[shown],
+              label: t(`library-view-${shown}`),
+              value: shown,
+            }))}
+          />
+        }
+      >
         {view === "files" ? <LibraryFilesOrFound /> : null}
         {view === "starred" ? <LibraryStarred /> : null}
         {view === "trash" ? <LibraryTrash /> : null}
@@ -163,11 +195,10 @@ function LibraryFiles() {
 
   return (
     <div
-      className="data-[dropping=true]:outline-primary flex min-w-0 flex-col gap-3 rounded-xl data-[dropping=true]:outline-2 data-[dropping=true]:outline-dashed"
+      className="data-[dropping=true]:outline-primary flex min-h-0 min-w-0 flex-1 flex-col rounded-xl data-[dropping=true]:outline-2 data-[dropping=true]:outline-dashed"
       data-dropping={dropping}
       ref={dropRef}
     >
-      <LibraryPath folders={folderPath(folders, folderId)} />
       <TablePages pageSize={LIBRARY_PAGE_SIZE} pagination={pagination}>
         <LibraryRows
           folders={childFolders(folders, folderId)}
@@ -244,15 +275,5 @@ function LibraryStarred() {
       items={QueryResult.isSuccess(starred) ? starred.value : []}
       pending={[]}
     />
-  );
-}
-
-/** What a manager adds from the header: a folder and an item, inside the folder the page shows. */
-function LibraryActions() {
-  return (
-    <ButtonGroup>
-      <NewFolder />
-      <AddToLibrary />
-    </ButtonGroup>
   );
 }

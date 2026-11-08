@@ -113,8 +113,9 @@ for (const viewport of [
     await expect(
       paneOf(page, viewport.width).getByText("Kerjakan soal 1 sampai 5.")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    // The header's path ends on the task; a phone's sheet hides the header from assistive technology, not from the page.
     await expect(
-      page.getByRole("navigation", { name: "breadcrumb" })
+      page.locator('header[data-slot="page-header"] nav')
     ).toContainText("Latihan Gerak Lurus");
     if (viewport.width < WIDE) {
       await page.keyboard.press("Escape");

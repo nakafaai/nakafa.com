@@ -1,4 +1,10 @@
 import { QueryResult, useQuery } from "@confect/react";
+import {
+  SquareLock02Icon,
+  TimeQuarterPassIcon,
+  UserCheck01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { LatePolicy } from "@repo/backend/confect/classroom/tasks/task";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
@@ -9,6 +15,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   NumberField,
@@ -20,7 +27,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -35,6 +44,12 @@ import { useClockZone } from "@/components/tenant/settings/time";
 
 /** Who a task can go to. */
 const REACHES = ["class", "some"] as const;
+
+/** The icon of each reach: the class's people, as the People tab shows them, or the students the teacher ticks. */
+const REACH_ICONS = { class: UserGroupIcon, some: UserCheck01Icon };
+
+/** The icon of each late policy: late work taken, as the work table marks it, or the task closed at its deadline. */
+const LATE_ICONS = { accept: TimeQuarterPassIcon, close: SquareLock02Icon };
 
 /**
  * The fields of a task's form, the same when a teacher publishes a task and when they edit it: its title, what it
@@ -132,11 +147,18 @@ export function TaskFields({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(policies, (policy) => (
-                <SelectItem key={policy.value} value={policy.value}>
-                  {policy.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel>{t("select-late")}</SelectLabel>
+                {Arr.map(policies, (policy) => (
+                  <SelectItem key={policy.value} value={policy.value}>
+                    <HugeIcons
+                      aria-hidden="true"
+                      icon={LATE_ICONS[policy.value]}
+                    />
+                    {policy.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>
@@ -199,11 +221,18 @@ function TaskReachField({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Arr.map(reaches, (reach) => (
-              <SelectItem key={reach.value} value={reach.value}>
-                {reach.label}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <SelectLabel>{t("select-reach")}</SelectLabel>
+              {Arr.map(reaches, (reach) => (
+                <SelectItem key={reach.value} value={reach.value}>
+                  <HugeIcons
+                    aria-hidden="true"
+                    icon={REACH_ICONS[reach.value]}
+                  />
+                  {reach.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </Field>

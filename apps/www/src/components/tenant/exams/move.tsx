@@ -75,6 +75,7 @@ export function RoomMenu({
     <>
       <ConfirmRowMenu
         action={t("room-cancel")}
+        body={<ConfirmSubject icon={Door01Icon} name={room.room} />}
         confirm={t("room-cancel-confirm")}
         description={t("room-cancel-description")}
         icon={Cancel01Icon}
@@ -84,7 +85,6 @@ export function RoomMenu({
             saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
           )
         }
-        subject={{ icon: Door01Icon, name: room.room }}
         title={t("room-cancel-title")}
       >
         <DropdownMenuItem
