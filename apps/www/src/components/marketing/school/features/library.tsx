@@ -1,111 +1,136 @@
 import {
-  File01Icon,
   Folder01Icon,
   Image01Icon,
-  LibraryIcon,
-  Pdf01Icon,
-  Video01Icon,
+  Link04Icon,
+  Pdf02Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import type { ReactNode } from "react";
-import { useFormatter, useTranslations } from "use-intl";
-import { stepVariants } from "@/components/marketing/school/features/step";
+import { Array as Arr } from "effect";
+import { useTranslations } from "use-intl";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
+import {
+  FeatureProduct,
+  FeatureRow,
+} from "@/components/marketing/shared/feature";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
+import { namedOptions } from "@/components/shared/table/filter";
+import { TablePageBody } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { PERSON_ICONS } from "@/components/tenant/settings/choices";
 
-/** One entry of the class library: the icon of its kind, its name, and what it holds or weighs. */
-function LibraryEntry({
-  children,
-  icon,
-  name,
-  step,
-}: {
-  children: ReactNode;
-  icon: IconSvgElement;
-  name: string;
-  step: 1 | 2 | 3 | 4 | 5;
-}) {
+/** The icon of each kind of entry, as the class library draws it. */
+const KIND_ICONS = {
+  folder: Folder01Icon,
+  image: Image01Icon,
+  link: Link04Icon,
+  pdf: Pdf02Icon,
+};
+
+/**
+ * The class's drive, as its library lists it, the chapter's folder first: the key of each entry's
+ * title, its kind, and who added it.
+ */
+const DEMO_ENTRIES = [
+  { by: "teacher", kind: "folder", title: "folder" },
+  { by: "teacher", kind: "pdf", title: "worksheet" },
+  { by: "nina", kind: "pdf", title: "summary" },
+  { by: "teacher", kind: "link", title: "video" },
+  { by: "nina", kind: "image", title: "formulas" },
+] as const;
+
+/** One entry of the demo's library. */
+type DemoEntry = (typeof DEMO_ENTRIES)[number];
+
+/** The columns of the demo's library table. */
+const libraryColumns = tableColumns<DemoEntry>();
+
+/** The title of an entry, after the icon of its kind, as the library's own rows draw it. */
+function EntryTitle({ entry }: { entry: DemoEntry }) {
+  const t = useTranslations("SchoolSite");
+
   return (
-    <li
-      className={stepVariants({
-        className: "flex min-h-12 items-center gap-3 py-2",
-        step,
-      })}
-    >
-      <HugeIcons className="text-muted-foreground" icon={icon} />
-      <span className="min-w-0 flex-1 truncate text-sm">{name}</span>
-      <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
-        {children}
-      </span>
-    </li>
+    <span className="flex items-center gap-2 font-medium">
+      <HugeIcons
+        aria-label={t(`demo-kind-${entry.kind}`)}
+        className="text-muted-foreground size-4 shrink-0"
+        icon={KIND_ICONS[entry.kind]}
+      />
+      {t(`demo-library-${entry.title}`)}
+    </span>
   );
 }
 
 /**
- * The library row: one class's drive as the School library lists it, a folder
- * of the chapter first and its files under it, Nina's summary among them.
+ * The columns of the class library's table that fit beside the words: each entry's title after its
+ * kind's icon, its kind, who added it, and the row's menu. Every head filters its column, as it does
+ * in the School.
+ */
+function useDemoColumns() {
+  const t = useTranslations("SchoolSite");
+  const teacher = t("demo-teacher");
+  const author = (entry: DemoEntry) => (entry.by === "nina" ? "Nina" : teacher);
+
+  return [
+    libraryColumns.text((entry) => t(`demo-library-${entry.title}`), {
+      cell: (info) => <EntryTitle entry={info.row.original} />,
+      header: t("demo-head-title"),
+      id: "title",
+    }),
+    libraryColumns.values((entry) => entry.kind, {
+      cell: (info) => (
+        <span className="text-muted-foreground">
+          {t(`demo-kind-${info.getValue()}`)}
+        </span>
+      ),
+      header: t("demo-head-type"),
+      id: "kind",
+      options: Arr.map(["folder", "pdf", "image", "link"] as const, (kind) => ({
+        icon: KIND_ICONS[kind],
+        label: t(`demo-kind-${kind}`),
+        value: kind,
+      })),
+    }),
+    libraryColumns.values(author, {
+      cell: (info) => (
+        <span className="text-muted-foreground">{info.getValue()}</span>
+      ),
+      header: t("demo-head-by"),
+      id: "author",
+      options: namedOptions([teacher, "Nina"], PERSON_ICONS),
+    }),
+    libraryColumns.menu((info) => (
+      <RowCopy value={t(`demo-library-${info.row.original.title}`)} />
+    )),
+  ];
+}
+
+/**
+ * The library part: one class's drive in the School's own library table, the chapter's folder first
+ * and its files under it, Nina's summary among them. Its heads filter the rows, and each row's menu
+ * copies its title.
  */
 export function SchoolLibrary() {
-  const t = useTranslations("SchoolSite");
-  const format = useFormatter();
-  const size = (value: number, unit: "kilobyte" | "megabyte") =>
-    format.number(value, { style: "unit", unit });
+  const columns = useDemoColumns();
 
   return (
-    <FeatureRow id="library">
+    <FeatureRow id="library" layout="end">
       <SchoolFeatureText feature="library">
         <Nina act="carrying" label="" size={88} whole />
       </SchoolFeatureText>
-      <FeatureCard>
-        <p className="flex min-w-0 items-center gap-2 border-b pb-4 font-medium">
-          <HugeIcons icon={LibraryIcon} />
-          <span className="truncate">{t("demo-class")}</span>
-        </p>
-        <ul className="-my-2 divide-y">
-          <LibraryEntry
-            icon={Folder01Icon}
-            name={t("demo-library-folder")}
-            step={1}
-          >
-            {t("demo-library-files", { count: 6 })}
-          </LibraryEntry>
-          <LibraryEntry
-            icon={Pdf01Icon}
-            name={t("demo-library-worksheet")}
-            step={2}
-          >
-            {size(240, "kilobyte")}
-          </LibraryEntry>
-          <LibraryEntry
-            icon={File01Icon}
-            name={t("demo-library-summary")}
-            step={3}
-          >
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-flex size-6 overflow-hidden rounded-full">
-                <Nina label="" lean="center" size={24} tile="yellow" />
-              </span>
-              {size(36, "kilobyte")}
-            </span>
-          </LibraryEntry>
-          <LibraryEntry
-            icon={Video01Icon}
-            name={t("demo-library-video")}
-            step={4}
-          >
-            {size(18, "megabyte")}
-          </LibraryEntry>
-          <LibraryEntry
-            icon={Image01Icon}
-            name={t("demo-library-formulas")}
-            step={5}
-          >
-            {size(1.2, "megabyte")}
-          </LibraryEntry>
-        </ul>
-      </FeatureCard>
+      <FeatureProduct>
+        <TableFiltersProvider>
+          <TablePageBody>
+            <DataTable
+              columns={columns}
+              data={DEMO_ENTRIES}
+              rowId={(entry) => entry.title}
+            />
+          </TablePageBody>
+        </TableFiltersProvider>
+      </FeatureProduct>
     </FeatureRow>
   );
 }

@@ -10,6 +10,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
+import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
 import { SchoolHero } from "@/components/marketing/school/hero";
 import {
   openSchoolLanding,
@@ -123,8 +124,9 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
 
 /**
  * The School landing: its hero, one screen for each thing a school runs on it,
- * each with the real School screen beside its words, its questions, and the
- * closing question. Every section after the hero loads its code as it nears.
+ * each with the real School screen beside or under its words, its questions,
+ * and the closing question. Every section after the hero loads its code as it
+ * nears, and the toys come on a wide screen once the page has its reader.
  */
 function SchoolLanding() {
   const { faqs } = Route.useLoaderData();
@@ -135,6 +137,7 @@ function SchoolLanding() {
       <PageField />
       <div className="relative grid grid-cols-1">
         <SchoolHero />
+        <DeferredSchoolToys page="landing" />
         <LaterSection code={schoolSections.forum}>
           {(SchoolForum) => <SchoolForum />}
         </LaterSection>
