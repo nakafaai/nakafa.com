@@ -25,14 +25,13 @@ import {
 } from "@/components/tryout/catalog/table/visitor";
 import { readTryoutTrackListFn } from "@/components/tryout/route/catalog.functions";
 
-/** Props of the discovery table: the build's payload and its title. */
+/** Props of the discovery table: the build's payload. */
 export interface TryoutSetTableProps {
   /** The list request that the loader's answer holds and the result it resolved to. */
   bootstrap: {
     readonly args: TryoutSetListArgs;
     readonly result: TryoutSetPage;
   };
-  title: string;
 }
 
 /** The track route, whose validated search is the catalog's filter, sort and direction. */
@@ -47,7 +46,7 @@ const catalogRoute = getRouteApi(
  * each further window through the server function, so no visitor opens a socket. A change of filter, sort or direction is a navigation
  * that adds a history entry and keeps the scroll position.
  */
-export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
+export function TryoutSetTable({ bootstrap }: TryoutSetTableProps) {
   /**
    * The selection reads the address, which a navigation updates at once. The route
    * match commits only when the track loader resolves, so its search would hold the
@@ -81,7 +80,6 @@ export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
         onSort: (sort) =>
           select({ direction: sort.direction, sort: sort.field }),
         sort: request.sort,
-        title,
       }}
     >
       <TableFiltersProvider>

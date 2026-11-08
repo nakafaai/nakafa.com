@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableHashSet, Option, Schema } from "effect";
 import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -10,9 +11,6 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The read of the exam, which a change to any question runs again. */
 const EXAM_READ = "exams/exams:open";
-
-/** How long a page that had fallen would take to show it. */
-const FALL_MILLISECONDS = 2000;
 
 /** One answer of the server, whole, since a frame the page reads keeps every field. */
 const decodeFrame = Schema.decodeOption(
@@ -121,7 +119,7 @@ test("a read of the exam that fails takes nothing off a teacher's screen", async
   armed.now = true;
   await page.getByRole("button", { exact: true, name: "Add question" }).click();
   await expect.poll(() => armed.failed).toBe(1);
-  await page.waitForTimeout(FALL_MILLISECONDS);
+  await waitForQuiet(page);
 
   // The title, the words and the editor stay, and the teacher writes on.
   await expect(page.getByRole("textbox", { name: "Exam title" })).toHaveValue(

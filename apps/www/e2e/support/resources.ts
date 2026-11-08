@@ -28,10 +28,27 @@ const RESOURCE_IDLE_MILLISECONDS = 1000;
 const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const RESOURCE_POLL_MILLISECONDS = 100;
 /**
- * How many Resource Timing entries a measured page keeps. A browser keeps 250
- * and drops every later one, and a lesson loads more scripts than that alone.
+ * How many Resource Timing entries a page keeps. A browser keeps 250 and drops
+ * every later one, and a lesson or the home page loads more scripts than that
+ * alone.
  */
 const RESOURCE_TIMING_ENTRIES = 2000;
+
+/**
+ * Keeps every resource each document of the page loads in its Resource Timing
+ * entries, from before the page's own scripts run. Without it a list of what a
+ * page loaded misses whatever came after the browser's 250th entry.
+ */
+export const keepResourceTimings = Effect.fn("NakafaE2E.keepResourceTimings")(
+  function* (page: Page) {
+    yield* Effect.promise(() =>
+      page.addInitScript(
+        (entries) => performance.setResourceTimingBufferSize(entries),
+        RESOURCE_TIMING_ENTRIES
+      )
+    );
+  }
+);
 
 const createResourceRequestClassifier = (applicationOrigin: string) =>
   function classifyResourceRequest(
@@ -290,12 +307,7 @@ export const measureRouteJavascript = Effect.fn(
             yield* signInLearner(context, baseURL);
           }
           const page = yield* Effect.promise(() => context.newPage());
-          yield* Effect.promise(() =>
-            page.addInitScript(
-              (entries) => performance.setResourceTimingBufferSize(entries),
-              RESOURCE_TIMING_ENTRIES
-            )
-          );
+          yield* keepResourceTimings(page);
           yield* seedAnalyticsConsent(page, "denied");
           const applicationOrigin = new URL(baseURL).origin;
           const classifyRequest =

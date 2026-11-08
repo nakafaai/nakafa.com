@@ -1,8 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { SeatKind } from "@repo/backend/confect/exams/seed/contract";
-import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
+import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import type { LoadPlan } from "@repo/backend/scripts/load/plan";
-import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
 import { Base64Url, Hex } from "effect/encoding";
@@ -31,12 +30,11 @@ const Room = Schema.Struct({
   token: Schema.String,
 });
 
-/** The exam and its rooms, as the load seed prints them. */
-const Seeded = Schema.fromJsonString(
-  Schema.Struct({ examId: Id("exams"), sittings: Schema.Array(Room) })
-);
-
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+/** The exam and its rooms, as the load seed answers them. */
+const Seeded = Schema.Struct({
+  examId: Id("exams"),
+  sittings: Schema.Array(Room),
+});
 
 /**
  * Seats `count` accounts of one kind, in calls of `SEATS_PER_CALL`. Each seat gets a key of
@@ -69,20 +67,25 @@ const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
   yield* Effect.forEach(
     Arr.chunksOf(seats, SEATS_PER_CALL),
     (batch) =>
-      encodeArguments({
-        kind: seating.kind,
-        seats: Arr.map(batch, ({ key, name, token }) => ({ key, name, token })),
-        slug: seating.slug,
-      }).pipe(
-        Effect.flatMap((args) =>
-          run(
-            "Load seats",
-            ["run", "exams/seed:seats", args],
-            Arr.map(batch, (seat) => seat.token)
-          )
-        ),
-        Effect.retry({ times: SEED_RETRIES })
-      ),
+      // Each attempt calls the runner again, so a retry sends the seats again.
+      Effect.suspend(() =>
+        run(
+          "Load seats",
+          {
+            args: {
+              kind: seating.kind,
+              seats: Arr.map(batch, ({ key, name, token }) => ({
+                key,
+                name,
+                token,
+              })),
+              slug: seating.slug,
+            },
+            path: "exams/seed:seats",
+          },
+          Arr.map(batch, (seat) => seat.token)
+        )
+      ).pipe(Effect.retry({ times: SEED_RETRIES })),
     { concurrency: SEED_CONCURRENCY, discard: true }
   );
   return Arr.map(seats, ({ room, token }) => ({ room, token }));
@@ -100,16 +103,10 @@ export const seedRun = Effect.fn("load.seed")(function* <E, R>(
 ) {
   const crypto = yield* SecureRandom.SecureRandom;
   const runId = Hex.encode(yield* crypto.randomBytes(3));
-  const seeded = yield* encodeArguments({
-    questions: plan.questions,
-    rooms: plan.rooms,
-    slug,
-  }).pipe(
-    Effect.flatMap((args) =>
-      run("Load exam", ["run", "exams/seed:load", args])
-    ),
-    Effect.flatMap(Schema.decodeEffect(Seeded))
-  );
+  const seeded = yield* run("Load exam", {
+    args: { questions: plan.questions, rooms: plan.rooms, slug },
+    path: "exams/seed:load",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Seeded)));
   const students = yield* seatAll(run, {
     count: plan.students,
     kind: "student",

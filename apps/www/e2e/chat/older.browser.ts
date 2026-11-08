@@ -1,11 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { answerTurn, chatOf } from "@/e2e/support/prose";
+import { waitForFrames } from "@/e2e/support/quiet";
 import { TRANSCRIPT_ROW } from "@/e2e/support/selector";
 import { openServedChat } from "@/e2e/support/serve";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+/** The frames between two checks that reaching the oldest message loads nothing more. */
+const CHECK_FRAMES = 24;
 
 /**
  * Answers more than two pages of turns hold, so the third page of turns is the
@@ -65,7 +69,7 @@ test.describe("An older page of a chat", () => {
             .toBe(2 * NINA_MESSAGES_PAGE_SIZE)
         );
         for (let check = 0; check < 5; check += 1) {
-          yield* Effect.sleep(Duration.millis(400));
+          yield* Effect.promise(() => waitForFrames(page, CHECK_FRAMES));
           yield* Effect.promise(async () => {
             await reachOldest(page);
             expect(await page.locator(MESSAGE_ROW).count()).toBe(
