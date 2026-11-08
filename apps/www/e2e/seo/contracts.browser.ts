@@ -1,6 +1,6 @@
 import type { PublicationDates } from "@nakafa/aksara-contracts/date";
 import {
-  type AppLocaleCode,
+  type ActiveAppLocaleCode,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
@@ -57,7 +57,7 @@ const dateLabels = {
   de: { published: "Veröffentlicht", updated: "Aktualisiert" },
   en: { published: "Published", updated: "Updated" },
   id: { published: "Diterbitkan", updated: "Diperbarui" },
-} satisfies Record<AppLocaleCode, DateLabels>;
+} satisfies Record<ActiveAppLocaleCode, DateLabels>;
 
 const LocalizedContentRouteSchema = Schema.Struct({
   href: Schema.String,

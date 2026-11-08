@@ -1,4 +1,7 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type {
+  ActiveAppLocaleCode,
+  AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import { SchoolLineKey } from "@repo/backend/confect/billing/quote";
@@ -25,7 +28,13 @@ const PAYMENT_ITEMS = {
     invoice: "Nakafa School",
     pass: "Pass Nakafa Pro",
   },
-} as const;
+  ms: {
+    credits: "1,000 kredit Nina",
+    cycle: "Langganan Nakafa Pro",
+    invoice: "Nakafa School",
+    pass: "Pas Nakafa Pro",
+  },
+} as const satisfies Record<AppLocaleCode, Record<string, string>>;
 
 /** What each School line buys, in the language of the invoice. The invoice's period says for how long. */
 const SCHOOL_ITEMS = {
@@ -44,7 +53,12 @@ const SCHOOL_ITEMS = {
     "school.max": "Nakafa School Max",
     "school.pro": "Nakafa School Pro",
   },
-} as const satisfies Record<ActiveAppLocaleCode, Record<SchoolLineKey, string>>;
+  ms: {
+    "school.accounts": "Akaun tambahan",
+    "school.max": "Nakafa School Max",
+    "school.pro": "Nakafa School Pro",
+  },
+} as const satisfies Record<AppLocaleCode, Record<SchoolLineKey, string>>;
 
 /** An invoice line's text: the words of a School line, or the text an operator wrote. */
 const lineDescription = (description: string, locale: ActiveAppLocaleCode) =>

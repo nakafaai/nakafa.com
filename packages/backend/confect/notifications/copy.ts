@@ -47,6 +47,19 @@ const SENTENCES = {
     "grade.released": "Ada nilai baru yang dirilis.",
     "comment.replied": "Ada yang membalas komentarmu.",
   },
+  ms: {
+    "announcement.posted": "Ada pengumuman baharu dalam kelas anda.",
+    "assignment.published": "Ada tugasan baharu dalam kelas anda.",
+    "assignment.deadline": "Tarikh akhir sesuatu tugasan semakin hampir.",
+    "assignment.missed":
+      "Anak anda tidak menghantar tugasan tepat pada masanya.",
+    "forum.mentioned": "Seseorang menyebut anda dalam kelas anda.",
+    "person.invited": "Anda telah dijemput ke sebuah sekolah.",
+    "exam.starting": "Peperiksaan anda akan bermula tidak lama lagi.",
+    "exam.reminder": "Anak anda akan menduduki peperiksaan.",
+    "grade.released": "Markah baharu telah dikeluarkan.",
+    "comment.replied": "Seseorang telah membalas komen anda.",
+  },
 } satisfies Record<
   typeof AppLocaleCodeSchema.Type,
   Record<NotificationsDoc["changeType"], string>

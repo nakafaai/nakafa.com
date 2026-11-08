@@ -1,3 +1,5 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+
 /** The words of a report PDF, in each language a school's unit may set. */
 export const REPORT_COPY = {
   de: {
@@ -44,4 +46,19 @@ export const REPORT_COPY = {
     subject: "Mata pelajaran",
     title: "Laporan Hasil Belajar",
   },
-} as const;
+  ms: {
+    approved: "Diluluskan pada",
+    check:
+      "Disemak melalui hashnya. Bukan tandatangan elektronik yang diperakui.",
+    class: "Kumpulan kelas",
+    grade: "Markah",
+    kktpNotReached: "Di bawah KKTP",
+    kktpReached: "Mencapai KKTP",
+    note: "Catatan guru kelas",
+    period: "Penggal",
+    result: "Keputusan",
+    student: "Pelajar",
+    subject: "Mata pelajaran",
+    title: "Kad Laporan",
+  },
+} as const satisfies Record<AppLocaleCode, Record<string, string>>;

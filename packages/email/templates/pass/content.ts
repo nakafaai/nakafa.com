@@ -1,6 +1,7 @@
 import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
@@ -52,8 +53,15 @@ const passEndingEmailCopy = {
       "Kami mengirim email ini karena kamu membeli pass Nakafa Pro.",
     subject: `Pass Pro kamu berakhir pada ${endsOn}`,
   }),
+  ms: (endsOn) => ({
+    body: `Pas Pro anda tamat pada ${endsOn}. Pas seterusnya bermula tepat pada masa itu, jadi anda tidak terlepas sehari pun Pro.`,
+    cta: "Lanjutkan Pro",
+    footerReason:
+      "Kami menghantar e-mel ini kerana anda telah membeli pas Nakafa Pro.",
+    subject: `Pas Pro anda tamat pada ${endsOn}`,
+  }),
 } satisfies Record<
-  ActiveAppLocaleCode,
+  AppLocaleCode,
   (endsOn: string) => typeof PassEndingEmailCopySchema.Type
 >;
 
