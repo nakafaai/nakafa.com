@@ -40,6 +40,7 @@ import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectMenuSource } from "#scripts/check/menus";
+import { nameViolations } from "#scripts/check/names";
 import { inspectMenuOrder } from "#scripts/check/order";
 import { inspectPickerSource } from "#scripts/check/pickers";
 import { pluginRuleNames } from "#scripts/check/plugin";
@@ -141,7 +142,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string, owner: string = root) {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const { agents, scripts, workspaces } = yield* readAuthoredTree(root);
+    const { agents, docs, scripts, workspaces } = yield* readAuthoredTree(root);
     const tests = Arr.filter(workspaces, (file) =>
       TEST_FILE_PATTERN.test(file)
     );
@@ -220,6 +221,13 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     );
     const sdkViolations = yield* inspectSdkReach(root, workspaces);
     const dictionaryViolations = yield* inspectDictionaries(root, workspaces);
+    // Every hand-written path is named, the documents and the agent skills' tooling included, by repository path.
+    const names = nameViolations(
+      Arr.map(
+        relative(Arr.flatten([workspaces, scripts, agents, docs])),
+        (file) => Arr.join(Str.split(file, path.sep), "/")
+      )
+    );
     const reports = Arr.filter(
       [
         fileReport(
@@ -239,6 +247,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         lineReport(Arr.flatten(sheetViolations)),
         lineReport(sdkViolations),
         lineReport(dictionaryViolations),
+        lineReport(names),
         lineReport(
           inspectCompilerConfigs(
             sharedPackage,

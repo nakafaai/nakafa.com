@@ -2,7 +2,7 @@ import { Calendar } from "@repo/design-system/components/ui/calendar";
 import {
   getCalendarDayKey,
   parseCalendarDayKey,
-} from "@repo/design-system/lib/calendar/day-key";
+} from "@repo/design-system/lib/calendar/day";
 import { DateTime, Option } from "effect";
 import { useTimeZone } from "use-intl";
 import { chosenDays, dayRangeOf } from "@/components/shared/table/days";

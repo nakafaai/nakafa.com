@@ -1,5 +1,5 @@
 import { useTriangle } from "@repo/design-system/components/contents/mathematics/triangle/context";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinates";
 import { Triangle } from "@repo/design-system/components/three/triangle";
 
 const CAMERA_Z_POSITION = 4;

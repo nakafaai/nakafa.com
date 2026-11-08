@@ -6,13 +6,13 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Effect, Layer, Option } from "effect";
 import { getMaterialModel } from "@/lib/content/material/model";
 import { activateTestRelease } from "@/test/active";
+import { previewProjection as projection } from "@/test/manifest";
 import {
   activeReleaseId,
   data,
   model,
   published,
-} from "@/test/content-material";
-import { previewProjection as projection } from "@/test/content-preview";
+} from "@/test/published/material";
 import { resetTestRuntimeCache } from "@/test/store";
 
 /** Reads one model that the test expects to exist. */

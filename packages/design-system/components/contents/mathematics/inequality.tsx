@@ -4,7 +4,7 @@ import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinates";
 import { Inequality as Inequality3D } from "@repo/design-system/components/three/inequality";
 import {
   VisualCard,

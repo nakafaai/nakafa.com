@@ -36,7 +36,7 @@ import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
-import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
+import { type ChatFirstPage, useChatList } from "@/components/ai/chat/list";
 import { readChatTitle } from "@/components/ai/chat/title";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";

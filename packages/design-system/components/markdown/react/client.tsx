@@ -1,7 +1,7 @@
 "use client";
 
-import { CodeBlockText } from "@repo/design-system/components/code-block/text";
-import { codeBodyVariants } from "@repo/design-system/components/code-block/variants";
+import { CodeBlockText } from "@repo/design-system/components/code/text";
+import { codeBodyVariants } from "@repo/design-system/components/code/variants";
 import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { CodeFence } from "@repo/design-system/components/markdown/react/fence";
 import {

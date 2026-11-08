@@ -1,7 +1,7 @@
 import { useMergedRef } from "@mantine/hooks";
 import type { Point } from "@repo/design-system/lib/toy/flight";
 import { createScatter, type Place } from "@repo/design-system/lib/toy/scatter";
-import { createToys } from "@repo/design-system/lib/toy/toys";
+import { createToys } from "@repo/design-system/lib/toy/shelf";
 import { cn } from "cn";
 import {
   createContext,
