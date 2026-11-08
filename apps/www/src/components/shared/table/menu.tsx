@@ -5,9 +5,7 @@ import {
   createDropdownMenuHandle,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -67,9 +65,9 @@ export function RowMenu({
           ref={trigger}
           render={
             <Button
-              aria-label={common("more-actions")}
               inert={inert}
               size="icon-sm"
+              tooltip={common("more-actions")}
               variant="ghost"
             >
               <HugeIcons icon={MoreHorizontalIcon} />
@@ -96,11 +94,12 @@ export function RowItems({
 
   return (
     <DropdownMenu handle={handle} onOpenChange={onOpenChange}>
-      <DropdownMenuContent align="end" className="min-w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-          {children}
-        </DropdownMenuGroup>
+      <DropdownMenuContent
+        align="end"
+        className="min-w-48"
+        label={common("menu-actions")}
+      >
+        {children}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -117,8 +116,7 @@ export function RowOpen({
   const { press } = useRowMenu();
 
   return (
-    <DropdownMenuItem onClick={press}>
-      <HugeIcons icon={icon} />
+    <DropdownMenuItem icon={icon} onClick={press}>
       {label}
     </DropdownMenuItem>
   );
@@ -131,8 +129,7 @@ export function RowCopy({ value }: { value: string }) {
 
   return (
     <RowItems>
-      <DropdownMenuItem onClick={() => clipboard.copy(value)}>
-        <HugeIcons icon={Copy01Icon} />
+      <DropdownMenuItem icon={Copy01Icon} onClick={() => clipboard.copy(value)}>
         {common("copy")}
       </DropdownMenuItem>
     </RowItems>

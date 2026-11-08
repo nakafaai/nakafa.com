@@ -11,7 +11,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -79,13 +78,13 @@ function InvoiceAction({ payment }: { payment: Receipt }) {
     <RowItems>
       <DropdownMenuItem
         disabled={!isActiveLocale(locale) || isPending}
+        icon={Download04Icon}
         onClick={() => {
           if (isActiveLocale(locale)) {
             download(() => draw({ locale, paymentId: payment.id }));
           }
         }}
       >
-        <HugeIcons icon={Download04Icon} />
         {t("payment-download")}
       </DropdownMenuItem>
     </RowItems>
@@ -101,9 +100,9 @@ function PortalAction() {
     <RowItems>
       <DropdownMenuItem
         disabled={billing.isPending}
+        icon={LinkSquare02Icon}
         onClick={() => billing.openPortal({ source: "settings-invoice" })}
       >
-        <HugeIcons icon={LinkSquare02Icon} />
         {t("payment-portal")}
       </DropdownMenuItem>
     </RowItems>

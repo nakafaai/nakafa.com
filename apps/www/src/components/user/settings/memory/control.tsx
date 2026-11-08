@@ -1,7 +1,11 @@
+import { AiBrain01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
 import { Label } from "@repo/design-system/components/ui/label";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { elementById } from "@repo/design-system/lib/element";
 import { useRef, useState } from "react";
@@ -26,7 +30,6 @@ const REMEMBER_ID = "user-settings-memory-remember";
 export function MemoryControl() {
   const t = useTranslations("Memory");
   const auth = useTranslations("Auth");
-  const common = useTranslations("Common");
   const { empty, paused } = useMemory((reading) => ({
     empty: reading.empty,
     paused: reading.paused,
@@ -64,29 +67,20 @@ export function MemoryControl() {
         </CardSectionActions>
       </CardSectionFooter>
       <ResponsiveDialog
-        description={t("clear-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setConfirming(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                clearing.current = true;
-                setConfirming(false);
-                clear();
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("clear")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              clearing.current = true;
+              setConfirming(false);
+              clear();
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("clear")}
+          </Button>
         }
+        description={t("clear-description")}
         // The button that opened the dialog is disabled once every memory is
         // gone, so after a confirmed clear the focus goes to the Add memory button.
         onOpenChangeComplete={(open) => {
@@ -98,7 +92,11 @@ export function MemoryControl() {
         open={confirming}
         setOpen={setConfirming}
         title={t("clear-title")}
-      />
+      >
+        <ResponsiveDialogSubject icon={AiBrain01Icon}>
+          {auth("memory")}
+        </ResponsiveDialogSubject>
+      </ResponsiveDialog>
     </CardSection>
   );
 }

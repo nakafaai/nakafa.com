@@ -150,6 +150,7 @@ function CommentOwnerMenu({ comment }: { comment: RowComment }) {
             <CommentDeletion
               commentId={comment._id}
               isReply={comment.threadId !== undefined}
+              text={comment.text}
             />
           </ClientOnly>
         </Suspense>

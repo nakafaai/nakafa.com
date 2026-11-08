@@ -234,4 +234,14 @@ describe("GitHub Action sources", () => {
       expect(failure.message).toBe("Unable to read GitHub action files.");
     }).pipe(Effect.provide(NodeServices.layer))
   );
+
+  it.effect(
+    "finds the repository's own workflows and composite actions within the reviews",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* inspectGithubActionPolicy(`${import.meta.dirname}/../..`)
+        ).toEqual([]);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
 });

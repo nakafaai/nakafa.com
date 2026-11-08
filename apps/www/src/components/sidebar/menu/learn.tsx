@@ -10,9 +10,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -46,18 +44,15 @@ export function LearnMoreSubmenu({ children }: { children: ReactNode }) {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <HugeIcons icon={InformationCircleIcon} />
+      <DropdownMenuSubTrigger icon={InformationCircleIcon}>
         <span className="truncate">{t("learn-more")}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent
         className="w-max max-w-[calc(100vw-2rem)]"
+        label={t("menu-more")}
         side={side}
       >
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("more")}</DropdownMenuLabel>
-          {children}
-        </DropdownMenuGroup>
+        {children}
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );
@@ -92,13 +87,11 @@ export function GuestLearnMoreMenu({ children }: { children: ReactNode }) {
         <DropdownMenuContent
           align="start"
           className="w-max max-w-[calc(100vw-2rem)]"
+          label={t("menu-more")}
           side={side}
           sideOffset={4}
         >
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("more")}</DropdownMenuLabel>
-            {children}
-          </DropdownMenuGroup>
+          {children}
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>
@@ -113,9 +106,9 @@ export function NakafaAboutMenuItem() {
 
   return (
     <DropdownMenuItem
+      icon={FavouriteIcon}
       onClick={() => navigate({ params: { locale }, to: "/$locale" })}
     >
-      <HugeIcons icon={FavouriteIcon} />
       {t("about-nakafa")}
     </DropdownMenuItem>
   );
@@ -131,13 +124,15 @@ export function SiteAboutMenuItem() {
 
   return (
     <DropdownMenuItem
-      render={
-        <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
-          <HugeIcons icon={FavouriteIcon} />
-          {t("about-nakafa")}
+      icon={FavouriteIcon}
+      render={({ children, ...props }) => (
+        <a {...props} href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+          {children}
         </a>
-      }
-    />
+      )}
+    >
+      {t("about-nakafa")}
+    </DropdownMenuItem>
   );
 }
 
@@ -147,19 +142,21 @@ export function CommunityMenuItem() {
 
   return (
     <DropdownMenuItem
-      render={(props) => (
+      icon={DiscordIcon}
+      render={({ children, ...props }) => (
         <a
           {...props}
           href={COMPANY_SOCIAL_PROFILES.discord}
           rel="noopener noreferrer"
           target="_blank"
         >
-          <HugeIcons icon={DiscordIcon} />
-          {t("community")}
-          <HugeIcons className="ml-auto size-4" icon={LinkSquare02Icon} />
+          {children}
         </a>
       )}
-    />
+    >
+      {t("community")}
+      <HugeIcons className="ml-auto size-4" icon={LinkSquare02Icon} />
+    </DropdownMenuItem>
   );
 }
 
@@ -184,15 +181,15 @@ export function LegalMenuItems() {
   return (
     <>
       <DropdownMenuItem
+        icon={FileValidationIcon}
         onClick={() => openPage(pageNavigation.termsOfServicePath)}
       >
-        <HugeIcons icon={FileValidationIcon} />
         {tLegal("terms-of-service")}
       </DropdownMenuItem>
       <DropdownMenuItem
+        icon={LockIcon}
         onClick={() => openPage(pageNavigation.privacyPolicyPath)}
       >
-        <HugeIcons icon={LockIcon} />
         {tLegal("privacy-policy")}
       </DropdownMenuItem>
     </>
