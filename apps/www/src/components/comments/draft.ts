@@ -101,9 +101,15 @@ export interface CommentDraft {
 export const textOf = (draft: CommentDraft, key: ComposerKey) =>
   Option.getOrElse(HashMap.get(draft.texts, key), () => "");
 
+/**
+ * The tray of a composer without photos. It is one array for every read, because a store selector that answers a
+ * new array on each read makes React render again without end.
+ */
+const NO_PHOTOS: readonly Photo[] = [];
+
 /** The photos of one composer's tray, none until the learner adds one. */
 export const photosOf = (draft: CommentDraft, key: ComposerKey) =>
-  Option.getOrElse(HashMap.get(draft.photos, key), () => []);
+  Option.getOrElse(HashMap.get(draft.photos, key), () => NO_PHOTOS);
 
 /**
  * Whether the replies of a top-level comment show under it: its reader opened a thread that has replies,

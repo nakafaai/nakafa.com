@@ -115,6 +115,15 @@ describe("the draft of a list of comments", () => {
     expect(photosOf(draft.getState(), root._id)).toEqual([]);
   });
 
+  it("answers one empty tray for every read of a composer without photos, so a store selector settles", () => {
+    const draft = createCommentDraft();
+    expect(photosOf(draft.getState(), "")).toBe(photosOf(draft.getState(), ""));
+    draft.getState().write("", "Teks");
+    expect(photosOf(draft.getState(), root._id)).toBe(
+      photosOf(draft.getState(), "")
+    );
+  });
+
   it("empties a composer that sent, with a new editor, and starts one again for restored words", () => {
     const draft = createCommentDraft();
     draft.getState().write("", "Terkirim");
