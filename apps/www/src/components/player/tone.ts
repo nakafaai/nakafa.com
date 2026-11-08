@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 /** The tone of an answer's marked line: open, chosen, correct or wrong. */
 type ChoiceTone = NonNullable<ComponentProps<typeof MarkedLine>["tone"]>;
 
-const TryoutPreviewChoiceAppearanceSchema = Schema.Union([
+const ChoiceAppearanceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("selectable"),
   }),
@@ -15,29 +15,28 @@ const TryoutPreviewChoiceAppearanceSchema = Schema.Union([
   }),
 ]);
 
-export type TryoutPreviewChoiceAppearance =
-  typeof TryoutPreviewChoiceAppearanceSchema.Type;
+export type ChoiceAppearance = typeof ChoiceAppearanceSchema.Type;
 
 /** The tone of an answer while it stays answerable, or once a demo reveals its key. */
-export function getTryoutPreviewChoiceTone({
+export function choiceTone({
   appearance,
   checked,
 }: {
-  appearance: TryoutPreviewChoiceAppearance;
+  appearance: ChoiceAppearance;
   checked: boolean;
 }): ChoiceTone {
   if (appearance.kind === "selectable") {
     return checked ? "chosen" : "idle";
   }
 
-  return getTryoutReviewedChoiceTone({
+  return getChoiceReviewedTone({
     checked,
     isCorrect: appearance.isCorrect,
   });
 }
 
 /** The tone of an answer after its correctness is authorized. */
-export function getTryoutReviewedChoiceTone({
+export function getChoiceReviewedTone({
   checked,
   isCorrect,
 }: {

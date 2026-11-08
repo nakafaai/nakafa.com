@@ -13,7 +13,7 @@ import {
   toggleOption,
   withHeld,
   writtenOf,
-} from "@/components/exams/sitting/response";
+} from "@/components/player/response";
 
 const decodeInteraction = Schema.decodeUnknownSync(InteractionSchema);
 
