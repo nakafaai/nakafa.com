@@ -7,7 +7,6 @@ import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Array as Arr, Effect, Layer } from "effect";
 import {
   readPublishedProgramCatalog,
-  readPublishedProgramPrerenderRoute,
   readPublishedProgramSubjects,
 } from "@/lib/content/program/catalog";
 import { activateTestRelease } from "@/test/active";
@@ -83,7 +82,6 @@ describe("published program catalog", () => {
         runtimeQueryMock.mockReturnValue(Effect.succeed(catalogResponse()));
         yield* readPublishedProgramCatalog("en");
         yield* readPublishedProgramCatalog("en");
-        yield* readPublishedProgramPrerenderRoute("en");
         expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
 
         // The English response does not describe the Indonesian catalog, so
@@ -104,63 +102,6 @@ describe("published program catalog", () => {
       })
   );
   it.effect(
-    "selects one renderable root without enumerating descendant routes",
-    () =>
-      Effect.gen(function* () {
-        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(catalogResponse()));
-        expect(yield* readPublishedProgramPrerenderRoute("en")).toEqual(
-          testProgramRoot
-        );
-        expect(runtimeQueryMock).toHaveBeenCalledExactlyOnceWith(
-          expect.anything(),
-          {
-            appLocale: "en",
-          }
-        );
-      })
-  );
-  it.effect.each([
-    [
-      "empty inventory",
-      catalogResponse({
-        routeJson: [],
-      }),
-    ],
-    [
-      "hidden roots",
-      catalogResponse({
-        routeJson: [
-          testCurriculumRowJson({
-            ...testProgramRoot,
-            sitemap: false,
-          }),
-        ],
-      }),
-    ],
-    [
-      "unmanaged inventory",
-      catalogResponse({
-        managed: false,
-      }),
-    ],
-    [
-      "non-root route",
-      catalogResponse({
-        routeJson: [testCurriculumRowJson(testProgramClass)],
-      }),
-    ],
-  ])("rejects a prerender seed from %s", ([_label, result]) =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(result));
-      expect(
-        yield* readPublishedProgramPrerenderRoute("en").pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PublishedProjectionError",
-        appLocale: "en",
-      });
-    })
-  );
-  it.effect(
     "reads curriculum roots through the native Convex program query",
     () =>
       Effect.gen(function* () {
@@ -171,9 +112,6 @@ describe("published program catalog", () => {
         expect(
           Arr.map(catalog.entries, ({ translation }) => translation.title)
         ).toEqual(["Technical Program 1", "Technical Program 2"]);
-        expect(yield* readPublishedProgramPrerenderRoute("en")).toEqual(
-          catalog.entries[0].route
-        );
       })
   );
   it.effect("decodes real program roots and applies the runtime cache", () =>
