@@ -85,55 +85,54 @@ const register = FunctionImpl.make(
   databaseSchema,
   spec,
   "register",
-  Effect.fn("comments.files.register")(function* ({
-    fileId,
-    height,
-    thumbnailId,
-    width,
-  }) {
-    const user = yield* requireAuth();
-    const files = Arr.appendAll(
-      [fileId],
-      thumbnailId === null ? [] : [thumbnailId]
-    );
-    const stored = yield* inspectFile(fileId, HEAD_BYTES);
-    const small =
-      thumbnailId === null
-        ? Option.none()
-        : yield* inspectFile(thumbnailId, HEAD_BYTES);
-    if (
-      Option.isNone(stored) ||
-      (thumbnailId !== null && Option.isNone(small))
-    ) {
-      yield* discardAll(files);
-      return yield* refused();
-    }
-    if (
-      stored.value.byteSize > COMMENT_PHOTO_BYTE_LIMIT ||
-      Option.exists(
-        small,
-        (copy) => copy.byteSize > COMMENT_THUMBNAIL_BYTE_LIMIT
-      )
-    ) {
-      yield* discardAll(files);
-      return yield* tooLarge();
-    }
-    if (
-      Option.isNone(imageTypeOf(stored.value.head)) ||
-      Option.exists(small, (copy) => Option.isNone(imageTypeOf(copy.head)))
-    ) {
-      yield* discardAll(files);
-      return yield* refused();
-    }
-    const { runMutation } = yield* MutationRunner;
-    return yield* runMutation(commentsInternal.files.commit, {
-      fileId,
-      height,
-      thumbnailId,
-      userId: user.appUser._id,
-      width,
-    });
-  })
+  Effect.fn("comments.files.register")(
+    function* ({ fileId, height, thumbnailId, width }) {
+      const user = yield* requireAuth();
+      const files = Arr.appendAll(
+        [fileId],
+        thumbnailId === null ? [] : [thumbnailId]
+      );
+      const stored = yield* inspectFile(fileId, HEAD_BYTES);
+      const small =
+        thumbnailId === null
+          ? Option.none()
+          : yield* inspectFile(thumbnailId, HEAD_BYTES);
+      if (
+        Option.isNone(stored) ||
+        (thumbnailId !== null && Option.isNone(small))
+      ) {
+        yield* discardAll(files);
+        return yield* refused();
+      }
+      if (
+        stored.value.byteSize > COMMENT_PHOTO_BYTE_LIMIT ||
+        Option.exists(
+          small,
+          (copy) => copy.byteSize > COMMENT_THUMBNAIL_BYTE_LIMIT
+        )
+      ) {
+        yield* discardAll(files);
+        return yield* tooLarge();
+      }
+      if (
+        Option.isNone(imageTypeOf(stored.value.head)) ||
+        Option.exists(small, (copy) => Option.isNone(imageTypeOf(copy.head)))
+      ) {
+        yield* discardAll(files);
+        return yield* refused();
+      }
+      const { runMutation } = yield* MutationRunner;
+      return yield* runMutation(commentsInternal.files.commit, {
+        fileId,
+        height,
+        thumbnailId,
+        userId: user.appUser._id,
+        width,
+      });
+    },
+    // The runner decodes the server's own answer, so a decode failure is a defect.
+    Effect.catchTag("SchemaError", Effect.die)
+  )
 );
 
 /** Stores a registered photo for its learner. Its bytes were charged at its reservation. */

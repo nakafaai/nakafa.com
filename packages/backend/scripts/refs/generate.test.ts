@@ -13,6 +13,7 @@ import chats from "@repo/backend/confect/_generated/refs/chats";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import comments from "@repo/backend/confect/_generated/refs/comments";
+import commentsInternal from "@repo/backend/confect/_generated/refs/comments.server";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import consents from "@repo/backend/confect/_generated/refs/consents";
@@ -164,6 +165,7 @@ const internalModules = {
   billing: billingInternal,
   bucket: bucketInternal,
   classroom: classroomInternal,
+  comments: commentsInternal,
   connectors: connectorsInternal,
   contentRelease: contentReleaseInternal,
   contents: contentsInternal,
