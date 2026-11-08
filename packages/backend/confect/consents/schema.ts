@@ -83,13 +83,13 @@ export const consentPersistenceFailedCode = "CONSENT_PERSISTENCE_FAILED";
 export const consentPersistenceFailedMessage =
   "Unable to read or persist account consent.";
 /** Raised when account consent state cannot be read or persisted safely. */
-export class ConsentPersistenceError extends Schema.TaggedError<ConsentPersistenceError>()(
-  "ConsentPersistenceError",
-  {
-    code: Schema.Literal(consentPersistenceFailedCode),
-    message: Schema.Literal(consentPersistenceFailedMessage),
-  }
-) {}
+export class ConsentPersistenceError extends Schema.TaggedError<
+  ConsentPersistenceError,
+  { readonly brand: unique symbol }
+>()("ConsentPersistenceError", {
+  code: Schema.Literal(consentPersistenceFailedCode),
+  message: Schema.Literal(consentPersistenceFailedMessage),
+}) {}
 
 /** Maps a Convex database failure into the consent domain error channel. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */

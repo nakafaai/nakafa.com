@@ -34,13 +34,13 @@ const PageNavigationSchema = Schema.Struct({
 export type PageNavigation = typeof PageNavigationSchema.Type;
 
 /** Raised when a required Page is absent from an active publication. */
-export class PageNavigationMissingError extends Schema.TaggedError<PageNavigationMissingError>()(
-  "PageNavigationMissingError",
-  {
-    locale: Schema.String,
-    pageKey: PageKeySchema,
-  }
-) {}
+export class PageNavigationMissingError extends Schema.TaggedError<
+  PageNavigationMissingError,
+  { readonly brand: unique symbol }
+>()("PageNavigationMissingError", {
+  locale: Schema.String,
+  pageKey: PageKeySchema,
+}) {}
 
 const dataProcessingKey = PageKeySchema.make("data-processing-agreement");
 const developerKey = PageKeySchema.make("developers");

@@ -69,10 +69,8 @@ test("a visitor's try-out track opens no socket, sends no session read, and read
 /** Orders the sets by name from Z to A, which reads the rows again. */
 async function sortRows(page: Page) {
   const sort = page.getByRole("button", {
-    name: en.Tryouts["set-filter-label"].replace(
-      "{column}",
-      en.Tryouts["set-column-name"]
-    ),
+    exact: true,
+    name: en.Tryouts["set-column-name"],
   });
   await waitUntilTakenOver(sort);
   await sort.click();

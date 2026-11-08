@@ -21,10 +21,10 @@ import { ChildProcess } from "effect/process";
  * not answer in time, or failed. The message names the step and never repeats a
  * setting.
  */
-export class DevelopmentCliError extends Schema.TaggedError<DevelopmentCliError>()(
-  "DevelopmentCliError",
-  { message: Schema.String }
-) {}
+export class DevelopmentCliError extends Schema.TaggedError<
+  DevelopmentCliError,
+  { readonly brand: unique symbol }
+>()("DevelopmentCliError", { message: Schema.String }) {}
 
 const cliError = (message: string) => new DevelopmentCliError({ message });
 

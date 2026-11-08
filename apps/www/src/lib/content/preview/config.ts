@@ -58,15 +58,17 @@ const PreviewRendererConfigSchema = Schema.Struct({
 /** Ephemeral credentials accepted only by the local renderer endpoint. */
 type PreviewRendererConfig = typeof PreviewRendererConfigSchema.Type;
 /** Local preview configuration exists but does not satisfy its strict shape. */
-export class PreviewConfigError extends Schema.TaggedError<PreviewConfigError>()(
-  "PreviewConfigError",
-  { prefix: Schema.Literal("AKSARA_PREVIEW") }
-) {}
+export class PreviewConfigError extends Schema.TaggedError<
+  PreviewConfigError,
+  { readonly brand: unique symbol }
+>()("PreviewConfigError", { prefix: Schema.Literal("AKSARA_PREVIEW") }) {}
 /** Local renderer credentials exist but do not satisfy their strict shape. */
-export class PreviewRendererConfigError extends Schema.TaggedError<PreviewRendererConfigError>()(
-  "PreviewRendererConfigError",
-  { prefix: Schema.Literal("AKSARA_PREVIEW_RENDERER") }
-) {}
+export class PreviewRendererConfigError extends Schema.TaggedError<
+  PreviewRendererConfigError,
+  { readonly brand: unique symbol }
+>()("PreviewRendererConfigError", {
+  prefix: Schema.Literal("AKSARA_PREVIEW_RENDERER"),
+}) {}
 /** Decodes one complete child-process environment without starting a runtime. */
 export function decodePreviewEnvironment(
   environment: ReturnType<typeof readPreviewEnvironment>

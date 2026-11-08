@@ -46,10 +46,10 @@ const OWN_PAGE = 10;
 const PASSED_LIMIT = 2 * SUMMARY_FOLD_LIMIT;
 
 /** The turn records or the thread could not be read. */
-class NinaUncoveredError extends Schema.TaggedError<NinaUncoveredError>()(
-  "NinaUncoveredError",
-  {}
-) {}
+class NinaUncoveredError extends Schema.TaggedError<
+  NinaUncoveredError,
+  { readonly brand: unique symbol }
+>()("NinaUncoveredError", {}) {}
 
 /** The stored messages of one turn, in the order the model produced them. */
 export function storedTurn(docs: readonly MessageDoc[], order: number) {

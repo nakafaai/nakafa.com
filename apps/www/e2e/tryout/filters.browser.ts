@@ -16,14 +16,10 @@ const HEADS = {
   status: en.Tryouts["set-column-status"],
 };
 
-/** The name of a head's button. */
-const headName = (column: string) =>
-  en.Tryouts["set-filter-label"].replace("{column}", column);
-
 /**
  * The try-out table showed the raw key `DataTable.sort` over its sort on production, and its Questions, Duration and
  * Score heads only sorted. Every head filters what its column holds now, each panel sorts in the column's own words, and
- * no message reaches the page without its text.
+ * no message reaches the page without its text. A head that sorts reads its column's name, as every data table's heads do.
  */
 test("every head of a try-out table filters its column, and no menu shows a raw key", async ({
   page,
@@ -40,7 +36,7 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
           timeout: readinessTimeoutMilliseconds,
         });
         await waitUntilTakenOver(
-          table.getByRole("button", { name: headName(HEADS.name) })
+          table.getByRole("button", { exact: true, name: HEADS.name })
         );
         // Every head in `HEADS`, and the one over the row's menu.
         expect(await table.getByRole("columnheader").count()).toBe(
@@ -48,7 +44,9 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
         );
         const total = await rows.count();
 
-        await table.getByRole("button", { name: headName(HEADS.name) }).click();
+        await table
+          .getByRole("button", { exact: true, name: HEADS.name })
+          .click();
         await expect(
           page.getByRole("button", {
             name: en.DataTable["sort-a-z"],
@@ -63,7 +61,9 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
         await page.keyboard.press("Escape");
 
         for (const column of [HEADS.questions, HEADS.duration, HEADS.score]) {
-          await table.getByRole("button", { name: headName(column) }).click();
+          await table
+            .getByRole("button", { exact: true, name: column })
+            .click();
           await page
             .getByRole("textbox", {
               name: `${column}, ${en.DataTable["filter-lowest"]}`,

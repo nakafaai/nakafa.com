@@ -71,7 +71,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await expect(editorOf(page)).toHaveCount(0);
     // The emptied draft is not written, so the row keeps the saved memory.
     await expect(row).toBeVisible();
-    await page.waitForTimeout(1500);
+    await page.clock.runFor(1500);
     expect(changes.sent).toBe(before);
     await reloadUntil(page, () => expect(row).toBeVisible({ timeout: 3000 }));
 
@@ -82,7 +82,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await opened(page, "");
     await editorOf(page).press("Escape");
     await expect(editorOf(page)).toHaveCount(0);
-    await page.waitForTimeout(1500);
+    await page.clock.runFor(1500);
     expect(changes.sent).toBe(sent);
     await expect(page.locator("main ul > li")).toHaveCount(1);
 
@@ -102,7 +102,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await expect(editorOf(page)).toHaveCount(0);
     await expect(row).toHaveCount(0);
     await saved(changes, once);
-    await page.waitForTimeout(1500);
+    await page.clock.runFor(1500);
     expect(changes.sent - once).toBe(1);
     await expect(page.getByText(MISSING)).toHaveCount(0);
   });

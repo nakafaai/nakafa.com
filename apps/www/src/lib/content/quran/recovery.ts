@@ -5,13 +5,13 @@ import { expireActiveContentIdentity } from "@/lib/content/published/active";
 import { readPublishedQuranIdentity } from "@/lib/content/quran/publication";
 
 /** One stale Quran snapshot could not be safely recovered. */
-export class QuranSnapshotRecoveryError extends Schema.TaggedError<QuranSnapshotRecoveryError>()(
-  "QuranSnapshotRecoveryError",
-  {
-    cause: Schema.Unknown,
-    reason: Schema.Literals(["active-identity", "invalid-input"]),
-  }
-) {}
+export class QuranSnapshotRecoveryError extends Schema.TaggedError<
+  QuranSnapshotRecoveryError,
+  { readonly brand: unique symbol }
+>()("QuranSnapshotRecoveryError", {
+  cause: Schema.Unknown,
+  reason: Schema.Literals(["active-identity", "invalid-input"]),
+}) {}
 
 /**
  * Answers a stale Quran snapshot that a reader captured. The snapshot is not

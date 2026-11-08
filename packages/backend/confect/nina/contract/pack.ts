@@ -54,12 +54,12 @@ const NinaLearningSessionSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 type NinaLearningSession = typeof NinaLearningSessionSchema.Type;
 /** Raised when the app boundary sends an invalid Nina learning context. */
-class NinaContextError extends Schema.TaggedError<NinaContextError>()(
-  "NinaContextError",
-  {
-    message: Schema.String,
-  }
-) {}
+class NinaContextError extends Schema.TaggedError<
+  NinaContextError,
+  { readonly brand: unique symbol }
+>()("NinaContextError", {
+  message: Schema.String,
+}) {}
 /** Resolves the evidence the model is told about from validated context. */
 function resolveNinaToolContext(
   learning: NinaLearningContext

@@ -15,12 +15,12 @@ const PublicationResultSchema = Schema.Struct({
 /** JSON body and exact HTTP status returned by publication ingress. */
 type PublicationResult = typeof PublicationResultSchema.Type;
 /** Marks a response-construction contradiction as a non-wire defect. */
-export class PublicationResponseDefect extends Schema.TaggedError<PublicationResponseDefect>()(
-  "PublicationResponseDefect",
-  {
-    reason: Schema.Literals(["contract", "size"]),
-  }
-) {}
+export class PublicationResponseDefect extends Schema.TaggedError<
+  PublicationResponseDefect,
+  { readonly brand: unique symbol }
+>()("PublicationResponseDefect", {
+  reason: Schema.Literals(["contract", "size"]),
+}) {}
 /** Fails closed if one encoded response exceeds its complete body ceiling. */
 export function validateResponseBytes(source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
