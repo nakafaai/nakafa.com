@@ -27,10 +27,7 @@ function SearchScreen() {
         <div className="relative space-y-12">
           <HomeHeader name={Option.fromUndefinedOr(name)} />
           <div className="flex flex-col gap-2">
-            <BackButton
-              className="text-muted-foreground w-fit p-0"
-              variant="link"
-            />
+            <BackButton className="w-fit" />
             <div className="grid gap-6">
               <InputSearch />
               <SearchListItems />

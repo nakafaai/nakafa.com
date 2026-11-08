@@ -66,7 +66,7 @@ export function PostRow({ post }: { post: ListPost }) {
                 <SignedInIsland>
                   <Suspense fallback={null}>
                     <ClientOnly fallback={null}>
-                      <PostDeletion postId={post._id} />
+                      <PostDeletion postId={post._id} text={post.text} />
                     </ClientOnly>
                   </Suspense>
                 </SignedInIsland>

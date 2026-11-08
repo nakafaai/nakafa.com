@@ -1,3 +1,4 @@
+import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -142,15 +143,19 @@ export function AttachmentActions({
   );
 }
 
+/** The icon action of an attachment, such as its remove, named by its required tooltip. */
 export function AttachmentAction({
   variant = "ghost",
-  size = "icon-xs",
   ...props
-}: ComponentProps<typeof Button>) {
+}: ButtonPrimitive.Props &
+  Pick<ComponentProps<typeof Button>, "variant"> & {
+    /** The action in words, shown on hover and focus and read as the button's name. */
+    tooltip: string;
+  }) {
   return (
     <Button
       data-slot="attachment-action"
-      size={size}
+      size="icon-sm"
       variant={variant}
       {...props}
     />

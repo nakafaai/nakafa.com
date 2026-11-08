@@ -13,6 +13,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -72,9 +73,9 @@ import type { SchoolViewer } from "@/lib/tenant/frame";
  * The schools of the viewer, which the school switcher lists. The list loads when the
  * switcher opens, as the account menu of Nakafa loads its own.
  */
-const SidebarMembershipGroup = lazy(() =>
+const SidebarMembershipItems = lazy(() =>
   import("@/components/sidebar/menu/memberships").then((module) => ({
-    default: module.SidebarMembershipGroup,
+    default: module.SidebarMembershipItems,
   }))
 );
 
@@ -182,39 +183,43 @@ function TenantSwitcher() {
           align="start"
           className="min-w-56"
           keepMounted
+          label={common("menu-schools")}
           sideOffset={4}
         >
           {warmed ? (
             <Suspense fallback={null}>
               <ClientOnly fallback={null}>
                 <Authenticated>
-                  <SidebarMembershipGroup />
+                  <SidebarMembershipItems />
                 </Authenticated>
               </ClientOnly>
             </Suspense>
           ) : null}
+          <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-school")}</DropdownMenuLabel>
             <DropdownMenuItem
+              icon={Home01Icon}
               render={
                 <Link
                   activeOptions={EXACT_ACTIVE_OPTIONS}
                   params={{ slug: tenant.slug }}
                   to="/school/$slug"
-                >
-                  <HugeIcons icon={Home01Icon} />
-                  {t("home")}
-                </Link>
+                />
               }
-            />
+            >
+              {t("home")}
+            </DropdownMenuItem>
             <DropdownMenuItem
-              render={
-                <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
-                  <HugeIcons icon={ArrowTurnBackwardIcon} />
-                  {t("back-to-learning")}
+              icon={ArrowTurnBackwardIcon}
+              render={({ children, ...props }) => (
+                <a {...props} href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+                  {children}
                 </a>
-              }
-            />
+              )}
+            >
+              {t("back-to-learning")}
+            </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

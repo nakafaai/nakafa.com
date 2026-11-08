@@ -7,11 +7,9 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -19,7 +17,6 @@ import {
 import { Array as Arr, Function as Fn, Option, pipe } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   readingUpdate,
@@ -48,6 +45,7 @@ export function ReadingField({
   /** The question as the server holds it. */
   readonly question: Question;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const id = useId();
@@ -104,17 +102,16 @@ export function ReadingField({
         <SelectTrigger className="w-full" disabled={!editable} id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="passage" />
-
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons icon={BookOpen01Icon} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-passage")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={BookOpen01Icon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <FieldDescription>{t("reading-hint")}</FieldDescription>

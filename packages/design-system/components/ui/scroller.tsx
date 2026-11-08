@@ -85,9 +85,13 @@ export function MessageScrollerItem({
 export function MessageScrollerButton({
   className,
   children,
+  label,
   render,
   ...props
-}: ComponentProps<typeof Primitive.Button>) {
+}: ComponentProps<typeof Primitive.Button> & {
+  /** What the button does in words, its tooltip and its name. */
+  label: string;
+}) {
   return (
     <Primitive.Button
       className={cn(
@@ -95,7 +99,9 @@ export function MessageScrollerButton({
         className
       )}
       data-slot="message-scroller-button"
-      render={render ?? <Button size="icon-sm" variant="outline" />}
+      render={
+        render ?? <Button size="icon-sm" tooltip={label} variant="outline" />
+      }
       {...props}
     >
       {children ?? <HugeIcons icon={ArrowDown02Icon} />}
