@@ -37,7 +37,6 @@ export function MoveDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const folders = useFolderList();
   const [chosen, setChosen] = useState<Destination>(current);
   const shown = Arr.filter(
@@ -62,25 +61,16 @@ export function MoveDialog({
 
   return (
     <ResponsiveDialog
-      description={t("library-move-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={chosen === current}
-            onClick={() => onMove(chosen)}
-            type="button"
-          >
-            {t("library-move")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={chosen === current}
+          onClick={() => onMove(chosen)}
+          type="button"
+        >
+          {t("library-move")}
+        </Button>
       }
+      description={t("library-move-description")}
       open={open}
       setOpen={setOpen}
       title={t("library-move-title")}

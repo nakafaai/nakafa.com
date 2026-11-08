@@ -6,6 +6,7 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
 import { Array as Arr, Option } from "effect";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 const { list } = classroom.forum.channels;
 
@@ -17,21 +18,11 @@ const changePages = (
     page: readonly (typeof ChannelView.Type)[]
   ) => (typeof ChannelView.Type)[]
 ) => {
-  for (const query of localStore.getAllQueries(list)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(query.value.value.page, (channel) => channel.id === channelId)
-    ) {
-      localStore.setQuery(
-        list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, list, (value) =>
+    Arr.some(value.page, (channel) => channel.id === channelId)
+      ? Option.some(withPage(value, change))
+      : Option.none()
+  );
 };
 
 /** Moves a channel to the archived chats, or back, at once. */

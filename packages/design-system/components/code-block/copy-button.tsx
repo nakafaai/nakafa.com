@@ -1,3 +1,4 @@
+import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -10,11 +11,10 @@ import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboa
 import { useCodeBlock } from "@repo/design-system/lib/code-block/context";
 import { cn } from "cn";
 import { Array as Arr, Duration, Effect, Fiber, Option } from "effect";
-import type { ComponentProps } from "react";
 import { useEffect, useRef, useState } from "react";
 
 /** Copy callbacks and duration for the transient success state. */
-type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
+type CodeBlockCopyButtonProps = ButtonPrimitive.Props & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
@@ -95,17 +95,14 @@ export function CodeBlockCopyButton({
 
   return (
     <Button
-      aria-label={isCopied ? "Copied" : "Copy to clipboard"}
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
+      tooltip={isCopied ? "Copied" : "Copy to clipboard"}
       variant="ghost"
       {...props}
     >
       {children ?? <HugeIcons className="text-muted-foreground" icon={icon} />}
-      <span className="sr-only">
-        {isCopied ? "Copied" : "Copy to clipboard"}
-      </span>
     </Button>
   );
 }

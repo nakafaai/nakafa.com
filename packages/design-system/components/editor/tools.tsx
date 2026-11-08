@@ -1,5 +1,4 @@
 import { Redo02Icon, Undo02Icon } from "@hugeicons/core-free-icons";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
@@ -24,23 +23,21 @@ export function RichEditorControl({
   onClick: () => void;
 }) {
   return (
-    <ToolHint label={label}>
-      <Button
-        aria-label={label}
-        aria-pressed={active}
-        className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-        disabled={disabled}
-        onClick={onClick}
-        // The press must not take the focus from the text, or the caret and the
-        // next keystrokes would be lost for a moment.
-        onMouseDown={(event) => event.preventDefault()}
-        size="icon-sm"
-        type="button"
-        variant="ghost"
-      >
-        <HugeIcons icon={icon} />
-      </Button>
-    </ToolHint>
+    <Button
+      aria-pressed={active}
+      className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+      disabled={disabled}
+      onClick={onClick}
+      // The press must not take the focus from the text, or the caret and the
+      // next keystrokes would be lost for a moment.
+      onMouseDown={(event) => event.preventDefault()}
+      size="icon-sm"
+      tooltip={label}
+      type="button"
+      variant="ghost"
+    >
+      <HugeIcons icon={icon} />
+    </Button>
   );
 }
 

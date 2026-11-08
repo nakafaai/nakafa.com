@@ -7,6 +7,7 @@ import {
   String as Str,
 } from "effect";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
+import { inspectButtonSource } from "#scripts/check/buttons";
 import { classFindings } from "#scripts/check/classes";
 import { inspectColorSource } from "#scripts/check/colors";
 import {
@@ -16,6 +17,7 @@ import {
   sharedPackageName,
 } from "#scripts/check/compiler";
 import { inspectNativeControls } from "#scripts/check/controls";
+import { inspectDialogSource } from "#scripts/check/dialogs";
 import { inspectDictionaries } from "#scripts/check/dictionary";
 import { inspectDrillingSource } from "#scripts/check/drilling";
 import {
@@ -36,7 +38,10 @@ import {
 } from "#scripts/check/files";
 import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
+import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectMenuSource } from "#scripts/check/menus";
+import { inspectMenuOrder } from "#scripts/check/order";
+import { inspectPickerSource } from "#scripts/check/pickers";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
@@ -73,7 +78,7 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, array, gateway, React, props drilling, menu, state, refs,
+ * Applies the Effect-native, array, gateway, React, props drilling, menu, button group, state, refs,
  * sealed message, settings card, and class source policies to authored modules. The array rules read each module's types
  * from its project on disk, and their findings join the Effect-native findings
  * before the list is sorted. Every finding is a violation: no baseline or
@@ -108,6 +113,11 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectReactSource(file, sourceFile),
         inspectDrillingSource(file, sourceFile),
         inspectMenuSource(file, sourceFile),
+        inspectMenuOrder(file, sourceFile),
+        inspectGroupSource(file, sourceFile),
+        inspectButtonSource(file, sourceFile),
+        inspectDialogSource(file, sourceFile),
+        inspectPickerSource(file, sourceFile),
         inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),

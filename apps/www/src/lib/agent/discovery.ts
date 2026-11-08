@@ -1,7 +1,6 @@
 import { SCHOOL_HOST_MCP_PATH } from "@repo/backend/confect/integrations/api";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Option } from "effect";
-import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
+import { readRequestHostRole } from "@/lib/routing/school/host";
 
 /** The path of a resource's metadata (RFC 9728), which a client reads before it has a token. */
 const RESOURCE_METADATA_PATH = `/.well-known/oauth-protected-resource${SCHOOL_HOST_MCP_PATH}`;
@@ -19,10 +18,9 @@ function readOrigin(request: Request) {
  * cookie every school host shares (ADR 0026), and any other host signs in on itself.
  */
 function readSignInOrigin(request: Request) {
-  return Option.match(
-    Option.flatMap(readRequestHostname(request.headers), readSchoolSlug),
-    { onNone: () => readOrigin(request), onSome: () => SITE_ORIGIN }
-  );
+  return readRequestHostRole(request.headers)._tag === "School"
+    ? SITE_ORIGIN
+    : readOrigin(request);
 }
 
 /** The authorization server's metadata (RFC 8414), over Better Auth's OAuth routes. */

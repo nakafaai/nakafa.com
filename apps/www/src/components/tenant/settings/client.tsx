@@ -114,28 +114,19 @@ export function SchoolClientCreateDialog({
 
   return (
     <ResponsiveDialog
-      description={t("client-add-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            aria-busy={isPending || undefined}
-            disabled={Option.isNone(clientName)}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <Spinner icon={Add01Icon} isLoading={isPending} />
-            {t("client-create")}
-          </Button>
-        </>
+      action={
+        <Button
+          aria-busy={isPending || undefined}
+          disabled={Option.isNone(clientName)}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <Spinner icon={Add01Icon} isLoading={isPending} />
+          {t("client-create")}
+        </Button>
       }
+      description={t("client-add-description")}
       open={open}
       setOpen={setOpen}
       title={t("client-add")}
@@ -151,9 +142,9 @@ export function SchoolClientCreateDialog({
           />
         </Field>
         <SelectField
-          choice="scope"
           items={scopeItems}
           label={t("client-scope")}
+          menu={common("menu-scope")}
           onChoose={setScope}
           value={scope}
         />
@@ -222,7 +213,6 @@ export function SchoolClientEditDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const update = useMutation(integrations.clients.update).withOptimisticUpdate(
     updateClientChange
@@ -259,25 +249,16 @@ export function SchoolClientEditDialog({
 
   return (
     <ResponsiveDialog
-      description={t("client-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(clientName)}
-            onClick={save}
-            type="button"
-          >
-            {t("save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(clientName)}
+          onClick={save}
+          type="button"
+        >
+          {t("save")}
+        </Button>
       }
+      description={t("client-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("client-edit")}

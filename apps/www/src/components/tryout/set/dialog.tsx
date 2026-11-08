@@ -1,15 +1,21 @@
-import { Rocket01Icon } from "@hugeicons/core-free-icons";
+import {
+  Rocket01Icon,
+  Timer01Icon,
+  WorkHistoryIcon,
+} from "@hugeicons/core-free-icons";
 import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { useTranslations } from "use-intl";
 
 interface TryoutStartDialogProps {
   readonly directEntry: boolean;
   readonly finishedAttempt: boolean;
   readonly kind: TryoutStartAccess["kind"];
-  readonly onCancel: () => void;
   readonly onPrimary: () => void;
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
@@ -25,22 +31,26 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
 
   return (
     <ResponsiveDialog
-      description={copy.description}
-      footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button onClick={props.onCancel} type="button" variant="outline">
-            {t("cancel-cta")}
-          </Button>
-          <Button onClick={props.onPrimary} type="button">
-            <HugeIcons data-icon="inline-start" icon={Rocket01Icon} />
-            {copy.primary}
-          </Button>
-        </div>
+      action={
+        <Button onClick={props.onPrimary} type="button">
+          <HugeIcons data-icon="inline-start" icon={Rocket01Icon} />
+          {copy.primary}
+        </Button>
       }
+      description={copy.description}
       open={props.open}
       setOpen={props.setOpen}
       title={copy.title}
-    />
+    >
+      <div className="flex flex-col gap-2">
+        <ResponsiveDialogSubject icon={Timer01Icon}>
+          {t("start-timer")}
+        </ResponsiveDialogSubject>
+        <ResponsiveDialogSubject icon={WorkHistoryIcon}>
+          {t("start-history")}
+        </ResponsiveDialogSubject>
+      </div>
+    </ResponsiveDialog>
   );
 }
 

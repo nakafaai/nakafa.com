@@ -108,7 +108,7 @@ export function TryoutPlayerOpening({
       >
         <PlayerHeader>
           <PlayerHeaderStart>
-            <Button aria-label={tCommon("back")} size="icon" variant="outline">
+            <Button size="icon" tooltip={tCommon("back")} variant="outline">
               <HugeIcons icon={ArrowLeft01Icon} />
             </Button>
             <PlayerTitle>{title}</PlayerTitle>
