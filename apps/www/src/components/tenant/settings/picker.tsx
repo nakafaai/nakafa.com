@@ -1,10 +1,14 @@
-import { ArrowDown01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowDown01Icon,
+  Search02Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import {
   Autocomplete,
   AutocompleteEmpty,
+  AutocompleteInput,
   AutocompleteItem,
   AutocompleteList,
-  AutocompleteSearch,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -87,11 +91,7 @@ export function RegionPicker({
           icon={ArrowDown01Icon}
         />
       </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-(--anchor-width) min-w-72"
-        flush
-      >
+      <PopoverContent align="start" className="w-(--anchor-width) min-w-72 p-0">
         <Autocomplete
           autoHighlight="always"
           inline
@@ -100,13 +100,16 @@ export function RegionPicker({
           keepHighlight
           open
         >
-          <AutocompleteSearch
+          <AutocompleteInput
+            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
             clearLabel={common("clear-search")}
             placeholder={t(
               kind === "country"
                 ? "locale-country-search"
                 : "locale-currency-search"
             )}
+            showClear
+            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
           />
           <AutocompleteEmpty>{t("locale-empty")}</AutocompleteEmpty>
           <AutocompleteList className="max-h-72" scrollArea={false}>

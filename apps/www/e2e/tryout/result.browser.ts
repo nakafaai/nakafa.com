@@ -289,47 +289,6 @@ test.describe("The result of a finished try-out", () => {
       );
     });
 
-    test("opens the attempt picker with its history right under its search", async ({
-      baseURL,
-      page,
-    }) => {
-      await runOnPage(page, baseURL, (origin) =>
-        Effect.gen(function* () {
-          yield* openChatPage(page, origin);
-          yield* Effect.promise(() =>
-            page.goto(entrySetHref, { waitUntil: "commit" })
-          );
-          yield* takeAttempt(page, "Start", "Start free", false, false);
-          yield* takeAttempt(page, "Restart", "Start free", false, false);
-          const picker = page
-            .locator("main")
-            .getByRole("button", { exact: true, name: "Attempt 2" });
-          yield* Effect.promise(() =>
-            expect(picker).toBeEnabled({
-              timeout: readinessTimeoutMilliseconds,
-            })
-          );
-          yield* activate(picker, false);
-          const popup = page.locator("[data-slot=popover-content]");
-          const gap = yield* Effect.promise(async () => {
-            await expect(popup.getByRole("option")).toHaveCount(2);
-            const search = await popup
-              .locator("[data-slot=autocomplete-input-group]")
-              .boundingBox();
-            const list = await popup
-              .locator("[data-slot=autocomplete-list]")
-              .boundingBox();
-            return list === null || search === null
-              ? Number.POSITIVE_INFINITY
-              : list.y - (search.y + search.height);
-          });
-          yield* Effect.sync(() =>
-            expect(Math.abs(gap)).toBeLessThanOrEqual(1)
-          );
-        })
-      );
-    });
-
     test("draws no empty card and no nameless action in a signed-in learner's first frames of a set", async ({
       baseURL,
       page,

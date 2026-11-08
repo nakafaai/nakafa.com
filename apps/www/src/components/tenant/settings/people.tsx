@@ -334,7 +334,7 @@ function PersonSelect({
           icon={ArrowDown01Icon}
         />
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-(--anchor-width)" flush>
+      <PopoverContent align="start" className="w-(--anchor-width) p-0">
         <Command
           filter={null}
           items={items}
