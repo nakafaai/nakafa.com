@@ -1,77 +1,59 @@
-import {
-  openLearnerAccount,
-  type RunConvex,
-} from "@repo/backend/scripts/content/acceptance/account";
+import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import {
-  SESSION_LIFETIME,
-  writeSessionCookie,
-} from "@repo/backend/scripts/content/acceptance/learner";
+import { writeSessionCookie } from "@repo/backend/scripts/content/acceptance/learner";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  encodeArguments,
+  openInvitedMember,
+} from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
-import { JsonTextSchema } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  Duration,
-  Effect,
-  Option,
-  Schedule,
-  Schema,
-} from "effect";
+import { Duration, Effect, Option, Schedule, Schema } from "effect";
 
-/** The Person that the invite function wrote, as the Convex CLI prints it. */
-const InvitedPerson = Schema.fromJsonString(
-  Schema.Struct({ person: Schema.String })
+/** The invite and the Person that the invite function wrote, as the Convex CLI prints them. */
+const Invited = Schema.fromJsonString(
+  Schema.Struct({ invite: Schema.String, person: Schema.String })
 );
-/** The app users of the local runtime, as the Convex CLI prints them. */
-const UserRows = Schema.fromJsonString(
-  Schema.Array(Schema.Struct({ _id: Schema.String, authId: Schema.String }))
-);
-/** The inbox rows of the local runtime, as the Convex CLI prints them. A row for a learner's account names no Person. */
-const InboxRows = Schema.fromJsonString(
-  Schema.Array(
-    Schema.Struct({ recipientPersonId: Schema.optionalKey(Schema.String) })
-  )
-);
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+/** Whether the inbox holds the invitation's row, as the Convex CLI prints it. */
+const HoldsRow = Schema.fromJsonString(Schema.Boolean);
 
 /** The name of the learner the command invites, as the other acceptance accounts name theirs. */
 const LEARNER_NAME = "Acceptance Learner";
 /** The content language of the schools that `school` opens, which the invitation email is written in. */
 const CONTENT_LOCALE = "id";
 /**
- * How long the inbox may take to hold the invited row. The inbox reads an entry
- * only after it has settled, five seconds after it is written (ADR 0027), so the
- * row comes after that and the consumer's run.
+ * How long the inbox may take to hold the invited row. The invite schedules the
+ * inbox consumer at once, and the consumer handles an entry that has not settled
+ * yet while it has room (ADR 0027), so the row usually stands before the first
+ * read; a loaded backend runs the consumer later.
  */
 const ROW_WAIT = Duration.seconds(30);
+/** How often the one row is read while the command waits for it. */
+const ROW_READ_PAUSE = Duration.millis(250);
 
 /**
- * Reads the inbox rows of the local runtime once a second until one of them
- * belongs to `person`, and fails when none does within `wait`.
+ * Reads the inbox row of one invitation by the invite and the Person it names,
+ * until it stands, and fails when it does not within `wait`.
  */
 export const waitForInboxRow = Effect.fn("contentAcceptance.inboxRow")(
-  function* <E, R>(run: RunConvex<E, R>, person: string, wait: Duration.Input) {
-    const holdsRow = run("inbox rows", [
-      "data",
-      "notifications",
-      "--format",
-      "jsonArray",
-      "--limit",
-      "1000",
-    ]).pipe(
-      Effect.flatMap(Schema.decodeEffect(InboxRows)),
-      Effect.map(Arr.some((row) => row.recipientPersonId === person))
+  function* <E, R>(
+    run: RunConvex<E, R>,
+    invited: { readonly invite: string; readonly person: string },
+    wait: Duration.Input
+  ) {
+    const holdsRow = encodeArguments(invited).pipe(
+      Effect.flatMap((args) =>
+        run("inbox row", ["run", "tenancy/seed:invitation", args])
+      ),
+      Effect.flatMap(Schema.decodeEffect(HoldsRow))
     );
     const found = yield* holdsRow.pipe(
       Effect.repeat({
-        schedule: Schedule.spaced(Duration.seconds(1)),
-        until: (ok) => ok,
+        schedule: Schedule.spaced(ROW_READ_PAUSE),
+        until: (held) => held,
       }),
       Effect.timeoutOption(wait)
     );
@@ -122,7 +104,7 @@ export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
       Effect.flatMap((args) =>
         run("school invite", ["run", "tenancy/provision:invite", args])
       ),
-      Effect.flatMap(Schema.decodeEffect(InvitedPerson))
+      Effect.flatMap(Schema.decodeEffect(Invited))
     );
     if (expired) {
       yield* encodeArguments({ email: address, slug }).pipe(
@@ -131,33 +113,11 @@ export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
         )
       );
     }
-    const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
-    const users = yield* run("app users", [
-      "data",
-      "users",
-      "--format",
-      "jsonArray",
-      "--limit",
-      "1000",
-    ]).pipe(Effect.flatMap(Schema.decodeEffect(UserRows)));
-    const learner = Arr.findFirst(
-      users,
-      (user) => user.authId === account.userId
-    );
-    if (Option.isNone(learner)) {
-      return yield* acceptanceRuntimeError(
-        "The new learner account has no app user to claim the invitation with."
-      );
-    }
-    yield* encodeArguments({ cursor: null, userId: learner.value._id }).pipe(
-      Effect.flatMap((args) =>
-        run("learner claim", ["run", "tenancy/claims:run", args])
-      )
-    );
+    const token = yield* openInvitedMember(run, address);
     if (!expired) {
-      yield* waitForInboxRow(run, invited.person, ROW_WAIT);
+      yield* waitForInboxRow(run, invited, ROW_WAIT);
     }
-    yield* writeSessionCookie(output, account.token);
+    yield* writeSessionCookie(output, token);
   }
 );
 
