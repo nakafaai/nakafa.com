@@ -1,4 +1,3 @@
-import type { Ref } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
@@ -17,10 +16,7 @@ import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { PanesProvider } from "@/components/shared/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
-import { ForumChannel } from "@/components/tenant/classes/forum/channel";
-import { ForumFrame, ForumPick } from "@/components/tenant/classes/forum/frame";
-import { StartDiscussion } from "@/components/tenant/classes/forum/start";
-import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
+import { ForumBody } from "@/components/tenant/classes/forum/body";
 import {
   ClassHeader,
   ClassHeaderProvider,
@@ -235,9 +231,9 @@ function useViewFolder(classId: Resolved["id"]) {
 
 /**
  * The resolved class: the path and the title that its header shows, given to the view, which
- * draws the header with its own actions, the tabs, and its body. The channel's name and the
- * discussion's number and title end the path, read from the same channel list and discussion the
- * forum shows. A discussion the class does not hold shows the missing state.
+ * draws the header with its own actions, the tabs, and its body. The channel's name ends the path of a
+ * channel and of its discussions, read from the same channel list the forum shows, since a discussion's
+ * pane names the discussion. A discussion the class does not hold shows the missing state.
  */
 function ResolvedClass({ klass }: { klass: Resolved }) {
   const view = useClassView();
@@ -293,16 +289,7 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
       id: channel.id,
       label: channelLabel(channel, t("general-channel")),
     })),
-    QueryResult.isSuccess(task)
-      ? Option.some(task.value.title)
-      : Option.orElse(folder.name, () =>
-          Option.map(found, (shown) =>
-            t("discussion-label", {
-              number: shown.discussion.number,
-              title: shown.discussion.title,
-            })
-          )
-        ),
+    QueryResult.isSuccess(task) ? Option.some(task.value.title) : folder.name,
     folder.above
   );
 
@@ -310,82 +297,36 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
     <ClassHeaderProvider items={path} tab={view._tag} title={klass.name}>
       {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
       <div className="flex h-svh min-h-0 flex-col">
-        <ClassBody
-          archived={Option.exists(open, (channel) => channel.archived)}
-          found={found}
-          klass={klass}
-        />
+        {view._tag === "channel" ||
+        view._tag === "discussion" ||
+        view._tag === "forum" ? (
+          <ForumBody
+            archived={Option.exists(open, (channel) => channel.archived)}
+            found={found}
+            view={view}
+          />
+        ) : (
+          <ClassBody klass={klass} />
+        )}
       </div>
     </ClassHeaderProvider>
   );
 }
 
 /**
- * The view under the class's header, as wide as the page, each with the header's actions it
- * holds: the forum keeps the list of chats beside one chat, with New discussion for whoever the
- * server lets open one there, or one discussion beside its chat; the class's announcements, with
+ * The view under the class's header outside the forum, which draws its own (`ForumBody`), as wide
+ * as the page, each with the header's actions it holds: the class's announcements, with
  * New announcement for its subject teachers, which scrolls within it; the library and the
  * task list each draw their header and their one table card, the task list with the open task in
  * its pane; and the gradebook shares its filters and its panes between its header and its body.
  */
-function ClassBody({
-  archived,
-  found,
-  klass,
-}: {
-  /** Whether the channel on the page is archived, so it takes nothing new. */
-  archived: boolean;
-  found: Option.Option<Ref.Returns<typeof classroom.forum.threads.get>>;
-  klass: Resolved;
-}) {
+function ClassBody({ klass }: { klass: Resolved }) {
   const view = useClassView();
   const { slug } = useClassScope();
-  const canManage = Arr.contains(klass.can, "forum.manage");
-  const canPost = Arr.contains(klass.can, "forum.post") && !archived;
-  // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
-  const everyone = Arr.contains(klass.can, "post.publish");
 
-  if (view._tag === "channel") {
-    return (
-      <>
-        <ClassHeader>
-          {klass.opens ? <StartDiscussion channelId={view.channelId} /> : null}
-        </ClassHeader>
-        <ForumFrame shown="chat">
-          <ForumChannel
-            canManage={canManage}
-            canPost={canPost}
-            channelId={view.channelId}
-            everyone={everyone}
-            jump={view.jump}
-          />
-        </ForumFrame>
-      </>
-    );
-  }
-  if (view._tag === "discussion") {
-    return (
-      <>
-        <ClassHeader />
-        <ForumFrame shown="thread">
-          {Option.match(found, {
-            onNone: () => null,
-            onSome: (thread) => (
-              <ForumDiscussion
-                canManage={canManage}
-                canPost={canPost}
-                everyone={everyone}
-                jump={view.jump}
-                thread={thread}
-              />
-            ),
-          })}
-        </ForumFrame>
-      </>
-    );
-  }
   if (view._tag === "home") {
-    return <HomeFeed publishes={everyone} />;
+    // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
+    return <HomeFeed publishes={Arr.contains(klass.can, "post.publish")} />;
   }
   if (view._tag === "library") {
     return (
@@ -433,14 +374,8 @@ function ClassBody({
       </PanesProvider>
     );
   }
-  return (
-    <>
-      <ClassHeader />
-      <ForumFrame shown="rail">
-        <ForumPick />
-      </ForumFrame>
-    </>
-  );
+  // The forum's views draw their own body (`ForumBody`), so none reaches here.
+  return null;
 }
 
 /** The state of a class that the viewer may not read, with one way back to the school's home. */

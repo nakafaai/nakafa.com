@@ -39,19 +39,20 @@ const localeRoute = getRouteApi("/$locale");
 /**
  * The marketing group: the home, pricing, contributor and legal pages share one
  * message set, the app and shared providers, and the site header and footer.
- * The navigation of the shell is read on the server, so the loader imports no
- * server-only module.
+ * The footer's signed pages are read on the server with the app shell's
+ * navigation, so the loader imports no server-only module, and only the pages
+ * reach the page.
  */
 export const Route = createFileRoute("/$locale/_marketing")({
   loader: async ({ params }) => {
-    const [messages, shell] = await Promise.all([
+    const [messages, { pageNavigation }] = await Promise.all([
       readStaticData(readRouteMessages, {
         locale: params.locale,
         namespaces: MARKETING_NAMESPACES,
       }),
       readStaticData(readMarketingShellFn, { locale: params.locale }),
     ]);
-    return { ...shell, messages };
+    return { messages, pageNavigation };
   },
   component: MarketingLayout,
 });
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/$locale/_marketing")({
 /** Renders the marketing subtree inside its site shell. */
 function MarketingLayout() {
   const { locale } = Route.useParams();
-  const { articleNavigation, messages, pageNavigation } = Route.useLoaderData();
+  const { messages, pageNavigation } = Route.useLoaderData();
   const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
     <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
@@ -71,10 +72,7 @@ function MarketingLayout() {
           >
             <Header />
             <Outlet />
-            <Footer
-              articleNavigation={articleNavigation}
-              pageNavigation={pageNavigation}
-            />
+            <Footer pageNavigation={pageNavigation} />
           </main>
         </SharedProviders>
       </PageProviders>

@@ -5,6 +5,7 @@ import {
   Cancel01Icon,
   ChartBarLineIcon,
   DashboardSquare01Icon,
+  Door01Icon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -22,21 +23,18 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
+import { DateTime, Option, Schema, String as Str } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import {
+  ConfirmRowMenu,
+  ConfirmSubject,
+} from "@/components/shared/table/confirm";
 import {
   cancelRoomChange,
   rescheduleRoomChange,
 } from "@/components/tenant/exams/filter";
+import { RoomLengthField } from "@/components/tenant/exams/length";
 import {
   lengthsWith,
   movedTimes,
@@ -80,10 +78,11 @@ export function RoomMenu({
     <>
       <ConfirmRowMenu
         action={t("room-cancel")}
+        body={<ConfirmSubject icon={Door01Icon} name={room.room} />}
         confirm={t("room-cancel-confirm")}
         description={t("room-cancel-description")}
-        disabled={!room.canChange}
         icon={Cancel01Icon}
+        offered={room.canChange}
         onConfirm={() =>
           startTransition(() =>
             saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
@@ -155,10 +154,6 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
       onSome: (named) => wallClockOf(room.opensAt, named),
     });
   const minutes = editedMinutes ?? minutesNow;
-  const lengthItems = Arr.map(lengthsWith(minutesNow), (length) => ({
-    label: t("length-minutes", { count: length }),
-    value: `${length}`,
-  }));
   const roomName = Str.trim(name);
   const times = Option.flatMap(zone, (named) =>
     movedTimes(room, starts, minutes, named)
@@ -234,33 +229,12 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
           />
           <FieldDescription>{room.timeZone}</FieldDescription>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
-          <Select
-            items={lengthItems}
-            onValueChange={(value) => {
-              const next = Arr.findFirst(
-                lengthsWith(minutesNow),
-                (length) => `${length}` === value
-              );
-              if (Option.isSome(next)) {
-                setMinutes(next.value);
-              }
-            }}
-            value={`${minutes}`}
-          >
-            <SelectTrigger className="w-full" id={`${id}-length`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(lengthItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <RoomLengthField
+          id={`${id}-length`}
+          lengths={lengthsWith(minutesNow)}
+          minutes={minutes}
+          onChange={setMinutes}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

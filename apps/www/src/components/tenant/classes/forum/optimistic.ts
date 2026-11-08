@@ -7,6 +7,7 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ReadPlace } from "@repo/backend/confect/classroom/forum/read";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
+import { withReplier } from "@/components/tenant/classes/forum/repliers";
 
 /** One message of a channel, as the forum shows it. */
 export type ForumMessage = Ref.Returns<
@@ -171,6 +172,7 @@ export const replyUpdate =
     changeDiscussion(localStore, args.number, (discussion) => ({
       ...discussion,
       lastReplyAt: message.createdAt,
+      repliers: withReplier(discussion.repliers, message.author),
       replies: discussion.replies + 1,
       unread: false,
     }));
