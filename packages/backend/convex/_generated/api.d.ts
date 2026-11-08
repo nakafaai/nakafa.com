@@ -10435,12 +10435,66 @@ export declare const api: {
   };
   island: {
     mutations: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          operations: Array<
+            | {
+                _tag: "place";
+                at: { x: number; y: number; z: number };
+                item:
+                  | "house"
+                  | "tree"
+                  | "pond"
+                  | "grass"
+                  | "soil"
+                  | "stone"
+                  | "sand"
+                  | "planks"
+                  | "brick"
+                  | "glass"
+                  | "tile"
+                  | "slate"
+                  | "flowers"
+                  | "bush"
+                  | "rock"
+                  | "lamp";
+                rotation: number;
+                stage: number;
+              }
+            | {
+                _tag: "move";
+                from: { x: number; y: number; z: number };
+                rotation: number;
+                to: { x: number; y: number; z: number };
+              }
+            | { _tag: "remove"; at: { x: number; y: number; z: number } }
+            | { _tag: "upgrade"; at: { x: number; y: number; z: number } }
+            | { _tag: "downgrade"; at: { x: number; y: number; z: number } }
+          >;
+          version: number;
+        },
+        { version: number }
+      >;
+      harvest: FunctionReference<
+        "mutation",
+        "public",
+        { at: { x: number; y: number; z: number }; version: number },
+        { version: number }
+      >;
       open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
       share: FunctionReference<
         "mutation",
         "public",
         { visibility: "private" | "link" | "public" },
         null
+      >;
+      water: FunctionReference<
+        "mutation",
+        "public",
+        { version: number },
+        { version: number }
       >;
     };
     queries: {
@@ -10460,12 +10514,15 @@ export declare const api: {
               | "biology";
           }>;
           layout: ArrayBuffer;
+          learned?: string;
           level: number;
           lifetime: number;
+          materials: { petals: number; wood: number };
           stars: number;
           timeZone: string;
           version: number;
           visibility: "private" | "link" | "public";
+          watered?: string;
         } | null
       >;
       visit: FunctionReference<

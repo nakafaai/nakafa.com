@@ -1,6 +1,7 @@
 "use client";
 
-import { LineMark } from "@repo/design-system/components/ui/line";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
 import {
   Radio,
   RadioGroup,
@@ -12,9 +13,11 @@ import {
   tableRowVariants,
 } from "@repo/design-system/lib/prose";
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
+import { cn } from "cn";
+import { Array as Arr, Option } from "effect";
 import { createContext, type ReactNode, use, useId } from "react";
 import { useTranslations } from "use-intl";
+import { getChoiceReviewedTone, toneMark } from "@/components/player/tone";
 
 /** One column of the table, such as true or false, with its header. */
 interface ChoiceTableColumn {
@@ -42,22 +45,38 @@ const ChoiceTableContext = createContext<{
 } | null>(null);
 
 /**
- * How one choice's cell reads: open, the key's column once answers show, or the learner's mark that misses it.
- * Its radio stands in a marker band, so it shares the statement's first line with the row's number.
+ * The room of one choice's cell: a radio centred under its column's header while the table is answered, and once
+ * the key shows, a tile nearly as wide as the cell, so its tone reads as clearly as an option's line. Its radio
+ * stands in a marker band, so it shares the statement's first line with the row's number.
  */
-const choiceCell = cva(
-  tableCellVariants({ className: "flex justify-center" }),
-  {
-    variants: {
-      tone: {
-        correct: "bg-success/10",
-        open: "",
-        wrong: "bg-destructive/10",
-      },
+const choiceCell = cva("flex justify-center", {
+  defaultVariants: { reviewed: false },
+  variants: {
+    reviewed: {
+      false: "",
+      true: "p-1",
     },
-    defaultVariants: { tone: "open" },
-  }
-);
+  },
+});
+
+/**
+ * The line inside a cell: open while the table is answered, and once the key shows, a tile in the tone of an
+ * option's line, or, for a cell neither marked nor the key, the same room with no outline, so every radio of a
+ * column stands on one line.
+ */
+const cellLine = cva("justify-center", {
+  defaultVariants: { tone: "open" },
+  variants: {
+    tone: {
+      chosen: "gap-1 p-1",
+      correct: "gap-1 p-1",
+      idle: "w-full gap-1 border border-transparent p-1",
+      key: "gap-1 p-1",
+      open: "",
+      wrong: "gap-1 p-1",
+    },
+  },
+});
 
 /**
  * A true or false question as a printed exam sets it: one table, a row for each numbered statement and a
@@ -145,7 +164,6 @@ function ChoiceTableRow({
   readonly number: number;
   readonly statement: ChoiceTableStatement;
 }) {
-  const t = useTranslations("Player");
   const table = use(ChoiceTableContext);
   if (table === null) {
     throw new Error("ChoiceTableRow must be used within ChoiceTable");
@@ -168,33 +186,64 @@ function ChoiceTableRow({
         {statement.label}
       </div>
       {Arr.map(table.columns, (column) => (
-        <div
-          className={choiceCell({ tone: toneOf(statement, column.id) })}
+        <ChoiceTableCell
+          column={column.id}
           key={column.id}
-        >
-          <LineMark>
-            <Radio
-              aria-labelledby={`${table.headerId}-${column.id}`}
-              disabled={table.locked}
-              value={column.id}
-            />
-          </LineMark>
-          {statement.correct === column.id ? (
-            <span className="sr-only">{t("correct")}</span>
-          ) : null}
-        </div>
+          statement={statement}
+        />
       ))}
     </RadioGroup>
   );
 }
 
-/** The tone of one cell: the key's column, the learner's mark that misses it, or open. */
-function toneOf(statement: ChoiceTableStatement, column: string) {
-  if (statement.correct === undefined) {
-    return "open";
+/**
+ * One choice's cell: its radio under its column's header, and once the key shows, the tone and the mark an option
+ * takes (`getChoiceReviewedTone`, `toneMark`): the learner's mark that earns the key, a mark that
+ * misses it, or the key the learner did not mark, which is dashed so it never reads as a mark.
+ */
+function ChoiceTableCell({
+  column,
+  statement,
+}: {
+  readonly column: string;
+  readonly statement: ChoiceTableStatement;
+}) {
+  const t = useTranslations("Player");
+  const table = use(ChoiceTableContext);
+  if (table === null) {
+    throw new Error("ChoiceTableCell must be used within ChoiceTable");
   }
-  if (statement.correct === column) {
-    return "correct";
-  }
-  return statement.marked === column ? "wrong" : "open";
+  const reviewed = statement.correct !== undefined;
+  const tone = getChoiceReviewedTone({
+    checked: statement.marked === column,
+    isCorrect: reviewed ? statement.correct === column : undefined,
+  });
+
+  return (
+    <div className={cn(tableCellVariants(), choiceCell({ reviewed }))}>
+      <MarkedLine
+        className={cellLine({ tone: reviewed ? tone : "open" })}
+        tone={reviewed && tone !== "idle" ? tone : "bare"}
+      >
+        <LineMark>
+          <Radio
+            aria-labelledby={`${table.headerId}-${column}`}
+            disabled={table.locked}
+            value={column}
+          />
+        </LineMark>
+        {reviewed ? (
+          <LineMark aria-hidden="true" className="min-w-4">
+            {Option.match(toneMark(tone), {
+              onNone: () => null,
+              onSome: (icon) => <HugeIcons icon={icon} />,
+            })}
+          </LineMark>
+        ) : null}
+      </MarkedLine>
+      {statement.correct === column ? (
+        <span className="sr-only">{t("correct")}</span>
+      ) : null}
+    </div>
+  );
 }

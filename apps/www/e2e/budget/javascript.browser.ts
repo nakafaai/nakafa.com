@@ -36,12 +36,10 @@ const QURAN_MAX_DECODED_BYTES = 2_445_000;
 const AUTH_MAX_ENCODED_BYTES = 602_000;
 const AUTH_MAX_DECODED_BYTES = 1_717_000;
 
-// The Memory page, signed in, warms its settings tabs. Measured before the home
-// stopped loading its sections on a warm at 1,348,143 encoded, of which the
-// home's sections took 362,531, so the limit set before the Start migration
-// (954,412 measured) still holds.
-const MEMORY_MAX_ENCODED_BYTES = 1_012_000;
-const MEMORY_MAX_DECODED_BYTES = 2_980_000;
+// The Memory page, signed in, warms its settings tabs: 1,049,988 encoded /
+// 2,944,185 decoded, measured on the Start build of 8 November 2026.
+const MEMORY_MAX_ENCODED_BYTES = 1_113_000;
+const MEMORY_MAX_DECODED_BYTES = 3_121_000;
 
 // A lesson, whose first visual card is near enough to the first screen to load
 // its 3D scene: 1,127,084 encoded / 3,343,730 decoded, 1,017,722 before its

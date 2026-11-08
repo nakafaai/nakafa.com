@@ -231,7 +231,11 @@ export function readFrameProblems(page: Page) {
         : ["the header does not stand above the page's layers"];
     };
 
-    /** The crumbs of the header's path that its row cuts. */
+    /**
+     * The crumbs of the header's path that its row cuts. The current page is the
+     * page's title, and a long title truncates instead of reaching past the row,
+     * so only a crumb before it counts.
+     */
     const pathProblems = (header: Element) =>
       Array.from(
         header.querySelectorAll(
@@ -242,6 +246,7 @@ export function readFrameProblems(page: Page) {
           (crumb) =>
             crumb instanceof HTMLElement &&
             isDrawn(crumb) &&
+            crumb.closest('[aria-current="page"]') === null &&
             crumb.scrollWidth > crumb.clientWidth + tolerance
         )
         .map((crumb) => `the path is cut at ${name(crumb)}`);

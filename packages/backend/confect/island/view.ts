@@ -1,6 +1,14 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { Layout, paidFor } from "@repo/backend/confect/island/layout";
+import {
+  Layout,
+  materialsFor,
+  paidFor,
+} from "@repo/backend/confect/island/layout";
 import { growthOf } from "@repo/backend/confect/island/level";
+import {
+  lessMaterials,
+  Materials,
+} from "@repo/backend/confect/island/material";
 import { EarnedBadge, Visibility } from "@repo/backend/confect/island/schema";
 import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
@@ -16,13 +24,20 @@ const islandFields = {
   timeZone: Schema.String,
 };
 
-/** The owner's own island, with the Stars they can spend and who may visit it. */
+/**
+ * The owner's own island, with the Stars and materials they can spend, who may
+ * visit it, and the last days they learned and watered, which decide whether
+ * the garden can be watered today (ADR 0042, D13).
+ */
 export const OwnIsland = Schema.Struct({
   ...islandFields,
+  learned: Schema.optionalKey(Schema.String),
   lifetime: Schema.Finite,
+  materials: Materials,
   stars: Schema.Finite,
   version: Schema.Finite,
   visibility: Visibility,
+  watered: Schema.optionalKey(Schema.String),
 });
 
 /**
@@ -46,14 +61,29 @@ function shared(island: Docs["islands"]) {
   };
 }
 
-/** Projects the owner's island; spendable Stars are lifetime minus what the layout paid (D3). */
+/**
+ * What the owner can spend: Stars are lifetime minus what the layout paid (D3),
+ * and materials are every harvest minus what the layout's stages cost (D13).
+ */
+export function spendableOf(
+  island: Pick<Docs["islands"], "harvested" | "layout" | "lifetime">
+) {
+  return {
+    materials: lessMaterials(island.harvested, materialsFor(island.layout)),
+    stars: island.lifetime - paidFor(island.layout),
+  };
+}
+
+/** Projects the owner's island, with the last days they learned and watered when there are any. */
 export function toOwnIsland(island: Docs["islands"]) {
   return {
     ...shared(island),
+    ...(island.learned === undefined ? {} : { learned: island.learned }),
+    ...spendableOf(island),
     lifetime: island.lifetime,
-    stars: island.lifetime - paidFor(island.layout),
     version: island.version,
     visibility: island.visibility,
+    ...(island.watered === undefined ? {} : { watered: island.watered }),
   };
 }
 
