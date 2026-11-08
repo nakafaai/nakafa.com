@@ -20,6 +20,23 @@ const FORMULAS = {
 
 type Formula = keyof typeof FORMULAS;
 
+/** Where a fence of a formula on its own lines may open: `$$` at the start of a line, then the line's end. */
+const BLOCK_START = /(?:^|\n)(?=\$\$[ \t]*\n)/u;
+
+/**
+ * Where each kind of formula may start in the source the lexer has left. A block's start only names a line
+ * that opens a fence, because the lexer breaks its text at every start a block names, and a break inside a
+ * line would split the line's words, and an inline formula in them, in two.
+ */
+const STARTS: Record<Formula, (src: string) => number> = {
+  mathBlock: (src) =>
+    Option.match(Option.fromNullishOr(BLOCK_START.exec(src)), {
+      onNone: () => -1,
+      onSome: (match) => match.index + match[0].length,
+    }),
+  mathInline: (src) => src.indexOf("$$"),
+};
+
 /** Reads the formula of the kind `formula` that starts `src`, or none when `src` does not start with one. */
 export function formulaAt(formula: Formula, src: string) {
   return Option.fromNullishOr(FORMULAS[formula].exec(src)).pipe(
@@ -37,7 +54,7 @@ function formulaTokenizer(formula: Formula): MarkdownTokenizer {
   return {
     level: formula === "mathInline" ? "inline" : "block",
     name: formula,
-    start: (src) => src.indexOf("$$"),
+    start: STARTS[formula],
     tokenize: (src) =>
       Option.match(formulaAt(formula, src), {
         onNone: Fn.constUndefined,
