@@ -1,12 +1,13 @@
-import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
+import {
+  LocalConvex,
+  localConvexLayer,
+  type RunConvex,
+} from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
   type AcceptanceMode,
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
-import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Effect, FileSystem, Schema } from "effect";
 
 /**
@@ -14,14 +15,10 @@ import { Clock, Effect, FileSystem, Schema } from "effect";
  * name and the photo address. Each is optional, so a test writes only the field
  * it names.
  */
-const ProfileFile = Schema.fromJsonString(
-  Schema.Struct({
-    image: Schema.optionalKey(Schema.String),
-    name: Schema.optionalKey(Schema.String),
-  })
-);
-/** The profile fields that a test writes. */
-type LearnerProfile = typeof ProfileFile.Type;
+const LearnerProfile = Schema.Struct({
+  image: Schema.optionalKey(Schema.String),
+  name: Schema.optionalKey(Schema.String),
+});
 
 /**
  * The fields of a Better Auth user that the app's update trigger reads. The
@@ -36,27 +33,17 @@ const AuthUser = Schema.Struct({
   name: Schema.String,
 });
 /** What `adapter:findOne` answers: the row, or null when no row matches. */
-const FoundAuthUser = Schema.fromJsonString(Schema.NullOr(AuthUser));
-/** What `adapter:updateOne` answers: the row after the write. */
-const UpdatedAuthUser = Schema.fromJsonString(AuthUser);
-/** The arguments of the app's update trigger: the row before and after the write. */
-const UpdateTriggerArguments = Schema.fromJsonString(
-  Schema.Struct({
-    model: Schema.Literal("user"),
-    newDoc: AuthUser,
-    oldDoc: AuthUser,
-  })
-);
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+const FoundAuthUser = Schema.NullOr(AuthUser);
+/** The Better Auth component, which owns every account row. */
+const BETTER_AUTH = "betterAuth";
 
 /**
  * Writes the fields that a test names, its name and its photo address, for one
  * synthetic learner the way Better Auth writes them. Then it runs the app's
  * update trigger with the row before and after the write, which copies those
  * fields to the app profile that the sidebar and the comments read. The adapter
- * passes that trigger into its own mutation as a function handle, which a
- * command line call cannot give, so the trigger runs as a second call, as
+ * passes that trigger into its own mutation as a function handle, which an
+ * admin call cannot give, so the trigger runs as a second call, as
  * `createLearnerAccount` runs the creation trigger.
  *
  * It fails before it writes when no account has the auth id.
@@ -66,81 +53,40 @@ export const updateLearnerProfile = Effect.fn(
 )(function* <E, R>(
   run: RunConvex<E, R>,
   authId: string,
-  profile: LearnerProfile
+  profile: typeof LearnerProfile.Type
 ) {
   const now = yield* Clock.currentTimeMillis;
   const where = [{ field: "_id", operator: "eq", value: authId }];
-  const oldDoc = yield* encodeArguments({ model: "user", where }).pipe(
-    Effect.flatMap((args) =>
-      run("Learner account read", [
-        "run",
-        "--component",
-        "betterAuth",
-        "adapter:findOne",
-        args,
-      ])
-    ),
-    Effect.flatMap(Schema.decodeEffect(FoundAuthUser))
-  );
+  const oldDoc = yield* run("Learner account read", {
+    args: { model: "user", where },
+    component: BETTER_AUTH,
+    path: "adapter:findOne",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(FoundAuthUser)));
   if (oldDoc === null) {
     return yield* acceptanceRuntimeError(
       `No learner account has the auth id ${authId}.`
     );
   }
-  const newDoc = yield* encodeArguments({
-    input: {
-      model: "user",
-      update: { ...profile, updatedAt: now },
-      where,
+  const newDoc = yield* run("Learner profile write", {
+    args: {
+      input: { model: "user", update: { ...profile, updatedAt: now }, where },
     },
-  }).pipe(
-    Effect.flatMap((args) =>
-      run("Learner profile write", [
-        "run",
-        "--component",
-        "betterAuth",
-        "adapter:updateOne",
-        args,
-      ])
-    ),
-    Effect.flatMap(Schema.decodeEffect(UpdatedAuthUser))
-  );
-  yield* Schema.encodeEffect(UpdateTriggerArguments)({
-    model: "user",
-    newDoc,
-    oldDoc,
-  }).pipe(
-    Effect.flatMap((args) =>
-      run("Learner profile sync", ["run", "auth/lifecycle:onUpdate", args])
-    )
-  );
+    component: BETTER_AUTH,
+    path: "adapter:updateOne",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(AuthUser)));
+  yield* run("Learner profile sync", {
+    args: { model: "user", newDoc, oldDoc },
+    path: "auth/lifecycle:onUpdate",
+  });
 });
 
-/**
- * Writes a profile for the learner of an auth id in the running local runtime.
- * The profile is a JSON file that the browser test wrote, and the runtime must
- * be prepared and running, as for a learner.
- */
-export const updateAcceptanceProfile = Effect.fn(
-  "contentAcceptance.updateAcceptanceProfile"
-)(function* (root: string, authId: string, file: string) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
-    return yield* acceptanceRuntimeError(
-      "Run bun run acceptance:prepare and start acceptance before updating a learner's profile."
-    );
+/** Writes a profile for the learner of an auth id in the running local runtime. */
+export const seedProfile = Effect.fn("contentAcceptance.seedProfile")(
+  function* (authId: string, profile: typeof LearnerProfile.Type) {
+    const { run } = yield* LocalConvex;
+    yield* updateLearnerProfile(run, authId, profile);
   }
-  const fs = yield* FileSystem.FileSystem;
-  const profile = yield* fs
-    .readFileString(file)
-    .pipe(Effect.flatMap(Schema.decodeEffect(ProfileFile)));
-  yield* updateLearnerProfile(
-    (operation, args, sensitiveValues) =>
-      runLocalConvex(runtime, operation, args, sensitiveValues),
-    authId,
-    profile
-  );
-});
+);
 
 /** The usage of the profile mode: the auth id of the learner, then the JSON file of the profile. */
 const USAGE = "profile <auth-user-id> <profile-json-file>";
@@ -162,6 +108,15 @@ export const profileMode = {
       ProfileArguments,
       args
     );
-    return yield* updateAcceptanceProfile(root, authId, file);
+    const profile = yield* (yield* FileSystem.FileSystem)
+      .readFileString(file)
+      .pipe(
+        Effect.flatMap(
+          Schema.decodeEffect(Schema.fromJsonString(LearnerProfile))
+        )
+      );
+    yield* seedProfile(authId, profile).pipe(
+      Effect.provide(localConvexLayer(root))
+    );
   }),
 } satisfies AcceptanceMode;

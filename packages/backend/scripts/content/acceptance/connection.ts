@@ -1,39 +1,30 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  LocalConvex,
+  localConvexLayer,
+} from "@repo/backend/scripts/content/acceptance/convex";
 import {
   type AcceptanceMode,
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
-import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+/** The states a seeded Classroom connection can stand in. */
+const ConnectionStatus = Schema.Literals(["active", "reconnect"]);
 
 /** Seeds one Classroom connection of a school in the running local acceptance backend. */
-export const createAcceptanceConnection = Effect.fn(
-  "contentAcceptance.connection"
-)(function* (root: string, slug: string, status: string) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
-    return yield* acceptanceRuntimeError(
-      "Run bun run acceptance:prepare and start acceptance before seeding a connection."
-    );
+export const seedConnection = Effect.fn("contentAcceptance.seedConnection")(
+  function* (slug: string, status: typeof ConnectionStatus.Type) {
+    const { run } = yield* LocalConvex;
+    yield* run("connection seed", {
+      args: { slug, status },
+      path: "connectors/seed:connection",
+    });
   }
-  yield* runLocalConvex(runtime, "connectors/seed:connection", [
-    "run",
-    "connectors/seed:connection",
-    yield* encodeArguments({ slug, status }),
-  ]);
-});
+);
 
 /** The usage of the connection mode: the school, then the state of its connection. */
 const USAGE = "connection <school-slug> <active|reconnect>";
-const ConnectionArguments = Schema.Tuple([
-  Schema.String,
-  Schema.Literals(["active", "reconnect"]),
-]);
+const ConnectionArguments = Schema.Tuple([Schema.String, ConnectionStatus]);
 
 /**
  * The connection mode of the acceptance command line: stores a Classroom connection of the school
@@ -51,6 +42,8 @@ export const connectionMode = {
       ConnectionArguments,
       args
     );
-    return yield* createAcceptanceConnection(root, slug, status);
+    yield* seedConnection(slug, status).pipe(
+      Effect.provide(localConvexLayer(root))
+    );
   }),
 } satisfies AcceptanceMode;
