@@ -81,7 +81,7 @@ function useReact(messageId: ForumMessage["id"]) {
 }
 
 /** One emoji of a message and its count, on the secondary surface when the viewer gave it. */
-const reactionChip = cva("gap-1.5 rounded-full px-3 tabular-nums", {
+export const reactionChip = cva("gap-1.5 rounded-full px-3 tabular-nums", {
   variants: {
     mine: {
       false: "bg-muted/60 border-transparent",

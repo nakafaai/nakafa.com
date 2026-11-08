@@ -27,7 +27,7 @@ const BYTES_IN_MEGABYTE = 1024 * 1024;
  * A document of a message: one width for every document, so a column of them lines up, with the same inset on all
  * four sides, its name breaking anywhere, and the whole card one press.
  */
-const documentCard = cva(
+export const documentCard = cva(
   "w-72 max-w-full gap-3 rounded-xl has-data-[slot=attachment-content]:p-3 has-data-[slot=attachment-media]:p-3"
 );
 

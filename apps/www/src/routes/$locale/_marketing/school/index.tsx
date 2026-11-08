@@ -7,7 +7,14 @@ import {
 } from "@repo/seo/jsonld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { useTranslations } from "use-intl";
+import type { ReactNode } from "react";
+import {
+  IntlProvider,
+  useLocale,
+  useMessages,
+  useTimeZone,
+  useTranslations,
+} from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
@@ -45,10 +52,18 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
     }
   },
   loader: async ({ params }) => {
-    const messages = await readStaticData(readRouteMessages, {
-      locale: params.locale,
-      namespaces: ["Common", "SchoolSite"],
-    });
+    const [messages, inApp] = await Promise.all([
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: ["Common", "SchoolSite"],
+      }),
+      // The words of the School screens the sections draw as the app does: the forum, the editor's
+      // toolbar, the exam editor and the player. Only this page reads them.
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: ["Classroom", "Editor", "Exams", "Player"],
+      }),
+    ]);
     const t = createTranslator({
       locale: params.locale,
       messages,
@@ -69,6 +84,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
           question: t(`faq-${key}-question`),
         })
       ),
+      inApp,
       title: t("metadata-title"),
     };
   },
@@ -133,7 +149,7 @@ function SchoolLanding() {
   const t = useTranslations("SchoolSite");
 
   return (
-    <>
+    <InAppMessages>
       <PageField />
       <div className="relative grid grid-cols-1">
         <SchoolHero />
@@ -149,6 +165,9 @@ function SchoolLanding() {
         </LaterSection>
         <LaterSection code={schoolSections.exams}>
           {(SchoolExams) => <SchoolExams />}
+        </LaterSection>
+        <LaterSection code={schoolSections.player}>
+          {(SchoolPlayer) => <SchoolPlayer />}
         </LaterSection>
         <LaterSection code={schoolSections.reports}>
           {(SchoolReports) => <SchoolReports />}
@@ -182,6 +201,28 @@ function SchoolLanding() {
           )}
         </LaterSection>
       </div>
-    </>
+    </InAppMessages>
+  );
+}
+
+/**
+ * The page's messages with the words of the School screens its sections draw, so a forum, an editor
+ * or a player on the page reads its own dictionary as it does in the app. Its value is the loader's,
+ * so it never changes after hydration.
+ */
+function InAppMessages({ children }: { children: ReactNode }) {
+  const { inApp } = Route.useLoaderData();
+  const locale = useLocale();
+  const messages = useMessages();
+  const timeZone = useTimeZone();
+
+  return (
+    <IntlProvider
+      locale={locale}
+      messages={{ ...messages, ...inApp }}
+      timeZone={timeZone}
+    >
+      {children}
+    </IntlProvider>
   );
 }
