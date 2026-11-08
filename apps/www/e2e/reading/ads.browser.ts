@@ -104,7 +104,7 @@ test("a visitor finds a frame between two sections that moves nothing and explai
           name: "Why does Nakafa show ads?",
         });
         await expect(note.getByText("Nabil, founder of Nakafa")).toBeVisible();
-        await note.getByRole("button", { name: "Not now" }).click();
+        await note.getByRole("button", { name: "Cancel" }).click();
         await expect(note).toBeHidden();
       });
     })
