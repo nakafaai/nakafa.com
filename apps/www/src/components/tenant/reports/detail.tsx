@@ -75,7 +75,9 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
       />
       {found.report === null ? (
         <PaneBody>
-          <p className="text-muted-foreground text-sm">{t("report-empty")}</p>
+          <p className="text-muted-foreground text-center text-sm">
+            {t("report-empty")}
+          </p>
         </PaneBody>
       ) : (
         <ReportDetailBody reportId={found.report.id} />

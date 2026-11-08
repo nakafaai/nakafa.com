@@ -1,24 +1,19 @@
 import { ListPlusIcon } from "@hugeicons/core-free-icons";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import {
-  letterScript,
-  optionLetter,
-} from "@repo/backend/confect/exams/letters";
+import { partLetter } from "@repo/backend/confect/exams/letters";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { LineWords } from "@repo/design-system/components/ui/line";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
-import type { QuestionEditing } from "@/components/tenant/exams/edits";
-import type { Question } from "@/components/tenant/exams/optimistic";
-import { OptionRow } from "@/components/tenant/exams/option";
+import { OptionRemove, OptionRow } from "@/components/tenant/exams/option";
+import { useQuestionPage } from "@/components/tenant/exams/page";
 import { ExamDocument } from "@/components/tenant/exams/rich";
-import { PaperPartText } from "@/components/tenant/exams/sheet";
+import { PartAdd } from "@/components/tenant/exams/sheet";
 import {
   cellsKey,
   keyCells,
@@ -35,35 +30,16 @@ type Table = Extract<Interaction, { kind: "matrix" }>;
 /** One statement or column of the table: its ID and its rich text. */
 type Part = Table["statements"][number];
 
-/** The props of a true or false table on its question's paper. */
-interface TableSheetProps {
-  /** Whether the page is the chosen one, which shows the action that adds a statement. */
-  readonly chosen: boolean;
-  readonly editing: QuestionEditing;
-  /** Whether the exam is locked, so the table takes no change. */
-  readonly frozen: boolean;
-  /** The number of the question, which names each editor and mark for assistive technology. */
-  readonly number: number;
-  /** The question as the server holds it, whose labels each editor starts from. */
-  readonly question: Question;
-  readonly table: Table;
-}
-
 /**
  * A true or false question's paper as the student sees it: one table, a row for each numbered statement and a
  * column for each choice, true and false, each row's circles unmarked. The teacher writes each statement in its
- * row and may retype a column's header; the key is marked in the teacher's layer (`TableKey`), so the paper
- * carries no mark. A statement that leaves takes its mark out of the key.
+ * row, with its remove control at the end of the statement's first line, and may retype a column's header; the key is
+ * marked in the teacher's layer (`TableKey`), so the paper carries no mark. A statement that leaves takes its mark out
+ * of the key.
  */
-export function TableSheet({
-  chosen,
-  editing,
-  frozen,
-  number,
-  question,
-  table,
-}: TableSheetProps) {
+export function TableSheet({ table }: { readonly table: Table }) {
   const t = useTranslations("Exams");
+  const { chosen, editing, locked, number, question } = useQuestionPage();
   const saved = (side: "columns" | "statements") =>
     Arr.flatMap(question.answers, (answer) =>
       answer.kind === "matrix" ? answer[side] : []
@@ -114,24 +90,20 @@ export function TableSheet({
           label: (
             <OptionRow
               label={labelOf(column, saved("columns"))}
-              locked={frozen}
-              onRemove={null}
               onSave={(label: OptionLabel, unstored: Unstored) =>
                 saveLabel(column.id, label, unstored)
               }
-              removeName=""
             >
-              <ExamDocument
-                label={t("column-of", {
-                  name: optionLetter(
-                    index,
-                    letterScript(Arr.map(table.columns, (part) => part.label))
-                  ),
-                  number,
-                })}
-                placeholder={t("column-placeholder")}
-                size="line"
-              />
+              <LineWords>
+                <ExamDocument
+                  label={t("column-of", {
+                    name: partLetter(table.columns, index),
+                    number,
+                  })}
+                  placeholder={t("column-placeholder")}
+                  size="line"
+                />
+              </LineWords>
             </OptionRow>
           ),
         }))}
@@ -143,44 +115,35 @@ export function TableSheet({
           label: (
             <OptionRow
               label={labelOf(statement, saved("statements"))}
-              locked={frozen}
-              onRemove={
-                table.statements.length > CHOICE_OPTIONS_MIN
-                  ? () => removeStatement(statement.id)
-                  : null
-              }
               onSave={(label: OptionLabel, unstored: Unstored) =>
                 saveLabel(statement.id, label, unstored)
               }
-              removeName={t("statement-remove-of", {
-                name: index + 1,
-                number,
-              })}
             >
-              <PaperPartText>
+              <LineWords>
                 <ExamDocument
                   label={t("statement-of", { name: index + 1, number })}
                   placeholder={t("statement-placeholder")}
                   size="line"
                 />
-              </PaperPartText>
+              </LineWords>
+              {table.statements.length > CHOICE_OPTIONS_MIN ? (
+                <OptionRemove
+                  name={t("statement-remove-of", { name: index + 1, number })}
+                  onRemove={() => removeStatement(statement.id)}
+                />
+              ) : null}
             </OptionRow>
           ),
           marked: undefined,
         }))}
       />
-      {frozen || table.statements.length >= CHOICE_OPTIONS_MAX ? null : (
-        <div className={chosen ? undefined : "invisible"}>
-          <Button
-            onClick={addStatement}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <HugeIcons aria-hidden="true" icon={ListPlusIcon} />
-            {t("statement-add")}
-          </Button>
-        </div>
+      {locked || table.statements.length >= CHOICE_OPTIONS_MAX ? null : (
+        <PartAdd
+          icon={ListPlusIcon}
+          label={t("statement-add")}
+          onAdd={addStatement}
+          shown={chosen}
+        />
       )}
     </div>
   );

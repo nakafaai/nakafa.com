@@ -43,6 +43,7 @@ export function period(
 ): Period {
   return {
     end: "2027-06-30",
+    hold: status === "active" ? "active" : null,
     id: Schema.decodeUnknownSync(Id("tenantPeriods"))(id),
     name: id,
     start,

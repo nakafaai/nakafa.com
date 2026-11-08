@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createTranslator } from "use-intl/core";
-import { ChatNew } from "@/components/ai/chat/new";
+import { ChatNew } from "@/components/ai/chat/welcome";
 import { Videos } from "@/components/ai/home/videos";
 import { DeferredWeather } from "@/components/ai/home/weather/deferred";
 import { signedInHead } from "@/lib/account/head";

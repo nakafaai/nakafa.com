@@ -5,10 +5,8 @@ import {
   type ExamResponse,
   markedCells,
 } from "@repo/backend/confect/assessment/response";
-import {
-  optionDirection,
-  optionLetters,
-} from "@repo/backend/confect/exams/letters";
+import { partDirection, partLetter } from "@repo/backend/confect/exams/letters";
+import { LineWords } from "@repo/design-system/components/ui/line";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
@@ -73,8 +71,7 @@ function SingleChoiceFields({
     () => ""
   );
   const labelId = `${id}-answer-label`;
-  const labels = Arr.map(choice.options, (option) => option.label);
-  const letterOf = optionLetters(labels);
+  const parts = choice.options;
   return (
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="sr-only" id={labelId}>
@@ -83,7 +80,7 @@ function SingleChoiceFields({
       <RadioGroup
         aria-labelledby={labelId}
         className="grid grid-cols-1 gap-2 md:grid-cols-2"
-        dir={optionDirection(labels)}
+        dir={partDirection(parts)}
         disabled={locked}
         onValueChange={(optionId) => onChange([optionId])}
         value={selected}
@@ -95,7 +92,7 @@ function SingleChoiceFields({
             disabled={locked}
             id={optionLabelId(id, option.id)}
             key={option.id}
-            letter={letterOf(index)}
+            letter={partLetter(parts, index)}
             value={option.id}
           >
             <TryoutResponseLabel
@@ -119,12 +116,11 @@ function MultipleChoiceFields({
   const t = useTranslations("Tryouts");
   const { id, locked, onChange, response } = value;
   const chosen = chosenOptions(response ?? []);
-  const labels = Arr.map(choice.options, (option) => option.label);
-  const letterOf = optionLetters(labels);
+  const parts = choice.options;
   return (
     <fieldset
       className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
-      dir={optionDirection(labels)}
+      dir={partDirection(parts)}
     >
       <legend className="sr-only">{t("answer")}</legend>
       {Arr.map(choice.options, (option, index) => (
@@ -134,7 +130,7 @@ function MultipleChoiceFields({
           disabled={locked}
           id={optionLabelId(id, option.id)}
           key={option.id}
-          letter={letterOf(index)}
+          letter={partLetter(parts, index)}
           onCheckedChange={(checked) => {
             const next = toggleOption(
               chosen,
@@ -192,7 +188,11 @@ function MatrixFields({
               )
             : undefined,
         id: statement.id,
-        label: <TryoutResponseLabel document={statement.label} />,
+        label: (
+          <LineWords>
+            <TryoutResponseLabel document={statement.label} />
+          </LineWords>
+        ),
         marked: Option.getOrUndefined(
           Option.map(
             Arr.findFirst(cells, (cell) => cell.statement === statement.id),

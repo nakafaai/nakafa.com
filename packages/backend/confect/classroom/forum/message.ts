@@ -4,6 +4,7 @@ import {
   AttachmentView,
   attachmentValidator,
 } from "@repo/backend/confect/classroom/forum/attachment";
+import { Face } from "@repo/backend/confect/classroom/forum/face";
 import {
   Mention,
   MentionView,
@@ -52,12 +53,14 @@ export const DiscussionNumber = Schema.Int.check(
 
 /**
  * A discussion as its opening message carries it in the channel: its number,
- * title, how many replies it holds, when the newest came, and whether a reply
- * came after the viewer last read the discussion.
+ * title, how many replies it holds, when the newest came, the faces of who wrote
+ * the newest replies, newest first, and whether a reply came after the viewer
+ * last read the discussion.
  */
 export const DiscussionView = Schema.Struct({
   lastReplyAt: Schema.NullOr(Schema.Finite),
   number: DiscussionNumber,
+  repliers: Schema.Array(Face),
   replies: Schema.Int,
   title: Schema.String,
   unread: Schema.Boolean,
@@ -94,7 +97,7 @@ export const messageValidator = Schema.Struct({
 });
 
 /**
- * One message as the forum shows it: its author's name, its text, or null once a
+ * One message as the forum shows it: its author's face, its text, or null once a
  * teacher hid it, when it was written and last edited, and whether the viewer
  * wrote it. Its client key is the one the composer gave it, so the forum keeps
  * one row for the message from the moment it is sent to the server's answer. A
@@ -103,11 +106,7 @@ export const messageValidator = Schema.Struct({
  */
 export const MessageView = Schema.Struct({
   attachments: Schema.Array(AttachmentView),
-  author: Schema.Struct({
-    id: Id("tenantPeople"),
-    name: Schema.String,
-    nina: Schema.Boolean,
-  }),
+  author: Face,
   clientKey: ClientKey,
   createdAt: Schema.Finite,
   discussion: Schema.NullOr(DiscussionView),
