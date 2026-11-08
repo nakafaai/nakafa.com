@@ -3739,13 +3739,13 @@
       "title": "Ada yang berdiri di atasnya."
     },
     "island-refused-locked": {
-      "title": "Ini terbuka di level yang lebih tinggi."
+      "title": "Ini terbuka di level lebih tinggi."
     },
     "island-refused-unaffordable": {
       "title": "Bintangmu belum cukup untuk ini."
     },
     "island-refused-starter": {
-      "title": "Ini bawaan pulaumu, jadi tetap di sini."
+      "title": "Ini bawaan pulaumu, jadi tetap ada."
     },
     "island-refused-missing": {
       "title": "Benda itu sudah tidak ada."
@@ -3757,19 +3757,20 @@
       "title": "Ini sudah di tahap pertama."
     },
     "island-stale": {
-      "title": "Pulaumu berubah di tempat lain, jadi kami memuatnya lagi."
+      "title": "Pulaumu berubah di tempat lain.",
+      "description": "Sudah kami muat ulang, coba lagi ya."
     },
     "island-refused-grows": {
       "title": "Ini tumbuh saat kamu menyiramnya."
     },
     "island-refused-rooted": {
-      "title": "Ini sudah berakar, jadi pindahkan saja."
+      "title": "Ini sudah berakar, pindahkan saja."
     },
     "island-refused-materials": {
       "title": "Hasil kebunmu belum cukup untuk ini."
     },
     "island-farm-unlearned": {
-      "title": "Belajar dulu hari ini, lalu siram kebunmu."
+      "title": "Belajar dulu, lalu siram kebunmu."
     },
     "island-farm-watered": {
       "title": "Kebunmu sudah disiram hari ini."

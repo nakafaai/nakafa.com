@@ -43,7 +43,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
               .getByRole("menuitem", { name: "Water the garden" })
               .click();
             await expect(
-              page.getByText("Learn something today, then water your garden.")
+              page.getByText("Learn something first, then water.")
             ).toBeVisible();
           })
         )

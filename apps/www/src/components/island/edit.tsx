@@ -64,7 +64,10 @@ export function useEditIsland() {
               Effect.sync(() => {
                 tools.getState().forget();
                 if (error._tag === "IslandStale") {
-                  toast.error({ title: "island-stale.title" });
+                  toast.error({
+                    description: "island-stale.description",
+                    title: "island-stale.title",
+                  });
                 } else if (error._tag === "BuildRefused") {
                   toast.error({
                     title: `island-refused-${error.reason}.title`,
