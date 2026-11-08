@@ -15,6 +15,9 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** Every question article of the page, the player's or the review's. */
 const ARTICLES = 'main article[id^="exercise-question-"]';
 
+/** The tone of the learner's own mark on a reviewed statement: it earns the key or misses it. */
+const PICK_TONE = /^(?:correct|wrong)$/u;
+
 /** A reviewed answer's line, in the tone it was drawn with. */
 const lineOf = (scope: Locator, tone: string) =>
   scope.locator(`[data-slot="marked-line"][data-tone="${tone}"]`);
@@ -108,7 +111,7 @@ test.describe("The marks of a reviewed try-out", () => {
             ).toHaveCount(1);
             await expect(
               row.locator('[data-slot="marked-line"][data-tone]').first()
-            ).toHaveAttribute("data-tone", /^(?:correct|wrong)$/u);
+            ).toHaveAttribute("data-tone", PICK_TONE);
           });
         }
         yield* expectOutlines(table);
