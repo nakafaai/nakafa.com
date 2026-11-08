@@ -18,9 +18,11 @@ import { Array as Arr, Effect, Number as Num, Option, Result } from "effect";
 import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import {
+  type CommentDraft,
   type ComposerKey,
   generationOf,
   photosOf,
+  type TrayPhoto,
   textOf,
 } from "@/components/comments/draft";
 import { useCommentDraft } from "@/components/comments/provider";
@@ -154,9 +156,47 @@ function PhotoButton({
 }
 
 /**
- * Adds files to one composer's tray, the first four photos at most, each shown at once from this device and
- * uploaded on its own fiber. A photo the server refuses stays in the tray marked, and the learner hears why.
+ * Shows one photo in its composer's tray at once, from this device, then uploads it and places the server's
+ * answer on it. A photo the server refuses stays in the tray marked, and the learner hears why. It stands
+ * outside the hook that runs it, because the React Compiler does not compile a generator.
  */
+const trayPhoto = Effect.fn("comments.writer.trayPhoto")(function* (
+  file: File,
+  tray: {
+    readonly add: (photo: typeof TrayPhoto.Type) => void;
+    readonly place: (
+      key: string,
+      change: Parameters<CommentDraft["placePhoto"]>[2]
+    ) => void;
+    readonly register: Parameters<typeof uploadPhoto>[2];
+    readonly reserve: Parameters<typeof uploadPhoto>[1];
+  }
+) {
+  const key = yield* randomUuid;
+  tray.add({
+    failed: false,
+    height: 0,
+    key,
+    preview: URL.createObjectURL(file),
+    upload: Option.none(),
+    width: 0,
+  });
+  yield* uploadPhoto(file, tray.reserve, tray.register).pipe(
+    Effect.matchEffect({
+      onFailure: () =>
+        Effect.sync(() => {
+          tray.place(key, { failed: true });
+          toast.error({ title: "comment-photo-refused.title" });
+        }),
+      onSuccess: ({ height, upload, width }) =>
+        Effect.sync(() =>
+          tray.place(key, { height, upload: Option.some(upload), width })
+        ),
+    })
+  );
+});
+
+/** Adds files to one composer's tray, the first four photos at most, each uploaded on its own fiber. */
 function useAddPhotos(composerKey: ComposerKey) {
   const room = useCommentDraft(
     (draft) => COMMENT_PHOTO_LIMIT - photosOf(draft, composerKey).length
@@ -173,40 +213,12 @@ function useAddPhotos(composerKey: ComposerKey) {
     }
     Arr.forEach(taken, (file) => {
       Effect.runFork(
-        Effect.gen(function* () {
-          const key = yield* randomUuid;
-          addPhotos(composerKey, [
-            {
-              failed: false,
-              height: 0,
-              key,
-              preview: URL.createObjectURL(file),
-              upload: Option.none(),
-              width: 0,
-            },
-          ]);
-          yield* uploadPhoto(
-            file,
-            (bytes, contentType) =>
-              reserve({ byteSize: bytes.size, contentType }),
-            register
-          ).pipe(
-            Effect.matchEffect({
-              onFailure: () =>
-                Effect.sync(() => {
-                  placePhoto(composerKey, key, { failed: true });
-                  toast.error({ title: "comment-photo-refused.title" });
-                }),
-              onSuccess: ({ height, upload, width }) =>
-                Effect.sync(() =>
-                  placePhoto(composerKey, key, {
-                    height,
-                    upload: Option.some(upload),
-                    width,
-                  })
-                ),
-            })
-          );
+        trayPhoto(file, {
+          add: (photo) => addPhotos(composerKey, [photo]),
+          place: (key, change) => placePhoto(composerKey, key, change),
+          register,
+          reserve: (bytes, contentType) =>
+            reserve({ byteSize: bytes.size, contentType }),
         })
       );
     });

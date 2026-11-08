@@ -95,16 +95,25 @@ function LearnerMenu() {
           className="w-40"
           label={t("menu-actions")}
         >
+          <DropdownMenuGroup>
+            {own ? (
+              <DropdownMenuItem
+                icon={Edit02Icon}
+                onClick={() => edit(comment._id)}
+              >
+                {t("edit")}
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                icon={Flag02Icon}
+                onClick={() => setDialog("report")}
+              >
+                {t("report")}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuGroup>
           {own ? (
             <>
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  icon={Edit02Icon}
-                  onClick={() => edit(comment._id)}
-                >
-                  {t("edit")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
@@ -116,16 +125,7 @@ function LearnerMenu() {
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </>
-          ) : (
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                icon={Flag02Icon}
-                onClick={() => setDialog("report")}
-              >
-                {t("report")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          )}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
       {opened ? (

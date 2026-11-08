@@ -1,13 +1,13 @@
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
+import { Array as Arr, Result } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useRowComment } from "@/components/comments/scope";
 import type { RowComment } from "@/components/comments/state";
 
-/** One photo of a comment, as a list shows it. */
-type Photo = RowComment["photos"][number];
+/** One photo of a comment that the list shows: its file is stored, so it has an address to open. */
+type Photo = RowComment["photos"][number] & { readonly address: string };
 
 /** The photos of a comment: one at its own shape, and several in equal squares, as a chat's album. */
 const photoGrid = cva("grid w-full max-w-sm gap-1 py-1", {
@@ -20,17 +20,23 @@ const photoGrid = cva("grid w-full max-w-sm gap-1 py-1", {
  */
 export function CommentPhotos() {
   const comment = useRowComment();
-  if (Arr.isReadonlyArrayEmpty(comment.photos)) {
+  // A photo whose file is gone has no address, so it has nothing to show or to open.
+  const shown = Arr.filterMap(comment.photos, (photo) =>
+    photo.address === null
+      ? Result.failVoid
+      : Result.succeed({ ...photo, address: photo.address })
+  );
+  if (Arr.isReadonlyArrayEmpty(shown)) {
     return null;
   }
-  const single = comment.photos.length === 1;
+  const single = shown.length === 1;
   return (
     <div className={photoGrid({ single })}>
-      {Arr.map(comment.photos, (photo, index) => (
+      {Arr.map(shown, (photo, index) => (
         <CommentPhoto
           index={index}
-          // A photo has no id of its own, and its place in the comment never changes once posted.
-          key={photo.address ?? photo.thumbnail ?? index}
+          // The address is signed from the start of the hour, so it stays the same between reads.
+          key={photo.address}
           photo={photo}
           single={single}
         />
@@ -66,7 +72,7 @@ function CommentPhoto({
           className="size-full object-cover"
           height={photo.height}
           loading="lazy"
-          src={photo.thumbnail ?? photo.address ?? undefined}
+          src={photo.thumbnail ?? photo.address}
           style={{
             aspectRatio: single ? `${photo.width} / ${photo.height}` : "1",
           }}
@@ -83,7 +89,7 @@ function CommentPhoto({
           alt={name}
           className="max-h-[70dvh] w-full rounded-lg object-contain"
           height={photo.height}
-          src={photo.address ?? undefined}
+          src={photo.address}
           width={photo.width}
         />
       </ResponsiveDialog>
