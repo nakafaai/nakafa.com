@@ -22,7 +22,7 @@ export const LineEquation = withHydrationBoundary(
 export const QuadraticEquationReadingRoomProblem = withHydrationBoundary(
   lazy(() =>
     import(
-      "@repo/design-system/components/contents/mathematics/quadratic/reading-room"
+      "@repo/design-system/components/contents/mathematics/quadratic/room"
     ).then((module) => ({ default: module.ReadingRoomProblem }))
   )
 );

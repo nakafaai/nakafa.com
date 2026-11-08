@@ -7,7 +7,7 @@ import {
   type OperationalExceptionProperties,
   operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
-import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import { isServerExceptionReportingEnabled } from "@repo/analytics/reporting";
 import { Effect, Option, Schema } from "effect";
 import { PostHog } from "posthog-node";
 

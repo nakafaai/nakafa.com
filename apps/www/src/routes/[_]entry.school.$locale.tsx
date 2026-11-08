@@ -18,7 +18,7 @@ import { ThemePicker } from "@/components/shared/theme/picker";
 import { authLegalLinks } from "@/lib/auth/legal";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
-import { readNotFoundRouteLocale } from "@/lib/routing/not-found";
+import { readNotFoundRouteLocale } from "@/lib/routing/missing";
 import { SCHOOL_ENTRY_ID } from "@/lib/routing/shell";
 import { readStaticData } from "@/lib/static/data";
 

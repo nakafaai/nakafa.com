@@ -10,7 +10,7 @@ import {
   settleSearch,
   startSearch,
 } from "@/lib/search/answer";
-import { readSearchFn } from "@/lib/search/search.functions";
+import { readSearchFn } from "@/lib/search/read.functions";
 
 /**
  * Runs the public content search for the active locale. Every viewer reads it

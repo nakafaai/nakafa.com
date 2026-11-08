@@ -1,4 +1,4 @@
-import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { useResizable } from "@repo/design-system/hooks/resizable";
 import { cva } from "class-variance-authority";
 import { type ReactNode, useLayoutEffect, useSyncExternalStore } from "react";
 import { PaneEdge } from "@/components/shared/panes/edge";
