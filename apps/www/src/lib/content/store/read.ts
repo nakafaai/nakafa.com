@@ -26,27 +26,25 @@ const RELEASE_ENTRY_LIFETIME = Duration.days(30);
 type ContentScope = "release" | ContentSnapshotFamily;
 
 /**
- * The key of one read's scope: the scope, the id that keys its entries (the
- * release, or the family's snapshot), and the release it was read under, which a
- * mismatch names.
+ * The key of a scope under one active identity: the scope, the id that keys its
+ * entries (the release, or the family's snapshot), and the release it was read
+ * under, which a mismatch names. None for a family that has no snapshot.
  */
-type ScopeKey = Readonly<{
-  id: string;
-  releaseId: ActiveContentReleaseId;
-  scope: ContentScope;
-}>;
-
-/** The key of a scope under one active identity, or none for a family that has no snapshot. */
 function scopeKeyOf(
   identity: NonNullable<ActiveContentIdentity>,
   scope: ContentScope
-): Option.Option<ScopeKey> {
+) {
   const id =
     scope === "release" ? identity.releaseId : identity.snapshots[scope];
-  return id === null
-    ? Option.none()
-    : Option.some({ id, releaseId: identity.releaseId, scope });
+  return Option.map(Option.fromNullOr(id), (key) => ({
+    id: key,
+    releaseId: identity.releaseId,
+    scope,
+  }));
 }
+
+/** The key of one read's scope, as `scopeKeyOf` builds it. */
+type ScopeKey = Option.Option.Value<ReturnType<typeof scopeKeyOf>>;
 
 /**
  * The parts that lead every key of a scope. A release keys its entries by its
