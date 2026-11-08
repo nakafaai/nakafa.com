@@ -10,6 +10,7 @@ import {
   insertCohort,
   setCohortStatus,
 } from "@/components/tenant/settings/state";
+import { changeLoaded } from "@/lib/data/loaded";
 
 /**
  * The optimistic changes of the cohorts of a period. Each one shows a mutation's result
@@ -23,15 +24,9 @@ function changeCohortLists(
   matches: (args: Ref.Args<typeof tenancy.cohorts.list>) => boolean,
   change: (cohorts: readonly Cohort[]) => Cohort[]
 ) {
-  for (const query of localStore.getAllQueries(tenancy.cohorts.list)) {
-    if (Option.isSome(query.value) && matches(query.args)) {
-      localStore.setQuery(
-        tenancy.cohorts.list,
-        query.args,
-        Option.some(change(query.value.value))
-      );
-    }
-  }
+  changeLoaded(localStore, tenancy.cohorts.list, (value, args) =>
+    matches(args) ? Option.some(change(value)) : Option.none()
+  );
 }
 
 /**

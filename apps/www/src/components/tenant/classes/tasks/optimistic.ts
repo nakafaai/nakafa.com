@@ -5,6 +5,7 @@ import type {
 } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /** One task of a class, as its pages show it. */
 export type ClassTask = Ref.Returns<typeof classroom.tasks.get>;
@@ -22,32 +23,18 @@ const changeTask = (
   slug: string,
   change: (task: ClassTask) => ClassTask
 ) => {
-  for (const query of localStore.getAllQueries(get)) {
-    if (Option.isSome(query.value) && query.args.task === slug) {
-      localStore.setQuery(
-        get,
-        query.args,
-        Option.some(change(query.value.value))
-      );
-    }
-  }
-  for (const query of localStore.getAllQueries(list)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(query.value.value.page, (task) => task.slug === slug)
-    ) {
-      localStore.setQuery(
-        list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (task) =>
-            task.slug === slug ? change(task) : task
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, get, (task, args) =>
+    args.task === slug ? Option.some(change(task)) : Option.none()
+  );
+  changeLoaded(localStore, list, (value) =>
+    Arr.some(value.page, (task) => task.slug === slug)
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.map(page, (task) => (task.slug === slug ? change(task) : task))
+          )
+        )
+      : Option.none()
+  );
 };
 
 /**
@@ -91,25 +78,19 @@ export const scoreUpdate: OptimisticUpdate<typeof classroom.tasks.score> = (
   localStore,
   args
 ) => {
-  for (const query of localStore.getAllQueries(submissions)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(query.value.value.page, (work) => work.id === args.submissionId)
-    ) {
-      localStore.setQuery(
-        submissions,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (work) =>
-            work.id === args.submissionId
-              ? { ...work, score: args.points }
-              : work
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, submissions, (value) =>
+    Arr.some(value.page, (work) => work.id === args.submissionId)
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.map(page, (work) =>
+              work.id === args.submissionId
+                ? { ...work, score: args.points }
+                : work
+            )
+          )
+        )
+      : Option.none()
+  );
 };
 
 /** Takes the task at `slug` out of every list of the class that holds it. */
@@ -117,24 +98,15 @@ const leaveLists = (
   localStore: LocalStore.OptimisticLocalStore,
   slug: string
 ) => {
-  for (const query of localStore.getAllQueries(list)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(query.value.value.page, (task) => task.slug === slug)
-    ) {
-      localStore.setQuery(
-        list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.filter(
-            query.value.value.page,
-            (task) => task.slug !== slug
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, list, (value) =>
+    Arr.some(value.page, (task) => task.slug === slug)
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.filter(page, (task) => task.slug !== slug)
+          )
+        )
+      : Option.none()
+  );
 };
 
 /**
