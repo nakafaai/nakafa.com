@@ -7,9 +7,18 @@ import {
   type ContentTreeValue,
   contentTreeComponentNames,
 } from "@nakafa/aksara-contracts/tree";
+import { drawFormula } from "@repo/design-system/components/editor/render";
+import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Array as Arr, Effect, Predicate, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  Predicate,
+  Record as Rec,
+} from "effect";
 import { createElement, Fragment, type ReactElement } from "react";
+import { inlinePieces } from "@/lib/content/renderer/inline";
 import { takesLocale } from "@/lib/content/renderer/locale";
 import { RendererImplementationMissing } from "@/lib/content/renderer/selection";
 
@@ -35,22 +44,56 @@ function isRecord(value: ContentTreeValue): value is ContentTreeProps {
   return Predicate.isObject(value) && !Arr.isArray(value);
 }
 
-/** Renders one prop value: nested elements become React elements, JSON data passes through. */
+/** A component name, as JSX writes it, rather than an intrinsic tag such as `a`. */
+const COMPONENT_NAME = /^[A-Z]/u;
+
+/**
+ * A string with formulas between dollar signs, drawn as text and KaTeX with
+ * mhchem on the server, so a title such as `$\ce{H2O}$` shows real chemistry
+ * and the browser loads no math runtime for it.
+ */
+function renderText(text: string) {
+  return Option.match(inlinePieces(text), {
+    onNone: () => text,
+    onSome: (pieces) =>
+      createElement(
+        Fragment,
+        null,
+        ...Arr.map(pieces, (piece) =>
+          piece.kind === "text"
+            ? piece.text
+            : createElement(DrawnInlineMath, {
+                html: drawFormula(piece.math, false),
+              })
+        )
+      ),
+  });
+}
+
+/**
+ * Renders one prop value: nested elements become React elements, JSON data
+ * passes through, and a component's string prop draws its formulas.
+ */
 function renderValue(
   value: ContentTreeValue,
   components: MDXComponents,
-  locale: ArtifactLocale
+  locale: ArtifactLocale,
+  rich: boolean
 ): unknown {
   if (isElement(value)) {
     return renderElement(value, components, locale);
   }
   if (isList(value)) {
-    return Arr.map(value, (item) => renderValue(item, components, locale));
+    return Arr.map(value, (item) =>
+      renderValue(item, components, locale, rich)
+    );
   }
   if (isRecord(value)) {
-    return Rec.map(value, (item) => renderValue(item, components, locale));
+    return Rec.map(value, (item) =>
+      renderValue(item, components, locale, rich)
+    );
   }
-  return value;
+  return rich && typeof value === "string" ? renderText(value) : value;
 }
 
 /**
@@ -68,8 +111,9 @@ function renderElement(
     element.name === FRAGMENT
       ? Fragment
       : (components[element.name] ?? element.name);
+  const rich = COMPONENT_NAME.test(element.name);
   const props = Rec.map(element.props, (value) =>
-    renderValue(value, components, locale)
+    renderValue(value, components, locale, rich)
   );
   const children = Arr.map(element.children, (child) =>
     typeof child === "string" ? child : renderElement(child, components, locale)

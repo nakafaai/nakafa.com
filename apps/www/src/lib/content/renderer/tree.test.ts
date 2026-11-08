@@ -202,4 +202,28 @@ describe("content tree rendering", () => {
         );
       })
   );
+
+  it.effect(
+    "draws a component's dollar formulas, mhchem included, and leaves tags alone",
+    () =>
+      Effect.gen(function* () {
+        const markup = renderToStaticMarkup(
+          yield* renderTree(
+            root([
+              node("Probe", [], {
+                icon: node("em", ["rate"]),
+                label: "$\\ce{2H2 + O2 -> 2H2O}$ burns",
+              }),
+              node("a", ["link"], { href: "/x?price=$v$" }),
+            ])
+          )
+        );
+
+        expect(markup).toContain('data-testid="katex"');
+        expect(markup).not.toContain("katex-error");
+        expect(markup).toContain("burns");
+        expect(markup).toContain('href="/x?price=$v$"');
+      })
+  );
 });
+
