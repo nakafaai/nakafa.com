@@ -2286,7 +2286,6 @@
     "lowest": "Terendah",
     "range": "Julat",
     "mean": "Min",
-    "series-mean": "Min {series}",
     "points": "Mata",
     "input": "Input",
     "output": "Output",
@@ -2483,6 +2482,11 @@
   "Holy": {
     "holy": "Suci",
     "quran": "Al-Quran",
+    "search-surah": "Cari surah",
+    "search-surah-none": "Tiada surah dijumpai",
+    "search-surah-none-description": "Cari ikut nombor, nama atau maksud.",
+    "menu-surah": "Surah",
+    "surah-empty": "Tiada surah dijumpai.",
     "quran-description": "Baca kesemua 114 surah Al-Quran dalam bahasa Arab dengan terjemahan ayat demi ayat, percuma di Nakafa.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
@@ -3727,6 +3731,72 @@
     "classroom-refusal-file-size": {
       "title": "Fail terlalu besar.",
       "description": "Pilih fail yang lebih kecil."
+    },
+    "island-refused-outside": {
+      "title": "Itu tidak muat di pulau kamu."
+    },
+    "island-refused-overlap": {
+      "title": "Sudah ada sesuatu di situ."
+    },
+    "island-refused-unsupported": {
+      "title": "Ia perlukan blok di bawahnya."
+    },
+    "island-refused-carrying": {
+      "title": "Ada sesuatu di atasnya."
+    },
+    "island-refused-locked": {
+      "title": "Ini terbuka pada tahap yang lebih tinggi."
+    },
+    "island-refused-unaffordable": {
+      "title": "Kamu perlukan lebih banyak Bintang untuk ini."
+    },
+    "island-refused-starter": {
+      "title": "Ini datang bersama pulau kamu, jadi ia kekal."
+    },
+    "island-refused-missing": {
+      "title": "Kepingan itu sudah tiada."
+    },
+    "island-refused-top": {
+      "title": "Ia sudah berada di peringkat tertinggi."
+    },
+    "island-refused-bottom": {
+      "title": "Ia sudah berada di peringkat pertama."
+    },
+    "island-stale": {
+      "title": "Pulau kamu berubah di tempat lain, jadi kami muatkan semula."
+    },
+    "island-refused-grows": {
+      "title": "Ia membesar apabila kamu menyiramnya."
+    },
+    "island-refused-rooted": {
+      "title": "Ia sudah berakar, jadi alihkan sahaja."
+    },
+    "island-refused-materials": {
+      "title": "Kamu perlukan lebih banyak hasil kebun untuk ini."
+    },
+    "island-farm-unlearned": {
+      "title": "Belajar sesuatu hari ini, kemudian siram kebun kamu."
+    },
+    "island-farm-watered": {
+      "title": "Kebun kamu sudah disiram hari ini."
+    },
+    "island-farm-barren": {
+      "title": "Tanam pokok atau bunga dahulu."
+    },
+    "island-farm-missing": {
+      "title": "Tumbuhan itu sudah tiada."
+    },
+    "island-farm-unripe": {
+      "title": "Ia belum mengeluarkan hasil lagi."
+    },
+    "island-watered": {
+      "title": "Kebun kamu sudah disiram."
+    },
+    "island-harvested-wood": {
+      "title": "Kamu mengumpul kayu."
+    },
+    "island-harvested-petals": {
+      "title": "Kamu mengumpul kelopak bunga."
     }
   },
   "Ai": {
@@ -4352,6 +4422,8 @@
     "plan-pro": "Pro",
     "plan-max": "Max",
     "plan-trial": "Percuma selama {days} hari",
+    "plan-free-price": "Percuma",
+    "plan-trial-for": "selama {days} hari",
     "plan-month": "/bulan",
     "plan-billed-free": "Tiada bayaran, tiada kad",
     "plan-accounts": "{count, number} akaun untuk setiap peranan",
@@ -4436,6 +4508,8 @@
     "tasks-lead": "Setiap kerja yang dihantar dan markah kekal bersama kelasnya.",
     "exams-title": "Peperiksaan yang memberi markah sendiri",
     "exams-lead": "Setiap kuiz dan percubaan berjalan dalam pemain yang sama.",
+    "player-title": "Satu pemain untuk setiap peperiksaan",
+    "player-lead": "Jam, navigasi dan bendera, dengan setiap formula seperti yang ditulis.",
     "reports-title": "Kad laporan daripada markah yang kamu berikan",
     "reports-lead": "Sekolah menandatangani, dan kod QR membuktikan setiap satu.",
     "insight-title": "Kenal pasti siapa yang perlukan bantuan lebih awal",
@@ -4478,6 +4552,7 @@
     "demo-kind-link": "Pautan",
     "demo-exam-title": "Peperiksaan pertengahan tahun Fizik",
     "demo-exam-question": "Sebiji bola 2 kg bergolek pada 3 m/s. Berapa momentumnya?",
+    "demo-exam-explanation": "Momentum ialah jisim darab halaju: <formula></formula>.",
     "demo-exam-answer": "Jawapan",
     "demo-exam-progress": "Soalan {current} daripada {total}",
     "demo-report-term": "Laporan Semester 1",
@@ -4522,5 +4597,49 @@
     "faq-credits-answer": "Nina, AI Nakafa, menggunakan kredit bagi setiap jawapan. Seluruh sekolah berkongsi satu kumpulan kredit, dan pek 1,000 tambahan tahan selama 12 bulan.",
     "faq-change-question": "Boleh kami menukar pelan kemudian?",
     "faq-change-answer": "Boleh. Bertukar antara Pro dan Max atau tambah akaun bila-bila masa, dan perubahan berkuat kuasa mulai invois berbayar seterusnya."
+  },
+  "Island": {
+    "title": "Pulau",
+    "description": "Pulau kamu berkembang dengan setiap pelajaran dan percubaan.",
+    "name": "Pulau {name}",
+    "level": "Tahap {level}",
+    "stars": "Bintang",
+    "next": "Tahap seterusnya",
+    "next-value": "{stars} Bintang",
+    "top": "Tahap tertinggi",
+    "turn-left": "Pusing ke kiri",
+    "turn-right": "Pusing ke kanan",
+    "build": "Bina",
+    "done": "Siap",
+    "undo": "Buat asal",
+    "redo": "Buat semula",
+    "rotate": "Pusing",
+    "move": "Alih",
+    "remove": "Buang",
+    "upgrade": "Naik taraf",
+    "items": "Barang",
+    "price": "{stars} Bintang",
+    "locked": "Tahap {level}",
+    "item-house": "Rumah",
+    "item-tree": "Pokok",
+    "item-pond": "Kolam",
+    "item-grass": "Rumput",
+    "item-soil": "Tanah",
+    "item-stone": "Batu",
+    "item-sand": "Pasir",
+    "item-planks": "Papan",
+    "item-brick": "Bata",
+    "item-glass": "Kaca",
+    "item-tile": "Jubin merah",
+    "item-slate": "Jubin biru",
+    "item-flowers": "Bunga",
+    "item-bush": "Semak",
+    "item-rock": "Batu besar",
+    "item-lamp": "Lampu",
+    "water": "Siram kebun",
+    "harvest": "Tuai",
+    "materials": "Kebun",
+    "materials-value": "{wood} kayu, {petals} kelopak",
+    "price-wood": "{stars} Bintang, {wood} kayu"
   }
 }
