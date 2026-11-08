@@ -6,7 +6,6 @@ import {
   DEMO_COHORTS,
   DEMO_REPLIERS,
   DEMO_REPORTED,
-  DEMO_STRUGGLING,
   DEMO_TEACHER,
   SCHOOL_TOY_HERD,
 } from "@/components/marketing/school/features/cast";
@@ -18,7 +17,6 @@ const PEOPLE = Arr.map(
     DEMO_ASKER.mascot,
     ...DEMO_REPLIERS,
     DEMO_REPORTED.mascot,
-    ...Arr.map(DEMO_STRUGGLING, (person) => person.mascot),
     ...Arr.flatten(DEMO_COHORTS),
     DEMO_CHILD.mascot,
   ],
@@ -27,13 +25,13 @@ const PEOPLE = Arr.map(
 
 describe("the people of the School landing", () => {
   it("give every person and every face on the page an animal no one else has", () => {
-    expect(PEOPLE).toHaveLength(18);
-    expect(Arr.dedupe(PEOPLE)).toHaveLength(18);
+    expect(PEOPLE).toHaveLength(16);
+    expect(Arr.dedupe(PEOPLE)).toHaveLength(16);
   });
 
   it("give the toys sixteen more animals that none of the people has", () => {
     const toys = Arr.map(SCHOOL_TOY_HERD, (mascot) => mascot.animal);
     expect(toys).toHaveLength(16);
-    expect(Arr.dedupe([...PEOPLE, ...toys])).toHaveLength(34);
+    expect(Arr.dedupe([...PEOPLE, ...toys])).toHaveLength(32);
   });
 });

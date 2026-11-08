@@ -36,12 +36,6 @@ export const DEMO_REPLIERS = Arr.take(Arr.drop(SCHOOL_CAST, 2), 3);
 /** The student whose report card the school signs. */
 export const DEMO_REPORTED = person("Sari", 8);
 
-/** The students that insight shows as needing help. */
-export const DEMO_STRUGGLING = [
-  person("Bima", 9),
-  person("Citra", 10),
-] as const;
-
 /** The animals of each cohort that moves up a grade, three of them each. */
 export const DEMO_COHORTS = Arr.map([11, 14, 17], (start) =>
   Arr.take(Arr.drop(SCHOOL_CAST, start), 3)
