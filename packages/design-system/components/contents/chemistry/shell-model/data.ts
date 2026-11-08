@@ -27,7 +27,7 @@ export function getShellModelSceneColors(resolvedTheme: string | undefined) {
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    electron: isDarkTheme ? PLOT_COLORS.violet : PLOT_COLORS.teal,
+    electron: PLOT_COLORS.violet,
     groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     nucleus: PLOT_COLORS.pink,
     outerElectron: PLOT_COLORS.orange,

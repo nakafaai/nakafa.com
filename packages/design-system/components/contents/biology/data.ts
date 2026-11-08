@@ -33,7 +33,6 @@ const BiologySceneColorsSchema = Schema.Struct({
   soil: Schema.String,
   spore: Schema.String,
   text: Schema.String,
-  warning: Schema.String,
   wood: Schema.String,
 });
 
@@ -68,9 +67,9 @@ export function getBiologySceneColors(theme?: string): BiologySceneColors {
     genome: PLOT_COLORS.amber,
     heat: PLOT_COLORS.orange,
     host: PLOT_COLORS.teal,
-    ice: PLOT_COLORS.teal,
+    ice: getColor("SLATE", 300),
     membrane: PLOT_COLORS.violet,
-    microbe: PLOT_COLORS.teal,
+    microbe: PLOT_COLORS.orange,
     muted: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
     nucleus: PLOT_COLORS.amber,
     ocean: PLOT_COLORS.teal,
@@ -81,7 +80,6 @@ export function getBiologySceneColors(theme?: string): BiologySceneColors {
     spore: PLOT_COLORS.fuchsia,
     grain: PLOT_COLORS.amber,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    warning: PLOT_COLORS.pink,
     wood: getColor("STONE"),
   };
 }

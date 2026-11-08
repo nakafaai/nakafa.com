@@ -67,7 +67,7 @@ export function getReactionSceneColors(resolvedTheme: string | undefined) {
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     bubble: PLOT_COLORS.teal,
-    glass: PLOT_COLORS.violet,
+    glass: getColor("SLATE", 300),
     groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     heat: PLOT_COLORS.orange,
     liquidAfterColor: PLOT_COLORS.amber,

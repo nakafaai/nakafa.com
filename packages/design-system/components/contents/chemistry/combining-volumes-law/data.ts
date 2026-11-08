@@ -115,7 +115,7 @@ export function getCombiningVolumesSceneColors(
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     bond: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
-    glass: PLOT_COLORS.teal,
+    glass: getColor("SLATE", 300),
     hydrogen: isDarkTheme ? getColor("ZINC") : getColor("NEUTRAL"),
     hydrogenGas: PLOT_COLORS.slate,
     nitrogen: PLOT_COLORS.violet,
@@ -124,7 +124,7 @@ export function getCombiningVolumesSceneColors(
     oxygenGas: PLOT_COLORS.teal,
     sphereText: ORIGIN_COLOR.LIGHT,
     sphereTextOutline: isDarkTheme ? ORIGIN_COLOR.DARK : PLOT_COLORS.slate,
-    steamGas: PLOT_COLORS.teal,
+    steamGas: PLOT_COLORS.amber,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

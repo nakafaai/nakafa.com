@@ -53,10 +53,10 @@ export function getSubatomicSceneColors(resolvedTheme: string | undefined) {
 
   return {
     alpha: PLOT_COLORS.orange,
-    anode: PLOT_COLORS.teal,
+    anode: PLOT_COLORS.orange,
     cathode: PLOT_COLORS.slate,
     electron: PLOT_COLORS.violet,
-    glass: PLOT_COLORS.teal,
+    glass: getColor("SLATE", 300),
     gold: PLOT_COLORS.amber,
     groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     negative: PLOT_COLORS.pink,

@@ -72,7 +72,7 @@ export function getSubatomicParticlePropertiesColors(
 
   return {
     electron: PLOT_COLORS.teal,
-    electronPath: PLOT_COLORS.violet,
+    electronPath: PLOT_COLORS.teal,
     groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     neutral: PLOT_COLORS.slate,
     neutron: PLOT_COLORS.slate,

@@ -361,7 +361,7 @@ export function getModernPeriodicTableSceneColors(
     innerTransition: PLOT_COLORS.pink,
     metal: PLOT_COLORS.teal,
     metalloid: PLOT_COLORS.violet,
-    nobleGas: PLOT_COLORS.teal,
+    nobleGas: PLOT_COLORS.orange,
     nonmetal: PLOT_COLORS.fuchsia,
     seriesMarker: PLOT_COLORS.pink,
     skyLight: ORIGIN_COLOR.LIGHT,

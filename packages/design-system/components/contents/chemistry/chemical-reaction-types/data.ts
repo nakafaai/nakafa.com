@@ -63,7 +63,7 @@ export function getChemicalReactionTypeSceneColors(
     calcium: getColor("STONE"),
     carbon: PLOT_COLORS.slate,
     flame: PLOT_COLORS.orange,
-    glass: PLOT_COLORS.violet,
+    glass: getColor("SLATE", 300),
     groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     hydrogen: getColor("ZINC"),
     iron: PLOT_COLORS.slate,
