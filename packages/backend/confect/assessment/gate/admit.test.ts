@@ -9,7 +9,10 @@ const NOW = 1_000_000;
 const HOUR = 3_600_000;
 
 /** A failure of the in-memory store's own integrity checks. */
-class Corrupt extends Schema.TaggedError<Corrupt>()("Corrupt", {}) {}
+class Corrupt extends Schema.TaggedError<
+  Corrupt,
+  { readonly brand: unique symbol }
+>()("Corrupt", {}) {}
 
 /**
  * The in-memory store's one attempt: its attempt stage, its running section's deadline

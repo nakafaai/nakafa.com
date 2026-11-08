@@ -53,19 +53,19 @@ export const redeemRefusalKey = (reason: typeof RedeemRefusal.Type) =>
  * A redemption whose request got no answer, so the form cannot tell whether the card was spent.
  * It is not a refusal: a card that the school refuses answers a reason instead.
  */
-export class RedeemUnanswered extends Schema.TaggedError<RedeemUnanswered>()(
-  "RedeemUnanswered",
-  {}
-) {}
+export class RedeemUnanswered extends Schema.TaggedError<
+  RedeemUnanswered,
+  { readonly brand: unique symbol }
+>()("RedeemUnanswered", {}) {}
 
 /**
  * A password sign-in whose request got no answer, or whose server failed to answer. It is not a
  * refusal: a wrong password answers an error status below 500, which the form reads as a refusal.
  */
-export class SignInUnanswered extends Schema.TaggedError<SignInUnanswered>()(
-  "SignInUnanswered",
-  {}
-) {}
+export class SignInUnanswered extends Schema.TaggedError<
+  SignInUnanswered,
+  { readonly brand: unique symbol }
+>()("SignInUnanswered", {}) {}
 
 /**
  * Reads the answer of one password sign-in from the status of its error. No error status means

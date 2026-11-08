@@ -9,18 +9,18 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const MarketingSurfaceSchema = Schema.Literals(["community"]);
 
 /** The fixed contributor fixture does not contain its required first row. */
-class MarketingContributorMissing extends Schema.TaggedError<MarketingContributorMissing>()(
-  "MarketingContributorMissing",
-  {}
-) {
+class MarketingContributorMissing extends Schema.TaggedError<
+  MarketingContributorMissing,
+  { readonly brand: unique symbol }
+>()("MarketingContributorMissing", {}) {
   override readonly message = "The marketing contributor fixture is empty.";
 }
 
 /** One required homepage surface was absent from the rendered document. */
-class MarketingSurfaceMissing extends Schema.TaggedError<MarketingSurfaceMissing>()(
-  "MarketingSurfaceMissing",
-  { surface: MarketingSurfaceSchema }
-) {
+class MarketingSurfaceMissing extends Schema.TaggedError<
+  MarketingSurfaceMissing,
+  { readonly brand: unique symbol }
+>()("MarketingSurfaceMissing", { surface: MarketingSurfaceSchema }) {
   get message() {
     return `Marketing surface is missing: surface=${this.surface}.`;
   }

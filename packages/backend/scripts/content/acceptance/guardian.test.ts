@@ -1,49 +1,31 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { GuardianFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
-  createAcceptanceGuardian,
   guardianMode,
+  seedGuardian,
 } from "@repo/backend/scripts/content/acceptance/guardian";
-import {
-  Array as Arr,
-  Effect,
-  Exit,
-  FileSystem,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Effect, FileSystem, Schema } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
+/** A temporary folder for the files a mode writes. */
+const folder = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.makeTempDirectoryScoped({ prefix: "acceptance-mode-test-" });
+});
 
-/** The arguments of the seed function, as the Convex CLI receives them. */
-const SeedArgs = Schema.fromJsonString(
-  Schema.Struct({
-    email: Schema.String,
-    nisn: Schema.String,
-    slug: Schema.String,
-  })
-);
-
-/** A runtime whose backend folder sits under the test's own temporary root. */
-const runtimeIn = (root: string) =>
-  mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
+const ANSWER = { code: "123456" };
 
 describe("acceptance guardian", () => {
   afterEach(() => {
@@ -51,85 +33,66 @@ describe("acceptance guardian", () => {
   });
 
   it.effect(
-    "seeds a parent's code through the seed function and writes it to the file",
+    "seeds through guardians/seed:code and answers what it returned",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-guardian-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(spec.stdoutPath, '{"code":"042917"}');
-          })
-        );
+        const backend = localConvexDouble({ "guardians/seed:code": ANSWER });
 
-        yield* guardianMode.run(root, [
-          "acc-1234abcd",
-          "ibu@example.com",
-          "0012345678",
-          `${root}/code.json`,
-        ]);
+        const seeded = yield* seedGuardian(
+          "acc-1",
+          "wali@example.test",
+          "0012345678"
+        ).pipe(Effect.provide(backend.layer));
 
-        const [spec] = MutableList.toArray(specs);
-        expect(Arr.take(Arr.drop(spec?.args ?? [], 1), 2)).toEqual([
-          "run",
-          "guardians/seed:code",
-        ]);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({
-          email: "ibu@example.com",
+        expect(seeded).toEqual(ANSWER);
+        expect(backend.argsOf("guardians/seed:code")).toEqual({
+          email: "wali@example.test",
           nisn: "0012345678",
-          slug: "acc-1234abcd",
+          slug: "acc-1",
         });
-        const seeded = yield* fs
-          .readFileString(`${root}/code.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(GuardianFixture)));
-        expect(seeded).toEqual({ code: "042917" });
-        expect((yield* fs.stat(`${root}/code.json`)).mode % 0o1000).toBe(0o600);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      })
   );
 
-  it.effect("seeds nothing when no local runtime is running", () =>
+  it.effect("writes what the mode seeded to the file it names, mode 600", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-guardian-test-",
-      });
-      mocks.read.mockReturnValue(Effect.void);
-
-      const exit = yield* Effect.exit(
-        createAcceptanceGuardian(
-          root,
-          "acc-1234abcd",
-          "ibu@example.com",
-          "0012345678",
-          `${root}/code.json`
-        )
+      const root = yield* folder;
+      const output = `${root}/mode.json`;
+      mocks.layer.mockReturnValue(
+        localConvexDouble({ "guardians/seed:code": ANSWER }).layer
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      yield* guardianMode.run(root, [
+        "acc-1",
+        "wali@example.test",
+        "0012345678",
+        output,
+      ]);
+
+      const fs = yield* FileSystem.FileSystem;
+      expect(
+        yield* fs
+          .readFileString(output)
+          .pipe(
+            Effect.flatMap(
+              Schema.decodeEffect(Schema.fromJsonString(GuardianFixture))
+            )
+          )
+      ).toEqual(ANSWER);
+      expect((yield* fs.stat(output)).mode % 0o1000).toBe(0o600);
+      expect(mocks.layer).toHaveBeenCalledWith(root);
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
-  it.effect(
-    "refuses the mode without its four arguments before any operation",
-    () =>
-      Effect.gen(function* () {
-        expect(
-          yield* guardianMode.run("/root", ["acc-1234abcd"]).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message:
-            "Usage: acceptance guardian <school-slug> <email> <nisn> <code-file>",
-        });
-        expect(mocks.read).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  it.effect("refuses the mode without its arguments", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* guardianMode.run("/root", []).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "AcceptanceRuntimeError",
+        message:
+          "Usage: acceptance guardian <school-slug> <email> <nisn> <code-file>",
+      });
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

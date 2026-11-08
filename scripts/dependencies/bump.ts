@@ -23,13 +23,13 @@ import { writeError, writeOutput } from "#scripts/output";
 import { problemWhen } from "#scripts/problem";
 
 /** Expected failure while decoding package registry metadata. */
-class DependencyMetadataError extends Schema.TaggedError<DependencyMetadataError>()(
-  "DependencyMetadataError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class DependencyMetadataError extends Schema.TaggedError<
+  DependencyMetadataError,
+  { readonly brand: unique symbol }
+>()("DependencyMetadataError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Returns every local dependency and workflow policy violation. */
 const inspectRepositoryPolicy = Effect.fn("RepositoryPolicy.inspectRepository")(

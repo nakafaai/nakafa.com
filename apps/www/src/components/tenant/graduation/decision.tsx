@@ -19,9 +19,7 @@ import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { decideChange } from "@/components/tenant/graduation/change";
 import type { GraduationOverview } from "@/components/tenant/graduation/workbook";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/graduation/decision";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** Whether the typed fields make a decision the server takes. */
 const isDecision = Schema.is(GraduationDecision);
@@ -65,9 +63,10 @@ export function GraduationDecisionDialog({
   const submit = () =>
     startTransition(() => {
       setOpen(false);
-      return saveSchool(
-        () => decide({ ...next, periodId: overview.cohort.periodId, slug }),
-        SOURCE
+      return runSchoolWrite(
+        schoolCall(() =>
+          decide({ ...next, periodId: overview.cohort.periodId, slug })
+        )
       );
     });
 

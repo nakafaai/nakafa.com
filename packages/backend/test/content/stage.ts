@@ -61,12 +61,12 @@ const StagedReleaseOptionsSchema = Schema.Struct({
 type StagedReleaseOptions = typeof StagedReleaseOptionsSchema.Type;
 
 /** Inserts one pending candidate slot with caller-owned frozen envelope bytes. */
-class ObservedStageActionFailure extends Schema.TaggedError<ObservedStageActionFailure>()(
-  "ObservedStageActionFailure",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class ObservedStageActionFailure extends Schema.TaggedError<
+  ObservedStageActionFailure,
+  { readonly brand: unique symbol }
+>()("ObservedStageActionFailure", {
+  cause: Schema.Unknown,
+}) {}
 
 /** Runs one staging program through the real Convex action boundary. */
 export const runStage = Effect.fn("test.contentRelease.runStage")(function* <

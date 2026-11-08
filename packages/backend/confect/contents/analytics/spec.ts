@@ -102,23 +102,23 @@ export type ExpireLearningPopularityWindowPageArgs =
   typeof expireLearningPopularityWindowPageArgsValidator.Type;
 
 /** Raised when a requested analytics partition is outside the configured set. */
-export class InvalidContentAnalyticsPartitionError extends Schema.TaggedError<InvalidContentAnalyticsPartitionError>()(
-  "InvalidContentAnalyticsPartitionError",
-  {
-    code: Schema.Literal(invalidContentAnalyticsPartitionCode),
-    message: Schema.String,
-  }
-) {}
+export class InvalidContentAnalyticsPartitionError extends Schema.TaggedError<
+  InvalidContentAnalyticsPartitionError,
+  { readonly brand: unique symbol }
+>()("InvalidContentAnalyticsPartitionError", {
+  code: Schema.Literal(invalidContentAnalyticsPartitionCode),
+  message: Schema.String,
+}) {}
 
 /** Raised when Convex IO fails while leasing or draining content analytics. */
 
-export class ContentAnalyticsIoError extends Schema.TaggedError<ContentAnalyticsIoError>()(
-  "ContentAnalyticsIoError",
-  {
-    code: Schema.Literal(contentAnalyticsIoFailedCode),
-    message: Schema.String,
-  }
-) {}
+export class ContentAnalyticsIoError extends Schema.TaggedError<
+  ContentAnalyticsIoError,
+  { readonly brand: unique symbol }
+>()("ContentAnalyticsIoError", {
+  code: Schema.Literal(contentAnalyticsIoFailedCode),
+  message: Schema.String,
+}) {}
 
 /** Maps thrown Convex IO failures into the analytics domain error channel. */
 

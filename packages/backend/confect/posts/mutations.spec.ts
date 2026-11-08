@@ -6,13 +6,13 @@ import { LearnerTextRefusal } from "@repo/backend/confect/writing/text";
 import { Schema } from "effect";
 
 /** Expected denial while writing a post or a like on it. */
-export class PostWriteError extends Schema.TaggedError<PostWriteError>()(
-  "PostWriteError",
-  {
-    code: Schema.Literals([...LearnerTextRefusal.literals, "POST_NOT_FOUND"]),
-    message: Schema.String,
-  }
-) {}
+export class PostWriteError extends Schema.TaggedError<
+  PostWriteError,
+  { readonly brand: unique symbol }
+>()("PostWriteError", {
+  code: Schema.Literals([...LearnerTextRefusal.literals, "POST_NOT_FOUND"]),
+  message: Schema.String,
+}) {}
 
 /** Writes a learner's own posts, and likes any post. */
 export default GroupSpec.make()

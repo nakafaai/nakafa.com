@@ -31,7 +31,10 @@ const LlmsMarkdownInputSchema = Schema.Struct({
 });
 type LlmsMarkdownInput = typeof LlmsMarkdownInputSchema.Type;
 /** One rejected content cache read with its exact content owner preserved. */
-class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
+class CacheFailure extends Schema.TaggedError<
+  CacheFailure,
+  { readonly brand: unique symbol }
+>()("CacheFailure", {
   cause: Schema.Unknown,
   owner: Schema.Literals(["index", "published"]),
 }) {}

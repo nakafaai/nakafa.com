@@ -4,6 +4,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate, press, visibleLink } from "@/e2e/support/input";
 import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { recordDataRequests } from "@/e2e/support/requests";
 import {
   expectStillShell,
@@ -109,8 +110,8 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   yield* arrive(page, onPath(setHref), section);
   yield* Effect.promise(() => page.goBack({ waitUntil: "commit" }));
   yield* arrive(page, onPath(trackHref), visibleLink(page, setHref, "main"));
-  // Late streamed content would still move the page, so keep observing.
-  yield* Effect.sleep("1 second");
+  // Late streamed content would still move the page, so keep observing until it goes quiet.
+  yield* Effect.promise(() => waitForQuiet(page));
 
   const observation = yield* readShellObservation(page, since);
   yield* Effect.sync(() => expectStillShell(observation, [false]));

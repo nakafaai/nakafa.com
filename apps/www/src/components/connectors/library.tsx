@@ -14,11 +14,12 @@ import {
 import { CATEGORY_FILTER } from "@/components/connectors/filter";
 import { pageGutterVariants } from "@/components/shared/content/width";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 
 /** The search and the filter of a connector page's header. */
 export function LibraryControls({ children }: { children: ReactNode }) {
@@ -60,9 +61,9 @@ export function ServiceList({
 
   if (Arr.isReadonlyArrayEmpty(shown)) {
     return (
-      <TableEmpty
-        act="searching"
+      <EmptyState
         description={t("search-none-description")}
+        scene={<EmptyNina act="searching" />}
         title={t("search-none")}
       />
     );

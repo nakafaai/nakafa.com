@@ -7,10 +7,10 @@ import { Effect, type Result, Schema } from "effect";
 import { logoAnswerOutcome } from "@/components/tenant/logo";
 
 /** The school kept no logo, because the server refused the file it was given. */
-class LogoNotSaved extends Schema.TaggedError<LogoNotSaved>()(
-  "LogoNotSaved",
-  {}
-) {}
+class LogoNotSaved extends Schema.TaggedError<
+  LogoNotSaved,
+  { readonly brand: unique symbol }
+>()("LogoNotSaved", {}) {}
 
 /** Awaits one mutation answer, and fails with the typed error that the answer holds. */
 const awaited = <A, E>(call: () => Promise<Result.Result<A, E>>) =>
