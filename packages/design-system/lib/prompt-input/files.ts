@@ -51,13 +51,13 @@ const PromptInputFileConstraintCode = Schema.Literals([
  * the files that broke it, so one pick reports each reason once. The words that
  * say the reason belong to the caller, in its language, not to this module.
  */
-export class PromptInputFileConstraintError extends Schema.TaggedError<PromptInputFileConstraintError>()(
-  "PromptInputFileConstraintError",
-  {
-    code: PromptInputFileConstraintCode,
-    files: Schema.Array(Schema.String),
-  }
-) {}
+export class PromptInputFileConstraintError extends Schema.TaggedError<
+  PromptInputFileConstraintError,
+  { readonly brand: unique symbol }
+>()("PromptInputFileConstraintError", {
+  code: PromptInputFileConstraintCode,
+  files: Schema.Array(Schema.String),
+}) {}
 const ValidatePromptInputFilesOptionsSchema = Schema.Struct({
   accept: Schema.optional(Schema.String),
   currentFileCount: Schema.Finite,

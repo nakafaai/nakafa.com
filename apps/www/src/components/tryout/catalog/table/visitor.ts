@@ -15,10 +15,10 @@ import type {
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 
 /** A visitor's set list could not be read, so the table keeps its last complete rows and reports it. */
-export class VisitorSetReadError extends Schema.TaggedError<VisitorSetReadError>()(
-  "VisitorSetReadError",
-  { cause: Schema.Unknown }
-) {}
+export class VisitorSetReadError extends Schema.TaggedError<
+  VisitorSetReadError,
+  { readonly brand: unique symbol }
+>()("VisitorSetReadError", { cause: Schema.Unknown }) {}
 
 /** The loader's first page of a track: the request it answers and its rows. */
 const VisitorSetBootstrap = Schema.Struct({

@@ -11,7 +11,7 @@ import { Function as Fn, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { SittingField } from "@/components/exams/sitting/field";
-import { writtenOf } from "@/components/exams/sitting/response";
+import { writtenOf } from "@/components/player/response";
 
 /**
  * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
