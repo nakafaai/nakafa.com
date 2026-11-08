@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
@@ -180,7 +180,7 @@ describe("the refusal of a prompt over the limit", () => {
 });
 
 describe("the sentences of the failure table", () => {
-  it.effect.each(APP_LOCALE_CODES)(
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
     "say the limits the code checks, in %s",
     (locale) =>
       Effect.gen(function* () {
@@ -200,7 +200,7 @@ describe("the sentences of the failure table", () => {
       })
   );
 
-  it.effect.each(APP_LOCALE_CODES)(
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
     "keeps each number with its unit or its noun on one line, in %s",
     (locale) =>
       Effect.gen(function* () {

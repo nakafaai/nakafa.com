@@ -3,7 +3,7 @@
 import { HttpClient } from "@confect/js";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-  APP_LOCALE_CODES,
+  ACTIVE_APP_LOCALE_CODES,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -123,7 +123,7 @@ describe("immutable try-out application catalog", () => {
         }
       })
   );
-  it.effect.each(APP_LOCALE_CODES)(
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
     "serves the complete %s hierarchy and route metadata",
     (locale) =>
       Effect.gen(function* () {

@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
   decodePublishedQuranSource,
@@ -32,7 +32,7 @@ export const decodePublishedQuranReference = Effect.fn(
 )(function* (
   result: QuranReferenceResult,
   expected: {
-    readonly appLocale: AppLocaleCode;
+    readonly appLocale: ActiveAppLocaleCode;
     readonly surahNumber: number;
   }
 ) {
@@ -108,7 +108,7 @@ export const decodePublishedQuranReference = Effect.fn(
 /** Checks the app-locale search identity returned beside one surah. */
 function hasExpectedSearchIdentity(
   search: QuranSearchRow,
-  appLocale: AppLocaleCode,
+  appLocale: ActiveAppLocaleCode,
   surahNumber: number
 ) {
   return (

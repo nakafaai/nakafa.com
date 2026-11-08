@@ -20,6 +20,7 @@ const GRADES = {
   de: new Intl.NumberFormat("de", { maximumFractionDigits: 2 }),
   en: new Intl.NumberFormat("en", { maximumFractionDigits: 2 }),
   id: new Intl.NumberFormat("id", { maximumFractionDigits: 2 }),
+  ms: new Intl.NumberFormat("ms", { maximumFractionDigits: 2 }),
 } satisfies Record<keyof typeof REPORT_COPY, Intl.NumberFormat>;
 
 /**

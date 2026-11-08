@@ -232,7 +232,7 @@ describe("contentRelease/material", () => {
     await expect(
       t.query(publication, {
         expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
-        appLocale: material.appLocale,
+        appLocale: "en",
         publicPath: material.publicPath,
       })
     ).rejects.toMatchObject({
@@ -253,7 +253,7 @@ describe("contentRelease/material", () => {
       await expect(
         t.query(publication, {
           expectedActiveReleaseId,
-          appLocale: material.appLocale,
+          appLocale: "en",
           publicPath: material.publicPath,
         })
       ).rejects.toMatchObject({
@@ -265,7 +265,7 @@ describe("contentRelease/material", () => {
     await expect(
       t.query(publication, {
         expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
-        appLocale: material.appLocale,
+        appLocale: "en",
         publicPath: material.publicPath,
       })
     ).resolves.toMatchObject({

@@ -1,4 +1,4 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
@@ -104,7 +104,7 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
 /** Resolve context using the same signed owners used by lesson navigation. */
 const resolvePublishedContext = Effect.fn("nina.context.publication")(
   function* (input: typeof NinaPageInput.Type, slug: string, url: string) {
-    const appLocale = AppLocaleSchema.make(input.locale);
+    const appLocale = ActiveAppLocaleSchema.make(input.locale);
     const isMaterial = Arr.some(
       PUBLIC_ROUTE_SURFACES,
       (surface) =>

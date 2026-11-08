@@ -1,8 +1,11 @@
-import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type {
+  ActiveAppLocaleCodeSchema,
+  AppLocaleCodeSchema,
+} from "@nakafa/aksara-contracts/locale";
 import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 
 /** The language of a notice with no school: an account keeps none, and Nakafa's learners are Indonesian. */
-export const ACCOUNT_LOCALE: typeof AppLocaleCodeSchema.Type = "id";
+export const ACCOUNT_LOCALE: typeof ActiveAppLocaleCodeSchema.Type = "id";
 
 /**
  * The general sentences a push shows on a lock screen, in each language a school

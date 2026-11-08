@@ -1,11 +1,12 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, HashSet, Option } from "effect";
 import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
 import { userSettingsSections } from "@/lib/settings/routes";
 
-type PublicLocale = Locale;
+/** A declared locale, since every declared locale owns its route slugs before Nakafa serves it. */
+type PublicLocale = AppLocaleCode;
 
 function readPublicSurface(locale: PublicLocale, root: string) {
   return Arr.findFirst(

@@ -2,11 +2,14 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  ActiveAppLocaleCodeSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
-import { Array as Arr, Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 import { readPublishedArticleRoute } from "@/lib/content/article/route";
 import { activateTestRelease } from "@/test/active";
 import { makeArticleRuntimeSource } from "@/test/content/article";
@@ -17,6 +20,9 @@ import {
   testArticleProjection,
 } from "@/test/published/article";
 import { resetTestRuntimeCache } from "@/test/store";
+
+/** The served locale a fixture of a release names, which every fixture of this file is in. */
+const servedLocale = Schema.decodeSync(ActiveAppLocaleCodeSchema);
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
@@ -126,7 +132,7 @@ describe("published article route", () => {
           )
         );
         const route = yield* readPublishedArticleRoute(
-          projection.appLocale,
+          servedLocale(projection.appLocale),
           projection.publicPath
         );
         expect(route).toEqual({

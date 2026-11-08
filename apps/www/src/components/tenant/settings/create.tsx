@@ -1,6 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
-import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -107,7 +107,7 @@ function SchoolUnitCreateForm({
   // The choices start as the first school's, so only a pick the teacher makes is kept.
   const [zoneChoice, setZoneChoice] = useState<string | null>(null);
   const [languageChoice, setLanguageChoice] = useState<
-    typeof AppLocaleCodeSchema.Type | null
+    typeof ActiveAppLocaleCodeSchema.Type | null
   >(null);
   const timeZone =
     zoneChoice ?? Option.getOrNull(Option.map(unit, (it) => it.timeZone));
