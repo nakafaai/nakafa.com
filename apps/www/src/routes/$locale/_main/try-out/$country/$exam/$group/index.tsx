@@ -5,6 +5,7 @@ import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
 import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
+import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
 import {
   TryoutExamSelector,
   TryoutGroupSelector,
@@ -61,7 +62,7 @@ function TryoutGroupPage() {
         <BreadcrumbHeader
           value={{
             action: (
-              <>
+              <TryoutCatalogChoices>
                 <TryoutExamSelector
                   currentValue={route.page.exam.publicPath}
                   options={route.examOptions}
@@ -71,7 +72,7 @@ function TryoutGroupPage() {
                   currentValue={route.page.group.publicPath}
                   options={route.groupOptions}
                 />
-              </>
+              </TryoutCatalogChoices>
             ),
             home: HOME_TARGET,
             homeLabel: route.labels.home,

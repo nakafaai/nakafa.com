@@ -9,6 +9,7 @@ import { Option, Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
+import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
 import {
   TryoutExamSelector,
   TryoutGroupSelector,
@@ -90,7 +91,7 @@ function TryoutTrackPage() {
         <BreadcrumbHeader
           value={{
             action: (
-              <>
+              <TryoutCatalogChoices>
                 <TryoutExamSelector
                   currentValue={route.page.exam.publicPath}
                   options={route.examOptions}
@@ -100,7 +101,7 @@ function TryoutTrackPage() {
                   currentValue={route.page.group.publicPath}
                   options={route.groupOptions}
                 />
-              </>
+              </TryoutCatalogChoices>
             ),
             home: HOME_TARGET,
             homeLabel: route.labels.home,

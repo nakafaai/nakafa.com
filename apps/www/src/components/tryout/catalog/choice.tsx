@@ -7,6 +7,7 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option } from "effect";
+import type { ReactNode } from "react";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 
 /**
@@ -83,4 +84,12 @@ export function TryoutCatalogChoice({
       </SelectContent>
     </Select>
   );
+}
+
+/**
+ * Holds the selects of a catalog header together at the end of its row, the exam
+ * first and its group beside it, so the header keeps its path, then its choices.
+ */
+export function TryoutCatalogChoices({ children }: { children: ReactNode }) {
+  return <div className="flex shrink-0 items-center gap-2">{children}</div>;
 }
