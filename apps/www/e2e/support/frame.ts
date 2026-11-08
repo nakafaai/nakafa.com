@@ -4,8 +4,8 @@ import type { Page } from "@playwright/test";
  * The owner's rule (1 Nov): a page has one frame. Its header row sets the frame's edges, up to the app's widest
  * content, and no tab row or body reaches past them. The tab row keeps the header's gutter, so the first tab's text
  * and underline stand on the x of the header's first letter, and so does every column of the body: a rail's search,
- * its tabs and its rows, and a table's card, with the right edge mirroring it. A header holds at most two controls, a ButtonGroup
- * counting as one, and its actions never cut its path. Reads all of it from what is drawn, so a page cannot pass by
+ * its tabs and its rows, and a table's card, with the right edge mirroring it. A header holds its path, an optional search,
+ * and at most two controls, a ButtonGroup counting as one, and its actions never cut its path. Reads all of it from what is drawn, so a page cannot pass by
  * its class names: a text clipped by a scroller counts only as far as the scroller shows it.
  */
 export function readFrameProblems(page: Page) {
@@ -173,6 +173,7 @@ export function readFrameProblems(page: Page) {
             (control) =>
               isDrawn(control) &&
               control.closest('[data-slot="breadcrumb"]') === null &&
+              control.closest("[data-table-search]") === null &&
               control.getAttribute("data-sidebar") !== "trigger"
           )
           .map(

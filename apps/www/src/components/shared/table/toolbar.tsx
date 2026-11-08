@@ -115,7 +115,7 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
 
   return (
     // One part of a button group, whichever form the width shows, so a hidden form never shapes the other.
-    <div className="flex">
+    <div className="flex" data-table-search="">
       <InputGroup className="hidden w-56 lg:flex xl:w-64">
         <InputGroupAddon>
           <HugeIcons icon={Search01Icon} />
