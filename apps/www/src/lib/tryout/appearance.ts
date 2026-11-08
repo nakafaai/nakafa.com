@@ -1,9 +1,13 @@
+import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import type { MarkedLine } from "@repo/design-system/components/ui/line";
-import { Schema } from "effect";
+import { Match, Option, Schema } from "effect";
 import type { ComponentProps } from "react";
 
-/** The tone of an answer's marked line: open, chosen, correct or wrong. */
-type ChoiceTone = NonNullable<ComponentProps<typeof MarkedLine>["tone"]>;
+/** The tone of an answer's marked line: open, chosen, correct, wrong, or the key the learner did not pick. */
+type ChoiceTone = Exclude<
+  NonNullable<ComponentProps<typeof MarkedLine>["tone"]>,
+  "bare"
+>;
 
 const TryoutPreviewChoiceAppearanceSchema = Schema.Union([
   Schema.Struct({
@@ -36,7 +40,11 @@ export function getTryoutPreviewChoiceTone({
   });
 }
 
-/** The tone of an answer after its correctness is authorized. */
+/**
+ * The tone of an answer, an option or a table's cell, after its correctness is authorized: the learner's pick
+ * that earns the key, a pick that misses it, the key the learner did not pick, which is dashed so it never reads
+ * as a pick, or open.
+ */
 export function getTryoutReviewedChoiceTone({
   checked,
   isCorrect,
@@ -44,13 +52,20 @@ export function getTryoutReviewedChoiceTone({
   checked: boolean;
   isCorrect: boolean | undefined;
 }): ChoiceTone {
-  if (checked && !isCorrect) {
-    return "wrong";
-  }
-
   if (isCorrect) {
-    return "correct";
+    return checked ? "correct" : "key";
   }
 
-  return "idle";
+  return checked ? "wrong" : "idle";
 }
+
+/**
+ * The mark at the end of an answer's line, the same on an option and on a table's cell: a check on the key, picked
+ * or not, a cross on a pick that misses it, and none on an open answer.
+ */
+export const getTryoutToneMark = (tone: ChoiceTone) =>
+  Match.value(tone).pipe(
+    Match.when(Match.is("correct", "key"), () => Option.some(Tick02Icon)),
+    Match.when("wrong", () => Option.some(Cancel01Icon)),
+    Match.orElse(() => Option.none())
+  );
