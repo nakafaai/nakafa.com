@@ -86,10 +86,10 @@ export function CommentWriter({
         <EmojiButton />
         <PhotoButton onFiles={addFiles} />
         <Button
-          aria-label={t("send")}
           disabled={!sendable}
           onClick={onSend}
           size="icon-sm"
+          tooltip={t("send")}
           type="button"
         >
           <HugeIcons icon={ArrowUp02Icon} />
@@ -109,8 +109,8 @@ function EmojiButton() {
       <EmojiTrigger
         render={
           <Button
-            aria-label={t("emoji")}
             size="icon-sm"
+            tooltip={t("emoji")}
             type="button"
             variant="ghost"
           />

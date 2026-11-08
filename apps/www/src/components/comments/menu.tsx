@@ -10,7 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -81,39 +81,51 @@ function LearnerMenu() {
         <DropdownMenuTrigger
           render={
             <Button
-              aria-label={t("more")}
               inert={saving}
               size="icon-sm"
+              tooltip={t("more-actions")}
               variant="ghost"
             >
               <HugeIcons icon={MoreHorizontalIcon} />
             </Button>
           }
         />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
-            {own ? (
-              <>
-                <DropdownMenuItem onClick={() => edit(comment._id)}>
-                  <HugeIcons icon={Edit02Icon} />
+        <DropdownMenuContent
+          align="end"
+          className="w-40"
+          label={t("menu-actions")}
+        >
+          {own ? (
+            <>
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  icon={Edit02Icon}
+                  onClick={() => edit(comment._id)}
+                >
                   {t("edit")}
                 </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
                 <DropdownMenuItem
+                  icon={Delete02Icon}
                   onClick={() => setDialog("delete")}
                   variant="destructive"
                 >
-                  <HugeIcons icon={Delete02Icon} />
                   {t("delete")}
                 </DropdownMenuItem>
-              </>
-            ) : (
-              <DropdownMenuItem onClick={() => setDialog("report")}>
-                <HugeIcons icon={Flag02Icon} />
+              </DropdownMenuGroup>
+            </>
+          ) : (
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                icon={Flag02Icon}
+                onClick={() => setDialog("report")}
+              >
                 {t("report")}
               </DropdownMenuItem>
-            )}
-          </DropdownMenuGroup>
+            </DropdownMenuGroup>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       {opened ? (

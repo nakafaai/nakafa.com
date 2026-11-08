@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -51,7 +50,6 @@ import {
   archiveThreadUpdate,
   restoreThreadUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TargetLink } from "@/lib/routing/link";
@@ -215,41 +213,42 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
   return (
     <ItemActions className="relative">
       <DropdownMenu>
-        <IconTip label={common("more-actions")}>
-          <DropdownMenuTrigger
+        <DropdownMenuTrigger
+          render={
+            <Button
+              size="icon"
+              tooltip={common("more-actions")}
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons icon={MoreHorizontalIcon} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-44"
+          label={common("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={ViewIcon}
             render={
-              <Button
-                aria-label={common("more-actions")}
-                size="icon"
-                variant="ghost"
+              <TargetLink
+                target={schoolClassDiscussionTarget(
+                  slug,
+                  classSlug,
+                  row.discussion.number
+                )}
               />
             }
           >
-            <HugeIcons icon={MoreHorizontalIcon} />
-          </DropdownMenuTrigger>
-        </IconTip>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem
-              render={
-                <TargetLink
-                  target={schoolClassDiscussionTarget(
-                    slug,
-                    classSlug,
-                    row.discussion.number
-                  )}
-                >
-                  <HugeIcons icon={ViewIcon} />
-                  {common("open")}
-                </TargetLink>
-              }
-            />
-          </DropdownMenuGroup>
+            {common("open")}
+          </DropdownMenuItem>
+
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             {row.archived ? (
               <DropdownMenuItem
+                icon={ArrowTurnBackwardIcon}
                 onClick={() =>
                   runForumCall(
                     forumCall(() =>
@@ -259,11 +258,11 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
                   )
                 }
               >
-                <HugeIcons icon={ArrowTurnBackwardIcon} />
                 {t("discussion-restore")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
+                icon={Archive02Icon}
                 onClick={() =>
                   runForumCall(
                     forumCall(() =>
@@ -273,7 +272,6 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
                   )
                 }
               >
-                <HugeIcons icon={Archive02Icon} />
                 {t("discussion-archive")}
               </DropdownMenuItem>
             )}

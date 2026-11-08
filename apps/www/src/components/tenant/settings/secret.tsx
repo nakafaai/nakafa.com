@@ -33,29 +33,23 @@ export function SchoolSecretDialog({
   title: string;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 1500 });
 
   return (
     <ResponsiveDialog
-      description={description}
-      footer={
-        <>
-          <Button onClick={onClose} type="button" variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button
-            onClick={() => {
-              if (secret !== undefined) {
-                clipboard.copy(secret);
-              }
-            }}
-            type="button"
-          >
-            {t("secret-copy")}
-          </Button>
-        </>
+      action={
+        <Button
+          onClick={() => {
+            if (secret !== undefined) {
+              clipboard.copy(secret);
+            }
+          }}
+          type="button"
+        >
+          {t("secret-copy")}
+        </Button>
       }
+      description={description}
       open={secret !== undefined}
       setOpen={(open) => {
         if (!open) {

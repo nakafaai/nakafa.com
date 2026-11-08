@@ -11,7 +11,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -71,9 +70,12 @@ function SortMenu() {
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-44">
+      <DropdownMenuContent
+        align="end"
+        className="w-44"
+        label={common("menu-sort")}
+      >
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-sort")}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             onValueChange={(value) => {
               if (Schema.is(CommentSort)(value)) {
@@ -82,12 +84,10 @@ function SortMenu() {
             }}
             value={sort}
           >
-            <DropdownMenuRadioItem value="top">
-              <HugeIcons icon={FavouriteIcon} />
+            <DropdownMenuRadioItem icon={FavouriteIcon} value="top">
               {t("sort-top")}
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="newest">
-              <HugeIcons icon={Clock01Icon} />
+            <DropdownMenuRadioItem icon={Clock01Icon} value="newest">
               {t("sort-newest")}
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>

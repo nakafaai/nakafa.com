@@ -106,8 +106,9 @@ export function useServerSearch() {
 
 /**
  * The search box of a table page, in its header row. A wide header shows the box itself; a narrow one shows its
- * button, which opens the box under it, so the page's name and its main action keep their room. Beside a second
- * outline action it joins that action in a `ButtonGroup`, so a header reads as two pills at most.
+ * button, which opens the box under it, so the page's name and its main action keep their room, and shows itself
+ * pressed while a search filters the rows. Beside a second outline action it joins that action in a `ButtonGroup`,
+ * so a header reads as two pills at most.
  */
 export function TableSearch({ placeholder }: { placeholder: string }) {
   const search = useTableFilters((state) => state.search);
@@ -132,11 +133,12 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
         <PopoverTrigger
           render={
             <Button
-              aria-label={placeholder}
+              aria-pressed={search !== ""}
               className="lg:hidden"
               size="icon"
+              tooltip={placeholder}
               type="button"
-              variant={search === "" ? "outline" : "secondary"}
+              variant="outline"
             >
               <HugeIcons icon={Search01Icon} />
             </Button>

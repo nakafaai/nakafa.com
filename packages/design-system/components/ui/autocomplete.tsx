@@ -2,6 +2,7 @@ import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomple
 import { ArrowDown01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
@@ -118,31 +119,33 @@ function AutocompletePopup({
   sideOffset?: AutocompletePrimitive.Positioner.Props["sideOffset"];
 }) {
   return (
-    <AutocompletePrimitive.Portal
-      container={use(PortalContainer)}
-      {...portalProps}
-    >
-      <AutocompletePrimitive.Positioner
-        align={align}
-        alignOffset={alignOffset}
-        anchor={anchor}
-        className="z-50 outline-none select-none"
-        data-slot="autocomplete-positioner"
-        side={side}
-        sideOffset={sideOffset}
+    <ButtonGroupVariant value={undefined}>
+      <AutocompletePrimitive.Portal
+        container={use(PortalContainer)}
+        {...portalProps}
       >
-        <AutocompletePrimitive.Popup
-          className={cn(
-            "bg-popover text-popover-foreground relative flex max-h-[min(var(--available-height),23rem)] max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) flex-col overflow-hidden rounded-lg border shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] transition-[scale,opacity] outline-none not-dark:bg-clip-padding data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
-            className
-          )}
-          data-slot="autocomplete-popup"
-          {...props}
+        <AutocompletePrimitive.Positioner
+          align={align}
+          alignOffset={alignOffset}
+          anchor={anchor}
+          className="z-50 outline-none select-none"
+          data-slot="autocomplete-positioner"
+          side={side}
+          sideOffset={sideOffset}
         >
-          {children}
-        </AutocompletePrimitive.Popup>
-      </AutocompletePrimitive.Positioner>
-    </AutocompletePrimitive.Portal>
+          <AutocompletePrimitive.Popup
+            className={cn(
+              "bg-popover text-popover-foreground relative flex max-h-[min(var(--available-height),23rem)] max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) flex-col overflow-hidden rounded-lg border shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] transition-[scale,opacity] outline-none not-dark:bg-clip-padding data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
+              className
+            )}
+            data-slot="autocomplete-popup"
+            {...props}
+          >
+            {children}
+          </AutocompletePrimitive.Popup>
+        </AutocompletePrimitive.Positioner>
+      </AutocompletePrimitive.Portal>
+    </ButtonGroupVariant>
   );
 }
 

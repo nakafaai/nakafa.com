@@ -83,10 +83,10 @@ function TrayItem({
         </span>
       ) : null}
       <Button
-        aria-label={t("photo-remove", { name })}
-        className="absolute end-0.5 top-0.5 size-6 rounded-full"
+        className="absolute end-0.5 top-0.5 rounded-full"
         onClick={remove}
         size="icon-sm"
+        tooltip={t("photo-remove", { name })}
         type="button"
         variant="secondary"
       >

@@ -1,9 +1,12 @@
 import { useMutation } from "@confect/react";
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { Comment01Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
@@ -54,29 +57,24 @@ export function CommentDeletion() {
 
   return (
     <ResponsiveDialog
+      action={
+        <Button onClick={confirm} type="button" variant="destructive">
+          <HugeIcons icon={Delete02Icon} />
+          {tCommon("delete")}
+        </Button>
+      }
       description={t(
         comment.threadId === undefined
           ? "delete-description"
           : "delete-reply-description"
       )}
-      footer={
-        <>
-          <Button
-            onClick={() => onOpenChange(false)}
-            type="button"
-            variant="outline"
-          >
-            {tCommon("cancel")}
-          </Button>
-          <Button onClick={confirm} type="button" variant="destructive">
-            <HugeIcons icon={Delete02Icon} />
-            {tCommon("delete")}
-          </Button>
-        </>
-      }
       open={open}
       setOpen={onOpenChange}
       title={t("delete-title")}
-    />
+    >
+      <ResponsiveDialogSubject icon={Comment01Icon}>
+        {comment.text}
+      </ResponsiveDialogSubject>
+    </ResponsiveDialog>
   );
 }

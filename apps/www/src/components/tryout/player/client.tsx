@@ -1,5 +1,10 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { Suspense, use } from "react";
@@ -86,13 +91,23 @@ export function TryoutPlayer({
       <PlayerKeys locked={locked} questions={questions} />
       <PlayerHeader>
         <PlayerHeaderStart>
-          <TryoutPageLink
-            aria-label={tCommon("back")}
-            className={buttonVariants({ size: "icon", variant: "outline" })}
-            {...finish.returnAddress}
-          >
-            <HugeIcons icon={ArrowLeft01Icon} />
-          </TryoutPageLink>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <TryoutPageLink
+                  aria-label={tCommon("back")}
+                  className={buttonVariants({
+                    size: "icon",
+                    variant: "outline",
+                  })}
+                  {...finish.returnAddress}
+                >
+                  <HugeIcons icon={ArrowLeft01Icon} />
+                </TryoutPageLink>
+              }
+            />
+            <TooltipContent>{tCommon("back")}</TooltipContent>
+          </Tooltip>
           <PlayerTitle>{title}</PlayerTitle>
           <OfflineNote />
         </PlayerHeaderStart>

@@ -61,22 +61,13 @@ export function CommentReport() {
 
   return (
     <ResponsiveDialog
-      description={t("report-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => onOpenChange(false)}
-            type="button"
-            variant="outline"
-          >
-            {tCommon("cancel")}
-          </Button>
-          <Button onClick={confirm} type="button">
-            <HugeIcons icon={Flag02Icon} />
-            {tCommon("report")}
-          </Button>
-        </>
+      action={
+        <Button onClick={confirm} type="button">
+          <HugeIcons icon={Flag02Icon} />
+          {tCommon("report")}
+        </Button>
       }
+      description={t("report-description")}
       open={open}
       setOpen={onOpenChange}
       title={t("report-title")}

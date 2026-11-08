@@ -32,10 +32,10 @@ function VisualCardPlay() {
       aria-pressed={playing}
       onClick={togglePlaying}
       size="icon"
+      tooltip={t("play")}
       variant="secondary"
     >
       <HugeIcons icon={playing ? PauseIcon : PlayIcon} />
-      <span className="sr-only">{t("play")}</span>
     </Button>
   );
 }
@@ -46,8 +46,7 @@ function VisualCardReset() {
   const resetView = useVisual((state) => state.resetView);
 
   return (
-    <DropdownMenuItem onClick={resetView}>
-      <HugeIcons icon={CenterFocusIcon} />
+    <DropdownMenuItem icon={CenterFocusIcon} onClick={resetView}>
       {t("reset-view")}
     </DropdownMenuItem>
   );

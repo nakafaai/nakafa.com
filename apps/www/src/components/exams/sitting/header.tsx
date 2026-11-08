@@ -5,9 +5,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -126,7 +124,6 @@ function SittingProctorActions({
         aria-label={t("join-show", { token })}
         onClick={() => onOpen("join")}
         type="button"
-        variant="outline"
       >
         <HugeIcons icon={QrCodeIcon} />
         <span className="font-mono tracking-widest tabular-nums" translate="no">
@@ -135,17 +132,18 @@ function SittingProctorActions({
       </Button>
       <DropdownMenu>
         <SplitMenuTrigger />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => onOpen("close")}
-              variant="destructive"
-            >
-              <HugeIcons icon={CancelCircleIcon} />
-              {t("close-sitting")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+        <DropdownMenuContent
+          align="end"
+          className="w-48"
+          label={common("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={CancelCircleIcon}
+            onClick={() => onOpen("close")}
+            variant="destructive"
+          >
+            {t("close-sitting")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>
