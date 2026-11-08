@@ -134,7 +134,6 @@ export const physicsComponentNames = {
   dimensionLab: "DimensionLab",
   displacementDistanceLab: "DisplacementDistanceLab",
   instantaneousVelocitySpeedLab: "InstantaneousVelocitySpeedLab",
-  lineEquation: "LineEquation",
   measurementToolsLab: "MeasurementToolsLab",
   nonUniformLinearMotionGraphCard: "NonUniformLinearMotionGraphCard",
   nonUniformLinearMotionLab: "NonUniformLinearMotionLab",
@@ -161,4 +160,3 @@ export const politicsComponentNames = {
   porkBarrelElectabilityChart: "PorkBarrelElectabilityChart",
   porkBarrelFundChart: "PorkBarrelFundChart",
 } as const;
-

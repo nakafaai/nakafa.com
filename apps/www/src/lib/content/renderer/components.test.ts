@@ -140,34 +140,32 @@ describe("renderer components", () => {
     })
   );
 
-  it.effect(
-    "rejects duplicate implementations of one name",
-    () =>
-      Effect.gen(function* () {
-        yield* Effect.sync(() =>
-          vi.doMock("@/lib/content/renderer/registry/politics", () => ({
-            politicsRenderers: [
-              { component: () => null, name: "SiteWidget" },
-              { component: () => null, name: "SiteWidget" },
-            ],
-          }))
-        );
-        const { resolveRendererComponents } = yield* Effect.promise(
-          () => import("@/lib/content/renderer/components")
-        );
-        const failure = yield* resolveRendererComponents({
-          contentKey,
-          rendererDomain: "site",
-          requiredComponents: ["SiteWidget"],
-        }).pipe(Effect.flip);
+  it.effect("rejects duplicate implementations of one name", () =>
+    Effect.gen(function* () {
+      yield* Effect.sync(() =>
+        vi.doMock("@/lib/content/renderer/registry/politics", () => ({
+          politicsRenderers: [
+            { component: () => null, name: "SiteWidget" },
+            { component: () => null, name: "SiteWidget" },
+          ],
+        }))
+      );
+      const { resolveRendererComponents } = yield* Effect.promise(
+        () => import("@/lib/content/renderer/components")
+      );
+      const failure = yield* resolveRendererComponents({
+        contentKey,
+        rendererDomain: "site",
+        requiredComponents: ["SiteWidget"],
+      }).pipe(Effect.flip);
 
-        expect(failure).toMatchObject({
-          _tag: "RendererComponentCollision",
-          componentName: "SiteWidget",
-          contentKey,
-          rendererDomain: "site",
-        });
-      })
+      expect(failure).toMatchObject({
+        _tag: "RendererComponentCollision",
+        componentName: "SiteWidget",
+        contentKey,
+        rendererDomain: "site",
+      });
+    })
   );
 
   it.effect("resolves only the signed renderers", () =>

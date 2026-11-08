@@ -1,4 +1,4 @@
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Order, Record as Rec } from "effect";
 import "@tanstack/react-start/server-only";
 
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
@@ -18,14 +18,17 @@ import {
  * them; the route domains stay published and register nothing of their own.
  */
 export const rendererManifest = createRendererManifest({
-  base: [
-    ...Rec.values(baseComponentNames),
-    ...Rec.values(biologyComponentNames),
-    ...Rec.values(chemistryComponentNames),
-    ...Rec.values(mathematicsComponentNames),
-    ...Rec.values(physicsComponentNames),
-    ...Rec.values(politicsComponentNames),
-  ],
+  base: Arr.sort(
+    [
+      ...Rec.values(baseComponentNames),
+      ...Rec.values(biologyComponentNames),
+      ...Rec.values(chemistryComponentNames),
+      ...Rec.values(mathematicsComponentNames),
+      ...Rec.values(physicsComponentNames),
+      ...Rec.values(politicsComponentNames),
+    ],
+    Order.String
+  ),
   domains: Arr.map(RENDERER_DOMAINS, (name) => ({ components: [], name })),
   publishedDomains: RENDERER_DOMAINS,
 });

@@ -81,10 +81,7 @@ export const selectRendererImplementations = Effect.fn(
   const selected = MutableList.make<SelectedRenderer>();
   for (const name of selection.requiredComponents) {
     const isSemantic = HashSet.has(semanticNames, name);
-    const implementations = findImplementations(
-      name,
-      rendererImplementations
-    );
+    const implementations = findImplementations(name, rendererImplementations);
     const matchCount = Number(isSemantic) + implementations.length;
 
     if (matchCount > 1) {
@@ -100,7 +97,10 @@ export const selectRendererImplementations = Effect.fn(
     }
     const implementation = implementations[0];
     if (implementation !== undefined) {
-      MutableList.append(selected, { kind: "implementation", ...implementation });
+      MutableList.append(selected, {
+        kind: "implementation",
+        ...implementation,
+      });
       continue;
     }
     return yield* new RendererImplementationMissing({

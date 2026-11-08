@@ -87,7 +87,10 @@ describe("renderer manifest", () => {
           )
         ).toEqual(
           Arr.sort(
-            Arr.filter(manifest.base, (name) => !HashSet.has(semanticNames, name)),
+            Arr.filter(
+              manifest.base,
+              (name) => !HashSet.has(semanticNames, name)
+            ),
             Order.String
           )
         );
