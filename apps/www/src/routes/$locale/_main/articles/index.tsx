@@ -1,15 +1,15 @@
-import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
+import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/frame";
-import { HeaderContent } from "@/components/shared/content/header";
 import { RefContent } from "@/components/shared/content/references";
 import { SubjectItem } from "@/components/shared/subject/item";
 import { SubjectList } from "@/components/shared/subject/list";
@@ -26,7 +26,7 @@ import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { articleCategoryTarget } from "@/lib/routing/target";
+import { articleCategoryTarget, HOME_TARGET } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
@@ -154,14 +154,18 @@ export const Route = createFileRoute("/$locale/_main/articles/")({
 
 function ArticleIndexPage() {
   const page = Route.useLoaderData();
+  const tCommon = useTranslations("Common");
   return (
     <>
-      <HeaderContent
-        description={page.description}
-        icon={BookOpen02Icon}
-        title={page.title}
+      <BreadcrumbHeader
+        value={{
+          home: HOME_TARGET,
+          homeLabel: tCommon("home"),
+          items: [{ label: page.title }],
+          title: page.title,
+        }}
       />
-      <LayoutContent>
+      <LayoutContent className="py-6">
         <SubjectList>
           {Arr.zipWith(
             page.categories,

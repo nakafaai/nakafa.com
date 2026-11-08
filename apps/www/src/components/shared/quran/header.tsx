@@ -3,19 +3,15 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
-import {
-  BreadcrumbHeaderFold,
-  BreadcrumbHeaderPath,
-} from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 import { HOME_TARGET, QURAN_TARGET } from "@/lib/routing/target";
 
 /**
- * Keeps surah navigation, name, and outline actions in one row at every width. On a
- * phone the path folds into its menu, as Google Drive folds it, and the surah's name
- * sits beside it without its Arabic, which the page shows; from md the path, the name
- * and the actions stand apart. The page composes the name and the actions, and the row
- * places them.
+ * A surah's header, as every page's: its path, Home, the Quran and the surah, and
+ * its actions at the end. The surah's names and the meaning of its name are its
+ * title for assistive technology, and the verses stand under it with no title
+ * block. On a phone the path folds as every path does, and the surah's name stays.
  */
 export function QuranSurahHeader({
   actions,
@@ -37,59 +33,27 @@ export function QuranSurahHeader({
   return (
     <BreadcrumbHeaderFrame
       className="h-(--surah-header-height)"
-      contentClassName="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-x-4"
+      contentClassName="flex-nowrap"
     >
-      <div className="col-start-1 row-start-1 min-w-0">
-        <BreadcrumbHeaderFold
-          className="md:hidden"
-          home={HOME_TARGET}
-          homeLabel={tCommon("home")}
-          items={[
-            {
-              label: quranLabel,
-              target: QURAN_TARGET,
-            },
-          ]}
-        />
-        <div className="min-w-0 max-md:hidden">
-          <BreadcrumbHeaderPath
-            home={HOME_TARGET}
-            homeLabel={tCommon("home")}
-            items={[
-              {
-                label: quranLabel,
-                target: QURAN_TARGET,
-              },
-            ]}
-          />
-        </div>
-      </div>
-      <h1
-        className="col-start-2 row-start-1 flex min-w-0 items-center gap-2 text-base font-medium md:justify-center md:text-center max-sm:[&_[lang=ar]]:hidden"
-        title={`${title}: ${meaning}`}
-      >
+      <h1 className="sr-only">
         {name}{" "}
-        <span
-          className="sr-only"
-          data-slot="surah-meaning"
-          lang={meaningLanguage}
-        >
+        <span data-slot="surah-meaning" lang={meaningLanguage}>
           {meaning}
         </span>
       </h1>
+      <BreadcrumbHeaderPath
+        home={HOME_TARGET}
+        homeLabel={tCommon("home")}
+        items={[{ label: quranLabel, target: QURAN_TARGET }, { label: title }]}
+      />
       <div
-        className="col-start-3 row-start-1 flex justify-end"
+        className="flex shrink-0 items-center gap-2"
         data-slot="surah-header-actions"
       >
-        <div className="flex items-center gap-2">
-          <ButtonGroup aria-label={tCommon("content-actions")}>
-            {actions}
-          </ButtonGroup>
-          <PanelSheetTrigger
-            icon={Menu02Icon}
-            label={tCommon("on-this-page")}
-          />
-        </div>
+        <ButtonGroup aria-label={tCommon("content-actions")}>
+          {actions}
+        </ButtonGroup>
+        <PanelSheetTrigger icon={Menu02Icon} label={tCommon("on-this-page")} />
       </div>
     </BreadcrumbHeaderFrame>
   );

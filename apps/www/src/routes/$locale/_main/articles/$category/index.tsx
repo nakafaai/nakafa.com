@@ -8,14 +8,14 @@ import {
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
+import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
-import { getArticleCategoryIcon } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { CardArticle } from "@/components/shared/card/article";
 import { ContainerList } from "@/components/shared/card/list";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/frame";
-import { HeaderContent } from "@/components/shared/content/header";
 import { RefContent } from "@/components/shared/content/references";
 import {
   ARTICLE_SOURCE_ROOT,
@@ -36,6 +36,7 @@ import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { ARTICLES_TARGET, HOME_TARGET } from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
@@ -224,14 +225,22 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
 
 function ArticleCategoryPage() {
   const page = Route.useLoaderData();
+  const t = useTranslations("Articles");
+  const tCommon = useTranslations("Common");
   return (
     <>
-      <HeaderContent
-        description={page.description}
-        icon={getArticleCategoryIcon(page.category)}
-        title={page.label}
+      <BreadcrumbHeader
+        value={{
+          home: HOME_TARGET,
+          homeLabel: tCommon("home"),
+          items: [
+            { label: t("articles"), target: ARTICLES_TARGET },
+            { label: page.label },
+          ],
+          title: page.label,
+        }}
       />
-      <LayoutContent>
+      <LayoutContent className="py-6">
         <ContainerList>
           {Arr.map(page.articles, (article) => (
             <CardArticle article={article} key={article.publicPath} />

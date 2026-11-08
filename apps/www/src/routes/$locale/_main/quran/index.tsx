@@ -1,5 +1,4 @@
-import { AllahIcon } from "@hugeicons/core-free-icons";
-import { Card } from "@repo/design-system/components/ui/card";
+import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
@@ -9,18 +8,21 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Schema } from "effect";
+import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
-import { CardLink, CardLinks } from "@/components/shared/card/link";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutContent } from "@/components/shared/content/frame";
-import { HeaderContent } from "@/components/shared/content/header";
-import { QuranSurahName } from "@/components/shared/quran/name";
-import { QuranSurahRow } from "@/components/shared/quran/surah";
+import { QuranSurahCatalog } from "@/components/shared/quran/catalog";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getQuranSurahName } from "@/lib/content/quran/navigation";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
-import { quranSurahTarget } from "@/lib/routing/target";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { runServerEffect } from "@/lib/server/fn";
@@ -56,6 +58,7 @@ const readQuranIndex = createServerFn({ method: "GET" })
       locale,
       surahs: Arr.map(surahs, (surah) => ({
         arabic: surah.name.arabic,
+        meaning: selectQuranMeaning(surah.name.meaning, locale).text,
         number: surah.number,
         title: getQuranSurahName(surah.name),
       })),
@@ -63,7 +66,11 @@ const readQuranIndex = createServerFn({ method: "GET" })
     };
   });
 
-/** The Quran index: every surah, in order, as one link list. */
+/**
+ * The Quran index: every surah, in order, as one link list under the page's
+ * breadcrumb, which a search in the header narrows in the browser. The
+ * description stands in the head and the structured data only.
+ */
 export const Route = createFileRoute("/$locale/_main/quran/")({
   loader: ({ params }) =>
     readStaticData(readQuranIndex, { locale: params.locale }),
@@ -105,30 +112,22 @@ export const Route = createFileRoute("/$locale/_main/quran/")({
 
 function QuranIndexPage() {
   const page = Route.useLoaderData();
+  const t = useTranslations("Holy");
+  const tCommon = useTranslations("Common");
   return (
-    <>
-      <HeaderContent
-        description={page.description}
-        icon={AllahIcon}
-        title={page.title}
+    <TableFiltersProvider>
+      <BreadcrumbHeader
+        value={{
+          action: <TableSearch placeholder={t("search-surah")} />,
+          home: HOME_TARGET,
+          homeLabel: tCommon("home"),
+          items: [{ label: page.title }],
+          title: page.title,
+        }}
       />
-      <LayoutContent className="pb-20">
-        <Card className="py-0">
-          <CardLinks>
-            {Arr.map(page.surahs, (surah) => (
-              <CardLink
-                key={surah.number}
-                target={quranSurahTarget(surah.number)}
-                title={surah.title}
-              >
-                <QuranSurahRow number={surah.number}>
-                  <QuranSurahName arabic={surah.arabic} title={surah.title} />
-                </QuranSurahRow>
-              </CardLink>
-            ))}
-          </CardLinks>
-        </Card>
+      <LayoutContent className="py-6 pb-20">
+        <QuranSurahCatalog surahs={page.surahs} />
       </LayoutContent>
-    </>
+    </TableFiltersProvider>
   );
 }

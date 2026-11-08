@@ -2424,6 +2424,9 @@
   "Holy": {
     "holy": "Holy",
     "quran": "Quran",
+    "search-surah": "Search surahs",
+    "search-surah-none": "No surah found",
+    "search-surah-none-description": "Search by number, name or meaning.",
     "quran-description": "Read all 114 surahs of the Quran in Arabic with a verse-by-verse translation, free on Nakafa.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
