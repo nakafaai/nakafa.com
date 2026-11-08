@@ -58,27 +58,4 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => TryoutRuntimeErrorWire,
     }).middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "reconcileAttempts",
-      args: () => ({
-        before: Schema.Finite,
-      }),
-      returns: () => Schema.Null,
-      error: () => TryoutRuntimeErrorWire,
-    }).middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "reconcileSections",
-      args: () => ({
-        before: Schema.Finite,
-        scheduledAttemptIds: Schema.mutable(
-          Schema.Array(IdSchema("tryoutAttempts"))
-        ),
-      }),
-      returns: () => Schema.Null,
-      error: () => TryoutRuntimeErrorWire,
-    }).middleware(Atomic)
   );

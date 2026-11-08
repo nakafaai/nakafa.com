@@ -1,11 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  reconcileMissedAttemptExpiries,
-  reconcileMissedSectionExpiries,
-  startExpirySweep,
-} from "@repo/backend/confect/tryouts/mutations/expiry";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { DEADLINE_GRACE_MS } from "@repo/backend/confect/assessment/gate/deadline";
+import { sweepTryoutDeadlines } from "@repo/backend/confect/tryouts/deadline";
 import { inMutation } from "@repo/backend/test/client";
 import {
   TRYOUT_NOW,
@@ -56,7 +53,7 @@ const seedRunning = Effect.gen(function* () {
   return { attemptId, sectionAttemptId: section._id, world };
 });
 
-describe("tryouts/mutations/expiry", () => {
+describe("tryouts/deadline", () => {
   it.effect(
     "expires a lapsed attempt: ends its running section, records the unopened one, and scores it",
     () =>
@@ -227,58 +224,41 @@ describe("tryouts/mutations/expiry", () => {
   );
 
   it.effect(
-    "sweeps missed expiries: one job per lapsed attempt, then one per lapsed section of another attempt",
+    "sweeps the deadlines no job ended past the grace, the attempt and each running section, and leaves later ones",
     () =>
       Effect.gen(function* () {
         const { attemptId, sectionAttemptId, world } = yield* seedRunning;
-        vi.setSystemTime(ATTEMPT_END + 1);
-        const jobsBefore = (yield* readExpiry(world, attemptId)).jobs.length;
+        vi.setSystemTime(SECTION_END + DEADLINE_GRACE_MS);
+        const early = (yield* readExpiry(world, attemptId)).jobs.length;
         yield* world.internal.mutation(expiry.sweep, {});
-        yield* world.internal.mutation(expiry.reconcileAttempts, {
-          before: ATTEMPT_END + 1,
-        });
-        yield* world.internal.mutation(expiry.reconcileSections, {
-          before: ATTEMPT_END + 1,
-          scheduledAttemptIds: [attemptId],
-        });
-        yield* world.internal.mutation(expiry.reconcileSections, {
-          before: ATTEMPT_END + 1,
-          scheduledAttemptIds: [],
-        });
+        expect((yield* readExpiry(world, attemptId)).jobs).toHaveLength(
+          early + 1
+        );
+        vi.setSystemTime(ATTEMPT_END + DEADLINE_GRACE_MS);
+        const before = (yield* readExpiry(world, attemptId)).jobs.length;
+        yield* world.internal.mutation(expiry.sweep, {});
         const jobs = Arr.drop(
           (yield* readExpiry(world, attemptId)).jobs,
-          jobsBefore
+          before
         );
         expect(Arr.map(jobs, ({ args }) => args[0])).toEqual([
-          { before: ATTEMPT_END + 1 },
           { attemptId, expiresAt: ATTEMPT_END },
-          { before: ATTEMPT_END + 1, scheduledAttemptIds: [attemptId] },
           { expiresAt: SECTION_END, sectionAttemptId },
         ]);
       })
   );
 
-  it.effect.each([
-    ["sweep", startExpirySweep()],
-    ["attempt reconciliation", reconcileMissedAttemptExpiries(ATTEMPT_END + 1)],
-    [
-      "section reconciliation",
-      reconcileMissedSectionExpiries({
-        before: ATTEMPT_END + 1,
-        scheduledAttemptIds: [],
-      }),
-    ],
-  ] as const)("rolls back the %s if scheduling fails", ([, program]) =>
+  it.effect("rolls the sweep back if scheduling fails", () =>
     Effect.gen(function* () {
       const { world } = yield* seedRunning;
-      vi.setSystemTime(ATTEMPT_END + 1);
+      vi.setSystemTime(ATTEMPT_END + DEADLINE_GRACE_MS);
       yield* Effect.promise(() =>
         expect(
           world.t.mutation(async (ctx) => {
             vi.spyOn(ctx.scheduler, "runAfter").mockRejectedValue(
               new Error("scheduler outage")
             );
-            return await inMutation(() => program)(ctx);
+            return await inMutation(() => sweepTryoutDeadlines())(ctx);
           })
         ).rejects.toMatchObject({ code: "TRYOUT_RUNTIME_FAILED" })
       );

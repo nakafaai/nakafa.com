@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { SWEEP_LATE_MS } from "@repo/backend/confect/exams/sittings/sweep";
+import { DEADLINE_GRACE_MS } from "@repo/backend/confect/assessment/gate/deadline";
 import { SUBMIT_DELAY_MS } from "@repo/backend/confect/exams/sittings/timers";
 import {
   CLOSES_AT,
@@ -56,9 +56,9 @@ describe("exams/sittings sweep", () => {
         });
 
         expect(
-          yield* sweptAt(fixture, OPENS_AT + SWEEP_LATE_MS - 1)
+          yield* sweptAt(fixture, OPENS_AT + DEADLINE_GRACE_MS - 1)
         ).toHaveLength(0);
-        expect(yield* sweptAt(fixture, OPENS_AT + SWEEP_LATE_MS)).toEqual([
+        expect(yield* sweptAt(fixture, OPENS_AT + DEADLINE_GRACE_MS)).toEqual([
           {
             args: [{ sittingId: made.id }],
             name: "exams/sittings/timers:open",
@@ -88,7 +88,7 @@ describe("exams/sittings sweep", () => {
           state: "locked",
         });
         yield* seedAttempt(fixture, {
-          deadline: CLOSES_AT + 10 * SWEEP_LATE_MS,
+          deadline: CLOSES_AT + 10 * DEADLINE_GRACE_MS,
           deviceId: null,
           person: fixture.invited,
           sittingId: made.id,
@@ -96,9 +96,9 @@ describe("exams/sittings sweep", () => {
         });
 
         expect(
-          yield* sweptAt(fixture, CLOSES_AT + SWEEP_LATE_MS - 1)
+          yield* sweptAt(fixture, CLOSES_AT + DEADLINE_GRACE_MS - 1)
         ).toHaveLength(0);
-        const swept = yield* sweptAt(fixture, CLOSES_AT + SWEEP_LATE_MS);
+        const swept = yield* sweptAt(fixture, CLOSES_AT + DEADLINE_GRACE_MS);
         expect(swept).toHaveLength(3);
         expect(swept).toEqual(
           expect.arrayContaining([
@@ -132,7 +132,7 @@ describe("exams/sittings sweep", () => {
           sittingId: made.id,
           state: "closing",
         });
-        const submitAt = OPENS_AT + SUBMIT_DELAY_MS + SWEEP_LATE_MS;
+        const submitAt = OPENS_AT + SUBMIT_DELAY_MS + DEADLINE_GRACE_MS;
 
         expect(yield* sweptAt(fixture, submitAt - 1)).toHaveLength(0);
         expect(yield* sweptAt(fixture, submitAt)).toEqual([
