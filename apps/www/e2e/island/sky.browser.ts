@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { DateTime, Effect, Schema } from "effect";
+import { drawnIsland, expectDrawnIsland } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
@@ -89,7 +90,8 @@ for (const scene of SCENES) {
         page,
         Effect.promise(async () => {
           await page.goto(ISLAND_PATH);
-          await expect(page.locator("canvas[data-drawn]")).toHaveAttribute(
+          await expectDrawnIsland(page);
+          await expect(drawnIsland(page)).toHaveAttribute(
             "data-sky",
             scene.sky
           );
