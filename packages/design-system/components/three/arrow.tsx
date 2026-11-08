@@ -225,6 +225,7 @@ export function ArrowHelper({
           frustumCulled
           lineWidth={lineWidth}
           points={shaftPoints}
+          toneMapped={false}
         />
 
         {/* Cone arrowhead with optimized segments */}
@@ -237,7 +238,7 @@ export function ArrowHelper({
             <coneGeometry
               args={[headSize / 4, headSize, GRAPH_ARROW_SEGMENTS, 1]}
             />
-            <meshBasicMaterial color={color} />
+            <meshBasicMaterial color={color} toneMapped={false} />
           </mesh>
         )}
 

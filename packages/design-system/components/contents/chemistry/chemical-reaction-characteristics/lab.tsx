@@ -13,11 +13,11 @@ import {
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import { ReactionCharacteristicsScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -125,24 +125,9 @@ export function ChemicalReactionCharacteristicsLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
             <ReactionCameraControls />
-            <ambientLight intensity={0.68} />
-            <hemisphereLight
-              color={sceneColors.skyLight}
-              groundColor={sceneColors.groundLight}
-              intensity={0.66}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.25}
-              position={[4, 5, 5]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <ReactionCharacteristicsSceneProvider
               colors={sceneColors}
               store={store}
@@ -150,7 +135,7 @@ export function ChemicalReactionCharacteristicsLab({
               <ReactionCharacteristicsScene labels={labels} />
             </ReactionCharacteristicsSceneProvider>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

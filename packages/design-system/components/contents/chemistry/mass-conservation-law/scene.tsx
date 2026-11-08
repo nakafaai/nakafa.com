@@ -8,9 +8,10 @@ import {
 import type { MassConservationLabProps } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/lab";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { Array as Arr, Schema } from "effect";
 import { createContext, use, useRef } from "react";
-import { DoubleSide, type Group, type MeshStandardMaterial } from "three";
+import type { Group, MeshStandardMaterial } from "three";
 
 const BEFORE_X = -1.08;
 const AFTER_X = 1.08;
@@ -233,19 +234,12 @@ function Vessel({
             true,
           ]}
         />
-        <meshStandardMaterial
-          color={colors.glass}
-          depthWrite={false}
-          opacity={0.22}
-          roughness={0.08}
-          side={DoubleSide}
-          transparent
-        />
+        <GlassMaterial color={colors.glass} opacity={0.22} />
       </mesh>
 
       <mesh position={[0, VESSEL_HEIGHT / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[VESSEL_RADIUS, 0.018, 16, 72]} />
-        <meshStandardMaterial color={colors.glass} opacity={0.56} transparent />
+        <GlassMaterial color={colors.glass} opacity={0.56} />
       </mesh>
 
       {closed && (
@@ -261,7 +255,7 @@ function Vessel({
         <cylinderGeometry
           args={[VESSEL_RADIUS * 0.92, VESSEL_RADIUS * 0.92, 0.04, 64]}
         />
-        <meshStandardMaterial color={colors.glass} opacity={0.36} transparent />
+        <GlassMaterial color={colors.glass} opacity={0.36} />
       </mesh>
     </group>
   );
