@@ -9,11 +9,11 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
+import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
 import {
   openSchoolPricing,
   schoolSections,
 } from "@/components/marketing/school/later";
-import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
 import { SchoolPlans } from "@/components/marketing/school/pricing/plans";
 import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";

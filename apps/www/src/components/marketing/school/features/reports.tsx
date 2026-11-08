@@ -59,8 +59,7 @@ export function SchoolReports() {
           ))}
           <div
             className={stepVariants({
-              className:
-                "flex items-center justify-between gap-4",
+              className: "flex items-center justify-between gap-4",
               step: 5,
             })}
           >

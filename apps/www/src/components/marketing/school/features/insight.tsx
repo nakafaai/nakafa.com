@@ -92,9 +92,7 @@ function useDemoColumns() {
         },
       ],
     }),
-    studentColumns.menu((info) => (
-      <RowCopy value={info.row.original.name} />
-    )),
+    studentColumns.menu((info) => <RowCopy value={info.row.original.name} />),
   ];
 }
 

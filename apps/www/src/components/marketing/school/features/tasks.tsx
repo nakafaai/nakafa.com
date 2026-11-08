@@ -3,7 +3,10 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { DateTime } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import { FeatureProduct, FeatureRow } from "@/components/marketing/shared/feature";
+import {
+  FeatureProduct,
+  FeatureRow,
+} from "@/components/marketing/shared/feature";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { TablePageBody } from "@/components/shared/table/frame";

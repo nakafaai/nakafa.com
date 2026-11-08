@@ -35,7 +35,10 @@ const DEMO_KEY: InteractionKey = {
 function formula(latex: string) {
   return {
     content: [
-      { content: [{ attrs: { latex }, type: "mathInline" }], type: "paragraph" },
+      {
+        content: [{ attrs: { latex }, type: "mathInline" }],
+        type: "paragraph",
+      },
     ],
     type: "doc",
   } as const;
