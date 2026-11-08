@@ -142,7 +142,7 @@ export function useHasPanes() {
  * panes renders only in the browser (ADR 0038), so the first render already reads the screen and a
  * detail that opens with the page never shows in a sheet on a wide screen.
  */
-function useWide() {
+export function useWide() {
   const width = use(PanesWidthContext);
 
   return useMediaQuery(TAILWIND_MEDIA_QUERIES[`${width}AndUp`], undefined, {

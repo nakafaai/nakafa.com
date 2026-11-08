@@ -124,6 +124,7 @@ export function ForumBody({
             </ForumFrame>
           </PanesList>
           <ThreadPane
+            asked={view._tag === "discussion"}
             canManage={canManage}
             canPost={canPost}
             everyone={everyone}

@@ -76,6 +76,79 @@ function recordRemovedMessages(key: string) {
 const removedMessages = (page: Page) =>
   page.evaluate((key) => Number(Reflect.get(window, key)), REMOVED_KEY);
 
+/** The page global that counts every thread body that came onto the page with no message in it. */
+const BLANK_KEY = "__nakafaThreadBlank";
+
+/** The page global that counts every message, the chat's or a thread's, that left the page since it loaded. */
+const RELOAD_KEY = "__nakafaThreadReloadRemoved";
+
+/**
+ * Counts, from the page's start, every thread body that comes onto the page without a message in it: a pane or a sheet
+ * that opens empty and fills a moment later flickers, so the count stays zero while every thread draws whole.
+ */
+function recordBlankThreads(key: string) {
+  /** Whether an added node brings a thread body with no message in it. */
+  const isBlank = (node: Node) => {
+    if (!(node instanceof Element)) {
+      return false;
+    }
+    const bodies = node.matches("[data-slot=discussion]")
+      ? [node]
+      : Array.from(node.querySelectorAll("[data-slot=discussion]"));
+    return bodies.some(
+      (body) => body.querySelector("[data-slot=message]") === null
+    );
+  };
+  Reflect.set(window, key, 0);
+  new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of Array.from(record.addedNodes)) {
+        if (isBlank(node)) {
+          Reflect.set(window, key, Number(Reflect.get(window, key)) + 1);
+        }
+      }
+    }
+  }).observe(document, { childList: true, subtree: true });
+}
+
+/** Counts, from the page's start, every message that leaves the page, a thread's included. */
+function recordEveryRemovedMessage(key: string) {
+  /** Whether a removed node takes a message with it. */
+  const takesMessage = (node: Node) =>
+    node instanceof Element &&
+    (node.matches("[data-slot=message]") ||
+      node.querySelector("[data-slot=message]") !== null);
+  Reflect.set(window, key, 0);
+  new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of Array.from(record.removedNodes)) {
+        if (takesMessage(node)) {
+          Reflect.set(window, key, Number(Reflect.get(window, key)) + 1);
+        }
+      }
+    }
+  }).observe(document, { childList: true, subtree: true });
+}
+
+/** What the page global `key` counted. */
+const counted = (page: Page, key: string) =>
+  page.evaluate((name) => Number(Reflect.get(window, name)), key);
+
+/**
+ * Closes the open thread: beside the chat from its header's close button; on a phone by Escape, since the sheet has no
+ * close button and closes as an iPhone's sheet does.
+ */
+const closeThread = async (page: Page, width: number) => {
+  if (width >= BESIDE_FROM) {
+    await page.getByRole("button", { exact: true, name: "Close" }).click();
+    return;
+  }
+  await expect(
+    page.getByRole("dialog").getByRole("button", { exact: true, name: "Close" })
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
+};
+
 /** The layout shift that no press or key caused, since the page loaded. */
 const unansweredShift = async (page: Page) =>
   Num.sumAll(
@@ -123,6 +196,7 @@ for (const viewport of SCREENS) {
       key: SHIFTS_KEY,
       overlay: "[data-sonner-toaster]",
     });
+    await page.addInitScript(recordBlankThreads, BLANK_KEY);
     const shot = (state: string) =>
       page.screenshot({
         path: info.outputPath(`thread-${state}-${viewport.width}.png`),
@@ -195,7 +269,7 @@ for (const viewport of SCREENS) {
     await shot("replied");
 
     // Closing leads back to the chat, which kept its place, and the thread's row counts the reply.
-    await page.getByRole("button", { exact: true, name: "Close" }).click();
+    await closeThread(page, viewport.width);
     await page.waitForURL(CHANNEL_PATH);
     await expect(pane).toHaveCount(0);
     const summary = fifth.getByRole("link", { name: ONE_REPLY });
@@ -231,7 +305,7 @@ for (const viewport of SCREENS) {
     expect(await removedMessages(page)).toBe(0);
 
     // The thread's row opens it again, with its reply.
-    await page.getByRole("button", { exact: true, name: "Close" }).click();
+    await closeThread(page, viewport.width);
     await page.waitForURL(CHANNEL_PATH);
     await summary.click();
     await page.waitForURL(threadPath(1));
@@ -239,8 +313,25 @@ for (const viewport of SCREENS) {
     expect(await removedMessages(page)).toBe(0);
     await shot("summary");
 
-    // Nothing moved that no press or key moved, and the page logged no error.
+    // Nothing moved that no press or key moved, and every thread drew whole.
     expect(await unansweredShift(page)).toBeCloseTo(settled, 3);
+    expect(await counted(page, BLANK_KEY)).toBe(0);
+
+    // A reload with the thread open draws the chat and the thread whole, each once: no message leaves the page, the
+    // thread's own included, no thread body shows empty, and nothing moves.
+    await page.addInitScript(recordEveryRemovedMessage, RELOAD_KEY);
+    await page.reload();
+    await expect(pane.getByText("Balasan pertama di thread.")).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(messageRow(page, "Pesan 6")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    expect(await counted(page, RELOAD_KEY)).toBe(0);
+    expect(await counted(page, BLANK_KEY)).toBe(0);
+    expect(await unansweredShift(page)).toBeCloseTo(0, 3);
+    await shot("reloaded");
+
+    // The page logged no error.
     expect(errors).toEqual([]);
     await context.close();
   });

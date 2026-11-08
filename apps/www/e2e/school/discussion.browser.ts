@@ -125,7 +125,13 @@ for (const viewport of [
         .poll(async () => (await panel.boundingBox())?.width ?? 0)
         .toBeGreaterThan(narrow.width + 150);
     }
-    await page.getByRole("button", { name: CLOSE, exact: true }).click();
+    // Beside the chat the pane closes from its header; on a phone the sheet has no close button and closes by Escape,
+    // a swipe down or a tap outside.
+    if (viewport.width >= 1280) {
+      await page.getByRole("button", { name: CLOSE, exact: true }).click();
+    } else {
+      await page.keyboard.press("Escape");
+    }
     await page.waitForURL(CHANNEL_PATH);
     await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
     await expect(page.getByRole("link", { name: ONE_REPLY })).toBeVisible();
