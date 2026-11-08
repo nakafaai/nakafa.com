@@ -6,7 +6,7 @@ import type {
 import { compute } from "@repo/backend/confect/nina/math/tools/compute";
 import type { MathRequest } from "@repo/math/schema/request";
 import type { MathResult } from "@repo/math/schema/result";
-import type { MathToolInput } from "@repo/math/schema/tool-input";
+import type { MathToolInput } from "@repo/math/schema/tool/input";
 import { MathService } from "@repo/math/service";
 import {
   Array as Arr,

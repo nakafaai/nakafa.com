@@ -1,6 +1,6 @@
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinates";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { LineEquation } from "@repo/design-system/components/three/line-equation";
+import { LineEquation } from "@repo/design-system/components/three/line";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { Polygon } from "@repo/design-system/components/three/polygon";
 import { Array as Arr } from "effect";

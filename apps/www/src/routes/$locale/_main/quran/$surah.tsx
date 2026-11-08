@@ -1,5 +1,5 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { makeBreadcrumbNodes, makeSurahNode } from "@repo/seo/json-ld/node";
+import { makeBreadcrumbNodes, makeSurahNode } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";

@@ -8,7 +8,7 @@ import {
   type TaskCategory,
   type TaskTargets,
   taskField,
-} from "@repo/backend/confect/classroom/tasks/task";
+} from "@repo/backend/confect/classroom/tasks/schema";
 import { classTask } from "@repo/backend/confect/classroom/tasks/views";
 import { classTargets } from "@repo/backend/confect/classroom/tasks/write";
 import { Member } from "@repo/backend/confect/middleware/member.spec";

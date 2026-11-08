@@ -1,5 +1,5 @@
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
+import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";

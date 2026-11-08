@@ -6,7 +6,10 @@ import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Effect, Layer } from "effect";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { activateTestRelease } from "@/test/active";
-import { testCurriculumRowJson, testProgramRoot } from "@/test/content-program";
+import {
+  testCurriculumRowJson,
+  testProgramRoot,
+} from "@/test/published/program";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const readQueryMock = vi.hoisted(() => vi.fn());

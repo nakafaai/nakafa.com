@@ -276,3 +276,37 @@ export const names = Object.keys(text);
     })
   );
 });
+
+describe("router signals", () => {
+  it.effect(
+    "exempts the router signals that the module imports from TanStack",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings([
+            {
+              file: "apps/www/src/lib/example.ts",
+              sourceText: `import { notFound, redirect as route } from "@tanstack/react-router";
+export function load(value: string | undefined) {
+  if (value === undefined) {
+    throw notFound();
+  }
+  throw route({ to: "/en" });
+}
+export function unimported() {
+  throw answerNotFound();
+}
+export function failure() {
+  throw new Error("bad");
+}
+`,
+            },
+          ]),
+          [
+            "apps/www/src/lib/example.ts:9 throw",
+            "apps/www/src/lib/example.ts:12 throw",
+          ]
+        );
+      })
+  );
+});

@@ -1,4 +1,4 @@
-import { AgentContext } from "@repo/design-system/components/markdown/agent-context";
+import { AgentContext } from "@repo/design-system/components/markdown/agent";
 import {
   BlockMath,
   InlineMath,
