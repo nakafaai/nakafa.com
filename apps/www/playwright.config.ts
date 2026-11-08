@@ -17,11 +17,40 @@ const baseURL =
 
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.
-// Each suite pays about ten minutes to prepare and build before its first
-// test, so the suites are balanced by run time. Measured on 12 October: runtime
-// 290 s plus 40 s of site checks, learner 316 s, chat 361 s, visual 349 s,
-// navigation 267 to 344 s. Marketing and consent run in the visual suite only
-// for that balance.
+
+// Specs that assert how long something takes or what each frame draws: a press
+// that must answer within a budget, a page that must paint once, a popup that
+// must open without a loader, a check under Chromium's CPU throttle. Another
+// test beside them on a loaded machine moves those numbers, so they run in the
+// timing suites, one test at a time, after the suites that run in parallel.
+const TIMING_TESTS = [
+  "**/auth/static.browser.ts",
+  "**/static/answers.browser.ts",
+  "**/curriculum/placement.browser.ts",
+  "**/navigation/flicker.browser.ts",
+  "**/navigation/instant.browser.ts",
+  "**/navigation/prefetch.browser.ts",
+  "**/state/popups.browser.ts",
+  "**/reading/press.browser.ts",
+  "**/reading/shift.browser.ts",
+  "**/tryout/attempt.browser.ts",
+  "**/tryout/player.browser.ts",
+  "**/tryout/shell.browser.ts",
+  "**/tryout/start.browser.ts",
+  "**/chat/settle.browser.ts",
+  "**/chat/shift.browser.ts",
+  "**/marketing/home.browser.ts",
+  "**/marketing/settle.browser.ts",
+  "**/school/empty.browser.ts",
+  "**/school/founding.browser.ts",
+  "**/school/instant.browser.ts",
+  "**/school/paint.browser.ts",
+  "**/school/roles.browser.ts",
+  "**/school/shift.browser.ts",
+  "**/school/walk.browser.ts",
+];
+
+// The visual cards, scenes and marketing pages.
 const VISUAL_TESTS = [
   "**/visual/**/*.browser.ts",
   "**/scene/**/*.browser.ts",
@@ -30,22 +59,19 @@ const VISUAL_TESTS = [
   "**/content/charts.browser.ts",
 ];
 
-// The account, settings and try-out pages are the slowest files of the shared
-// runtime (316 of its 604 s), and no test of a public page reads what they
-// write, so they run in their own leg.
+// The account, settings and try-out pages of a signed-in learner.
 const LEARNER_TESTS = [
   "**/account/**/*.browser.ts",
   "**/settings/**/*.browser.ts",
   "**/tryout/**/*.browser.ts",
 ];
 
-// Nina's chats, on their page and in the sheet. They seed their own chats and
-// take as long as the whole learner suite, so they run in their own leg too.
+// Nina's chats, on their page and in the sheet.
 const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 
-// Every School page, role and worst case, which the browsers suite runs again in
+// Every School page, role and worst case, which the browsers suites run again in
 // Firefox, desktop Safari, an Android phone and an iPhone, after Chromium's run
-// in the shared runtime: a school must work on every device its people bring.
+// in the runtime suite: a school must work on every device its people bring.
 const SCHOOL_TESTS = "**/school/**/*.browser.ts";
 
 // What only Chromium can measure: its CPU throttle and layout shift entries, and its
@@ -55,16 +81,39 @@ const CHROMIUM_SCHOOL_TESTS = [
   "**/school/shift.browser.ts",
 ];
 
+// The visual cards take the whole screen through the Fullscreen API on desktop,
+// Android, and iPad, and cover the viewport on iPhone, in Safari too.
+const WEBKIT_TESTS = ["**/visual/cards.browser.ts"];
+
+// The School pages of the timing specs, which the browser timing suite runs in
+// the other four browsers.
+const SCHOOL_TIMING_TESTS = Arr.filter(TIMING_TESTS, (path) =>
+  path.startsWith("**/school/")
+);
+
+// The lesson breadcrumb that must paint once, and a press into a lesson that
+// must draw it whole, in Safari too.
+const WEBKIT_TIMING_TESTS = [
+  "**/curriculum/placement.browser.ts",
+  "**/reading/press.browser.ts",
+];
+
+/** The cores of this machine, which the local backend runs as many isolates on. */
+const CORES = navigator.hardwareConcurrency;
+
 /**
- * How many workers run a suite whose tests measure no timing across tests: one,
- * unless PLAYWRIGHT_WORKERS names more. Every test of those suites seeds its own
- * learner, school and chats, and marks what it writes with the moment of its
- * run, so its files can run side by side. The navigation checks measure timing
- * while they share the runner, so they keep their own counts.
+ * How many workers run a suite whose tests measure no timing: half the cores,
+ * unless PLAYWRIGHT_WORKERS names another count. Every test seeds its own
+ * learner, school and chats and marks what it writes with the moment of its
+ * run, so any two tests can run side by side. The local backend runs one
+ * isolate per core and stops a function after five seconds of its own code
+ * (`packages/backend/scripts/content/acceptance/process.ts`), and each worker
+ * drives a browser and the app's server besides, so a count is capped at the
+ * cores: past them every function waits for a core and nears that limit.
  */
 function parallelWorkers(value: string | undefined): number {
   if (value === undefined) {
-    return 1;
+    return Num.max(1, Math.floor(CORES / 2));
   }
   const workers = Num.parse(value);
   if (
@@ -72,102 +121,131 @@ function parallelWorkers(value: string | undefined): number {
     Number.isInteger(workers.value) &&
     workers.value > 0
   ) {
-    return workers.value;
+    return Num.min(workers.value, CORES);
   }
   throw new Error(
     `PLAYWRIGHT_WORKERS must be a whole number above 0; received "${value}".`
   );
 }
 
-const WORKERS = parallelWorkers(process.env.PLAYWRIGHT_WORKERS);
-
-// Each project as it runs. No project names its dependency here: the suite
-// order below derives it.
+// Each project as it runs. No project depends on another: Playwright skips a
+// project whose dependency had one failure, and runs a dependency whole when
+// one file is filtered, so suites order nothing and share nothing.
 const PROJECTS = {
   "shared-runtime": {
     testIgnore: [
-      "**/navigation/instant.browser.ts",
       ...CHAT_TESTS,
       ...LEARNER_TESTS,
       ...VISUAL_TESTS,
+      ...TIMING_TESTS,
     ],
-    workers: WORKERS,
   },
   learner: {
+    testIgnore: TIMING_TESTS,
     testMatch: LEARNER_TESTS,
-    workers: WORKERS,
   },
   chat: {
+    testIgnore: TIMING_TESTS,
     testMatch: CHAT_TESTS,
-    workers: WORKERS,
   },
   visual: {
+    testIgnore: TIMING_TESTS,
     testMatch: VISUAL_TESTS,
-    workers: WORKERS,
   },
-  "isolated-navigation": {
-    testMatch: "**/navigation/instant.browser.ts",
-    workers: 2,
-  },
-  // Visual cards take the whole screen through the Fullscreen API on
-  // desktop, Android, and iPad, and cover the viewport on iPhone, and a press
-  // into a lesson must draw it whole in Safari too, so both suites also run in
-  // WebKit. Its project runs after the navigation checks, so no other browser
-  // shares the runner while those checks measure timing.
   webkit: {
-    // The visual cards, the lesson breadcrumb that must paint once, and a press into a lesson
-    // that must draw it whole, in Safari too.
-    testMatch: [
-      "**/visual/cards.browser.ts",
-      "**/curriculum/placement.browser.ts",
-      "**/reading/press.browser.ts",
-    ],
+    testMatch: WEBKIT_TESTS,
+    use: { browserName: "webkit" },
+  },
+  "school-firefox": {
+    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testMatch: SCHOOL_TESTS,
+    use: devices["Desktop Firefox"],
+  },
+  "school-safari": {
+    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testMatch: SCHOOL_TESTS,
+    use: devices["Desktop Safari"],
+  },
+  "school-android": {
+    testIgnore: TIMING_TESTS,
+    testMatch: SCHOOL_TESTS,
+    use: devices["Pixel 7"],
+  },
+  "school-iphone": {
+    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testMatch: SCHOOL_TESTS,
+    use: devices["iPhone 15"],
+  },
+  timing: {
+    testMatch: TIMING_TESTS,
+    workers: 1,
+  },
+  "timing-webkit": {
+    testMatch: WEBKIT_TIMING_TESTS,
     use: { browserName: "webkit" },
     workers: 1,
   },
-  "school-firefox": {
+  "school-timing-firefox": {
     testIgnore: CHROMIUM_SCHOOL_TESTS,
-    testMatch: SCHOOL_TESTS,
+    testMatch: SCHOOL_TIMING_TESTS,
     use: devices["Desktop Firefox"],
-    workers: WORKERS,
+    workers: 1,
   },
-  "school-safari": {
+  "school-timing-safari": {
     testIgnore: CHROMIUM_SCHOOL_TESTS,
-    testMatch: SCHOOL_TESTS,
+    testMatch: SCHOOL_TIMING_TESTS,
     use: devices["Desktop Safari"],
-    workers: WORKERS,
+    workers: 1,
   },
-  "school-android": {
-    testMatch: SCHOOL_TESTS,
+  "school-timing-android": {
+    testMatch: SCHOOL_TIMING_TESTS,
     use: devices["Pixel 7"],
-    workers: WORKERS,
+    workers: 1,
   },
-  "school-iphone": {
+  "school-timing-iphone": {
     testIgnore: CHROMIUM_SCHOOL_TESTS,
-    testMatch: SCHOOL_TESTS,
+    testMatch: SCHOOL_TIMING_TESTS,
     use: devices["iPhone 15"],
-    workers: WORKERS,
+    workers: 1,
   },
 } satisfies Record<string, Omit<Project, "dependencies" | "name">>;
 
 type ProjectName = keyof typeof PROJECTS;
 
-// Each suite runs in its own runtime. Projects in a suite run in
-// the listed order, and each one waits for the project before it. Without a
-// selection, every suite runs as one chain in this order.
+// Each suite is one run of `playwright test` against one prepared runtime,
+// selected by PLAYWRIGHT_SUITE. A parallel suite runs its tests on
+// `parallelWorkers`; a timing suite runs one test at a time, so a timing spec
+// never shares the machine with another test. A whole run runs every parallel
+// suite it needs, then the timing suites. Measured on 8 November on one worker:
+// runtime 602 tests in 174 minutes, chat 200 tests in about 25.
 const SUITES = {
-  runtime: ["shared-runtime"],
-  learner: ["learner"],
-  chat: ["chat"],
-  visual: ["visual"],
-  navigation: ["isolated-navigation", "webkit"],
-  browsers: [
-    "school-firefox",
-    "school-safari",
-    "school-android",
-    "school-iphone",
-  ],
-} satisfies Record<string, readonly ProjectName[]>;
+  runtime: { projects: ["shared-runtime"], timing: false },
+  learner: { projects: ["learner"], timing: false },
+  chat: { projects: ["chat"], timing: false },
+  visual: { projects: ["visual", "webkit"], timing: false },
+  browsers: {
+    projects: [
+      "school-firefox",
+      "school-safari",
+      "school-android",
+      "school-iphone",
+    ],
+    timing: false,
+  },
+  timing: { projects: ["timing", "timing-webkit"], timing: true },
+  "browser-timing": {
+    projects: [
+      "school-timing-firefox",
+      "school-timing-safari",
+      "school-timing-android",
+      "school-timing-iphone",
+    ],
+    timing: true,
+  },
+} satisfies Record<
+  string,
+  { readonly projects: readonly ProjectName[]; readonly timing: boolean }
+>;
 
 type SuiteName = keyof typeof SUITES;
 
@@ -175,37 +253,43 @@ function isSuiteName(value: string): value is SuiteName {
   return Arr.some(Rec.keys(SUITES), (name) => name === value);
 }
 
-/** Returns the project names of the selected suite, or of every suite in order. */
-function selectedProjectNames(
-  suite: string | undefined
-): readonly ProjectName[] {
+/**
+ * The projects and the worker count of the selected suite. Without a selection
+ * every project runs at once on the parallel count, which suits a run of one
+ * file or one folder: its timing specs then share the machine.
+ */
+function selectedRun(suite: string | undefined): {
+  readonly projects: readonly ProjectName[];
+  readonly workers: number;
+} {
+  const parallel = parallelWorkers(process.env.PLAYWRIGHT_WORKERS);
   if (suite === undefined) {
-    return Arr.flatten(Rec.values(SUITES));
+    return {
+      projects: Arr.flatMap(Rec.values(SUITES), (one) => one.projects),
+      workers: parallel,
+    };
   }
   if (!isSuiteName(suite)) {
     throw new Error(
       `PLAYWRIGHT_SUITE must be one of ${Arr.join(Rec.keys(SUITES), ", ")}; received "${suite}".`
     );
   }
-  return SUITES[suite];
+  const { projects, timing } = SUITES[suite];
+  return { projects, workers: timing ? 1 : parallel };
 }
 
-/** Builds the projects in order: each one depends on the project before it. */
-function chainProjects(names: readonly ProjectName[]): Project[] {
-  return Arr.map(names, (name, index) => ({
-    name,
-    ...PROJECTS[name],
-    dependencies: Arr.fromOption(Arr.get(names, index - 1)),
-  }));
-}
+const RUN = selectedRun(process.env.PLAYWRIGHT_SUITE);
 
 export default defineConfig({
   expect: {
     timeout: 5000,
   },
-  fullyParallel: false,
+  fullyParallel: true,
   outputDir: "../../.cache/playwright/www",
-  projects: chainProjects(selectedProjectNames(process.env.PLAYWRIGHT_SUITE)),
+  projects: Arr.map(
+    RUN.projects,
+    (name): Project => ({ name, ...PROJECTS[name] })
+  ),
   reporter: "list",
   retries: 0,
   testDir: "./e2e",
@@ -218,4 +302,5 @@ export default defineConfig({
     trace: "retain-on-failure",
     video: "retain-on-failure",
   },
+  workers: RUN.workers,
 });
