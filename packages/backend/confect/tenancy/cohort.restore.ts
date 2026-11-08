@@ -1,9 +1,5 @@
 import type { GenericId } from "@confect/core";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { cohortAuthority } from "@repo/backend/confect/tenancy/authority";
 import type { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
@@ -18,51 +14,18 @@ import { Effect, Struct } from "effect";
  */
 export const restoreCohort = Effect.fn("tenancy.cohort.restore")(function* (
   actor: typeof TenantActor.Type,
-  tenantId: GenericId.GenericId<"tenants">,
   cohortId: GenericId.GenericId<"tenantCohorts">
 ) {
-  const reader = yield* DatabaseReader;
-  const cohort = yield* reader
-    .table("tenantCohorts")
-    .get(cohortId)
-    .pipe(
-      Effect.catchTags({
-        DocumentDecodeError: Effect.die,
-        GetByIdFailure: () =>
-          new AccessDenied({ action: "cohort.manage", reason: "resource" }),
-      })
-    );
-  if (cohort.tenantId !== tenantId) {
-    return yield* new AccessDenied({
-      action: "cohort.manage",
-      reason: "resource",
-    });
-  }
+  const cohort = yield* cohortAuthority.lifecycle("cohort.manage", cohortId);
   if (cohort.status !== "archived") {
     return cohort;
   }
-  const period = yield* reader
-    .table("tenantPeriods")
-    .get(cohort.periodId)
-    .pipe(Effect.orDie);
-  const unit = yield* reader
-    .table("tenantUnits")
-    .get(cohort.unitId)
-    .pipe(Effect.orDie);
-  if (period.status === "archived" || unit.status === "archived") {
-    return yield* new AccessDenied({
-      action: "cohort.manage",
-      reason: "condition",
-    });
-  }
   const status: typeof CohortStatus.Type = "active";
   const restored = Struct.assign(cohort, { status });
+  yield* cohortAuthority.restorable("cohort.manage", restored);
   yield* (yield* DatabaseWriter)
     .table("tenantCohorts")
-    .replace(
-      cohort._id,
-      Struct.assign(Struct.omit(cohort, ["_creationTime", "_id"]), { status })
-    )
+    .replace(cohort._id, Struct.omit(restored, ["_creationTime", "_id"]))
     .pipe(Effect.orDie);
   yield* cohortAuthority.record(actor, cohort, { type: "cohort.restored" });
   return restored;
