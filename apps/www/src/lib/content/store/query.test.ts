@@ -10,6 +10,7 @@ import { Effect, Layer } from "effect";
 import {
   queryContentStore,
   queryPinnedContentStore,
+  querySnapshotContentStore,
 } from "@/lib/content/store/query";
 import {
   resetTestRuntimeCache,
@@ -56,6 +57,11 @@ const identity = {
   manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
   releaseId: ReleaseIdSchema.make("release-a"),
   sequence: 1,
+  snapshots: {
+    assessment: null,
+    program: Sha256HashSchema.make(`sha256:${"1".repeat(64)}`),
+    quran: null,
+  },
 };
 const pinned = ReleaseIdSchema.make("release-pinned");
 const catalog = {
@@ -194,5 +200,37 @@ describe("content store query", () => {
       expect(fetchQueryMock).toHaveBeenCalledTimes(1);
       expect(activeMocks.read).toHaveBeenCalledTimes(2);
     })
+  );
+
+  it.effect(
+    "reaches Convex once for a family's query while releases keep its snapshot",
+    () =>
+      Effect.gen(function* () {
+        const path = { managed: true, routeJson: null };
+        fetchQueryMock.mockReturnValue(Effect.succeed(path));
+        const args = { appLocale: "en", publicPath: "curriculum/a" } as const;
+
+        yield* querySnapshotContentStore(
+          "program",
+          contentRelease.program.path,
+          args
+        );
+        const next = {
+          ...identity,
+          releaseId: ReleaseIdSchema.make("release-b"),
+        };
+        activeMocks.read.mockReturnValue(Effect.succeed(next));
+        activeMocks.load.mockReturnValue(Effect.succeed(next));
+        yield* querySnapshotContentStore(
+          "program",
+          contentRelease.program.path,
+          args
+        );
+
+        expect(fetchQueryMock).toHaveBeenCalledExactlyOnceWith(
+          contentRelease.program.path,
+          args
+        );
+      })
   );
 });
