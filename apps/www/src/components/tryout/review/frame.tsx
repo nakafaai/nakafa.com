@@ -71,6 +71,9 @@ export function TryoutReviewFrame({
       <TryoutExplainedContext value={explained}>
         <PlayerProvider
           address
+          // A reader who takes Pro on the page reads the section whole once its read comes back, so the
+          // player starts again with every question to move through.
+          key={whole ? "whole" : "preview"}
           keys={
             whole
               ? Arr.map(runtime.questions, (question) => question.placementId)
