@@ -11,20 +11,21 @@ import {
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { SchoolHeader } from "@/components/tenant/header";
 import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { Link } from "@/lib/routing/link";
@@ -104,9 +105,9 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
       </SchoolHeader>
       <TablePageBody>
         {QueryResult.isSuccess(cohorts) && Arr.isReadonlyArrayEmpty(loaded) ? (
-          <TableEmpty
-            act="pointing"
+          <EmptyState
             description={t("cohorts-empty-description")}
+            scene={<EmptyNina act="pointing" />}
             title={t("cohorts-empty")}
           />
         ) : null}
@@ -136,16 +137,16 @@ function GraduationCohortMenu({
   return (
     <RowItems>
       <DropdownMenuItem
+        icon={MortarboardIcon}
         render={
           <Link
             params={{ cohortId, slug }}
             to="/school/$slug/graduation/$cohortId"
-          >
-            <HugeIcons icon={MortarboardIcon} />
-            {common("open")}
-          </Link>
+          />
         }
-      />
+      >
+        {common("open")}
+      </DropdownMenuItem>
     </RowItems>
   );
 }

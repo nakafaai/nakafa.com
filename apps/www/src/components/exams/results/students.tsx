@@ -12,7 +12,6 @@ import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -26,7 +25,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -34,6 +32,8 @@ import {
   useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useKeptRows } from "@/lib/data/kept";
 
@@ -122,10 +122,11 @@ function StudentName({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   return (
     <Button
       aria-pressed={chosen}
-      className="h-auto max-w-xs px-0 md:max-w-sm"
+      className="max-w-xs md:max-w-sm"
       onClick={() => (chosen ? close() : show(row.attemptId))}
+      size="sm"
       type="button"
-      variant="link"
+      variant="ghost"
     >
       <span className="truncate">{row.name}</span>
     </Button>
@@ -143,8 +144,7 @@ function StudentRowMenu({
 
   return (
     <RowItems>
-      <DropdownMenuItem onClick={() => show(attemptId)}>
-        <HugeIcons icon={ViewIcon} />
+      <DropdownMenuItem icon={ViewIcon} onClick={() => show(attemptId)}>
         {t("results-answers")}
       </DropdownMenuItem>
     </RowItems>
@@ -299,9 +299,9 @@ export function StudentsTable() {
         columns={columns}
         data={Option.getOrElse(kept, Arr.empty)}
         empty={
-          <TableEmpty
-            act="reading"
+          <EmptyState
             description={t(filtering ? "filter-empty" : "results-empty")}
+            scene={<EmptyNina act="reading" />}
             title={t(filtering ? "results-no-match" : "results-empty-title")}
           />
         }

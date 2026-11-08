@@ -3,6 +3,7 @@ import { Effect, Number as Num, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -11,8 +12,6 @@ const CURRICULUM = "/en/curriculum/merdeka/class-11/mathematics";
 /** A lesson of that curriculum, opened with its placement. */
 const CONTEXTUAL_LESSON =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
-/** How long the page keeps sampling once the new lesson has its body, so a late part shows. */
-const SETTLE_MILLISECONDS = 1500;
 
 /** What the page saw from the press until it settled. */
 const Pressed = Schema.Struct({
@@ -124,7 +123,7 @@ const pressInto = Effect.fn("NakafaE2E.pressIntoLesson")(function* (
       timeout: readinessTimeoutMilliseconds,
     })
   );
-  yield* Effect.promise(() => page.waitForTimeout(SETTLE_MILLISECONDS));
+  yield* Effect.promise(() => waitForQuiet(page));
   return yield* Effect.promise(() =>
     page.evaluate(() => Reflect.get(window, "nakafaPress"))
   ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Pressed)));

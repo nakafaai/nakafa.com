@@ -68,7 +68,7 @@ describe("saveLedger", () => {
         mocks.report.mockReturnValue(Effect.void);
         yield* saveLedger(slug, { id: cohortId, name: "IX-A" });
         expect(mocks.report).toHaveBeenCalledWith(expect.any(SaveFailed), {
-          source: "components/tenant/graduation/save",
+          source: "components/tenant/write",
         });
         expect(mocks.toastError).toHaveBeenCalledWith({
           title: "school-graduation-export-failed.title",

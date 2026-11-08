@@ -23,29 +23,23 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
+import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
-import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt/boundary";
+import { usePromptInputAttachments } from "@repo/design-system/lib/prompt/context";
 import {
   type PromptInputMessage,
   submitPromptInput,
-} from "@repo/design-system/lib/prompt-input/submission";
+} from "@repo/design-system/lib/prompt/submission";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffectEvent,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { NinaAttach } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
+import { useEarlyTyping } from "@/components/shared/typed";
 
 /**
  * The file tray and the attach button load with their upload code, which
@@ -101,19 +95,7 @@ export function NinaInput({
   const attachPress = useEarlyPress<HTMLButtonElement>(() =>
     onAttachRequest?.()
   );
-  const field = useRef<HTMLTextAreaElement>(null);
-  // React hydrates the field without its value, so text typed before React took
-  // the page over stays in the field but not in the draft, and the next render
-  // would write the empty draft back. The draft takes it first.
-  const keepTyped = useEffectEvent(() => {
-    const typed = field.current?.value ?? "";
-    if (typed !== "" && text === "") {
-      setText(typed);
-    }
-  });
-  useLayoutEffect(() => {
-    keepTyped();
-  }, []);
+  const field = useEarlyTyping(text, setText);
   const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
   // While Nina answers, the button stops the reply and a press sends no text.
   const answering = status === "streaming";
@@ -204,10 +186,10 @@ export function NinaInput({
           {attachments ? null : (
             <InputGroupButton
               {...attachPress}
-              aria-label={t("attach-files")}
               className="rounded-full"
               disabled={disabled}
               size="icon"
+              tooltip={t("attach-files")}
               type="button"
               variant="outline"
             >
@@ -216,11 +198,11 @@ export function NinaInput({
           )}
           <div className="flex items-center gap-1">
             <InputGroupButton
-              aria-label={stopping ? t("stop-response") : t("send-message")}
               className="rounded-full"
               disabled={disabled}
               onClick={stopping ? onStop : undefined}
               size="icon"
+              tooltip={stopping ? t("stop-response") : t("send-message")}
               type={stopping ? "button" : "submit"}
               variant="secondary"
             >

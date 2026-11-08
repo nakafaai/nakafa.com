@@ -7,12 +7,9 @@ import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Item,
-  ItemContent,
-  ItemMedia,
-  ItemTitle,
-} from "@repo/design-system/components/ui/item";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
@@ -96,40 +93,22 @@ export function ChatDeletionDialog({
 
   return (
     <ResponsiveDialog
-      description={t("delete-chat-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button onClick={onDelete} type="button" variant="destructive">
-            <HugeIcons icon={Delete02Icon} />
-            {common("delete")}
-          </Button>
-        </>
+      action={
+        <Button onClick={onDelete} type="button" variant="destructive">
+          <HugeIcons icon={Delete02Icon} />
+          {common("delete")}
+        </Button>
       }
+      description={t("delete-chat-description")}
       open={open}
       setOpen={setOpen}
       title={t("delete-chat")}
     >
-      <Item size="sm" variant="outline">
-        <ItemMedia variant="icon">
-          <HugeIcons
-            icon={
-              chat.visibility === "private" ? SquareLock01Icon : Globe02Icon
-            }
-          />
-        </ItemMedia>
-        <ItemContent>
-          <ItemTitle className="line-clamp-2">
-            {readChatTitle(chat.title, t("new-chat"))}
-          </ItemTitle>
-        </ItemContent>
-      </Item>
+      <ResponsiveDialogSubject
+        icon={chat.visibility === "private" ? SquareLock01Icon : Globe02Icon}
+      >
+        {readChatTitle(chat.title, t("new-chat"))}
+      </ResponsiveDialogSubject>
     </ResponsiveDialog>
   );
 }

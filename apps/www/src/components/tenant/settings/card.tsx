@@ -14,11 +14,9 @@ import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
 import { QrImage } from "@/components/shared/qr/image";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { schoolOrigin } from "@/lib/routing/school/host";
-
-const SOURCE = "components/tenant/settings/card";
 
 /**
  * A login card as the page holds it: the code the server answered once, the login
@@ -70,19 +68,14 @@ export function SchoolCardDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 1500 });
   const printCard = useMutation(identity.cards.print);
   const [isPrinting, startPrinting] = useTransition();
 
   return (
     <ResponsiveDialog
-      description={t("card-code-description")}
-      footer={
+      action={
         <>
-          <Button onClick={onClose} type="button" variant="outline">
-            {common("cancel")}
-          </Button>
           <Button
             onClick={() => {
               if (card !== undefined) {
@@ -103,10 +96,9 @@ export function SchoolCardDialog({
                 const { personId } = card;
                 // The sheet opens once the journal holds the print, so a refused print never prints.
                 startPrinting(() =>
-                  saveSchool(
-                    () => printCard({ personId, slug }),
-                    SOURCE,
-                    () => window.print()
+                  runSchoolWrite(
+                    schoolCall(() => printCard({ personId, slug })),
+                    { onSaved: () => window.print() }
                   )
                 );
               }
@@ -117,6 +109,7 @@ export function SchoolCardDialog({
           </Button>
         </>
       }
+      description={t("card-code-description")}
       open={card !== undefined}
       setOpen={(open) => {
         if (!open) {

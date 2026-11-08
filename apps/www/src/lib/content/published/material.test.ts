@@ -22,11 +22,11 @@ import {
   readPublishedMaterial,
   readRenderedMaterial,
 } from "@/lib/content/published/material";
-import { testArticleProjection } from "@/test/content-article";
 import {
   previewProjection as projection,
   previewSourcePath as sourcePath,
-} from "@/test/content-preview";
+} from "@/test/manifest";
+import { testArticleProjection } from "@/test/published/article";
 
 const readMock = vi.hoisted(() => vi.fn());
 const bodyMock = vi.hoisted(() => vi.fn());

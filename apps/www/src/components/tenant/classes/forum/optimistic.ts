@@ -6,8 +6,14 @@ import type {
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ReadPlace } from "@repo/backend/confect/classroom/forum/read";
-import { Array as Arr, Number as Num, Option, Schema } from "effect";
+import { Number as Num, Option, Schema } from "effect";
 import { withReplier } from "@/components/tenant/classes/forum/repliers";
+import {
+  changeLoaded,
+  changeRows,
+  dropRows,
+  withPage,
+} from "@/lib/data/loaded";
 
 /** One message of a channel, as the forum shows it. */
 export type ForumMessage = Ref.Returns<
@@ -32,23 +38,9 @@ const changeMessage = (
   messageId: Id<"classroomMessages">,
   change: (message: ForumMessage) => ForumMessage
 ) => {
-  for (const query of localStore.getAllQueries(page)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(query.value.value.page, (message) => message.id === messageId)
-    ) {
-      localStore.setQuery(
-        page,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (message) =>
-            message.id === messageId ? change(message) : message
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, page, (value) =>
+    changeRows(value, (message) => message.id === messageId, change)
+  );
 };
 
 /**
@@ -60,22 +52,11 @@ const prependToChannel = (
   channelId: Id<"classroomChannels">,
   message: ForumMessage
 ) => {
-  for (const query of localStore.getAllQueries(page)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.channelId === channelId &&
-      query.args.paginationOpts.cursor === null
-    ) {
-      localStore.setQuery(
-        page,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: [message, ...query.value.value.page],
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, page, (value, args) =>
+    args.channelId === channelId && args.paginationOpts.cursor === null
+      ? Option.some(withPage(value, (rows) => [message, ...rows]))
+      : Option.none()
+  );
 };
 
 /**
@@ -87,40 +68,23 @@ export const changeDiscussion = (
   number: number,
   change: (discussion: Discussion) => Discussion
 ) => {
-  for (const query of localStore.getAllQueries(get)) {
-    if (Option.isSome(query.value) && query.args.number === number) {
-      localStore.setQuery(
-        get,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          discussion: change(query.value.value.discussion),
-        })
-      );
-    }
-  }
-  for (const query of localStore.getAllQueries(page)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(
-        query.value.value.page,
-        (message) => message.discussion?.number === number
-      )
-    ) {
-      localStore.setQuery(
-        page,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (message) =>
-            message.discussion !== null && message.discussion.number === number
-              ? { ...message, discussion: change(message.discussion) }
-              : message
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, get, (value, args) =>
+    args.number === number
+      ? Option.some({ ...value, discussion: change(value.discussion) })
+      : Option.none()
+  );
+  changeLoaded(localStore, page, (value) =>
+    changeRows(
+      value,
+      (message) => message.discussion?.number === number,
+      (message) => ({
+        ...message,
+        discussion: Option.getOrNull(
+          Option.map(Option.fromNullOr(message.discussion), change)
+        ),
+      })
+    )
+  );
 };
 
 /** The summary of one discussion, as a channel and the discussion's page show it. */
@@ -153,22 +117,11 @@ export const replyUpdate =
     message: ForumMessage
   ): OptimisticUpdate<typeof classroom.forum.threads.reply> =>
   (localStore, args) => {
-    for (const query of localStore.getAllQueries(replies)) {
-      if (
-        Option.isSome(query.value) &&
-        query.args.number === args.number &&
-        query.args.paginationOpts.cursor === null
-      ) {
-        localStore.setQuery(
-          replies,
-          query.args,
-          Option.some({
-            ...query.value.value,
-            page: [message, ...query.value.value.page],
-          })
-        );
-      }
-    }
+    changeLoaded(localStore, replies, (value, loaded) =>
+      loaded.number === args.number && loaded.paginationOpts.cursor === null
+        ? Option.some(withPage(value, (rows) => [message, ...rows]))
+        : Option.none()
+    );
     changeDiscussion(localStore, args.number, (discussion) => ({
       ...discussion,
       lastReplyAt: message.createdAt,
@@ -186,20 +139,11 @@ export const markUpdate: OptimisticUpdate<typeof classroom.forum.reads.mark> = (
   localStore,
   args
 ) => {
-  for (const query of localStore.getAllQueries(reads.get)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.classId === args.classId &&
-      samePlace(query.args.place, args.place)
-    ) {
-      const at = query.value.value.at;
-      localStore.setQuery(
-        reads.get,
-        query.args,
-        Option.some({ at: at === null ? args.at : Num.max(at, args.at) })
-      );
-    }
-  }
+  changeLoaded(localStore, reads.get, ({ at }, loaded) =>
+    loaded.classId === args.classId && samePlace(loaded.place, args.place)
+      ? Option.some({ at: at === null ? args.at : Num.max(at, args.at) })
+      : Option.none()
+  );
   const place = args.place;
   if (place._tag === "discussion") {
     changeDiscussion(localStore, place.number, (discussion) => ({
@@ -209,28 +153,13 @@ export const markUpdate: OptimisticUpdate<typeof classroom.forum.reads.mark> = (
     }));
     return;
   }
-  for (const query of localStore.getAllQueries(channels.list)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.some(
-        query.value.value.page,
-        (channel) => channel.id === place.channelId
-      )
-    ) {
-      localStore.setQuery(
-        channels.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (channel) =>
-            channel.id === place.channelId
-              ? { ...channel, unread: false }
-              : channel
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, channels.list, (value) =>
+    changeRows(
+      value,
+      (channel) => channel.id === place.channelId,
+      (channel) => ({ ...channel, unread: false })
+    )
+  );
 };
 
 /** Shows the author's new text of a message at once, edited at `at`. */
@@ -262,28 +191,11 @@ const leaveThreads = (
   classId: Id<"classes">,
   number: number
 ) => {
-  for (const query of localStore.getAllQueries(threadList)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.classId === classId &&
-      Arr.some(
-        query.value.value.page,
-        (row) => row.discussion.number === number
-      )
-    ) {
-      localStore.setQuery(
-        threadList,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.filter(
-            query.value.value.page,
-            (row) => row.discussion.number !== number
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, threadList, (value, args) =>
+    args.classId === classId
+      ? dropRows(value, (row) => row.discussion.number === number)
+      : Option.none()
+  );
 };
 
 /** Takes an archived discussion out of the class's list at once; a refusal brings it back. */

@@ -9,14 +9,12 @@ import {
   PinOffIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { PostText } from "@repo/backend/confect/classroom/posts/post";
+import { PostText } from "@repo/backend/confect/classroom/posts/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -28,7 +26,10 @@ import {
   ItemHeader,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import {
   Array as Arr,
@@ -40,11 +41,6 @@ import {
 } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   archivePostUpdate,
@@ -55,8 +51,8 @@ import {
   restorePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
 import { PostPoll } from "@/components/tenant/classes/home/poll";
-import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * One announcement of the class home: who posted it and when, and its text, which may break
@@ -146,15 +142,14 @@ function PostActions({
 
   const confirm = () => {
     setRemoving(false);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         remove.withOptimisticUpdate(removePostUpdate)({
           classId,
           postId: post.id,
           slug,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 
@@ -162,102 +157,96 @@ function PostActions({
     <ItemActions>
       <DropdownMenu>
         <PostMenuTrigger />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() =>
-                runForumCall(
-                  forumCall(() =>
-                    pin.withOptimisticUpdate(pinPostUpdate(post))({
-                      classId,
-                      pinned: !post.pinned,
-                      postId: post.id,
-                      slug,
-                    })
-                  ),
-                  toastForumFailure
+        <DropdownMenuContent
+          align="end"
+          className="w-40"
+          label={common("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={post.pinned ? PinOffIcon : PinIcon}
+            onClick={() =>
+              runSchoolWrite(
+                schoolCall(() =>
+                  pin.withOptimisticUpdate(pinPostUpdate(post))({
+                    classId,
+                    pinned: !post.pinned,
+                    postId: post.id,
+                    slug,
+                  })
                 )
-              }
-            >
-              <HugeIcons icon={post.pinned ? PinOffIcon : PinIcon} />
-              {t(post.pinned ? "post-unpin" : "post-pin")}
-            </DropdownMenuItem>
-            {post.mine ? (
-              <>
-                {post.poll === null ? (
-                  <DropdownMenuItem onClick={onEdit}>
-                    <HugeIcons icon={PencilEdit02Icon} />
-                    {t("message-edit")}
-                  </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuSeparator />
-                {post.archived ? (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      runForumCall(
-                        forumCall(() =>
-                          restore.withOptimisticUpdate(restorePostUpdate)({
-                            classId,
-                            postId: post.id,
-                            slug,
-                          })
-                        ),
-                        toastForumFailure
-                      )
-                    }
-                  >
-                    <HugeIcons icon={ArrowTurnBackwardIcon} />
-                    {t("post-restore")}
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      runForumCall(
-                        forumCall(() =>
-                          archive.withOptimisticUpdate(archivePostUpdate)({
-                            classId,
-                            postId: post.id,
-                            slug,
-                          })
-                        ),
-                        toastForumFailure
-                      )
-                    }
-                  >
-                    <HugeIcons icon={Archive02Icon} />
-                    {t("post-archive")}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  onClick={() => setRemoving(true)}
-                  variant="destructive"
-                >
-                  <HugeIcons icon={Delete02Icon} />
-                  {t("post-remove")}
+              )
+            }
+          >
+            {t(post.pinned ? "post-unpin" : "post-pin")}
+          </DropdownMenuItem>
+          {post.mine ? (
+            <>
+              {post.poll === null ? (
+                <DropdownMenuItem icon={PencilEdit02Icon} onClick={onEdit}>
+                  {t("message-edit")}
                 </DropdownMenuItem>
-              </>
-            ) : null}
-          </DropdownMenuGroup>
+              ) : null}
+              <DropdownMenuSeparator />
+              {post.archived ? (
+                <DropdownMenuItem
+                  icon={ArrowTurnBackwardIcon}
+                  onClick={() =>
+                    runSchoolWrite(
+                      schoolCall(() =>
+                        restore.withOptimisticUpdate(restorePostUpdate)({
+                          classId,
+                          postId: post.id,
+                          slug,
+                        })
+                      )
+                    )
+                  }
+                >
+                  {t("post-restore")}
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  icon={Archive02Icon}
+                  onClick={() =>
+                    runSchoolWrite(
+                      schoolCall(() =>
+                        archive.withOptimisticUpdate(archivePostUpdate)({
+                          classId,
+                          postId: post.id,
+                          slug,
+                        })
+                      )
+                    )
+                  }
+                >
+                  {t("post-archive")}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                icon={Delete02Icon}
+                onClick={() => setRemoving(true)}
+                variant="destructive"
+              >
+                {t("post-remove")}
+              </DropdownMenuItem>
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog
-        description={t("post-remove-description")}
-        footer={
-          <>
-            <Button onClick={() => setRemoving(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button onClick={confirm} variant="destructive">
-              {t("post-remove")}
-            </Button>
-          </>
+        action={
+          <Button onClick={confirm} variant="destructive">
+            {t("post-remove")}
+          </Button>
         }
+        description={t("post-remove-description")}
         open={removing}
         setOpen={setRemoving}
         title={t("post-remove-title")}
       >
-        <LossItem icon={Megaphone01Icon} name={post.text} />
+        <ResponsiveDialogSubject icon={Megaphone01Icon}>
+          {post.text}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </ItemActions>
   );
@@ -280,9 +269,9 @@ function PostEditor({ onDone, post }: { onDone: () => void; post: ClassPost }) {
     if (!Schema.is(PostText)(text) || text === post.text) {
       return;
     }
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(Clock.currentTimeMillis, (at) =>
-        forumCall(() =>
+        schoolCall(() =>
           edit.withOptimisticUpdate(editPostUpdate(at))({
             classId,
             postId: post.id,
@@ -290,8 +279,7 @@ function PostEditor({ onDone, post }: { onDone: () => void; post: ClassPost }) {
             text,
           })
         )
-      ),
-      toastForumFailure
+      )
     );
   };
 

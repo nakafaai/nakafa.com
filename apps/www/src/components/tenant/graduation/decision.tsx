@@ -19,9 +19,7 @@ import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { decideChange } from "@/components/tenant/graduation/change";
 import type { GraduationOverview } from "@/components/tenant/graduation/workbook";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/graduation/decision";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** Whether the typed fields make a decision the server takes. */
 const isDecision = Schema.is(GraduationDecision);
@@ -42,7 +40,6 @@ export function GraduationDecisionDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolGraduation");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const decide = useMutation(records.graduations.decide).withOptimisticUpdate(
@@ -66,35 +63,27 @@ export function GraduationDecisionDialog({
   const submit = () =>
     startTransition(() => {
       setOpen(false);
-      return saveSchool(
-        () => decide({ ...next, periodId: overview.cohort.periodId, slug }),
-        SOURCE
+      return runSchoolWrite(
+        schoolCall(() =>
+          decide({ ...next, periodId: overview.cohort.periodId, slug })
+        )
       );
     });
 
   return (
     <ResponsiveDialog
-      description={t("decide-description", { period: overview.cohort.period })}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!isDecision(next) || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={CheckmarkBadge01Icon} />
-            {t("save-decision")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={!isDecision(next) || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={CheckmarkBadge01Icon} />
+          {t("save-decision")}
+        </Button>
       }
+      description={t("decide-description", { period: overview.cohort.period })}
       open={open}
       setOpen={setOpen}
       title={t("decide")}

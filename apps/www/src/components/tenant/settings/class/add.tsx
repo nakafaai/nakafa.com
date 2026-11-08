@@ -12,13 +12,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -27,14 +25,11 @@ import { Array as Arr, Option, Result, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { createClassChange } from "@/components/tenant/settings/class/changes";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/settings/class/add";
 
 /** The ID of one cohort, as the cohorts list of a period names it. */
 type CohortId = Cohort["id"];
@@ -58,7 +53,6 @@ export function SchoolClassAdd({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const create = useMutation(classroom.classes.create).withOptimisticUpdate(
     createClassChange
@@ -79,12 +73,15 @@ export function SchoolClassAdd({
     }
     setIsOpen(false);
     startSaving(() =>
-      saveSchool(
-        () => create({ cohortId, slug, ...(sd ? {} : { subject: next }) }),
-        SOURCE,
-        () => {
-          setCohortId(null);
-          setSubject("");
+      runSchoolWrite(
+        schoolCall(() =>
+          create({ cohortId, slug, ...(sd ? {} : { subject: next }) })
+        ),
+        {
+          onSaved: () => {
+            setCohortId(null);
+            setSubject("");
+          },
         }
       )
     );
@@ -97,26 +94,17 @@ export function SchoolClassAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
-        description={hasNoPeriod ? t("class-add-no-period") : startsAs}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={!isComplete || isPending}
-              inert={isPending}
-              onClick={submit}
-              type="button"
-            >
-              {t("class-create")}
-            </Button>
-          </>
+        action={
+          <Button
+            disabled={!isComplete || isPending}
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
+            {t("class-create")}
+          </Button>
         }
+        description={hasNoPeriod ? t("class-add-no-period") : startsAs}
         open={isOpen}
         setOpen={setIsOpen}
         title={t("class-create")}
@@ -171,6 +159,7 @@ function ClassCohortSelect({
   periodId: Period["id"] | null;
   slug: TenantSlug;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohorts = useQuery(
@@ -211,16 +200,16 @@ function ClassCohortSelect({
             }
           />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="cohort" />
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons icon={UserGroupIcon} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-cohort")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={UserGroupIcon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       {isEmpty ? (

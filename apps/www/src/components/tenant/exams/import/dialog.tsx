@@ -14,9 +14,7 @@ import {
 import { ImportFileField } from "@/components/tenant/exams/import/field";
 import { IMPORT_ACCEPT } from "@/components/tenant/exams/import/file";
 import { useExam } from "@/components/tenant/exams/provider";
-import { reportClientException } from "@/lib/analytics/client";
-
-const SOURCE = "components/tenant/exams/import/dialog";
+import { failSchoolAction } from "@/components/tenant/write";
 
 /** Says that a form is read through a Google Drive connection this account does not have. */
 const toastNoDrive = () =>
@@ -39,7 +37,6 @@ export function ImportQuestions({
   open: boolean;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const { exam, slug } = useExam();
   const importFile = useImportFile(slug);
   const importForm = useImportForm(slug);
@@ -50,26 +47,21 @@ export function ImportQuestions({
 
   return (
     <ResponsiveDialog
-      description={t("import-dialog-description")}
-      footer={
-        <>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={file === null}
-            onClick={() => {
-              if (file === null) {
-                return;
-              }
-              onOpenChange(false);
-              Effect.runFork(importFile(exam.id, file));
-            }}
-          >
-            {t("import-submit")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={file === null}
+          onClick={() => {
+            if (file === null) {
+              return;
+            }
+            onOpenChange(false);
+            Effect.runFork(importFile(exam.id, file));
+          }}
+        >
+          {t("import-submit")}
+        </Button>
       }
+      description={t("import-dialog-description")}
       // The dialog forgets its file once it has closed, so it opens empty again and the closing dialog
       // keeps showing the file it imports.
       onOpenChangeComplete={(next) => {
@@ -99,16 +91,10 @@ export function ImportQuestions({
                     Effect.sync(toastNoDrive)
                   ),
                   Effect.catch((error) =>
-                    reportClientException(error, { source: SOURCE }).pipe(
-                      Effect.andThen(
-                        Effect.sync(() =>
-                          toast.error({
-                            description: "import-unread.description",
-                            title: "import-unread.title",
-                          })
-                        )
-                      )
-                    )
+                    failSchoolAction(error, {
+                      description: "import-unread.description",
+                      title: "import-unread.title",
+                    })
                   )
                 )
               )

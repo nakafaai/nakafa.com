@@ -14,10 +14,8 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { setRosterEntryChange } from "@/components/tenant/settings/entry";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { CohortMember } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/nisn";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that sets a student's NISN and under-age flag by hand, which decide whether the student needs a guardian's
@@ -36,7 +34,6 @@ export function RosterEntryDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const entry = useQuery(
@@ -59,34 +56,24 @@ export function RosterEntryDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () => save({ nisn: nisn.value, personId: person.id, slug }),
-        SOURCE
+      runSchoolWrite(
+        schoolCall(() => save({ nisn: nisn.value, personId: person.id, slug }))
       )
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("roster-entry-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(loaded) || Option.isNone(nisn)}
-            onClick={submit}
-            type="button"
-          >
-            {t("roster-entry-save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(loaded) || Option.isNone(nisn)}
+          onClick={submit}
+          type="button"
+        >
+          {t("roster-entry-save")}
+        </Button>
       }
+      description={t("roster-entry-description")}
       open={open}
       setOpen={setOpen}
       title={person.name}

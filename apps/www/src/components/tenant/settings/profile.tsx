@@ -6,7 +6,10 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Schema } from "effect";
@@ -17,7 +20,6 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { logoRefusalOf } from "@/components/tenant/logo";
 import { SchoolMark } from "@/components/tenant/mark";
@@ -25,9 +27,9 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolLocaleCard } from "@/components/tenant/settings/locale";
 import { removeLogoChange } from "@/components/tenant/settings/mutation";
 import { SchoolNameCard } from "@/components/tenant/settings/name";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
 import { storeSchoolLogo } from "@/components/tenant/settings/upload";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { reportClientException } from "@/lib/analytics/client";
 
 const SOURCE = "components/tenant/settings/profile";
@@ -88,7 +90,6 @@ function SchoolProfileCard({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const fileInput = useRef<HTMLInputElement>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(undefined);
@@ -115,15 +116,15 @@ function SchoolProfileCard({
     const url = URL.createObjectURL(file);
     setPreview(url);
     startTransition(async () => {
-      await saveSchool(
-        () =>
+      await runSchoolWrite(
+        schoolCall(() =>
           storeSchoolLogo({
             file,
             reserve: () =>
               reserveLogo({ byteSize: file.size, contentType, slug }),
             save: (fileId) => setLogo({ fileId, slug }),
-          }),
-        SOURCE
+          })
+        )
       );
       setPreview(undefined);
       URL.revokeObjectURL(url);
@@ -132,7 +133,9 @@ function SchoolProfileCard({
 
   const takeLogoOff = () => {
     setIsRemoving(false);
-    startTransition(() => saveSchool(() => removeLogo({ slug }), SOURCE));
+    startTransition(() =>
+      runSchoolWrite(schoolCall(() => removeLogo({ slug })))
+    );
   };
 
   const copyAddress = () => {
@@ -202,26 +205,19 @@ function SchoolProfileCard({
           </CardSectionActions>
         </CardSectionFooter>
         <ResponsiveDialog
-          description={t("logo-remove-description")}
-          footer={
-            <>
-              <Button
-                onClick={() => setIsRemoving(false)}
-                type="button"
-                variant="outline"
-              >
-                {common("cancel")}
-              </Button>
-              <Button onClick={takeLogoOff} type="button" variant="destructive">
-                {t("logo-remove-confirm")}
-              </Button>
-            </>
+          action={
+            <Button onClick={takeLogoOff} type="button" variant="destructive">
+              {t("logo-remove-confirm")}
+            </Button>
           }
+          description={t("logo-remove-description")}
           open={isRemoving}
           setOpen={setIsRemoving}
           title={t("logo-remove-title")}
         >
-          <ConfirmSubject icon={Image01Icon} name={tenant.name} />
+          <ResponsiveDialogSubject icon={Image01Icon}>
+            {tenant.name}
+          </ResponsiveDialogSubject>
         </ResponsiveDialog>
       </CardSection>
       <CardSection

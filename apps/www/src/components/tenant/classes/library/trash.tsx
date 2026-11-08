@@ -14,6 +14,7 @@ import {
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, DateTime, Match } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -22,13 +23,9 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import {
   folderPath,
   type LibraryFolder,
@@ -41,10 +38,10 @@ import {
   restoreItemUpdate,
 } from "@/components/tenant/classes/library/optimistic";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
-import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many trashed items the trash reads each time its end comes into view. */
 const TRASH_PAGE_SIZE = 20;
@@ -193,9 +190,9 @@ export function LibraryTrash() {
         columns={columns}
         data={rows}
         empty={
-          <TableEmpty
-            act="reading"
+          <EmptyState
             description={t("library-trash-empty-description")}
+            scene={<EmptyNina act="reading" />}
             title={t("library-trash-empty")}
           />
         }
@@ -216,8 +213,8 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
   const purgeFolder = useMutation(classroom.folders.purge);
 
   const restore = () =>
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         row._tag === "item"
           ? restoreItem.withOptimisticUpdate(restoreItemUpdate)({
               classId,
@@ -229,12 +226,11 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
               folderId: row.folder.id,
               slug,
             })
-      ),
-      toastForumFailure
+      )
     );
   const purge = () =>
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         row._tag === "item"
           ? purgeItem.withOptimisticUpdate(purgeItemUpdate)({
               classId,
@@ -246,18 +242,16 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
               folderId: row.folder.id,
               slug,
             })
-      ),
-      toastForumFailure
+      )
     );
 
   return (
     <ConfirmRowMenu
       action={t("library-purge")}
       body={
-        <LossItem
-          icon={KIND_ICONS[shownOf(row).kind]}
-          name={shownOf(row).title}
-        />
+        <ResponsiveDialogSubject icon={KIND_ICONS[shownOf(row).kind]}>
+          {shownOf(row).title}
+        </ResponsiveDialogSubject>
       }
       confirm={t("library-purge")}
       description={t("library-purge-description")}
@@ -265,8 +259,7 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
       onConfirm={purge}
       title={t("library-purge-title")}
     >
-      <DropdownMenuItem onClick={restore}>
-        <HugeIcons icon={RotateLeft01Icon} />
+      <DropdownMenuItem icon={RotateLeft01Icon} onClick={restore}>
         {t("library-restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>

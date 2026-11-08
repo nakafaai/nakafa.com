@@ -54,10 +54,12 @@ const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
 const initialPageviewCaptured = MutableRef.make(false);
 
 /** Raised when the baseline client cannot initialize or upgrade. */
-export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyticsLoadFailed>()(
-  "BrowserAnalyticsLoadFailed",
-  { code: Schema.Literal(browserAnalyticsLoadFailedCode) }
-) {}
+export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<
+  BrowserAnalyticsLoadFailed,
+  { readonly brand: unique symbol }
+>()("BrowserAnalyticsLoadFailed", {
+  code: Schema.Literal(browserAnalyticsLoadFailedCode),
+}) {}
 
 const browserAnalyticsLoadFailure = () =>
   new BrowserAnalyticsLoadFailed({ code: browserAnalyticsLoadFailedCode });

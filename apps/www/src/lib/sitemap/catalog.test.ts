@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 
-class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMaterialInventory>()(
-  "MissingSignedMaterialInventory",
-  { message: Schema.String }
-) {}
+class MissingSignedMaterialInventory extends Schema.TaggedError<
+  MissingSignedMaterialInventory,
+  { readonly brand: unique symbol }
+>()("MissingSignedMaterialInventory", { message: Schema.String }) {}
 
 const activeMocks = vi.hoisted(() => ({
   expireActiveContentIdentity: vi.fn(),
@@ -280,23 +280,23 @@ describe("sitemap page catalog", () => {
     })
   );
 
-  it.effect("rejects a Quran catalog from another active release", () =>
-    Effect.gen(function* () {
-      quranMocks.readPublishedQuranCatalog.mockReturnValue(
-        Effect.succeed({
-          activeReleaseId: "release-next",
-          surahs: [{ number: 1 }],
-        })
-      );
+  it.effect(
+    "takes a Quran catalog that an earlier release keeps through its snapshot",
+    () =>
+      Effect.gen(function* () {
+        quranMocks.readPublishedQuranCatalog.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-earlier",
+            surahs: [{ number: 1 }],
+          })
+        );
 
-      expect(
-        yield* readSitemapPageDescriptors().pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PublishedReleaseMismatchError",
-        actualReleaseId: "release-next",
-        expectedReleaseId: "release-material",
-      });
-    })
+        expect(yield* readSitemapPageDescriptors()).toEqual(
+          expect.arrayContaining([
+            { id: "quran_en", kind: "quran", locale: "en" },
+          ])
+        );
+      })
   );
 
   it.effect("omits Quran pages when the signed catalog is empty", () =>

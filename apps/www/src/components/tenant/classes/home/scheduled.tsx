@@ -5,15 +5,13 @@ import {
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { PostText } from "@repo/backend/confect/classroom/posts/post";
+import { PostText } from "@repo/backend/confect/classroom/posts/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
@@ -37,11 +35,6 @@ import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   cancelWaitingUpdate,
@@ -55,6 +48,7 @@ import {
   localDeadline,
 } from "@/components/tenant/classes/tasks/deadline";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The announcements the viewer keeps for later, above the class's posts, the soonest first. Nobody else in the class
@@ -121,33 +115,35 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
     <ItemActions>
       <DropdownMenu>
         <PostMenuTrigger />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("message-edit")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() =>
-                runForumCall(
-                  forumCall(() =>
-                    cancel.withOptimisticUpdate(cancelWaitingUpdate)({
-                      classId,
-                      scheduledId: post.id,
-                      slug,
-                    })
-                  ),
-                  toastForumFailure
+        <DropdownMenuContent
+          align="end"
+          className="w-44"
+          label={common("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={PencilEdit02Icon}
+            onClick={() => dialogs.show("edit")}
+          >
+            {t("message-edit")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            icon={Cancel01Icon}
+            onClick={() =>
+              runSchoolWrite(
+                schoolCall(() =>
+                  cancel.withOptimisticUpdate(cancelWaitingUpdate)({
+                    classId,
+                    scheduledId: post.id,
+                    slug,
+                  })
                 )
-              }
-              variant="destructive"
-            >
-              <HugeIcons icon={Cancel01Icon} />
-              {t("post-schedule-cancel")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+              )
+            }
+            variant="destructive"
+          >
+            {t("post-schedule-cancel")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {dialogs.kind === "edit" ? (
@@ -173,7 +169,6 @@ function WaitingDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const id = useId();
   const edit = useMutation(classroom.scheduled.edit);
@@ -194,8 +189,8 @@ function WaitingDialog({
       return;
     }
     setOpen(false);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         edit.withOptimisticUpdate(editWaitingUpdate)({
           classId,
           publishAt: publishAt.value,
@@ -204,26 +199,22 @@ function WaitingDialog({
           text: body,
         })
       ),
-      () => {
-        setOpen(true);
-        toastForumFailure();
+      {
+        onFailed: () => {
+          setOpen(true);
+        },
       }
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("post-schedule-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={!ready} onClick={save}>
-            {t("message-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!ready} onClick={save}>
+          {t("message-save")}
+        </Button>
       }
+      description={t("post-schedule-description")}
       open={open}
       setOpen={setOpen}
       title={t("post-waiting-edit")}

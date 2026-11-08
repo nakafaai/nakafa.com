@@ -1,5 +1,7 @@
 "use client";
 
+import type { Button as ButtonPrimitive } from "@base-ui/react/button";
+
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -9,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { useMissedPress } from "@repo/design-system/hooks/use-press";
+import { useMissedPress } from "@repo/design-system/hooks/press";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
@@ -142,12 +144,17 @@ export function SidebarTrigger({
   onClick,
   icon,
   label,
+  size = "icon-sm",
+  variant = "ghost",
   ...props
-}: ComponentProps<typeof Button> & {
-  icon?: ComponentProps<typeof HugeIcons>["icon"];
-  /** The name of the toggle, in the reader's language. */
-  label: string;
-}) {
+}: ButtonPrimitive.Props &
+  Pick<ComponentProps<typeof Button>, "variant"> & {
+    /** The square size of the toggle, the height of the row it stands in. */
+    size?: "icon" | "icon-sm";
+    icon?: ComponentProps<typeof HugeIcons>["icon"];
+    /** The name of the toggle, in the reader's language. */
+    label: string;
+  }) {
   const isLocked = useSidebar((sidebar) => sidebar.isLocked);
   const isMobile = useSidebar((sidebar) => sidebar.isMobile);
   const open = useSidebar((sidebar) => sidebar.open);
@@ -163,8 +170,7 @@ export function SidebarTrigger({
     <Button
       {...press}
       aria-expanded={isMobile ? openMobile : open}
-      aria-label={label}
-      className={cn("size-7", className)}
+      className={className}
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       onClick={(event) => {
@@ -172,8 +178,9 @@ export function SidebarTrigger({
         onClick?.(event);
         toggleSidebar();
       }}
-      size="icon"
-      variant="ghost"
+      size={size}
+      tooltip={label}
+      variant={variant}
       {...props}
     >
       <HugeIcons icon={icon ?? PanelLeftIcon} />

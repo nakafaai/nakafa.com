@@ -40,8 +40,8 @@ import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SelectField } from "@/components/tenant/settings/select";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import {
   formatBillingDate,
   formatCount,
@@ -52,8 +52,6 @@ import {
   type SchoolBilling,
   schoolPayChange,
 } from "@/lib/billing/school";
-
-const SOURCE = "components/tenant/settings/order";
 
 const isMonths = Schema.is(SchoolPeriod);
 
@@ -96,11 +94,22 @@ export function SchoolOrderDialog({
 
   const submit = () => {
     setOpen(false);
-    startPaying(() => saveSchool(() => pay({ order, slug }), SOURCE));
+    startPaying(() => runSchoolWrite(schoolCall(() => pay({ order, slug }))));
   };
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={Option.isNone(draft) || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={Invoice01Icon} />
+          {t("billing-issue")}
+        </Button>
+      }
       description={
         kind === "plan"
           ? t("billing-order-description")
@@ -108,26 +117,6 @@ export function SchoolOrderDialog({
               credits: schoolAccount.credits,
               drive: schoolAccount.storageMegabytes,
             })
-      }
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(draft) || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={Invoice01Icon} />
-            {t("billing-issue")}
-          </Button>
-        </>
       }
       open={open}
       setOpen={setOpen}
@@ -157,7 +146,6 @@ export function SchoolOrderDialog({
         ) : null}
         {kind === "plan" ? (
           <SelectField
-            choice="period"
             items={Arr.map(SchoolPeriod.literals, (each) => ({
               icon: Calendar03Icon,
               label: t("billing-months", {
@@ -167,6 +155,7 @@ export function SchoolOrderDialog({
               value: String(each),
             }))}
             label={t("billing-order-period")}
+            menu={common("menu-period")}
             onChoose={(value) => {
               const chosen = Number(value);
               if (isMonths(chosen)) {
@@ -209,7 +198,6 @@ export function SchoolOrderDialog({
                     )
                   }
                   type="button"
-                  variant="outline"
                 >
                   {`+${formatCount(preset, locale)}`}
                 </Button>

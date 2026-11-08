@@ -2,6 +2,8 @@ import {
   ArrowDown01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
+  Calendar01Icon,
+  Calendar03Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -13,7 +15,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
+import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day";
 import {
   captionChoices,
   chosenMonth,
@@ -154,10 +156,11 @@ function CalendarCaption({
           <SelectTrigger aria-label={t("month")} size="sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={t("menu-month")}>
             {Arr.map(monthItems, (item) => (
               <SelectItem
                 disabled={item.disabled}
+                icon={Calendar01Icon}
                 key={item.value}
                 value={item.value}
               >
@@ -181,9 +184,13 @@ function CalendarCaption({
           <SelectTrigger aria-label={t("year")} size="sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={t("menu-year")}>
             {Arr.map(yearItems, (item) => (
-              <SelectItem key={item.value} value={item.value}>
+              <SelectItem
+                icon={Calendar03Icon}
+                key={item.value}
+                value={item.value}
+              >
                 {item.label}
               </SelectItem>
             ))}
@@ -331,7 +338,7 @@ function CalendarDayButton({
   return (
     <Button
       className={cn(
-        "data-[range-end=true]:bg-primary data-[range-middle=true]:bg-accent data-[range-start=true]:bg-primary data-[selected-single=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:text-accent-foreground data-[range-start=true]:text-primary-foreground data-[selected-single=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-3 [&>span]:text-xs [&>span]:opacity-70",
+        "data-[range-end=true]:bg-primary data-[range-middle=true]:bg-accent data-[range-start=true]:bg-primary data-[selected-single=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:text-accent-foreground data-[range-start=true]:text-primary-foreground data-[selected-single=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 p-0 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-3 [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
         className
       )}
@@ -346,7 +353,7 @@ function CalendarDayButton({
         !modifiers.range_middle
       }
       ref={focusedButtonRef}
-      size="icon"
+      size="sm"
       variant="ghost"
       {...props}
     />

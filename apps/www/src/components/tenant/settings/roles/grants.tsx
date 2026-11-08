@@ -16,8 +16,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
@@ -26,26 +28,24 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
 import { useServerSearch } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { revokeGrantChange } from "@/components/tenant/settings/grants";
 import { SchoolRoleChangeDialog } from "@/components/tenant/settings/roles/change";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
-
-const SOURCE = "components/tenant/settings/roles/grants";
 
 /** How many grants the table reads each time its end comes near. */
 const PAGE_SIZE = 25;
@@ -123,9 +123,9 @@ export function SchoolGrantTable() {
         columns={columns}
         data={Option.getOrElse(kept, () => [])}
         empty={
-          <TableEmpty
-            act="juggling"
+          <EmptyState
             description={t("roles-grants-description")}
+            scene={<EmptyNina act="juggling" />}
             title={t("roles-empty")}
           />
         }
@@ -146,7 +146,6 @@ export function SchoolGrantTable() {
 function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const revoke = useMutation(access.grants.revoke).withOptimisticUpdate(
     revokeGrantChange
   );
@@ -160,24 +159,26 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("give")}>
-          <HugeIcons icon={UserStar01Icon} />
+        <DropdownMenuItem
+          icon={UserStar01Icon}
+          onClick={() => dialogs.show("give")}
+        >
           {t("roles-assign-dialog")}
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={!grant.revocable}
+          icon={UserEdit01Icon}
           onClick={() => dialogs.show("change")}
         >
-          <HugeIcons icon={UserEdit01Icon} />
           {t("grant-change")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={!grant.revocable}
+          icon={Delete02Icon}
           onClick={() => dialogs.show("revoke")}
           variant="destructive"
         >
-          <HugeIcons icon={Delete02Icon} />
           {t("grant-revoke")}
         </DropdownMenuItem>
       </RowItems>
@@ -195,65 +196,60 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
         />
       ) : null}
       <ResponsiveDialog
-        description={t("grant-revoke-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                dialogs.close();
-                startTransition(async () => {
-                  if (own) {
-                    await navigate({
-                      params: { slug },
-                      replace: true,
-                      to: "/school/$slug/notifications",
-                    });
-                  }
-                  // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
-                  let ended = false;
-                  await saveSchool(
-                    () => revoke({ grantId: grant.id, slug }),
-                    SOURCE,
-                    own
+        action={
+          <Button
+            onClick={() => {
+              dialogs.close();
+              startTransition(async () => {
+                if (own) {
+                  await navigate({
+                    params: { slug },
+                    replace: true,
+                    to: "/school/$slug/notifications",
+                  });
+                }
+                // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
+                let ended = false;
+                await runSchoolWrite(
+                  schoolCall(() => revoke({ grantId: grant.id, slug })),
+                  {
+                    onSaved: own
                       ? () => {
                           ended = true;
                           toast.success({
                             title: "school-own-role-ended.title",
                           });
                         }
-                      : undefined
-                  );
-                  if (ended) {
-                    await router.invalidate();
-                    await navigate({
-                      params: { slug },
-                      replace: true,
-                      to: "/school/$slug",
-                    });
+                      : undefined,
                   }
-                });
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("grant-revoke-confirm")}
-            </Button>
-          </>
+                );
+                if (ended) {
+                  await router.invalidate();
+                  await navigate({
+                    params: { slug },
+                    replace: true,
+                    to: "/school/$slug",
+                  });
+                }
+              });
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("grant-revoke-confirm")}
+          </Button>
         }
+        description={t("grant-revoke-description")}
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("grant-revoke-title")}
       >
-        <ConfirmSubject
+        <ResponsiveDialogSubject
+          description={grant.person.email ?? undefined}
           icon={UserStar01Icon}
-          name={grant.person.name}
-          {...(grant.person.email === null
-            ? {}
-            : { detail: grant.person.email })}
-        />
+        >
+          {grant.person.name}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </>
   );

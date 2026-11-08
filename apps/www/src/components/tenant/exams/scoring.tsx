@@ -7,11 +7,9 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -19,13 +17,12 @@ import {
 import { Array as Arr, Function as Fn, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   type Question,
   scoringUpdate,
 } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** Whether a value the select gives is one of the rules. */
 const isScoringKind = Schema.is(ScoringKind);
@@ -60,6 +57,7 @@ export function ScoringField({
   /** The question whose rule the field sets. */
   readonly questionId: Question["id"];
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const id = useId();
@@ -79,11 +77,11 @@ export function ScoringField({
           if (!isScoringKind(value) || value === kind) {
             return;
           }
-          runExamAction(
-            sentAction(() =>
+          runSchoolWrite(
+            schoolCall(() =>
               save({ examId: exam.id, questionId, scoring: value, slug })
             ),
-            { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+            { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
           );
         }}
         value={kind}
@@ -91,17 +89,12 @@ export function ScoringField({
         <SelectTrigger className="w-full" disabled={!editable} id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="scoring" />
-
-            {Arr.map(ScoringKind.literals, (value) => (
-              <SelectItem key={value} value={value}>
-                <HugeIcons icon={CheckmarkCircle02Icon} />
-                {t(SCORING_NAME[value])}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-scoring")}>
+          {Arr.map(ScoringKind.literals, (value) => (
+            <SelectItem icon={CheckmarkCircle02Icon} key={value} value={value}>
+              {t(SCORING_NAME[value])}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <FieldDescription>{t(SCORING_HINT[kind])}</FieldDescription>

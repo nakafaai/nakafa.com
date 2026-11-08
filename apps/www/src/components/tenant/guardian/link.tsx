@@ -13,11 +13,13 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { RowItems } from "@/components/shared/table/menu";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
@@ -27,9 +29,7 @@ import {
   verifyLinkChange,
 } from "@/components/tenant/guardian/change";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/link";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The dialogs of a live link, from its row menu or its open pane. */
 type LinkDialog = "readdress" | "rename" | "revoke";
@@ -82,7 +82,9 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
           <Button
             onClick={() =>
               startTransition(() =>
-                saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => verify({ linkId: link.id, slug }))
+                )
               )
             }
             type="button"
@@ -117,35 +119,41 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
       {link.status === "pending" || link.status === "verified" ? (
         <RowItems>
           <WithAction action="person.manage">
-            <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-              <HugeIcons icon={UserEdit01Icon} />
+            <DropdownMenuItem
+              icon={UserEdit01Icon}
+              onClick={() => dialogs.show("rename")}
+            >
               {t("link-rename")}
             </DropdownMenuItem>
           </WithAction>
           {link.status === "pending" ? (
             <>
-              <DropdownMenuItem onClick={() => dialogs.show("readdress")}>
-                <HugeIcons icon={PencilEdit02Icon} />
+              <DropdownMenuItem
+                icon={PencilEdit02Icon}
+                onClick={() => dialogs.show("readdress")}
+              >
                 {t("link-readdress")}
               </DropdownMenuItem>
               <DropdownMenuItem
+                icon={CheckmarkBadge01Icon}
                 onClick={() =>
                   startTransition(() =>
-                    saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
+                    runSchoolWrite(
+                      schoolCall(() => verify({ linkId: link.id, slug }))
+                    )
                   )
                 }
               >
-                <HugeIcons icon={CheckmarkBadge01Icon} />
                 {t("link-verify")}
               </DropdownMenuItem>
             </>
           ) : null}
           <DropdownMenuSeparator />
           <DropdownMenuItem
+            icon={Unlink01Icon}
             onClick={() => dialogs.show("revoke")}
             variant="destructive"
           >
-            <HugeIcons icon={Unlink01Icon} />
             {t("link-revoke")}
           </DropdownMenuItem>
         </RowItems>
@@ -199,7 +207,6 @@ function GuardianLinkRevokeDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const revoke = useMutation(guardians.links.revoke).withOptimisticUpdate(
     revokeLinkChange
@@ -208,40 +215,34 @@ function GuardianLinkRevokeDialog({
 
   return (
     <ResponsiveDialog
-      description={t("link-revoke-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            onClick={() => {
-              setOpen(false);
-              startTransition(() =>
-                saveSchool(() => revoke({ linkId: link.id, slug }), SOURCE)
-              );
-            }}
-            type="button"
-            variant="destructive"
-          >
-            <HugeIcons icon={Unlink01Icon} />
-            {t("link-revoke")}
-          </Button>
-        </>
+      action={
+        <Button
+          onClick={() => {
+            setOpen(false);
+            startTransition(() =>
+              runSchoolWrite(
+                schoolCall(() => revoke({ linkId: link.id, slug }))
+              )
+            );
+          }}
+          type="button"
+          variant="destructive"
+        >
+          <HugeIcons icon={Unlink01Icon} />
+          {t("link-revoke")}
+        </Button>
       }
+      description={t("link-revoke-description")}
       open={open}
       setOpen={setOpen}
       title={t("link-revoke-title")}
     >
-      <ConfirmSubject
-        detail={link.guardian.name}
+      <ResponsiveDialogSubject
+        description={link.guardian.name}
         icon={Link01Icon}
-        name={link.student.name}
-      />
+      >
+        {link.student.name}
+      </ResponsiveDialogSubject>
     </ResponsiveDialog>
   );
 }

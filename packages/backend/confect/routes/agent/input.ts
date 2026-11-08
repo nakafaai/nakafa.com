@@ -3,13 +3,13 @@ import { Array as Arr, Effect, Schema } from "effect";
 const INTEGER_PATTERN = /^-?\d+$/u;
 
 /** Syntactically malformed HTTP input before domain schema validation. */
-export class AgentHttpInputError extends Schema.TaggedError<AgentHttpInputError>()(
-  "AgentHttpInputError",
-  {
-    detail: Schema.String,
-    resolution: Schema.String,
-  }
-) {}
+export class AgentHttpInputError extends Schema.TaggedError<
+  AgentHttpInputError,
+  { readonly brand: unique symbol }
+>()("AgentHttpInputError", {
+  detail: Schema.String,
+  resolution: Schema.String,
+}) {}
 
 /** Builds the search input from typed public query parameters. */
 export const readSearchInput = Effect.fn("agent.http.readSearchInput")(

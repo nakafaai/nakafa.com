@@ -14,10 +14,8 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { renamePersonChange } from "@/components/tenant/settings/accounts";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Member } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/rename";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that renames a person of the school, from a members or a logins row: the name field starts from the
@@ -34,7 +32,6 @@ export function PersonRenameDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const rename = useMutation(tenancy.people.rename).withOptimisticUpdate(
@@ -52,30 +49,20 @@ export function PersonRenameDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () => rename({ name: next, personId: person.id, slug }),
-        SOURCE
+      runSchoolWrite(
+        schoolCall(() => rename({ name: next, personId: person.id, slug }))
       )
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("person-rename-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {t("person-rename-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {t("person-rename-save")}
+        </Button>
       }
+      description={t("person-rename-description")}
       open={open}
       setOpen={setOpen}
       title={person.name}

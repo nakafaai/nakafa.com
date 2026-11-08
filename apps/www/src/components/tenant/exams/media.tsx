@@ -30,7 +30,6 @@ import {
 import { type ComponentProps, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PaperMedia } from "@/components/exams/sitting/media";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { mediaUpdate } from "@/components/tenant/exams/attached";
 import { sendFile } from "@/components/tenant/exams/image";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
@@ -40,6 +39,7 @@ import {
   useTryExamId,
   useTrySlug,
 } from "@/components/tenant/exams/try/context";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The audio files a teacher picks from. */
 const AUDIO_FILES =
@@ -106,7 +106,6 @@ function MediaDialog({
   readonly onClose: () => void;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const id = useId();
   const [alt, setAlt] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -120,29 +119,24 @@ function MediaDialog({
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={!ready}
+          onClick={() => {
+            onAdd({
+              alt: Str.trim(alt),
+              file,
+              video: Option.getOrElse(video, () => ""),
+            });
+            setOpen(false);
+          }}
+        >
+          {t("media-save")}
+        </Button>
+      }
       description={t(
         kind === "audio" ? "media-audio-hint" : "media-video-hint"
       )}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!ready}
-            onClick={() => {
-              onAdd({
-                alt: Str.trim(alt),
-                file,
-                video: Option.getOrElse(video, () => ""),
-              });
-              setOpen(false);
-            }}
-          >
-            {t("media-save")}
-          </Button>
-        </>
-      }
       onOpenChangeComplete={(next) => {
         if (!next) {
           onClose();
@@ -218,7 +212,7 @@ export function MediaField({
 
   /** Saves the question's media with one piece more or less. */
   const saveMedia = (media: readonly QuestionMedia[]) =>
-    sentAction(() =>
+    schoolCall(() =>
       save({ examId: exam.id, media, questionId: question.id, slug })
     );
 
@@ -229,7 +223,7 @@ export function MediaField({
       file
     ).pipe(
       Effect.flatMap((fileId) =>
-        sentAction(() => register({ examId: exam.id, fileId, slug }))
+        schoolCall(() => register({ examId: exam.id, fileId, slug }))
       ),
       Effect.flatMap(({ id }) =>
         saveMedia([...question.media, { alt, asset: id, kind: "audio" }])
@@ -250,15 +244,15 @@ export function MediaField({
                 {item.alt}
               </span>
               <Button
-                aria-label={t("media-remove", { name: item.alt })}
                 disabled={!editable}
                 onClick={() =>
-                  runExamAction(saveMedia(Arr.remove(question.media, index)), {
-                    onFailure: Fn.constVoid,
-                    onSuccess: Fn.constVoid,
+                  runSchoolWrite(saveMedia(Arr.remove(question.media, index)), {
+                    onFailed: Fn.constVoid,
+                    onSaved: Fn.constVoid,
                   })
                 }
                 size="icon-sm"
+                tooltip={t("media-remove", { name: item.alt })}
                 type="button"
                 variant="ghost"
               >
@@ -295,14 +289,14 @@ export function MediaField({
           kind={adding}
           onAdd={({ alt, file, video }) =>
             startTransition(async () => {
-              await runExamAction(
+              await runSchoolWrite(
                 file === null
                   ? saveMedia([
                       ...question.media,
                       { alt, kind: "video", video },
                     ])
                   : addClip(file, alt),
-                { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+                { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
               );
             })
           }

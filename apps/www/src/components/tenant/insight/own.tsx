@@ -3,16 +3,17 @@ import { QueryResult, useQuery } from "@confect/react";
 import { File02Icon, Target02Icon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableNote } from "@/components/shared/table/frame";
+import { TableNote } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { percentOf } from "@/components/tenant/insight/rows";
 import { Link } from "@/lib/routing/link";
@@ -67,8 +68,7 @@ export function OwnMastery() {
         ]}
         data={isRead ? mine.value : []}
         empty={
-          <TableEmpty
-            act="waving"
+          <EmptyState
             action={
               <Link
                 className={buttonVariants()}
@@ -79,6 +79,7 @@ export function OwnMastery() {
               </Link>
             }
             description={t("empty-description")}
+            scene={<EmptyNina act="waving" />}
             title={t("empty")}
           />
         }
@@ -100,13 +101,11 @@ function OwnExamsItems() {
   return (
     <RowItems>
       <DropdownMenuItem
-        render={
-          <Link params={{ slug }} to="/school/$slug/exams">
-            <HugeIcons icon={File02Icon} />
-            {t("exams-action")}
-          </Link>
-        }
-      />
+        icon={File02Icon}
+        render={<Link params={{ slug }} to="/school/$slug/exams" />}
+      >
+        {t("exams-action")}
+      </DropdownMenuItem>
     </RowItems>
   );
 }

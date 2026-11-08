@@ -10,7 +10,10 @@ import {
   PostVotes,
   VOTES_READ_LIMIT,
 } from "@repo/backend/confect/classroom/posts/poll";
-import { PostText, PostView } from "@repo/backend/confect/classroom/posts/post";
+import {
+  PostText,
+  PostView,
+} from "@repo/backend/confect/classroom/posts/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";

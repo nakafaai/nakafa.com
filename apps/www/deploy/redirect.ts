@@ -1,7 +1,7 @@
 import { Ruleset, type Zone } from "@alchemy.run/cloudflare";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect } from "effect";
-import { NAKAFA_ZONE } from "#www/deploy/stage";
+import { NAKAFA_ZONE, OWN_HOST_LABELS, ownHost } from "#www/deploy/stage";
 
 /** A path under one of the locales, where every static page lives. */
 const LOCALE_PATH_EXPRESSION = Arr.join(
@@ -20,14 +20,11 @@ const LOCALE_ROOT_EXPRESSION = `http.request.uri.path in {${Arr.join(
 
 /**
  * The hosts under the zone that serve their own Worker and answer their own
- * paths: staging is the whole site behind Access, and the API, MCP and CAS hosts
- * have exact Worker routes (`deploy/stage.ts`). Every other subdomain is a school
- * host or names nothing.
+ * paths (`OWN_HOST_LABELS`): staging is the whole site behind Access, and the
+ * API, MCP and CAS hosts have exact Worker routes. Every other subdomain is a
+ * school host or names nothing.
  */
-const OWN_HOSTS = Arr.map(
-  ["staging", "api", "mcp", "cas"],
-  (label) => `"${label}.${NAKAFA_ZONE}"`
-);
+const OWN_HOSTS = Arr.map(OWN_HOST_LABELS, (label) => `"${ownHost(label)}"`);
 
 /**
  * A page of the main site asked on another subdomain: a locale path on a host

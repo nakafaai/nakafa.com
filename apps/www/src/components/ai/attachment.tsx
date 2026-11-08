@@ -17,11 +17,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import { usePromptInputAttachments } from "@repo/design-system/lib/prompt/context";
 import type {
   PromptInputFile,
   PromptInputRefusal,
-} from "@repo/design-system/lib/prompt-input/files";
+} from "@repo/design-system/lib/prompt/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
 import { type ReactNode, useEffect, useRef } from "react";
@@ -208,8 +208,8 @@ export function NinaRefusedAttachment({
       </AttachmentContent>
       <AttachmentActions>
         <AttachmentAction
-          aria-label={t("remove-attachment", { filename: refusal.name })}
           onClick={onRemove}
+          tooltip={t("remove-attachment", { filename: refusal.name })}
           type="button"
           variant="secondary"
         >
@@ -227,10 +227,10 @@ export function NinaAttach() {
   const t = useTranslations("Ai");
   return (
     <InputGroupButton
-      aria-label={t("attach-files")}
       className="rounded-full"
       onClick={openFileDialog}
       size="icon"
+      tooltip={t("attach-files")}
       type="button"
       variant="outline"
     >

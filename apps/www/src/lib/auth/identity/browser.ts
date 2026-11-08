@@ -29,12 +29,12 @@ const denyAnonymousAnalytics = Clock.currentTimeMillis.pipe(
 );
 
 /** Raised when the current account cannot be signed out safely. */
-export class AccountSignOutFailed extends Schema.TaggedError<AccountSignOutFailed>()(
-  "AccountSignOutFailed",
-  {
-    code: Schema.Literal(accountSignOutFailedCode),
-  }
-) {}
+export class AccountSignOutFailed extends Schema.TaggedError<
+  AccountSignOutFailed,
+  { readonly brand: unique symbol }
+>()("AccountSignOutFailed", {
+  code: Schema.Literal(accountSignOutFailedCode),
+}) {}
 
 const defaultBrowserAccountIdentityCleanup = {
   removePersistedAccountState: () => {

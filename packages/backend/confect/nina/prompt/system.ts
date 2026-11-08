@@ -1,6 +1,6 @@
 import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
-import { createNinaPrompt } from "@repo/backend/confect/nina/prompt/prompt";
+import { createNinaPrompt } from "@repo/backend/confect/nina/prompt/compose";
 import type { PromptUserRole } from "@repo/backend/confect/users/role";
 import dedent from "dedent";
 

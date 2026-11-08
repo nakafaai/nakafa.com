@@ -11,7 +11,7 @@ import {
 import { getParabolicFacts } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/facts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import {
   ToggleGroup,
   ToggleGroupItem,

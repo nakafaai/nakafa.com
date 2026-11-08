@@ -8,13 +8,11 @@ import {
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
@@ -74,40 +72,46 @@ export function TenantAccountItems({
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem
-            render={
+            icon={UserIcon}
+            render={({ children, ...props }) => (
               <a
+                {...props}
                 href={
                   new URL(`/${locale}${profileHref(username)}`, SITE_ORIGIN)
                     .href
                 }
               >
-                <HugeIcons icon={UserIcon} />
-                {t("Auth.profile")}
+                {children}
               </a>
-            }
-          />
+            )}
+          >
+            {t("Auth.profile")}
+          </DropdownMenuItem>
         )}
         <DropdownMenuItem
-          render={
-            <a href={new URL(`/${locale}/user/settings`, SITE_ORIGIN).href}>
-              <HugeIcons icon={Settings01Icon} />
-              {t("School.account-settings")}
+          icon={Settings01Icon}
+          render={({ children, ...props }) => (
+            <a
+              {...props}
+              href={new URL(`/${locale}/user/settings`, SITE_ORIGIN).href}
+            >
+              {children}
             </a>
-          }
-        />
+          )}
+        >
+          {t("School.account-settings")}
+        </DropdownMenuItem>
       </DropdownMenuGroup>
       {Option.isSome(settings) ? (
         <>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem
-              render={
-                <TargetLink target={settings.value}>
-                  <HugeIcons icon={SchoolIcon} />
-                  {t("SchoolSettings.manage-settings")}
-                </TargetLink>
-              }
-            />
+              icon={SchoolIcon}
+              render={<TargetLink target={settings.value} />}
+            >
+              {t("SchoolSettings.manage-settings")}
+            </DropdownMenuItem>
           </DropdownMenuGroup>
         </>
       ) : null}
@@ -120,13 +124,15 @@ export function TenantAccountItems({
           <CommunityMenuItem />
         </LearnMoreSubmenu>
         <DropdownMenuItem
-          render={
-            <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
-              <HugeIcons icon={ArrowTurnBackwardIcon} />
-              {t("School.back-to-learning")}
+          icon={ArrowTurnBackwardIcon}
+          render={({ children, ...props }) => (
+            <a {...props} href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+              {children}
             </a>
-          }
-        />
+          )}
+        >
+          {t("School.back-to-learning")}
+        </DropdownMenuItem>
       </DropdownMenuGroup>
     </>
   );
@@ -145,27 +151,24 @@ function TenantLanguageSubmenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <HugeIcons icon={TranslateIcon} />
+      <DropdownMenuSubTrigger icon={TranslateIcon}>
         <span className="truncate">{t("language")}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent
         className="w-max max-w-[calc(100vw-2rem)]"
+        label={t("menu-language")}
         side={side}
       >
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
-          {Arr.map(languages, (language) => (
-            <DropdownMenuItem
-              key={language.value}
-              onClick={() => changeLanguage(language.value, router)}
-            >
-              <CountryFlagIcon countryCode={language.countryCode} />
-              <span className="truncate">{language.label}</span>
-              <ActiveBadge isActive={locale === language.value} />
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
+        {Arr.map(languages, (language) => (
+          <DropdownMenuItem
+            icon={<CountryFlagIcon countryCode={language.countryCode} />}
+            key={language.value}
+            onClick={() => changeLanguage(language.value, router)}
+          >
+            <span className="truncate">{language.label}</span>
+            <ActiveBadge isActive={locale === language.value} />
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );

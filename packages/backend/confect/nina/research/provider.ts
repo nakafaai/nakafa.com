@@ -132,20 +132,20 @@ export type SearchResult = typeof SearchResultSchema.Type;
 export type SearchData = typeof SearchDataSchema.Type;
 
 /** The deployment has no usable provider key. */
-class ResearchProviderError extends Schema.TaggedError<ResearchProviderError>()(
-  "ResearchProviderError",
-  { message: Schema.String }
-) {}
+class ResearchProviderError extends Schema.TaggedError<
+  ResearchProviderError,
+  { readonly brand: unique symbol }
+>()("ResearchProviderError", { message: Schema.String }) {}
 
 /**
  * A request that returned no usable answer. `status` is the HTTP status of the
  * answer, when there was one. It never keeps the provider's message, which may
  * repeat the query or the address of a page.
  */
-class ProviderRequestError extends Schema.TaggedError<ProviderRequestError>()(
-  "ProviderRequestError",
-  { status: Schema.optional(Schema.Finite) }
-) {}
+class ProviderRequestError extends Schema.TaggedError<
+  ProviderRequestError,
+  { readonly brand: unique symbol }
+>()("ProviderRequestError", { status: Schema.optional(Schema.Finite) }) {}
 
 /**
  * Resolves the provider key inside the action that uses it. The key is

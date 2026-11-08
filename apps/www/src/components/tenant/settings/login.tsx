@@ -16,10 +16,8 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { renameLoginChange } from "@/components/tenant/settings/accounts";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Login } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/login";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that changes the login name a student signs in with on the school's host. The field starts from the
@@ -38,7 +36,6 @@ export function LoginRenameDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const rename = useMutation(identity.logins.rename).withOptimisticUpdate(
     renameLoginChange
@@ -56,35 +53,26 @@ export function LoginRenameDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           rename({
             loginName: next.value,
             personId: login.person.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("login-rename-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {t("login-rename-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {t("login-rename-save")}
+        </Button>
       }
+      description={t("login-rename-description")}
       open={open}
       setOpen={setOpen}
       title={login.person.name}

@@ -78,15 +78,15 @@ export type Escrow = typeof Escrow.Type;
  * The payer's month cannot hold the call: what it spent and holds, with this
  * call, would pass the budget its plan grants.
  */
-export class SpendRefused extends Schema.TaggedError<SpendRefused>()(
-  "SpendRefused",
-  {
-    vendor: Vendor,
-    budget: MicroUsd,
-    used: MicroUsd,
-    held: MicroUsd,
-  }
-) {}
+export class SpendRefused extends Schema.TaggedError<
+  SpendRefused,
+  { readonly brand: unique symbol }
+>()("SpendRefused", {
+  vendor: Vendor,
+  budget: MicroUsd,
+  used: MicroUsd,
+  held: MicroUsd,
+}) {}
 
 /**
  * Who a Nina turn's calls are for: the school whose pool its credits came

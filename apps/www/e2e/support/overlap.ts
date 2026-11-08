@@ -135,10 +135,22 @@ export function readOverlaps({
     }
   });
 
-  /** The nearest framed row or card around a control, or none, or a group's own frame, which joins its controls. */
+  /** Whether an element clips what it holds, as a box that scrolls does, so nothing past it draws over a frame. */
+  const clips = (element: Element) => {
+    const style = getComputedStyle(element);
+    return style.overflowX !== "visible" || style.overflowY !== "visible";
+  };
+
+  /**
+   * The nearest framed row or card around a control, or none: past a box that clips the control first, or a group's
+   * own frame, which joins its controls.
+   */
   const frameOf = (control: Element) => {
     let frame = control.parentElement;
     while (frame !== null && !isFramed(frame)) {
+      if (clips(frame)) {
+        return null;
+      }
       frame = frame.parentElement;
     }
     return frame === null || frame.closest(JOINED) !== null ? null : frame;

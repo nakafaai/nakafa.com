@@ -3,6 +3,7 @@ import { Effect, Record as Rec, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { readRobots } from "@/e2e/support/crawler";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { paginationNavigation } from "@/e2e/support/selector";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -10,10 +11,10 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** A robots directive that keeps a page out of search indexes. */
 const NOINDEX = /noindex/u;
 
-class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
-  "LessonNavigationMissing",
-  { href: Schema.String }
-) {}
+class LessonNavigationMissing extends Schema.TaggedError<
+  LessonNavigationMissing,
+  { readonly brand: unique symbol }
+>()("LessonNavigationMissing", { href: Schema.String }) {}
 
 /** Captures the rendered lesson identity and its canonical metadata. */
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
@@ -126,33 +127,27 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
 }
 
 test("chat and a search with a query answer noindex, so no engine indexes a learner's screen or a result list", async ({
-  page,
+  request,
 }) => {
   for (const path of ["/en/search?q=fraction", "/en/chat"]) {
-    await page.goto(path);
-    await expect(page.locator('meta[name="robots"]'), path).toHaveAttribute(
-      "content",
-      NOINDEX
-    );
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    expect(readRobots(await response.text()), path).toMatch(NOINDEX);
   }
 });
 
 test("the bare search page stays open to search engines, since it names no query and no learner", async ({
-  page,
+  request,
 }) => {
-  await page.goto("/en/search");
-  await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute(
-    "content",
-    NOINDEX
-  );
+  const response = await request.get("/en/search");
+  expect(response.status()).toBe(200);
+  expect(readRobots(await response.text())).not.toMatch(NOINDEX);
 });
 
 test("sign-in stays open to search, so a learner who looks for it finds it", async ({
-  page,
+  request,
 }) => {
-  await page.goto("/en/auth");
-  await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute(
-    "content",
-    NOINDEX
-  );
+  const response = await request.get("/en/auth");
+  expect(response.status()).toBe(200);
+  expect(readRobots(await response.text())).not.toMatch(NOINDEX);
 });

@@ -11,9 +11,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -31,10 +29,8 @@ import { GraduationDecisionDialog } from "@/components/tenant/graduation/decisio
 import { saveReadiness } from "@/components/tenant/graduation/save";
 import type { GraduationOverview } from "@/components/tenant/graduation/workbook";
 import { SchoolHeader } from "@/components/tenant/header";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
-
-const SOURCE = "components/tenant/graduation/header";
 
 /** The route of one class group's graduation, whose context holds the class group's ID. */
 const cohortRoute = getRouteApi("/school/$slug/graduation/$cohortId");
@@ -149,17 +145,19 @@ function GraduationActions({
 
   const issueLetters = () =>
     startIssuing(() =>
-      saveSchool(issueAll, SOURCE, (issued) => {
-        toast.success({
-          description:
-            issued > 0
-              ? "school-letters-issued.description"
-              : "school-letters-none.description",
-          title:
-            issued > 0
-              ? "school-letters-issued.title"
-              : "school-letters-none.title",
-        });
+      runSchoolWrite(schoolCall(issueAll), {
+        onSaved: (issued) => {
+          toast.success({
+            description:
+              issued > 0
+                ? "school-letters-issued.description"
+                : "school-letters-none.description",
+            title:
+              issued > 0
+                ? "school-letters-issued.title"
+                : "school-letters-none.title",
+          });
+        },
       })
     );
 
@@ -173,11 +171,7 @@ function GraduationActions({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button
-                aria-label={common("more-actions")}
-                size="icon"
-                variant="outline"
-              >
+              <Button size="icon" tooltip={common("more-actions")}>
                 {isExporting ? (
                   <Spinner isLoading />
                 ) : (
@@ -186,23 +180,26 @@ function GraduationActions({
               </Button>
             }
           />
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-              {canDecide ? (
-                <DropdownMenuItem onClick={() => setIsDeciding(true)}>
-                  <HugeIcons icon={CheckmarkBadge01Icon} />
-                  {t("decide")}
-                </DropdownMenuItem>
-              ) : null}
+          <DropdownMenuContent
+            align="end"
+            className="w-56"
+            label={common("menu-actions")}
+          >
+            {canDecide ? (
               <DropdownMenuItem
-                disabled={isExporting}
-                onClick={exportReadiness}
+                icon={CheckmarkBadge01Icon}
+                onClick={() => setIsDeciding(true)}
               >
-                <HugeIcons icon={FileExportIcon} />
-                {t("export-readiness")}
+                {t("decide")}
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            ) : null}
+            <DropdownMenuItem
+              disabled={isExporting}
+              icon={FileExportIcon}
+              onClick={exportReadiness}
+            >
+              {t("export-readiness")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>

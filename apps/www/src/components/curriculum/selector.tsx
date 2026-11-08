@@ -6,9 +6,7 @@ import type learningPreferences from "@repo/backend/confect/_generated/refs/lear
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
@@ -16,7 +14,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createContext, use } from "react";
-import { useLocale } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -36,12 +34,12 @@ type SavePreferredCurriculum = (
   args: SavePreferredCurriculumArgs
 ) => InvokeReturn<typeof learningPreferences.mutations.setPreferredCurriculum>;
 /** Expected failure when a background curriculum preference save fails. */
-class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPreferenceSaveError>()(
-  "CurriculumPreferenceSaveError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class CurriculumPreferenceSaveError extends Schema.TaggedError<
+  CurriculumPreferenceSaveError,
+  { readonly brand: unique symbol }
+>()("CurriculumPreferenceSaveError", {
+  cause: Schema.Unknown,
+}) {}
 
 /** The props of the selector and of its two variants. */
 interface CurriculumSelectorProps {
@@ -179,6 +177,7 @@ function CurriculumSelect({
   onValueChange: (value: string | null) => void;
 }) {
   const { currentValue, label, options } = useCurriculumSelector();
+  const common = useTranslations("Common");
   const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,
@@ -208,18 +207,19 @@ function CurriculumSelect({
         align="end"
         alignItemWithTrigger={false}
         className="max-w-(--available-width) sm:w-max sm:min-w-(--anchor-width)"
+        label={common("menu-curriculum")}
       >
-        <SelectGroup>
-          <SelectLabel>{label}</SelectLabel>
-          {Arr.map(options, (option) => (
-            <SelectItem key={option.value} value={option.value}>
-              <CountryFlagIcon countryCode={option.countryCode} />
-              <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
-                {option.title}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectGroup>
+        {Arr.map(options, (option) => (
+          <SelectItem
+            icon={<CountryFlagIcon countryCode={option.countryCode} />}
+            key={option.value}
+            value={option.value}
+          >
+            <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
+              {option.title}
+            </span>
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

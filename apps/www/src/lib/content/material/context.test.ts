@@ -7,8 +7,8 @@ import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer, Schema } from "effect";
 import { readPublishedMaterialPlacements } from "@/lib/content/material/context";
 import { activateTestRelease } from "@/test/active";
-import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
-import { previewProjection } from "@/test/content-preview";
+import { makeProgramContextRuntimeSource } from "@/test/content/program";
+import { previewProjection } from "@/test/manifest";
 import {
   testCurriculumRowJson,
   testProgramClass,
@@ -16,7 +16,7 @@ import {
   testProgramGroups,
   testProgramRoot,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -130,37 +130,28 @@ describe("published material places", () => {
       })
   );
 
-  it.effect("asks Convex once for a material's places in one release", () =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValue(Effect.succeed([place]));
+  it.effect(
+    "asks Convex once for a material's places in one curriculum snapshot, across releases that keep it",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockReturnValue(Effect.succeed([place]));
 
-      for (const _ of [1, 2, 3]) {
+        for (const _ of [1, 2, 3]) {
+          yield* readPublishedMaterialPlacements("en", previewProjection);
+        }
+        expect(runtimeQueryMock).toHaveBeenCalledOnce();
+
+        activateTestRelease(ReleaseIdSchema.make("release-material-kept"), {
+          program: `sha256:${"7".repeat(64)}`,
+        });
         yield* readPublishedMaterialPlacements("en", previewProjection);
-      }
-      expect(runtimeQueryMock).toHaveBeenCalledOnce();
-
-      activateTestRelease(ReleaseIdSchema.make("release-material-next"));
-      yield* readPublishedMaterialPlacements("en", previewProjection);
-      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
-    })
-  );
-
-  it.effect("pins the read when its caller reads several in one release", () =>
-    Effect.gen(function* () {
-      const activeReleaseId = ReleaseIdSchema.make("release-material");
-      runtimeQueryMock.mockReturnValueOnce(Effect.succeed([]));
-
-      yield* readPublishedMaterialPlacements(
-        "en",
-        previewProjection,
-        activeReleaseId
-      );
-
-      expect(runtimeQueryMock).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
-      );
-    })
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+        activateTestRelease(ReleaseIdSchema.make("release-material-next"), {
+          program: `sha256:${"7".repeat(64)}`,
+        });
+        yield* readPublishedMaterialPlacements("en", previewProjection);
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+      })
   );
 
   it.effect("answers no place for a material that no curriculum shows", () =>

@@ -45,11 +45,7 @@ export function SchoolRolesSettings() {
             <ButtonGroup>
               <TableSearch placeholder={t("roles-search")} />
               {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
-              <Button
-                onClick={() => dialogs.show("guide")}
-                type="button"
-                variant="outline"
-              >
+              <Button onClick={() => dialogs.show("guide")} type="button">
                 <HugeIcons icon={BookOpen01Icon} />
                 <span className="max-sm:sr-only">{t("roles-guide")}</span>
               </Button>

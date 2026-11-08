@@ -26,15 +26,16 @@ import { useMemo } from "react";
 import { useTranslations } from "use-intl";
 import { DrawnDocument } from "@/components/assessment/drawn";
 import {
-  LinesColumn,
-  LinesItem,
-  LinesProvider,
-} from "@/components/exams/lines/board";
-import {
   addressesOf,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
 import { ChoiceGroup } from "@/components/exams/sitting/reason";
+import {
+  LinesColumn,
+  LinesItem,
+  LinesProvider,
+} from "@/components/player/lines/board";
+import { ChoiceTable } from "@/components/player/table";
 import {
   type Choice,
   isChoice,
@@ -52,7 +53,6 @@ import {
   PartAdd,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
-import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { assetIdsOf } from "@/lib/editor/pictures";
 
@@ -122,7 +122,7 @@ function TableSketch({
 
   return (
     <div className="grid min-w-0 gap-3">
-      <TryoutChoiceTable
+      <ChoiceTable
         columns={Arr.map(table.columns, (column) => ({
           id: column.id,
           label: <OptionSketch label={column.label} />,

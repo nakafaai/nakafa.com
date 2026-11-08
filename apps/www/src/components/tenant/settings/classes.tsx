@@ -24,7 +24,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -34,6 +33,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -203,9 +204,9 @@ function SchoolClassesOfPeriod() {
     }
     return (
       <SettingsTablePage actions={<ClassesActions />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           description={t("classes-unavailable-description")}
+          scene={<EmptyNina act="pointing" />}
           title={t("classes-unavailable")}
         />
       </SettingsTablePage>
@@ -219,8 +220,7 @@ function SchoolClassesOfPeriod() {
   if (active.value === null) {
     return (
       <SettingsTablePage actions={<ClassesActions />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           action={
             <Link
               className={buttonVariants({ variant: "outline" })}
@@ -231,6 +231,7 @@ function SchoolClassesOfPeriod() {
             </Link>
           }
           description={t("classes-no-period")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohorts-no-period-title")}
         />
       </SettingsTablePage>
@@ -412,8 +413,7 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="writing"
+          <EmptyState
             action={
               QueryResult.isSuccess(placeable) &&
               !Arr.some(
@@ -424,6 +424,7 @@ function SchoolClassTable({ periodId }: { periodId: Period["id"] }) {
               ) : undefined
             }
             description={t("classes-description")}
+            scene={<EmptyNina act="writing" />}
             title={t("classes-empty")}
           />
         }

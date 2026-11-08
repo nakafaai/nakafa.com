@@ -6,7 +6,7 @@ import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/sp
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
-import { queryContentStore } from "@/lib/content/store/query";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
@@ -21,12 +21,12 @@ const TryoutMetadataArgsSchema = Schema.Struct({
 type TryoutMetadataArgs = typeof TryoutMetadataArgsSchema.Type;
 
 /** Expected failure while reading one authenticated try-out page. */
-class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>()(
-  "TryoutCatalogReadError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class TryoutCatalogReadError extends Schema.TaggedError<
+  TryoutCatalogReadError,
+  { readonly brand: unique symbol }
+>()("TryoutCatalogReadError", {
+  cause: Schema.Unknown,
+}) {}
 
 /**
  * Reads the question demonstrated on the marketing page, decoded from the JSON text its body crosses
@@ -36,7 +36,8 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
  */
 export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
   function* (locale: Locale) {
-    const featured = yield* queryContentStore(
+    const featured = yield* querySnapshotContentStore(
+      "assessment",
       tryouts.queries.catalog.getFeaturedQuestion,
       {
         appLocale: AppLocaleSchema.make(locale),
@@ -53,7 +54,11 @@ export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
  */
 export const readTryoutMetadata = Effect.fn("www.tryout.catalog.readMetadata")(
   function* (args: TryoutMetadataArgs) {
-    return yield* queryContentStore(tryouts.queries.catalog.getMetadata, args);
+    return yield* querySnapshotContentStore(
+      "assessment",
+      tryouts.queries.catalog.getMetadata,
+      args
+    );
   }
 );
 
@@ -65,9 +70,13 @@ export const readTryoutMetadata = Effect.fn("www.tryout.catalog.readMetadata")(
 export const readTryoutHubPage = Effect.fn("www.tryout.catalog.readHubPage")(
   function* (locale: Locale) {
     const appLocale = AppLocaleSchema.make(locale);
-    return yield* queryContentStore(tryouts.queries.catalog.getHubPage, {
-      appLocale,
-    }).pipe(Effect.mapError((cause) => new TryoutCatalogReadError({ cause })));
+    return yield* querySnapshotContentStore(
+      "assessment",
+      tryouts.queries.catalog.getHubPage,
+      {
+        appLocale,
+      }
+    ).pipe(Effect.mapError((cause) => new TryoutCatalogReadError({ cause })));
   }
 );
 
@@ -79,7 +88,8 @@ export const readTryoutCountryPage = Effect.fn(
   "www.tryout.catalog.readCountryPage"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const page = yield* queryContentStore(
+  const page = yield* querySnapshotContentStore(
+    "assessment",
     tryouts.queries.catalog.getCountryPage,
     {
       appLocale,
@@ -105,10 +115,14 @@ export const readTryoutExamPage = Effect.fn("www.tryout.catalog.readExamPage")(
 export const readTryoutTrackPage = Effect.fn(
   "www.tryout.catalog.readTrackPage"
 )(function* (locale: Locale, publicPath: string) {
-  return yield* queryContentStore(tryouts.queries.catalog.getTrackPage, {
-    appLocale: AppLocaleSchema.make(locale),
-    publicPath,
-  });
+  return yield* querySnapshotContentStore(
+    "assessment",
+    tryouts.queries.catalog.getTrackPage,
+    {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    }
+  );
 });
 
 /** Reads one window of a track's set list as a visitor, with no session. */
@@ -131,10 +145,14 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
 /** Reads one public set page. The content store answers for the release. */
 export const readTryoutSetPage = Effect.fn("www.tryout.catalog.readSetPage")(
   function* (locale: Locale, publicPath: string) {
-    return yield* queryContentStore(tryouts.queries.catalog.getSetPage, {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    });
+    return yield* querySnapshotContentStore(
+      "assessment",
+      tryouts.queries.catalog.getSetPage,
+      {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      }
+    );
   }
 );
 
