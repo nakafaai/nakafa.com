@@ -9,13 +9,13 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /** The buyer asked for an invoice Nakafa cannot give: another's, unpaid, or sold by another merchant. */
-export class ReceiptUnavailable extends Schema.TaggedError<ReceiptUnavailable>()(
-  "ReceiptUnavailable",
-  {
-    code: Schema.Literal("BILLING_RECEIPT_UNAVAILABLE"),
-    message: Schema.String,
-  }
-) {}
+export class ReceiptUnavailable extends Schema.TaggedError<
+  ReceiptUnavailable,
+  { readonly brand: unique symbol }
+>()("ReceiptUnavailable", {
+  code: Schema.Literal("BILLING_RECEIPT_UNAVAILABLE"),
+  message: Schema.String,
+}) {}
 
 /** One invoice file, its bytes in Base64 and the name it saves under. */
 const ReceiptFile = Schema.Struct({

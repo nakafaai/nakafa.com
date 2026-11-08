@@ -8,13 +8,13 @@ import { Clock, DateTime, Effect, Option, Schema } from "effect";
 const MAX_INVOICE_SEQUENCE = 999_999;
 
 /** A year's invoice numbers are used up, so the next invoice cannot take a number. */
-class InvoiceNumberExhausted extends Schema.TaggedError<InvoiceNumberExhausted>()(
-  "InvoiceNumberExhausted",
-  {
-    year: Schema.Int,
-    message: Schema.String,
-  }
-) {}
+class InvoiceNumberExhausted extends Schema.TaggedError<
+  InvoiceNumberExhausted,
+  { readonly brand: unique symbol }
+>()("InvoiceNumberExhausted", {
+  year: Schema.Int,
+  message: Schema.String,
+}) {}
 
 /** Formats one sequence as the invoice number `NKF-YYYY-NNNNNN` of its year. */
 export function formatInvoiceNumber(year: number, sequence: number): string {

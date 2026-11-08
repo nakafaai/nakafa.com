@@ -35,12 +35,12 @@ const RelationSchema = Schema.Struct({
 );
 
 /** An authored relation references an absent or ambiguous set element. */
-export class RelationError extends Schema.TaggedError<RelationError>()(
-  "RelationError",
-  {
-    message: Schema.String,
-  }
-) {}
+export class RelationError extends Schema.TaggedError<
+  RelationError,
+  { readonly brand: unique symbol }
+>()("RelationError", {
+  message: Schema.String,
+}) {}
 
 /** Places a set's elements evenly inside its own ellipse. */
 function positions(ids: readonly string[], x: number) {

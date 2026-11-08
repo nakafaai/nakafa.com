@@ -6,28 +6,28 @@ export const accountDeletionErrorCode = {
   sessionExpired: "ACCOUNT_DELETION_SESSION_EXPIRED",
 } as const;
 /** Raised when Better Auth cannot complete the deletion. */
-export class AccountDeletionFailed extends Schema.TaggedError<AccountDeletionFailed>()(
-  "AccountDeletionFailed",
-  {
-    code: Schema.Literal(accountDeletionErrorCode.failed),
-  }
-) {}
+export class AccountDeletionFailed extends Schema.TaggedError<
+  AccountDeletionFailed,
+  { readonly brand: unique symbol }
+>()("AccountDeletionFailed", {
+  code: Schema.Literal(accountDeletionErrorCode.failed),
+}) {}
 /** Raised when the browser cannot know whether the server committed deletion. */
-export class AccountDeletionRequestUncertain extends Schema.TaggedError<AccountDeletionRequestUncertain>()(
-  "AccountDeletionRequestUncertain",
-  {
-    attemptId: Schema.String,
-    code: Schema.Literal(accountDeletionErrorCode.requestUncertain),
-    phase: Schema.Literals([
-      accountDeletionRequestPhase.preparation,
-      accountDeletionRequestPhase.deletion,
-    ]),
-  }
-) {}
+export class AccountDeletionRequestUncertain extends Schema.TaggedError<
+  AccountDeletionRequestUncertain,
+  { readonly brand: unique symbol }
+>()("AccountDeletionRequestUncertain", {
+  attemptId: Schema.String,
+  code: Schema.Literal(accountDeletionErrorCode.requestUncertain),
+  phase: Schema.Literals([
+    accountDeletionRequestPhase.preparation,
+    accountDeletionRequestPhase.deletion,
+  ]),
+}) {}
 /** Raised when Better Auth requires a fresh session before account deletion. */
-export class AccountDeletionSessionExpired extends Schema.TaggedError<AccountDeletionSessionExpired>()(
-  "AccountDeletionSessionExpired",
-  {
-    code: Schema.Literal(accountDeletionErrorCode.sessionExpired),
-  }
-) {}
+export class AccountDeletionSessionExpired extends Schema.TaggedError<
+  AccountDeletionSessionExpired,
+  { readonly brand: unique symbol }
+>()("AccountDeletionSessionExpired", {
+  code: Schema.Literal(accountDeletionErrorCode.sessionExpired),
+}) {}

@@ -18,10 +18,10 @@ const LineStrokeSchema = Schema.Struct({
 type LineStroke = typeof LineStrokeSchema.Type;
 
 /** Endpoint declarations must identify actual, unambiguous points. */
-export class LineEndpointError extends Schema.TaggedError<LineEndpointError>()(
-  "LineEndpointError",
-  { message: Schema.String }
-) {}
+export class LineEndpointError extends Schema.TaggedError<
+  LineEndpointError,
+  { readonly brand: unique symbol }
+>()("LineEndpointError", { message: Schema.String }) {}
 
 /** Resolves endpoint membership without inventing or moving source points. */
 export const resolveLineEndpoints = Effect.fn("line.resolveEndpoints")(

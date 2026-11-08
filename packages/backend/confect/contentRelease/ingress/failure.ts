@@ -5,13 +5,13 @@ import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Effect, Match, Schema } from "effect";
 
 /** Marks an impossible request/error pairing as an internal programming defect. */
-export class PublicationFailureDefect extends Schema.TaggedError<PublicationFailureDefect>()(
-  "PublicationFailureDefect",
-  {
-    code: Schema.String,
-    operation: Schema.String,
-  }
-) {}
+export class PublicationFailureDefect extends Schema.TaggedError<
+  PublicationFailureDefect,
+  { readonly brand: unique symbol }
+>()("PublicationFailureDefect", {
+  code: Schema.String,
+  operation: Schema.String,
+}) {}
 
 /** Returns the release identity owned by one fully decoded request. */
 export function requestReleaseId(

@@ -31,25 +31,30 @@ export const PAGE_LIMIT = 100;
 export const TOKEN_SECONDS = 3600;
 
 /** A bearer token that is missing, unknown, expired, or of a revoked client. */
-export class SchoolApiUnauthorized extends Schema.TaggedError<SchoolApiUnauthorized>()(
+export class SchoolApiUnauthorized extends Schema.TaggedError<
+  SchoolApiUnauthorized,
+  { readonly brand: unique symbol }
+>()(
   "SchoolApiUnauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 
 /** A client past its request limit; `retryAfter` is in seconds. */
-export class SchoolApiRateLimited extends Schema.TaggedError<SchoolApiRateLimited>()(
+export class SchoolApiRateLimited extends Schema.TaggedError<
+  SchoolApiRateLimited,
+  { readonly brand: unique symbol }
+>()(
   "SchoolApiRateLimited",
   { message: Schema.String, retryAfter: Schema.Finite },
   { httpApiStatus: 429 }
 ) {}
 
 /** A read the client's action list or scope does not open. */
-export class SchoolApiForbidden extends Schema.TaggedError<SchoolApiForbidden>()(
-  "SchoolApiForbidden",
-  { message: Schema.String },
-  { httpApiStatus: 403 }
-) {}
+export class SchoolApiForbidden extends Schema.TaggedError<
+  SchoolApiForbidden,
+  { readonly brand: unique symbol }
+>()("SchoolApiForbidden", { message: Schema.String }, { httpApiStatus: 403 }) {}
 
 /** The bearer token of one request, which the handler checks before it reads anything. */
 export class SchoolApiToken extends Context.Service<
@@ -71,18 +76,16 @@ export class SchoolApiBearer extends HttpApiMiddleware.Service<
 }) {}
 
 /** A request whose rows do not read as students. */
-export class SchoolApiInvalid extends Schema.TaggedError<SchoolApiInvalid>()(
-  "SchoolApiInvalid",
-  { message: Schema.String },
-  { httpApiStatus: 400 }
-) {}
+export class SchoolApiInvalid extends Schema.TaggedError<
+  SchoolApiInvalid,
+  { readonly brand: unique symbol }
+>()("SchoolApiInvalid", { message: Schema.String }, { httpApiStatus: 400 }) {}
 
 /** A repeat of an `Idempotency-Key` with another request. */
-export class SchoolApiConflict extends Schema.TaggedError<SchoolApiConflict>()(
-  "SchoolApiConflict",
-  { message: Schema.String },
-  { httpApiStatus: 422 }
-) {}
+export class SchoolApiConflict extends Schema.TaggedError<
+  SchoolApiConflict,
+  { readonly brand: unique symbol }
+>()("SchoolApiConflict", { message: Schema.String }, { httpApiStatus: 422 }) {}
 
 /** The refusals every roster read may answer: a closed read, a refused token, and a client past its limit. */
 const ROSTER_ERRORS = [
@@ -104,14 +107,20 @@ const OAuthErrorCode = Schema.Literals([
 ]);
 
 /** A refused token request, with the status RFC 6749 gives it. */
-export class OAuthError extends Schema.TaggedError<OAuthError>()(
+export class OAuthError extends Schema.TaggedError<
+  OAuthError,
+  { readonly brand: unique symbol }
+>()(
   "OAuthError",
   { error: OAuthErrorCode, error_description: Schema.String },
   { httpApiStatus: 400 }
 ) {}
 
 /** A client that failed to authenticate: an unknown client, a wrong secret, or a revoked client. */
-export class OAuthClientError extends Schema.TaggedError<OAuthClientError>()(
+export class OAuthClientError extends Schema.TaggedError<
+  OAuthClientError,
+  { readonly brand: unique symbol }
+>()(
   "OAuthClientError",
   { error: Schema.Literal("invalid_client"), error_description: Schema.String },
   { httpApiStatus: 401 }

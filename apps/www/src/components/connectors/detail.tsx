@@ -24,8 +24,9 @@ import { DisconnectDialog } from "@/components/connectors/disconnect";
 import { ServiceContext, useService } from "@/components/connectors/service";
 import { PaneHeader } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 
 /** How each state of a service looks in its detail. */
 const STATE_LOOKS = {
@@ -103,8 +104,7 @@ export function ServiceEmpty() {
   const line = t(`${service.key}-line`);
 
   return (
-    <TableEmpty
-      act={STATE_ACTS[state.value]}
+    <EmptyState
       description={
         {
           connected: line,
@@ -116,6 +116,7 @@ export function ServiceEmpty() {
           soon: t("status-soon"),
         }[state.value]
       }
+      scene={<EmptyNina act={STATE_ACTS[state.value]} />}
       title={t(`pane-${state.value}`)}
     />
   );
