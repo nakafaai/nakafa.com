@@ -1,7 +1,7 @@
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
+import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { ClientOnly, useLocation } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { type ComponentProps, useState, useTransition } from "react";

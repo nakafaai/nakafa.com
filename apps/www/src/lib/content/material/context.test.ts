@@ -7,8 +7,8 @@ import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer, Schema } from "effect";
 import { readPublishedMaterialPlacements } from "@/lib/content/material/context";
 import { activateTestRelease } from "@/test/active";
-import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
-import { previewProjection } from "@/test/content-preview";
+import { makeProgramContextRuntimeSource } from "@/test/content/program";
+import { previewProjection } from "@/test/manifest";
 import {
   testCurriculumRowJson,
   testProgramClass,
@@ -16,7 +16,7 @@ import {
   testProgramGroups,
   testProgramRoot,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());

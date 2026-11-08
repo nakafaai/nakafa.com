@@ -1,6 +1,6 @@
 import { waitUntil } from "cloudflare:workers";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
-import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import { isServerExceptionReportingEnabled } from "@repo/analytics/reporting";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { Cause, Effect, Schema } from "effect";
 
