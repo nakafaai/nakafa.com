@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { expectDrawnIsland } from "@/e2e/support/island";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { expectDrawnIsland, openIsland } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -36,22 +37,26 @@ test("a learner shares their island, and a signed-out visitor opens it read only
   await Effect.runPromise(
     withObservedPageErrors(
       page,
-      Effect.promise(async () => {
-        await page.goto("/en/island");
-        await expectDrawnIsland(page);
-        await page.getByRole("button", { name: "More actions" }).click();
-        await page.getByRole("menuitem", { name: "Share" }).click();
-        await expect(page.locator("html")).toHaveAttribute(
-          "data-shared",
-          VISIT
-        );
-      })
+      openIsland(page, false).pipe(
+        Effect.andThen(
+          Effect.promise(async () => {
+            await page.getByRole("button", { name: "More actions" }).click();
+            await page.getByRole("menuitem", { name: "Share" }).click();
+            await expect(page.locator("html")).toHaveAttribute(
+              "data-shared",
+              VISIT
+            );
+          })
+        )
+      )
     )
   );
   const address =
     (await page.locator("html").getAttribute("data-shared")) ?? "";
   const visitor = await browser.newContext({ baseURL: origin });
   const visit = await visitor.newPage();
+  // A visitor who never answered the usage-data prompt would find it over the card's actions.
+  await Effect.runPromise(seedAnalyticsConsent(visit, "denied"));
   await Effect.runPromise(
     withObservedPageErrors(
       visit,
