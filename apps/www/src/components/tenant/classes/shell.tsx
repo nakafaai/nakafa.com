@@ -23,6 +23,7 @@ import {
 } from "@/components/tenant/classes/header";
 import { HomeFeed } from "@/components/tenant/classes/home/feed";
 import { channelLabel } from "@/components/tenant/classes/label";
+import { folderPath } from "@/components/tenant/classes/library/folder";
 import { LibraryList } from "@/components/tenant/classes/library/list";
 import { LibraryScope } from "@/components/tenant/classes/library/scope";
 import { useMyClasses } from "@/components/tenant/classes/mine";
@@ -220,7 +221,12 @@ function useViewFolder(classId: Resolved["id"]) {
     Arr.findFirst(listed ?? [], (found) => Option.contains(folderId, found.id)),
     (found) => found.name
   );
-  return { missing: listed !== null && Option.isNone(name), name };
+  // The folders above the open one, outermost first, which the path passes through.
+  const above = Arr.map(
+    Arr.dropRight(folderPath(listed ?? [], Option.getOrNull(folderId)), 1),
+    (folder) => ({ id: folder.id, label: folder.name })
+  );
+  return { above, missing: listed !== null && Option.isNone(name), name };
 }
 
 /**
@@ -283,7 +289,8 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
       id: channel.id,
       label: channelLabel(channel, t("general-channel")),
     })),
-    QueryResult.isSuccess(task) ? Option.some(task.value.title) : folder.name
+    QueryResult.isSuccess(task) ? Option.some(task.value.title) : folder.name,
+    folder.above
   );
 
   return (

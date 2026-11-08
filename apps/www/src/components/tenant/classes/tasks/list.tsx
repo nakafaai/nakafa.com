@@ -20,9 +20,6 @@ import {
   TaskStanding as Standing,
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/task";
-import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -40,6 +37,7 @@ import {
   TableSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { TableViews } from "@/components/shared/table/views";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
@@ -111,8 +109,10 @@ function TaskListBody() {
     chosenOne(chosen, "standing", Schema.is(StandingFilter)),
     (): StandingFilter => "all"
   );
-  // A teacher's Archived button reads the archived tasks in place of the live ones.
-  const [archived, setArchived] = useState(false);
+  // A teacher's Archived view reads the archived tasks in place of the live ones.
+  const [view, setView] = useState<"active" | "archived">("active");
+  const archived = view === "archived";
+  const manages = Arr.contains(can, "task.manage");
   const pagination = usePaginatedQuery(
     classroom.tasks.list,
     isSettled
@@ -148,27 +148,35 @@ function TaskListBody() {
     <>
       <ClassHeader>
         <TableSearch placeholder={t("tasks-search")} />
-        {Arr.contains(can, "task.manage") ? (
-          <ButtonGroup>
-            <Button
-              aria-pressed={archived}
-              onClick={() => setArchived((shown) => !shown)}
-              variant={archived ? "secondary" : "outline"}
-            >
-              <HugeIcons aria-hidden="true" icon={Archive02Icon} />
-              <span className="@max-sm/header:sr-only">
-                {t("task-archived")}
-              </span>
-            </Button>
-            <NewTask />
-          </ButtonGroup>
-        ) : null}
+        {manages ? <NewTask /> : null}
       </ClassHeader>
       {/* The header's 4rem and the tabs' 3rem stand above the list and its pane. */}
       <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
         <Panes id="tasks">
           <PanesList>
-            <TablePageBody>
+            <TablePageBody
+              views={
+                manages ? (
+                  <TableViews
+                    label={t("tasks-views")}
+                    onChoose={setView}
+                    view={view}
+                    views={[
+                      {
+                        icon: Task01Icon,
+                        label: t("view-active"),
+                        value: "active",
+                      },
+                      {
+                        icon: Archive02Icon,
+                        label: t("task-archived"),
+                        value: "archived",
+                      },
+                    ]}
+                  />
+                ) : null
+              }
+            >
               <TablePages pageSize={TASK_PAGE_SIZE} pagination={pagination}>
                 <DataTable
                   columns={columns}

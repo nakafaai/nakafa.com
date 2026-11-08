@@ -91,7 +91,7 @@ const reactionChip = cva("gap-1.5 rounded-full px-3 tabular-nums", {
   variants: {
     mine: {
       false: "bg-muted/60 border-transparent",
-      true: "bg-secondary text-secondary-foreground border-transparent",
+      true: "border-border bg-accent text-accent-foreground",
     },
   },
 });

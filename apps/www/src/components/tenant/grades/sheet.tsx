@@ -42,7 +42,7 @@ import {
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -203,22 +203,24 @@ export function ClassGradebook({
     >
       <Panes id="grades">
         <PanesList>
-          <TablePages pageSize={GRADEBOOK_PAGE_SIZE} pagination={pagination}>
-            <DataTable
-              columns={columns}
-              data={isRead ? pagination.results : []}
-              empty={
-                <TableEmpty
-                  act="reading"
-                  description={t("empty-description")}
-                  title={t("empty")}
-                />
-              }
-              loading={!isRead}
-              rowId={(line) => line.student.id}
-              search="student"
-            />
-          </TablePages>
+          <TablePageBody>
+            <TablePages pageSize={GRADEBOOK_PAGE_SIZE} pagination={pagination}>
+              <DataTable
+                columns={columns}
+                data={isRead ? pagination.results : []}
+                empty={
+                  <TableEmpty
+                    act="reading"
+                    description={t("empty-description")}
+                    title={t("empty")}
+                  />
+                }
+                loading={!isRead}
+                rowId={(line) => line.student.id}
+                search="student"
+              />
+            </TablePages>
+          </TablePageBody>
         </PanesList>
         <PanesDetail label={t("detail")}>
           {isRead ? <GradeLineDetail lines={pagination.results} /> : null}

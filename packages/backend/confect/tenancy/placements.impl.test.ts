@@ -40,7 +40,7 @@ const cohort = (
   periodId: GenericId.GenericId<"tenantPeriods">,
   name: string
 ) =>
-  fixture.as("admin").mutation(create, { grade: 7, name, periodId, slug: nf });
+  fixture.as("admin").mutation(create, { grade: 10, name, periodId, slug: nf });
 
 /** Enrols the fixture's student in the SMA unit, so a cohort of that unit may hold them. */
 const enrolInSma = (fixture: Fixture) =>
@@ -145,7 +145,7 @@ describe("tenancy/placements place", () => {
                   unitId: fixture.units.sma,
                 });
                 const cohortId = yield* writer.table("tenantCohorts").insert({
-                  grade: 7,
+                  grade: 10,
                   name: `Lama ${index}`,
                   nameKey: `lama ${index}`,
                   periodId: earlier,

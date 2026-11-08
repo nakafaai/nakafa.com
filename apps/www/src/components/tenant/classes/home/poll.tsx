@@ -3,6 +3,11 @@ import { ChartBarLineIcon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect } from "effect";
 import { useState } from "react";
@@ -35,20 +40,28 @@ export function NewPostPoll() {
 
   return (
     <>
-      <Button
-        className="@xs/header:has-[>svg]:px-4"
-        disabled={viewer._tag !== "Success"}
-        onClick={() => setOpen(true)}
-        type="button"
-        variant="outline"
-      >
-        <HugeIcons
-          aria-hidden="true"
-          className="@2xl/header:hidden"
-          icon={ChartBarLineIcon}
-        />
-        <HeaderLabel>{t("post-new-poll")}</HeaderLabel>
-      </Button>
+      {/* A narrow header shows the icon alone, so its name stays in the tooltip. */}
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              className="@xs/header:has-[>svg]:px-4"
+              disabled={viewer._tag !== "Success"}
+              onClick={() => setOpen(true)}
+              type="button"
+              variant="outline"
+            />
+          }
+        >
+          <HugeIcons
+            aria-hidden="true"
+            className="@2xl/header:hidden"
+            icon={ChartBarLineIcon}
+          />
+          <HeaderLabel>{t("post-new-poll")}</HeaderLabel>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("post-new-poll")}</TooltipContent>
+      </Tooltip>
       <NewPoll
         onSend={(poll) => {
           if (viewer._tag !== "Success") {

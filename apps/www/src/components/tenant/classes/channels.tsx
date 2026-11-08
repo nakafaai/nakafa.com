@@ -115,7 +115,7 @@ export function ChannelUnread() {
     <>
       <span
         aria-hidden="true"
-        className="bg-primary size-2 shrink-0 rounded-full"
+        className="bg-foreground size-2 shrink-0 rounded-full"
         data-slot="unread-dot"
       />
       <span className="sr-only">{t("unread")}</span>

@@ -1,9 +1,10 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Match, Option, Schema } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import type { ClassView } from "@/components/tenant/classes/view";
 import {
+  schoolClassFolderTarget,
   schoolClassForumTarget,
   schoolClassLibraryTarget,
   schoolClassTarget,
@@ -28,19 +29,27 @@ const PathChannel = Schema.Struct({
   label: Schema.String,
 });
 
+/** A folder the path passes through on its way to the open one, by its ID and its name. */
+const PathFolder = Schema.Struct({
+  id: Id("classroomFolders"),
+  label: Schema.String,
+});
+
 /**
  * The path of a class page after the school's home, the page itself last: the class alone on its
  * home; the class and the forum on the channel list; the forum and the channel on a channel and on a
  * discussion, which its pane names; the class and the tasks on the task
  * list; the class and the library or its people on those tabs; the tasks and the task's title on a task; and the class and the gradebook on
  * the gradebook. A name that is not known yet is left out, so
- * the path never shows a placeholder. `leaf` is the last name: the folder's or the task's.
+ * the path never shows a placeholder. `leaf` is the last name: the folder's or the task's. A folder inside others
+ * passes through each of them (`above`), so the library needs no path of its own in its body.
  */
 export const classPath = (
   view: typeof ClassView.Type,
   root: typeof PathRoot.Type,
   channel: Option.Option<typeof PathChannel.Type>,
-  leaf: Option.Option<string>
+  leaf: Option.Option<string>,
+  above: readonly (typeof PathFolder.Type)[] = []
 ): readonly BreadcrumbHeaderItem[] => {
   const klass = {
     label: root.name,
@@ -74,6 +83,10 @@ export const classPath = (
         label: root.library,
         target: schoolClassLibraryTarget(root.slug, root.classSlug),
       },
+      ...Arr.map(above, (folder) => ({
+        label: folder.label,
+        target: schoolClassFolderTarget(root.slug, root.classSlug, folder.id),
+      })),
       ...last,
     ],
     people: () => [klass, { label: root.people }],

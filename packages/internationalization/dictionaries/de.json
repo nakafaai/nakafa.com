@@ -1729,6 +1729,7 @@
     "task-remove": "Aufgabe löschen",
     "task-remove-title": "Diese Aufgabe löschen",
     "task-remove-description": "Die abgegebenen Arbeiten werden mit gelöscht, und das lässt sich nicht rückgängig machen.",
+    "task-remove-work": "{count, plural, =0 {Noch nichts abgegeben} one {# Abgabe wird mit gelöscht} other {# Abgaben werden mit gelöscht}}",
     "library-download": "Herunterladen",
     "library-move": "Verschieben",
     "library-move-title": "Verschieben nach",
@@ -1748,7 +1749,15 @@
     "library-purge-title": "Endgültig löschen",
     "library-purge-description": "Das gibt Speicher der Schule frei und lässt sich nicht rückgängig machen.",
     "library-restore": "Wiederherstellen",
-    "library-path": "Ordnerpfad",
+    "library-views": "Einträge anzeigen",
+    "posts-views": "Ankündigungen anzeigen",
+    "tasks-views": "Aufgaben anzeigen",
+    "threads-views": "Diskussionen anzeigen",
+    "view-active": "Aktiv",
+    "select-folder": "Ordner",
+    "select-late": "Verspätung",
+    "select-questions": "Fragen",
+    "select-reach": "Empfänger",
     "task-exam": "Fragen",
     "task-exam-none": "Eine schriftliche Antwort",
     "task-exam-description": "Wähle eine Prüfung aus dem Prüfungseditor, und die Klasse bearbeitet sie im Prüfungsplayer.",
@@ -1857,6 +1866,10 @@
     "search-students": "Schüler suchen",
     "students-empty": "Noch kein Schüler in dieser Klasse.",
     "students-empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "elsewhere-title": "{cohort} schließt nicht ab.",
+    "elsewhere-description": "Nur Klasse {last} von {unit} schließt ab, und {cohort} ist in Klasse {grade}.",
+    "elsewhere-none": "{unit} hat keine Klasse, die abschließt.",
+    "elsewhere-action": "Abschlüsse ansehen",
     "student": "Schüler",
     "nisn": "NISN",
     "nisn-yes": "Erfasst",
@@ -3261,6 +3274,10 @@
     "school-refusal-cohort-name-taken": {
       "title": "Diesen Namen gibt es schon.",
       "description": "Wähle für diese Periode einen anderen Namen."
+    },
+    "school-refusal-cohort-grade": {
+      "title": "Diese Stufe gibt es hier nicht.",
+      "description": "Wähle eine Klassenstufe dieser Schulform."
     },
     "school-refusal-cohort-limit": {
       "title": "Diese Periode ist voll.",

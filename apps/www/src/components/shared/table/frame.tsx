@@ -34,14 +34,26 @@ export function TableFrame({ children }: { children: ReactNode }) {
  * a working table, such as the exams, rooms or results, takes the page width. The data table fills
  * the card, its rows divided and running the card's width, and so does the empty state in its
  * place; a table taller than the card scrolls inside it with its column heads in view. The table
- * closes on its last row (`tableCardVariants`).
+ * closes on its last row (`tableCardVariants`). A list with views shows them above its card (`TableViews`), never in the
+ * page's header.
  */
-export function TablePageBody({ children }: { children: ReactNode }) {
+export function TablePageBody({
+  children,
+  views,
+}: {
+  children: ReactNode;
+  /** The list's views, which stand above the card. */
+  views?: ReactNode;
+}) {
   return (
     <div
-      className={cn(pageRowVariants(), "flex min-h-0 flex-1 flex-col py-4")}
+      className={cn(
+        pageRowVariants(),
+        "flex min-h-0 flex-1 flex-col gap-3 py-4"
+      )}
       data-slot="table-page-body"
     >
+      {views}
       <div
         className={cn(
           tableCardVariants(),

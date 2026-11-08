@@ -315,7 +315,7 @@ export const foreignCohort = Effect.fn("test.tenancy.foreignCohort")(function* (
   return yield* fixture
     .as("otherOwner")
     .mutation(refs.public.tenancy.cohorts.create, {
-      grade: 7,
+      grade: 1,
       name: "7A",
       periodId: period.id,
       slug: other,

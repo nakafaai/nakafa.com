@@ -39,6 +39,7 @@ import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
+import { TableViews } from "@/components/shared/table/views";
 import { LoadFailure } from "@/components/state/failure";
 import { ChannelUnread } from "@/components/tenant/classes/channels";
 import {
@@ -69,7 +70,8 @@ export function ThreadRows() {
   const t = useTranslations("Classroom");
   const { can, classId, slug } = useClassScope();
   const search = useTableFilters((state) => state.search);
-  const [archived, setArchived] = useState(false);
+  const [view, setView] = useState<"active" | "archived">("active");
+  const archived = view === "archived";
   const pagination = usePaginatedQuery(
     classroom.forum.threads.list,
     { classId, slug, ...(archived ? { archived } : {}) },
@@ -91,15 +93,24 @@ export function ThreadRows() {
   return (
     <>
       {Arr.contains(can, "forum.manage") ? (
-        <div className="flex justify-end py-2 lg:pe-2">
-          <Button
-            aria-pressed={archived}
-            onClick={() => setArchived((shown) => !shown)}
-            variant={archived ? "secondary" : "ghost"}
-          >
-            <HugeIcons aria-hidden="true" icon={Archive02Icon} />
-            {t("threads-archived")}
-          </Button>
+        <div className="py-2 lg:pe-2">
+          <TableViews
+            label={t("threads-views")}
+            onChoose={setView}
+            view={view}
+            views={[
+              {
+                icon: BubbleChatIcon,
+                label: t("view-active"),
+                value: "active",
+              },
+              {
+                icon: Archive02Icon,
+                label: t("threads-archived"),
+                value: "archived",
+              },
+            ]}
+          />
         </div>
       ) : null}
       <ThreadList

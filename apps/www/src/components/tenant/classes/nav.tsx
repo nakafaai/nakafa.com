@@ -16,10 +16,8 @@ import {
 import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { TenantClassLinks } from "@/components/tenant/classes/links";
 import { markOf, withMarks } from "@/components/tenant/classes/marks";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
@@ -77,12 +75,7 @@ function TenantClassesRows() {
               mascot={klass.mascot}
               name={klass.name}
               slug={klass.slug}
-            >
-              <TenantClassLinks
-                classSlug={klass.slug}
-                cohortId={klass.cohortId}
-              />
-            </TenantClassItem>
+            />
           ))}
         </TenantSidebarGroup>
       ) : null}
@@ -164,9 +157,7 @@ function TenantUnitClasses({
           mascot={markOf(klass.id)}
           name={klass.name}
           slug={klass.slug}
-        >
-          <TenantClassLinks classSlug={klass.slug} cohortId={klass.cohortId} />
-        </TenantClassItem>
+        />
       ))}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -176,18 +167,16 @@ function TenantUnitClasses({
 }
 
 /**
- * One class of the school sidebar, linking to the class page on the school host, marked
- * with its animal as the school switcher marks a school. Its entry is the current page on
- * the class page and on its tabs, and the open class shows its places under it.
+ * One class of the school sidebar, linking to the class home on the school host, marked
+ * with its animal as the school switcher marks a school. A press opens the class; its places
+ * are the page's own tabs, so the entry unfolds nothing. Its entry is the current page on the
+ * class page and on its tabs.
  */
 function TenantClassItem({
-  children,
   mascot,
   name,
   slug,
 }: {
-  /** The class's places, which show under its entry while the class is open. */
-  children: ReactNode;
   mascot: typeof Mascot.Type;
   name: string;
   slug: string;
@@ -214,7 +203,6 @@ function TenantClassItem({
           {name}
         </span>
       </SidebarMenuButton>
-      {isActive ? children : null}
     </SidebarMenuItem>
   );
 }

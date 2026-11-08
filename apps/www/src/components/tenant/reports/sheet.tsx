@@ -29,7 +29,7 @@ import {
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -96,9 +96,7 @@ export function CohortReports() {
     <TableFiltersProvider>
       <PanesProvider>
         <CohortReportsHeader />
-        <div className="flex w-full min-w-0 flex-1 flex-col">
-          <CohortReportsBody />
-        </div>
+        <CohortReportsBody />
       </PanesProvider>
     </TableFiltersProvider>
   );
@@ -191,21 +189,23 @@ function CohortReportsBody() {
   return (
     <Panes id="reports">
       <PanesList>
-        <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
-          <DataTable
-            columns={columns}
-            data={pagination.results}
-            empty={
-              <TableEmpty
-                act="reading"
-                description={t("students-empty-description")}
-                title={t("students-empty")}
-              />
-            }
-            rowId={(line) => line.student.id}
-            search="student"
-          />
-        </TablePages>
+        <TablePageBody>
+          <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
+            <DataTable
+              columns={columns}
+              data={pagination.results}
+              empty={
+                <TableEmpty
+                  act="reading"
+                  description={t("students-empty-description")}
+                  title={t("students-empty")}
+                />
+              }
+              rowId={(line) => line.student.id}
+              search="student"
+            />
+          </TablePages>
+        </TablePageBody>
       </PanesList>
       <PanesDetail label={t("detail")}>
         <ReportLineDetail lines={pagination.results} />
