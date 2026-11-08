@@ -44,10 +44,17 @@ describe("the chat's emoji", () => {
     expect(emojiOf(smile, "fr").name).toBe("grinning face");
   });
 
-  it("finds emoji by the start of their words in the reader's language and in English, with or without accents", () => {
+  it("finds emoji by the start of their words in Indonesian, English and German, whichever the reader reads, with or without accents", () => {
     expect(found("buku")).toContain("📚");
     expect(found("book")).toContain("📚");
     expect(found("kura")).toContain("🐢");
+    expect(found("daumen")).toEqual(["👍", "👎"]);
+    const english = Arr.map(GLYPHS, (glyph) => emojiOf(glyph, "en"));
+    const forEnglish = (query: string) =>
+      Arr.map(matchEmoji(english, query), (emoji) => emoji.emoji);
+    expect(forEnglish("jempol")).toEqual(["👍", "👎"]);
+    expect(forEnglish("rakete")).toEqual(["🚀"]);
+    expect(forEnglish("thumbs up")).toEqual(["👍"]);
     expect(found("TERIMA kasih")).toEqual(["🙏"]);
     expect(found("zzzzz")).toEqual([]);
     expect(matchEmoji(indonesian, "  ")).toHaveLength(GLYPHS.length);

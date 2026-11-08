@@ -1,5 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { grantFinishAwards } from "@repo/backend/confect/tryouts/runtime/award";
 import {
   readSectionCompletion,
   requireFinalSectionAttempts,
@@ -24,7 +25,7 @@ import {
   summarizeResponses,
   type TryoutScoreSource,
 } from "@repo/backend/confect/tryouts/runtime/score";
-import { Array as Arr, Effect, flow, MutableHashSet } from "effect";
+import { Array as Arr, Effect, flow, MutableHashSet, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -175,6 +176,15 @@ export const finalizeSectionAttempt = Effect.fn(
         lastActivityAt: args.now,
       })
       .pipe(Effect.orDie);
+    yield* grantFinishAwards(args.attempt, {
+      sectionAnswered: finalization.answeredCount,
+      sectionKey: args.section.sectionKey,
+      setAnswered: attemptResponseIndex
+        ? Option.some(
+            summarizeResponses(attemptResponseIndex.responses).answeredCount
+          )
+        : Option.none(),
+    });
     if (!attemptResponseIndex) {
       return {
         kind: "completed",

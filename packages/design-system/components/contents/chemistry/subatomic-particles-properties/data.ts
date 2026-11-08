@@ -1,5 +1,4 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { getColor } from "@repo/design-system/lib/color";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -73,7 +72,6 @@ export function getSubatomicParticlePropertiesColors(
   return {
     electron: PLOT_COLORS.teal,
     electronPath: PLOT_COLORS.teal,
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     neutral: PLOT_COLORS.slate,
     neutron: PLOT_COLORS.slate,
     negativePlate: PLOT_COLORS.pink,
@@ -82,7 +80,6 @@ export function getSubatomicParticlePropertiesColors(
     proton: PLOT_COLORS.pink,
     protonPath: PLOT_COLORS.pink,
     sphereText: ORIGIN_COLOR.LIGHT,
-    skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

@@ -5,6 +5,7 @@ import { readTryoutSectionPage } from "@/components/tryout/catalog/source.server
 import { readTryoutRouteHead } from "@/components/tryout/route/metadata.server";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { serverHandler } from "@/lib/server/fn";
+import { getTryoutSectionArtwork } from "@/lib/tryout/artwork";
 
 /**
  * Resolves one section URL: the catalog view every visitor sees, with the set page it returns to,
@@ -54,6 +55,13 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       // little more than its set says, and search has left these unread, so the set stands for them.
       head: {
         ...head.value,
+        // A section with reviewed artwork shares it; any other keeps the generated image.
+        image:
+          getTryoutSectionArtwork(input.locale, {
+            countryKey: page.set.countryKey,
+            examKey: page.set.examKey,
+            sectionKey: page.section.sectionKey,
+          }) ?? head.value.image,
         indexable: false,
         description:
           page.section.description ??

@@ -21,9 +21,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useRef } from "react";
-import { DoubleSide, type Group } from "three";
+import type { Group } from "three";
 
 const REACTANTS_X = -1.05;
 const PRODUCTS_X = 1.05;
@@ -217,24 +218,13 @@ function VolumeTube({
         <cylinderGeometry
           args={[TUBE_RADIUS, TUBE_RADIUS, height, 48, 1, true]}
         />
-        <meshStandardMaterial
-          color={colors.glass}
-          depthWrite={false}
-          opacity={0.18}
-          roughness={0.12}
-          side={DoubleSide}
-          transparent
-        />
+        <GlassMaterial color={colors.glass} opacity={0.18} />
       </mesh>
 
       {Arr.map([-height / 2, height / 2], (y) => (
         <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[TUBE_RADIUS, 0.012, 12, 48]} />
-          <meshStandardMaterial
-            color={colors.glass}
-            opacity={0.48}
-            transparent
-          />
+          <GlassMaterial color={colors.glass} opacity={0.48} />
         </mesh>
       ))}
     </group>
@@ -311,6 +301,7 @@ function Molecule({ kind }: { kind: CombiningVolumesMoleculeKind }) {
             key={`${startId}-${endId}`}
             lineWidth={BOND_LINE_WIDTH}
             points={[start.value.position, end.value.position]}
+            toneMapped={false}
           />
         );
       })}

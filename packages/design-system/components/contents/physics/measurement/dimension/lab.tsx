@@ -15,11 +15,11 @@ import {
 import { DimensionScene } from "@repo/design-system/components/contents/physics/measurement/dimension/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -106,31 +106,16 @@ export function DimensionLab({
       </VisualCardToolbar>
 
       <VisualCardBody className={threeSceneFrameVariants()}>
-        <ThreeCanvas frameloop="demand">
+        <ScienceStage frameloop="demand">
           <Suspense>
             <ResponsiveDimensionCamera />
-            <ambientLight intensity={0.75} />
-            <hemisphereLight
-              color={sceneColors.skyLight}
-              groundColor={sceneColors.groundLight}
-              intensity={0.65}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.3}
-              position={[4, 6, 5]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <DimensionScene
               colors={sceneColors}
               modeId={selectedModeId}
               powerLabel={selectedMode.powerLabel}
             />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

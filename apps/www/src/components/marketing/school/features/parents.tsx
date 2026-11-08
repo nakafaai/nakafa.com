@@ -35,7 +35,7 @@ function ParentLine({
         step,
       })}
     >
-      <HugeIcons className="text-muted-foreground" icon={icon} />
+      <HugeIcons className="text-muted-foreground size-4" icon={icon} />
       <span className="min-w-0 flex-1 truncate text-sm">{label}</span>
       {children}
     </li>
@@ -51,12 +51,12 @@ export function SchoolParents() {
   const tSubject = useTranslations("Subject");
 
   return (
-    <FeatureRow id="parents">
+    <FeatureRow id="parents" layout="end">
       <SchoolFeatureText feature="parents">
         <Nina act="waving" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureCard>
-        <div className="flex items-center gap-3 border-b pb-4">
+        <div className="flex items-center gap-3">
           <PersonAvatar mascot={DEMO_CHILD.mascot} size="lg" />
           <div className="grid min-w-0 gap-0.5">
             <p className="truncate font-medium">{DEMO_CHILD.name}</p>
