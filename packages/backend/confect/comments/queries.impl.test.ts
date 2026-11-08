@@ -54,6 +54,7 @@ describe("comments/queries", () => {
         sessionId: asker.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "Pertanyaan",
       });
@@ -63,12 +64,14 @@ describe("comments/queries", () => {
         sessionId: answerer.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "Jawaban",
         parentId: question,
       });
 
     const page = await t.query(api.comments.queries.getCommentsBySlug, {
+      sort: "newest",
       slug,
       paginationOpts,
     });
@@ -107,6 +110,7 @@ describe("comments/queries", () => {
     const question = await t
       .withIdentity({ subject: gone.authUserId, sessionId: gone.sessionId })
       .mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "Pertanyaan lama",
       });
@@ -116,6 +120,7 @@ describe("comments/queries", () => {
         sessionId: replier.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "Jawaban baru",
         parentId: question,
@@ -123,6 +128,7 @@ describe("comments/queries", () => {
     await t.mutation((ctx) => ctx.db.delete("users", gone.userId));
 
     const page = await t.query(api.comments.queries.getCommentsBySlug, {
+      sort: "newest",
       slug,
       paginationOpts,
     });
@@ -167,6 +173,7 @@ describe("comments/queries", () => {
         sessionId: asker.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "Pertanyaan foto",
       });
@@ -176,12 +183,14 @@ describe("comments/queries", () => {
         sessionId: answerer.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "Jawaban foto",
         parentId: question,
       });
 
     const page = await t.query(api.comments.queries.getCommentsBySlug, {
+      sort: "newest",
       slug,
       paginationOpts,
     });
@@ -225,9 +234,10 @@ describe("comments/queries", () => {
     const slug = "articles/listing";
     const root = await authorClient.mutation(
       api.comments.mutations.addComment,
-      { slug, text: "Akar" }
+      { uploads: [], slug, text: "Akar" }
     );
     await readerClient.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Balasan",
       parentId: root,
@@ -238,9 +248,10 @@ describe("comments/queries", () => {
 
     const signedIn = await readerClient.query(
       api.comments.queries.getCommentsBySlug,
-      { slug, paginationOpts }
+      { sort: "newest", slug, paginationOpts }
     );
     const signedOut = await t.query(api.comments.queries.getCommentsBySlug, {
+      sort: "newest",
       slug,
       paginationOpts,
     });
@@ -327,5 +338,64 @@ describe("comments/queries", () => {
     });
     await t.run((ctx) => ctx.db.delete(reply));
     expect(await reader.query(getComment, { commentId: reply })).toBeNull();
+  });
+
+  it("orders a slug's comments by likes for Top and by time for Newest, and counts its comments with replies", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const [author, reader] = await t.mutation((ctx) =>
+      Promise.all([
+        seedAuthenticatedUser(ctx, { now, suffix: "order-author" }),
+        seedAuthenticatedUser(ctx, { now, suffix: "order-reader" }),
+      ])
+    );
+    const authorClient = t.withIdentity({
+      subject: author.authUserId,
+      sessionId: author.sessionId,
+    });
+    const readerClient = t.withIdentity({
+      subject: reader.authUserId,
+      sessionId: reader.sessionId,
+    });
+    const slug = "articles/order";
+    const post = (text: string) =>
+      authorClient.mutation(api.comments.mutations.addComment, {
+        slug,
+        text,
+        uploads: [],
+      });
+    const quiet = await post("Quiet");
+    const liked = await post("Liked");
+    const newest = await post("Newest");
+    await readerClient.mutation(likeComment, { commentId: liked });
+    await readerClient.mutation(api.comments.mutations.addComment, {
+      parentId: quiet,
+      slug,
+      text: "Reply",
+      uploads: [],
+    });
+    const order = async (sort: "newest" | "top") =>
+      Arr.map(
+        (
+          await t.query(api.comments.queries.getCommentsBySlug, {
+            paginationOpts,
+            slug,
+            sort,
+          })
+        ).page,
+        (row) => row._id
+      );
+    expect(await order("top")).toEqual([liked, newest, quiet]);
+    expect(await order("newest")).toEqual([newest, liked, quiet]);
+    const count = () => t.query(api.comments.queries.getCommentCount, { slug });
+    expect(await count()).toBe(4);
+    await authorClient.mutation(api.comments.mutations.deleteComment, {
+      commentId: newest,
+    });
+    expect(await count()).toBe(3);
+    expect(
+      await t.query(api.comments.queries.getCommentCount, {
+        slug: "articles/empty",
+      })
+    ).toBe(0);
   });
 });

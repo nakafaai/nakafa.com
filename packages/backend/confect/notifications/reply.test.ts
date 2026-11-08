@@ -96,11 +96,11 @@ const subscribe = (t: Learners["t"], userId: Id<"users">) =>
 async function reply({ author, reader }: Learners) {
   const parentId = await author.client.mutation(
     api.comments.mutations.addComment,
-    { slug: SLUG, text: "Question" }
+    { uploads: [], slug: SLUG, text: "Question" }
   );
   const replyId = await reader.client.mutation(
     api.comments.mutations.addComment,
-    { parentId, slug: SLUG, text: "Answer" }
+    { uploads: [], parentId, slug: SLUG, text: "Answer" }
   );
   return { parentId, replyId };
 }
@@ -133,9 +133,10 @@ describe("notifications/reply", () => {
     const { author, t } = await createLearners();
     const parentId = await author.client.mutation(
       api.comments.mutations.addComment,
-      { slug: SLUG, text: "Question" }
+      { uploads: [], slug: SLUG, text: "Question" }
     );
     await author.client.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       parentId,
       slug: SLUG,
       text: "A follow-up",

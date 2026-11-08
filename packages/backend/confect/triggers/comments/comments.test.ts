@@ -28,6 +28,7 @@ describe("triggers/comments/comments", () => {
     });
     const slug = "en/articles/politics/cleanup";
     const parentId = await client.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Parent",
     });
@@ -98,15 +99,18 @@ describe("triggers/comments/comments", () => {
 
     const slug = "/en/articles/politics/thread";
     const rootId = await author.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Root comment",
     });
     const replyId = await replier.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Reply to the root",
       parentId: rootId,
     });
     const nestedId = await author.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Reply to the reply",
       parentId: replyId,
@@ -145,6 +149,7 @@ describe("triggers/comments/comments", () => {
     });
     const slug = "en/articles/politics/thread-batches";
     const rootId = await client.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Root with a long thread",
     });
@@ -204,10 +209,12 @@ describe("triggers/comments/comments", () => {
     });
 
     const parentId = await author.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug: "/en/articles/politics/deleted-parent",
       text: "Parent before delete",
     });
     const replyId = await replier.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug: "/en/articles/politics/deleted-parent",
       text: "Reply after parent delete",
       parentId,

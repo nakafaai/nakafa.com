@@ -291,15 +291,23 @@ describe("notifications/mail", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* school;
-        const parentId = yield* fixture
-          .as("student")
-          .mutation(addComment, { slug: SLUG, text: "Pertanyaan" });
-        yield* fixture
-          .as("teacher")
-          .mutation(addComment, { parentId, slug: SLUG, text: "Jawaban" });
-        yield* fixture
-          .as("admin")
-          .mutation(addComment, { parentId, slug: SLUG, text: "Jawaban lain" });
+        const parentId = yield* fixture.as("student").mutation(addComment, {
+          uploads: [],
+          slug: SLUG,
+          text: "Pertanyaan",
+        });
+        yield* fixture.as("teacher").mutation(addComment, {
+          uploads: [],
+          parentId,
+          slug: SLUG,
+          text: "Jawaban",
+        });
+        yield* fixture.as("admin").mutation(addComment, {
+          uploads: [],
+          parentId,
+          slug: SLUG,
+          text: "Jawaban lain",
+        });
         expect(yield* swept(fixture)).toEqual([]);
         vi.setSystemTime(TENANCY_NOW + DAY);
         const mails = yield* swept(fixture);

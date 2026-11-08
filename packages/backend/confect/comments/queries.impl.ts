@@ -6,6 +6,7 @@ import {
   QueryCtx as QueryCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
+import { photoViews } from "@repo/backend/confect/comments/photo";
 import { readCommentPlace } from "@repo/backend/confect/comments/place";
 import spec from "@repo/backend/confect/comments/queries.spec";
 import {
@@ -34,10 +35,20 @@ function publicAuthor(user: typeof userDataValidator.Type) {
   };
 }
 
-/** A comment as the lists show it: its stored fields, and whether the viewer liked it. */
-function likedRow(comment: CommentDoc, liked: boolean) {
-  return { ...comment, liked };
-}
+/**
+ * A comment as the lists show it: its stored fields, its photos at the addresses they are read at, and
+ * whether the viewer liked it.
+ */
+const listedRow = Effect.fn("comments.queries.listedRow")(function* (
+  comment: CommentDoc,
+  viewerId: Id<"users"> | null
+) {
+  return {
+    ...comment,
+    liked: yield* isCommentLikedBy(comment._id, viewerId),
+    photos: yield* photoViews(comment.photos),
+  };
+});
 
 /**
  * One page of comments with the viewer's likes, and with the author and the reply
@@ -54,7 +65,7 @@ const withAuthors = Effect.fn("comments.queries.withAuthors")(function* (
     )
   );
   return yield* Effect.forEach(page, (comment) =>
-    Effect.map(isCommentLikedBy(comment._id, viewerId), (liked) => {
+    Effect.map(listedRow(comment, viewerId), (row) => {
       const user = Option.getOrUndefined(HashMap.get(userMap, comment.userId));
       const replyToUser = comment.replyToUserId
         ? Option.getOrUndefined(
@@ -62,7 +73,7 @@ const withAuthors = Effect.fn("comments.queries.withAuthors")(function* (
           )
         : undefined;
       return {
-        ...likedRow(comment, liked),
+        ...row,
         user: user ? publicAuthor(user) : null,
         replyToUser: replyToUser ? publicAuthor(replyToUser) : null,
       };
@@ -107,20 +118,30 @@ const getCommentPlace = FunctionImpl.make(
   })
 );
 
-/** Reads one page of the top-level comments of a slug, newest first. Replies are read by thread. */
+/**
+ * Reads one page of the top-level comments of a slug: the most liked first, the newest first among
+ * equals, or the newest first. Replies are read by thread.
+ */
 const getCommentsBySlug = FunctionImpl.make(
   databaseSchema,
   spec,
   "getCommentsBySlug",
   Effect.fn("comments.queries.getCommentsBySlug")(function* (args) {
-    const database = yield* DatabaseReader;
-    const comments = yield* database
-      .table("comments")
-      .index(
-        "by_slug_and_threadId",
-        (q) => q.eq("slug", cleanSlug(args.slug)).eq("threadId", undefined),
-        "desc"
-      )
+    const table = (yield* DatabaseReader).table("comments");
+    const slug = cleanSlug(args.slug);
+    const ordered =
+      args.sort === "top"
+        ? table.index(
+            "by_slug_and_threadId_and_likeCount",
+            (q) => q.eq("slug", slug).eq("threadId", undefined),
+            "desc"
+          )
+        : table.index(
+            "by_slug_and_threadId",
+            (q) => q.eq("slug", slug).eq("threadId", undefined),
+            "desc"
+          );
+    const comments = yield* ordered
       .paginate(args.paginationOpts)
       .pipe(Effect.orDie);
     const viewer = yield* getOptionalAppUserForRead();
@@ -128,6 +149,23 @@ const getCommentsBySlug = FunctionImpl.make(
       ...comments,
       page: yield* withAuthors(comments.page, viewer?.appUser._id ?? null),
     };
+  })
+);
+
+/** Reads how many comments a slug holds, replies counted. A slug without comments holds none. */
+const getCommentCount = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "getCommentCount",
+  Effect.fn("comments.queries.getCommentCount")(function* (args) {
+    const row = yield* (yield* DatabaseReader)
+      .table("commentCounts")
+      .get("by_slug", cleanSlug(args.slug))
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    return row?.count ?? 0;
   })
 );
 
@@ -175,9 +213,7 @@ const getCommentsByUserId = FunctionImpl.make(
     return {
       ...comments,
       page: yield* Effect.forEach(comments.page, (comment) =>
-        Effect.map(isCommentLikedBy(comment._id, viewerId), (liked) =>
-          likedRow(comment, liked)
-        )
+        listedRow(comment, viewerId)
       ),
     };
   })
@@ -187,6 +223,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getComment),
   Layer.provide(getCommentPlace),
   Layer.provide(getCommentsBySlug),
+  Layer.provide(getCommentCount),
   Layer.provide(getCommentReplies),
   Layer.provide(getCommentsByUserId),
   Layer.provide(sessionMiddleware),

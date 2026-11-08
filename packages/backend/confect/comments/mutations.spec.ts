@@ -2,40 +2,49 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import commentsTable from "@repo/backend/confect/_generated/tables/comments";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { CommentWriteError } from "@repo/backend/confect/comments/errors";
+import { COMMENT_PHOTO_LIMIT } from "@repo/backend/confect/comments/photo";
+import { ReportReason } from "@repo/backend/confect/comments/report";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { LearnerTextRefusal } from "@repo/backend/confect/writing/text";
 import { Schema, Struct } from "effect";
 
-/** Expected denial while writing a comment, or a like on it. */
-export class CommentWriteError extends Schema.TaggedError<CommentWriteError>()(
-  "CommentWriteError",
-  {
-    code: Schema.Literals([
-      ...LearnerTextRefusal.literals,
-      "COMMENT_PARENT_NOT_FOUND",
-      "COMMENT_PARENT_MISMATCH",
-      "COMMENT_NOT_FOUND",
-      "FORBIDDEN",
-    ]),
-    message: Schema.String,
-  }
-) {}
+/** The error of every comment write: a missing session, or a denial the learner can be told. */
+const writeError = () => Schema.Union([AuthFailure, CommentWriteError]);
+
+/** What a learner posts: the page, the Markdown, the comment it answers, and the photos it carries. */
+export const CommentPost = Schema.Struct({
+  ...commentsTable.Fields.mapFields(Struct.pick(["slug", "text", "parentId"]))
+    .fields,
+  uploads: Schema.Array(IdSchema("commentUploads")).check(
+    Schema.isMaxLength(COMMENT_PHOTO_LIMIT)
+  ),
+});
+
+/** The comment one write acts on. */
+const commentArgs = () => ({ commentId: IdSchema("comments") });
 
 /**
- * Writes the comments of a slug (article, post, etc.), their replies and their likes.
- * The replies count of a top-level comment is kept by the comment trigger.
+ * Writes the comments of a slug (article, lesson, etc.), their replies, edits, likes and reports.
+ * The replies count of a top-level comment, and the count of a slug, are kept by the comment trigger.
  */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "addComment",
-      args: () =>
-        commentsTable.Fields.mapFields(
-          Struct.pick(["slug", "text", "parentId"])
-        ).fields,
+      args: () => CommentPost.fields,
       returns: () => IdSchema("comments"),
-      error: () => Schema.Union([AuthFailure, CommentWriteError]),
+      error: writeError,
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "editComment",
+      args: () => ({ ...commentArgs(), text: Schema.String }),
+      returns: () => Schema.Null,
+      error: writeError,
     })
       .middleware(Session)
       .middleware(Atomic)
@@ -43,11 +52,9 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "likeComment",
-      args: () => ({
-        commentId: IdSchema("comments"),
-      }),
+      args: commentArgs,
       returns: () => Schema.Null,
-      error: () => Schema.Union([AuthFailure, CommentWriteError]),
+      error: writeError,
     })
       .middleware(Session)
       .middleware(Atomic)
@@ -55,11 +62,19 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "unlikeComment",
-      args: () => ({
-        commentId: IdSchema("comments"),
-      }),
+      args: commentArgs,
       returns: () => Schema.Null,
-      error: () => Schema.Union([AuthFailure, CommentWriteError]),
+      error: writeError,
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "reportComment",
+      args: () => ({ ...commentArgs(), reason: ReportReason }),
+      returns: () => Schema.Null,
+      error: writeError,
     })
       .middleware(Session)
       .middleware(Atomic)
@@ -67,11 +82,9 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "deleteComment",
-      args: () => ({
-        commentId: IdSchema("comments"),
-      }),
+      args: commentArgs,
       returns: () => Schema.Null,
-      error: () => Schema.Union([AuthFailure, CommentWriteError]),
+      error: writeError,
     })
       .middleware(Session)
       .middleware(Atomic)

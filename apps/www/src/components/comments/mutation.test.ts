@@ -28,6 +28,7 @@ function row(id: string, change: Partial<CommentRow> = {}): CommentRow {
     _id: commentId(id),
     likeCount: 0,
     liked: false,
+    photos: [],
     replyCount: 0,
     replyToUser: null,
     slug: SLUG,
@@ -53,6 +54,7 @@ function slugList(
     Ref.encodeArgsSync(comments.queries.getCommentsBySlug, {
       paginationOpts: { cursor, numItems: 25 },
       slug,
+      sort: "newest",
     }),
     Ref.encodeReturnsSync(comments.queries.getCommentsBySlug, {
       continueCursor: "next",
@@ -108,6 +110,7 @@ function loadingSlug(slug: string): Cached {
     Ref.encodeArgsSync(comments.queries.getCommentsBySlug, {
       paginationOpts: { cursor: null, numItems: 25 },
       slug,
+      sort: "newest",
     }),
     undefined,
   ];
@@ -275,7 +278,11 @@ describe("the optimistic changes of the comment lists", () => {
       slugList(null, [row("elsewhere")], "other-lesson"),
     ]);
 
-    insertDraftComment(draft)(fake.store, { slug: SLUG, text: "draft" });
+    insertDraftComment(draft)(fake.store, {
+      slug: SLUG,
+      text: "draft",
+      uploads: [],
+    });
 
     expect(slugPages(fake)).toEqual([
       [commentId("draft"), commentId("older")],
@@ -289,7 +296,11 @@ describe("the optimistic changes of the comment lists", () => {
     const draft = row("draft", { _id: commentId("draft") });
     const fake = fakeStore([loadingSlug(SLUG)]);
 
-    insertDraftComment(draft)(fake.store, { slug: SLUG, text: "draft" });
+    insertDraftComment(draft)(fake.store, {
+      slug: SLUG,
+      text: "draft",
+      uploads: [],
+    });
 
     expect(slugPages(fake)).toEqual([null]);
     expect(fake.writes()).toBe(0);
@@ -311,6 +322,7 @@ describe("the optimistic changes of the comment lists", () => {
       parentId: ROOT,
       slug: SLUG,
       text: "reply",
+      uploads: [],
     });
 
     expect(slugPages(fake)).toEqual([[ROOT, OTHER]]);
@@ -339,6 +351,7 @@ describe("the optimistic changes of the comment lists", () => {
       parentId: ROOT,
       slug: SLUG,
       text: "reply",
+      uploads: [],
     });
 
     expect(replyPages(fake)).toEqual([[commentId("first")]]);
