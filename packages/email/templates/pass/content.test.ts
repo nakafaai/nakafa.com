@@ -27,6 +27,10 @@ describe("pass reminder content", () => {
     assert.strictEqual(id.cta, "Perpanjang Pro");
     assert.strictEqual(de.subject, "Dein Pro-Pass endet am 26. November 2026");
     assert.ok(de.body.startsWith("Dein Pro-Pass endet am 26. November 2026."));
+    const ms = getPassEndingEmailCopy("ms", "26 November 2026");
+    assert.strictEqual(ms.subject, "Pas Pro kamu tamat pada 26 November 2026");
+    assert.strictEqual(ms.cta, "Lanjutkan Pro");
+    assert.strictEqual(ms.privacyPolicy, "Dasar Privasi");
   });
 
   it.effect(

@@ -1,5 +1,4 @@
 import {
-  type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
   type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
@@ -65,10 +64,7 @@ const passEndingEmailCopy = {
   (endsOn: string) => typeof PassEndingEmailCopySchema.Type
 >;
 
-/** Returns the reviewed reminder copy for one active app locale and the day the pass ends. */
-export function getPassEndingEmailCopy(
-  locale: ActiveAppLocaleCode,
-  endsOn: string
-) {
+/** Returns the reviewed reminder copy for one app locale and the day the pass ends. */
+export function getPassEndingEmailCopy(locale: AppLocaleCode, endsOn: string) {
   return { ...passEndingEmailCopy[locale](endsOn), ...legalLabels[locale] };
 }
