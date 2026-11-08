@@ -34,6 +34,7 @@ import insight from "@repo/backend/confect/_generated/refs/insight";
 import insightInternal from "@repo/backend/confect/_generated/refs/insight.server";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
+import island from "@repo/backend/confect/_generated/refs/island";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
@@ -144,6 +145,7 @@ const domainModules = {
   identity,
   insight,
   integrations,
+  island,
   journal,
   learningPreferences,
   nina,

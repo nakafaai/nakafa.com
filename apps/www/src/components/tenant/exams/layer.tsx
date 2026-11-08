@@ -390,7 +390,7 @@ export function TeacherLayer({ live, notes }: TeacherLayerProps) {
  * A note of the teacher's layer, the rubric or the explanation: its title over its rich text, framed as
  * a text field is, so an empty note still reads as a place to write.
  */
-function NoteField({
+export function NoteField({
   children,
   title,
 }: {

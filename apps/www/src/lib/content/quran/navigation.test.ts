@@ -6,6 +6,7 @@ import { Schema } from "effect";
 import {
   getQuranPagination,
   getQuranSurahName,
+  toQuranIndexSurahs,
 } from "@/lib/content/quran/navigation";
 
 const SurahPageSchema = Schema.Struct({
@@ -49,6 +50,20 @@ describe("quran page helpers", () => {
       },
     });
     expect(getQuranSurahName(page.surahData.name)).toBe("Al-Fatihah");
+  });
+
+  it("lists the catalog for a surah search with each name's meaning in the page's language", () => {
+    const page = surahPage();
+
+    expect(toQuranIndexSurahs([page.surahData, page.nextSurah], "de")).toEqual([
+      {
+        arabic: "الفاتحة",
+        meaning: "Die Eröffnende",
+        number: 1,
+        title: "Al-Fatihah",
+      },
+      { arabic: "البقرة", meaning: "Die Kuh", number: 2, title: "Al-Baqarah" },
+    ]);
   });
 });
 

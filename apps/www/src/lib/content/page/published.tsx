@@ -72,7 +72,7 @@ const readCurrentPublished = Effect.fn("www.pages.current")(function* (
 ) {
   return yield* readCurrentPublishedPage(input).pipe(
     Effect.asSome,
-    Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeedNone)
+    Effect.catchTag("PublishedMissingError", () => Effect.succeedNone)
   );
 });
 

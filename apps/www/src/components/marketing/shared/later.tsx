@@ -10,6 +10,7 @@ import {
   useRef,
 } from "react";
 import {
+  holdsEarlyPress,
   type LaterCode,
   readWaiting,
 } from "@/components/marketing/shared/code";
@@ -35,7 +36,8 @@ function LaterBody<Props extends object>({
 /**
  * One section after the hero, in a hydration boundary of its own. The static page
  * draws every section from its HTML at once. The section's code starts to load
- * once the page has settled and the section is near the screen, then React
+ * once the page has settled and the section is near the screen, or at once for a
+ * section whose control the reader pressed before React took the page over, then React
  * hydrates it at the lowest priority, in small slices, so a phone never pays for a
  * part of the page that the reader has not reached. The browser also skips the
  * layout of a section far from the screen, and holds the height of one screen for
@@ -57,6 +59,12 @@ export function LaterSection<Props extends object>({
   useEffect(() => {
     const target = box.current;
     if (target === null) {
+      return;
+    }
+    // A control the reader pressed before React took the page over waits for this
+    // section's code, and its press can open a picker only for a few seconds.
+    if (holdsEarlyPress(target)) {
+      Deferred.doneUnsafe(code.near, Exit.void);
       return;
     }
     const opening = Effect.runFork(

@@ -4,6 +4,7 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
+import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { notFound, redirect } from "@tanstack/react-router";
@@ -204,5 +205,43 @@ export const notificationsScreenHandler = accountHandler(
         title: t("title"),
       };
       return { first, now, seo };
+    })
+);
+
+/**
+ * The owner's island page: the island as it stands, none before the owner's
+ * first visit opens it, and the account's name for its title (ADR 0042). The
+ * island and the account go out together, so the page waits on one round trip.
+ */
+export const islandScreenHandler = accountHandler(
+  ({ locale }: typeof LocaleInput.Type) =>
+    Effect.gen(function* () {
+      const token = yield* admitAccount(locale);
+      const [own, messages, account] = yield* Effect.all(
+        [
+          readOptional(island.queries.own, {}, token),
+          messagesFor(locale),
+          readOptional(auth.queries.getCurrentUser, {}, token),
+        ],
+        { concurrency: "unbounded" }
+      );
+      const t = createTranslator({ locale, messages, namespace: "Island" });
+      const seo: ScreenSeo = {
+        canonicalPath: `/${locale}/island`,
+        description: t("description"),
+        indexable: false,
+        locale,
+        title: t("title"),
+      };
+      return {
+        island: own ?? undefined,
+        name: Option.getOrUndefined(
+          Option.map(
+            Option.fromNullishOr(account),
+            (user) => user.authUser.name
+          )
+        ),
+        seo,
+      };
     })
 );

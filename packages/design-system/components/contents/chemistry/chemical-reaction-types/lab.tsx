@@ -13,11 +13,11 @@ import {
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import { ChemicalReactionTypesScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -129,29 +129,9 @@ export function ChemicalReactionTypesLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
             <ReactionTypeCameraControls />
-            <ambientLight intensity={0.72} />
-            <hemisphereLight
-              color={sceneColors.skyLight}
-              groundColor={sceneColors.groundLight}
-              intensity={0.7}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.3}
-              position={[4, 5, 5]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
-            <pointLight
-              color={sceneColors.flame}
-              intensity={0.8}
-              position={[1.8, 1.2, 1.6]}
-            />
             <ChemicalReactionTypeSceneProvider
               colors={sceneColors}
               store={store}
@@ -159,7 +139,7 @@ export function ChemicalReactionTypesLab({
               <ChemicalReactionTypesScene labels={labels} />
             </ChemicalReactionTypeSceneProvider>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
