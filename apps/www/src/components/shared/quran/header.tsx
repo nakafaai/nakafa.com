@@ -8,10 +8,11 @@ import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 import { HOME_TARGET, QURAN_TARGET } from "@/lib/routing/target";
 
 /**
- * A surah's header, as every page's: its path, Home, the Quran and the surah, and
- * its actions at the end. The surah's names and the meaning of its name are its
- * title for assistive technology, and the verses stand under it with no title
- * block. On a phone the path folds as every path does, and the surah's name stays.
+ * A surah's header, as every page's: its path, Home, the Quran and the surah, then
+ * its search and its actions at the end. The surah's names and the meaning of its
+ * name are its title for assistive technology, and the verses stand under it with
+ * no title block. On a phone the path folds as every path does, and the surah's
+ * name stays.
  */
 export function QuranSurahHeader({
   actions,
@@ -19,6 +20,7 @@ export function QuranSurahHeader({
   meaning,
   meaningLanguage,
   quranLabel,
+  search,
   title,
 }: {
   actions: ReactNode;
@@ -27,6 +29,8 @@ export function QuranSurahHeader({
   /** BCP 47 language of the meaning when it differs from the page. */
   meaningLanguage?: string;
   quranLabel: string;
+  /** The page's search, which finds another surah. */
+  search: ReactNode;
   title: string;
 }) {
   const tCommon = useTranslations("Common");
@@ -53,6 +57,7 @@ export function QuranSurahHeader({
         className="flex shrink-0 items-center gap-2"
         data-slot="surah-header-actions"
       >
+        {search}
         <ButtonGroup aria-label={tCommon("content-actions")}>
           {actions}
         </ButtonGroup>

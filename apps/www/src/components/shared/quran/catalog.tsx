@@ -3,7 +3,10 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { QuranSurahName } from "@/components/shared/quran/name";
-import { QuranSurahRow } from "@/components/shared/quran/surah";
+import {
+  QuranSurahNumber,
+  QuranSurahRow,
+} from "@/components/shared/quran/surah";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
@@ -43,7 +46,10 @@ export function QuranSurahCatalog({
             target={quranSurahTarget(surah.number)}
             title={surah.title}
           >
-            <QuranSurahRow meaning={surah.meaning} number={surah.number}>
+            <QuranSurahRow
+              meaning={surah.meaning}
+              ring={<QuranSurahNumber number={surah.number} />}
+            >
               <QuranSurahName arabic={surah.arabic} title={surah.title} />
             </QuranSurahRow>
           </CardLink>

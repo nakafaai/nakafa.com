@@ -1,4 +1,3 @@
-import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
@@ -18,7 +17,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
-import { getQuranSurahName } from "@/lib/content/quran/navigation";
+import { toQuranIndexSurahs } from "@/lib/content/quran/navigation";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { getLocaleOrThrow } from "@/lib/routing/locale/address";
@@ -56,12 +55,7 @@ const readQuranIndex = createServerFn({ method: "GET" })
       description: t("quran-description"),
       image: getAppSocialArtwork({ key: "quran", locale, publicPath: "quran" }),
       locale,
-      surahs: Arr.map(surahs, (surah) => ({
-        arabic: surah.name.arabic,
-        meaning: selectQuranMeaning(surah.name.meaning, locale).text,
-        number: surah.number,
-        title: getQuranSurahName(surah.name),
-      })),
+      surahs: toQuranIndexSurahs(surahs, locale),
       title,
     };
   });
