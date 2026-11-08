@@ -122,8 +122,6 @@ function GuardianLinksBody() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const search = useServerSearch();
-  // The school reads its links, or the parents' requests that wait for an answer.
-  const [view, setView] = useState<"links" | "requests">("links");
   const pagination = usePaginatedQuery(
     guardians.links.list,
     isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
@@ -170,55 +168,88 @@ function GuardianLinksBody() {
     );
   }
 
-  // The Requests view stands only while a request waits, so the last answer brings the links back.
-  const waits = !Arr.isReadonlyArrayEmpty(waiting.results);
+  return (
+    <LinksFrame links={kept.value}>
+      <LinkViews
+        requests={<WaitingList />}
+        waits={!Arr.isReadonlyArrayEmpty(waiting.results)}
+      >
+        {failed ? <DataFailure onRetry={reloadPage} /> : null}
+        <GuardianLinkTable />
+        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+        ) : null}
+      </LinkViews>
+    </LinksFrame>
+  );
+}
+
+/**
+ * The one card of the links page, under the Links and Requests views while a parent's request waits: the links the
+ * caller composes, or the waiting requests (`requests`). The views stand only while a request waits, so the last
+ * answer takes them away and brings the links back.
+ */
+function LinkViews({
+  children,
+  requests,
+  waits,
+}: {
+  children: ReactNode;
+  /** The waiting requests, which the Requests view shows in the links' place. */
+  requests: ReactNode;
+  /** Whether a parent's request waits for an answer. */
+  waits: boolean;
+}) {
+  const t = useTranslations("SchoolGuardians");
+  const [view, setView] = useState<"links" | "requests">("links");
   const shown = waits ? view : "links";
 
   return (
-    <LinksFrame links={kept.value}>
-      <TablePageBody
-        views={
-          waits ? (
-            <TableViews
-              label={t("links-views")}
-              onChoose={setView}
-              view={shown}
-              views={[
-                {
-                  icon: UserMultipleIcon,
-                  label: t("view-links"),
-                  value: "links",
-                },
-                {
-                  icon: InboxIcon,
-                  label: t("view-requests"),
-                  value: "requests",
-                },
-              ]}
-            />
-          ) : null
-        }
-      >
-        {shown === "requests" ? (
-          <>
-            <WaitingRequests requests={waiting.results} />
-            {PaginatedQueryResult.isCanLoadMore(waiting) ? (
-              <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
-            ) : null}
-          </>
-        ) : (
-          <>
-            {failed ? <DataFailure onRetry={reloadPage} /> : null}
-            <GuardianLinkTable />
-            {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-              <Intersection
-                onIntersect={() => pagination.loadMore(PAGE_SIZE)}
-              />
-            ) : null}
-          </>
-        )}
-      </TablePageBody>
-    </LinksFrame>
+    <TablePageBody
+      views={
+        waits ? (
+          <TableViews
+            label={t("links-views")}
+            onChoose={setView}
+            view={shown}
+            views={[
+              {
+                icon: UserMultipleIcon,
+                label: t("view-links"),
+                value: "links",
+              },
+              {
+                icon: InboxIcon,
+                label: t("view-requests"),
+                value: "requests",
+              },
+            ]}
+          />
+        ) : null
+      }
+    >
+      {shown === "requests" ? requests : children}
+    </TablePageBody>
+  );
+}
+
+/** The waiting requests, read a page at a time, the next page loading as the table's end comes into view. */
+function WaitingList() {
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const waiting = usePaginatedQuery(
+    guardians.requests.waiting,
+    isSettled ? { slug } : "skip",
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  return (
+    <>
+      <WaitingRequests requests={waiting.results} />
+      {PaginatedQueryResult.isCanLoadMore(waiting) ? (
+        <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </>
   );
 }
 
