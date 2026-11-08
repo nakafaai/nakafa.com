@@ -30,12 +30,31 @@ export function readHeaderLineProblems(page: Page) {
       return nodes;
     };
 
+    // Text for screen readers stands in a clipped box, its own or one around it, while its own rectangles keep
+    // their full width.
+    const isClipped = (element: Element) => {
+      for (
+        let current: Element | null = element;
+        current !== null;
+        current = current.parentElement
+      ) {
+        const style = getComputedStyle(current);
+        if (
+          style.display !== "contents" &&
+          style.overflow !== "visible" &&
+          current.getBoundingClientRect().width <= 1
+        ) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     const drawnLines = (node: Text) => {
       const parent = node.parentElement;
-      // Text for screen readers stands in a clipped box, while its own rectangles keep their full width.
       if (
         parent === null ||
-        parent.getBoundingClientRect().width <= 1 ||
+        isClipped(parent) ||
         getComputedStyle(parent).visibility === "hidden"
       ) {
         return [];

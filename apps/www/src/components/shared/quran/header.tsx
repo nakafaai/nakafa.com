@@ -15,17 +15,17 @@ import { HOME_TARGET, QURAN_TARGET } from "@/lib/routing/target";
  */
 export function QuranSurahHeader({
   actions,
+  arabic,
   meaning,
   meaningLanguage,
-  name,
   quranLabel,
   title,
 }: {
   actions: ReactNode;
+  arabic: string;
   meaning: string;
   /** BCP 47 language of the meaning when it differs from the page. */
   meaningLanguage?: string;
-  name: ReactNode;
   quranLabel: string;
   title: string;
 }) {
@@ -36,7 +36,10 @@ export function QuranSurahHeader({
       contentClassName="flex-nowrap"
     >
       <h1 className="sr-only">
-        {name}{" "}
+        {title}{" "}
+        <span dir="rtl" lang="ar">
+          {arabic}
+        </span>{" "}
         <span data-slot="surah-meaning" lang={meaningLanguage}>
           {meaning}
         </span>

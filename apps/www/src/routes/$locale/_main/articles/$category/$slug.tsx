@@ -258,6 +258,7 @@ function ArticlePage() {
                     },
                     { label: metadata.title },
                   ]}
+                  visibleItemCount={1}
                 />
               }
               title={metadata.title}
