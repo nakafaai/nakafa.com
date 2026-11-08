@@ -16,7 +16,7 @@ import {
   testProgramRoot,
   testProgramRowJson,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());

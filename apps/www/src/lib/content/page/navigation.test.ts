@@ -20,7 +20,7 @@ import {
   PageNavigationMissingError,
   readPageNavigation,
 } from "@/lib/content/page/navigation";
-import { testPageProjection } from "@/test/content-page";
+import { testPageProjection } from "@/test/published/page";
 
 const catalogMock = vi.hoisted(() => vi.fn());
 const previewMock = vi.hoisted(() => vi.fn());

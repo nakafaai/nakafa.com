@@ -52,14 +52,18 @@ export function FeatureLead({ children }: { children: ReactNode }) {
 
 /**
  * The card of a feature: the real product inside the design system's card, at
- * the card's own spacing, rising into place a little after its words. A feature
+ * the card's own spacing, rising into place a little after its words. Its one
+ * column holds the card's width, so a row of unbroken text truncates inside
+ * the card instead of widening it past its rounded edge. A feature
  * whose product draws its own cards, such as the lesson window, puts it in
  * `FeatureProduct` instead.
  */
 export function FeatureCard({ children }: { children: ReactNode }) {
   return (
     <Card className="rise-on-scroll min-w-0 [--rise-delay:15%]">
-      <div className="grid gap-6 px-(--card-spacing)">{children}</div>
+      <div className="grid grid-cols-1 gap-6 px-(--card-spacing)">
+        {children}
+      </div>
     </Card>
   );
 }

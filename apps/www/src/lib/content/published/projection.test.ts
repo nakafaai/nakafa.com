@@ -8,8 +8,8 @@ import {
   decodePublishedPage,
   decodePublishedPageJson,
 } from "@/lib/content/published/projection";
-import { testArticleProjection } from "@/test/content-article";
-import { testPageProjection } from "@/test/content-page";
+import { testArticleProjection } from "@/test/published/article";
+import { testPageProjection } from "@/test/published/page";
 
 const pageJson = Schema.encodeSync(
   Schema.fromJsonString(PublicPageProjectionSchema)

@@ -3,7 +3,7 @@ import {
   CodeBlockCopyButton,
   CodeBlockDownloadButton,
   CodeBlockSource,
-} from "@repo/design-system/components/ai/code-block";
+} from "@repo/design-system/components/ai/code";
 import { Mermaid } from "@repo/design-system/components/ai/mermaid";
 import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { Button } from "@repo/design-system/components/ui/button";
