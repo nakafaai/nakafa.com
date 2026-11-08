@@ -244,6 +244,25 @@ describe("editor/objects leaving an object", () => {
     editor.destroy();
   });
 
+  it("leaves a formula that a chain selects first, as the formula's editor does after Escape", () => {
+    const editor = openEditor([
+      {
+        content: [
+          { text: "a ", type: "text" },
+          { attrs: { latex: "x" }, type: "mathInline" },
+        ],
+        type: "paragraph",
+      },
+    ]);
+    const formula = nodeAt(editor, "mathInline");
+    expect(editor.chain().setNodeSelection(formula).leaveObject().run()).toBe(
+      true
+    );
+    expect(editor.state.selection).toBeInstanceOf(TextSelection);
+    expect(editor.state.selection.from).toBe(formula + 1);
+    editor.destroy();
+  });
+
   it("lets Escape pass in text that holds no object", () => {
     const editor = openEditor([paragraph("Soal")]);
     editor.commands.setTextSelection(2);
