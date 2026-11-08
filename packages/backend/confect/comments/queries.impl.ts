@@ -6,7 +6,6 @@ import {
   QueryCtx as QueryCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
-import { photoViews } from "@repo/backend/confect/comments/signed";
 import { readCommentPlace } from "@repo/backend/confect/comments/place";
 import spec from "@repo/backend/confect/comments/queries.spec";
 import {
@@ -14,6 +13,7 @@ import {
   findComment,
   isCommentLikedBy,
 } from "@repo/backend/confect/comments/rows";
+import { photoViews } from "@repo/backend/confect/comments/signed";
 import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
