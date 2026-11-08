@@ -193,6 +193,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               highlight: labels("highlight"),
               italic: labels("italic"),
               link: labels("link"),
+              linkInvalid: labels("link-invalid"),
               linkPlaceholder: labels("link-placeholder"),
               more: labels("more"),
               numbers: labels("numbers"),

@@ -127,6 +127,11 @@ for (const viewport of [
     });
     await row.hover();
     await row.getByRole("button", { name: "React" }).click();
+    // The chooser offers the six quick emoji at once, and searches the rest in the reader's language.
+    const chooser = page.locator("[data-slot=emoji-panel]");
+    await expect(
+      chooser.getByRole("searchbox", { name: "Search emoji" })
+    ).toBeFocused();
     await page.getByRole("button", { exact: true, name: "👍" }).first().click();
     const chip = row.getByRole("button", { name: "👍, 1" });
     await expect(chip).toHaveAttribute("aria-pressed", "true");

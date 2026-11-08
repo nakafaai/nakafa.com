@@ -30,14 +30,19 @@ describe("School Markdown", () => {
       })
   );
 
-  it.effect("adds the features and the trial link to the landing", () =>
-    Effect.gen(function* () {
-      const text = yield* getSchoolLlmsText("en", "school");
+  it.effect(
+    "adds each feature's section and the trial link to the landing",
+    () =>
+      Effect.gen(function* () {
+        const text = yield* getSchoolLlmsText("en", "school");
 
-      expect(text).toContain(`URL: ${BASE_URL}/en/school`);
-      expect(text).toContain("- Forum: ");
-      expect(text).toContain(`(${BASE_URL}/en/school/new)`);
-      expect(text.match(/^### /gmu)).toHaveLength(3 + 5);
-    })
+        expect(text).toContain(`URL: ${BASE_URL}/en/school`);
+        expect(text).toContain(
+          "## Every class talks in one place\n\nThreads, files and polls, with Nina answering too."
+        );
+        expect(text.match(/^## /gmu)).toHaveLength(8 + 4 + 1);
+        expect(text).toContain(`(${BASE_URL}/en/school/new)`);
+        expect(text.match(/^### /gmu)).toHaveLength(3 + 5);
+      })
   );
 });

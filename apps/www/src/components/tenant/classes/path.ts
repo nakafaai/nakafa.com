@@ -4,7 +4,6 @@ import { Array as Arr, Match, Option, Schema } from "effect";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import type { ClassView } from "@/components/tenant/classes/view";
 import {
-  schoolClassChannelTarget,
   schoolClassFolderTarget,
   schoolClassForumTarget,
   schoolClassLibraryTarget,
@@ -38,12 +37,12 @@ const PathFolder = Schema.Struct({
 
 /**
  * The path of a class page after the school's home, the page itself last: the class alone on its
- * home; the class and the forum on the channel list; the forum and the channel on a channel; the
- * channel and the discussion's number and title on a discussion; the class and the tasks on the task
+ * home; the class and the forum on the channel list; the forum and the channel on a channel and on a
+ * discussion, which its pane names; the class and the tasks on the task
  * list; the class and the library or its people on those tabs; the tasks and the task's title on a task; and the class and the gradebook on
  * the gradebook. A name that is not known yet is left out, so
- * the path never shows a placeholder. `leaf` is the last name: the discussion's, the folder's or the task's. A folder
- * inside others passes through each of them (`above`), so the library needs no path of its own in its body.
+ * the path never shows a placeholder. `leaf` is the last name: the folder's or the task's. A folder inside others
+ * passes through each of them (`above`), so the library needs no path of its own in its body.
  */
 export const classPath = (
   view: typeof ClassView.Type,
@@ -60,6 +59,12 @@ export const classPath = (
     label: root.forum,
     target: schoolClassForumTarget(root.slug, root.classSlug),
   };
+  /** The path of a channel's page: the forum and the channel, once its name is known. */
+  const chat = () =>
+    Option.match(channel, {
+      onNone: () => [klass, { label: root.forum }],
+      onSome: (found) => [klass, forum, { label: found.label }],
+    });
   const last = Option.match(leaf, {
     onNone: () => [],
     onSome: (label) => [{ label }],
@@ -67,29 +72,10 @@ export const classPath = (
   return Match.valueTags(view, {
     home: () => [{ label: root.name }],
     forum: () => [klass, { label: root.forum }],
-    channel: () =>
-      Option.match(channel, {
-        onNone: () => [klass, { label: root.forum }],
-        onSome: (found) => [klass, forum, { label: found.label }],
-      }),
-    discussion: () => [
-      klass,
-      forum,
-      ...Option.match(channel, {
-        onNone: () => [],
-        onSome: (found) => [
-          {
-            label: found.label,
-            target: schoolClassChannelTarget(
-              root.slug,
-              root.classSlug,
-              found.id
-            ),
-          },
-        ],
-      }),
-      ...last,
-    ],
+    channel: chat,
+    // A discussion stands in the pane beside its channel, which the pane's own header names, so the path ends at
+    // the channel as the channel's page does.
+    discussion: chat,
     library: () => [klass, { label: root.library }],
     folder: () => [
       klass,

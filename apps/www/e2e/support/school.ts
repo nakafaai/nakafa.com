@@ -246,7 +246,7 @@ export const seedCard = Effect.fn("NakafaE2E.seedCard")(
  * messages, oldest first. Each call adds a new classmate and its messages.
  */
 export const seedForum = Effect.fn("NakafaE2E.seedForum")(
-  function* (slug: string, count: number, read: number) {
+  function* (slug: string, count: number, read: number, author?: string) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
       prefix: "nakafa-forum-",
@@ -257,7 +257,8 @@ export const seedForum = Effect.fn("NakafaE2E.seedForum")(
       slug,
       String(count),
       String(read),
-      output
+      output,
+      ...(author === undefined ? [] : [author])
     );
     return yield* fs
       .readFileString(output)

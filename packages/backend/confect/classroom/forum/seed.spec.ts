@@ -4,6 +4,7 @@ import { SeedRefused } from "@repo/backend/confect/acceptance/seed";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAddress } from "@repo/backend/confect/classroom/class";
 import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -12,7 +13,7 @@ const SEED_HISTORY_LIMIT = 200;
 
 /**
  * Seeds the history of a class's general channel for an acceptance run: `count`
- * messages from a classmate placed in the class, one minute apart and ending now, and the read mark
+ * messages from a classmate placed in the class, named `author` when the run asks for a name, one minute apart and ending now, and the read mark
  * of every subject teacher of the class after the first `read` of them. It is
  * internal and refused outside the acceptance runtime, so no browser and no other
  * deployment can call it.
@@ -21,6 +22,7 @@ export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({
     name: "history",
     args: () => ({
+      author: Schema.optional(PersonName),
       classSlug: ClassAddress,
       count: Schema.Int.check(
         Schema.isBetween({ maximum: SEED_HISTORY_LIMIT, minimum: 1 })

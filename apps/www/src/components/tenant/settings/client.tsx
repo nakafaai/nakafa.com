@@ -1,5 +1,9 @@
 import { QueryResult, useMutation } from "@confect/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  Building03Icon,
+  SchoolIcon,
+} from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import type { IssuedClient } from "@repo/backend/confect/integrations/clients.spec";
@@ -66,11 +70,13 @@ export function SchoolClientCreateDialog({
   // Each choice carries the scope it sends, so the whole school never travels as a unit ID.
   const scopeItems = [
     {
+      icon: SchoolIcon,
       label: t("grant-scope-school"),
       scope: { kind: "tenant" } satisfies GrantScope,
       value: "school",
     },
     ...Arr.map(units, (unit) => ({
+      icon: Building03Icon,
       label: unit.name,
       scope: { kind: "unit", unitId: unit.id } satisfies GrantScope,
       value: unit.id,
@@ -145,6 +151,7 @@ export function SchoolClientCreateDialog({
           />
         </Field>
         <SelectField
+          choice="scope"
           items={scopeItems}
           label={t("client-scope")}
           onChoose={setScope}

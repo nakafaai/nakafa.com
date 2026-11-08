@@ -1,22 +1,17 @@
-import {
-  FilterHorizontalIcon,
-  Globe02Icon,
-  SchoolIcon,
-} from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
+import { Globe02Icon, SchoolIcon } from "@hugeicons/core-free-icons";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import { useNavigate } from "@tanstack/react-router";
-import { DateTime, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsList } from "@/components/notifications/list";
@@ -44,11 +39,11 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   return (
     <PageFrame width="column">
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {/* Mark all read stands before the filter from the first paint, ready and final. */}
+        {/* The school choice, then the page's two buttons in one group, ready and final from the first paint. */}
+        <InboxFilter all={all} />
         <ButtonGroup>
           <MarkAllRead scope={scope} />
           <SchoolPreferences />
-          <InboxFilter all={all} />
         </ButtonGroup>
       </SchoolHeader>
       <InboxTabs topics={SchoolInboxTopic.literals} />
@@ -61,49 +56,58 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   );
 }
 
-/** The header's filter: this school's rows, or every school's, kept in the page's address. */
+/**
+ * The header's choice of schools, as the unit choice of a settings page reads: this school's rows, or every school's,
+ * kept in the page's address. It opens with its one-word label, and each school choice shows its icon. The trigger
+ * shows the chosen icon and folds its words in a narrow header (`HeaderLabel`), as the header's buttons beside it do.
+ */
 function InboxFilter({ all }: { all: boolean }) {
   const t = useTranslations("Notifications");
   const common = useTranslations("Common");
   const { slug } = useTenant();
   const navigate = useNavigate();
+  const thisSchool = {
+    icon: SchoolIcon,
+    label: t("this-school"),
+    value: "school",
+  } as const;
+  const allSchools = {
+    icon: Globe02Icon,
+    label: t("all-schools"),
+    value: "all",
+  } as const;
+  const items = [thisSchool, allSchools] as const;
+  const chosen = all ? allSchools : thisSchool;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button type="button" variant="outline">
-            <HugeIcons icon={FilterHorizontalIcon} />
-            <HeaderLabel>
-              {all ? t("all-schools") : t("this-school")}
-            </HeaderLabel>
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            onValueChange={(value) =>
-              navigate({
-                params: { slug },
-                search: value === "all" ? { schools: "all" } : {},
-                to: "/school/$slug/notifications",
-              })
-            }
-            value={all ? "all" : "school"}
-          >
-            <DropdownMenuRadioItem value="school">
-              <HugeIcons icon={SchoolIcon} />
-              {t("this-school")}
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="all">
-              <HugeIcons icon={Globe02Icon} />
-              {t("all-schools")}
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Select
+      items={items}
+      onValueChange={(value) =>
+        navigate({
+          params: { slug },
+          search: value === "all" ? { schools: "all" } : {},
+          to: "/school/$slug/notifications",
+        })
+      }
+      value={chosen.value}
+    >
+      <SelectTrigger aria-label={common("menu-schools")} className="w-auto">
+        <SelectValue>
+          <HugeIcons icon={chosen.icon} />
+          <HeaderLabel>{chosen.label}</HeaderLabel>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>{common("menu-schools")}</SelectLabel>
+          {Arr.map(items, (item) => (
+            <SelectItem key={item.value} value={item.value}>
+              <HugeIcons icon={item.icon} />
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }

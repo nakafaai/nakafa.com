@@ -1,13 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { SmileIcon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
@@ -18,7 +11,11 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
-import { EMOJI, QUICK_EMOJI } from "@/components/tenant/classes/forum/emoji";
+import {
+  EmojiPopover,
+  EmojiTrigger,
+} from "@/components/tenant/classes/forum/chooser";
+import { QUICK_EMOJI } from "@/components/tenant/classes/forum/emoji";
 import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import {
@@ -29,6 +26,7 @@ import {
   type ForumTally,
   reactUpdate,
 } from "@/components/tenant/classes/forum/tally";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** The tallies of the messages a place has loaded. */
 const TalliesContext = createContext<readonly ForumTally[]>([]);
@@ -88,8 +86,8 @@ function useReact(messageId: ForumMessage["id"]) {
     );
 }
 
-/** One emoji of a message and its count, marked when the viewer gave it. */
-const reactionChip = cva("h-7 gap-1 rounded-full px-2 text-xs tabular-nums", {
+/** One emoji of a message and its count, on the secondary surface when the viewer gave it. */
+const reactionChip = cva("gap-1.5 rounded-full px-3 tabular-nums", {
   variants: {
     mine: {
       false: "bg-muted/60 border-transparent",
@@ -127,7 +125,6 @@ export function MessageReactions({ message }: { message: ForumMessage }) {
           disabled={!canPost}
           key={reaction.emoji}
           onClick={() => press(reaction.emoji)}
-          size="sm"
           variant="outline"
         >
           <span>{reaction.emoji}</span>
@@ -139,78 +136,28 @@ export function MessageReactions({ message }: { message: ForumMessage }) {
 }
 
 /**
- * The emoji of a chat in one grid, the first row the ones a press on a message reaches for most.
- * Choosing one runs `onPick`, and a phone keeps its own keyboard's emoji beside it.
- */
-export function EmojiGrid({ onPick }: { onPick: (emoji: string) => void }) {
-  return (
-    <div className="grid max-h-64 grid-cols-8 gap-0.5 overflow-y-auto">
-      {Arr.map(EMOJI, (emoji) => (
-        <Button
-          aria-label={emoji}
-          className="text-base"
-          key={emoji}
-          onClick={() => onPick(emoji)}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          {emoji}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-/**
- * Gives a message an emoji: the six a chat reaches for most, one press each, and the whole grid
- * under them. With a mouse it shows on the message's hover or focus; a touch screen always shows it.
- * A message the server is still saving takes no emoji yet, since it has no ID to give one to.
+ * Gives a message an emoji: the six a chat reaches for most, one press each, and the whole chooser under them. With a
+ * mouse it shows on the message's hover or focus; a touch screen always shows it. A message the server is still
+ * saving takes no emoji yet, since it has no ID to give one to.
  */
 export function ReactButton({ message }: { message: ForumMessage }) {
   const t = useTranslations("Classroom");
-  const [open, setOpen] = useState(false);
   const press = useReact(message.id);
 
-  /** Gives the chosen emoji and closes the panel. */
-  const pick = (emoji: string) => {
-    setOpen(false);
-    press(emoji);
-  };
-
   return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
-        render={
-          <Button
-            aria-label={t("reaction-add")}
-            className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100 pointer-fine:data-popup-open:opacity-100"
-            disabled={isPending(message)}
-            size="icon-xs"
-            title={t("reaction-add")}
-            variant="ghost"
-          >
-            <HugeIcons icon={SmileIcon} />
-          </Button>
-        }
-      />
-      <PopoverContent align="end" className="w-auto gap-2 p-2">
-        <div className="flex justify-between gap-1 border-b pb-2">
-          {Arr.map(QUICK_EMOJI, (emoji) => (
+    <EmojiPopover onPick={press} quick={QUICK_EMOJI}>
+      <IconTip label={t("reaction-add")}>
+        <EmojiTrigger
+          render={
             <Button
-              aria-label={emoji}
-              className="text-lg"
-              key={emoji}
-              onClick={() => pick(emoji)}
-              size="icon-sm"
+              aria-label={t("reaction-add")}
+              disabled={isPending(message)}
+              size="icon"
               variant="ghost"
-            >
-              {emoji}
-            </Button>
-          ))}
-        </div>
-        <EmojiGrid onPick={pick} />
-      </PopoverContent>
-    </Popover>
+            />
+          }
+        />
+      </IconTip>
+    </EmojiPopover>
   );
 }

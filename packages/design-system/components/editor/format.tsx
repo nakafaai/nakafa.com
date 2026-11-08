@@ -25,6 +25,7 @@ export function RichEditorMarks({
     highlight: string;
     italic: string;
     link: string;
+    linkInvalid: string;
     linkPlaceholder: string;
     strike: string;
     underline: string;
@@ -94,6 +95,7 @@ export function RichEditorMarks({
       />
       <RichEditorLink
         active={state?.link ?? false}
+        invalid={labels.linkInvalid}
         label={labels.link}
         placeholder={labels.linkPlaceholder}
       />
@@ -114,6 +116,7 @@ export function DocumentMarks({
     code: string;
     italic: string;
     link: string;
+    linkInvalid: string;
     linkPlaceholder: string;
     subscript: string;
     superscript: string;
@@ -184,6 +187,7 @@ export function DocumentMarks({
       />
       <RichEditorLink
         active={state?.link ?? false}
+        invalid={labels.linkInvalid}
         label={labels.link}
         placeholder={labels.linkPlaceholder}
       />
