@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 import {
   type CustomContainerComponentProps,
   type CustomItemComponentProps,
@@ -73,6 +74,7 @@ function useHandedFocus() {
  * would start again, with every row, each time the count changed.
  */
 export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
+  const t = useTranslations("Memory");
   const { remove } = useMemoryActions();
   // The memory a row asked to delete, until the learner confirms or cancels.
   const [pending, setPending] = useState<Memory | null>(null);
@@ -142,6 +144,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
             }
           }}
           open={pending !== null}
+          title={pending?.title || t("untitled")}
         />
       </div>
     </HandedFocus>

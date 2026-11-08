@@ -8,7 +8,7 @@ import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "use-intl";
-import { queryContentStore } from "@/lib/content/store/query";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 import { httpLayer } from "@/lib/convex/http";
 
 /** Reads and validates the active signed Quran identity without a catalog payload. */
@@ -29,7 +29,11 @@ export const readPublishedQuranIdentity = Effect.fn(
 export const readPublishedQuranCatalog = Effect.fn(
   "NakafaQuran.readPublishedCatalog"
 )(function* () {
-  const result = yield* queryContentStore(contentRelease.quran.surahs, {});
+  const result = yield* querySnapshotContentStore(
+    "quran",
+    contentRelease.quran.surahs,
+    {}
+  );
   return yield* decodePublishedQuranCatalog(result);
 });
 
@@ -38,7 +42,8 @@ export const readPublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.readPublishedMarkdown"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* queryContentStore(
+  const result = yield* querySnapshotContentStore(
+    "quran",
     contentRelease.quran.prose,
     verseLimit === undefined
       ? {
@@ -70,10 +75,14 @@ export const readPublishedQuranView = Effect.fn(
   "NakafaQuran.readPublishedView"
 )(function* (locale: Locale, surahNumber: number) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* queryContentStore(contentRelease.quran.page, {
-    appLocale,
-    surahNumber,
-  });
+  const result = yield* querySnapshotContentStore(
+    "quran",
+    contentRelease.quran.page,
+    {
+      appLocale,
+      surahNumber,
+    }
+  );
   return yield* decodePublishedQuranView(result, {
     appLocale,
     surahNumber,

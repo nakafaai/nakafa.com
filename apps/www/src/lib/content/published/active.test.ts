@@ -52,6 +52,11 @@ const identity = {
   manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
   releaseId: ReleaseIdSchema.make("release-active"),
   sequence: 3,
+  snapshots: {
+    assessment: null,
+    program: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+    quran: null,
+  },
 };
 beforeEach(() => {
   fetchQueryMock.mockReset();
@@ -71,6 +76,7 @@ describe("published active identity", () => {
           manifestHash: publication.manifestHash,
           releaseId: publication.manifest.releaseId,
           sequence: 9,
+          snapshots: { assessment: null, program: null, quran: null },
         });
       })
   );

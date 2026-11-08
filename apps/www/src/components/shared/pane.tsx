@@ -94,10 +94,10 @@ export function PaneHeader({
       </div>
       {close === undefined ? null : (
         <Button
-          aria-label={t("close")}
           className="absolute end-2 top-2"
           onClick={close}
           size="icon-sm"
+          tooltip={t("close")}
           type="button"
           variant="ghost"
         >

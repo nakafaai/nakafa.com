@@ -27,6 +27,17 @@ const GithubActionUseSchema = Schema.Struct({
 });
 export type GithubActionUse = typeof GithubActionUseSchema.Type;
 
+/** One GitHub Actions expression, as a workflow writes it, such as `${{ github.run_id }}`. */
+function expression(body: string) {
+  return `$\{{ ${body} }}`;
+}
+
+/** The prefix of the deploy's read store saves for one stage. */
+const STAGE_READS = `reads-${expression("env.NAKAFA_DEPLOY_STAGE")}-`;
+
+/** The prefix of the deploy's read store saves for one release of one stage. */
+const RELEASE_READS = `${STAGE_READS}${expression("steps.release.outputs.id")}-`;
+
 export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   Schema.Array(GithubActionReviewSchema)
 )([
@@ -62,18 +73,27 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   {
     action: "actions/cache/restore",
     approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+    expectedInputs: {
+      key: `${RELEASE_READS}${expression("github.run_id")}-${expression("github.run_attempt")}`,
+      path: ".cache/reads",
+      "restore-keys": `${RELEASE_READS}\n${STAGE_READS}\n`,
+    },
     expectedTag: "v6.1.0",
     expectedUsages: 1,
     reason:
-      "The deploy job restores the Convex reads of the last deploy of the same release and code, so an unchanged release is not read again (#1773).",
+      "The deploy job restores the newest Convex reads that a deploy of the same stage kept, the same release first: every store entry is keyed by what its answer depends on, so the cache key names the stage and the release alone, never the code or the dependencies, which would read the whole release again (docs/convex/cost.md, Deploy reads).",
   },
   {
     action: "actions/cache/save",
     approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+    expectedInputs: {
+      key: expression("steps.reads.outputs.cache-primary-key"),
+      path: ".cache/reads",
+    },
     expectedTag: "v6.1.0",
     expectedUsages: 1,
     reason:
-      "The deploy job saves the Convex reads of a release under the key its restore step read, for the next deploy of the same release (#1773).",
+      "The deploy job saves the Convex reads it added under its own run's key, so the next deploy of the release restores them (docs/convex/cost.md, Deploy reads).",
   },
   {
     action: "actions/upload-artifact",
