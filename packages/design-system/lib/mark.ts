@@ -6,11 +6,16 @@ import { cva } from "class-variance-authority";
  * check box. Its `control` size is the band of a marked line: a control high (2rem), or one line of the words when
  * that is taller, so a 32 pixel button fits it whole and every marker stands on the middle of the words' first line
  * (`lineWords`). A `letter` holds a number or a letter, at the end of a column one width wide, so the words of every
- * row of a list start on one line.
+ * row of a list start on one line. A mark `beside` an outlined line, outside its outline, such as a matching part's
+ * dot, starts below the line's border and padding (1px and 0.5rem), so it stands on the line's first band too.
  */
 export const lineMark = cva("flex shrink-0 items-center", {
-  defaultVariants: { letter: false, size: "line" },
+  defaultVariants: { beside: false, letter: false, size: "line" },
   variants: {
+    beside: {
+      false: "",
+      true: "mt-[calc(--spacing(2)+1px)]",
+    },
     letter: {
       false: "",
       true: "justify-end font-medium tabular-nums",

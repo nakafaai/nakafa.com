@@ -69,19 +69,23 @@ export function MarkedLine({
 
 /**
  * The band of one marker of a marked line, a control high: a circle, a check box, a dot, an icon button, or, as a
- * `letter`, the number or letter that names the row, at the end of a column one width wide.
+ * `letter`, the number or letter that names the row, at the end of a column one width wide. A band `beside` an
+ * outlined line stands outside its outline at the height of its first band.
  */
 export function LineMark({
+  beside = false,
   className,
   letter = false,
   ...props
 }: ComponentProps<"span"> & {
+  /** Whether the band stands beside an outlined line, outside its outline, on that line's first band. */
+  readonly beside?: boolean;
   /** Whether the band holds the number or letter that names the row. */
   readonly letter?: boolean;
 }) {
   return (
     <span
-      className={cn(lineMark({ letter, size: "control" }), className)}
+      className={cn(lineMark({ beside, letter, size: "control" }), className)}
       data-slot="line-mark"
       {...props}
     />

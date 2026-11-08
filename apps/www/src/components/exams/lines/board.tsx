@@ -210,7 +210,7 @@ export function LinesItem({
       data-line-target={side === "targets" ? id : undefined}
     >
       {side === "targets" ? (
-        <LineMark>
+        <LineMark beside>
           <LineDot id={id} name={name} side={side} />
         </LineMark>
       ) : null}
@@ -219,7 +219,7 @@ export function LinesItem({
         {children}
       </MarkedLine>
       {side === "sources" ? (
-        <LineMark>
+        <LineMark beside>
           <LineDot id={id} name={name} side={side} />
         </LineMark>
       ) : null}

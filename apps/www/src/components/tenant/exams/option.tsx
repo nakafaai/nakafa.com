@@ -233,7 +233,7 @@ export function OptionRow({ children, label, onSave }: OptionRowProps) {
         <OptionRowContext
           value={{ drop: () => Effect.runFork(saver.cancel), locked }}
         >
-          <MarkedLine tone="bare">
+          <MarkedLine className="flex-1" tone="bare">
             <Fragment key={editorRound}>{children}</Fragment>
           </MarkedLine>
         </OptionRowContext>

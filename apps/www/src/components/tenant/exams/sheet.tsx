@@ -118,7 +118,7 @@ export function PaperOption({
   multiple: boolean;
 }) {
   return (
-    <MarkedLine written>
+    <MarkedLine className="self-stretch" written>
       <LineMark inert>
         {multiple ? (
           <Checkbox letter={letter} />
