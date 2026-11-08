@@ -16,10 +16,9 @@ import { readMovedRedirect } from "@/lib/routing/moved";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 import {
-  isRefusedSchoolHost,
-  isSchoolProductHost,
+  readHostRole,
   readRequestHostname,
-  readSchoolSlug,
+  readRequestHostRole,
 } from "@/lib/routing/school/host";
 
 /**
@@ -58,23 +57,34 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
 );
 
 /**
- * The redirect of a host that sits under the production domain but names no
- * school, such as `www`: the same path and query open on the main site, with a
- * 307 (ADR 0026). Only the path and query move, so a path that starts with two
- * slashes stays on the main site. A shared path, such as the robots file, answers
- * on every host, so the refused host serves it itself. The deployment's own host
- * is its main site and never moves: staging serves `staging.nakafa.com`, whose
- * label no school may take. The home of `school.nakafa.com` opens the School
- * landing in the negotiated locale, so the product's own host lands on it.
+ * Whether a request came to the deployment's own address: staging serves
+ * `staging.nakafa.com`, and a Portless run serves `nakafa.local.nakafa.com`, whose
+ * names the host role refuses. Only the deployment knows its address
+ * (`SITE_URL`), so the host role cannot decide it.
+ */
+function isOwnHost(request: Request) {
+  return Option.exists(
+    readRequestHostname(request.headers),
+    (hostname) => hostname === new URL(siteUrlKeys().SITE_URL).hostname
+  );
+}
+
+/**
+ * The redirect of a refused host and of the School product's host (ADR 0026): the
+ * same path and query open on the main site, with a 307. Only the path and query
+ * move, so a path that starts with two slashes stays on the main site. A shared
+ * path, such as the robots file, answers on every host, so the refused host
+ * serves it itself. The deployment's own address is its main site and never
+ * moves. The home of `school.nakafa.com` opens the School landing in the
+ * negotiated locale, so the product's own host lands on it.
  */
 export function readMainSiteRedirect(
   request: Request
 ): Option.Option<Response> {
-  const hostname = readRequestHostname(request.headers);
+  const role = readRequestHostRole(request.headers);
   if (
-    Option.isNone(hostname) ||
-    !isRefusedSchoolHost(hostname.value) ||
-    hostname.value === new URL(siteUrlKeys().SITE_URL).hostname
+    (role._tag !== "Refused" && role._tag !== "Product") ||
+    isOwnHost(request)
   ) {
     return Option.none();
   }
@@ -84,7 +94,7 @@ export function readMainSiteRedirect(
   }
   const target = new URL(SITE_ORIGIN);
   target.search = url.search;
-  if (url.pathname === "/" && isSchoolProductHost(hostname.value)) {
+  if (url.pathname === "/" && role._tag === "Product") {
     target.pathname = `/${negotiateLocale(request.headers)}/school`;
     return Option.some(
       new Response(null, {
@@ -160,7 +170,7 @@ export function readSpellingRedirectResponse(
   request: Request
 ): Option.Option<Response> {
   const url = new URL(request.url);
-  const isSchoolHost = Option.isSome(readSchoolSlug(url.hostname));
+  const isSchoolHost = readHostRole(url.hostname)._tag === "School";
   return Option.map(
     decideSpellingRedirect({ isSchoolHost, url }),
     toRedirectResponse
@@ -193,7 +203,7 @@ export function readRootRedirectResponse(
   request: Request
 ): Option.Option<Response> {
   const url = new URL(request.url);
-  const isSchoolHost = Option.isSome(readSchoolSlug(url.hostname));
+  const isSchoolHost = readHostRole(url.hostname)._tag === "School";
   return Option.map(
     decideRootRedirect({ headers: request.headers, isSchoolHost, url }),
     toRedirectResponse
