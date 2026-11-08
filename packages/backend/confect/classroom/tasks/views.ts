@@ -2,6 +2,7 @@ import type { ClassroomTasksDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { isArchived } from "@repo/backend/confect/classroom/archive";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { mayIn } from "@repo/backend/confect/classroom/roster";
 import { taskExam } from "@repo/backend/confect/classroom/tasks/exam";
@@ -59,7 +60,7 @@ export const taskForViewer = Effect.fn("classroom.tasks.forViewer")(function* (
     return task;
   }
   // A student meets an archived task, or one for other students, as a missing one.
-  if (task.archivedAt === undefined && reaches(task, person._id)) {
+  if (!isArchived(task) && reaches(task, person._id)) {
     return task;
   }
   return yield* new AccessDenied({ action, reason: "resource" });
@@ -86,7 +87,7 @@ export const taskView = Effect.fn("classroom.tasks.view")(function* (
   const keys = yield* schoolKeys(task.tenantId);
   const mine = yield* ownSubmission(task);
   return {
-    archived: task.archivedAt !== undefined,
+    archived: isArchived(task),
     category: task.category ?? null,
     deadline: task.deadline,
     exam: yield* taskExam(task),

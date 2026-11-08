@@ -214,4 +214,145 @@ describe("editor/slice containers", () => {
         expect(failure._tag).toBe("BatchInvalid");
       })
   );
+
+  it.effect(
+    "accepts a row that a table command inserts on its own, which the contract reads inside its table",
+    () =>
+      Effect.gen(function* () {
+        const accepted = yield* checkContent([
+          {
+            from: 18,
+            slice: {
+              content: [
+                {
+                  content: [
+                    {
+                      attrs: { colspan: 1, rowspan: 1 },
+                      content: [{ type: "paragraph" }],
+                      type: "tableCell",
+                    },
+                    {
+                      attrs: { colspan: 1, rowspan: 1 },
+                      content: [{ type: "paragraph" }],
+                      type: "tableCell",
+                    },
+                  ],
+                  type: "tableRow",
+                },
+              ],
+            },
+            stepType: "replace",
+            to: 18,
+          },
+        ]).pipe(Effect.as(true));
+        expect(accepted).toBe(true);
+      })
+  );
+
+  it.effect(
+    "accepts the header cell and the body cell that a new column inserts, each read inside a row of its table",
+    () =>
+      Effect.gen(function* () {
+        const accepted = yield* checkContent([
+          {
+            from: 12,
+            slice: {
+              content: [
+                {
+                  attrs: { colspan: 1, rowspan: 1 },
+                  content: [{ type: "paragraph" }],
+                  type: "tableHeader",
+                },
+              ],
+            },
+            stepType: "replace",
+            to: 12,
+          },
+          {
+            from: 20,
+            slice: {
+              content: [
+                {
+                  attrs: { colspan: 1, rowspan: 1 },
+                  content: [{ type: "paragraph" }],
+                  type: "tableCell",
+                },
+              ],
+            },
+            stepType: "replace",
+            to: 20,
+          },
+        ]).pipe(Effect.as(true));
+        expect(accepted).toBe(true);
+      })
+  );
+
+  it.effect(
+    "accepts the span of a cell that a column widens, whose content the step keeps as its gap",
+    () =>
+      Effect.gen(function* () {
+        const accepted = yield* checkContent([
+          {
+            from: 8,
+            gapFrom: 9,
+            gapTo: 13,
+            insert: 1,
+            slice: {
+              content: [
+                { attrs: { colspan: 2, rowspan: 1 }, type: "tableCell" },
+              ],
+            },
+            stepType: "replaceAround",
+            structure: true,
+            to: 14,
+          },
+        ]).pipe(Effect.as(true));
+        expect(accepted).toBe(true);
+      })
+  );
+
+  it.effect(
+    "accepts a table and a row left open at an edge of a slice, whose rows and cells stay in the document",
+    () =>
+      Effect.gen(function* () {
+        const accepted = yield* checkContent([
+          {
+            from: 4,
+            slice: {
+              content: [{ type: "paragraph" }, { type: "table" }],
+              openEnd: 1,
+            },
+            stepType: "replace",
+            to: 9,
+          },
+          {
+            from: 9,
+            slice: { content: [{ type: "tableRow" }], openStart: 1 },
+            stepType: "replace",
+            to: 21,
+          },
+        ]).pipe(Effect.as(true));
+        expect(accepted).toBe(true);
+      })
+  );
+
+  it.effect(
+    "refuses a cell that holds no block and keeps no gap, as a whole cell the contract refuses",
+    () =>
+      Effect.gen(function* () {
+        const failure = yield* checkContent([
+          {
+            from: 12,
+            slice: {
+              content: [
+                { attrs: { colspan: 1, rowspan: 1 }, type: "tableCell" },
+              ],
+            },
+            stepType: "replace",
+            to: 12,
+          },
+        ]).pipe(Effect.flip);
+        expect(failure._tag).toBe("BatchInvalid");
+      })
+  );
 });

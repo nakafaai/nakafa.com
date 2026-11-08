@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { checkContent } from "@repo/backend/confect/editor/content";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import { foldSteps } from "@repo/backend/confect/editor/fold";
 import {
@@ -9,12 +10,23 @@ import { NodeTypeSchema } from "@repo/backend/confect/editor/node";
 import { StepSchema } from "@repo/backend/confect/editor/step";
 import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
+import type { Node as ProseNode } from "@tiptap/pm/model";
 import type { Transaction } from "@tiptap/pm/state";
-import { EditorState } from "@tiptap/pm/state";
+import { EditorState, TextSelection } from "@tiptap/pm/state";
+import {
+  addColumnAfter,
+  addColumnBefore,
+  addRowAfter,
+  addRowBefore,
+  deleteColumn,
+  deleteRow,
+  deleteTable,
+} from "@tiptap/pm/tables";
 import { findWrapping, type Step } from "@tiptap/pm/transform";
 import {
   Array as Arr,
   Effect,
+  Option,
   Record as Rec,
   Schema,
   String as Str,
@@ -206,6 +218,134 @@ describe("editor/assessment server fold", () => {
         );
         expect(folded.skipped).toEqual([]);
         expect(folded.doc.toJSON()).toEqual(state.doc.toJSON());
+      })
+  );
+});
+
+/** A paragraph of the assessment document, holding `text` or nothing. */
+const paragraph = (text: string) =>
+  assessmentSchema.node(
+    "paragraph",
+    null,
+    text === "" ? [] : [assessmentSchema.text(text)]
+  );
+
+/** A cell of a header row or a body row, holding one paragraph of `text`. */
+const cell = (type: "tableCell" | "tableHeader", text: string) =>
+  assessmentSchema.node(type, null, [paragraph(text)]);
+
+/**
+ * The document a teacher holds after the toolbar inserted a table and the cells were written:
+ * a header row and a body row of two cells each, between two paragraphs.
+ */
+const TABLE_DOCUMENT = assessmentSchema.node("doc", null, [
+  paragraph("Soal"),
+  assessmentSchema.node("table", null, [
+    assessmentSchema.node("tableRow", null, [
+      cell("tableHeader", "A"),
+      cell("tableHeader", "B"),
+    ]),
+    assessmentSchema.node("tableRow", null, [
+      cell("tableCell", "1"),
+      cell("tableCell", "2"),
+    ]),
+  ]),
+  paragraph("fin"),
+]);
+
+/** The rows and columns of the first table of a document, or none when it holds no table. */
+const tableShape = (doc: ProseNode) =>
+  Option.map(
+    Arr.findFirst(doc.children, (child) => child.type.name === "table"),
+    (table) => ({ columns: table.child(0).childCount, rows: table.childCount })
+  );
+
+/** The position of the first text node that reads `text`, where a press of the table menu has its caret. */
+const caretAt = (doc: ProseNode, text: string) => {
+  let position = 0;
+  doc.descendants((node, at) => {
+    if (position === 0 && node.text === text) {
+      position = at;
+    }
+  });
+  return position;
+};
+
+describe("editor/assessment table commands", () => {
+  it.effect.each([
+    {
+      command: addRowBefore,
+      name: "a row above",
+      shape: Option.some({ columns: 2, rows: 3 }),
+    },
+    {
+      command: addRowAfter,
+      name: "a row below",
+      shape: Option.some({ columns: 2, rows: 3 }),
+    },
+    {
+      command: deleteRow,
+      name: "a deleted row",
+      shape: Option.some({ columns: 2, rows: 1 }),
+    },
+    {
+      command: addColumnBefore,
+      name: "a column on the left",
+      shape: Option.some({ columns: 3, rows: 2 }),
+    },
+    {
+      command: addColumnAfter,
+      name: "a column on the right",
+      shape: Option.some({ columns: 3, rows: 2 }),
+    },
+    {
+      command: deleteColumn,
+      name: "a deleted column",
+      shape: Option.some({ columns: 1, rows: 2 }),
+    },
+    { command: deleteTable, name: "a deleted table", shape: Option.none() },
+  ])(
+    "sends $name, and the server stores the table the editor holds",
+    ({ command, shape }) =>
+      Effect.gen(function* () {
+        // The caret stands in the body row's first cell, where a teacher presses the control.
+        const start = EditorState.create({
+          doc: TABLE_DOCUMENT,
+          selection: TextSelection.create(
+            TABLE_DOCUMENT,
+            caretAt(TABLE_DOCUMENT, "1")
+          ),
+        });
+        // Each command dispatches one transaction, whose steps the editor sends.
+        let dispatched = Option.none<Transaction>();
+        expect(
+          command(start, (tr) => {
+            dispatched = Option.some(tr);
+          })
+        ).toBe(true);
+        const transaction = Option.getOrThrow(dispatched);
+        const after = start.apply(transaction);
+        const decoded = yield* Effect.forEach(transaction.steps, (step) =>
+          Schema.decodeUnknownEffect(StepSchema)(step.toJSON()).pipe(
+            Effect.orDie
+          )
+        );
+        // The editor sends a step only when the contract check passes, as the server runs it
+        // before it writes; a refused step is dropped and the table snaps back.
+        yield* checkContent(decoded);
+        const model = assessmentModel();
+        const folded = yield* foldSteps(
+          model,
+          "table-test",
+          model.nodeFromJSON(TABLE_DOCUMENT.toJSON()),
+          0,
+          decoded
+        );
+        expect(folded.skipped).toEqual([]);
+        expect(folded.doc.toJSON()).toEqual(after.doc.toJSON());
+        expect(tableShape(folded.doc)).toEqual(shape);
+        // The snapshot takes the folded document, so the change survives a reload.
+        yield* storedDocument(encodeJsonText(folded.doc.toJSON()));
       })
   );
 });

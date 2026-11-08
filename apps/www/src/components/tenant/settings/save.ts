@@ -354,6 +354,10 @@ const COHORT_HOLD_COPY: Readonly<Record<typeof CohortHold.Type, ToastCopy>> = {
     description: "school-refusal-cohort-in-use-members.description",
     title: "school-refusal-cohort-in-use-members.title",
   },
+  promotions: {
+    description: "school-refusal-cohort-in-use-promotions.description",
+    title: "school-refusal-cohort-in-use-promotions.title",
+  },
   reports: {
     description: "school-refusal-cohort-in-use-reports.description",
     title: "school-refusal-cohort-in-use-reports.title",
@@ -385,6 +389,10 @@ const PERIOD_HOLD_COPY: Readonly<Record<typeof PeriodHold.Type, ToastCopy>> = {
   graduations: {
     description: "school-refusal-period-in-use-graduations.description",
     title: "school-refusal-period-in-use-graduations.title",
+  },
+  insight: {
+    description: "school-refusal-period-in-use-insight.description",
+    title: "school-refusal-period-in-use-insight.title",
   },
   promotions: {
     description: "school-refusal-period-in-use-promotions.description",

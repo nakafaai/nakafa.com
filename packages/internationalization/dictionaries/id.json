@@ -3263,6 +3263,10 @@
       "title": "Periode ini punya kelulusan.",
       "description": "Arsipkan periode ini agar kelulusannya tetap ada."
     },
+    "school-refusal-period-in-use-insight": {
+      "title": "Periode ini masih punya Insight.",
+      "description": "Hapus setelah Insight terhapus, 30 hari sejak diarsipkan."
+    },
     "school-refusal-period-in-use-classes": {
       "title": "Periode ini masih punya kelas.",
       "description": "Arsipkan periode ini agar kelas dan nilainya tetap ada."
@@ -3286,6 +3290,10 @@
     "school-refusal-cohort-in-use-members": {
       "title": "Rombel ini masih punya siswa.",
       "description": "Pindahkan siswanya dulu, atau arsipkan rombel ini."
+    },
+    "school-refusal-cohort-in-use-promotions": {
+      "title": "Kenaikan kelas memakai rombel ini.",
+      "description": "Arsipkan rombel ini agar kenaikan kelasnya tetap ada."
     },
     "school-refusal-cohort-in-use-homeroom": {
       "title": "Rombel ini masih punya wali kelas.",

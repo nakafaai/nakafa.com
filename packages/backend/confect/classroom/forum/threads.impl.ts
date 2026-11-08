@@ -6,6 +6,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { isArchived, onShelf } from "@repo/backend/confect/classroom/archive";
 import { classAccess } from "@repo/backend/confect/classroom/authority";
 import { takeUploads } from "@repo/backend/confect/classroom/forum/attach";
 import {
@@ -92,14 +93,11 @@ const list = FunctionImpl.make(
       )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    const shelf = Arr.filter(
-      found.page,
-      (thread) => (thread.archivedAt !== undefined) === archived
-    );
+    const shelf = onShelf(found.page, archived);
     const discussions = yield* discussionViews(shelf);
     return Struct.assign(found, {
       page: Arr.zipWith(shelf, discussions, (thread, discussion) => ({
-        archived: thread.archivedAt !== undefined,
+        archived: isArchived(thread),
         channelId: thread.channelId,
         discussion,
       })),
