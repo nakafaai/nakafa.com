@@ -13,7 +13,7 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
-import { decodeContentReleasePin } from "@/lib/content/published/release";
+import { decodeContentRelease } from "@/lib/content/published/release";
 import { queryContentStore } from "@/lib/content/store/query";
 import { isReservedPagePath } from "@/lib/ownership/route";
 
@@ -56,9 +56,8 @@ export const readPublishedPageCatalog = Effect.fn(
     publicPath: "pages",
   };
   const result = yield* queryContentStore(contentRelease.page.catalog, {});
-  const activeReleaseId = yield* decodeContentReleasePin(
+  const activeReleaseId = yield* decodeContentRelease(
     result.activeReleaseId,
-    undefined,
     identity
   );
   if (!(result.managed && activeReleaseId)) {

@@ -1,9 +1,8 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Effect } from "effect";
-import { httpLayer } from "@/lib/convex/http";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 type TryoutLocalizedPathArgs = Ref.Args<
   typeof tryouts.queries.catalog.getLocalizedPath
@@ -13,7 +12,9 @@ type TryoutLocalizedPathArgs = Ref.Args<
 export const readPublishedTryoutLocalizedPath = Effect.fn(
   "www.tryouts.readLocalizedPath"
 )(function* (args: TryoutLocalizedPathArgs) {
-  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.catalog.getLocalizedPath, args)
-  ).pipe(Effect.provide(httpLayer()));
+  return yield* querySnapshotContentStore(
+    "assessment",
+    tryouts.queries.catalog.getLocalizedPath,
+    args
+  );
 });

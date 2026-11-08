@@ -58,7 +58,7 @@ const FIRST_CHOICES: readonly (typeof PollChoice.Type)[] = [
 /** The poll a message carries. */
 type ForumPoll = NonNullable<ForumMessage["poll"]>;
 
-/** One choice of a poll, marked when the viewer took it. */
+/** One choice of a poll, marked on the neutral surface when the viewer took it: the primary fill is the page's button's. */
 const pollChoice = cva(
   "relative flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-xl border px-3 py-2 text-start text-sm disabled:cursor-default",
   { variants: { mine: { false: "", true: "border-foreground" } } }
@@ -197,7 +197,6 @@ export function NewPoll({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const id = useId();
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(FIRST_CHOICES);
@@ -228,17 +227,12 @@ export function NewPoll({
 
   return (
     <ResponsiveDialog
-      description={t("poll-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={!ready} onClick={send}>
-            {t("poll-send")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!ready} onClick={send}>
+          {t("poll-send")}
+        </Button>
       }
+      description={t("poll-description")}
       open={open}
       setOpen={setOpen}
       title={t("poll-title")}
@@ -277,14 +271,13 @@ export function NewPoll({
               />
               {options.length > POLL_MIN_OPTIONS ? (
                 <Button
-                  aria-label={t("poll-remove-option", { number: index + 1 })}
                   onClick={() =>
                     setOptions(
                       Arr.filter(options, (held) => held.id !== option.id)
                     )
                   }
                   size="icon"
-                  title={t("poll-remove-option", { number: index + 1 })}
+                  tooltip={t("poll-remove-option", { number: index + 1 })}
                   type="button"
                   variant="ghost"
                 >
@@ -306,7 +299,6 @@ export function NewPoll({
                   })
                 )
               }
-              size="sm"
               type="button"
               variant="outline"
             >

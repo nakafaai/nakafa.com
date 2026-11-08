@@ -58,13 +58,13 @@ describe("locale negotiation", () => {
     ["id;foo=bar", "id"],
     ["id ; q = 0.5, de ; q = 0.4", "id"],
     ["fr-CA, en-GB;q=0.9", "en"],
-    ["fr", "en"],
-    ["", "en"],
+    ["fr", "id"],
+    ["", "id"],
   ])("negotiates %s as %s", (acceptLanguage, locale) => {
     expect(negotiateLocale(requestHeaders({ acceptLanguage }))).toBe(locale);
   });
 
-  it("falls back to the default locale without a header or cookie", () => {
-    expect(negotiateLocale(requestHeaders({}))).toBe("en");
+  it("falls back to Indonesian without a header or cookie", () => {
+    expect(negotiateLocale(requestHeaders({}))).toBe("id");
   });
 });

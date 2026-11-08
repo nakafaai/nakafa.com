@@ -5,6 +5,7 @@ import {
   addressTarget,
   articleCategoryTarget,
   canonicalHref,
+  chatTarget,
   commentTarget,
   curriculumPublicPathTarget,
   curriculumTarget,
@@ -22,6 +23,15 @@ describe("a comment's target", () => {
     expect(commentTarget("comment-1")).toMatchObject({
       params: { commentId: "comment-1" },
       to: "/$locale/comment/$commentId",
+    });
+  });
+});
+
+describe("a chat's target", () => {
+  it("opens the learner's chat with Nina by its ID, in the locale on screen", () => {
+    expect(chatTarget("chat-1")).toMatchObject({
+      params: { id: "chat-1" },
+      to: "/$locale/chat/$id",
     });
   });
 });

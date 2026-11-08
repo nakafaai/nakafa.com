@@ -16,7 +16,7 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { queryContentStore } from "@/lib/content/store/query";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 /**
  * Reads and validates the bounded published program catalog. The content store
@@ -26,9 +26,13 @@ export const readPublishedProgramCatalog = Effect.fn(
   "NakafaProgram.readPublishedCatalog"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* queryContentStore(contentRelease.program.catalog, {
-    appLocale,
-  });
+  const result = yield* querySnapshotContentStore(
+    "program",
+    contentRelease.program.catalog,
+    {
+      appLocale,
+    }
+  );
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath: "curricula",
@@ -98,21 +102,6 @@ const PublishedProgramCatalogSchema = Schema.Struct({
 /** Complete bounded program catalog used by root curriculum navigation. */
 type PublishedProgramCatalog = typeof PublishedProgramCatalogSchema.Type;
 
-/** Selects one renderable root from the authenticated bounded program catalog. */
-export const readPublishedProgramPrerenderRoute = Effect.fn(
-  "NakafaProgram.readPrerenderRoute"
-)(function* (locale: Locale) {
-  const catalog = yield* readPublishedProgramCatalog(locale);
-  const entry = Arr.findFirst(catalog.entries, ({ route }) => route.sitemap);
-  if (Option.isNone(entry)) {
-    return yield* new PublishedProjectionError({
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath: "curricula",
-    });
-  }
-  return entry.value.route;
-});
-
 /**
  * Reads the authenticated featured subjects, one route per subject, for the
  * About feature list. The content store holds the query result once for each
@@ -122,9 +111,13 @@ export const readPublishedProgramSubjects = Effect.fn(
   "NakafaProgram.readPublishedSubjects"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* queryContentStore(contentRelease.program.subjects, {
-    appLocale,
-  });
+  const result = yield* querySnapshotContentStore(
+    "program",
+    contentRelease.program.subjects,
+    {
+      appLocale,
+    }
+  );
   if (
     !result.managed ||
     result.routeJson.length > PROGRAM_FEATURED_SUBJECT_LIMIT

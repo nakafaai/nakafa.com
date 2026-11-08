@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ReadingSource } from "@repo/backend/confect/exams/question";
 import {
@@ -44,6 +45,7 @@ export function ReadingField({
   /** The question as the server holds it. */
   readonly question: Question;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const id = useId();
@@ -100,9 +102,13 @@ export function ReadingField({
         <SelectTrigger className="w-full" disabled={!editable} id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent label={common("menu-passage")}>
           {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
+            <SelectItem
+              icon={BookOpen01Icon}
+              key={item.value}
+              value={item.value}
+            >
               {item.label}
             </SelectItem>
           ))}

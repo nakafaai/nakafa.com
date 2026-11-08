@@ -21,6 +21,7 @@ import { SittingRetry } from "@/components/exams/sitting/retry";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingFilterRow } from "@/components/exams/sitting/toolbar";
+import { ClockProvider } from "@/components/player/now";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { pageGutterVariants } from "@/components/shared/content/width";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
@@ -106,26 +107,29 @@ export function SittingDashboard({
     <SittingStoreContext value={store}>
       <SittingDataContext value={data}>
         <PanesProvider>
-          <SittingHeader examId={examId} />
-          <SittingFilterRow />
-          <SittingOfflineContext value={offline}>
-            {/* The header and the filter row stand above the panes. */}
-            <div className="contents [--panes-offset:7rem]">
-              <Panes id="sitting">
-                <PanesList>
-                  <div
-                    className={cn(
-                      pageGutterVariants(),
-                      "grid min-w-0 content-start gap-4 py-4 md:py-6"
-                    )}
-                  >
-                    <SittingSeats />
-                  </div>
-                </PanesList>
-                <SittingPanel />
-              </Panes>
-            </div>
-          </SittingOfflineContext>
+          {/* The seats and the panel count the time a student is away on one clock. */}
+          <ClockProvider>
+            <SittingHeader examId={examId} />
+            <SittingFilterRow />
+            <SittingOfflineContext value={offline}>
+              {/* The header and the filter row stand above the panes. */}
+              <div className="contents [--panes-offset:7rem]">
+                <Panes id="sitting">
+                  <PanesList>
+                    <div
+                      className={cn(
+                        pageGutterVariants(),
+                        "grid min-w-0 content-start gap-4 py-4 md:py-6"
+                      )}
+                    >
+                      <SittingSeats />
+                    </div>
+                  </PanesList>
+                  <SittingPanel />
+                </Panes>
+              </div>
+            </SittingOfflineContext>
+          </ClockProvider>
         </PanesProvider>
       </SittingDataContext>
     </SittingStoreContext>

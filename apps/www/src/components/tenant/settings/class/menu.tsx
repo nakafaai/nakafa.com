@@ -9,8 +9,10 @@ import {
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassName, ClassSubject } from "@repo/backend/confect/classroom/class";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
 import { startTransition, useState } from "react";
@@ -46,13 +48,13 @@ export function SchoolClassRestore({
   return (
     <RowItems>
       <DropdownMenuItem
+        icon={ArchiveRestoreIcon}
         onClick={() =>
           startTransition(() =>
             saveSchool(() => restore({ classId: row.id, slug }), SOURCE)
           )
         }
       >
-        <HugeIcons icon={ArchiveRestoreIcon} />
         {t("class-restore")}
       </DropdownMenuItem>
     </RowItems>
@@ -90,21 +92,29 @@ export function SchoolClassMenu({
   return (
     <>
       <RowItems onOpenChange={setIsMenuOpen}>
-        <DropdownMenuItem onClick={() => dialogs.show("teach")}>
-          <HugeIcons icon={UserStar01Icon} />
+        <DropdownMenuItem
+          icon={UserStar01Icon}
+          onClick={() => dialogs.show("teach")}
+        >
           {t("class-teachers")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("rename")}
+        >
           {t("class-rename")}
         </DropdownMenuItem>
         {row.subject === undefined ? null : (
-          <DropdownMenuItem onClick={() => dialogs.show("subject")}>
-            <HugeIcons icon={Edit02Icon} />
+          <DropdownMenuItem
+            icon={Edit02Icon}
+            onClick={() => dialogs.show("subject")}
+          >
             {t("class-subject-change")}
           </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem
+          icon={Archive02Icon}
           onClick={() =>
             startTransition(() =>
               saveSchool(
@@ -130,7 +140,6 @@ export function SchoolClassMenu({
             )
           }
         >
-          <HugeIcons icon={Archive02Icon} />
           {t("class-archive")}
         </DropdownMenuItem>
       </RowItems>

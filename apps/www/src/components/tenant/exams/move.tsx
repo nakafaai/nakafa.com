@@ -5,6 +5,7 @@ import {
   Cancel01Icon,
   ChartBarLineIcon,
   DashboardSquare01Icon,
+  Door01Icon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -19,17 +20,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
+import { DateTime, Option, Schema, String as Str } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
@@ -37,6 +33,7 @@ import {
   cancelRoomChange,
   rescheduleRoomChange,
 } from "@/components/tenant/exams/filter";
+import { RoomLengthField } from "@/components/tenant/exams/length";
 import {
   lengthsWith,
   movedTimes,
@@ -80,10 +77,15 @@ export function RoomMenu({
     <>
       <ConfirmRowMenu
         action={t("room-cancel")}
+        body={
+          <ResponsiveDialogSubject icon={Door01Icon}>
+            {room.room}
+          </ResponsiveDialogSubject>
+        }
         confirm={t("room-cancel-confirm")}
         description={t("room-cancel-description")}
-        disabled={!room.canChange}
         icon={Cancel01Icon}
+        offered={room.canChange}
         onConfirm={() =>
           startTransition(() =>
             saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
@@ -92,32 +94,32 @@ export function RoomMenu({
         title={t("room-cancel-title")}
       >
         <DropdownMenuItem
+          icon={DashboardSquare01Icon}
           render={
             <Link
               params={params}
               to="/school/$slug/exams/$exam/sittings/$sitting"
-            >
-              <HugeIcons icon={DashboardSquare01Icon} />
-              {common("open")}
-            </Link>
+            />
           }
-        />
+        >
+          {common("open")}
+        </DropdownMenuItem>
         <DropdownMenuItem
+          icon={ChartBarLineIcon}
           render={
             <Link
               params={params}
               to="/school/$slug/exams/$exam/sittings/$sitting/results"
-            >
-              <HugeIcons icon={ChartBarLineIcon} />
-              {t("results-title")}
-            </Link>
+            />
           }
-        />
+        >
+          {t("results-title")}
+        </DropdownMenuItem>
         <DropdownMenuItem
           disabled={!room.canChange}
+          icon={Calendar03Icon}
           onClick={() => setMoves((count) => count + 1)}
         >
-          <HugeIcons icon={Calendar03Icon} />
           {t("room-move")}
         </DropdownMenuItem>
       </ConfirmRowMenu>
@@ -135,7 +137,6 @@ export function RoomMenu({
  */
 function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const id = useId();
   const reschedule = useMutation(
     exams.sittings.reschedule
@@ -155,10 +156,6 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
       onSome: (named) => wallClockOf(room.opensAt, named),
     });
   const minutes = editedMinutes ?? minutesNow;
-  const lengthItems = Arr.map(lengthsWith(minutesNow), (length) => ({
-    label: t("length-minutes", { count: length }),
-    value: `${length}`,
-  }));
   const roomName = Str.trim(name);
   const times = Option.flatMap(zone, (named) =>
     movedTimes(room, starts, minutes, named)
@@ -194,21 +191,12 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
 
   return (
     <ResponsiveDialog
-      description={t("room-move-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!ready} onClick={save} type="button">
-            {t("room-move-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!ready} onClick={save} type="button">
+          {t("room-move-save")}
+        </Button>
       }
+      description={t("room-move-description")}
       open={open}
       setOpen={setOpen}
       title={t("room-move")}
@@ -234,33 +222,12 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
           />
           <FieldDescription>{room.timeZone}</FieldDescription>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
-          <Select
-            items={lengthItems}
-            onValueChange={(value) => {
-              const next = Arr.findFirst(
-                lengthsWith(minutesNow),
-                (length) => `${length}` === value
-              );
-              if (Option.isSome(next)) {
-                setMinutes(next.value);
-              }
-            }}
-            value={`${minutes}`}
-          >
-            <SelectTrigger className="w-full" id={`${id}-length`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(lengthItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <RoomLengthField
+          id={`${id}-length`}
+          lengths={lengthsWith(minutesNow)}
+          minutes={minutes}
+          onChange={setMinutes}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

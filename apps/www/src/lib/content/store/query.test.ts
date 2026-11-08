@@ -7,7 +7,11 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Layer } from "effect";
-import { queryContentStore } from "@/lib/content/store/query";
+import {
+  queryContentStore,
+  queryPinnedContentStore,
+  querySnapshotContentStore,
+} from "@/lib/content/store/query";
 import {
   resetTestRuntimeCache,
   STORE_KEY_PATTERN,
@@ -53,7 +57,13 @@ const identity = {
   manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
   releaseId: ReleaseIdSchema.make("release-a"),
   sequence: 1,
+  snapshots: {
+    assessment: null,
+    program: Sha256HashSchema.make(`sha256:${"1".repeat(64)}`),
+    quran: null,
+  },
 };
+const pinned = ReleaseIdSchema.make("release-pinned");
 const catalog = {
   activeReleaseId: "release-a",
   managed: true,
@@ -65,6 +75,7 @@ beforeEach(() => {
   fetchQueryMock.mockReset();
   activeMocks.read.mockReset().mockReturnValue(Effect.succeed(identity));
   activeMocks.load.mockReset().mockReturnValue(Effect.succeed(identity));
+  activeMocks.expire.mockReset().mockReturnValue(Effect.void);
 });
 
 describe("content store query", () => {
@@ -143,5 +154,83 @@ describe("content store query", () => {
       ).toBe("convex down");
       expect(testRuntimeCache.set).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect("keys a pinned read by its pin, never by the stored pointer", () =>
+    Effect.gen(function* () {
+      const pinnedIdentity = { ...identity, releaseId: pinned };
+      activeMocks.load.mockReturnValue(Effect.succeed(pinnedIdentity));
+      fetchQueryMock.mockReturnValue(Effect.succeed(catalog));
+
+      yield* queryPinnedContentStore(pinned, contentRelease.page.catalog, {});
+      yield* queryPinnedContentStore(pinned, contentRelease.page.catalog, {});
+
+      expect(fetchQueryMock).toHaveBeenCalledTimes(1);
+      expect(activeMocks.read).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses a pinned read once Convex names another release", () =>
+    Effect.gen(function* () {
+      fetchQueryMock.mockReturnValue(Effect.succeed(catalog));
+
+      expect(
+        yield* queryPinnedContentStore(
+          pinned,
+          contentRelease.page.catalog,
+          {}
+        ).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: identity.releaseId,
+        expectedReleaseId: pinned,
+      });
+      expect(fetchQueryMock).toHaveBeenCalledTimes(1);
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("follows the active release when the caller holds none", () =>
+    Effect.gen(function* () {
+      fetchQueryMock.mockReturnValue(Effect.succeed(catalog));
+
+      yield* queryPinnedContentStore(undefined, contentRelease.page.catalog);
+      yield* queryContentStore(contentRelease.page.catalog);
+
+      expect(fetchQueryMock).toHaveBeenCalledTimes(1);
+      expect(activeMocks.read).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "reaches Convex once for a family's query while releases keep its snapshot",
+    () =>
+      Effect.gen(function* () {
+        const path = { managed: true, routeJson: null };
+        fetchQueryMock.mockReturnValue(Effect.succeed(path));
+        const args = { appLocale: "en", publicPath: "curriculum/a" } as const;
+
+        yield* querySnapshotContentStore(
+          "program",
+          contentRelease.program.path,
+          args
+        );
+        const next = {
+          ...identity,
+          releaseId: ReleaseIdSchema.make("release-b"),
+        };
+        activeMocks.read.mockReturnValue(Effect.succeed(next));
+        activeMocks.load.mockReturnValue(Effect.succeed(next));
+        yield* querySnapshotContentStore(
+          "program",
+          contentRelease.program.path,
+          args
+        );
+
+        expect(fetchQueryMock).toHaveBeenCalledExactlyOnceWith(
+          contentRelease.program.path,
+          args
+        );
+      })
   );
 });

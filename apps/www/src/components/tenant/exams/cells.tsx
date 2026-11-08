@@ -13,7 +13,7 @@ import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { markedWith } from "@/components/exams/sitting/response";
-import { OptionSketch } from "@/components/tenant/exams/preview";
+import { OptionSketch } from "@/components/tenant/exams/sketch";
 import { keyCells } from "@/components/tenant/exams/table";
 
 /** One cell of the key: a statement and the column it takes. */

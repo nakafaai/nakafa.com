@@ -1,11 +1,15 @@
 import { QueryResult, useMutation } from "@confect/react";
+import { Image01Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { LogoType } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Schema } from "effect";
@@ -86,7 +90,6 @@ function SchoolProfileCard({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const fileInput = useRef<HTMLInputElement>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(undefined);
@@ -193,31 +196,27 @@ function SchoolProfileCard({
               onClick={() => fileInput.current?.click()}
               size="sm"
               type="button"
+              variant="outline"
             >
               {t("logo-upload")}
             </Button>
           </CardSectionActions>
         </CardSectionFooter>
         <ResponsiveDialog
-          description={t("logo-remove-description")}
-          footer={
-            <>
-              <Button
-                onClick={() => setIsRemoving(false)}
-                type="button"
-                variant="outline"
-              >
-                {common("cancel")}
-              </Button>
-              <Button onClick={takeLogoOff} type="button" variant="destructive">
-                {t("logo-remove-confirm")}
-              </Button>
-            </>
+          action={
+            <Button onClick={takeLogoOff} type="button" variant="destructive">
+              {t("logo-remove-confirm")}
+            </Button>
           }
+          description={t("logo-remove-description")}
           open={isRemoving}
           setOpen={setIsRemoving}
           title={t("logo-remove-title")}
-        />
+        >
+          <ResponsiveDialogSubject icon={Image01Icon}>
+            {tenant.name}
+          </ResponsiveDialogSubject>
+        </ResponsiveDialog>
       </CardSection>
       <CardSection
         description={t("address-description")}
@@ -234,7 +233,12 @@ function SchoolProfileCard({
         </CardContent>
         <CardSectionFooter hint={t("address-footer")}>
           <CardSectionActions>
-            <Button onClick={copyAddress} size="sm" type="button">
+            <Button
+              onClick={copyAddress}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               {t("address-copy")}
             </Button>
           </CardSectionActions>

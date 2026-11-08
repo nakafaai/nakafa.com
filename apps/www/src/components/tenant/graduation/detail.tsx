@@ -152,6 +152,7 @@ export function GraduationLineDetail({
                 {t("open-letter")}
               </a>
             }
+            variant="outline"
           />
         </PaneFooter>
       )}

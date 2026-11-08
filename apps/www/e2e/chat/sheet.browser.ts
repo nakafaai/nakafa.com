@@ -87,10 +87,9 @@ test.describe("Nina sheet at 1440px", () => {
           await expect(
             page.getByRole("dialog", { exact: true, name: "Nina" })
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-          // The open sheet makes the entry inert, so the button is found by its mark.
-          await expect(page.locator("[data-press]")).not.toHaveAttribute(
-            "data-pressed"
-          );
+          // The open sheet makes the entry inert, and the press it held was replayed, so
+          // no control keeps a pressed mark. Other controls keep early presses too.
+          await expect(page.locator("[data-pressed]")).toHaveCount(0);
         })
       )
     );

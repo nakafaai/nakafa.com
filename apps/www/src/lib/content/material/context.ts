@@ -7,31 +7,28 @@ import {
   decodePublishedMaterialContext,
   type PublishedMaterialIdentity,
 } from "@/lib/content/material/projection";
-import type { ContentReleasePin } from "@/lib/content/published/release";
-import { queryContentStore } from "@/lib/content/store/query";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 /**
  * Reads every curriculum place that shows one material, verified, as a lesson's
  * links read them. The build writes them into the lesson's static page, so the
- * read goes through the store: a release's places reach Convex once per build.
+ * read goes through the store. Places come from the curriculum's snapshot alone,
+ * so they reach Convex once per snapshot, across every release that keeps it.
  */
 export const readPublishedMaterialPlacements = Effect.fn(
   "NakafaMaterial.readPublishedPlacements"
-)(function* (
-  locale: Locale,
-  material: PublishedMaterialIdentity,
-  expectedActiveReleaseId?: ContentReleasePin
-) {
-  const places = yield* queryContentStore(contentRelease.program.placements, {
-    ...(expectedActiveReleaseId === undefined
-      ? {}
-      : { expectedActiveReleaseId }),
-    appLocale: AppLocaleSchema.make(locale),
-    contentKey: material.contentKey,
-    materialKey: material.materialKey,
-    parentPath: material.parentPath,
-    publicPath: material.publicPath,
-  });
+)(function* (locale: Locale, material: PublishedMaterialIdentity) {
+  const places = yield* querySnapshotContentStore(
+    "program",
+    contentRelease.program.placements,
+    {
+      appLocale: AppLocaleSchema.make(locale),
+      contentKey: material.contentKey,
+      materialKey: material.materialKey,
+      parentPath: material.parentPath,
+      publicPath: material.publicPath,
+    }
+  );
   const published = yield* Effect.forEach(places, (place) =>
     decodePublishedMaterialContext(locale, material, place)
   );

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
+import { TestClock } from "effect/testing";
 import {
   keptAttempt,
   keptFinish,
@@ -53,12 +54,11 @@ describe("keptAttempt", () => {
     () =>
       scoped(
         Effect.gen(function* () {
-          const typed = {
-            answeredAt: 3,
+          yield* TestClock.setTime(3);
+          const typed = yield* keptAttempt(SITTING, ATTEMPT).keep(QUESTION, {
             response: { text: "Jakar" },
             version: 2,
-          };
-          yield* keptAttempt(SITTING, ATTEMPT).keep(QUESTION, typed);
+          });
           // No send and no confirm follow: the next page opens the field with the text and sends it again.
           const reloaded = keptAttempt(SITTING, ATTEMPT);
           expect(yield* reloaded.responseOf(QUESTION)).toEqual(
@@ -75,7 +75,6 @@ describe("keptAttempt", () => {
     scoped(
       Effect.gen(function* () {
         yield* keptAttempt(SITTING, ATTEMPT).keep(QUESTION, {
-          answeredAt: 1,
           response: ["option-b"],
           version: 1,
         });

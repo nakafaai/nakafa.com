@@ -37,8 +37,7 @@ export function SchoolSecretDialog({
 
   return (
     <ResponsiveDialog
-      description={description}
-      footer={
+      action={
         <Button
           onClick={() => {
             if (secret !== undefined) {
@@ -50,6 +49,7 @@ export function SchoolSecretDialog({
           {t("secret-copy")}
         </Button>
       }
+      description={description}
       open={secret !== undefined}
       setOpen={(open) => {
         if (!open) {

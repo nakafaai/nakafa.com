@@ -58,15 +58,17 @@ for (const viewport of [
       timeout: readinessTimeoutMilliseconds,
     });
 
-    const filter = page.getByRole("button", { name: "This school" });
+    // The header's school choice opens with its one-word label and keeps the choice in the address.
+    const filter = page
+      .locator("header")
+      .getByRole("combobox", { name: "Schools" });
     await waitUntilTakenOver(filter);
+    await expect(filter).toContainText("This school");
     await filter.click();
-    await page.getByRole("menuitemradio", { name: "All schools" }).click();
+    await page.getByRole("option", { name: "All schools" }).click();
     await expect(page).toHaveURL(ALL_SCHOOLS);
     await expect(page.getByText(INVITED)).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "All schools" })
-    ).toBeVisible();
+    await expect(filter).toContainText("All schools");
 
     expect(
       await page.evaluate(

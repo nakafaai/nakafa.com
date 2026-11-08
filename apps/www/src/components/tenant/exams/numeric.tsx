@@ -1,3 +1,4 @@
+import { Target02Icon } from "@hugeicons/core-free-icons";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import {
@@ -124,6 +125,7 @@ export function NumberKey({
   readonly onChange: (setting: NumberSetting) => void;
   readonly setting: NumberSetting;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const id = useId();
   // A tolerance the teacher chose whose distance is not written yet, which the key takes once it is.
@@ -185,9 +187,9 @@ export function NumberKey({
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={common("menu-tolerance")}>
             {Arr.map(ToleranceKind.literals, (value) => (
-              <SelectItem key={value} value={value}>
+              <SelectItem icon={Target02Icon} key={value} value={value}>
                 {t(TOLERANCE_NAME[value])}
               </SelectItem>
             ))}

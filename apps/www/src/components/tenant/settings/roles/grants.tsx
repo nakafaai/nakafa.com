@@ -12,9 +12,14 @@ import {
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
@@ -142,7 +147,6 @@ export function SchoolGrantTable() {
 function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const revoke = useMutation(access.grants.revoke).withOptimisticUpdate(
     revokeGrantChange
   );
@@ -156,23 +160,26 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("give")}>
-          <HugeIcons icon={UserStar01Icon} />
+        <DropdownMenuItem
+          icon={UserStar01Icon}
+          onClick={() => dialogs.show("give")}
+        >
           {t("roles-assign-dialog")}
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={!grant.revocable}
+          icon={UserEdit01Icon}
           onClick={() => dialogs.show("change")}
         >
-          <HugeIcons icon={UserEdit01Icon} />
           {t("grant-change")}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={!grant.revocable}
+          icon={Delete02Icon}
           onClick={() => dialogs.show("revoke")}
           variant="destructive"
         >
-          <HugeIcons icon={Delete02Icon} />
           {t("grant-revoke")}
         </DropdownMenuItem>
       </RowItems>
@@ -190,58 +197,60 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
         />
       ) : null}
       <ResponsiveDialog
-        description={t("grant-revoke-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                dialogs.close();
-                startTransition(async () => {
-                  if (own) {
-                    await navigate({
-                      params: { slug },
-                      replace: true,
-                      to: "/school/$slug/notifications",
-                    });
-                  }
-                  // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
-                  let ended = false;
-                  await saveSchool(
-                    () => revoke({ grantId: grant.id, slug }),
-                    SOURCE,
-                    own
-                      ? () => {
-                          ended = true;
-                          toast.success({
-                            title: "school-own-role-ended.title",
-                          });
-                        }
-                      : undefined
-                  );
-                  if (ended) {
-                    await router.invalidate();
-                    await navigate({
-                      params: { slug },
-                      replace: true,
-                      to: "/school/$slug",
-                    });
-                  }
-                });
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("grant-revoke-confirm")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              dialogs.close();
+              startTransition(async () => {
+                if (own) {
+                  await navigate({
+                    params: { slug },
+                    replace: true,
+                    to: "/school/$slug/notifications",
+                  });
+                }
+                // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
+                let ended = false;
+                await saveSchool(
+                  () => revoke({ grantId: grant.id, slug }),
+                  SOURCE,
+                  own
+                    ? () => {
+                        ended = true;
+                        toast.success({
+                          title: "school-own-role-ended.title",
+                        });
+                      }
+                    : undefined
+                );
+                if (ended) {
+                  await router.invalidate();
+                  await navigate({
+                    params: { slug },
+                    replace: true,
+                    to: "/school/$slug",
+                  });
+                }
+              });
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("grant-revoke-confirm")}
+          </Button>
         }
+        description={t("grant-revoke-description")}
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("grant-revoke-title")}
-      />
+      >
+        <ResponsiveDialogSubject
+          description={grant.person.email ?? undefined}
+          icon={UserStar01Icon}
+        >
+          {grant.person.name}
+        </ResponsiveDialogSubject>
+      </ResponsiveDialog>
     </>
   );
 }

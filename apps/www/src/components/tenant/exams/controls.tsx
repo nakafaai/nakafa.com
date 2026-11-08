@@ -6,19 +6,21 @@ import {
   Delete02Icon,
   DragDropVerticalIcon,
   MoreHorizontalIcon,
+  TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -116,68 +118,77 @@ export function PageActions({
           <DropdownMenuTrigger
             render={
               <Button
-                aria-label={t("more-actions-of", { number })}
                 size="icon-sm"
+                tooltip={t("more-actions-of", { number })}
                 variant="ghost"
               >
                 <HugeIcons aria-hidden="true" icon={MoreHorizontalIcon} />
               </Button>
             }
           />
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-              <DropdownMenuItem disabled={index === 0} onClick={moveUp}>
-                <HugeIcons aria-hidden="true" icon={ArrowUp02Icon} />
-                {t("move-up")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={index === count - 1}
-                onClick={moveDown}
-              >
-                <HugeIcons aria-hidden="true" icon={ArrowDown02Icon} />
-                {t("move-down")}
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={actions.room < 1} onClick={copy}>
-                <HugeIcons aria-hidden="true" icon={Copy01Icon} />
-                {t("copy")}
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={actions.room < 1} onClick={addBelow}>
-                <HugeIcons aria-hidden="true" icon={Add01Icon} />
-                {t("add-below")}
-              </DropdownMenuItem>
-              {count > 1 ? (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setAsking(true)}
-                    variant="destructive"
-                  >
-                    <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-                    {t("remove")}
-                  </DropdownMenuItem>
-                </>
-              ) : null}
-            </DropdownMenuGroup>
+          <DropdownMenuContent
+            align="end"
+            className="w-44"
+            label={common("menu-actions")}
+          >
+            <DropdownMenuItem
+              disabled={index === 0}
+              icon={ArrowUp02Icon}
+              onClick={moveUp}
+            >
+              {t("move-up")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={index === count - 1}
+              icon={ArrowDown02Icon}
+              onClick={moveDown}
+            >
+              {t("move-down")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={actions.room < 1}
+              icon={Copy01Icon}
+              onClick={copy}
+            >
+              {t("copy")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={actions.room < 1}
+              icon={Add01Icon}
+              onClick={addBelow}
+            >
+              {t("add-below")}
+            </DropdownMenuItem>
+            {count > 1 ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  icon={Delete02Icon}
+                  onClick={() => setAsking(true)}
+                  variant="destructive"
+                >
+                  {t("remove")}
+                </DropdownMenuItem>
+              </>
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
       <ResponsiveDialog
-        description={t("remove-description")}
-        footer={
-          <>
-            <Button onClick={() => setAsking(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button onClick={removeQuestion} variant="destructive">
-              {t("remove")}
-            </Button>
-          </>
+        action={
+          <Button onClick={removeQuestion} variant="destructive">
+            {t("remove")}
+          </Button>
         }
+        description={t("remove-description")}
         open={asking}
         setOpen={setAsking}
         title={t("remove-title")}
-      />
+      >
+        <ResponsiveDialogSubject icon={TaskEdit01Icon}>
+          {t("question", { number })}
+        </ResponsiveDialogSubject>
+      </ResponsiveDialog>
     </>
   );
 }
@@ -204,10 +215,10 @@ function PageAction({
       <TooltipTrigger
         render={
           <Button
-            aria-label={label}
             disabled={disabled}
             onClick={onClick}
             size="icon-sm"
+            tooltip={label}
             type="button"
             variant="ghost"
           />
@@ -238,10 +249,10 @@ export function QuestionGrip({
       <TooltipTrigger
         render={
           <Button
-            aria-label={t("reorder-of", { number })}
             className="cursor-grab touch-none active:cursor-grabbing"
             data-grip={questionId}
             size="icon-sm"
+            tooltip={t("reorder-of", { number })}
             type="button"
             variant="ghost"
           />

@@ -7,6 +7,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
+import { lineMark } from "@repo/design-system/lib/mark";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { DateTime, Effect, Fiber, Schema } from "effect";
@@ -167,7 +168,7 @@ const ThinkingMessage = memo(() => {
 });
 ThinkingMessage.displayName = "ThinkingMessage";
 
-/** What the row says: the thought's spinner, how long it took, and the chevron of a thought that opens. */
+/** What the row says: the thought's spinner, how long it took, and the chevron of a thought that opens, its icons on its first line. */
 function ReasoningSummary() {
   const hasContent = useReasoning((reasoning) => reasoning.hasContent);
   const isOpen = useReasoning((reasoning) => reasoning.isOpen);
@@ -175,16 +176,20 @@ function ReasoningSummary() {
 
   return (
     <>
-      <Spinner className="size-4" icon={BrainIcon} isLoading={isStreaming} />
+      <span className={lineMark()}>
+        <Spinner className="size-4" icon={BrainIcon} isLoading={isStreaming} />
+      </span>
       <ThinkingMessage />
       {hasContent ? (
-        <HugeIcons
-          className={cn(
-            "size-4 shrink-0 transition-transform",
-            isOpen ? "rotate-180" : "rotate-0"
-          )}
-          icon={ArrowDown01Icon}
-        />
+        <span className={lineMark()}>
+          <HugeIcons
+            className={cn(
+              "size-4 shrink-0 transition-transform",
+              isOpen ? "rotate-180" : "rotate-0"
+            )}
+            icon={ArrowDown01Icon}
+          />
+        </span>
       ) : null}
     </>
   );
@@ -196,7 +201,7 @@ function ReasoningSummary() {
  * that would open nothing.
  */
 const reasoningTriggerVariants = cva(
-  "text-muted-foreground flex w-fit max-w-full items-center gap-2 text-start text-sm transition-colors",
+  "text-muted-foreground flex w-fit max-w-full items-start gap-2 text-start text-sm transition-colors",
   {
     variants: {
       opens: {

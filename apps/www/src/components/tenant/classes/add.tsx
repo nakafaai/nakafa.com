@@ -48,7 +48,6 @@ export function AddChannel({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const add = useMutation(classroom.forum.channels.add);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -125,26 +124,20 @@ export function AddChannel({
   return (
     <>
       <Button
-        aria-label={t("add-channel")}
         onClick={() => setOpen(true)}
         size="icon"
-        title={t("add-channel")}
+        tooltip={t("add-channel")}
         variant="outline"
       >
         <HugeIcons icon={Add01Icon} />
       </Button>
       <ResponsiveDialog
-        description={t("add-channel-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} inert={isPending} onClick={submit}>
-              {t("add-submit")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} inert={isPending} onClick={submit}>
+            {t("add-submit")}
+          </Button>
         }
+        description={t("add-channel-description")}
         open={open}
         setOpen={setOpen}
         title={t("add-channel-title")}

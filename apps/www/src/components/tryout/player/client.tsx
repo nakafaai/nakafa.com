@@ -1,5 +1,10 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { Suspense, use } from "react";
@@ -20,6 +25,7 @@ import { PlayerGrid } from "@/components/player/navigator/grid";
 import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
+import { useServerTime } from "@/components/player/now";
 import { PlayerProvider } from "@/components/player/provider";
 import { OfflineNote } from "@/components/shared/offline";
 import { TryoutContentContext } from "@/components/tryout/content/context";
@@ -29,7 +35,6 @@ import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
 import { TryoutPageLink } from "@/components/tryout/route/link";
-import { useServerTime } from "@/components/tryout/runtime/clock";
 import { useResendKeptPicks } from "@/components/tryout/runtime/response/kept";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
 import { readServerClockOffset } from "@/components/tryout/runtime/server";
@@ -86,13 +91,23 @@ export function TryoutPlayer({
       <PlayerKeys locked={locked} questions={questions} />
       <PlayerHeader>
         <PlayerHeaderStart>
-          <TryoutPageLink
-            aria-label={tCommon("back")}
-            className={buttonVariants({ size: "icon", variant: "outline" })}
-            {...finish.returnAddress}
-          >
-            <HugeIcons icon={ArrowLeft01Icon} />
-          </TryoutPageLink>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <TryoutPageLink
+                  aria-label={tCommon("back")}
+                  className={buttonVariants({
+                    size: "icon",
+                    variant: "outline",
+                  })}
+                  {...finish.returnAddress}
+                >
+                  <HugeIcons icon={ArrowLeft01Icon} />
+                </TryoutPageLink>
+              }
+            />
+            <TooltipContent>{tCommon("back")}</TooltipContent>
+          </Tooltip>
           <PlayerTitle>{title}</PlayerTitle>
           <OfflineNote />
         </PlayerHeaderStart>

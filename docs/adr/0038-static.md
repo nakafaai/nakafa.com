@@ -45,7 +45,7 @@ D5. Social images are one per collection or family, not one per page.
 
 D6. Content pages navigate in the browser, with no document load and no Worker request. While the build prerenders a page, the Worker records every server function call that the page's loaders make, and the build writes the answer of each call, byte for byte, as a static file. In the browser a loader reads that file and hands it to the function's own decoder through Start's per-call `fetch` option, so a navigation between prerendered pages costs one static asset read, made on intent before the press. A call that the build did not prerender, such as a later page of a list, asks the Worker. A read that depends on the reader instead of the page, such as a lesson's curriculum placement under a `?ctx=` hint, goes from the browser to Convex and never through the Worker. (Amended 25 Oct 2026: the document loads and Speculation Rules of Phase A made every press reload the page in every browser, and Safari and Firefox do not prerender. Amended 30 Oct 2026: the placement's server function cost 100 to 353 ms of CPU on a fresh isolate against the 10 ms of Workers Free, because its handler loaded Effect, Schema and the contentRelease refs.)
 
-D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy. Phase A does not declare them (see Not in Phase A).
+D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy. Phase A does not declare them (see Not in Phase A). (Amended 8 Nov 2026: no zone rule picks a locale. The Worker answers the root and every address that names no locale with one negotiation, `negotiateLocale`: the language cookie, then Accept-Language among id, en and de, then Indonesian, the owner's rule. `apps/www/src/lib/routing/locale/` owns which addresses are bare, the main host's School pages included, and the zone's redirect phase holds only the rules of `apps/www/deploy/redirect.ts`.)
 
 D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation starts deploy.yml with a workflow dispatch for stage prod and ref main, in place of the cache POST. The stack binds the active release id to the web Worker as `NAKAFA_CONTENT_RELEASE` (`apps/www/deploy/release.ts`), because Alchemy rebuilds a Vite Worker only when its files or its bindings change: without that binding, the dispatch after release legal-xendit-20261026 (26 Oct 2026, run 40418168284) planned no change on an unchanged commit and the site kept the previous release's pages. In the same change the replaced request-time paths are deleted: Accept negotiation, the nine-page prerender list, the per-page social images and their alias, and Set-Cookie on static pages. The content store, the request-time content readers and the server functions with callers stay for what the Worker still renders (search). Phase C deletes them, once Phase B moves it to the browser.
 
@@ -61,12 +61,54 @@ Added 31 October 2026. Convex's usage API measured about 0.45 GB of Database I/O
 build (0.08 GB a day when nothing deploys, 2 GB to 11 GB on a day of merges). D8's one
 bulk read was never built: a build reads each page once, through the content store, in
 three processes that share nothing. A release never changes, so a deploy keeps those
-reads. `deploy.yml` restores `.cache/reads` for the active release and the code behind
-the reads, and serves it on loopback (`scripts/static/store.ts`), because the
+reads. `deploy.yml` restores `.cache/reads` for the active release, and serves it on loopback (`scripts/static/store.ts`), because the
 prerender's Worker has no file system. The content store asks it on a miss and hands it
 every release-keyed entry (`lasting`), never the active pointer. Only a deploy sets
 `NAKAFA_BUILD_STORE`, and `deployedWorkerBindings` never binds it. A store failure is a
 miss, so the build reads Convex.
+
+Amended on 8 November 2026: every read whose answer depends only on the content
+release goes through the content store (`apps/www/src/lib/content/store/query.ts`),
+including the article delivery that a page and its social image share, the article and
+lesson route models of the language switch, the article catalog pages, the discovery
+reads of the feed and llms files, the curriculum path and the try-out localized path.
+On 7 November, a day of 33 production deploys, those reads bypassed the store and were
+read again by every deploy, whether or not the release had changed: the article delivery
+alone made 1,337 calls (74.6 MB), and the five largest of them 147 MB of Database I/O. An operation that reads several values of one
+release passes the release it read first (`queryPinnedContentStore`), so the store keys
+each read by that release and fails with `PublishedReleaseMismatchError` instead of
+moving to another one, and the reader no longer compares releases itself. Five reads stay
+live, because their answer depends on more than the release: the content search (a free
+text query per visitor), the trending subjects (live analytics, kept an hour per isolate
+by their own entry), a try-out track's further set windows (the viewer's query, read as a
+visitor), the Quran identity that a stale snapshot is checked against, and the active
+release identity itself.
+
+Amended again on 8 November 2026, after Convex production stopped at the spending limit:
+the cache key was the release, the backend's dependency hash and the hash of its content
+code, and a deploy saved only when it missed. Three of the four misses of 7 November kept
+the release and changed only a hash, and each read the whole release again, about 0.55 GB
+(`docs/convex/cost.md`, "Deploy reads"). The key is now the stage and the release, with
+the run as its last part: the restore takes the newest save of the release, or else of any
+earlier release of the stage, and every run that added a read saves, a failed or cancelled
+one included. A build that finished drops the entries it did not use (the read store marks
+what it answers), so the cache holds one build's reads. A release is read once per stage,
+and a later deploy of it reads only what no earlier deploy read; an entry keyed by a family
+snapshot or an artifact's hash also carries over to the next release. A change to what a
+query answers for the same release bumps `CONTENT_STORE_VERSION`
+(`apps/www/src/lib/content/store/entry.ts`); a changed shape needs no bump, because an
+entry that does not decode is a miss.
+
+Amended a third time on 8 November 2026, so that a new release reads only what it changed:
+a release that does not change a structured family keeps that family's snapshot
+(`signed.manifest.snapshots`), and the active identity names the snapshot of each family
+(`contentRelease/runtime/active:read`). The curriculum, the try-out catalog and paths, the
+Quran publication and a lesson's curriculum places are keyed by their family's snapshot
+(`querySnapshotContentStore`), so their entries answer every later release that keeps the
+snapshot. An entry is kept only while the active release still names the snapshot that it
+was read under, and a read that finds another snapshot after its load starts over once
+under it, as a release read does. The curriculum route stays keyed by the release, because
+it also reads lesson rows that no snapshot covers.
 
 ## Phase A as implemented
 

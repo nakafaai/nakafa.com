@@ -3,7 +3,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
@@ -22,10 +21,10 @@ function ThemeGroup({ options }: { options: typeof themeOptions }) {
     <DropdownMenuGroup>
       {Arr.map(options, (theme) => (
         <DropdownMenuItem
+          icon={theme.icon}
           key={theme.value}
           onClick={() => setTheme(theme.value)}
         >
-          <HugeIcons className="shrink-0" icon={theme.icon} />
           {t(theme.value)}
           <ActiveBadge isActive={currentTheme === theme.value} />
         </DropdownMenuItem>

@@ -1,3 +1,7 @@
+import {
+  ChartBubble01Icon,
+  ChartLineData01Icon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -90,6 +94,7 @@ function GraphFields({
   readonly draft: FigureDraft;
   readonly onChange: (change: Partial<FigureDraft>) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const id = useId();
 
@@ -111,9 +116,9 @@ function GraphFields({
           <SelectTrigger className="w-full" id={`${id}-curve`}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={common("menu-curve")}>
             {Arr.map(GraphCurve.literals, (value) => (
-              <SelectItem key={value} value={value}>
+              <SelectItem icon={ChartLineData01Icon} key={value} value={value}>
                 {t(CURVE_NAME[value])}
               </SelectItem>
             ))}
@@ -183,6 +188,7 @@ function ChartFields({
   readonly draft: FigureDraft;
   readonly onChange: (change: Partial<FigureDraft>) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const id = useId();
 
@@ -230,9 +236,9 @@ function ChartFields({
           <SelectTrigger className="w-full" id={`${id}-mark`}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent label={common("menu-mark")}>
             {Arr.map(ChartMark.literals, (value) => (
-              <SelectItem key={value} value={value}>
+              <SelectItem icon={ChartBubble01Icon} key={value} value={value}>
                 {t(MARK_NAME[value])}
               </SelectItem>
             ))}
@@ -252,7 +258,6 @@ function FigureForm({
   readonly pending: PendingFigure;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const id = useId();
   const [draft, setDraft] = useState(pending.draft);
   const [open, setOpen] = useState(true);
@@ -282,17 +287,12 @@ function FigureForm({
 
   return (
     <ResponsiveDialog
-      description={t("figure-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={Option.isNone(made)} onClick={save}>
-            {t("figure-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={Option.isNone(made)} onClick={save}>
+          {t("figure-save")}
+        </Button>
       }
+      description={t("figure-description")}
       onOpenChangeComplete={(next) => {
         if (!next) {
           onClose();

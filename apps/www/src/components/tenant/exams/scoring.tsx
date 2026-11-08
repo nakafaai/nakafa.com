@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { ScoringKind } from "@repo/backend/confect/exams/scoring";
 import {
@@ -56,6 +57,7 @@ export function ScoringField({
   /** The question whose rule the field sets. */
   readonly questionId: Question["id"];
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const id = useId();
@@ -87,9 +89,9 @@ export function ScoringField({
         <SelectTrigger className="w-full" disabled={!editable} id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent label={common("menu-scoring")}>
           {Arr.map(ScoringKind.literals, (value) => (
-            <SelectItem key={value} value={value}>
+            <SelectItem icon={CheckmarkCircle02Icon} key={value} value={value}>
               {t(SCORING_NAME[value])}
             </SelectItem>
           ))}

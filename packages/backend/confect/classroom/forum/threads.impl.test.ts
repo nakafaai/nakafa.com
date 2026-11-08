@@ -238,6 +238,10 @@ describe("classroom/forum threads", () => {
           replies: 2,
           unread: true,
         });
+        // The summary shows who answered last first, each once.
+        expect(Arr.map(forStudent.discussion.repliers, ({ id }) => id)).toEqual(
+          [fixture.people.teacher.personId, fixture.people.student.personId]
+        );
         const forTeacher = yield* teacher.query(get, {
           classId: forum.classId,
           number: 1,

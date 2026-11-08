@@ -22,7 +22,10 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
-import { openDiscussion } from "@/components/tenant/classes/forum/send";
+import {
+  openDiscussion,
+  viewerFace,
+} from "@/components/tenant/classes/forum/send";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -39,7 +42,6 @@ export function StartDiscussion({
   channelId: Id<"classroomChannels">;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const open = useMutation(classroom.forum.threads.open);
   const viewer = useViewerQuery();
@@ -70,14 +72,14 @@ export function StartDiscussion({
     if (!ready) {
       return;
     }
-    const { person } = viewer.value;
+    const author = viewerFace(viewer.value);
     sent.current = true;
     setShown(false);
     runForumCall(
       Effect.flatMap(randomUuid, (clientKey) =>
         openDiscussion(
           (update, args) => open.withOptimisticUpdate(update)(args),
-          { id: person.id, name: person.name, nina: false },
+          author,
           {
             channelId,
             classId,
@@ -107,17 +109,12 @@ export function StartDiscussion({
         onClick={() => setShown(true)}
       />
       <ResponsiveDialog
-        description={t("discussion-new-description")}
-        footer={
-          <>
-            <Button onClick={() => setShown(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} onClick={submit}>
-              {t("discussion-start")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} onClick={submit}>
+            {t("discussion-start")}
+          </Button>
         }
+        description={t("discussion-new-description")}
         // A sent discussion's dialog empties once it has closed, so it keeps what was sent while it closes; a
         // refusal that comes back after that puts the text back.
         onOpenChangeComplete={(next) => {

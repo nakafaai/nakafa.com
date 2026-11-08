@@ -1,5 +1,9 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
+import {
+  Building03Icon,
+  SchoolIcon,
+  UserMultiple02Icon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   questionGap,
@@ -23,7 +27,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -48,6 +51,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
+import { RoomLengthField } from "@/components/tenant/exams/length";
 import { useExam } from "@/components/tenant/exams/provider";
 import { SITTING_LENGTHS, sittingTimes } from "@/components/tenant/exams/time";
 
@@ -129,10 +133,6 @@ export function ScheduleSitting({
   const unitItems = Arr.map(units, (unit) => ({
     label: unit.name,
     value: unit.id,
-  }));
-  const lengthItems = Arr.map(SITTING_LENGTHS, (length) => ({
-    label: t("length-minutes", { count: length }),
-    value: `${length}`,
   }));
   const choice = Option.orElse(
     Arr.findFirst(units, (unit) => unit.id === picked),
@@ -250,8 +250,7 @@ export function ScheduleSitting({
 
   return (
     <ResponsiveDialog
-      description={t("schedule-description")}
-      footer={
+      action={
         <>
           <ScheduleNotices
             missing={Option.orElse(firstUnready, () =>
@@ -264,14 +263,12 @@ export function ScheduleSitting({
             )}
             roomMissing={!Schema.is(RoomName)(roomName)}
           />
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
           <Button disabled={!ready} onClick={submit}>
             {t("schedule")}
           </Button>
         </>
       }
+      description={t("schedule-description")}
       open={open}
       setOpen={setOpen}
       title={t("schedule-title")}
@@ -290,9 +287,13 @@ export function ScheduleSitting({
             <SelectTrigger className="w-full" id={`${id}-unit`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent label={common("menu-unit")}>
               {Arr.map(unitItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
+                <SelectItem
+                  icon={SchoolIcon}
+                  key={item.value}
+                  value={item.value}
+                >
                   {item.label}
                 </SelectItem>
               ))}
@@ -310,16 +311,17 @@ export function ScheduleSitting({
             <SelectTrigger className="w-full" id={`${id}-audience`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent label={common("menu-audience")}>
               {Arr.map(audienceItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  <HugeIcons
-                    icon={
-                      item.value === UNIT_AUDIENCE
-                        ? Building03Icon
-                        : UserMultiple02Icon
-                    }
-                  />
+                <SelectItem
+                  icon={
+                    item.value === UNIT_AUDIENCE
+                      ? Building03Icon
+                      : UserMultiple02Icon
+                  }
+                  key={item.value}
+                  value={item.value}
+                >
                   {item.label}
                 </SelectItem>
               ))}
@@ -358,33 +360,12 @@ export function ScheduleSitting({
           </FieldDescription>
           <FieldError>{pastStart ? t("schedule-past") : null}</FieldError>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
-          <Select
-            items={lengthItems}
-            onValueChange={(value) => {
-              const next = Arr.findFirst(
-                SITTING_LENGTHS,
-                (length) => `${length}` === value
-              );
-              if (Option.isSome(next)) {
-                setMinutes(next.value);
-              }
-            }}
-            value={`${minutes}`}
-          >
-            <SelectTrigger className="w-full" id={`${id}-length`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(lengthItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <RoomLengthField
+          id={`${id}-length`}
+          lengths={SITTING_LENGTHS}
+          minutes={minutes}
+          onChange={setMinutes}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

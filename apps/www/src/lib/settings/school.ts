@@ -307,7 +307,7 @@ export function opensSettingsPath(
   slug: TenantSlug,
   reach: readonly string[],
   pathname: string
-) {
+): boolean {
   const sections = Arr.flatMap(
     openSettingsGroups(slug, reach),
     (group) => group.sections
@@ -346,8 +346,19 @@ export function schoolSettingsSections(
 }
 
 /**
+ * Whether a section owns the page at a leaf route path: its own page, or a page below it, such as one cohort under the
+ * cohorts, so the sidebar keeps the section's group open and the section marked on its child pages.
+ */
+export const ownsLeafPath = (
+  section: { readonly target: Pick<LinkTarget, "to"> },
+  leafPath: string
+) =>
+  leafPath === section.target.to ||
+  Str.startsWith(`${section.target.to}/`)(leafPath);
+
+/**
  * Resolves the settings section that owns the page on screen, given the leaf
- * route path. The settings root and every path this table does not declare
+ * route path (`ownsLeafPath`). The settings root and every path this table does not declare
  * belong to the first section, so the breadcrumb is never blank.
  */
 export function getSchoolSettingsSection(
@@ -357,7 +368,7 @@ export function getSchoolSettingsSection(
 ) {
   const sections = schoolSettingsSections(slug, reach);
   return Option.getOrElse(
-    Arr.findFirst(sections, (section) => section.target.to === leafPath),
+    Arr.findFirst(sections, (section) => ownsLeafPath(section, leafPath)),
     () => Arr.headNonEmpty(sections)
   );
 }

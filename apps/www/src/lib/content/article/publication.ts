@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
@@ -15,7 +14,7 @@ import {
   renderArticleArtifact,
 } from "@/lib/content/published/article";
 import { decodePublishedDelivery } from "@/lib/content/published/exchange";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 /** Verifies the signed query result without evaluating its immutable body.
  *
@@ -78,17 +77,20 @@ const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
   }
 );
 
-/** Fetches one signed delivery row shared by body and metadata readers. */
+/**
+ * Reads one signed delivery row, which the page and its social image share.
+ * The content store keeps it for the release, so a build reads each article
+ * from Convex once, and a deploy of the same release reads it from the deploy's
+ * read store instead.
+ */
 const fetchArticleSource = Effect.fn("NakafaArticle.fetchSource")(function* (
   locale: Locale,
   publicPath: string
 ) {
-  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.article.delivery, {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  return yield* queryContentStore(contentRelease.article.delivery, {
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  });
 });
 
 /** Reads and verifies one signed article delivery for the article page. */

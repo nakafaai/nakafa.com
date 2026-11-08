@@ -1,6 +1,7 @@
 import { type PaginatedQueryItem, useMutation } from "@confect/react";
 import {
   CheckmarkBadge01Icon,
+  Link01Icon,
   PencilEdit02Icon,
   Unlink01Icon,
   UserEdit01Icon,
@@ -12,7 +13,10 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -84,6 +88,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
               )
             }
             type="button"
+            variant="outline"
           >
             <HugeIcons icon={CheckmarkBadge01Icon} />
             {t("link-verify")}
@@ -114,35 +119,39 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
       {link.status === "pending" || link.status === "verified" ? (
         <RowItems>
           <WithAction action="person.manage">
-            <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-              <HugeIcons icon={UserEdit01Icon} />
+            <DropdownMenuItem
+              icon={UserEdit01Icon}
+              onClick={() => dialogs.show("rename")}
+            >
               {t("link-rename")}
             </DropdownMenuItem>
           </WithAction>
           {link.status === "pending" ? (
             <>
-              <DropdownMenuItem onClick={() => dialogs.show("readdress")}>
-                <HugeIcons icon={PencilEdit02Icon} />
+              <DropdownMenuItem
+                icon={PencilEdit02Icon}
+                onClick={() => dialogs.show("readdress")}
+              >
                 {t("link-readdress")}
               </DropdownMenuItem>
               <DropdownMenuItem
+                icon={CheckmarkBadge01Icon}
                 onClick={() =>
                   startTransition(() =>
                     saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
                   )
                 }
               >
-                <HugeIcons icon={CheckmarkBadge01Icon} />
                 {t("link-verify")}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
             </>
           ) : null}
+          <DropdownMenuSeparator />
           <DropdownMenuItem
+            icon={Unlink01Icon}
             onClick={() => dialogs.show("revoke")}
             variant="destructive"
           >
-            <HugeIcons icon={Unlink01Icon} />
             {t("link-revoke")}
           </DropdownMenuItem>
         </RowItems>
@@ -196,7 +205,6 @@ function GuardianLinkRevokeDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const revoke = useMutation(guardians.links.revoke).withOptimisticUpdate(
     revokeLinkChange
@@ -205,34 +213,32 @@ function GuardianLinkRevokeDialog({
 
   return (
     <ResponsiveDialog
-      description={t("link-revoke-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            onClick={() => {
-              setOpen(false);
-              startTransition(() =>
-                saveSchool(() => revoke({ linkId: link.id, slug }), SOURCE)
-              );
-            }}
-            type="button"
-            variant="destructive"
-          >
-            <HugeIcons icon={Unlink01Icon} />
-            {t("link-revoke")}
-          </Button>
-        </>
+      action={
+        <Button
+          onClick={() => {
+            setOpen(false);
+            startTransition(() =>
+              saveSchool(() => revoke({ linkId: link.id, slug }), SOURCE)
+            );
+          }}
+          type="button"
+          variant="destructive"
+        >
+          <HugeIcons icon={Unlink01Icon} />
+          {t("link-revoke")}
+        </Button>
       }
+      description={t("link-revoke-description")}
       open={open}
       setOpen={setOpen}
       title={t("link-revoke-title")}
-    />
+    >
+      <ResponsiveDialogSubject
+        description={link.guardian.name}
+        icon={Link01Icon}
+      >
+        {link.student.name}
+      </ResponsiveDialogSubject>
+    </ResponsiveDialog>
   );
 }

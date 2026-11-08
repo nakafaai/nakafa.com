@@ -14,8 +14,8 @@ const SEEDED_CLASS = "fisika-x-1";
 
 /**
  * Seeds the history of the general channel of the seeded class of a school, in the running local
- * acceptance backend: `count` messages from a classmate, a minute apart and ending now, and the
- * class teacher's read mark after the first `read` of them. The channel, the class, and the
+ * acceptance backend: `count` messages from a classmate, named `author` when the run gives a name, a
+ * minute apart and ending now, and the class teacher's read mark after the first `read` of them. The channel, the class, and the
  * messages go to `output` for a browser test to read back.
  */
 export const createAcceptanceForum = Effect.fn("contentAcceptance.createForum")(
@@ -24,7 +24,8 @@ export const createAcceptanceForum = Effect.fn("contentAcceptance.createForum")(
     slug: string,
     count: number,
     read: number,
-    output: string
+    output: string,
+    author?: string
   ) {
     const runtime = yield* readLocalRuntime(root);
     if (runtime === undefined) {
@@ -33,6 +34,7 @@ export const createAcceptanceForum = Effect.fn("contentAcceptance.createForum")(
       );
     }
     const args = yield* encodeArguments({
+      ...(author === undefined ? {} : { author }),
       classSlug: SEEDED_CLASS,
       count,
       read,
@@ -50,13 +52,17 @@ export const createAcceptanceForum = Effect.fn("contentAcceptance.createForum")(
   }
 );
 
-/** The usage of the forum mode: the school, the number of messages, how many are read, then the file. */
-const USAGE = "forum <school-slug> <count> <read> <forum-file>";
+/**
+ * The usage of the forum mode: the school, the number of messages, how many are read, the file, and the classmate's
+ * name when a run needs one.
+ */
+const USAGE = "forum <school-slug> <count> <read> <forum-file> [author]";
 const ForumArguments = Schema.Tuple([
   Schema.String,
   Schema.FiniteFromString,
   Schema.FiniteFromString,
   Schema.String,
+  Schema.optionalKey(Schema.String),
 ]);
 
 /**
@@ -71,11 +77,18 @@ export const forumMode = {
     root: string,
     args: readonly string[]
   ) {
-    const [slug, count, read, output] = yield* decodeModeArguments(
+    const [slug, count, read, output, author] = yield* decodeModeArguments(
       USAGE,
       ForumArguments,
       args
     );
-    return yield* createAcceptanceForum(root, slug, count, read, output);
+    return yield* createAcceptanceForum(
+      root,
+      slug,
+      count,
+      read,
+      output,
+      author
+    );
   }),
 } satisfies AcceptanceMode;
