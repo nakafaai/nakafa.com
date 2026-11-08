@@ -1,21 +1,17 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import { ExamTryPaper } from "@/components/tenant/exams/try/paper";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readExamId } from "@/lib/tenant/params";
 
 /** One exam of the school, as its teacher tries it the way a student would. */
 export const Route = createFileRoute("/school/$slug/exams/$exam/try")({
-  beforeLoad: ({ params }) => {
-    const examId = readExamId(params.exam);
-    if (Option.isNone(examId)) {
-      throw notFound();
-    }
-    return { examId: examId.value };
-  },
+  ...guardSchoolPage({
+    reads: (params: { readonly exam: string }) =>
+      Option.all({ examId: readExamId(params.exam) }),
+  }),
   component: SchoolExamTryPage,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolExamTryPage(): ReactElement | null {
