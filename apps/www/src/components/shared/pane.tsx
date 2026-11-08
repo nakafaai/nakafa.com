@@ -169,11 +169,17 @@ export function PaneFact({
   );
 }
 
-/** The facts of a detail: one under another, or two to a row for short values, such as a result's numbers. */
+/**
+ * The facts of a detail: one under another, or, for short values such as a result's numbers, two to a row once
+ * the pane is wide enough that every label keeps one line, and one under another below that.
+ */
 const paneFactsVariants = cva("gap-4", {
   defaultVariants: { layout: "stack" },
   variants: {
-    layout: { grid: "grid grid-cols-2 tabular-nums", stack: "flex flex-col" },
+    layout: {
+      grid: "grid tabular-nums @xs:grid-cols-2",
+      stack: "flex flex-col",
+    },
   },
 });
 
@@ -182,7 +188,11 @@ export function PaneFacts({
   children,
   layout,
 }: VariantProps<typeof paneFactsVariants> & { children: ReactNode }) {
-  return <dl className={paneFactsVariants({ layout })}>{children}</dl>;
+  return (
+    <div className="@container">
+      <dl className={paneFactsVariants({ layout })}>{children}</dl>
+    </div>
+  );
 }
 
 /**

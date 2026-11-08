@@ -2525,6 +2525,7 @@
     "time-limit-label": "Zeitlimit",
     "result-short": "Ergebnis",
     "result-open": "Dein Ergebnis öffnen, {correct} von {total} richtig",
+    "review-controls": "Versuch und Ansicht",
     "attempt-menu-label": "Verlauf",
     "attempt-menu-search-placeholder": "Versuche suchen...",
     "attempt-menu-empty": "Keine passenden Versuche gefunden.",

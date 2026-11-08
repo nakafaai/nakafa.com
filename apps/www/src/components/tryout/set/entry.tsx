@@ -1,5 +1,7 @@
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Option } from "effect";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerTimer } from "@/components/player/timer";
 import { PlayerViewSwitch } from "@/components/player/view";
@@ -116,28 +118,41 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 }
 
 /**
- * The set's header: its path and title, the attempt picker, what the page adds, such as the view of a
- * review's questions, and the action.
+ * The set's header: its path and title, the attempt picker, and the action. A review adds the view of its
+ * questions, which joins the picker in one group of outlined buttons, so the header holds the primary
+ * action and one group, never three buttons.
  */
 function TryoutEntryHeader({
   children,
   value,
 }: {
+  /** What the page adds beside the picker, such as the view of a review's questions. */
   children?: ReactNode;
   value: TryoutSetEntryProps["value"];
 }) {
+  const t = useTranslations("Tryouts");
   return (
     <TryoutSetPageHeader
       currentPath={value.currentPath}
       page={value.page}
       returnPath={value.returnPath}
     >
-      <TryoutAttemptPicker
-        attempt={value.actionAttempt}
-        locale={value.route.locale}
-        set={value.page.set}
-      />
-      {children}
+      {children === undefined ? (
+        <TryoutAttemptPicker
+          attempt={value.actionAttempt}
+          locale={value.route.locale}
+          set={value.page.set}
+        />
+      ) : (
+        <ButtonGroup aria-label={t("review-controls")}>
+          <TryoutAttemptPicker
+            attempt={value.actionAttempt}
+            locale={value.route.locale}
+            set={value.page.set}
+          />
+          {children}
+        </ButtonGroup>
+      )}
       <TryoutEntryAction value={value} />
     </TryoutSetPageHeader>
   );

@@ -2525,6 +2525,7 @@
     "time-limit-label": "Time limit",
     "result-short": "Result",
     "result-open": "Open your result, {correct} of {total} correct",
+    "review-controls": "Attempt and view",
     "attempt-menu-label": "History",
     "attempt-menu-search-placeholder": "Search attempts...",
     "attempt-menu-empty": "No matching attempts found.",

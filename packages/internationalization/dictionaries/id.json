@@ -2525,6 +2525,7 @@
     "time-limit-label": "Batas waktu",
     "result-short": "Hasil",
     "result-open": "Buka hasil kamu, {correct} dari {total} benar",
+    "review-controls": "Percobaan dan tampilan",
     "attempt-menu-label": "Riwayat",
     "attempt-menu-search-placeholder": "Cari percobaan...",
     "attempt-menu-empty": "Tidak ada percobaan yang cocok.",
