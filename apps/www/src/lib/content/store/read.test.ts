@@ -36,17 +36,32 @@ const TextSchema = Schema.String;
 /** The release check could not reach Convex. */
 class ConvexDownError extends Data.TaggedError("ConvexDownError") {}
 
-/** An active identity for one release id. */
-const identityOf = (releaseId: string) => ({
+/** The curriculum snapshots that the tests' releases name. */
+const PROGRAM_ONE = Sha256HashSchema.make(`sha256:${"1".repeat(64)}`);
+const PROGRAM_TWO = Sha256HashSchema.make(`sha256:${"2".repeat(64)}`);
+
+/** An active identity for one release id, naming one curriculum snapshot or none. */
+const identityOf = (
+  releaseId: string,
+  program: typeof PROGRAM_ONE | null = PROGRAM_ONE
+) => ({
   manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
   releaseId: ReleaseIdSchema.make(releaseId),
   sequence: 1,
+  snapshots: { assessment: null, program, quran: null },
 });
 
-/** Makes the pointer and Convex agree that one release is active. */
-const activate = (releaseId: string) => {
-  activeMocks.read.mockReturnValue(Effect.succeed(identityOf(releaseId)));
-  activeMocks.load.mockReturnValue(Effect.succeed(identityOf(releaseId)));
+/** Makes the pointer and Convex agree that one release, and its curriculum snapshot, is active. */
+const activate = (
+  releaseId: string,
+  program: typeof PROGRAM_ONE | null = PROGRAM_ONE
+) => {
+  activeMocks.read.mockReturnValue(
+    Effect.succeed(identityOf(releaseId, program))
+  );
+  activeMocks.load.mockReturnValue(
+    Effect.succeed(identityOf(releaseId, program))
+  );
 };
 
 /** A loader that counts its runs and yields the next numbered text. */
@@ -265,6 +280,122 @@ describe("content store reads", () => {
 
         expect(error).toBe("boom");
         expect(activeMocks.expire).toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "answers a family's read from its snapshot across releases that keep it",
+    () =>
+      Effect.gen(function* () {
+        const load = makeLoader();
+        const read = { ...input(load), scope: "program" as const };
+
+        expect(yield* readContentStore(read)).toBe("loaded 1");
+        activate("release-b");
+        expect(yield* readContentStore(read)).toBe("loaded 1");
+        expect(load).toHaveBeenCalledOnce();
+
+        activate("release-c", PROGRAM_TWO);
+        expect(yield* readContentStore(read)).toBe("loaded 2");
+        expect(load).toHaveBeenCalledTimes(2);
+      })
+  );
+
+  it.effect("keeps a family's answers apart from the release's", () =>
+    Effect.gen(function* () {
+      const load = makeLoader();
+
+      yield* readContentStore(input(load));
+      yield* readContentStore({ ...input(load), scope: "program" });
+
+      expect(load).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "loads and keeps nothing for a family the release has no snapshot of",
+    () =>
+      Effect.gen(function* () {
+        activate("release-a", null);
+        const load = makeLoader();
+        const read = { ...input(load), scope: "program" as const };
+
+        yield* readContentStore(read);
+        yield* readContentStore(read);
+
+        expect(load).toHaveBeenCalledTimes(2);
+        expect(testRuntimeCache.set).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "reads a family again under the snapshot that a release landing during the load names",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.load
+          .mockReturnValueOnce(
+            Effect.succeed(identityOf("release-b", PROGRAM_TWO))
+          )
+          .mockReturnValue(
+            Effect.succeed(identityOf("release-b", PROGRAM_TWO))
+          );
+        activeMocks.expire.mockImplementation(() =>
+          Effect.sync(() =>
+            activeMocks.read.mockReturnValue(
+              Effect.succeed(identityOf("release-b", PROGRAM_TWO))
+            )
+          )
+        );
+        const load = makeLoader();
+
+        expect(
+          yield* readContentStore({ ...input(load), scope: "program" })
+        ).toBe("loaded 2");
+        expect(activeMocks.expire).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "fails with the releases when a family's snapshot moves twice, and when no release is active after the load",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.load
+          .mockReturnValueOnce(
+            Effect.succeed(identityOf("release-b", PROGRAM_TWO))
+          )
+          .mockReturnValueOnce(Effect.succeed(identityOf("release-c")));
+        const read = { ...input(makeLoader()), scope: "program" as const };
+
+        expect(yield* readContentStore(read).pipe(Effect.flip)).toEqual(
+          new PublishedReleaseMismatchError({
+            actualReleaseId: ReleaseIdSchema.make("release-c"),
+            expectedReleaseId: ReleaseIdSchema.make("release-b"),
+          })
+        );
+
+        activeMocks.load.mockReturnValueOnce(Effect.succeed(null));
+        expect(yield* readContentStore(read).pipe(Effect.flip)).toEqual(
+          new PublishedReleaseMismatchError({
+            actualReleaseId: null,
+            expectedReleaseId: ReleaseIdSchema.make("release-a"),
+          })
+        );
+      })
+  );
+
+  it.effect(
+    "loads unkept when the release that lands during the load has no snapshot of the family",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.load.mockReturnValueOnce(
+          Effect.succeed(identityOf("release-b", null))
+        );
+        const load = makeLoader();
+
+        expect(
+          yield* readContentStore({ ...input(load), scope: "program" })
+        ).toBe("loaded 2");
+        expect(testRuntimeCache.set).not.toHaveBeenCalled();
       })
   );
 });
