@@ -23,10 +23,10 @@ const Size = Schema.Struct({
 const AssetId = Id("examAssets");
 
 /** A file that the browser cannot decode as an image, so its size is unknown. Nothing is uploaded. */
-class ImageUnreadable extends Schema.TaggedError<ImageUnreadable>()(
-  "ImageUnreadable",
-  {}
-) {}
+class ImageUnreadable extends Schema.TaggedError<
+  ImageUnreadable,
+  { readonly brand: unique symbol }
+>()("ImageUnreadable", {}) {}
 
 /** Awaits one call's answer, and fails with the typed error that the answer holds. */
 const awaited = <A, E>(call: () => Promise<Result.Result<A, E>>) =>

@@ -11,10 +11,10 @@ import {
 } from "@repo/backend/confect/nina/contract/message";
 import { Schema } from "effect";
 
-export class NinaReadError extends Schema.TaggedError<NinaReadError>()(
-  "NinaReadError",
-  { message: Schema.String }
-) {}
+export class NinaReadError extends Schema.TaggedError<
+  NinaReadError,
+  { readonly brand: unique symbol }
+>()("NinaReadError", { message: Schema.String }) {}
 
 export default GroupSpec.make()
   // One page of a chat's messages, newest first. A page holds at most

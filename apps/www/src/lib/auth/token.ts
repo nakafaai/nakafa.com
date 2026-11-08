@@ -14,13 +14,13 @@ import { TOKEN_PATH } from "@/lib/auth/session";
  * a cookie, or a body. A 401 is the route's "no session" answer and is not this
  * error.
  */
-export class SessionTokenUnavailable extends Schema.TaggedError<SessionTokenUnavailable>()(
-  "SessionTokenUnavailable",
-  {
-    reason: Schema.Literals(["body", "deadline", "fetch", "status"]),
-    status: Schema.optionalKey(Schema.Int),
-  }
-) {}
+export class SessionTokenUnavailable extends Schema.TaggedError<
+  SessionTokenUnavailable,
+  { readonly brand: unique symbol }
+>()("SessionTokenUnavailable", {
+  reason: Schema.Literals(["body", "deadline", "fetch", "status"]),
+  status: Schema.optionalKey(Schema.Int),
+}) {}
 
 /** The token route's 200 answer: the token, or `null` for a request whose session is missing or has ended. */
 const TokenResponseSchema = Schema.Struct({

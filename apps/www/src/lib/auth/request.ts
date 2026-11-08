@@ -8,18 +8,18 @@ import { bufferResponse } from "@/lib/auth/body";
 import { SESSION_PATH } from "@/lib/auth/session";
 
 /** The browser could not send a Better Auth request or read its answer. */
-export class AuthRequestFailed extends Schema.TaggedError<AuthRequestFailed>()(
-  "AuthRequestFailed",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+export class AuthRequestFailed extends Schema.TaggedError<
+  AuthRequestFailed,
+  { readonly brand: unique symbol }
+>()("AuthRequestFailed", {
+  cause: Schema.Unknown,
+}) {}
 
 /** A Better Auth request did not answer within the shared attempt deadline. */
-export class AuthRequestDeadline extends Schema.TaggedError<AuthRequestDeadline>()(
-  "AuthRequestDeadline",
-  {}
-) {}
+export class AuthRequestDeadline extends Schema.TaggedError<
+  AuthRequestDeadline,
+  { readonly brand: unique symbol }
+>()("AuthRequestDeadline", {}) {}
 
 /**
  * A read of the session that the server answered with an error status. It is

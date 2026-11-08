@@ -16,9 +16,11 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   type FamilyItem,
@@ -67,9 +69,9 @@ function FamilyList() {
   }
   if (Arr.isReadonlyArrayEmpty(links.value)) {
     return (
-      <TableEmpty
-        act="typing"
+      <EmptyState
         description={t("family-empty-description")}
+        scene={<EmptyNina act="typing" />}
         title={t("links-empty")}
       />
     );

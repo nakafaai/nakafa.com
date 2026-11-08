@@ -9,10 +9,10 @@ const BUCKET_DEADLINE = Duration.seconds(20);
 const SERVER_SECONDS = 60;
 
 /** R2 did not answer, or answered a request with a status it should not. */
-export class BucketFailed extends Schema.TaggedError<BucketFailed>()(
-  "BucketFailed",
-  { status: Schema.optionalKey(Schema.Int) }
-) {}
+export class BucketFailed extends Schema.TaggedError<
+  BucketFailed,
+  { readonly brand: unique symbol }
+>()("BucketFailed", { status: Schema.optionalKey(Schema.Int) }) {}
 
 /** The failure of a request that R2 never answered, or whose body never arrived. */
 const unreached = () => new BucketFailed({});

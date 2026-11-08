@@ -15,12 +15,9 @@ import {
 } from "@/components/entry/shell";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { ActionLink } from "@/components/state/action";
-import { Broken, BrokenRetry } from "@/components/state/broken";
-import { useRouteFailure } from "@/components/state/localized";
+import { LocalizedError, useRouteFailure } from "@/components/state/localized";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
-import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { readStaticData } from "@/lib/static/data";
 
 /** The messages of the entry pages, which the locale route's messages join. */
@@ -79,7 +76,6 @@ function EntryLayout() {
  */
 function EntryError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
-  const messages = readStandaloneMessages(locale);
   const reloading = useRouteFailure(error, "start-entry-error");
   if (reloading) {
     return null;
@@ -93,17 +89,7 @@ function EntryError({ error }: ErrorComponentProps) {
           </div>
         </EntryShellHeader>
         <EntryShellBody>
-          <Broken
-            description={messages.Error.description}
-            title={messages.Error.title}
-          >
-            <BrokenRetry>{messages.Error.retry}</BrokenRetry>
-            <ActionLink
-              href={`/${locale}`}
-              label={messages.State["home-button"]}
-              variant="ghost"
-            />
-          </Broken>
+          <LocalizedError locale={locale} />
         </EntryShellBody>
       </EntryShellPanel>
       <EntryShellArtwork />

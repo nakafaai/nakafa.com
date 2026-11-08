@@ -6,13 +6,13 @@ import { Schema } from "effect";
 export const productAnalyticsCaptureFailedCode =
   "PRODUCT_ANALYTICS_CAPTURE_FAILED";
 /** Raised when an admitted backend product event cannot be queued. */
-export class ProductAnalyticsCaptureError extends Schema.TaggedError<ProductAnalyticsCaptureError>()(
-  "ProductAnalyticsCaptureError",
-  {
-    code: Schema.Literal(productAnalyticsCaptureFailedCode),
-    message: Schema.String,
-  }
-) {}
+export class ProductAnalyticsCaptureError extends Schema.TaggedError<
+  ProductAnalyticsCaptureError,
+  { readonly brand: unique symbol }
+>()("ProductAnalyticsCaptureError", {
+  code: Schema.Literal(productAnalyticsCaptureFailedCode),
+  message: Schema.String,
+}) {}
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
 
 export default GroupSpec.make()

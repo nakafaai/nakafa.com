@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { IntlProvider } from "use-intl";
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
+import { Stage } from "@/components/state/stage";
 import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 
 /**
@@ -70,5 +71,9 @@ function AppLayout() {
 function AppError({ error }: ErrorComponentProps) {
   const { locale } = Route.useParams();
   const reloading = useRouteFailure(error, "app-route-error");
-  return reloading ? null : <LocalizedError locale={locale} />;
+  return reloading ? null : (
+    <Stage>
+      <LocalizedError locale={locale} />
+    </Stage>
+  );
 }

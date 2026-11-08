@@ -19,14 +19,14 @@ import {
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
 import { Array as Arr, Effect, flow, Result, Schema } from "effect";
 
-class PublicRuntimeBatchRequestError extends Schema.TaggedError<PublicRuntimeBatchRequestError>()(
-  "PublicRuntimeBatchRequestError",
-  {}
-) {}
-class PublicRuntimeBatchReadError extends Schema.TaggedError<PublicRuntimeBatchReadError>()(
-  "PublicRuntimeBatchReadError",
-  {}
-) {}
+class PublicRuntimeBatchRequestError extends Schema.TaggedError<
+  PublicRuntimeBatchRequestError,
+  { readonly brand: unique symbol }
+>()("PublicRuntimeBatchRequestError", {}) {}
+class PublicRuntimeBatchReadError extends Schema.TaggedError<
+  PublicRuntimeBatchReadError,
+  { readonly brand: unique symbol }
+>()("PublicRuntimeBatchReadError", {}) {}
 /** Strictly parses one bounded UTF-8 public batch request. */
 const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
   function* (source: string, byteLength: number) {
