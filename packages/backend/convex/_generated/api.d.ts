@@ -2809,13 +2809,17 @@ export declare const api: {
         "public",
         { appLocale: "en" | "id" | "de"; publicPath: string },
         {
+          delivery: {
+            artifactHash: string;
+            projectionHash: string;
+            sourcePath: string;
+          } | null;
           model: {
             activeAppLocales: Array<"en" | "id" | "de">;
             activeReleaseId: string;
             alternateJson: Array<string>;
             projectionJson: string | null;
           };
-          runtimeJson: string | null;
         }
       >;
       latest: FunctionReference<
@@ -2993,6 +2997,11 @@ export declare const api: {
         "public",
         { appLocale: "en" | "id" | "de"; publicPath: string },
         {
+          delivery: {
+            artifactHash: string;
+            projectionHash: string;
+            sourcePath: string;
+          } | null;
           materialKey: string | null;
           model: {
             activeAppLocales: Array<"en" | "id" | "de">;
@@ -3017,7 +3026,6 @@ export declare const api: {
             sourcePath: string | null;
             sourceRevision: string | null;
           };
-          runtimeJson: string | null;
         }
       >;
       navigation: FunctionReference<
@@ -4218,6 +4226,17 @@ export declare const api: {
     };
     runtime: {
       active: {
+        artifact: FunctionReference<
+          "query",
+          "public",
+          {
+            appLocale: "en" | "id" | "de";
+            artifactHash: string;
+            family: "article" | "material" | "page";
+            publicPath: string;
+          },
+          { artifactJson: string } | null
+        >;
         dates: FunctionReference<
           "query",
           "public",
@@ -4227,6 +4246,30 @@ export declare const api: {
             program: string | null;
             quran: string | null;
           }
+        >;
+        frame: FunctionReference<
+          "query",
+          "public",
+          {},
+          {
+            activeManifestHash: string;
+            activeReleaseId: string;
+            releaseJson: string;
+            rendererJson: string;
+          } | null
+        >;
+        head: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          {
+            activeReleaseId: string;
+            artifactHash: string;
+            family: "article" | "material" | "page";
+            projectionHash: string;
+            projectionJson: string;
+            sourcePath: string;
+          } | null
         >;
         read: FunctionReference<
           "query",
@@ -4273,6 +4316,26 @@ export declare const api: {
   contents: {
     mutations: {
       views: {
+        finishLesson: FunctionReference<
+          "mutation",
+          "public",
+          { contentId: string; locale: "en" | "id" | "de"; publicPath: string },
+          | {
+              _tag: "granted";
+              badges: Array<
+                | "explorer"
+                | "fighter"
+                | "mathematics"
+                | "physics"
+                | "chemistry"
+                | "biology"
+              >;
+              stars: number;
+            }
+          | { _tag: "duplicate" }
+          | { _tag: "capped" }
+          | { _tag: "unread" }
+        >;
         recordContentView: FunctionReference<
           "mutation",
           "public",
@@ -10367,6 +10430,66 @@ export declare const api: {
           webhookId: Id<"integrationWebhooks">;
         },
         { id: Id<"integrationWebhooks">; secret: string }
+      >;
+    };
+  };
+  island: {
+    mutations: {
+      open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
+      share: FunctionReference<
+        "mutation",
+        "public",
+        { visibility: "private" | "link" | "public" },
+        null
+      >;
+    };
+    queries: {
+      own: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          badges: Array<{
+            at: number;
+            badge:
+              | "explorer"
+              | "fighter"
+              | "mathematics"
+              | "physics"
+              | "chemistry"
+              | "biology";
+          }>;
+          layout: ArrayBuffer;
+          level: number;
+          lifetime: number;
+          stars: number;
+          timeZone: string;
+          version: number;
+          visibility: "private" | "link" | "public";
+        } | null
+      >;
+      visit: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          badges: Array<{
+            at: number;
+            badge:
+              | "explorer"
+              | "fighter"
+              | "mathematics"
+              | "physics"
+              | "chemistry"
+              | "biology";
+          }>;
+          layout: ArrayBuffer;
+          level: number;
+          mascot: string;
+          name: string;
+          timeZone: string;
+          username: string;
+        } | null
       >;
     };
   };

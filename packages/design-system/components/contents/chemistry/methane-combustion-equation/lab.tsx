@@ -2,13 +2,13 @@ import { Line } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
   VisualCardBody,
@@ -159,15 +159,12 @@ export function MethaneCombustionEquationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
             <CombustionCamera />
-            <ambientLight intensity={0.72} />
-            <hemisphereLight color={colors.text} groundColor={colors.bond} />
-            <directionalLight intensity={1.28} position={[4.2, 5.4, 4.8]} />
             <CombustionScene colors={colors} labels={labels} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -294,7 +291,12 @@ function Bond({
 }) {
   if (data.order !== 2) {
     return (
-      <Line color={color} lineWidth={BOND_LINE_WIDTH} points={[start, end]} />
+      <Line
+        color={color}
+        lineWidth={BOND_LINE_WIDTH}
+        points={[start, end]}
+        toneMapped={false}
+      />
     );
   }
 
@@ -307,6 +309,7 @@ function Bond({
           offsetY(start, DOUBLE_BOND_OFFSET),
           offsetY(end, DOUBLE_BOND_OFFSET),
         ]}
+        toneMapped={false}
       />
       <Line
         color={color}
@@ -315,6 +318,7 @@ function Bond({
           offsetY(start, -DOUBLE_BOND_OFFSET),
           offsetY(end, -DOUBLE_BOND_OFFSET),
         ]}
+        toneMapped={false}
       />
     </>
   );

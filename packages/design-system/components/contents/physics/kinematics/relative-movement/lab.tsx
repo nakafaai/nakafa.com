@@ -16,8 +16,8 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -45,7 +45,8 @@ const CAR_SCALE = 0.58;
 const MIN_LOOP_SECONDS = 6.5;
 const MAX_LOOP_SECONDS = 10.5;
 const MAX_RELATIVE_SPEED = 24;
-const SHADOW_CAMERA_RADIUS =
+/** How far the lab reaches from its middle, which its shadows cover. */
+const SCENE_REACH =
   RELATIVE_MOVEMENT_SCENE.roadLength / 2 + RELATIVE_MOVEMENT_SCENE.roadWidth;
 
 interface RelativeMovementLabProps {
@@ -108,27 +109,8 @@ export function RelativeMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always" reach={SCENE_REACH}>
           <Suspense>
-            <ambientLight intensity={0.7} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={PLOT_COLORS.slate}
-              intensity={0.6}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.25}
-              position={[3.4, 5.4, 4.2]}
-              shadow-bias={-0.0006}
-              shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
-              shadow-camera-left={-SHADOW_CAMERA_RADIUS}
-              shadow-camera-right={SHADOW_CAMERA_RADIUS}
-              shadow-camera-top={SHADOW_CAMERA_RADIUS}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <RelativeMovementCamera />
             <group>
               <CameraBounds exclude>
@@ -137,7 +119,7 @@ export function RelativeMovementLab({
               <AnimatedCarPair motion={motion} />
             </group>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

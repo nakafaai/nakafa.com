@@ -118,6 +118,7 @@ function Molecule({ molecule }: { molecule: MultipleProportionsMolecule }) {
             key={`${startId}-${endId}`}
             lineWidth={BOND_LINE_WIDTH}
             points={[start.value.position, end.value.position]}
+            toneMapped={false}
           />
         );
       })}
