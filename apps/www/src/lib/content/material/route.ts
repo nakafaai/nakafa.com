@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import {
   CorpusSourcePathSchema,
@@ -23,11 +22,8 @@ import {
   makeMaterialProjectionError,
 } from "@/lib/content/material/decode";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import {
-  type ContentReleasePin,
-  decodeContentReleasePin,
-} from "@/lib/content/published/release";
-import { httpLayer } from "@/lib/convex/http";
+import { decodeContentRelease } from "@/lib/content/published/release";
+import { queryContentStore } from "@/lib/content/store/query";
 
 const PublishedMaterialIdentitySchema = Schema.Struct({
   activeManifestHash: Sha256HashSchema,
@@ -60,18 +56,13 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
   function* (
     activeManifestHash: null | string,
     activeReleaseId: null | string,
-    expectedActiveReleaseId: ContentReleasePin | undefined,
     locale: Locale,
     publicPath: string
   ) {
-    const releaseId = yield* decodeContentReleasePin(
-      activeReleaseId,
-      expectedActiveReleaseId,
-      {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      }
-    );
+    const releaseId = yield* decodeContentRelease(activeReleaseId, {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    });
     if (activeManifestHash === null || releaseId === null) {
       return yield* makeMaterialProjectionError({
         appLocale: AppLocaleSchema.make(locale),
@@ -94,32 +85,19 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
     };
   }
 );
-/** Reads and validates one complete signed material route model. */
+/**
+ * Reads and validates one complete signed material route model. The content
+ * store keeps it for the release, so a language switch reads Convex once for
+ * each lesson and release in an isolate.
+ */
 export const readPublishedMaterialRoute = Effect.fn(
   "NakafaMaterial.readPublishedRoute"
-)(function* (
-  locale: Locale,
-  publicPath: string,
-  expectedActiveReleaseId?: ContentReleasePin
-) {
-  const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.material.publication, {
-      ...(expectedActiveReleaseId === undefined
-        ? {}
-        : {
-            expectedActiveReleaseId,
-          }),
-      appLocale,
-      publicPath,
-    })
-  ).pipe(Effect.provide(httpLayer()));
-  return yield* decodePublishedMaterialRoute(
-    result,
-    locale,
+)(function* (locale: Locale, publicPath: string) {
+  const result = yield* queryContentStore(contentRelease.material.publication, {
+    appLocale: AppLocaleSchema.make(locale),
     publicPath,
-    expectedActiveReleaseId
-  );
+  });
+  return yield* decodePublishedMaterialRoute(result, locale, publicPath);
 });
 
 /** Validates the route model delivered alone or with its signed public body. */
@@ -128,8 +106,7 @@ export const decodePublishedMaterialRoute = Effect.fn(
 )(function* (
   result: Ref.Returns<typeof contentRelease.material.publication>,
   locale: Locale,
-  publicPath: string,
-  expectedActiveReleaseId?: ContentReleasePin
+  publicPath: string
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const decodedActiveAppLocales = Schema.decodeUnknownEffect(
@@ -146,7 +123,6 @@ export const decodePublishedMaterialRoute = Effect.fn(
     decodeActiveIdentity(
       result.activeManifestHash,
       result.activeReleaseId,
-      expectedActiveReleaseId,
       locale,
       publicPath
     ),

@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
@@ -55,7 +55,7 @@ export function QuestionGraph({ title, description }: GraphProps) {
       data={[
         {
           points: expPoints,
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           smooth: false,
           cone: { position: "end", size: 0.5 },
@@ -84,7 +84,7 @@ export function QuestionGraph({ title, description }: GraphProps) {
         },
         {
           points: linePoints,
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           showPoints: false,
           smooth: false,
           cone: { position: "both", size: 0.5 },

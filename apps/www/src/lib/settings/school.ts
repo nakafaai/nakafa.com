@@ -307,7 +307,7 @@ export function opensSettingsPath(
   slug: TenantSlug,
   reach: readonly string[],
   pathname: string
-) {
+): boolean {
   const sections = Arr.flatMap(
     openSettingsGroups(slug, reach),
     (group) => group.sections

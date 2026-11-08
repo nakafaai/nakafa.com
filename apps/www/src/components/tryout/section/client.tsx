@@ -6,6 +6,7 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
+import { useNow } from "@/components/player/now";
 import { PlayerTimer } from "@/components/player/timer";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
@@ -24,13 +25,13 @@ import {
   TryoutFinishedPanes,
   TryoutFinishedPlace,
 } from "@/components/tryout/review/panes";
+import { useTryoutLeave } from "@/components/tryout/route/leave";
 import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
   getTryoutPublicPathHref,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
-import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
   TryoutStartProvider,
   useTryoutStartPhase,
@@ -175,13 +176,17 @@ function LiveTryoutSectionPage({
     state = terminalState;
   }
   // The finish holds the running state, so it reads the state before any early exit.
-  const finish = useTryoutFinish({
-    returnAddress: {
-      attemptId: binding.attemptId,
-      publicPath: page.set.publicPath,
-    },
-    state,
-  });
+  const returnAddress = {
+    attemptId: binding.attemptId,
+    publicPath: page.set.publicPath,
+  };
+  const leave = useTryoutLeave(returnAddress);
+  const finishing = useTryoutFinish({ leave, state });
+  const finish: TryoutFinish = {
+    pending: finishing.pending,
+    returnAddress,
+    run: finishing.run,
+  };
 
   if (QueryResult.isFailure(liveState)) {
     throw liveState.error;
@@ -191,7 +196,7 @@ function LiveTryoutSectionPage({
     <ResolvedTryoutSectionPage
       binding={binding}
       finish={finish}
-      state={finish.shown}
+      state={finishing.shown}
     >
       {children}
     </ResolvedTryoutSectionPage>
@@ -220,7 +225,7 @@ function ResolvedTryoutSectionPage({
   const opening = useTryoutStartPhase() === "opening";
   const attempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
-  const now = useTryoutClock(
+  const now = useNow(
     attempt?.status === "in-progress" ||
       runtime?.section.status === "in-progress"
   );

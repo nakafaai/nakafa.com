@@ -57,8 +57,12 @@ export function isApplicationRouteRoot(locale: PublicLocale, root: string) {
   return Option.isSome(readPublicSurface(locale, root));
 }
 
-/** The pages under `school` that the main host serves: the landing, the account's entry, the start page and the pricing. */
-const MAIN_HOST_SCHOOL_PAGES = ["", "enter", "new", "pricing"];
+/**
+ * The pages under `school` that a main host serves: the public landing, the
+ * account's School entry, the page where an account opens its own school, and
+ * the pricing. No school can take these addresses.
+ */
+export const MAIN_HOST_SCHOOL_PAGES = ["", "enter", "new", "pricing"];
 
 /**
  * Checks whether the route tree can receive one public path.

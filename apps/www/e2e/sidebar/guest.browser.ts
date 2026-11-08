@@ -75,22 +75,21 @@ for (const viewport of sidebarViewports) {
           );
           yield* Effect.promise(() =>
             expect(
-              footer.getByText("Continue learning", { exact: true })
+              footer.getByText(en.Auth["login-cta-title"], { exact: true })
             ).toBeVisible()
           );
           yield* Effect.promise(() =>
             expect(
-              footer.getByText(
-                "Log in to save progress in materials and tryouts.",
-                { exact: true }
-              )
+              footer.getByText(en.Auth["login-cta-description"], {
+                exact: true,
+              })
             ).toBeVisible()
           );
           yield* Effect.promise(() =>
             expect(
               footer.getByRole("link", {
                 exact: true,
-                name: "See plans",
+                name: en.Auth["pricing-cta"],
               })
             ).toBeVisible()
           );

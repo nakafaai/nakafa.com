@@ -35,9 +35,17 @@ finds the right data.
   organisations under a registrable domain of its own (see Data cells). One host
   serves every unit of the organisation.
 - A school host has no locale prefix. The language comes from the `NAKAFA_LOCALE`
-  cookie, then from Accept-Language, then from the default locale, as the locale
-  negotiation resolves it. Sign-in sets the cookie, and changing the language in the account
+  cookie, then from Accept-Language among id, en and de, then Indonesian, as the
+  locale negotiation resolves it (`negotiateLocale`). Sign-in sets the cookie, and changing the language in the account
   menu sets it again.
+- The product host keeps its own School pages under a locale like every other
+  page: the landing `/{locale}/school`, its pricing, the account's School entry
+  and the start page (`MAIN_HOST_SCHOOL_PAGES`). Written without a locale, such
+  as `nakafa.com/school/pricing`, they move with a 307 to the negotiated locale
+  as every bare address does, and every other `/school/...` path of the product
+  host belongs to the school tree, which only a school host reaches.
+  `apps/www/src/lib/routing/locale/` owns both rules (amended 8 Nov 2026: the
+  bare School pages answered 404).
 - One sign-in covers `nakafa.com` and every school host of the `us` cell,
   through the cross-subdomain cookies that ADR 0011 describes.
 - The shared sign-in trusts an origin only when it is the site's own origin on a

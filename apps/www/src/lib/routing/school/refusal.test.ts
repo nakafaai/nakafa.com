@@ -33,7 +33,7 @@ describe("school page refusal", () => {
       Effect.gen(function* () {
         serve({ refusal: answered(true) });
 
-        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("en"));
+        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("id"));
         expect(queriesOf()).toEqual([
           { auth: null, path: REFUSAL, slug: "harapan" },
         ]);
@@ -45,7 +45,7 @@ describe("school page refusal", () => {
       serve({ refusal: answered(true) });
 
       for (const _ of [1, 2, 3]) {
-        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("en"));
+        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("id"));
       }
 
       expect(queriesOf()).toEqual([
@@ -78,7 +78,7 @@ describe("school page refusal", () => {
           cookie: SESSION_COOKIE,
         });
 
-        expect(answer).toEqual(Option.some("en"));
+        expect(answer).toEqual(Option.some("id"));
         expect(count).toBe(0);
         expect(queriesOf()).toEqual([
           { auth: null, path: REFUSAL, slug: "harapan" },
@@ -103,7 +103,7 @@ describe("school page refusal", () => {
   );
 
   it.effect(
-    "answers the locale that the school page negotiates: the cookie, then Accept-Language, then the default",
+    "answers the locale that the school page negotiates: the cookie, then Accept-Language, then Indonesian",
     () =>
       Effect.gen(function* () {
         serve({ refusal: answered(true) });
@@ -118,7 +118,7 @@ describe("school page refusal", () => {
             headers: { "accept-language": "id-ID" },
           })
         ).toEqual(Option.some("id"));
-        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("en"));
+        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("id"));
       })
   );
 
