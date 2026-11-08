@@ -1,7 +1,7 @@
 import {
-  AbacusIcon,
-  Backpack01Icon,
+  Backpack02Icon,
   BoardMathIcon,
+  Book04Icon,
   BookOpenTextIcon,
   BookSearchIcon,
   Brain02Icon,
@@ -13,6 +13,7 @@ import {
   Factory01Icon,
   FileTextIcon,
   FireworksIcon,
+  GraduationScrollIcon,
   Hospital01Icon,
   Knowledge01Icon,
   LandmarkIcon,
@@ -20,21 +21,20 @@ import {
   LibraryBigIcon,
   LighthouseIcon,
   Mortarboard02Icon,
+  Notebook02Icon,
   PartyPopperIcon,
-  PencilRulerIcon,
   PuzzleIcon,
   QuillWriteIcon,
   Quiz04Icon,
   RankingIcon,
-  School01Icon,
-  SchoolBell01Icon,
-  SchoolBusIcon,
-  SchoolIcon,
-  SchoolTieIcon,
+  RulerIcon,
+  SchoolBell02Icon,
   SquareRootSquareIcon,
   StopWatchIcon,
+  StudentsIcon,
   SunMoonIcon,
   SunriseIcon,
+  TeacherIcon,
   TheaterIcon,
   TimeZoneIcon,
   UniversityIcon,
@@ -143,20 +143,21 @@ export function getTryoutSubjectIcons(
 }
 
 /**
- * The icons that the grade groups of one exam take apart, one each: a school,
- * a school with a flag, a school bell, a backpack, a school bus, a pencil and a
- * ruler, an abacus, a school tie, and a desk. Each is a different object at 40px.
+ * The icons that the grade groups of one exam take apart, one each: a desk, a
+ * backpack, a school bell, a group of students, a teacher at a board, a ruler,
+ * a notebook, a book, and a graduation scroll. Each is a different object at
+ * 40px, and none is the icon of a curriculum stage or class.
  */
 export const TRYOUT_GRADE_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> = [
-  SchoolIcon,
-  School01Icon,
-  SchoolBell01Icon,
-  Backpack01Icon,
-  SchoolBusIcon,
-  PencilRulerIcon,
-  AbacusIcon,
-  SchoolTieIcon,
   DeskIcon,
+  Backpack02Icon,
+  SchoolBell02Icon,
+  StudentsIcon,
+  TeacherIcon,
+  RulerIcon,
+  Notebook02Icon,
+  Book04Icon,
+  GraduationScrollIcon,
 ];
 
 /**

@@ -61,8 +61,10 @@ describe("tryouts/queries/catalog", () => {
     () =>
       Effect.gen(function* () {
         const world = yield* tryoutWorld();
-        const page = (ref: typeof catalog.getCountryPage, publicPath: string) =>
-          world.visitor.query(ref, { appLocale: "id", publicPath });
+        const page = <Ref extends typeof catalog.getCountryPage>(
+          ref: Ref,
+          publicPath: string
+        ) => world.visitor.query(ref, { appLocale: "id", publicPath });
         expect(
           yield* world.visitor.query(catalog.getHubPage, { appLocale: "id" })
         ).toEqual({

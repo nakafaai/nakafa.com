@@ -31,6 +31,7 @@ describe("contentRelease/assessment/facts", () => {
         }),
         expect.not.objectContaining({ setIdentity }),
         expect.not.objectContaining({ setIdentity }),
+        expect.not.objectContaining({ setIdentity }),
         expect.objectContaining({
           publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-en",
           setIdentity,

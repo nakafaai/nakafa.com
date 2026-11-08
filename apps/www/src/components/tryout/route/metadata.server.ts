@@ -78,7 +78,7 @@ const readTryoutBreadcrumbs = Effect.fn("www.tryout.route.readBreadcrumbs")(
     const crumbs: { name: string; path: string }[] = [];
     let lead = "";
     for (const [kind, { route }] of Arr.zip(ANCESTOR_KINDS, ancestors)) {
-      if (route === null) {
+      if (!route) {
         continue;
       }
       if (kind === "exam") {
