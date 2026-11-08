@@ -24,9 +24,7 @@ import {
   scoreOf,
   topicNameOf,
 } from "@/components/tenant/insight/rows";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/insight/practice";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The columns of the practice a class's students share. */
 const sharedColumns = tableColumns<ReturnType<typeof practiceRowsOf>[number]>();
@@ -190,7 +188,9 @@ function OwnTopicShare({ topic }: { topic: OwnTopic }) {
       onCheckedChange={(next) =>
         startSaving(async () => {
           setShared(next);
-          await saveSchool(() => (next ? share(names) : stop(names)), SOURCE);
+          await runSchoolWrite(
+            schoolCall(() => (next ? share(names) : stop(names)))
+          );
         })
       }
     />

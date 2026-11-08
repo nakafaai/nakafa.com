@@ -34,18 +34,12 @@ import {
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffectEvent,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { NinaAttach } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
+import { useEarlyTyping } from "@/components/shared/typed";
 
 /**
  * The file tray and the attach button load with their upload code, which
@@ -101,19 +95,7 @@ export function NinaInput({
   const attachPress = useEarlyPress<HTMLButtonElement>(() =>
     onAttachRequest?.()
   );
-  const field = useRef<HTMLTextAreaElement>(null);
-  // React hydrates the field without its value, so text typed before React took
-  // the page over stays in the field but not in the draft, and the next render
-  // would write the empty draft back. The draft takes it first.
-  const keepTyped = useEffectEvent(() => {
-    const typed = field.current?.value ?? "";
-    if (typed !== "" && text === "") {
-      setText(typed);
-    }
-  });
-  useLayoutEffect(() => {
-    keepTyped();
-  }, []);
+  const field = useEarlyTyping(text, setText);
   const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
   // While Nina answers, the button stops the reply and a press sends no text.
   const answering = status === "streaming";

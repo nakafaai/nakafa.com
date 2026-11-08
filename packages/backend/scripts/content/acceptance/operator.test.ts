@@ -1,63 +1,29 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
-  createAcceptanceOperator,
   operatorMode,
+  seedOperator,
 } from "@repo/backend/scripts/content/acceptance/operator";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
-import {
-  Array as Arr,
-  Effect,
-  FileSystem,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { Effect, FileSystem, Layer, Schema } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
-
-/** What the local backend prints for the app users of the runtime. */
-const USERS = '[{"_id":"app-1","authId":"user-1"}]';
-
-/** Answers each Convex command the way the local backend does. */
-function answerCommands(users = USERS) {
-  const specs = MutableList.make<CommandSpec>();
-  mocks.command.mockImplementation((spec: CommandSpec) =>
-    Effect.gen(function* () {
-      MutableList.append(specs, spec);
-      const fs = yield* FileSystem.FileSystem;
-      const output = Arr.contains(spec.args, "data")
-        ? users
-        : '{"_creationTime":1,"_id":"user-1"}';
-      yield* fs.writeFileString(spec.stdoutPath, output);
-    })
-  );
-  return specs;
-}
-
-const fixture = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const root = yield* fs.makeTempDirectoryScoped({
-    prefix: "acceptance-operator-test-",
-  });
-  mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
-  return { fs, root };
-});
+/** What the local backend answers: a new account `user-1` whose app user is `app-1`. */
+const ANSWERS = {
+  "adapter:create": { _creationTime: 1, _id: "user-1" },
+  "tenancy/seed:user": "app-1",
+};
 
 describe("synthetic acceptance operator", () => {
   afterEach(() => {
@@ -65,57 +31,68 @@ describe("synthetic acceptance operator", () => {
   });
 
   it.effect(
-    "grants a new learner operator access before it writes its cookie",
+    "grants a new learner operator access before it answers its cookie",
     () =>
       Effect.gen(function* () {
-        const { fs, root } = yield* fixture;
-        const specs = answerCommands();
+        const backend = localConvexDouble(ANSWERS);
 
-        yield* operatorMode.run(root, [`${root}/cookie.json`]);
+        const cookie = yield* seedOperator().pipe(
+          Effect.provide(Layer.merge(backend.layer, nodePlatform))
+        );
 
-        const grant = Option.getOrThrow(
-          Arr.findFirst(MutableList.toArray(specs), (spec) =>
-            Arr.contains(spec.args, "operators/staff:grant")
+        expect(backend.argsOf("tenancy/seed:user")).toEqual({
+          authId: "user-1",
+        });
+        expect(backend.argsOf("operators/staff:grant")).toEqual({
+          userId: "app-1",
+        });
+        expect(cookie.name).toBe("better-auth.session_token");
+      })
+  );
+
+  it.effect("grants nothing when the account has no app user", () =>
+    Effect.gen(function* () {
+      const backend = localConvexDouble(ANSWERS, ["tenancy/seed:user"]);
+
+      const error = yield* seedOperator().pipe(
+        Effect.provide(Layer.merge(backend.layer, nodePlatform)),
+        Effect.flip
+      );
+
+      expect(error._tag).toBe("AcceptanceRuntimeError");
+      expect(backend.paths()).not.toContain("operators/staff:grant");
+    })
+  );
+
+  it.effect("writes the operator's cookie to the file the mode names", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({
+        prefix: "acceptance-operator-test-",
+      });
+      mocks.layer.mockReturnValue(localConvexDouble(ANSWERS).layer);
+
+      yield* operatorMode.run(root, [`${root}/cookie.json`]);
+
+      const cookie = yield* fs
+        .readFileString(`${root}/cookie.json`)
+        .pipe(
+          Effect.flatMap(
+            Schema.decodeEffect(Schema.fromJsonString(SessionCookie))
           )
         );
-        expect(Arr.last(grant.args)).toEqual(Option.some('{"userId":"app-1"}'));
-        const cookie = yield* fs
-          .readFileString(`${root}/cookie.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
-        expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
-  );
-
-  it.effect("refuses without a prepared runtime", () =>
-    Effect.gen(function* () {
-      const { fs, root } = yield* fixture;
-      mocks.read.mockReturnValue(Effect.undefined);
-
-      const error = yield* createAcceptanceOperator(
-        root,
-        `${root}/cookie.json`
-      ).pipe(Effect.flip);
-
-      expect(error).toMatchObject({ _tag: "AcceptanceRuntimeError" });
-      expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
+      expect(cookie.name).toBe("better-auth.session_token");
     }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
-  it.effect("writes no cookie when the account has no app user", () =>
+  it.effect("refuses the operator mode without its cookie file", () =>
     Effect.gen(function* () {
-      const { fs, root } = yield* fixture;
-      answerCommands("[]");
-
-      const error = yield* createAcceptanceOperator(
-        root,
-        `${root}/cookie.json`
-      ).pipe(Effect.flip);
-
-      expect(error).toMatchObject({
+      expect(
+        yield* operatorMode.run("/root", []).pipe(Effect.flip)
+      ).toMatchObject({
         _tag: "AcceptanceRuntimeError",
-        message: "The new account has no app user.",
+        message: "Usage: acceptance operator <cookie-file>",
       });
-      expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

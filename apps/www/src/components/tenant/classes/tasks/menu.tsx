@@ -16,11 +16,6 @@ import { useTranslations } from "use-intl";
 import { usePanes } from "@/components/shared/panes";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
 import {
@@ -29,6 +24,7 @@ import {
   removeUpdate,
   restoreUpdate,
 } from "@/components/tenant/classes/tasks/optimistic";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * What a row of the task table can do: open the task in the pane, and for a teacher who keeps the class's tasks, edit
@@ -81,11 +77,10 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
               icon={ArrowTurnBackwardIcon}
               onClick={() => {
                 leave();
-                runForumCall(
-                  forumCall(() =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     restore.withOptimisticUpdate(restoreUpdate)(args)
-                  ),
-                  toastForumFailure
+                  )
                 );
               }}
             >
@@ -96,11 +91,10 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
               icon={Archive02Icon}
               onClick={() => {
                 leave();
-                runForumCall(
-                  forumCall(() =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     archive.withOptimisticUpdate(archiveUpdate)(args)
-                  ),
-                  toastForumFailure
+                  )
                 );
               }}
             >
@@ -111,9 +105,8 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
         icon={Delete02Icon}
         onConfirm={() => {
           leave();
-          runForumCall(
-            forumCall(() => remove.withOptimisticUpdate(removeUpdate)(args)),
-            toastForumFailure
+          runSchoolWrite(
+            schoolCall(() => remove.withOptimisticUpdate(removeUpdate)(args))
           );
         }}
         title={t("task-remove-title")}
