@@ -43,22 +43,23 @@ const LONG_FILE =
   "Rangkuman-Materi-Bab-1-Bilangan-Bulat-dan-Pecahan-Kelas-VII-Semester-Ganjil-2026-final-revisi-3.pdf";
 
 /**
- * The words a reader searches the twelve emoji of one message by. The chooser searches the reader's language and
- * English, and this teacher reads English, so each word is English and finds its emoji first.
+ * The words a reader searches the twelve emoji of one message by. The chooser finds an emoji by its words in
+ * Indonesian, English and German whichever the reader reads, so this English-reading teacher mixes all three, and each
+ * word finds its emoji first.
  */
 const REACTIONS = [
-  "thumbs up",
+  "jempol",
   "red heart",
-  "tears of joy",
-  "fire",
-  "glowing star",
-  "clapping",
-  "rocket",
-  "trophy",
-  "books",
-  "check mark",
+  "tertawa",
+  "feuer",
+  "bintang",
+  "tepuk",
+  "rakete",
+  "piala",
+  "buku",
+  "centang",
   "light bulb",
-  "party popper",
+  "pesta",
 ];
 
 /** What a screenshot's name leaves out of the text it shows. */
@@ -197,7 +198,7 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
     page.getByRole("button", { name: "Open panorama.png" })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
-  // Twelve reactions on one message, each found by its word in the chooser.
+  // Twelve reactions on one message, each found in the chooser by a word in one of the three languages.
   const target = messageRow(page, Str.slice(0, 40)(LONG_URL)).first();
   for (const word of REACTIONS) {
     await target.hover();
