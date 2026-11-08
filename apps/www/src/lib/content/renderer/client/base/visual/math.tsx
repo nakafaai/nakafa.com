@@ -13,6 +13,10 @@ import {
 import { type ReactNode, useId } from "react";
 
 import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/deferred";
+import {
+  ParameterProvider,
+  ParameterSliders,
+} from "@/lib/content/renderer/client/base/visual/sliders";
 
 interface Props {
   readonly description: ReactNode;
@@ -29,11 +33,13 @@ export function MathVisual({ description, title, ...scene }: Props) {
 
   return (
     <CoordinateProvider>
-      <VisualCard>
-        <VisualCardHeader
-          description={<span id={descriptionId}>{description}</span>}
-          title={<span id={titleId}>{title}</span>}
-        />
+      <ParameterProvider parameters={scene.scene.parameters ?? []}>
+        <VisualCard>
+          <VisualCardHeader
+            description={<span id={descriptionId}>{description}</span>}
+            title={<span id={titleId}>{title}</span>}
+          />
+          <ParameterSliders />
         <VisualCardBody
           aria-describedby={descriptionId}
           aria-labelledby={titleId}
@@ -43,8 +49,9 @@ export function MathVisual({ description, title, ...scene }: Props) {
         >
           <DeferredMathScene {...scene} />
         </VisualCardBody>
-        <CoordinateControls />
-      </VisualCard>
+          <CoordinateControls />
+        </VisualCard>
+      </ParameterProvider>
     </CoordinateProvider>
   );
 }
