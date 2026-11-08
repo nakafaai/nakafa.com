@@ -87,13 +87,18 @@ test("a visitor finds a frame between two sections that moves nothing and explai
         await expect(
           frame.getByRole("link", { name: "See Pro" })
         ).toHaveAttribute("href", "/en/pricing");
-        const shifts = Schema.decodeUnknownSync(Shifts)(
-          await page.evaluate(() => Reflect.get(window, "nakafaShifts"))
-        );
-        expect(Arr.reduce(shifts, 0, (sum, shift) => sum + shift)).toBeLessThan(
-          0.001
-        );
+      });
 
+      // The frame appeared under the screen, so nothing the reader saw moved.
+      const shifts = yield* Effect.promise(() =>
+        page.evaluate(() => Reflect.get(window, "nakafaShifts"))
+      ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Shifts)));
+      expect(Arr.reduce(shifts, 0, (sum, shift) => sum + shift)).toBeLessThan(
+        0.001
+      );
+
+      yield* Effect.promise(async () => {
+        const frame = firstFrame(page);
         await frame.getByRole("button", { name: "Why ads?" }).click();
         const note = page.getByRole("dialog", {
           name: "Why does Nakafa show ads?",
