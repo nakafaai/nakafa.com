@@ -6,7 +6,7 @@ import {
   TaskTargets,
   TaskText,
   TaskTitle,
-} from "@repo/backend/confect/classroom/tasks/task";
+} from "@repo/backend/confect/classroom/tasks/schema";
 import { Option, Schema, String as Str } from "effect";
 import {
   deadlineOf,

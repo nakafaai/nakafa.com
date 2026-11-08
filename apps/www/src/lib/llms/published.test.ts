@@ -15,17 +15,17 @@ import {
 } from "@/lib/llms/published";
 import { activateTestRelease } from "@/test/active";
 import {
-  testArticleArtifact,
-  testArticleProjection,
-  testArticleSourcePath,
-} from "@/test/content-article";
-import { testPageArtifact, testPageProjection } from "@/test/content-page";
-import {
   previewMetadata,
   previewProjection,
   previewSourcePath,
   previewWireArtifact,
-} from "@/test/content-preview";
+} from "@/test/manifest";
+import {
+  testArticleArtifact,
+  testArticleProjection,
+  testArticleSourcePath,
+} from "@/test/published/article";
+import { testPageArtifact, testPageProjection } from "@/test/published/page";
 import { resetTestRuntimeCache, testRuntimeCache } from "@/test/store";
 
 const readContentMock = vi.hoisted(() => vi.fn());

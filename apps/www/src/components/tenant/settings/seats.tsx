@@ -14,12 +14,10 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { formatCount, formatMinorAmount } from "@/lib/billing/plan";
 import type { SchoolBilling } from "@/lib/billing/school";
 import { isActiveLocale } from "@/lib/i18n/active";
-
-const SOURCE = "components/tenant/settings/seats";
 
 /** The Polar seat offers a school outside Indonesia buys: monthly or yearly seats that renew until it cancels them. */
 const PolarSeatOffer = Schema.Literals([
@@ -56,11 +54,12 @@ export function SchoolSeatsDialog({
     }
     setOpen(false);
     startPaying(() =>
-      saveSchool(
-        () => checkout({ locale, offer, slug }),
-        SOURCE,
-        ({ url }) => {
-          window.location.href = url;
+      runSchoolWrite(
+        schoolCall(() => checkout({ locale, offer, slug })),
+        {
+          onSaved: ({ url }) => {
+            window.location.href = url;
+          },
         }
       )
     );

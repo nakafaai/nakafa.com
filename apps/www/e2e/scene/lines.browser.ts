@@ -124,6 +124,7 @@ const pauseSceneAway = Effect.fn("NakafaE2E.pauseSceneAway")(function* (
   yield* expectCanvasToMove(canvas, resumed);
 });
 
+// A scene sizes its canvas and its drawing buffer to the width, so its notices are read at both widths.
 for (const width of [390, 1440]) {
   test.describe(`lesson scenes at ${width}px`, () => {
     test.use({ viewport: { height: 900, width } });
@@ -138,11 +139,14 @@ for (const width of [390, 1440]) {
         )
       );
     });
-
-    test("pause far from the viewport and resume in view", async ({ page }) => {
-      await Effect.runPromise(
-        withObservedPageErrors(page, pauseSceneAway(page))
-      );
-    });
   });
 }
+
+// Pausing follows whether the canvas is near the viewport, which no width changes, so a phone proves it.
+test.describe("lesson scenes on a phone", () => {
+  test.use({ viewport: { height: 900, width: 390 } });
+
+  test("pause far from the viewport and resume in view", async ({ page }) => {
+    await Effect.runPromise(withObservedPageErrors(page, pauseSceneAway(page)));
+  });
+});

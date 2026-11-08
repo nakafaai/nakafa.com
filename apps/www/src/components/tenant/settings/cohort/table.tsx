@@ -9,10 +9,11 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { CohortOverviewContext } from "@/components/tenant/settings/cohort/holds";
@@ -58,9 +59,9 @@ export function SchoolCohortTable({
   }
   if (Arr.isReadonlyArrayEmpty(cohorts.value)) {
     return (
-      <TableEmpty
-        act="writing"
+      <EmptyState
         description={t("cohorts-description")}
+        scene={<EmptyNina act="writing" />}
         title={t("cohorts-empty")}
       />
     );

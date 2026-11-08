@@ -26,13 +26,13 @@ import {
   PaneBody,
   PaneFact,
   PaneFacts,
+  PaneFill,
   PaneFooter,
   PaneHeader,
 } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
@@ -43,10 +43,8 @@ import {
   writeChange,
 } from "@/components/tenant/reports/change";
 import { checkAddress } from "@/components/tenant/reports/check";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-
-const SOURCE = "components/tenant/reports/detail";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The route of one class group's report cards, whose context holds the class group's ID. */
 const cohortRoute = getRouteApi("/school/$slug/reports/$cohortId");
@@ -91,7 +89,7 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
 const subjectColumns =
   tableColumns<Ref.Returns<typeof records.reports.get>["subjects"][number]>();
 
-/** The body of a started report: its state and dates, the note, and the subjects it copies. */
+/** The body of a started report: its state and dates, the note, and under them the subjects it copies, a table from edge to edge of the pane. */
 function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
   const t = useTranslations("SchoolReports");
   const { slug } = useTenant();
@@ -106,57 +104,72 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
   }
   const report = detail.value;
 
-  return (
-    <PaneBody>
-      <div className="flex flex-col gap-6">
-        <PaneFacts>
-          <PaneFact label={t("status")}>{t(`state-${report.state}`)}</PaneFact>
-          {report.approvedAt === null ? null : (
-            <PaneFact label={t("approved-at")}>
-              <SchoolDateTime at={report.approvedAt} />
-            </PaneFact>
-          )}
-          <PaneFact label={t("note-label")}>
-            {report.note === "" ? (
-              <span className="text-muted-foreground">{t("note-empty")}</span>
-            ) : (
-              <span className="whitespace-pre-wrap">{report.note}</span>
-            )}
-          </PaneFact>
-        </PaneFacts>
-        {Arr.isReadonlyArrayEmpty(report.subjects) ? (
+  if (Arr.isReadonlyArrayEmpty(report.subjects)) {
+    return (
+      <PaneBody>
+        <div className="flex flex-col gap-6">
+          <ReportFacts report={report} />
           <p className="text-muted-foreground text-sm">{t("subjects-empty")}</p>
+        </div>
+      </PaneBody>
+    );
+  }
+
+  return (
+    <PaneFill head={<ReportFacts report={report} />}>
+      <TableFiltersProvider>
+        <DataTable
+          columns={[
+            subjectColumns.text((subject) => subject.className, {
+              cell: (info) => <span dir="auto">{info.getValue()}</span>,
+              header: t("subject"),
+              id: "subject",
+            }),
+            subjectColumns.number((subject) => subject.value, {
+              header: t("grade"),
+              id: "grade",
+            }),
+            subjectColumns.text(
+              (subject) => subject.band ?? t(`kktp-${subject.kktp}`),
+              { header: t("result"), id: "result" }
+            ),
+            subjectColumns.menu((info) => (
+              <RowCopy value={info.row.original.className} />
+            )),
+          ]}
+          data={report.subjects}
+          plain
+          rowId={(subject) => subject.className}
+        />
+      </TableFiltersProvider>
+    </PaneFill>
+  );
+}
+
+/** The facts of a started report: its state, when it was approved, and the homeroom teacher's note. */
+function ReportFacts({
+  report,
+}: {
+  report: Ref.Returns<typeof records.reports.get>;
+}) {
+  const t = useTranslations("SchoolReports");
+
+  return (
+    <PaneFacts>
+      <PaneFact label={t("status")}>{t(`state-${report.state}`)}</PaneFact>
+      {report.approvedAt === null ? null : (
+        <PaneFact label={t("approved-at")}>
+          <SchoolDateTime at={report.approvedAt} />
+        </PaneFact>
+      )}
+      <PaneFact label={t("note-label")}>
+        {report.note === "" ? (
+          <span className="text-muted-foreground">{t("note-empty")}</span>
         ) : (
-          <TableFiltersProvider>
-            <TableFrame>
-              <DataTable
-                columns={[
-                  subjectColumns.text((subject) => subject.className, {
-                    cell: (info) => <span dir="auto">{info.getValue()}</span>,
-                    header: t("subject"),
-                    id: "subject",
-                  }),
-                  subjectColumns.number((subject) => subject.value, {
-                    header: t("grade"),
-                    id: "grade",
-                  }),
-                  subjectColumns.text(
-                    (subject) => subject.band ?? t(`kktp-${subject.kktp}`),
-                    { header: t("result"), id: "result" }
-                  ),
-                  subjectColumns.menu((info) => (
-                    <RowCopy value={info.row.original.className} />
-                  )),
-                ]}
-                data={report.subjects}
-                plain
-                rowId={(subject) => subject.className}
-              />
-            </TableFrame>
-          </TableFiltersProvider>
+          <span className="whitespace-pre-wrap">{report.note}</span>
         )}
-      </div>
-    </PaneBody>
+      </PaneFact>
+    </PaneFacts>
   );
 }
 
@@ -306,9 +319,10 @@ export function ReportNoteDialog({
   const submit = () =>
     startTransition(() => {
       setOpen(false);
-      return saveSchool(
-        () => write({ cohortId, note, personId: line.student.id, slug }),
-        SOURCE
+      return runSchoolWrite(
+        schoolCall(() =>
+          write({ cohortId, note, personId: line.student.id, slug })
+        )
       );
     });
 

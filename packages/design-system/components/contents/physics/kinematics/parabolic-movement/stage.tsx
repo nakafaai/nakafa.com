@@ -1,6 +1,6 @@
 import { PARABOLIC_SCENE } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { getColor } from "@repo/design-system/lib/color";
 import { Suspense } from "react";

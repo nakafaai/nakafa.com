@@ -2,7 +2,7 @@ import { Menu02Icon } from "@hugeicons/core-free-icons";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
-import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
+import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Option, Schema } from "effect";

@@ -42,10 +42,10 @@ const SCHOOL_NAMESPACES = [
 ] as const;
 
 /** The browser could not load the dictionary of the school's locale. */
-export class SchoolMessagesUnavailable extends Schema.TaggedError<SchoolMessagesUnavailable>()(
-  "SchoolMessagesUnavailable",
-  { cause: Schema.Unknown }
-) {}
+export class SchoolMessagesUnavailable extends Schema.TaggedError<
+  SchoolMessagesUnavailable,
+  { readonly brand: unique symbol }
+>()("SchoolMessagesUnavailable", { cause: Schema.Unknown }) {}
 
 /**
  * The locale that a school page renders in. A school address names no locale, so

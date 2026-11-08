@@ -165,7 +165,10 @@ layer(services)("signed acceptance lifecycle", (it) => {
   );
 
   for (const [operation, command] of [
-    ["build", ["nice", "-n", "10", "bunx", "turbo", "run", "build"]],
+    [
+      "build",
+      ["nice", "-n", "10", "bunx", "turbo", "run", "build", "--filter=www"],
+    ],
     [
       "start",
       [
@@ -184,10 +187,10 @@ layer(services)("signed acceptance lifecycle", (it) => {
       `runs normal ${operation} with the retained local selection and arguments`,
       () =>
         Effect.gen(function* () {
-          yield* runAcceptance("/test", operation, ["--filter=www"]);
+          yield* runAcceptance("/test", operation, ["--force"]);
           expect(mocks.command).toHaveBeenCalledWith(
             "/test",
-            [...command, "--filter=www"],
+            [...command, "--force"],
             expect.objectContaining({
               VITE_CONVEX_URL: runtime.query,
               AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
@@ -314,12 +317,22 @@ layer(services)("signed acceptance lifecycle", (it) => {
     "runs the build and start modes with the arguments after their words",
     () =>
       Effect.gen(function* () {
-        yield* buildMode.run("/test", ["--filter=www"]);
-        yield* startMode.run("/test", ["--filter=www"]);
+        yield* buildMode.run("/test", ["--force"]);
+        yield* startMode.run("/test", ["--host"]);
         expect(mocks.command).toHaveBeenNthCalledWith(
           1,
           "/test",
-          ["nice", "-n", "10", "bunx", "turbo", "run", "build", "--filter=www"],
+          [
+            "nice",
+            "-n",
+            "10",
+            "bunx",
+            "turbo",
+            "run",
+            "build",
+            "--filter=www",
+            "--force",
+          ],
           expect.anything()
         );
         expect(mocks.command).toHaveBeenNthCalledWith(
@@ -334,7 +347,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
             "--strictPort",
             "--port",
             "3000",
-            "--filter=www",
+            "--host",
           ],
           expect.objectContaining({ VITE_CONVEX_URL: runtime.query })
         );

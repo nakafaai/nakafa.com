@@ -3,11 +3,8 @@ import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
-import {
-  markedWith,
-  type TablePart,
-} from "@/components/exams/sitting/response";
-import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
+import { markedWith, type TablePart } from "@/components/player/response";
+import { ChoiceTable } from "@/components/player/table";
 
 /**
  * A true or false table as the student reads it and as a printed exam sets it: a row for each numbered
@@ -34,7 +31,7 @@ export function SittingTable({
   const t = useTranslations("Exams");
 
   return (
-    <TryoutChoiceTable
+    <ChoiceTable
       columns={Arr.map(table.columns, (column) => ({
         id: column.id,
         label: <SittingDocument document={column.label} size="line" />,

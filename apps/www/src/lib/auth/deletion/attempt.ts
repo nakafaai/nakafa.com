@@ -23,12 +23,12 @@ type AccountDeletionAttemptStorage = Pick<
   "getItem" | "removeItem" | "setItem"
 >;
 /** Raised when the browser cannot durably retain its deletion capability. */
-export class AccountDeletionAttemptStorageFailed extends Schema.TaggedError<AccountDeletionAttemptStorageFailed>()(
-  "AccountDeletionAttemptStorageFailed",
-  {
-    code: Schema.Literal(accountDeletionAttemptStorageFailedCode),
-  }
-) {}
+export class AccountDeletionAttemptStorageFailed extends Schema.TaggedError<
+  AccountDeletionAttemptStorageFailed,
+  { readonly brand: unique symbol }
+>()("AccountDeletionAttemptStorageFailed", {
+  code: Schema.Literal(accountDeletionAttemptStorageFailedCode),
+}) {}
 const accountDeletionAttemptStorageFailure = () =>
   new AccountDeletionAttemptStorageFailed({
     code: accountDeletionAttemptStorageFailedCode,

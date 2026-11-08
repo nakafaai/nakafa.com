@@ -39,10 +39,8 @@ import {
   movedTimes,
   wallClockOf,
 } from "@/components/tenant/exams/time";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/exams/move";
 
 /** One minute, in milliseconds. */
 const MINUTE_MS = 60_000;
@@ -88,7 +86,9 @@ export function RoomMenu({
         offered={room.canChange}
         onConfirm={() =>
           startTransition(() =>
-            saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
+            runSchoolWrite(
+              schoolCall(() => cancel({ sittingId: room.id, slug }))
+            )
           )
         }
         title={t("room-cancel-title")}
@@ -175,16 +175,16 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           reschedule({
             closesAt: times.value.closesAt,
             opensAt: times.value.opensAt,
             room: roomName,
             sittingId: room.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };

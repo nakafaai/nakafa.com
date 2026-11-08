@@ -4,7 +4,8 @@ import type records from "@repo/backend/confect/_generated/refs/records";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { Link } from "@/lib/routing/link";
 
@@ -24,8 +25,7 @@ export function GraduationElsewhere({ page }: { page: ElsewherePage }) {
   const { cohort, unit } = page;
 
   return (
-    <TableEmpty
-      act="pointing"
+    <EmptyState
       action={
         <Link
           className={buttonVariants({ variant: "outline" })}
@@ -46,6 +46,7 @@ export function GraduationElsewhere({ page }: { page: ElsewherePage }) {
               unit: unit.name,
             })
       }
+      scene={<EmptyNina act="pointing" />}
       title={t("elsewhere-title", { cohort: cohort.name })}
     />
   );

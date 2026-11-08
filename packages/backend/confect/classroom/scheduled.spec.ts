@@ -7,8 +7,8 @@ import {
   ScheduledPast,
 } from "@repo/backend/confect/classroom/errors";
 import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
-import { PostText } from "@repo/backend/confect/classroom/posts/post";
 import { ScheduledView } from "@repo/backend/confect/classroom/posts/scheduled";
+import { PostText } from "@repo/backend/confect/classroom/posts/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";

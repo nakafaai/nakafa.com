@@ -2,14 +2,14 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import type { NotFoundPage } from "@/lib/routing/not-found";
+import type { NotFoundPage } from "@/lib/routing/missing";
 import { answerRouted, type RouterHandler } from "@/lib/routing/routed.server";
 
 const reporting = vi.hoisted(() => ({
   report: vi.fn(() => Effect.void),
 }));
 
-vi.mock("@repo/analytics/server-reporting", () => ({
+vi.mock("@repo/analytics/reporting", () => ({
   reportUncaughtRequestError: reporting.report,
 }));
 

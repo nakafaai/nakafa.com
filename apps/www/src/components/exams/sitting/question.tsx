@@ -39,13 +39,6 @@ import {
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
 import { SittingReason } from "@/components/exams/sitting/reason";
-import {
-  choiceOf,
-  pairingOf,
-  reasonOf,
-  tableOf,
-  writtenOf,
-} from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
 import {
@@ -61,6 +54,13 @@ import {
   PlayerQuestionHeader,
   PlayerQuestionPrompt,
 } from "@/components/player/question";
+import {
+  choiceOf,
+  pairingOf,
+  reasonOf,
+  tableOf,
+  writtenOf,
+} from "@/components/player/response";
 
 /**
  * The paper of a sitting, out of sight until it can draw its first screen: the reader has loaded, and the prompts

@@ -73,6 +73,9 @@ export const VaultField = Schema.Struct({
  * `runtime`: the platform could not derive or seal a learner's or a school's key,
  * which says nothing about stored data. No reason carries key material or text.
  */
-export class VaultError extends Schema.TaggedError<VaultError>()("VaultError", {
+export class VaultError extends Schema.TaggedError<
+  VaultError,
+  { readonly brand: unique symbol }
+>()("VaultError", {
   reason: Schema.Literals(["configuration", "key", "cipher", "runtime"]),
 }) {}

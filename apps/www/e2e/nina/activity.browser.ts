@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAnimations } from "@/e2e/support/quiet";
 import { checkFailed, roots } from "@/e2e/support/transcript/math";
 import { cutText, startsUnder } from "@/e2e/support/transcript/measure";
 import { said } from "@/e2e/support/transcript/message";
@@ -247,9 +248,6 @@ test.describe("Nina evidence hierarchy on a phone", () => {
   );
 });
 
-/** Longer than a row's colour transition, so a hover has finished drawing. */
-const HOVER_SETTLE_MILLISECONDS = 400;
-
 test.describe("Nina activity rows under a pointer", () => {
   test.use({ viewport: { height: 2600, width: 1440 } });
 
@@ -264,7 +262,7 @@ test.describe("Nina activity rows under a pointer", () => {
           (element) => getComputedStyle(element).color
         );
         await row.hover();
-        await page.waitForTimeout(HOVER_SETTLE_MILLISECONDS);
+        await waitForAnimations(row);
         expect(
           await row.evaluate((element) => getComputedStyle(element).color)
         ).toBe(resting);

@@ -1,7 +1,7 @@
 import {
   getCalendarDayKey,
   parseCalendarDayKey,
-} from "@repo/design-system/lib/calendar/day-key";
+} from "@repo/design-system/lib/calendar/day";
 import { Array as Arr, Option } from "effect";
 
 /** The first day of a month as a day key, such as `2026-10-01`; `month` counts from 0. */

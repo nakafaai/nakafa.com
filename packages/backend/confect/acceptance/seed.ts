@@ -5,13 +5,19 @@ import { Config, Effect, Schema } from "effect";
  * A seed that the deployment refuses, because it is not the acceptance runtime. A seed writes
  * test rows, so no deployment outside acceptance may run one.
  */
-export class SeedRefused extends Schema.TaggedError<SeedRefused>()(
+export class SeedRefused extends Schema.TaggedError<
+  SeedRefused,
+  { readonly brand: unique symbol }
+>()(
   "SeedRefused",
   refusal("SEED_REFUSED", "Seeds run only in the acceptance runtime.")
 ) {}
 
 /** A seed that needs an active unit of its school, and the school has none. */
-export class SeedUnitMissing extends Schema.TaggedError<SeedUnitMissing>()(
+export class SeedUnitMissing extends Schema.TaggedError<
+  SeedUnitMissing,
+  { readonly brand: unique symbol }
+>()(
   "SeedUnitMissing",
   refusal("SEED_UNIT_MISSING", "The school has no active unit to seed into.")
 ) {}

@@ -52,10 +52,10 @@ const TryoutExamArtworkSchema = Schema.Struct({
   socialImageSrc: Schema.String,
 });
 
-export class InvalidTryoutExamArtworkIdentityError extends Schema.TaggedError<InvalidTryoutExamArtworkIdentityError>()(
-  "InvalidTryoutExamArtworkIdentityError",
-  { message: Schema.String }
-) {}
+export class InvalidTryoutExamArtworkIdentityError extends Schema.TaggedError<
+  InvalidTryoutExamArtworkIdentityError,
+  { readonly brand: unique symbol }
+>()("InvalidTryoutExamArtworkIdentityError", { message: Schema.String }) {}
 
 const decodeTryoutExamArtworkIdentity = Schema.decodeUnknownResult(
   TryoutExamArtworkIdentitySchema

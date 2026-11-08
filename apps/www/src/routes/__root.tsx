@@ -30,6 +30,7 @@ import {
   LocalizedNotFound,
   useRouteFailure,
 } from "@/components/state/localized";
+import { Stage } from "@/components/state/stage";
 import { AD_ACCOUNT_META } from "@/lib/ads/account";
 import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
@@ -43,7 +44,7 @@ import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
   NotFoundPageData,
   readNotFoundPageLocale,
-} from "@/lib/routing/not-found";
+} from "@/lib/routing/missing";
 import { paintFirst } from "@/lib/routing/paint";
 import { SCROLL_AREA_PROPERTIES_SCRIPT } from "@/lib/scroll/prepaint";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
@@ -247,5 +248,9 @@ function RootNotFound({ data }: NotFoundRouteProps) {
  */
 function RootError({ error }: ErrorComponentProps) {
   const reloading = useRouteFailure(error, "start-root-error");
-  return reloading ? null : <LocalizedError locale={DEFAULT_LOCALE} />;
+  return reloading ? null : (
+    <Stage>
+      <LocalizedError locale={DEFAULT_LOCALE} />
+    </Stage>
+  );
 }
