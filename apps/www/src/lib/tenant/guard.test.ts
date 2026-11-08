@@ -71,10 +71,13 @@ function run(beforeLoad: () => unknown) {
   return Result.try({ catch: (thrown) => thrown, try: beforeLoad });
 }
 
+/** An exam address is digits; anything else names no exam. */
+const EXAM_DIGITS = /^\d+$/u;
+
 /** Reads one exam address the way a route's `reads` does: digits name an exam, anything else none. */
 const readsExam = (params: { readonly exam: string }) =>
   Option.all({
-    examId: /^\d+$/u.test(params.exam)
+    examId: EXAM_DIGITS.test(params.exam)
       ? Option.some(Number(params.exam))
       : Option.none(),
   });
