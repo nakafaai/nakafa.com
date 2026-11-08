@@ -13,6 +13,7 @@ import {
   openSchoolPricing,
   schoolSections,
 } from "@/components/marketing/school/later";
+import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
 import { SchoolPlans } from "@/components/marketing/school/pricing/plans";
 import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";
@@ -161,7 +162,8 @@ function SchoolPricingPlans() {
 /**
  * The School pricing page: the plans, the full comparison straight under them,
  * the account calculator and the add-ons, the questions, and the closing
- * question. Everything after the plans loads its code as it nears.
+ * question. Everything after the plans loads its code as it nears, and the toys
+ * come on a wide screen once the page has its reader.
  */
 function SchoolPricing() {
   const { faqs } = Route.useLoaderData();
@@ -171,6 +173,7 @@ function SchoolPricing() {
       <PageField />
       <div className="relative grid grid-cols-1">
         <SchoolPricingPlans />
+        <DeferredSchoolToys page="pricing" />
         <LaterSection code={schoolSections.compare}>
           {(SchoolCompare) => <SchoolCompare />}
         </LaterSection>

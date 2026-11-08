@@ -4,7 +4,6 @@ import {
   DEMO_ASKER,
   DEMO_CHILD,
   DEMO_COHORTS,
-  DEMO_HANDERS,
   DEMO_REPLIERS,
   DEMO_REPORTED,
   DEMO_STRUGGLING,
@@ -18,7 +17,6 @@ const PEOPLE = Arr.map(
     DEMO_TEACHER.mascot,
     DEMO_ASKER.mascot,
     ...DEMO_REPLIERS,
-    ...Arr.map(DEMO_HANDERS, (person) => person.mascot),
     DEMO_REPORTED.mascot,
     ...Arr.map(DEMO_STRUGGLING, (person) => person.mascot),
     ...Arr.flatten(DEMO_COHORTS),
@@ -29,13 +27,13 @@ const PEOPLE = Arr.map(
 
 describe("the people of the School landing", () => {
   it("give every person and every face on the page an animal no one else has", () => {
-    expect(PEOPLE).toHaveLength(21);
-    expect(Arr.dedupe(PEOPLE)).toHaveLength(21);
+    expect(PEOPLE).toHaveLength(18);
+    expect(Arr.dedupe(PEOPLE)).toHaveLength(18);
   });
 
   it("give the toys sixteen more animals that none of the people has", () => {
     const toys = Arr.map(SCHOOL_TOY_HERD, (mascot) => mascot.animal);
     expect(toys).toHaveLength(16);
-    expect(Arr.dedupe([...PEOPLE, ...toys])).toHaveLength(37);
+    expect(Arr.dedupe([...PEOPLE, ...toys])).toHaveLength(34);
   });
 });

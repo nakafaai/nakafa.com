@@ -1,82 +1,155 @@
-import { Task01Icon } from "@hugeicons/core-free-icons";
-import { Badge } from "@repo/design-system/components/ui/badge";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Book02Icon,
+  Bookmark01Icon,
+  Flag01Icon,
+  Folder01Icon,
+  TaskEdit01Icon,
+} from "@hugeicons/core-free-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { PersonAvatar } from "@repo/design-system/components/ui/person";
-import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
-import { DEMO_HANDERS } from "@/components/marketing/school/features/cast";
-import { stepVariants } from "@/components/marketing/school/features/step";
+import { Array as Arr, DateTime } from "effect";
+import { useFormatter, useTranslations } from "use-intl";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
+import { FeatureProduct, FeatureRow } from "@/components/marketing/shared/feature";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
+import { namedOptions } from "@/components/shared/table/filter";
+import { TablePageBody } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
+import { TableTitle } from "@/components/shared/table/title";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 
-/** One hand-in of the task: the student, the state of their work, and its grade once it has one. */
-function HandIn({
-  children,
-  grade = "",
-  person,
-  step,
-}: {
-  children: ReactNode;
-  grade?: string;
-  person: (typeof DEMO_HANDERS)[number];
-  step: 1 | 2 | 3;
-}) {
-  return (
-    <li
-      className={stepVariants({ className: "flex items-center gap-3", step })}
-    >
-      <PersonAvatar mascot={person.mascot} />
-      <span className="min-w-0 flex-1 truncate text-sm">{person.name}</span>
-      {children}
-      <span className="w-8 text-right text-sm font-medium tabular-nums">
-        {grade}
-      </span>
-    </li>
-  );
+/** The clock the demo's deadlines are printed by, so the page reads the same wherever it is opened. */
+const DEMO_ZONE = "Asia/Jakarta";
+
+/** The class's tasks, the soonest deadline first, as its table lists them: the key of each title and category, and how many of the class's 30 handed it in. */
+const DEMO_TASKS = [
+  {
+    category: "worksheet",
+    deadline: DateTime.toEpochMillis(
+      DateTime.makeUnsafe("2026-11-13T05:00:00Z")
+    ),
+    handedIn: 24,
+    title: "title",
+  },
+  {
+    category: "lab",
+    deadline: DateTime.toEpochMillis(
+      DateTime.makeUnsafe("2026-11-17T02:00:00Z")
+    ),
+    handedIn: 18,
+    title: "lab",
+  },
+  {
+    category: "quiz",
+    deadline: DateTime.toEpochMillis(
+      DateTime.makeUnsafe("2026-11-20T01:00:00Z")
+    ),
+    handedIn: 9,
+    title: "quiz",
+  },
+  {
+    category: "essay",
+    deadline: DateTime.toEpochMillis(
+      DateTime.makeUnsafe("2026-11-27T10:00:00Z")
+    ),
+    handedIn: 2,
+    title: "essay",
+  },
+] as const;
+
+/** One task of the demo's table. */
+type DemoTask = (typeof DEMO_TASKS)[number];
+
+/** The columns of the demo's task table. */
+const taskColumns = tableColumns<DemoTask>();
+
+/** The icons of the categories in the category filter, as the class's own table gives them. */
+const CATEGORY_ICONS = [
+  Bookmark01Icon,
+  Folder01Icon,
+  Flag01Icon,
+  Book02Icon,
+] as const;
+
+/**
+ * The columns of the class's task table, as a teacher reads it: each task's title, its category, its
+ * deadline, how many handed it in, and the row's menu. Every head filters its column, as it does in
+ * the School.
+ */
+function useDemoColumns() {
+  const t = useTranslations("SchoolSite");
+  const format = useFormatter();
+
+  return [
+    taskColumns.text((task) => t(`demo-task-${task.title}`), {
+      cell: (info) => (
+        <TableTitle icon={TaskEdit01Icon}>{info.getValue()}</TableTitle>
+      ),
+      header: t("demo-head-title"),
+      id: "title",
+    }),
+    taskColumns.values((task) => t(`demo-category-${task.category}`), {
+      cell: (info) => (
+        <span className="text-muted-foreground">{info.getValue()}</span>
+      ),
+      header: t("demo-head-category"),
+      id: "category",
+      options: namedOptions(
+        Arr.map(DEMO_TASKS, (task) => t(`demo-category-${task.category}`)),
+        CATEGORY_ICONS
+      ),
+    }),
+    taskColumns.days((task) => task.deadline, {
+      cell: (info) => (
+        <span className="text-muted-foreground tabular-nums">
+          {format.dateTime(
+            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
+            { dateStyle: "medium", timeStyle: "short", timeZone: DEMO_ZONE }
+          )}
+        </span>
+      ),
+      header: t("demo-head-deadline"),
+      id: "deadline",
+      timeZone: () => DEMO_ZONE,
+    }),
+    taskColumns.number((task) => task.handedIn, {
+      cell: (info) => (
+        <span className="text-muted-foreground tabular-nums">
+          {t("demo-task-handed", { done: info.getValue(), total: 30 })}
+        </span>
+      ),
+      header: t("demo-head-status"),
+      id: "handedIn",
+    }),
+    taskColumns.menu((info) => (
+      <RowCopy value={t(`demo-task-${info.row.original.title}`)} />
+    )),
+  ];
 }
 
 /**
- * The tasks row: one task as its class sees it, its due time and how many
- * handed it in, and three hand-ins under it, one graded, one waiting and one
- * late.
+ * The tasks part: a class's tasks in the School's own task table, the soonest deadline first, with
+ * how many handed each one in. Its heads filter the rows, and each row's menu copies its title.
  */
 export function SchoolTasks() {
-  const t = useTranslations("SchoolSite");
-  const [graded, waiting, late] = DEMO_HANDERS;
+  const columns = useDemoColumns();
 
   return (
     <FeatureRow id="tasks" layout="stack">
       <SchoolFeatureText feature="tasks">
         <Nina act="writing" label="" size={88} whole />
       </SchoolFeatureText>
-      <FeatureCard>
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-          <div className="grid min-w-0 gap-1">
-            <p className="flex min-w-0 items-center gap-2 font-medium">
-              <HugeIcons className="size-4" icon={Task01Icon} />
-              <span className="truncate">{t("demo-task-title")}</span>
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {t("demo-task-due")}
-            </p>
-          </div>
-          <Badge className="tabular-nums" variant="secondary">
-            {t("demo-task-handed", { done: 24, total: 30 })}
-          </Badge>
-        </div>
-        <ul className="grid gap-4">
-          <HandIn grade="92" person={graded} step={1}>
-            <Badge variant="success">{t("demo-task-graded")}</Badge>
-          </HandIn>
-          <HandIn person={waiting} step={2}>
-            <Badge variant="muted-outline">{t("demo-task-in")}</Badge>
-          </HandIn>
-          <HandIn person={late} step={3}>
-            <Badge variant="destructive-subtle">{t("demo-task-late")}</Badge>
-          </HandIn>
-        </ul>
-      </FeatureCard>
+      <FeatureProduct>
+        <TableFiltersProvider>
+          <TablePageBody>
+            <DataTable
+              columns={columns}
+              data={DEMO_TASKS}
+              rowId={(task) => task.title}
+            />
+          </TablePageBody>
+        </TableFiltersProvider>
+      </FeatureProduct>
     </FeatureRow>
   );
 }

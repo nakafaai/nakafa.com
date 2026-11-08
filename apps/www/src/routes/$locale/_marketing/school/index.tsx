@@ -137,7 +137,7 @@ function SchoolLanding() {
       <PageField />
       <div className="relative grid grid-cols-1">
         <SchoolHero />
-        <DeferredSchoolToys />
+        <DeferredSchoolToys page="landing" />
         <LaterSection code={schoolSections.forum}>
           {(SchoolForum) => <SchoolForum />}
         </LaterSection>

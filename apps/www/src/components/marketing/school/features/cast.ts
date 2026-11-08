@@ -4,7 +4,7 @@ import { Array as Arr } from "effect";
 /** The seed that names the animals of the School landing. */
 const SCHOOL_SEED = "nakafa-school";
 
-/** How many people the landing's demos show, each with an animal of their own. */
+/** How many places of the cast the landing's demos take, each person at a place of their own. */
 const SCHOOL_PEOPLE = 21;
 
 /** How many animals the landing's toys take: six around the hero's title, and two where each of five parts begins. */
@@ -32,13 +32,6 @@ export const DEMO_ASKER = person("Dimas", 1);
 
 /** The animals of the forum thread's replies, shown together. */
 export const DEMO_REPLIERS = Arr.take(Arr.drop(SCHOOL_CAST, 2), 3);
-
-/** The students whose hand-ins the task shows. */
-export const DEMO_HANDERS = [
-  person("Nadia", 5),
-  person("Raka", 6),
-  person("Fajar", 7),
-] as const;
 
 /** The student whose report card the school signs. */
 export const DEMO_REPORTED = person("Sari", 8);

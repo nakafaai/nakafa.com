@@ -5,21 +5,29 @@ import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Suspense } from "react";
 
-/** The toys of the School landing, whose code stays out of the page's first JavaScript. */
-const SchoolToys = lazy(() =>
-  import("@/components/marketing/school/toys").then((module) => ({
-    default: module.SchoolToys,
-  }))
-);
+/** The toys of each School page, whose code stays out of the page's first JavaScript. */
+const PAGE_TOYS = {
+  landing: lazy(() =>
+    import("@/components/marketing/school/toys").then((module) => ({
+      default: module.SchoolToys,
+    }))
+  ),
+  pricing: lazy(() =>
+    import("@/components/marketing/school/toys").then((module) => ({
+      default: module.SchoolPricingToys,
+    }))
+  ),
+};
 
 /**
- * The toys of the School landing, mounted once the page has its reader on a page
+ * The toys of a School page, mounted once the page has its reader on a page
  * wide enough to place them, as the pricing page mounts its own (ADR 0039), so
  * their animations never compete with the page's own loading. The toys wait for
  * their code inside their own boundary, and a layer that fails to load leaves
  * the page as it is.
  */
-export function DeferredSchoolToys() {
+export function DeferredSchoolToys({ page }: { page: keyof typeof PAGE_TOYS }) {
+  const Toys = PAGE_TOYS[page];
   const wide = useMediaQuery(TAILWIND_MEDIA_QUERIES.lgAndUp);
 
   if (!wide) {
@@ -31,7 +39,7 @@ export function DeferredSchoolToys() {
       <ErrorBoundary fallback={null}>
         <Suspense fallback={null}>
           <Suspense fallback={null}>
-            <SchoolToys />
+            <Toys />
           </Suspense>
         </Suspense>
       </ErrorBoundary>

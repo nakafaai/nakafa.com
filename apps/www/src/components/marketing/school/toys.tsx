@@ -1,3 +1,4 @@
+import { cast } from "@repo/mascot/seed";
 import { Array as Arr } from "effect";
 import { ToyAnimal } from "@/components/marketing/about/toys/animal";
 import { gap } from "@/components/marketing/about/toys/gap";
@@ -42,6 +43,36 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   ...gap("faq", 0.5, SCHOOL_TOY_HERD, [12, 13], ["bubble", "magnifier"]),
   ...gap("closing", 0.5, SCHOOL_TOY_HERD, [14, 15], ["medal", "flag"]),
 ];
+
+/** The animals of the School pricing page's toys, from a cast of its own, since no person stands on that page. */
+const PRICING_HERD = cast("nakafa-school-pricing", 12);
+
+/**
+ * The toys of the School pricing page: an animal in each top corner above the
+ * plans' title, and a small herd with its things where each later part begins.
+ */
+const PRICING_PLACEMENTS: readonly ToyPlacement[] = [
+  {
+    key: "plans-start",
+    picture: <ToyAnimal herd={PRICING_HERD} index={0} />,
+    place: within("plans", { dx: -28, dy: 96, minWidth: 1024, x: 0.08, y: 0 }),
+  },
+  {
+    key: "plans-end",
+    picture: <ToyAnimal herd={PRICING_HERD} index={1} />,
+    place: within("plans", { dx: -28, dy: 132, minWidth: 1024, x: 0.92, y: 0 }),
+  },
+  ...gap("compare", 0.5, PRICING_HERD, [2, 3], ["calculator", "clip"]),
+  ...gap("accounts", 0.5, PRICING_HERD, [4, 5], ["backpack", "pencil"]),
+  ...gap("addons", 0.5, PRICING_HERD, [6, 7], ["globe", "bulb"]),
+  ...gap("faq", 0.5, PRICING_HERD, [8, 9], ["bubble", "note"]),
+  ...gap("closing", 0.5, PRICING_HERD, [10, 11], ["medal", "flag"]),
+];
+
+/** The layer of toys over the School pricing page. */
+export function SchoolPricingToys() {
+  return <ToyOverlay placements={PRICING_PLACEMENTS} />;
+}
 
 /**
  * The layer of toys over the School landing: its animals and things, and every

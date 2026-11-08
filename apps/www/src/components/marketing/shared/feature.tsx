@@ -15,9 +15,9 @@ const featureVariants = cva("group/feature mx-auto grid w-full gap-12", {
     layout: {
       end: "max-w-7xl items-center lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 lg:*:first:order-last",
       stack: "max-w-3xl",
-      wide: "max-w-6xl",
       start:
         "max-w-7xl items-center lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16",
+      wide: "max-w-6xl",
     },
   },
 });
