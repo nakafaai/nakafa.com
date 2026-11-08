@@ -17,11 +17,14 @@ import {
 } from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
+import { QuranSurahFind } from "@/components/shared/quran/find";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranSurahName } from "@/components/shared/quran/name";
+import { QuranSurahsContext } from "@/components/shared/quran/surahs";
 import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
@@ -110,21 +113,28 @@ function QuranSurahPage() {
     <LayoutMaterial>
       <SidebarRightProvider>
         <LayoutMaterialContent>
-          <QuranSurahHeader
-            actions={
-              <OpenContent
-                copySourceUrl={page.copySourceUrl}
-                slug={`/${page.locale}/quran/${page.surah}`}
-              >
-                <AiMenuItem contextTitle={page.title} />
-              </OpenContent>
-            }
-            meaning={page.meaning.text}
-            meaningLanguage={page.meaning.appLocale}
-            name={<QuranSurahName arabic={page.arabic} title={page.title} />}
-            quranLabel={labels.quran}
-            title={page.title}
-          />
+          <TableFiltersProvider key={page.surahNumber}>
+            <QuranSurahsContext value={page.surahs}>
+              <QuranSurahHeader
+                actions={
+                  <OpenContent
+                    copySourceUrl={page.copySourceUrl}
+                    slug={`/${page.locale}/quran/${page.surah}`}
+                  >
+                    <AiMenuItem contextTitle={page.title} />
+                  </OpenContent>
+                }
+                meaning={page.meaning.text}
+                meaningLanguage={page.meaning.appLocale}
+                name={
+                  <QuranSurahName arabic={page.arabic} title={page.title} />
+                }
+                quranLabel={labels.quran}
+                search={<QuranSurahFind />}
+                title={page.title}
+              />
+            </QuranSurahsContext>
+          </TableFiltersProvider>
           <LayoutContent className="pt-6">
             <QuranVersesProvider
               interpretationLabel={page.interpretationLabel}
