@@ -14,6 +14,7 @@ import {
   type TryoutFinish,
   useTryoutFinish,
 } from "@/components/tryout/player/finish";
+import { useTryoutLeave } from "@/components/tryout/route/leave";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptLock,
@@ -153,13 +154,17 @@ function LiveTryoutSetPage({
     state = terminalState;
   }
   // The finish holds the running state, so it reads the state before any early exit.
-  const finish = useTryoutFinish({
-    returnAddress: {
-      attemptId: binding.attemptId,
-      publicPath: page.set.publicPath,
-    },
-    state,
-  });
+  const returnAddress = {
+    attemptId: binding.attemptId,
+    publicPath: page.set.publicPath,
+  };
+  const leave = useTryoutLeave(returnAddress);
+  const finishing = useTryoutFinish({ leave, state });
+  const finish: TryoutFinish = {
+    pending: finishing.pending,
+    returnAddress,
+    run: finishing.run,
+  };
 
   if (QueryResult.isFailure(liveState)) {
     throw liveState.error;
@@ -169,7 +174,7 @@ function LiveTryoutSetPage({
     <ResolvedTryoutSetPage
       binding={binding}
       finish={finish}
-      state={finish.shown}
+      state={finishing.shown}
     >
       {children}
     </ResolvedTryoutSetPage>
