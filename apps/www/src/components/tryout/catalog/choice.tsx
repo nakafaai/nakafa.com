@@ -16,11 +16,17 @@ import { TryoutPageLink } from "@/components/tryout/route/link";
  * breakpoint, and each choice links to the page it opens.
  */
 export function TryoutCatalogChoice({
+  current,
   entries,
   label,
   menuLabel,
-  value,
 }: {
+  /** The choice of the page on screen, none when no choice is the page's. */
+  current: Option.Option<{
+    readonly icon: IconSvgElement;
+    readonly title: string;
+    readonly value: string;
+  }>;
   /** Each choice: its icon, its title, its value, and the page it opens. */
   entries: readonly {
     readonly icon: IconSvgElement;
@@ -32,17 +38,14 @@ export function TryoutCatalogChoice({
   label: string;
   /** The one-word label of the menu. */
   menuLabel: string;
-  value: string;
 }) {
-  const current = Arr.findFirst(entries, (entry) => entry.value === value);
-
   return (
     <Select
       items={Arr.map(entries, (entry) => ({
         label: entry.title,
         value: entry.value,
       }))}
-      value={value}
+      value={Option.getOrNull(Option.map(current, (entry) => entry.value))}
     >
       <SelectTrigger
         aria-label={label}

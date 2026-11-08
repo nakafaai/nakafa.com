@@ -203,18 +203,19 @@ export function TryoutExamSelector({
       Tuple.make(getTryoutExamIcons(option.examKey), option.examKey)
     )
   );
+  const entries = Arr.zipWith(options, looks, (option, look) => ({
+    icon: look.icon,
+    publicPath: option.entryPath,
+    title: option.title,
+    value: option.value,
+  }));
 
   return (
     <TryoutCatalogChoice
-      entries={Arr.zipWith(options, looks, (option, look) => ({
-        icon: look.icon,
-        publicPath: option.entryPath,
-        title: option.title,
-        value: option.value,
-      }))}
+      current={Arr.findFirst(entries, ({ value }) => value === currentValue)}
+      entries={entries}
       label={tTryouts("exam-selector-label")}
       menuLabel={common("menu-exam")}
-      value={currentValue}
     />
   );
 }
@@ -247,18 +248,19 @@ export function TryoutGroupSelector({
       Tuple.make(getTryoutGroupIcons(axis), option.groupKey)
     )
   );
+  const entries = Arr.zipWith(options, looks, (option, look) => ({
+    icon: look.icon,
+    publicPath: option.value,
+    title: option.title,
+    value: option.value,
+  }));
 
   return (
     <TryoutCatalogChoice
-      entries={Arr.zipWith(options, looks, (option, look) => ({
-        icon: look.icon,
-        publicPath: option.value,
-        title: option.title,
-        value: option.value,
-      }))}
+      current={Arr.findFirst(entries, ({ value }) => value === currentValue)}
+      entries={entries}
       label={label}
       menuLabel={label}
-      value={currentValue}
     />
   );
 }
