@@ -377,7 +377,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   await context.close();
 });
 
-test("a student added with a card joins a cohort and takes a parent at once, and an empty picker says where students come from", async ({
+test("a student added with a card joins a cohort and takes a parent at once, and an empty picker says in one sentence that no student is available", async ({
   browser,
   baseURL,
 }) => {
@@ -402,11 +402,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   await place.click();
   const placing = page.getByRole("dialog");
   await placing.getByRole("combobox", { name: "Student" }).click();
-  await expect(
-    page.getByText(
-      "No student is free this period. Add one in Student accounts, or move one from their cohort."
-    )
-  ).toBeVisible();
+  await expect(page.getByText("No student is available.")).toBeVisible();
   await page.goto(address("/settings/students"));
 
   const add = page
