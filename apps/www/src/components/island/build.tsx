@@ -2,6 +2,7 @@ import {
   ArrowUpDoubleIcon,
   Delete02Icon,
   Move01Icon,
+  Plant02Icon,
   Redo02Icon,
   RotateRight01Icon,
   Undo02Icon,
@@ -14,8 +15,10 @@ import { VisualCardToolbar } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useEditIsland } from "@/components/island/edit";
+import { useHarvestIsland } from "@/components/island/farm";
 import { useToolStore, useTools } from "@/components/island/tools";
 import { useIsland } from "@/lib/island/context";
+import { ripeYield } from "@/lib/island/farm";
 
 /** Starts and ends building: the island page's one main action. */
 export function BuildToggle() {
@@ -69,6 +72,7 @@ function Picked() {
   const selected = useTools((state) => state.selected);
   const tools = useToolStore();
   const edit = useEditIsland();
+  const harvest = useHarvestIsland();
   const picked = Option.flatMap(selected, (at) =>
     Arr.findFirst(
       layout,
@@ -119,6 +123,14 @@ function Picked() {
         <HugeIcons icon={ArrowUpDoubleIcon} />
       </Button>
       <Button
+        disabled={Option.isNone(ripeYield(placement))}
+        onClick={() => harvest(placement)}
+        size="icon"
+        tooltip={t("harvest")}
+      >
+        <HugeIcons icon={Plant02Icon} />
+      </Button>
+      <Button
         onClick={() => {
           if (edit([{ _tag: "remove", at }], "edit")) {
             tools.getState().select(Option.none());
@@ -167,7 +179,11 @@ function Inventory() {
             <span className="tabular-nums">
               {locked
                 ? t("locked", { level: first.level })
-                : t("price", { stars: first.price })}
+                : Option.match(Option.fromNullishOr(first.materials), {
+                    onNone: () => t("price", { stars: first.price }),
+                    onSome: (cost) =>
+                      t("price-wood", { stars: first.price, wood: cost.wood }),
+                  })}
             </span>
           </Button>
         );

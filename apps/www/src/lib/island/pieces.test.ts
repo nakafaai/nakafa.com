@@ -65,12 +65,16 @@ describe("island pieces", () => {
     expect(lively[0]?.area).toEqual({ from: [0.4, 0.4], to: [2.6, 2.6] });
   });
 
-  it("stands a bed of flowers in the middle of its cell, on its layer", () => {
+  it("stands a bed of flowers in the middle of its cell, on its layer, in bud until watered open", () => {
     expect(
       floraOf([
-        placed({ item: "flowers", stage: 0, x: 2, y: 3, z: 1 }),
+        placed({ item: "flowers", stage: 1, x: 2, y: 3, z: 1 }),
+        placed({ item: "flowers", stage: 0, x: 4, y: 3 }),
         placed({ item: "grass", stage: 0, x: 2, y: 3 }),
       ])
-    ).toEqual([{ sprite: "flowers", x: 2.5, y: 1, z: 3.5 }]);
+    ).toEqual([
+      { sprite: "flowers", x: 2.5, y: 1, z: 3.5 },
+      { sprite: "buds", x: 4.5, y: 0, z: 3.5 },
+    ]);
   });
 });

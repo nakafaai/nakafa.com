@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Item, stagesOf } from "@repo/backend/confect/island/item";
+import { growsOf, Item, stagesOf } from "@repo/backend/confect/island/item";
 import { STARTER_LAYOUT } from "@repo/backend/confect/island/starter";
 import { Array as Arr, Option } from "effect";
 import { meshGrid } from "@/lib/island/mesh";
@@ -8,8 +8,15 @@ import { CLOUD_SHAPES, CLOUD_SIZE } from "@/lib/island/models/cloud";
 import { drawModel } from "@/lib/island/voxel";
 
 /** Every item and stage of the catalog. */
+/** Every stage of every item: the stages it can be bought at, and a plant's grown ones. */
 const STAGES = Arr.flatMap(Item.literals, (item) =>
-  Arr.map(stagesOf(item), (_, stage) => [item, stage] as const)
+  Arr.makeBy(
+    Option.match(growsOf(item), {
+      onNone: () => stagesOf(item).length,
+      onSome: ({ days }) => days.length + 1,
+    }),
+    (stage) => [item, stage] as const
+  )
 );
 
 describe("island models", () => {
@@ -24,7 +31,6 @@ describe("island models", () => {
   it("draws nothing for a stage with no drawing yet", () => {
     expect(drawingOf("flowers", 0)).toEqual(Option.none());
     expect(drawingOf("house", 3)).toEqual(Option.none());
-    expect(drawingOf("tree", 3)).toEqual(Option.none());
   });
 
   it("keeps every shape of a drawing inside its grid and leaves something to see", () => {

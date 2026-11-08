@@ -1,6 +1,8 @@
+import type * as Ref from "@confect/core/Ref";
 import { QueryResult } from "@confect/react";
 import island from "@repo/backend/confect/_generated/refs/island";
 import { growthOf } from "@repo/backend/confect/island/level";
+import { NO_MATERIALS } from "@repo/backend/confect/island/material";
 import { STARTER_LAYOUT } from "@repo/backend/confect/island/starter";
 import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
@@ -22,11 +24,27 @@ export const Route = createFileRoute("/$locale/_main/_app/_account/island")({
   component: IslandPage,
 });
 
-/** The island a learner owns before their first visit opens it: the starter set, nothing earned. */
-const STARTER_ISLAND = {
+/**
+ * The island a learner owns before their first visit opens it: the starter
+ * set, nothing earned, harvested or watered, in the zone the server gives an
+ * island before its owner's browser names theirs.
+ */
+const STARTER_ISLAND: Pick<
+  NonNullable<Ref.Returns<typeof island.queries.own>>,
+  | "layout"
+  | "learned"
+  | "lifetime"
+  | "materials"
+  | "stars"
+  | "timeZone"
+  | "version"
+  | "watered"
+> = {
   layout: STARTER_LAYOUT,
   lifetime: 0,
+  materials: NO_MATERIALS,
   stars: 0,
+  timeZone: "UTC",
   version: 0,
 };
 
@@ -47,11 +65,15 @@ function IslandPage() {
       value={{
         layout: shown.layout,
         owner: Option.some({
+          learned: Option.fromNullishOr(shown.learned),
           level: growthOf(shown.lifetime).level,
+          materials: shown.materials,
           stars: shown.stars,
           version: shown.version,
+          watered: Option.fromNullishOr(shown.watered),
         }),
         size: growthOf(shown.lifetime).size,
+        timeZone: shown.timeZone,
       }}
     >
       <OpenIsland />

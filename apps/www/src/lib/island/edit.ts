@@ -8,15 +8,21 @@ import { Option, Result } from "effect";
 /** The owner's island as its query answers it. */
 type OwnIsland = NonNullable<Ref.Returns<typeof island.queries.own>>;
 
-/** What the build rules read of the owner's island: its level, size and spendable Stars. */
+/** What the build rules read of the owner's island: its level, size, and spendable Stars and materials. */
 export function buildContextOf(own: OwnIsland) {
   const growth = growthOf(own.lifetime);
-  return { level: growth.level, size: growth.size, stars: own.stars };
+  return {
+    level: growth.level,
+    materials: own.materials,
+    size: growth.size,
+    stars: own.stars,
+  };
 }
 
 /**
  * Shows an edit on the owner's island at once, with the rules the server runs
- * (ADR 0042, D12): the new layout, the Stars left and the next version. A batch
+ * (ADR 0042, D12): the new layout, the Stars and materials left and the next
+ * version. A batch
  * the rules refuse changes nothing here, since the server refuses it too, and
  * Convex drops this change when the server answers either way.
  */
@@ -41,6 +47,7 @@ export const editIslandChange: OptimisticUpdate<
     Option.some({
       ...own.value,
       layout: edited.success.layout,
+      materials: edited.success.materials,
       stars: edited.success.stars,
       version: own.value.version + 1,
     })
