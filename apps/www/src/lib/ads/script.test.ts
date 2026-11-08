@@ -104,6 +104,8 @@ describe("asking for a unit's ad", () => {
 
       expect(window.adsbygoogle).toEqual([{}]);
       expect(unit.hasAttribute("data-ad-asked")).toBe(true);
+      // The test document is not on the production host, so it asks for a test ad.
+      expect(unit.getAttribute("data-adtest")).toBe("on");
     })
   );
 

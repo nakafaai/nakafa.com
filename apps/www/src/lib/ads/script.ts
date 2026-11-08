@@ -15,6 +15,9 @@ const OUTCOME_ATTRIBUTE = "data-outcome";
 /** The attribute a unit carries once it has asked for its ad, so it never asks twice. */
 const ASKED_ATTRIBUTE = "data-ad-asked";
 
+/** The attribute that asks AdSense for a test ad, which counts no impression and no click. */
+const TEST_ATTRIBUTE = "data-adtest";
+
 /** The attribute where AdSense answers whether a unit received an ad. */
 const STATUS_ATTRIBUTE = "data-ad-status";
 
@@ -98,7 +101,8 @@ export const loadAdScript = Effect.callback<void, AdScriptFailed>((resume) => {
 /**
  * Asks AdSense for one unit's ad. AdSense fills the next unit in the document that
  * it has not filled, so each unit asks once: a unit marks itself as it asks, and
- * a render that runs twice finds the mark.
+ * a render that runs twice finds the mark. A unit on any host but production asks
+ * for a test ad.
  */
 export const requestAd = (unit: HTMLElement) =>
   Effect.sync(() => {
@@ -106,6 +110,9 @@ export const requestAd = (unit: HTMLElement) =>
       return;
     }
     unit.setAttribute(ASKED_ATTRIBUTE, "");
+    if (isAdTest(window.location.hostname)) {
+      unit.setAttribute(TEST_ATTRIBUTE, "on");
+    }
     adQueue().push({});
   });
 

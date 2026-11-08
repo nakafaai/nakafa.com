@@ -11,12 +11,7 @@ import { AdFrame } from "@/components/ads/frame";
 import { SignedInIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 import { AD_CLIENT, AD_SLOTS, type AdUnit } from "@/lib/ads/account";
-import {
-  isAdTest,
-  loadAdScript,
-  requestAd,
-  untilUnfilled,
-} from "@/lib/ads/script";
+import { loadAdScript, requestAd, untilUnfilled } from "@/lib/ads/script";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { useViewer } from "@/lib/identity/client";
 
@@ -124,7 +119,6 @@ export function AdMount({ unit }: { unit: AdUnit }) {
             className="adsbygoogle block h-70 w-full"
             data-ad-client={AD_CLIENT}
             data-ad-slot={AD_SLOTS[unit]}
-            data-adtest={isAdTest(window.location.hostname) ? "on" : undefined}
             ref={slot}
           />
         </AdFrame>
