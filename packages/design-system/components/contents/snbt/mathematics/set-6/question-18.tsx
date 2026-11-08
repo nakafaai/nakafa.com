@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
@@ -29,10 +29,10 @@ export function Graph({ title, description }: GraphProps) {
   const G = { x: HALF, y: HALF, z: -HALF };
 
   // Colors
-  const COLOR_CUBE = getColor("INDIGO");
-  const COLOR_TRIANGLE = getColor("ROSE");
-  const COLOR_DIAGONAL = getColor("AMBER");
-  const COLOR_LABEL = getColor("VIOLET");
+  const COLOR_CUBE = PLOT_COLORS.fuchsia;
+  const COLOR_TRIANGLE = PLOT_COLORS.pink;
+  const COLOR_DIAGONAL = PLOT_COLORS.amber;
+  const COLOR_LABEL = PLOT_COLORS.violet;
 
   // Edges of the cube
   const cubeEdges = [

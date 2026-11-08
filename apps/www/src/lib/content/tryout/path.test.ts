@@ -6,6 +6,8 @@ import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 vi.mock("@confect/js", async (importOriginal) => {
@@ -27,8 +29,18 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 describe("published try-out localized paths", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease("release-tryout");
     runtimeQueryMock.mockReset();
   });
   it.effect.each(APP_LOCALE_CODES)(

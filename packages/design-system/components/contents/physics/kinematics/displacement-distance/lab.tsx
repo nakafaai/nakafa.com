@@ -35,14 +35,15 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { type Group, Vector3 } from "three";
 
-const ROUTE_COLOR = getColor("TEAL");
-const DISPLACEMENT_COLOR = getColor("VIOLET", 500);
-const CAR_COLOR = getColor("ORANGE", 500);
+const ROUTE_COLOR = PLOT_COLORS.teal;
+const DISPLACEMENT_COLOR = PLOT_COLORS.violet;
+const CAR_COLOR = PLOT_COLORS.orange;
 const END_PAUSE_SECONDS = 0.9;
 const MIN_TRAVEL_SECONDS = 4.8;
 const TRAVEL_SECONDS_PER_METER = 0.56;
@@ -112,7 +113,7 @@ export function DisplacementDistanceLab({
             <ambientLight intensity={0.72} />
             <hemisphereLight
               color={getColor("SLATE", 50)}
-              groundColor={getColor("SLATE")}
+              groundColor={PLOT_COLORS.slate}
               intensity={0.62}
             />
             <directionalLight

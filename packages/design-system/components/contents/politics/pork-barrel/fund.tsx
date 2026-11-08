@@ -18,6 +18,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
@@ -64,7 +65,7 @@ export function FundChart({
   const chartConfig = {
     fund: {
       label: labels.fund,
-      colors: { light: ["var(--chart-5)"], dark: ["var(--chart-5)"] },
+      colors: { light: [PLOT_COLORS.fuchsia], dark: [PLOT_COLORS.fuchsia] },
     },
   } satisfies ChartConfig;
 

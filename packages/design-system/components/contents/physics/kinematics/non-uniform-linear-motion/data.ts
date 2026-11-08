@@ -1,5 +1,5 @@
 import { formatSignedTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const GlbbScenarioIdSchema = Schema.Literals([
@@ -33,7 +33,7 @@ export const GLBB_TRAIN_MODEL_PATH =
   "/models/physics/kinematics/kenney-train-kit/train-electric-bullet-a.glb";
 
 export const GLBB_COLORS = {
-  trainBody: getColor("ROSE"),
+  trainBody: PLOT_COLORS.pink,
 } as const;
 
 export const DEFAULT_GLBB_SCENARIO_ID = "from-rest" satisfies GlbbScenarioId;
@@ -64,21 +64,21 @@ export const GLBB_SCENE = {
 export const GLBB_SCENARIOS: GlbbScenario[] = [
   {
     id: "from-rest",
-    color: getColor("TEAL"),
+    color: PLOT_COLORS.teal,
     initialVelocity: 0,
     acceleration: 4,
     duration: 5,
   },
   {
     id: "speed-up",
-    color: getColor("SKY"),
+    color: PLOT_COLORS.slate,
     initialVelocity: 8,
     acceleration: 4,
     duration: 4,
   },
   {
     id: "brake",
-    color: getColor("VIOLET"),
+    color: PLOT_COLORS.violet,
     initialVelocity: 24,
     acceleration: -4,
     duration: 5,

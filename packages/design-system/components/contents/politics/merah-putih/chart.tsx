@@ -19,6 +19,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -84,7 +85,7 @@ export function CabinetChart({
   const chartConfig = {
     cabinet: {
       label: labels.cabinet,
-      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+      colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
     },
   } satisfies ChartConfig;
 
@@ -145,12 +146,12 @@ export function CompositionChart({
     new: {
       cue: COMPOSITION_CUES.primary,
       label: labels.new,
-      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+      colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
     },
     incumbent: {
       cue: COMPOSITION_CUES.secondary,
       label: labels.incumbent,
-      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+      colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
     },
   } satisfies ChartConfig;
 
@@ -158,12 +159,12 @@ export function CompositionChart({
     male: {
       cue: COMPOSITION_CUES.primary,
       label: labels.male,
-      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+      colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
     },
     female: {
       cue: COMPOSITION_CUES.secondary,
       label: labels.female,
-      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+      colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
     },
   } satisfies ChartConfig;
 
@@ -171,12 +172,12 @@ export function CompositionChart({
     politician: {
       cue: COMPOSITION_CUES.primary,
       label: labels.politicians,
-      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+      colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
     },
     non_politician: {
       cue: COMPOSITION_CUES.secondary,
       label: labels.nonPoliticians,
-      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+      colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
     },
   } satisfies ChartConfig;
 

@@ -8,6 +8,7 @@ import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Array as Arr, Effect, Layer } from "effect";
 import { readPublishedArticleRoute } from "@/lib/content/article/route";
+import { activateTestRelease } from "@/test/active";
 import { makeArticleRuntimeSource } from "@/test/content/article";
 import {
   makeTestArticleProjection,
@@ -15,6 +16,7 @@ import {
   testArticleIdProjection,
   testArticleProjection,
 } from "@/test/content-article";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
@@ -37,6 +39,15 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 
 /** Builds one complete backend-verified article model response. */
 function foundModel(overrides?: {
@@ -68,6 +79,8 @@ function foundModel(overrides?: {
   };
 }
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease(activeReleaseId);
   runtimeQueryMock.mockReset();
 });
 describe("published article route", () => {
@@ -127,39 +140,21 @@ describe("published article route", () => {
         });
       })
   );
-  it.effect("pins a route read to the expected active release", () =>
+  it.effect("reaches Convex once for each route of each release", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(foundModel()));
-      const route = yield* readPublishedArticleRoute(
-        "en",
-        testArticleProjection.publicPath,
-        activeReleaseId
-      );
-      expect(route).toMatchObject({
-        activeReleaseId,
-      });
-      expect(runtimeQueryMock).toHaveBeenCalledWith(
+      runtimeQueryMock.mockReturnValue(Effect.succeed(foundModel()));
+      const path = testArticleProjection.publicPath;
+
+      yield* readPublishedArticleRoute("en", path);
+      yield* readPublishedArticleRoute("en", path);
+      expect(runtimeQueryMock).toHaveBeenCalledExactlyOnceWith(
         expect.anything(),
-        expect.objectContaining({
-          expectedActiveReleaseId: activeReleaseId,
-        })
+        { appLocale: "en", publicPath: path }
       );
-    })
-  );
-  it.effect("preserves an active release mismatch for pinned callers", () =>
-    Effect.gen(function* () {
-      const expectedReleaseId = ReleaseIdSchema.make("release-previous");
-      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(foundModel()));
-      const error = yield* readPublishedArticleRoute(
-        "en",
-        testArticleProjection.publicPath,
-        expectedReleaseId
-      ).pipe(Effect.flip);
-      expect(error).toMatchObject({
-        _tag: "PublishedReleaseMismatchError",
-        actualReleaseId: activeReleaseId,
-        expectedReleaseId,
-      });
+
+      activateTestRelease("release-article-next");
+      yield* readPublishedArticleRoute("en", path);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
     })
   );
   it.effect("preserves a signed missing-route tombstone", () =>

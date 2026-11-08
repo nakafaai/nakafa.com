@@ -18,6 +18,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -83,7 +84,7 @@ export function ElectabilityChart({
   const chartConfig = {
     value: {
       label: labels.electability,
-      colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
+      colors: { light: [PLOT_COLORS.violet], dark: [PLOT_COLORS.violet] },
     },
   } satisfies ChartConfig;
 

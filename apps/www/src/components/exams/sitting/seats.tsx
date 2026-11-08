@@ -34,7 +34,7 @@ import {
   seatTimeKey,
   seenOffline,
 } from "@/components/exams/sitting/seat";
-import { useSittingClock } from "@/components/exams/sitting/timer";
+import { useNow } from "@/components/player/now";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -347,7 +347,7 @@ function SeatLink({
  */
 function SeatAway({ since }: { readonly since: number }) {
   const t = useTranslations("Exams");
-  const { minutes, seconds } = awayTime(since, useSittingClock());
+  const { minutes, seconds } = awayTime(since, useNow(true));
 
   return minutes === 0
     ? t("seat-away-seconds", { seconds })

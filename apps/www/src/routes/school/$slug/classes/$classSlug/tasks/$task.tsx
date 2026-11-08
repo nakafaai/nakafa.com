@@ -1,9 +1,9 @@
 import { TaskAddress } from "@repo/backend/confect/classroom/tasks/task";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
 import { ClassShell } from "@/components/tenant/classes/shell";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readClassAddress } from "@/lib/tenant/params";
 
 /**
@@ -13,16 +13,14 @@ import { readClassAddress } from "@/lib/tenant/params";
 export const Route = createFileRoute(
   "/school/$slug/classes/$classSlug/tasks/$task"
 )({
-  beforeLoad: ({ params }) => {
-    const classAddress = readClassAddress(params.classSlug);
-    const task = Schema.decodeOption(TaskAddress)(params.task);
-    if (Option.isNone(classAddress) || Option.isNone(task)) {
-      throw notFound();
-    }
-    return { classAddress: classAddress.value, task: task.value };
-  },
+  ...guardSchoolPage({
+    reads: (params: { readonly classSlug: string; readonly task: string }) =>
+      Option.all({
+        classAddress: readClassAddress(params.classSlug),
+        task: Schema.decodeOption(TaskAddress)(params.task),
+      }),
+  }),
   component: SchoolClassTaskPage,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolClassTaskPage(): ReactElement {

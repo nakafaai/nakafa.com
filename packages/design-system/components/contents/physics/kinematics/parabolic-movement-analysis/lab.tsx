@@ -35,10 +35,11 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
-const FLASH_COLOR = getColor("ORANGE", 500);
+const FLASH_COLOR = PLOT_COLORS.orange;
 
 interface ProjectileAnalysisLabProps {
   decimalSeparator?: DecimalSeparator;
@@ -154,8 +155,8 @@ export function ParabolicMovementAnalysisLab({
           <Suspense>
             <ambientLight intensity={0.62} />
             <hemisphereLight
-              color={getColor("SKY", 400)}
-              groundColor={getColor("TEAL", 700)}
+              color={getColor("WHITE")}
+              groundColor={getColor("STONE", 600)}
               intensity={0.68}
             />
             <directionalLight

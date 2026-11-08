@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -60,7 +60,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: fortyFiveDegreeDistance, y: 0, z: 0 }, // D
             { x: thirtyDegreeDistance, y: 0, z: 0 }, // B
           ],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.fuchsia,
           labels: [
             {
               text: <InlineMath math="A\;(\mathrm{ATC})" />,
@@ -77,7 +77,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: fortyFiveDegreeDistance, y: height, z: 0 }, // E
             { x: thirtyDegreeDistance, y: height, z: 0 }, // C
           ],
-          color: getColor("EMERALD"),
+          color: PLOT_COLORS.amber,
           labels: [
             { text: <InlineMath math="E" />, at: 0, offset: [0, 0.5, 0] },
             { text: <InlineMath math="C" />, at: 1, offset: [0, 0.5, 0] },
@@ -89,7 +89,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: pointAOnGround, y: 0, z: 0 },
             { x: thirtyDegreeDistance, y: height, z: 0 },
           ],
-          color: getColor("ORANGE"),
+          color: PLOT_COLORS.orange,
         },
         // Line of Sight 2 (A -> E) - 45 degrees
         {
@@ -97,7 +97,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: pointAOnGround, y: 0, z: 0 },
             { x: fortyFiveDegreeDistance, y: height, z: 0 },
           ],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
         },
         // Vertical Line (B -> C)
         {
@@ -105,7 +105,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: thirtyDegreeDistance, y: 0, z: 0 },
             { x: thirtyDegreeDistance, y: height, z: 0 },
           ],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.fuchsia,
           labels: [
             {
               text: <InlineMath math="3000\,\mathrm{m}" />,
@@ -120,12 +120,12 @@ export function Graph({ title, description }: GraphProps) {
             { x: fortyFiveDegreeDistance, y: 0, z: 0 },
             { x: fortyFiveDegreeDistance, y: height, z: 0 },
           ],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.fuchsia,
         },
         // Arc 30 degrees
         {
           points: generateArc(1500 * scale, 0, 30),
-          color: getColor("VIOLET"),
+          color: PLOT_COLORS.violet,
           labels: [
             {
               text: <InlineMath math="30^\circ" />,
@@ -138,7 +138,7 @@ export function Graph({ title, description }: GraphProps) {
         // Arc 15 degrees (from 30 to 45)
         {
           points: generateArc(2000 * scale, 30, 45),
-          color: getColor("VIOLET"),
+          color: PLOT_COLORS.violet,
           labels: [
             {
               text: <InlineMath math="15^\circ" />,

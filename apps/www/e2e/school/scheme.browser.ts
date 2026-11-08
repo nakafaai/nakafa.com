@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { settingsLink } from "@/e2e/support/settings";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -18,7 +19,9 @@ test("an admin stores a grading scheme version with a band, then a newer one, an
   const changes = await Effect.runPromise(trackChanges(page, []));
 
   await page.goto(address("/settings/profile"));
-  await page.getByRole("link", { exact: true, name: "Grading" }).click();
+  await (
+    await settingsLink(page.locator('[data-slot="sidebar-content"]'), "grading")
+  ).click();
   await expect(page).toHaveURL(address("/settings/grading"));
   await expect(page.getByText("No version stored yet.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

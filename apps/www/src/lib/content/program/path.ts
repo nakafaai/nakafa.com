@@ -1,23 +1,20 @@
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "use-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 /** Resolves one exact curriculum path without loading its full page model. */
 export const readPublishedProgramPath = Effect.fn(
   "NakafaProgram.readPublishedPath"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.program.path, {
-      appLocale,
-      publicPath,
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(contentRelease.program.path, {
+    appLocale,
+    publicPath,
+  });
   if (!(result.managed && result.routeJson)) {
     return {
       managed: result.managed,

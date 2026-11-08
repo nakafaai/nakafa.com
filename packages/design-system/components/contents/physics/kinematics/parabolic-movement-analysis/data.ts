@@ -2,7 +2,7 @@ import {
   type DecimalSeparator,
   formatTrimmedNumber,
 } from "@repo/design-system/components/contents/physics/kinematics/number";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Number as Num, Schema } from "effect";
 
 const ProjectileScenarioIdSchema = Schema.Literals([
@@ -24,7 +24,7 @@ const PROJECTILE_GRAVITY = 10;
 /** The trajectory that opens first: 40 m/s at 60 degrees. */
 const DEFAULT_PROJECTILE_SCENARIO = {
   angleDegrees: 60,
-  color: getColor("TEAL"),
+  color: PLOT_COLORS.teal,
   id: "sixty-degree",
   initialSpeed: 40,
 } satisfies ProjectileScenario;
@@ -67,14 +67,14 @@ export const PROJECTILE_INSTANT_TIME = 2;
 
 const LONG_DRIVE_SCENARIO = {
   angleDegrees: 35,
-  color: getColor("ORANGE", 500),
+  color: PLOT_COLORS.orange,
   id: "long-drive",
   initialSpeed: 42,
 } satisfies ProjectileScenario;
 
 const HIGH_ARC_SCENARIO = {
   angleDegrees: 70,
-  color: getColor("VIOLET"),
+  color: PLOT_COLORS.violet,
   id: "high-arc",
   initialSpeed: 34,
 } satisfies ProjectileScenario;

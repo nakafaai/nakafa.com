@@ -36,7 +36,7 @@ import {
   SECONDS_IN_MINUTE,
   seenOffline,
 } from "@/components/exams/sitting/seat";
-import { useSittingClock } from "@/components/exams/sitting/timer";
+import { useNow } from "@/components/player/now";
 import { DataFailure } from "@/components/shared/failure";
 import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import { PanesDetail } from "@/components/shared/panes";
@@ -396,7 +396,7 @@ function SignalAway({
   readonly since: number;
 }) {
   const t = useTranslations("Exams");
-  const { minutes, seconds } = awayTime(since, useSittingClock());
+  const { minutes, seconds } = awayTime(since, useNow(true));
 
   return t(GONE_KEYS[kind][minutes === 0 ? "seconds" : "minutes"], {
     minutes,
