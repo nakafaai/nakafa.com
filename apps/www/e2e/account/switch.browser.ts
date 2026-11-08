@@ -12,6 +12,7 @@ import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOME = "/en";
@@ -316,6 +317,9 @@ for (const path of [SETTINGS, NOTIFICATIONS]) {
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
+              // The late session answer is what could still move the learner away, so the address is read once it has
+              // arrived and the page has drawn it.
+              const answered = page.waitForResponse(SESSION_ANSWER);
               yield* Effect.promise(() =>
                 page.goto(path, { waitUntil: "load" })
               );
@@ -324,9 +328,8 @@ for (const path of [SETTINGS, NOTIFICATIONS]) {
                   page.locator(MEMBER_FOOTER).getByRole("button").first()
                 ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
               );
-              yield* Effect.promise(() =>
-                page.waitForTimeout(SESSION_DELAY_MILLISECONDS)
-              );
+              yield* Effect.promise(() => answered);
+              yield* Effect.promise(() => waitForQuiet(page));
               yield* Effect.sync(() =>
                 expect(
                   Arr.dedupe(MutableList.toArray(addresses))
