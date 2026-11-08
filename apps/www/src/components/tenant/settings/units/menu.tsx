@@ -24,11 +24,9 @@ import {
   archiveUnitChange,
   unarchiveUnitChange,
 } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Unit } from "@/components/tenant/settings/state";
 import { UnitEditDialog } from "@/components/tenant/settings/units/edit";
-
-const SOURCE = "components/tenant/settings/units/menu";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The row menu of one school of the organisation: Edit and Archive for an active school, and Restore for an archived
@@ -51,7 +49,7 @@ export function UnitMenu({ unit }: { unit: Unit }) {
   const archiveUnit = () => {
     dialogs.close();
     startTransition(() =>
-      saveSchool(() => archive({ slug, unitId: unit.id }), SOURCE)
+      runSchoolWrite(schoolCall(() => archive({ slug, unitId: unit.id })))
     );
   };
 
@@ -63,7 +61,9 @@ export function UnitMenu({ unit }: { unit: Unit }) {
             icon={ArchiveRestoreIcon}
             onClick={() =>
               startTransition(() =>
-                saveSchool(() => restore({ slug, unitId: unit.id }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => restore({ slug, unitId: unit.id }))
+                )
               )
             }
           >

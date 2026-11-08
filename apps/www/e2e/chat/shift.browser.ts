@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { CHAT_PATH, runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { waitForQuiet } from "@/e2e/support/quiet";
 
 /**
  * A phone on a slow connection: four times slower than this machine, 150 ms
@@ -61,8 +62,8 @@ for (const width of [390, 1440]) {
               page.getByRole("textbox", { name: "Ask Nina anything..." })
             ).toBeVisible()
           );
-          // Late parts, such as the weather card, settle within seconds.
-          yield* Effect.promise(() => page.waitForTimeout(4000));
+          // Late parts, such as the weather card, render before the page goes quiet.
+          yield* Effect.promise(() => waitForQuiet(page));
           const shifts = yield* Effect.promise(() =>
             page.evaluate(() => Reflect.get(window, "nakafaShifts"))
           ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Shifts)));

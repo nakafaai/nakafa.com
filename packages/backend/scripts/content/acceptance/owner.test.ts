@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   createAcceptanceOwner,
@@ -33,6 +34,9 @@ vi.mock(
 
 type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
+/** What `tenancy/seed:user` prints for the new account: the id of its app user. */
+const APP_USER = '"app-user-1"';
+
 const SLUG = "acc-1a2b3c4d";
 const CreatedAccount = Schema.fromJsonString(
   Schema.Struct({
@@ -41,6 +45,7 @@ const CreatedAccount = Schema.fromJsonString(
     }),
   })
 );
+const Lookup = Schema.fromJsonString(Schema.Struct({ authId: Schema.String }));
 const Claim = Schema.fromJsonString(
   Schema.Struct({ cursor: Schema.NullOr(Schema.String), userId: Schema.String })
 );
@@ -50,10 +55,7 @@ const Claim = Schema.fromJsonString(
  * Owner's address finds the account `user-1` when `existing`, and nothing otherwise, which the
  * CLI prints as no text.
  */
-function answerOf(args: readonly string[], users: string, existing: boolean) {
-  if (Arr.contains(args, "data")) {
-    return users;
-  }
+function answerOf(args: readonly string[], existing: boolean) {
   if (Arr.contains(args, "adapter:findOne")) {
     return existing ? '{"_id":"user-1"}' : "";
   }
@@ -67,16 +69,20 @@ function answerOf(args: readonly string[], users: string, existing: boolean) {
 }
 
 /** Answers every command and keeps the commands in the order they ran. The Owner's Better Auth user is `user-1`. */
-function answerCommands(users: string, existing = false) {
+function answerCommands(appUser: string | null, existing = false) {
   const specs = MutableList.make<CommandSpec>();
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
       MutableList.append(specs, spec);
+      // The seed of the app user prints its id, and fails for an account without one.
+      const answer = Arr.contains(spec.args, "tenancy/seed:user")
+        ? appUser
+        : answerOf(spec.args, existing);
+      if (answer === null) {
+        return yield* acceptanceRuntimeError("The account has no app user.");
+      }
       const fs = yield* FileSystem.FileSystem;
-      yield* fs.writeFileString(
-        spec.stdoutPath,
-        answerOf(spec.args, users, existing)
-      );
+      yield* fs.writeFileString(spec.stdoutPath, answer);
     })
   );
   return specs;
@@ -105,9 +111,7 @@ describe("acceptance owner", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        const specs = answerCommands(
-          '[{"_id":"app-user-0","authId":"someone-else"},{"_id":"app-user-1","authId":"user-1"}]'
-        );
+        const specs = answerCommands(APP_USER);
 
         yield* createAcceptanceOwner(root, SLUG, `${root}/owner.json`);
 
@@ -121,6 +125,14 @@ describe("acceptance owner", () => {
           lastArgument(accountCall)
         );
         expect(account.input.data.email).toBe(ownerAddress(SLUG));
+        const lookupCall = Option.getOrThrow(
+          Arr.findFirst(calls, (spec) =>
+            Arr.contains(spec.args, "tenancy/seed:user")
+          )
+        );
+        expect(
+          yield* Schema.decodeEffect(Lookup)(lastArgument(lookupCall))
+        ).toEqual({ authId: "user-1" });
         const claimCall = Option.getOrThrow(
           Arr.findFirst(calls, (spec) =>
             Arr.contains(spec.args, "tenancy/claims:run")
@@ -141,10 +153,7 @@ describe("acceptance owner", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        const specs = answerCommands(
-          '[{"_id":"app-user-1","authId":"user-1"}]',
-          true
-        );
+        const specs = answerCommands(APP_USER, true);
 
         yield* createAcceptanceOwner(root, SLUG, `${root}/owner.json`);
 
@@ -166,7 +175,7 @@ describe("acceptance owner", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        const specs = answerCommands("[]");
+        const specs = answerCommands(null);
 
         const exit = yield* Effect.exit(
           createAcceptanceOwner(root, SLUG, `${root}/owner.json`)
@@ -204,7 +213,7 @@ describe("acceptance owner", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        answerCommands('[{"_id":"app-user-1","authId":"user-1"}]');
+        answerCommands(APP_USER);
 
         yield* ownerMode.run(root, [SLUG, `${root}/mode.json`, "ignored"]);
 
@@ -220,7 +229,7 @@ describe("acceptance owner", () => {
     () =>
       Effect.gen(function* () {
         const { root } = yield* fixture;
-        const specs = answerCommands("[]");
+        const specs = answerCommands(null);
 
         expect(
           yield* ownerMode.run(root, [SLUG]).pipe(Effect.flip)

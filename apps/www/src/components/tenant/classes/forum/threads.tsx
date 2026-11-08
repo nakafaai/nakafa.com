@@ -42,16 +42,12 @@ import { TableViews } from "@/components/shared/table/views";
 import { LoadFailure } from "@/components/state/failure";
 import { ChannelUnread } from "@/components/tenant/classes/channels";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   archiveThreadUpdate,
   restoreThreadUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassDiscussionTarget } from "@/lib/routing/school/target";
 
@@ -250,11 +246,10 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
               <DropdownMenuItem
                 icon={ArrowTurnBackwardIcon}
                 onClick={() =>
-                  runForumCall(
-                    forumCall(() =>
+                  runSchoolWrite(
+                    schoolCall(() =>
                       restore.withOptimisticUpdate(restoreThreadUpdate)(args)
-                    ),
-                    toastForumFailure
+                    )
                   )
                 }
               >
@@ -264,11 +259,10 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
               <DropdownMenuItem
                 icon={Archive02Icon}
                 onClick={() =>
-                  runForumCall(
-                    forumCall(() =>
+                  runSchoolWrite(
+                    schoolCall(() =>
                       archive.withOptimisticUpdate(archiveThreadUpdate)(args)
-                    ),
-                    toastForumFailure
+                    )
                   )
                 }
               >
