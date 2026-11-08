@@ -199,8 +199,7 @@
  */
 :root[data-resizing],
 :root[data-resizing] * {
-  cursor: col-resize;
-  user-select: none;
+  @apply cursor-col-resize select-none;
 }
 
 [data-player-key] {

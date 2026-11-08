@@ -124,8 +124,10 @@ function PlayerPrevious() {
 }
 
 /**
- * Goes to the question after the current one. On the last question it becomes review, which opens the
- * finish's review of the flagged and the unanswered questions, so the end of the questions leads on.
+ * Goes to the question after the current one. On the last question of a running paper it becomes review,
+ * which opens the finish's review of the flagged and the unanswered questions, so the end of the questions
+ * leads on. A finished paper has nothing to finish, so there it is disabled on the last, as previous is on
+ * the first.
  */
 function PlayerNext() {
   const t = useTranslations("Player");
@@ -135,10 +137,14 @@ function PlayerNext() {
       state.current !== null &&
       Option.isNone(readNeighbor(state.keys, state.current, 1))
   );
+  const available = usePlayer((state) =>
+    Option.isSome(readNeighbor(state.keys, state.current, 1))
+  );
+  const review = usePlayer((state) => state.review);
   const step = usePlayer((state) => state.step);
   const open = usePlayer((state) => state.open);
 
-  if (last) {
+  if (last && !review) {
     return (
       <Button
         aria-haspopup="dialog"
@@ -156,6 +162,7 @@ function PlayerNext() {
     <Button
       aria-keyshortcuts="ArrowRight"
       aria-label={t("next-question")}
+      disabled={review && !available}
       onClick={() => step(1)}
       type="button"
       variant="outline"

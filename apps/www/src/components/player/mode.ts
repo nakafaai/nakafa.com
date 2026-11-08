@@ -1,3 +1,4 @@
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { readCookie } from "@repo/internationalization/src/cookie";
 import { Duration, Option, Schema } from "effect";
 
@@ -43,20 +44,26 @@ export function readPlayerModeParam(
   });
 }
 
-/** Picks the view to render: the address first, then the saved view, then the list. */
+/**
+ * Picks the view to render: the address first, then the view saved on this device, then the device's own:
+ * the list on a screen from the medium breakpoint, where several questions fit, and one question at a time
+ * on a phone.
+ */
 export function resolvePlayerMode(input: {
   cookie: Option.Option<PlayerMode>;
   param: PlayerModeParam;
+  /** Whether the screen is at least as wide as the medium breakpoint. */
+  wide: boolean;
 }): PlayerMode {
   if (input.param.kind === "valid") {
     return input.param.mode;
   }
-  return Option.getOrElse(input.cookie, () => "list");
+  return Option.getOrElse(input.cookie, () => (input.wide ? "list" : "single"));
 }
 
 /**
- * Resolves the view in the browser, for a page that renders only there, such as a
- * school sitting: the address first, then the view the learner saved, then the list.
+ * Resolves the view in the browser, where every player renders: the address first, then the view the
+ * learner saved on this device, then the list on a wide screen and one question at a time on a phone.
  */
 export function readBrowserPlayerMode(param: PlayerModeParam): PlayerMode {
   const cookie = readCookie(
@@ -66,5 +73,6 @@ export function readBrowserPlayerMode(param: PlayerModeParam): PlayerMode {
   return resolvePlayerMode({
     cookie: Option.flatMap(cookie, decodePlayerMode),
     param,
+    wide: window.matchMedia(TAILWIND_MEDIA_QUERIES.mdAndUp).matches,
   });
 }

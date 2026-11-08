@@ -8,6 +8,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { useNow } from "@/components/player/now";
 import { PlayerTimer } from "@/components/player/timer";
+import { PlayerViewSwitch } from "@/components/player/view";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
@@ -20,11 +21,9 @@ import {
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
 import {
-  TryoutFinishedFacts,
-  TryoutFinishedPanel,
-  TryoutFinishedPanes,
   TryoutFinishedPlace,
-} from "@/components/tryout/review/panes";
+  TryoutReviewFrame,
+} from "@/components/tryout/review/frame";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
 import {
   getTryoutAttemptLock,
@@ -274,6 +273,33 @@ function ResolvedTryoutSectionPage({
     );
   }
 
+  const score = actionAttempt?.section?.score ?? null;
+  if (binding && score && runtimeState.kind === "review") {
+    return (
+      <TryoutPage>
+        <SectionLock binding={binding} />
+        <TryoutReviewFrame
+          header={
+            <TryoutSectionHeader
+              actionAttempt={actionAttempt}
+              activeAttempt={activeAttempt}
+              binding={binding}
+              sectionStatus={sectionStatus}
+            >
+              <PlayerViewSwitch />
+            </TryoutSectionHeader>
+          }
+          limit={Option.some(page.section.timeLimitSeconds)}
+          mode={binding.mode}
+          runtime={runtimeState.runtime}
+          score={score}
+        >
+          {children}
+        </TryoutReviewFrame>
+      </TryoutPage>
+    );
+  }
+
   return (
     <TryoutPage>
       <SectionLock binding={binding} />
@@ -283,31 +309,16 @@ function ResolvedTryoutSectionPage({
         binding={binding}
         sectionStatus={sectionStatus}
       />
-      {runtimeState.kind === "review" && actionAttempt?.section?.score ? (
-        <TryoutFinishedPanes
-          panel={
-            <TryoutFinishedPanel runtime={runtimeState.runtime}>
-              <TryoutFinishedFacts
-                score={actionAttempt.section.score}
-                seconds={page.section.timeLimitSeconds}
-              />
-            </TryoutFinishedPanel>
-          }
-        >
-          {children}
-        </TryoutFinishedPanes>
-      ) : (
-        <TryoutPageBody>
-          <TryoutSectionSummary
-            value={{
-              pending: actionAttempt === undefined,
-              score: actionAttempt?.section?.score ?? null,
-              section: page.section,
-            }}
-          />
-          <TryoutFinishedPlace pending={actionAttempt === undefined} />
-        </TryoutPageBody>
-      )}
+      <TryoutPageBody>
+        <TryoutSectionSummary
+          value={{
+            pending: actionAttempt === undefined,
+            score,
+            section: page.section,
+          }}
+        />
+        <TryoutFinishedPlace pending={actionAttempt === undefined} />
+      </TryoutPageBody>
     </TryoutPage>
   );
 }
@@ -356,13 +367,15 @@ function SectionLock({
   return opening ? <ShellLock /> : null;
 }
 
-/** Renders the section heading with its start or return action. */
+/** Renders the section heading with what the page adds, such as the view of a review's questions, and its start or return action. */
 function TryoutSectionHeader({
   activeAttempt,
   actionAttempt,
   binding,
+  children,
   sectionStatus,
 }: Pick<TryoutSectionPageClientProps, "binding"> & {
+  children?: ReactNode;
   activeAttempt: NonNullable<SectionState>["attempt"] | null;
   /** The attempt the action reads; none while the learner read is pending. */
   actionAttempt: NonNullable<SectionState>["attempt"] | null | undefined;
@@ -391,6 +404,7 @@ function TryoutSectionHeader({
       parents={hasCurrentPath ? "linked" : "unlinked"}
       setPath={returnAddress.publicPath}
     >
+      {children}
       <TryoutSummaryAction
         value={{
           activeAttempt,

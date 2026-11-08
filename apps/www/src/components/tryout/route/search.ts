@@ -42,12 +42,14 @@ const TryoutQueryValue = Schema.Union([
 ]).pipe(Schema.catchDecoding(() => Effect.succeedSome("")));
 
 /**
- * The address of an attempt page: its attempt capability and its player view.
- * Both stay raw here, because a page refuses an invalid value with not found, as
- * the attempt readers decide it.
+ * The address of an attempt page: its attempt capability, its player view, and
+ * the question the player is on. The first two stay raw here, because a page
+ * refuses an invalid value with not found, as the attempt readers decide it; the
+ * player reads the question itself and opens the first for one it does not know.
  */
 export const TryoutAttemptSearch = Schema.Struct({
   attemptId: Schema.optionalKey(TryoutQueryValue),
+  question: Schema.optionalKey(TryoutQueryValue),
   view: Schema.optionalKey(TryoutQueryValue),
 });
 

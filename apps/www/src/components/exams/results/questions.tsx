@@ -15,6 +15,7 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { Verdict } from "@repo/backend/confect/assessment/verdict";
 import {
   isReasonOption,
   optionLetter,
@@ -25,7 +26,6 @@ import type {
   QuestionStats as QuestionStatsSchema,
   QuestionSummary as QuestionSummarySchema,
 } from "@repo/backend/confect/exams/results/contract";
-import { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";

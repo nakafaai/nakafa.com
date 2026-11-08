@@ -8,7 +8,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TableRow } from "@repo/design-system/components/ui/table";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Option } from "effect";
 import type { ReactNode } from "react";
@@ -169,9 +169,20 @@ export function PaneFact({
   );
 }
 
-/** The facts of the open row, one under another. */
-export function PaneFacts({ children }: { children: ReactNode }) {
-  return <dl className="flex flex-col gap-4">{children}</dl>;
+/** The facts of a detail: one under another, or two to a row for short values, such as a result's numbers. */
+const paneFactsVariants = cva("gap-4", {
+  defaultVariants: { layout: "stack" },
+  variants: {
+    layout: { grid: "grid grid-cols-2 tabular-nums", stack: "flex flex-col" },
+  },
+});
+
+/** The facts of the open row, one under another, or two to a row when `layout` is `grid`. */
+export function PaneFacts({
+  children,
+  layout,
+}: VariantProps<typeof paneFactsVariants> & { children: ReactNode }) {
+  return <dl className={paneFactsVariants({ layout })}>{children}</dl>;
 }
 
 /**

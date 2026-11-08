@@ -1,7 +1,4 @@
-import {
-  ArrowDown01Icon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import {
   Autocomplete,
   AutocompleteEmpty,

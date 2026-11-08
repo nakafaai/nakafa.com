@@ -1,4 +1,5 @@
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
+import { replaceSearchParam } from "@/components/player/address";
 import { PLAYER_MODE_PARAM, type PlayerMode } from "@/components/player/mode";
 import { savePlayerMode } from "@/components/player/preference";
 import { reportClientException } from "@/lib/analytics/client";
@@ -9,12 +10,9 @@ import { reportClientException } from "@/lib/analytics/client";
  * parameter stays as it is.
  */
 function syncModeParam(mode: PlayerMode) {
-  const url = new URL(window.location.href);
-  if (!url.searchParams.has(PLAYER_MODE_PARAM)) {
-    return;
+  if (new URLSearchParams(window.location.search).has(PLAYER_MODE_PARAM)) {
+    replaceSearchParam(PLAYER_MODE_PARAM, Option.some(mode));
   }
-  url.searchParams.set(PLAYER_MODE_PARAM, mode);
-  window.history.replaceState(null, "", url);
 }
 
 /** Saves the chosen view for the next page; true when it was saved, false when it was not. */

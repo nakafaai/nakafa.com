@@ -53,11 +53,12 @@ export const Route = createFileRoute(
           canonicalPath: loaderData.head.canonicalPath,
           description: loaderData.head.description,
           image: loaderData.head.image,
-          // A URL bound to one attempt is personal, and one that names a view repeats the page,
+          // A URL bound to one attempt is personal, and one that names a view or a question repeats the page,
           // so only the bare address is indexed.
           indexable:
             loaderData.head.indexable &&
             match.search.attemptId === undefined &&
+            match.search.question === undefined &&
             match.search.view === undefined,
           jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
           locale: params.locale,
