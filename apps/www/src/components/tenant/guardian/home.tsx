@@ -39,7 +39,11 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import {
+  TableEmpty,
+  TableFrame,
+  TablePageBody,
+} from "@/components/shared/table/frame";
 import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
@@ -72,8 +76,7 @@ const childColumns = tableColumns<ChildItem>();
  */
 export function GuardianHome() {
   const t = useTranslations("SchoolGuardians");
-  const { slug } = useTenant();
-  const children = useQuery(guardians.family.children, { slug });
+  const children = useChildren();
 
   if (QueryResult.isFailure(children) && isLostAccess(children.error)) {
     throw children.error;
@@ -86,39 +89,42 @@ export function GuardianHome() {
           items={[{ label: t("home-title") }]}
           title={t("home-title")}
         />
-        <div className="flex w-full min-w-0 flex-1 flex-col">
-          {QueryResult.isFailure(children) ? (
-            <LoadFailure onRetry={reloadPage} />
-          ) : null}
+        <Panes id="guardian">
+          <PanesList>
+            <TablePageBody>
+              {QueryResult.isFailure(children) ? (
+                <LoadFailure onRetry={reloadPage} />
+              ) : null}
+              {QueryResult.isSuccess(children) ? <GuardianChildren /> : null}
+            </TablePageBody>
+          </PanesList>
           {QueryResult.isSuccess(children) ? (
-            <GuardianChildren items={children.value} />
+            <PanesDetail label={t("child-detail")}>
+              <GuardianChild items={children.value} />
+            </PanesDetail>
           ) : null}
-        </div>
+        </Panes>
       </PanesProvider>
     </TableFiltersProvider>
   );
 }
 
-/** The children beside the open child, or the empty state while no child is linked. */
-function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
+/** The parent's linked children, which the home and its table read from one subscription. */
+function useChildren() {
+  const { slug } = useTenant();
+  return useQuery(guardians.family.children, { slug });
+}
+
+/** The linked children, each opening beside the list, or the empty state under the heads while none is linked. */
+function GuardianChildren() {
   const t = useTranslations("SchoolGuardians");
   const common = useTranslations("Common");
-  if (Arr.isReadonlyArrayEmpty(items)) {
-    return (
-      <TableEmpty
-        act="waving"
-        description={t("home-empty-description")}
-        title={t("home-empty")}
-      />
-    );
-  }
+  const children = useChildren();
 
   const columns = [
     childColumns.text((child) => child.student.name, {
       cell: (info) => (
-        <PaneOpen id={info.row.original.linkId}>
-          <TableText>{info.getValue()}</TableText>
-        </PaneOpen>
+        <PaneOpen id={info.row.original.linkId}>{info.getValue()}</PaneOpen>
       ),
       header: t("child"),
       id: "child",
@@ -161,18 +167,18 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   ];
 
   return (
-    <Panes id="guardian">
-      <PanesList>
-        <DataTable
-          columns={columns}
-          data={items}
-          rowId={(child) => child.linkId}
+    <DataTable
+      columns={columns}
+      data={QueryResult.isSuccess(children) ? children.value : []}
+      empty={
+        <TableEmpty
+          act="waving"
+          description={t("home-empty-description")}
+          title={t("home-empty")}
         />
-      </PanesList>
-      <PanesDetail label={t("child-detail")}>
-        <GuardianChild items={items} />
-      </PanesDetail>
-    </Panes>
+      }
+      rowId={(child) => child.linkId}
+    />
   );
 }
 

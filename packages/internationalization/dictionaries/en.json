@@ -1848,6 +1848,10 @@
     "search-students": "Search students",
     "students-empty": "No student in this class group yet.",
     "students-empty-description": "Students appear here once they are placed in the class group.",
+    "elsewhere-title": "{cohort} does not graduate.",
+    "elsewhere-description": "Only grade {last} of {unit} graduates, and {cohort} is in grade {grade}.",
+    "elsewhere-none": "{unit} has no grade that graduates.",
+    "elsewhere-action": "View graduation",
     "student": "Student",
     "nisn": "NISN",
     "nisn-yes": "On file",
@@ -3252,6 +3256,10 @@
     "school-refusal-cohort-name-taken": {
       "title": "This cohort name is already used.",
       "description": "Choose another name for this period."
+    },
+    "school-refusal-cohort-grade": {
+      "title": "This grade is not taught here.",
+      "description": "Choose a grade that this school's level teaches."
     },
     "school-refusal-cohort-limit": {
       "title": "No more cohorts fit this period.",

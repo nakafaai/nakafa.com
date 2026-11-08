@@ -4,14 +4,11 @@ import {
   encodeBatch,
 } from "@repo/backend/confect/editor/batch";
 import { checkContent } from "@repo/backend/confect/editor/content";
-import type {
-  BatchInvalid,
-  ClientTaken,
-} from "@repo/backend/confect/editor/errors";
+import type { BatchInvalid } from "@repo/backend/confect/editor/errors";
 import { MAX_BATCH_STEPS } from "@repo/backend/confect/editor/size";
 import { randomUuid } from "@repo/utilities/uuid";
 import type { Step } from "@tiptap/pm/transform";
-import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, Ref, Schema } from "effect";
 import { sendableSteps } from "prosemirror-collab";
 import { dropUnsendable } from "@/lib/editor/replay";
 import {
@@ -83,7 +80,7 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
 
 /**
  * Sends the editor's unconfirmed steps on the version they were made on. A batch
- * whose call reached the server, or was refused, waits for the server's steps: the
+ * that the server accepted, or answered as stale, waits for the server's steps: the
  * next round sends nothing on that version. A batch whose call failed keeps its id
  * and its steps, and the next round sends the same batch, so the server answers a
  * repeat of a batch it has taken without writing it again. A batch that waits for a
@@ -95,10 +92,7 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
  */
 export const push = Effect.fn("editor.sync.push")(function* (
   session: SyncSession
-): Effect.fn.Return<
-  void,
-  SyncFailed | SyncFolding | ClientTaken | EditorClosed
-> {
+): Effect.fn.Return<void, SyncFailed | SyncFolding | EditorClosed> {
   const state = yield* session.port.state;
   const sendable = sendableSteps(state);
   if (sendable === null) {
@@ -152,19 +146,20 @@ export const push = Effect.fn("editor.sync.push")(function* (
   // The document would break the contract with this batch, so the batch is not accepted
   // (ADR 0028). The round halves it below and sends the first half.
   const refused = () => Effect.succeed(false);
-  const accepted = yield* session.transport.submit(fitted.text).pipe(
-    Effect.as(true),
-    // A refused batch waits for the server's steps, and the next round sends nothing on
-    // this version. A failure of the call is not caught here: the batch stays unsent. A
-    // batch that waits for a fold fails with `SyncFolding`, and `tickThroughFold` runs the round again.
-    Effect.catchTag("VersionStale", () => Effect.succeed(true)),
-    Effect.catchTags({
-      DocumentInvalid: refused,
-      DocumentTooLarge: refused,
-      FoldPending: () => Effect.fail(new SyncFolding()),
-    })
-  );
-  if (!accepted) {
+  // A failure of the call is not caught here: the batch stays unsent, and the round fails.
+  const reply = yield* session.transport.submit(fitted.text);
+  const sent = yield* Match.valueTags(reply, {
+    Accepted: () => Effect.succeed(true),
+    // The batch missed the head: it waits for the server's steps, and the next round sends
+    // nothing on this version.
+    VersionStale: () => Effect.succeed(true),
+    DocumentInvalid: refused,
+    DocumentTooLarge: refused,
+    // The batch waits for a fold: the round fails with `SyncFolding`, and `tickThroughFold`
+    // runs it again under the same batch id.
+    FoldPending: () => Effect.fail(new SyncFolding()),
+  });
+  if (!sent) {
     yield* refusedBatch(session, fitted.count);
     return yield* push(session);
   }
@@ -175,7 +170,7 @@ export const push = Effect.fn("editor.sync.push")(function* (
 });
 
 /**
- * The server refused a batch because the document it would make breaks the contract
+ * The server answered that the document a batch would make breaks the contract
  * (ADR 0028). A batch of more than one step is halved under a new id, so the next round
  * sends the first half. A batch of one step is a step that the document refuses on its
  * own, so the loop drops it and counts it, as it drops a step no call can carry.

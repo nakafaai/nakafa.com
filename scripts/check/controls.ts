@@ -12,7 +12,7 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { children } from "#scripts/check/source";
 
 const JSX_MODULE_PATTERN = /\.tsx$/u;

@@ -45,6 +45,7 @@ describe("downloadReadiness", () => {
             page: [],
           });
         yield* downloadReadiness(slug, {
+          _tag: "Graduating",
           can: [],
           cohort: {
             id: cohortId,

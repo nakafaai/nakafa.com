@@ -33,6 +33,7 @@ const cohortId = Schema.decodeUnknownSync(Id("tenantCohorts"))("ix-a");
 
 /** A graduating class group's page with no decision yet. */
 const overview: GraduationOverview = {
+  _tag: "Graduating",
   can: [],
   cohort: {
     id: cohortId,

@@ -17,7 +17,7 @@ import {
   isImportDeclaration,
   isStringLiteral,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";
 import { resolveSpecifier } from "#scripts/check/page";
 import { parseSources, type RepositorySource } from "#scripts/check/source";

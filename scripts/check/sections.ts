@@ -1,8 +1,5 @@
 import { Array as Arr, String as Str } from "effect";
-import {
-  isStringLiteralLikeNode,
-  type SourceFile,
-} from "typescript/unstable/ast";
+import { isStringLiteralLikeNode, type SourceFile } from "tsrs/ast";
 import { descendants, namesModule } from "#scripts/check/source";
 
 /** The settings card, which only the Settings components import. */

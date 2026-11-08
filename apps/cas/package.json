@@ -10,7 +10,7 @@
     "lint": "UV_NO_DEV=0 uv run --dev ruff check --no-cache .",
     "setup": "uv sync",
     "test": "vitest run && UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false && UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
+    "typecheck": "tsrs --noEmit --emitDeclarationOnly false && UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
   },
   "dependencies": {
     "effect": "catalog:"

@@ -13,9 +13,11 @@ import {
   cohortNameKey,
 } from "@repo/backend/confect/tenancy/cohort";
 import {
+  CohortGradeOutsideLevel,
   CohortLimit,
   CohortNameTaken,
 } from "@repo/backend/confect/tenancy/errors";
+import { gradesOf } from "@repo/backend/confect/tenancy/grades";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** The period that new cohorts join, as the writes read it. */
@@ -44,6 +46,22 @@ export const cohortNamesFree = Effect.fn("tenancy.write.cohort.namesFree")(
     );
     if (Arr.some(existing, Option.isSome)) {
       return yield* new CohortNameTaken();
+    }
+  }
+);
+
+/**
+ * Refuses a grade that the level of the cohort's unit does not teach (`gradesOf`), so a cohort an Admin adds or edits
+ * holds one of the grades its dialog offers. It reads the unit once.
+ */
+export const gradeTaught = Effect.fn("tenancy.write.cohort.gradeTaught")(
+  function* (unitId: TenantPeriodsDoc["unitId"], grade: number) {
+    const unit = yield* (yield* DatabaseReader)
+      .table("tenantUnits")
+      .get(unitId)
+      .pipe(Effect.orDie);
+    if (!Arr.contains(gradesOf(unit.level), grade)) {
+      return yield* new CohortGradeOutsideLevel();
     }
   }
 );

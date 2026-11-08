@@ -103,11 +103,13 @@ jobs:
           NAKAFA_BUILD_STORE_DIRECTORY: ${{ github.workspace }}/.cache/reads
         run: bun scripts/static/store.ts &
 
+      # Convex typechecks only with the stock `typescript` package, which this
+      # repository does not install: tsrs typechecks every workspace before merge.
       - name: Deploy Convex
         working-directory: packages/backend
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: bun run codegen && bunx --no-install convex deploy --yes
+        run: bun run codegen && bunx --no-install convex deploy --yes --typecheck disable
 
       # Each value is named, so this step receives only what the build and the
       # Worker bindings read. `VITE_` values are variables, every other one a secret.

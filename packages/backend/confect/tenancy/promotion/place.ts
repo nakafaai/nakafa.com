@@ -23,12 +23,12 @@ import {
   PersonPlacementLimit,
   PromotionPlanInvalid,
 } from "@repo/backend/confect/tenancy/errors";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { graduationOf } from "@repo/backend/confect/tenancy/graduate";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
 import {
   createdCohort,
   destinationIssue,
-  lastGradeOf,
   targetNameOf,
 } from "@repo/backend/confect/tenancy/promotion/destination";
 import { PROMOTION_PAGE_SIZE } from "@repo/backend/confect/tenancy/promotion/progress";

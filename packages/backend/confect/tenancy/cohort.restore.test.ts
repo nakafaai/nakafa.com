@@ -42,7 +42,7 @@ describe("tenancy/cohorts restore", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const period = yield* sma(fixture);
-      const made = yield* cohort(fixture, period.id, "7A", 7);
+      const made = yield* cohort(fixture, period.id, "7A", 10);
       yield* fixture
         .as("admin")
         .mutation(archive, { cohortId: made.id, slug: nf });
@@ -60,7 +60,7 @@ describe("tenancy/cohorts restore", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const period = yield* sma(fixture);
-      const made = yield* cohort(fixture, period.id, "7A", 7);
+      const made = yield* cohort(fixture, period.id, "7A", 10);
       const again = yield* fixture
         .as("admin")
         .mutation(restore, { cohortId: made.id, slug: nf });
@@ -77,7 +77,7 @@ describe("tenancy/cohorts restore", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const made = yield* cohort(fixture, period.id, "7A", 10);
         const foreign = yield* foreignCohort(fixture);
         yield* fixture
           .as("admin")

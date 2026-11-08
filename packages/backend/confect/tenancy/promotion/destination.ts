@@ -6,31 +6,7 @@ import {
   PromotionDestination,
   type PromotionTarget,
 } from "@repo/backend/confect/tenancy/promotion/schema";
-import type { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option } from "effect";
-
-/**
- * The last grade of each unit level: the grade whose students graduate. SD and MI
- * end at grade 6, SMP and MTs at 9, and SMA, MA, and SMK at 12. Levels without a
- * last grade, such as PAUD, SLB, and other, have none, so their students cannot
- * graduate through a promotion.
- */
-const LAST_GRADE: Record<typeof UnitLevel.Type, number | undefined> = {
-  ma: 12,
-  mi: 6,
-  mts: 9,
-  other: undefined,
-  paud: undefined,
-  sd: 6,
-  sma: 12,
-  smk: 12,
-  smp: 9,
-  slb: undefined,
-};
-
-/** The last grade of a unit level, if its students can graduate. */
-export const lastGradeOf = (level: typeof UnitLevel.Type) =>
-  Option.fromUndefinedOr(LAST_GRADE[level]);
 
 /**
  * Why a destination does not fit a cohort of the source period, if it does not.

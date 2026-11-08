@@ -29,11 +29,9 @@ import {
   UserStar01Icon,
 } from "@hugeicons/core-free-icons";
 import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
-import {
-  COHORT_GRADE_MAX,
-  COHORT_GRADE_MIN,
-  CohortGrade,
-} from "@repo/backend/confect/tenancy/cohort";
+import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
+import { gradesOf } from "@repo/backend/confect/tenancy/grades";
+import type { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { languages } from "@repo/internationalization/data/lang";
 import { countries } from "country-flag-icons";
 import {
@@ -84,14 +82,12 @@ export const languageItems = Arr.map(languages, (language) => ({
   value: language.value,
 }));
 
-/** The school years a cohort may hold, as the grade choices of its dialog and of its filter. */
-export const gradeItems = Arr.makeBy(
-  COHORT_GRADE_MAX - COHORT_GRADE_MIN + 1,
-  (index) => {
-    const grade = String(COHORT_GRADE_MIN + index);
-    return { label: grade, value: grade };
-  }
-);
+/** The school years a cohort of a unit of this level may hold (`gradesOf`), as the grade choices of its dialogs. */
+export const gradeItemsOf = (level: typeof UnitLevel.Type) =>
+  Arr.map(gradesOf(level), (grade) => ({
+    label: String(grade),
+    value: String(grade),
+  }));
 
 /**
  * The icons of study, one for each school year, which the filters of the cohorts' grades and of a list's class groups

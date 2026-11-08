@@ -1848,6 +1848,10 @@
     "search-students": "Cari peserta didik",
     "students-empty": "Belum ada peserta didik di rombel ini.",
     "students-empty-description": "Peserta didik muncul di sini setelah ditempatkan di rombel.",
+    "elsewhere-title": "{cohort} tidak mengikuti kelulusan.",
+    "elsewhere-description": "Hanya kelas {last} di {unit} yang lulus, dan {cohort} ada di kelas {grade}.",
+    "elsewhere-none": "{unit} tidak memiliki kelas yang lulus.",
+    "elsewhere-action": "Lihat kelulusan",
     "student": "Peserta didik",
     "nisn": "NISN",
     "nisn-yes": "Tercatat",
@@ -3252,6 +3256,10 @@
     "school-refusal-cohort-name-taken": {
       "title": "Nama kelompok ini sudah dipakai.",
       "description": "Pilih nama lain untuk periode ini."
+    },
+    "school-refusal-cohort-grade": {
+      "title": "Tingkat ini tidak ada di sini.",
+      "description": "Pilih tingkat yang diajarkan jenjang sekolah ini."
     },
     "school-refusal-cohort-limit": {
       "title": "Periode ini sudah penuh kelompok.",

@@ -8,7 +8,7 @@ import {
   type Node,
   type SourceFile,
   type TypeNode,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 
 /** Whether a type is the bare name `const`, which `as const` and `<const>` spell. */

@@ -48,7 +48,7 @@ const batchOf = (
 
 describe("editor/result submit", () => {
   it.effect(
-    "refuses a batch that makes a heading level the contract refuses, with DocumentInvalid, and writes nothing",
+    "answers a batch that makes a heading level the contract refuses with DocumentInvalid, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -68,17 +68,14 @@ describe("editor/result submit", () => {
         });
         // An attribute step sets a heading level the contract refuses. Its value is not read
         // by the step check, so the document it makes is checked here, before any write.
-        const refused = yield* fixture
-          .as("admin")
-          .mutation(steps.submit, {
-            batch: yield* batchOf("crafted", 0, [
-              { attr: "level", pos: 0, stepType: "attr", value: 4 },
-            ]),
-            documentId: made.id,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "DocumentInvalid" });
+        const refused = yield* fixture.as("admin").mutation(steps.submit, {
+          batch: yield* batchOf("crafted", 0, [
+            { attr: "level", pos: 0, stepType: "attr", value: 4 },
+          ]),
+          documentId: made.id,
+          slug: nf,
+        });
+        expect(refused).toEqual({ _tag: "DocumentInvalid" });
         expect(yield* fixture.run(stepRows)).toEqual([]);
         const document = yield* fixture.run(documentRowOf(made.id));
         expect(document.head).toBe(0);
@@ -86,7 +83,7 @@ describe("editor/result submit", () => {
   );
 
   it.effect(
-    "refuses a batch whose step nests the document past the depth bound, with DocumentInvalid, and writes nothing",
+    "answers a batch whose step nests the document past the depth bound with DocumentInvalid, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -99,14 +96,12 @@ describe("editor/result submit", () => {
           slug: nf,
         });
         // One more level passes the bound, so the batch is refused before any write.
-        const refused = yield* teacher
-          .mutation(steps.submit, {
-            batch: yield* batchOf("beyond", 1, [blockquotesAtStart(15)]),
-            documentId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "DocumentInvalid" });
+        const refused = yield* teacher.mutation(steps.submit, {
+          batch: yield* batchOf("beyond", 1, [blockquotesAtStart(15)]),
+          documentId,
+          slug: nf,
+        });
+        expect(refused).toEqual({ _tag: "DocumentInvalid" });
         expect(
           Arr.map(yield* fixture.run(stepRows), (row) => row.version)
         ).toEqual([1]);
@@ -116,7 +111,7 @@ describe("editor/result submit", () => {
   );
 
   it.effect(
-    "refuses a batch that grows the document one byte past the bound, with DocumentTooLarge, and writes nothing",
+    "answers a batch that grows the document one byte past the bound with DocumentTooLarge, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -126,14 +121,11 @@ describe("editor/result submit", () => {
           scope: { kind: "tenant" },
           slug: nf,
         });
-        const refused = yield* fixture
-          .as("admin")
-          .mutation(steps.submit, {
-            batch: yield* batchOf("grow", 0, [insertAt(1, "b")]),
-            documentId: made.id,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
+        const refused = yield* fixture.as("admin").mutation(steps.submit, {
+          batch: yield* batchOf("grow", 0, [insertAt(1, "b")]),
+          documentId: made.id,
+          slug: nf,
+        });
         expect(refused).toMatchObject({
           _tag: "DocumentTooLarge",
           limit: MAX_DOCUMENT_BYTES,
@@ -167,7 +159,7 @@ describe("editor/result submit", () => {
           documentId: made.id,
           slug: nf,
         });
-        expect(accepted).toBeNull();
+        expect(accepted).toEqual({ _tag: "Accepted" });
         const folded = yield* fixture.internal.mutation(fold, {
           documentId: made.id,
         });
@@ -176,7 +168,7 @@ describe("editor/result submit", () => {
   );
 
   it.effect(
-    "refuses a batch with FoldPending while the steps the snapshot lacks are more than one read holds, and accepts it once they fold",
+    "answers a batch with FoldPending while the steps the snapshot lacks are more than one read holds, and accepts it once they fold",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -194,28 +186,27 @@ describe("editor/result submit", () => {
           slug: nf,
         });
         // The backlog is two batches, and one read holds one of them, so the third batch waits.
-        const pending = yield* teacher
-          .mutation(steps.submit, {
-            batch: yield* batchText(backlog, "rina", 1),
-            documentId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(pending).toMatchObject({ _tag: "FoldPending" });
-        expect(yield* fixture.run(stepRows)).toHaveLength(backlog);
-        yield* fixture.internal.mutation(fold, { documentId });
-        yield* teacher.mutation(steps.submit, {
+        const pending = yield* teacher.mutation(steps.submit, {
           batch: yield* batchText(backlog, "rina", 1),
           documentId,
           slug: nf,
         });
+        expect(pending).toEqual({ _tag: "FoldPending" });
+        expect(yield* fixture.run(stepRows)).toHaveLength(backlog);
+        yield* fixture.internal.mutation(fold, { documentId });
+        const retried = yield* teacher.mutation(steps.submit, {
+          batch: yield* batchText(backlog, "rina", 1),
+          documentId,
+          slug: nf,
+        });
+        expect(retried).toEqual({ _tag: "Accepted" });
         const [snapshot] = yield* fixture.run(snapshotRows);
         expect(snapshot.version).toBe(backlog);
       })
   );
 
   it.effect(
-    "refuses a batch with FoldPending while the steps the snapshot lacks fill more than one read's bytes",
+    "answers a batch with FoldPending while the steps the snapshot lacks fill more than one read's bytes",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -232,14 +223,12 @@ describe("editor/result submit", () => {
             ),
           { discard: true }
         );
-        const pending = yield* teacher
-          .mutation(steps.submit, {
-            batch: yield* batchText(6, "rina", 1, text),
-            documentId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(pending).toMatchObject({ _tag: "FoldPending" });
+        const pending = yield* teacher.mutation(steps.submit, {
+          batch: yield* batchText(6, "rina", 1, text),
+          documentId,
+          slug: nf,
+        });
+        expect(pending).toEqual({ _tag: "FoldPending" });
         expect(yield* fixture.run(stepRows)).toHaveLength(6);
       })
   );

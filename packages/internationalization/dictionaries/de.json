@@ -1848,6 +1848,10 @@
     "search-students": "Schüler suchen",
     "students-empty": "Noch kein Schüler in dieser Klasse.",
     "students-empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "elsewhere-title": "{cohort} schließt nicht ab.",
+    "elsewhere-description": "Nur Klasse {last} von {unit} schließt ab, und {cohort} ist in Klasse {grade}.",
+    "elsewhere-none": "{unit} hat keine Klasse, die abschließt.",
+    "elsewhere-action": "Abschlüsse ansehen",
     "student": "Schüler",
     "nisn": "NISN",
     "nisn-yes": "Erfasst",
@@ -3252,6 +3256,10 @@
     "school-refusal-cohort-name-taken": {
       "title": "Diesen Namen gibt es schon.",
       "description": "Wähle für diese Periode einen anderen Namen."
+    },
+    "school-refusal-cohort-grade": {
+      "title": "Diese Stufe gibt es hier nicht.",
+      "description": "Wähle eine Klassenstufe dieser Schulform."
     },
     "school-refusal-cohort-limit": {
       "title": "Diese Periode ist voll.",

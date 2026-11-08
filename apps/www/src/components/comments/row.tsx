@@ -28,7 +28,7 @@ import type {
 } from "@/components/comments/state";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";
-import { formatShortAge } from "@/components/user/age";
+import { formatAge } from "@/components/user/age";
 import {
   FeedActions,
   FeedAge,
@@ -113,7 +113,7 @@ export function CommentRow({
           <FeedHeader>
             <FeedName>{author?.name ?? t("anonymous")}</FeedName>
             <FeedAge at={comment._creationTime}>
-              {formatShortAge(comment._creationTime, now, locale)}
+              {formatAge(comment._creationTime, now, locale)}
             </FeedAge>
             <SignedInIsland>
               <CommentOwnerMenu comment={comment} />

@@ -9,7 +9,7 @@ import { createContext, Suspense, use } from "react";
 import { useLocale } from "use-intl";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";
-import { formatShortAge } from "@/components/user/age";
+import { formatAge } from "@/components/user/age";
 import {
   FeedActions,
   FeedAge,
@@ -58,7 +58,7 @@ export function PostRow({ post }: { post: ListPost }) {
         <FeedHeader>
           <FeedName>{profile.name}</FeedName>
           <FeedAge at={post._creationTime}>
-            {formatShortAge(post._creationTime, now, locale)}
+            {formatAge(post._creationTime, now, locale)}
           </FeedAge>
           {isOwner && (
             <FeedEnd>

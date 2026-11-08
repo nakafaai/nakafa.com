@@ -6,20 +6,34 @@ import {
   Path,
   Record as Rec,
   Schema,
+  String as Str,
 } from "effect";
 
 /** The schema file of the installed Effect compiler plugin, which names every rule it defines. */
 const PLUGIN_SCHEMA = "node_modules/@effect/tsgo/schema.json";
+/** How the plugin's schema opens the description of a deprecated rule, whose listing fails the typecheck. */
+const DEPRECATED = "Deprecated:";
 
+const PluginRule = Schema.Struct({
+  description: Schema.optionalKey(Schema.String),
+});
 const PluginSchema = Schema.fromJsonString(
   Schema.Struct({
     definitions: Schema.Struct({
       effectLanguageServicePluginDiagnosticSeverityDefinition: Schema.Struct({
-        properties: Schema.Record(Schema.String, Schema.Unknown),
+        properties: Schema.Record(Schema.String, PluginRule),
       }),
     }),
   })
 );
+
+/** Whether the plugin still offers a rule, rather than naming it only to report its replacement. */
+function isCurrent(rule: typeof PluginRule.Type) {
+  return !(
+    rule.description !== undefined &&
+    Str.startsWith(DEPRECATED)(rule.description)
+  );
+}
 const RuleDecisions = Schema.Struct({
   diagnosticSeverity: Schema.Record(Schema.String, Schema.Unknown),
 });
@@ -43,8 +57,9 @@ function unreadableRules(cause: unknown) {
 }
 
 /**
- * Reads the name of every rule the installed Effect compiler plugin defines,
- * so the policy can ask for a decision on each one.
+ * Reads the name of every current rule the installed Effect compiler plugin
+ * defines, so the policy can ask for a decision on each one. A deprecated rule
+ * gets none: listing it fails the typecheck, which names its replacement.
  */
 export const pluginRuleNames = Effect.fn("RepositoryPolicy.pluginRuleNames")(
   function* (root: string) {
@@ -57,8 +72,11 @@ export const pluginRuleNames = Effect.fn("RepositoryPolicy.pluginRuleNames")(
       Effect.mapError(unreadableRules)
     );
     return Rec.keys(
-      schema.definitions.effectLanguageServicePluginDiagnosticSeverityDefinition
-        .properties
+      Rec.filter(
+        schema.definitions
+          .effectLanguageServicePluginDiagnosticSeverityDefinition.properties,
+        isCurrent
+      )
     );
   }
 );

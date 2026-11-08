@@ -38,7 +38,7 @@ import {
   type TypeLiteralNode,
   type TypeNode,
   type TypeReferenceNode,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 import { children } from "#scripts/check/source";
 import { localShapes, valueMembers } from "#scripts/check/value";

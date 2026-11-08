@@ -21,7 +21,7 @@ import {
   type SourceFile,
   type TypeLiteralNode,
   type TypeNode,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 import { declaredNames, mentions, objectLiterals } from "#scripts/check/shapes";
 import { valueMembers, valueTypes } from "#scripts/check/value";

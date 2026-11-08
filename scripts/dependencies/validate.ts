@@ -17,6 +17,7 @@ import {
   PACKAGE_MANAGER,
   RETIRED_LOCK_PACKAGES,
   SCRIPT_DEPENDENCY_HOLDS,
+  TSRS_VERSION,
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
 import type {
@@ -107,8 +108,8 @@ function cohortProblems(workspace: WorkspaceManifest) {
       )
     ),
     problemWhen(
-      workspace.catalog?.typescript !== "7.0.2",
-      "The native TypeScript catalog must be exactly 7.0.2."
+      workspace.catalog?.tsrs !== TSRS_VERSION,
+      `The tsrs catalog must be exactly ${TSRS_VERSION}, the release @effect/tsgo patches.`
     ),
     Arr.flatMap(
       ["vitest", "@vitest/coverage-istanbul", "@vitest/ui"],

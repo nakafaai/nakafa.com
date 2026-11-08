@@ -11,6 +11,12 @@ export const TryExamIdContext =
 /** The school of the try, which the try page provides. */
 export const TrySlugContext = createContext<TenantSlug | null>(null);
 
+/**
+ * Whether the try's exam was deleted, or closed to the teacher, after the page read it. Its texts then
+ * read no more and keep what they showed, so the deletion of their documents fails no read.
+ */
+export const TryGoneContext = createContext(false);
+
 /** The try's own answers, which the try page creates once for its instance. */
 export const TryStoreContext = createContext<StoreApi<ExamTry> | null>(null);
 
