@@ -34,7 +34,7 @@ import {
 } from "@/lib/routing/school/shell.server";
 import { readPathSegments } from "@/lib/routing/template";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
-import { readSchoolTreeGate } from "@/lib/tenant/gate";
+import { readSchoolPageRedirect, readSchoolTreeGate } from "@/lib/tenant/gate";
 
 /** Names a failure of a decision as the entry's uncaught error, and keeps an error that already is one. */
 function toUncaughtRequestError(cause: unknown) {
@@ -129,7 +129,8 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * decide each answer, in this order: a host under the production domain that
  * names no school moves to the main site; a non-canonical slash spelling moves to
  * its canonical address; a non-public spelling moves to its public address. A
- * school tree path answers not found, a file that a school host's address names
+ * main host's School page without its locale moves to the negotiated locale, and
+ * a school tree path answers not found, a file that a school host's address names
  * answers the static not-found page before any read, and a refused school page
  * answers the static not-found page made for a school host. A page whose route renders only
  * in the browser, such as a learner's home or settings, answers the browser shell.
@@ -166,6 +167,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   const spelling = readSpellingRedirectResponse(request);
   if (Option.isSome(spelling)) {
     return spelling.value;
+  }
+
+  const schoolPage = readSchoolPageRedirect(request);
+  if (Option.isSome(schoolPage)) {
+    return schoolPage.value;
   }
 
   const schoolTree = readSchoolTreeGate(request);
