@@ -30,7 +30,6 @@ import {
 import { type ComponentProps, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PaperMedia } from "@/components/exams/sitting/media";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { mediaUpdate } from "@/components/tenant/exams/attached";
 import { sendFile } from "@/components/tenant/exams/image";
 import { ImportFileField } from "@/components/tenant/exams/import/field";
@@ -40,6 +39,7 @@ import {
   useTryExamId,
   useTrySlug,
 } from "@/components/tenant/exams/try/context";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The audio files a teacher picks from. */
 const AUDIO_FILES =
@@ -212,7 +212,7 @@ export function MediaField({
 
   /** Saves the question's media with one piece more or less. */
   const saveMedia = (media: readonly QuestionMedia[]) =>
-    sentAction(() =>
+    schoolCall(() =>
       save({ examId: exam.id, media, questionId: question.id, slug })
     );
 
@@ -223,7 +223,7 @@ export function MediaField({
       file
     ).pipe(
       Effect.flatMap((fileId) =>
-        sentAction(() => register({ examId: exam.id, fileId, slug }))
+        schoolCall(() => register({ examId: exam.id, fileId, slug }))
       ),
       Effect.flatMap(({ id }) =>
         saveMedia([...question.media, { alt, asset: id, kind: "audio" }])
@@ -246,9 +246,9 @@ export function MediaField({
               <Button
                 disabled={!editable}
                 onClick={() =>
-                  runExamAction(saveMedia(Arr.remove(question.media, index)), {
-                    onFailure: Fn.constVoid,
-                    onSuccess: Fn.constVoid,
+                  runSchoolWrite(saveMedia(Arr.remove(question.media, index)), {
+                    onFailed: Fn.constVoid,
+                    onSaved: Fn.constVoid,
                   })
                 }
                 size="icon-sm"
@@ -289,14 +289,14 @@ export function MediaField({
           kind={adding}
           onAdd={({ alt, file, video }) =>
             startTransition(async () => {
-              await runExamAction(
+              await runSchoolWrite(
                 file === null
                   ? saveMedia([
                       ...question.media,
                       { alt, kind: "video", video },
                     ])
                   : addClip(file, alt),
-                { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+                { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
               );
             })
           }

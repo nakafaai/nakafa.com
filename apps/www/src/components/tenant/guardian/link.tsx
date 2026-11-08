@@ -29,9 +29,7 @@ import {
   verifyLinkChange,
 } from "@/components/tenant/guardian/change";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/link";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The dialogs of a live link, from its row menu or its open pane. */
 type LinkDialog = "readdress" | "rename" | "revoke";
@@ -84,7 +82,9 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
           <Button
             onClick={() =>
               startTransition(() =>
-                saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => verify({ linkId: link.id, slug }))
+                )
               )
             }
             type="button"
@@ -138,7 +138,9 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
                 icon={CheckmarkBadge01Icon}
                 onClick={() =>
                   startTransition(() =>
-                    saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
+                    runSchoolWrite(
+                      schoolCall(() => verify({ linkId: link.id, slug }))
+                    )
                   )
                 }
               >
@@ -218,7 +220,9 @@ function GuardianLinkRevokeDialog({
           onClick={() => {
             setOpen(false);
             startTransition(() =>
-              saveSchool(() => revoke({ linkId: link.id, slug }), SOURCE)
+              runSchoolWrite(
+                schoolCall(() => revoke({ linkId: link.id, slug }))
+              )
             );
           }}
           type="button"
