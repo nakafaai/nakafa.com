@@ -16,6 +16,7 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
@@ -328,11 +329,11 @@ function getWindSceneColors(theme: string | undefined) {
   return {
     blade: dark ? getColor("GRAY", 200) : getColor("SLATE", 50),
     foundation: dark ? getColor("SLATE", 600) : getColor("SLATE", 300),
-    groundLight: dark ? getColor("GRAY", 800) : getColor("EMERALD", 100),
-    hub: dark ? getColor("SLATE", 300) : getColor("SLATE"),
+    groundLight: dark ? getColor("GRAY", 800) : getColor("SLATE", 200),
+    hub: dark ? getColor("SLATE", 300) : PLOT_COLORS.slate,
     nacelle: dark ? getColor("SLATE", 300) : getColor("SLATE", 200),
-    skyLight: dark ? getColor("BLUE", 300) : getColor("BLUE", 100),
+    skyLight: dark ? getColor("SLATE", 300) : getColor("SLATE", 50),
     tower: dark ? getColor("SLATE", 300) : getColor("GRAY", 300),
-    wind: dark ? getColor("SKY", 400) : getColor("SKY"),
+    wind: PLOT_COLORS.teal,
   };
 }

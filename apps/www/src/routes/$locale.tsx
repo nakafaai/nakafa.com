@@ -16,7 +16,6 @@ import {
 import {
   createFileRoute,
   type ErrorComponentProps,
-  notFound,
   Outlet,
   useParams,
 } from "@tanstack/react-router";
@@ -26,6 +25,7 @@ import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { readStaticData } from "@/lib/static/data";
 
 /** The messages that every locale page renders, under every route group. */
@@ -37,13 +37,7 @@ const SHELL_NAMESPACES = ["Common", "State", "Toast"] as const;
  */
 export const Route = createFileRoute("/$locale")({
   params: {
-    parse: ({ locale }) => {
-      const decoded = decodeLocale(locale);
-      if (Option.isNone(decoded)) {
-        throw notFound();
-      }
-      return { locale: decoded.value };
-    },
+    parse: ({ locale }) => ({ locale: getLocaleOrThrow(locale) }),
     stringify: ({ locale }) => ({ locale }),
   },
   loader: async ({ params }) => {

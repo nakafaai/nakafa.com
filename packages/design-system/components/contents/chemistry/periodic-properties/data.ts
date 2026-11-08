@@ -1,7 +1,8 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { COLORS, FIXED_COLORS, getColor } from "@repo/design-system/lib/color";
+import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS, PlotColorSchema } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Array as Arr, Record as Rec, Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const ATOMIC_RADIUS_MODE_ID = "atomic-radius";
 const IONIZATION_ENERGY_MODE_ID = "ionization-energy";
@@ -27,13 +28,8 @@ const PeriodicPropertySampleSchema = Schema.Struct({
 });
 export type PeriodicPropertySample = typeof PeriodicPropertySampleSchema.Type;
 
-const PeriodicPropertyColorKeySchema = Schema.Literals([
-  ...Rec.keys(COLORS),
-  ...Rec.keys(FIXED_COLORS),
-]);
-
 const PeriodicPropertyModeSchema = Schema.Struct({
-  colorKey: PeriodicPropertyColorKeySchema,
+  color: PlotColorSchema,
   groupSamples: Schema.Array(PeriodicPropertySampleSchema),
   marker: Schema.Literals(["sphere", "pillar"]),
   periodSamples: Schema.Array(PeriodicPropertySampleSchema),
@@ -42,7 +38,7 @@ export type PeriodicPropertyMode = typeof PeriodicPropertyModeSchema.Type;
 
 export const PERIODIC_PROPERTY_MODES = {
   [ATOMIC_RADIUS_MODE_ID]: {
-    colorKey: "TEAL",
+    color: "teal",
     marker: "sphere",
     periodSamples: [
       { symbol: "Na", value: 186 },
@@ -62,7 +58,7 @@ export const PERIODIC_PROPERTY_MODES = {
     ],
   },
   [IONIZATION_ENERGY_MODE_ID]: {
-    colorKey: "ORANGE",
+    color: "orange",
     marker: "pillar",
     periodSamples: [
       { symbol: "Na", value: 495.9 },
@@ -83,7 +79,7 @@ export const PERIODIC_PROPERTY_MODES = {
     ],
   },
   [ELECTRON_AFFINITY_MODE_ID]: {
-    colorKey: "VIOLET",
+    color: "violet",
     marker: "pillar",
     periodSamples: [
       { symbol: "Na", value: 53 },
@@ -103,7 +99,7 @@ export const PERIODIC_PROPERTY_MODES = {
     ],
   },
   [ELECTRONEGATIVITY_MODE_ID]: {
-    colorKey: "SKY",
+    color: "fuchsia",
     marker: "pillar",
     periodSamples: [
       { symbol: "Na", value: 0.93 },
@@ -149,7 +145,7 @@ export function isPeriodicPropertyModeId(
  * Resolves the deterministic data color for one periodic-property mode.
  */
 export function getPeriodicPropertyModeColor(modeId: PeriodicPropertyModeId) {
-  return getColor(PERIODIC_PROPERTY_MODES[modeId].colorKey);
+  return PLOT_COLORS[PERIODIC_PROPERTY_MODES[modeId].color];
 }
 
 /**
@@ -161,10 +157,10 @@ export function getPeriodicPropertiesSceneColors(
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     markerText: ORIGIN_COLOR.LIGHT,
     markerTextOutline: ORIGIN_COLOR.DARK,
-    rail: isDarkTheme ? getColor("SLATE") : getColor("GRAY"),
+    rail: isDarkTheme ? PLOT_COLORS.slate : getColor("GRAY"),
     skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };

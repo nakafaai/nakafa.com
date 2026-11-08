@@ -18,7 +18,7 @@ import {
   getCurriculumIndexHref,
   isRenderableCurriculumView,
 } from "@/lib/curriculum/routes";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 
 /** The params of the curriculum route, as the router decodes them. */
 const CurriculumParams = Schema.Struct({

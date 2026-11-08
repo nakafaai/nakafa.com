@@ -1,18 +1,18 @@
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 
 import type { MathAppearance } from "@/lib/content/renderer/client/base/visual/scene";
 
 const PALETTE = {
-  answer: getColor("FUCHSIA"),
-  construction: getColor("TEAL"),
-  highlight: getColor("AMBER"),
-  primary: getColor("ORANGE"),
-  reference: getColor("SLATE"),
-  secondary: getColor("VIOLET"),
-  warning: getColor("PINK"),
+  answer: PLOT_COLORS.fuchsia,
+  construction: PLOT_COLORS.teal,
+  highlight: PLOT_COLORS.amber,
+  primary: PLOT_COLORS.orange,
+  reference: PLOT_COLORS.slate,
+  secondary: PLOT_COLORS.violet,
+  warning: PLOT_COLORS.pink,
 } satisfies Record<MathAppearance, string>;
 
-/** Resolves subject colors while reserving red, green, and blue for Cartesian axes. */
+/** Resolves each appearance to its own plot color, never an axis color. */
 export function resolveMathAppearance(appearance: MathAppearance) {
   return PALETTE[appearance];
 }

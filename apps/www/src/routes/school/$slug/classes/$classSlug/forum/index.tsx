@@ -1,9 +1,9 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
 import { ClassShell } from "@/components/tenant/classes/shell";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readClassAddress } from "@/lib/tenant/params";
 
 /**
@@ -23,15 +23,11 @@ const ForumSearch = Schema.Struct({
 export const Route = createFileRoute("/school/$slug/classes/$classSlug/forum/")(
   {
     validateSearch: Schema.toStandardSchemaV1(ForumSearch),
-    beforeLoad: ({ params }) => {
-      const classAddress = readClassAddress(params.classSlug);
-      if (Option.isNone(classAddress)) {
-        throw notFound();
-      }
-      return { classAddress: classAddress.value };
-    },
+    ...guardSchoolPage({
+      reads: (params: { readonly classSlug: string }) =>
+        Option.all({ classAddress: readClassAddress(params.classSlug) }),
+    }),
     component: SchoolClassForumPage,
-    notFoundComponent: SchoolPageNotFound,
   }
 );
 

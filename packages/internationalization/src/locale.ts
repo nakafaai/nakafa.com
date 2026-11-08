@@ -1,6 +1,7 @@
 import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
+  INDONESIAN_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
 
@@ -13,10 +14,20 @@ export type Locale = typeof LocaleSchema.Type;
 export const LOCALES = ACTIVE_APP_LOCALE_CODES;
 
 /**
- * The locale of a URL that names none. It is also the `x-default` of every
- * alternate list, so the first contract locale is the one that answers.
+ * The canonical locale: the `x-default` of every alternate list, and the one
+ * locale of the feeds and catalogs that name a single locale, so the first
+ * contract locale is the one that answers. A visitor is never sent here for
+ * want of a language; that is `VISITOR_LOCALE`.
  */
 export const DEFAULT_LOCALE = ACTIVE_APP_LOCALE_CODES[0];
+
+/**
+ * The locale a visitor reads in when neither their language cookie nor their
+ * browser's languages name a Nakafa locale: Indonesian, the language of most of
+ * Nakafa's learners (owner, 8 Nov 2026). The root and every address that names
+ * no locale move there.
+ */
+export const VISITOR_LOCALE = INDONESIAN_APP_LOCALE_CODE;
 
 /**
  * The cookie that stores a visitor's locale choice. The product writes and

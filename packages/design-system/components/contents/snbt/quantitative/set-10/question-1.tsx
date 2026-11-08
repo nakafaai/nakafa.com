@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ComponentProps, ReactNode } from "react";
 
 interface GraphProps {
@@ -76,7 +76,7 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
   const data: ComponentProps<typeof LineEquationCard>["data"] = [
     {
       points: t1Points,
-      color: getColor("INDIGO"),
+      color: PLOT_COLORS.violet,
       smooth: false,
       showPoints: false,
       labels: [
@@ -93,7 +93,7 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
     },
     {
       points: t2Points,
-      color: getColor("ROSE"),
+      color: PLOT_COLORS.pink,
       smooth: false,
       showPoints: false,
       labels: [

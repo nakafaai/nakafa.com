@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
@@ -113,17 +114,17 @@ export function getCombiningVolumesSceneColors(
 
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    bond: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
-    glass: getColor("CYAN"),
+    bond: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
+    glass: getColor("SLATE", 300),
     hydrogen: isDarkTheme ? getColor("ZINC") : getColor("NEUTRAL"),
-    hydrogenGas: getColor("SLATE"),
-    nitrogen: getColor("VIOLET"),
-    nitrogenGas: getColor("VIOLET"),
-    oxygen: getColor("SKY"),
-    oxygenGas: getColor("SKY"),
+    hydrogenGas: PLOT_COLORS.slate,
+    nitrogen: PLOT_COLORS.violet,
+    nitrogenGas: PLOT_COLORS.violet,
+    oxygen: PLOT_COLORS.teal,
+    oxygenGas: PLOT_COLORS.teal,
     sphereText: ORIGIN_COLOR.LIGHT,
-    sphereTextOutline: isDarkTheme ? ORIGIN_COLOR.DARK : getColor("SLATE"),
-    steamGas: getColor("TEAL"),
+    sphereTextOutline: isDarkTheme ? ORIGIN_COLOR.DARK : PLOT_COLORS.slate,
+    steamGas: PLOT_COLORS.amber,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

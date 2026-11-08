@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -102,12 +102,12 @@ export function Graph({ title, description, labels }: GraphProps) {
   };
 
   // Colors
-  const COLOR_WATER = getColor("CYAN");
-  const COLOR_SIGHT = getColor("ORANGE");
-  const COLOR_DEPTH = getColor("INDIGO"); // Vertical lines
-  const COLOR_EAGLE = getColor("AMBER");
-  const COLOR_FISH = getColor("TEAL");
-  const COLOR_LABEL = getColor("VIOLET");
+  const COLOR_WATER = PLOT_COLORS.slate;
+  const COLOR_SIGHT = PLOT_COLORS.orange;
+  const COLOR_DEPTH = PLOT_COLORS.fuchsia; // Vertical lines
+  const COLOR_EAGLE = PLOT_COLORS.amber;
+  const COLOR_FISH = PLOT_COLORS.teal;
+  const COLOR_LABEL = PLOT_COLORS.violet;
 
   return (
     <LineEquationCard

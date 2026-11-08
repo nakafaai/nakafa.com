@@ -19,6 +19,7 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import {
   AnimatePresence,
@@ -30,6 +31,15 @@ import {
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+/** The colors the pieces of a divided lump take in turn. */
+const PIECE_COLORS = [
+  PLOT_COLORS.orange,
+  PLOT_COLORS.teal,
+  PLOT_COLORS.violet,
+  PLOT_COLORS.amber,
+  PLOT_COLORS.fuchsia,
+] as const;
 
 interface AncientAtomLabProps {
   description: ReactNode;
@@ -138,7 +148,8 @@ export function AncientAtomLab({
                     key={`${selectedLevelId}-${pieceIndex}`}
                     layout
                     style={{
-                      backgroundColor: `var(--chart-${(pieceIndex % 5) + 1})`,
+                      backgroundColor:
+                        PIECE_COLORS[pieceIndex % PIECE_COLORS.length],
                     }}
                     transition={{ ease: "easeOut" }}
                   />
