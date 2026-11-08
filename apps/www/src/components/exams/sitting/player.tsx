@@ -14,7 +14,6 @@ import {
   takesAnswers,
 } from "@/components/exams/sitting/attempt";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
-import { serverTime } from "@/components/exams/sitting/clock";
 import {
   isRetiredDevice,
   sittingFailureMessage,
@@ -38,7 +37,6 @@ import {
 } from "@/components/exams/sitting/questions";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import { useSittingSignals } from "@/components/exams/sitting/signals";
-import { useSittingClock } from "@/components/exams/sitting/timer";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
@@ -49,6 +47,7 @@ import { PlayerGrid } from "@/components/player/navigator/grid";
 import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
+import { useNow } from "@/components/player/now";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
@@ -75,16 +74,15 @@ export function StudentPlayer({
   sitting,
   slug,
 }: {
-  /** The device the student was admitted on, and its clock's offset from the server's. */
+  /** The device the student was admitted on; the clock above the player carries its offset from the server's. */
   readonly admission: {
-    readonly clockOffset: number;
     readonly deviceId: string;
   };
   readonly attempt: AttemptValue;
   readonly sitting: typeof SittingView.Type;
   readonly slug: TenantSlug;
 }) {
-  const { clockOffset, deviceId } = admission;
+  const { deviceId } = admission;
   const t = useTranslations("Exams");
   const mode = useSittingMode();
   const sittingId = sitting.id;
@@ -125,12 +123,7 @@ export function StudentPlayer({
         header={
           <PaperBar
             back={<PaperBack />}
-            timer={
-              <SittingTimer
-                clockOffset={clockOffset}
-                deadline={attempt.deadline}
-              />
-            }
+            timer={<SittingTimer deadline={attempt.deadline} />}
             title={sitting.examTitle}
           >
             <StudentFinish
@@ -164,10 +157,7 @@ export function StudentPlayer({
         back={<PaperBack />}
         timer={
           isActive(attempt.state) ? (
-            <SittingTimer
-              clockOffset={clockOffset}
-              deadline={attempt.deadline}
-            />
+            <SittingTimer deadline={attempt.deadline} />
           ) : undefined
         }
         title={sitting.examTitle}
@@ -237,21 +227,11 @@ function StudentFinish({
   );
 }
 
-/** The timer of the attempt, counted down on the server's time: the device's time corrected by the offset. */
-function SittingTimer({
-  clockOffset,
-  deadline,
-}: {
-  readonly clockOffset: number;
-  readonly deadline: number;
-}) {
-  const now = useSittingClock();
+/** The timer of the attempt, counted down on the server's time, which the clock above the player keeps. */
+function SittingTimer({ deadline }: { readonly deadline: number }) {
+  const now = useNow(true);
 
-  return (
-    <PlayerTimer
-      seconds={secondsLeft(deadline, serverTime(now, clockOffset))}
-    />
-  );
+  return <PlayerTimer seconds={secondsLeft(deadline, now)} />;
 }
 
 /**
