@@ -1,6 +1,7 @@
 import { type PaginatedQueryItem, useMutation } from "@confect/react";
 import {
   CheckmarkBadge01Icon,
+  Link01Icon,
   PencilEdit02Icon,
   Unlink01Icon,
   UserEdit01Icon,
@@ -16,6 +17,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { RowItems } from "@/components/shared/table/menu";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
@@ -84,6 +86,7 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
               )
             }
             type="button"
+            variant="outline"
           >
             <HugeIcons icon={CheckmarkBadge01Icon} />
             {t("link-verify")}
@@ -135,9 +138,9 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
                 <HugeIcons icon={CheckmarkBadge01Icon} />
                 {t("link-verify")}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
             </>
           ) : null}
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => dialogs.show("revoke")}
             variant="destructive"
@@ -233,6 +236,12 @@ function GuardianLinkRevokeDialog({
       open={open}
       setOpen={setOpen}
       title={t("link-revoke-title")}
-    />
+    >
+      <ConfirmSubject
+        detail={link.guardian.name}
+        icon={Link01Icon}
+        name={link.student.name}
+      />
+    </ResponsiveDialog>
   );
 }
