@@ -97,6 +97,23 @@ describe("dictionary key policy", () => {
   );
 
   it.effect(
+    "reports what an empty list says in more than one sentence and accepts one sentence or a title",
+    () =>
+      Effect.gen(function* () {
+        const findings = yield* dictionaryFindings([
+          source(
+            EN,
+            '{\n  "Common": {\n    "search-empty": "No match found.",\n    "class-empty": "No class yet",\n    "people-empty": "No one is free. Add one in Accounts.",\n    "empty": "Nothing here! Try again.",\n    "empty-description": "One. Two.",\n    "exam-empty": { "label": "One. Two." }\n  }\n}\n'
+          ),
+        ]);
+        assert.deepStrictEqual(findings, [
+          `${EN}:5: Common.people-empty says what an empty list holds, which takes one sentence: join or cut it to one sentence.`,
+          `${EN}:6: Common.empty says what an empty list holds, which takes one sentence: join or cut it to one sentence.`,
+        ]);
+      })
+  );
+
+  it.effect(
     "the real repository's dictionaries name each key once",
     () =>
       Effect.gen(function* () {

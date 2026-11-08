@@ -55,6 +55,7 @@ export function Menu() {
       <SelectContent label={t(key)} />
       <SelectContent label={t()} />
       <DropdownMenuContent label={\`\${name} menu\`} />
+      <PickerContent label={t("history")} />
     </>
   );
 }`),
@@ -65,6 +66,7 @@ export function Menu() {
             own("SelectContent"),
             own("SelectContent"),
             own("DropdownMenuContent"),
+            own("PickerContent"),
           ]
         );
       })

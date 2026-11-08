@@ -34,6 +34,12 @@ const DICTIONARY_FILE_PATTERN =
  */
 const MENU_KEY_PATTERN = /^menu-/u;
 const ONE_WORD_PATTERN = /^\S+$/u;
+/**
+ * A key that names what an empty list says, such as a picker's empty slot. It says it in one sentence at most, so a
+ * key of this family never holds a second sentence after the first one ends.
+ */
+const EMPTY_KEY_PATTERN = /(?:^|-)empty$/u;
+const SECOND_SENTENCE_PATTERN = /[.!?]\s+\S/u;
 
 /** A key that an object names again after its first copy, with the key path to that object. */
 const RepeatedKey = Schema.Struct({
@@ -113,21 +119,41 @@ function repeatedKeys(
   );
 }
 
+/** A family of keys, and the test that a value of the family fails. */
+interface ValueRule {
+  readonly key: RegExp;
+  readonly strays: (value: string) => boolean;
+}
+
+/** A dropdown's label holds one word. */
+const MENU_RULE: ValueRule = {
+  key: MENU_KEY_PATTERN,
+  strays: (value) => !ONE_WORD_PATTERN.test(value),
+};
+
+/** What an empty list says holds one sentence at most. */
+const EMPTY_RULE: ValueRule = {
+  key: EMPTY_KEY_PATTERN,
+  strays: (value) => SECOND_SENTENCE_PATTERN.test(value),
+};
+
 /**
- * Collects the dropdown labels below `node` that hold more than one word, with the key path that leads to each.
+ * Collects the values below `node` whose key belongs to the rule's family and that fail its test, with the key path
+ * that leads to each.
  */
-function wordyMenuLabels(
+function strayValues(
   sourceFile: SourceFile,
   node: Node,
-  path: readonly string[]
+  path: readonly string[],
+  rule: ValueRule
 ): readonly (typeof RepeatedKey.Type)[] {
   const named = isNamedProperty(node);
   const valuePath = named ? Arr.append(path, node.name.text) : path;
-  const wordy =
+  const stray =
     named &&
-    MENU_KEY_PATTERN.test(node.name.text) &&
+    rule.key.test(node.name.text) &&
     isStringLiteral(node.initializer) &&
-    !ONE_WORD_PATTERN.test(node.initializer.text)
+    rule.strays(node.initializer.text)
       ? [
           {
             keyPath: Arr.join(valuePath, "."),
@@ -139,9 +165,9 @@ function wordyMenuLabels(
         ]
       : [];
   return Arr.appendAll(
-    wordy,
+    stray,
     Arr.flatMap(children(node), (child) =>
-      wordyMenuLabels(sourceFile, child, valuePath)
+      strayValues(sourceFile, child, valuePath, rule)
     )
   );
 }
@@ -150,8 +176,9 @@ function wordyMenuLabels(
  * Reports each key that a dictionary object names more than once, at the line
  * of every copy after the first. A JSON reader keeps only the last copy, so a
  * merge that adds the same object twice would drop one of them with no error.
- * It also reports a dropdown's label that holds more than one word: a label
- * names what is chosen in one word, in every language.
+ * It also reports a dropdown's label that holds more than one word, since a label
+ * names what is chosen in one word in every language, and an empty list's words
+ * that run past one sentence.
  */
 export const dictionaryFindings = Effect.fn(
   "RepositoryPolicy.dictionaryFindings"
@@ -163,18 +190,23 @@ export const dictionaryFindings = Effect.fn(
     }))
   );
   return Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
-    Arr.appendAll(
+    Arr.flatten([
       Arr.map(
         repeatedKeys(sourceFile, sourceFile, []),
         ({ keyPath, line }) =>
           `${file}:${line}: ${keyPath} is named more than once in one object, and a JSON reader keeps only the last copy: merge the copies into one.`
       ),
       Arr.map(
-        wordyMenuLabels(sourceFile, sourceFile, []),
+        strayValues(sourceFile, sourceFile, [], MENU_RULE),
         ({ keyPath, line }) =>
           `${file}:${line}: ${keyPath} labels a dropdown, which names what is chosen in one word: shorten it to one word.`
-      )
-    )
+      ),
+      Arr.map(
+        strayValues(sourceFile, sourceFile, [], EMPTY_RULE),
+        ({ keyPath, line }) =>
+          `${file}:${line}: ${keyPath} says what an empty list holds, which takes one sentence: join or cut it to one sentence.`
+      ),
+    ])
   );
 }, Effect.scoped);
 
