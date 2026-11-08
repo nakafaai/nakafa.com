@@ -35,15 +35,19 @@ const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(function* (
     publicPath
   );
   if (!model.projection) {
-    if (source.runtimeJson !== null) {
+    if (source.delivery !== null) {
       return yield* makeArticleProjectionError(input);
     }
     return Option.none();
   }
-  if (source.runtimeJson === null) {
+  if (source.delivery === null || source.model.projectionJson === null) {
     return yield* makeArticleProjectionError(input);
   }
-  const data = yield* decodePublishedDelivery(input, source.runtimeJson);
+  const data = yield* decodePublishedDelivery(
+    { ...input, activeReleaseId: model.activeReleaseId, family: "article" },
+    source.delivery,
+    source.model.projectionJson
+  );
   const narrowed = yield* decodeArticleData(data, input);
   yield* verifyArticlePublication(
     {
