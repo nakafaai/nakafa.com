@@ -4,9 +4,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -97,16 +95,12 @@ function InboxFilter({ all }: { all: boolean }) {
           <HeaderLabel>{chosen.label}</HeaderLabel>
         </SelectValue>
       </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectLabel>{common("menu-schools")}</SelectLabel>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              <HugeIcons icon={item.icon} />
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
+      <SelectContent label={common("menu-schools")}>
+        {Arr.map(items, (item) => (
+          <SelectItem icon={item.icon} key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

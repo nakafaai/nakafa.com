@@ -36,7 +36,6 @@ export function SchoolRoleChangeDialog({
 }) {
   const { role: viewerRole, slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const change = useMutation(access.grants.change).withOptimisticUpdate(
     changeGrantRoleChange
@@ -45,36 +44,27 @@ export function SchoolRoleChangeDialog({
 
   return (
     <ResponsiveDialog
-      description={t("grant-change-description", { name: grant.person.name })}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={role === undefined}
-            onClick={() => {
-              if (role === undefined) {
-                return;
-              }
-              setOpen(false);
-              startTransition(() =>
-                saveSchool(
-                  () => change({ grantId: grant.id, role, slug }),
-                  SOURCE
-                )
-              );
-            }}
-            type="button"
-          >
-            {t("save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={role === undefined}
+          onClick={() => {
+            if (role === undefined) {
+              return;
+            }
+            setOpen(false);
+            startTransition(() =>
+              saveSchool(
+                () => change({ grantId: grant.id, role, slug }),
+                SOURCE
+              )
+            );
+          }}
+          type="button"
+        >
+          {t("save")}
+        </Button>
       }
+      description={t("grant-change-description", { name: grant.person.name })}
       open={open}
       setOpen={setOpen}
       title={t("grant-change")}

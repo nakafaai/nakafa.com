@@ -8,12 +8,9 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useState } from "react";
@@ -54,17 +51,15 @@ export function BreadcrumbMenu({
         <DropdownMenuContent
           align="start"
           className="w-auto max-w-[calc(100vw-2rem)] min-w-48"
+          label={tCommon("menu-pages")}
         >
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{tCommon("menu-pages")}</DropdownMenuLabel>
-            {Arr.map(items, (item) => (
-              <BreadcrumbMenuItem
-                item={item}
-                key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
-                onChoose={() => setOpen(false)}
-              />
-            ))}
-          </DropdownMenuGroup>
+          {Arr.map(items, (item) => (
+            <BreadcrumbMenuItem
+              item={item}
+              key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
+              onChoose={() => setOpen(false)}
+            />
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </BreadcrumbItem>
@@ -91,15 +86,13 @@ function BreadcrumbMenuItem({
 
   return (
     <DropdownMenuItem
+      icon={Folder02Icon}
       onClick={onChoose}
-      render={
-        <BreadcrumbAnchor target={item.target}>
-          <HugeIcons icon={Folder02Icon} />
-          <span className="min-w-0 truncate" title={label}>
-            {label}
-          </span>
-        </BreadcrumbAnchor>
-      }
-    />
+      render={<BreadcrumbAnchor target={item.target} />}
+    >
+      <span className="min-w-0 truncate" title={label}>
+        {label}
+      </span>
+    </DropdownMenuItem>
   );
 }

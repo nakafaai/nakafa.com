@@ -15,7 +15,7 @@ import type {
   ClassPersonKind,
 } from "@repo/backend/confect/classroom/people.spec";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
@@ -206,9 +206,9 @@ function CopyItem({
   return (
     <DropdownMenuItem
       closeOnClick={false}
+      icon={clipboard.copied ? Tick01Icon : icon}
       onClick={() => clipboard.copy(value)}
     >
-      <HugeIcons icon={clipboard.copied ? Tick01Icon : icon} />
       {label}
     </DropdownMenuItem>
   );
