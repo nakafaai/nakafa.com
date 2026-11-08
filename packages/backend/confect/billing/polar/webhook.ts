@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { findAccountByProviderCustomer } from "@repo/backend/confect/billing/accounts";
 import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
-import { endSubscriptionGrant } from "@repo/backend/confect/billing/grantEnd";
+import { endSubscriptionGrant } from "@repo/backend/confect/billing/end";
 import { syncSubscriptionGrant } from "@repo/backend/confect/billing/grants";
 import { applyPolarOrder } from "@repo/backend/confect/billing/polar/order";
 import type { PolarSubscriptionSource } from "@repo/backend/confect/billing/polar/payload";

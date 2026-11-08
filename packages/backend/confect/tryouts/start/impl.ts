@@ -9,7 +9,7 @@ import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/at
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { expireAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { readAttemptStart } from "@repo/backend/confect/tryouts/runtime/lookup";
-import { requireEntrySection } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
+import { requireEntrySection } from "@repo/backend/confect/tryouts/runtime/section/start";
 import { createTryoutAttempt } from "@repo/backend/confect/tryouts/start/attempt";
 import { selectAttemptScale } from "@repo/backend/confect/tryouts/start/scale";
 import { loadTryoutStartSource } from "@repo/backend/confect/tryouts/start/source";

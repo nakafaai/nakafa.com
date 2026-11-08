@@ -4,7 +4,7 @@ import {
   COMPANY_REGISTERED_ADDRESS,
   CompanyIdentitySchema,
 } from "@repo/seo/company";
-import { COMPANY_SOCIAL_PROFILE_URLS } from "@repo/seo/company-profiles";
+import { COMPANY_SOCIAL_PROFILE_URLS } from "@repo/seo/profiles";
 import { Schema } from "effect";
 
 const decodeCompanyIdentity = Schema.decodeUnknownSync(CompanyIdentitySchema);

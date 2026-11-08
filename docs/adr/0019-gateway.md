@@ -239,7 +239,7 @@ thresholds in the catalog were set from what that command printed on 12 October
   provider's SDK is not used. A search (`research/search/provider.ts`) sends the
   query that the research model writes from the learner's request and, when the
   learner names sites, their hostnames as `includeDomains`
-  ([ADR 0001](./0001-nina-engagement-architecture.md) says what the provider
+  ([ADR 0001](./0001-engagement.md) says what the provider
   documents for that field). A page read (`research/tools/scrape.ts`) sends the
   address of a page, which is a link the learner gave or a result of a search.
   A search body holds `query`, `sources`, `limit`, `timeout` and
@@ -497,7 +497,7 @@ Not yet established:
 - `gateway/model.ts` owns the gateway model ids, the language model and the
   decision model, the provider id that usage rows store for a call through the
   gateway, and the reasoning effort of each effort. The release gate in
-  [ADR 0001](./0001-nina-engagement-architecture.md) reads the language model id
+  [ADR 0001](./0001-engagement.md) reads the language model id
   and the provider id back from a real turn.
 - `gateway/handle.ts` builds every handle over one AI SDK provider, so the
   production adapter and tests set the same defaults. `gateway/decide.ts` owns

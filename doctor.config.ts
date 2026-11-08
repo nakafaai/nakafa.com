@@ -7,7 +7,7 @@ export default {
         // https://vitest.dev/guide/cli#config
         // https://vitest.dev/config/include
         // https://www.react.doctor/docs/configuration/config-files#narrow-ignores-and-suppressions
-        files: ["checks/afdocs.test.ts", "vitest.afdocs.mts"],
+        files: ["checks/afdocs.test.ts", "afdocs.config.mts"],
         rules: ["deslop/unused-file"],
       },
       {

@@ -15,6 +15,7 @@ import {
   PaneBody,
   PaneFact,
   PaneFacts,
+  PaneFill,
   PaneFooter,
   PaneHeader,
 } from "@/components/shared/pane";
@@ -22,7 +23,6 @@ import { usePanes } from "@/components/shared/panes";
 import { columnAlign } from "@/components/shared/table/align";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import type { GraduationLine } from "@/components/tenant/graduation/sheet";
@@ -34,9 +34,9 @@ const subjectColumns =
 
 /**
  * The open student's graduation: whether a NISN is on file, their SKL's number and state, what
- * is missing for it, and their transcript data, each subject with its value to two decimals and
- * the average; then the SKL's PDF and its check page once it is locked. A student the list no
- * longer holds closes.
+ * is missing for it, and their transcript data under them, a table from edge to edge of the pane,
+ * each subject with its value to two decimals and the average; then the SKL's PDF and its check
+ * page once it is locked. A student the list no longer holds closes.
  */
 export function GraduationLineDetail({
   lines,
@@ -67,69 +67,52 @@ export function GraduationLineDetail({
         description={t(`letter-${found.letter?.state ?? "none"}`)}
         title={found.student.name}
       />
-      <PaneBody>
-        <div className="flex flex-col gap-6">
-          <PaneFacts>
-            <PaneFact label={t("nisn")}>
-              {t(`nisn-${found.hasNisn ? "yes" : "no"}`)}
-            </PaneFact>
-            {found.letter === null ? null : (
-              <PaneFact label={t("letter-number")}>
-                <span className="tabular-nums">{found.letter.number}</span>
-              </PaneFact>
-            )}
-            <PaneFact label={t("ready")}>
-              {Arr.isReadonlyArrayEmpty(found.missing)
-                ? t("ready-ready")
-                : Arr.join(
-                    Arr.map(found.missing, (missing) => t(`ready-${missing}`)),
-                    ", "
-                  )}
-            </PaneFact>
-          </PaneFacts>
-          {found.transcript === null ? (
+      {found.transcript === null ? (
+        <PaneBody>
+          <div className="flex flex-col gap-6">
+            <GraduationFacts line={found} />
             <p className="text-muted-foreground text-sm">
               {t("transcript-empty")}
             </p>
-          ) : (
-            <TableFiltersProvider>
-              <TableFrame>
-                <DataTable
-                  columns={[
-                    subjectColumns.text((subject) => subject.subject, {
-                      cell: (info) => <span dir="auto">{info.getValue()}</span>,
-                      header: t("subject"),
-                      id: "subject",
-                    }),
-                    subjectColumns.number((subject) => subject.value, {
-                      cell: (info) => twoDecimals(info.getValue()),
-                      header: t("value"),
-                      id: "value",
-                    }),
-                    subjectColumns.menu((info) => (
-                      <RowCopy value={info.row.original.subject} />
-                    )),
-                  ]}
-                  data={found.transcript.subjects}
-                  plain
-                  rowId={(subject) => subject.subject}
-                >
-                  <TableFooter>
-                    <TableRow>
-                      <TableCell className={columnAlign({ align: "start" })}>
-                        {t("average")}
-                      </TableCell>
-                      <TableCell className={columnAlign()}>
-                        {twoDecimals(found.transcript.average)}
-                      </TableCell>
-                    </TableRow>
-                  </TableFooter>
-                </DataTable>
-              </TableFrame>
-            </TableFiltersProvider>
-          )}
-        </div>
-      </PaneBody>
+          </div>
+        </PaneBody>
+      ) : (
+        <PaneFill head={<GraduationFacts line={found} />}>
+          <TableFiltersProvider>
+            <DataTable
+              columns={[
+                subjectColumns.text((subject) => subject.subject, {
+                  cell: (info) => <span dir="auto">{info.getValue()}</span>,
+                  header: t("subject"),
+                  id: "subject",
+                }),
+                subjectColumns.number((subject) => subject.value, {
+                  cell: (info) => twoDecimals(info.getValue()),
+                  header: t("value"),
+                  id: "value",
+                }),
+                subjectColumns.menu((info) => (
+                  <RowCopy value={info.row.original.subject} />
+                )),
+              ]}
+              data={found.transcript.subjects}
+              plain
+              rowId={(subject) => subject.subject}
+            >
+              <TableFooter>
+                <TableRow>
+                  <TableCell className={columnAlign({ align: "start" })}>
+                    {t("average")}
+                  </TableCell>
+                  <TableCell className={columnAlign()}>
+                    {twoDecimals(found.transcript.average)}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </DataTable>
+          </TableFiltersProvider>
+        </PaneFill>
+      )}
       {found.letter === null || found.letter.file === null ? null : (
         <PaneFooter>
           <Button
@@ -157,5 +140,31 @@ export function GraduationLineDetail({
         </PaneFooter>
       )}
     </>
+  );
+}
+
+/** The facts of the open student's graduation: their NISN on file, their SKL's number, and what it still lacks. */
+function GraduationFacts({ line }: { line: GraduationLine }) {
+  const t = useTranslations("SchoolGraduation");
+
+  return (
+    <PaneFacts>
+      <PaneFact label={t("nisn")}>
+        {t(`nisn-${line.hasNisn ? "yes" : "no"}`)}
+      </PaneFact>
+      {line.letter === null ? null : (
+        <PaneFact label={t("letter-number")}>
+          <span className="tabular-nums">{line.letter.number}</span>
+        </PaneFact>
+      )}
+      <PaneFact label={t("ready")}>
+        {Arr.isReadonlyArrayEmpty(line.missing)
+          ? t("ready-ready")
+          : Arr.join(
+              Arr.map(line.missing, (missing) => t(`ready-${missing}`)),
+              ", "
+            )}
+      </PaneFact>
+    </PaneFacts>
   );
 }

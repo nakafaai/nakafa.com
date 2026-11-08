@@ -13,17 +13,14 @@ import {
   toMaterialPlacement,
 } from "@/lib/content/material/navigation";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
-import {
-  previewNextProjection,
-  previewProjection,
-} from "@/test/content-preview";
+import { previewNextProjection, previewProjection } from "@/test/manifest";
 import {
   testProgramClass,
   testProgramContexts,
   testProgramGroups,
   testProgramRoot,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 const metadata = previewProjection.metadata;
 const context = {
