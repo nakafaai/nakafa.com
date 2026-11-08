@@ -1,10 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Option, Schema } from "effect";
+import { MascotCode } from "@repo/mascot/code";
+import { Array as Arr, Duration, Option, Schema } from "effect";
 import {
   firstUnread,
   headToKeep,
+  isJumbo,
   isPending,
+  isTitled,
   newestSeen,
   opensDay,
   opensRun,
@@ -12,6 +15,7 @@ import {
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 
 const personId = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
+const mascot = Schema.decodeSync(MascotCode)("cat.0.243e66.right.open");
 const messageOf = Schema.decodeUnknownSync(Id("classroomMessages"));
 
 /** A message of the forum, saved unless `pending`, written at `createdAt` by the viewer when `mine`. */
@@ -22,7 +26,7 @@ const message = (
   pending = false
 ): ForumMessage => ({
   attachments: [],
-  author: { id: personId, name: "Raka", nina: false },
+  author: { id: personId, mascot, name: "Raka", nina: false, photo: null },
   clientKey: key,
   createdAt,
   discussion: null,
@@ -32,6 +36,16 @@ const message = (
   mine,
   poll: null,
   text: "Halo",
+});
+
+/** A thread under its opening message, titled `title`, with no reply yet. */
+const discussionOf = (title: string) => ({
+  lastReplyAt: null,
+  number: 1,
+  repliers: [],
+  replies: 0,
+  title,
+  unread: false,
 });
 
 const messages = [
@@ -74,8 +88,10 @@ describe("forum read marks", () => {
       ...message("other", 2500),
       author: {
         id: Schema.decodeUnknownSync(Id("tenantPeople"))("person-2"),
+        mascot,
         name: "Nadia",
         nina: false,
+        photo: null,
       },
     };
     const run = [
@@ -91,6 +107,38 @@ describe("forum read marks", () => {
       true,
     ]);
     expect(opensRun(run, 1, ["first"])).toBe(true);
+  });
+
+  it("opens a new run after a pause of more than five minutes, and after a message that opens a thread", () => {
+    const pause = Duration.toMillis(Duration.minutes(5));
+    const burst = [
+      message("first", 0),
+      message("soon", pause),
+      message("late", pause * 2 + 1),
+    ];
+    expect(Arr.map(burst, (_, index) => opensRun(burst, index, []))).toEqual([
+      true,
+      false,
+      true,
+    ]);
+    const threaded = [
+      { ...message("root", 0), discussion: discussionOf("Halo") },
+      message("next", 1),
+    ];
+    expect(opensRun(threaded, 1, [])).toBe(true);
+  });
+
+  it("tells a titled discussion from a thread of a message by its title", () => {
+    expect(
+      isTitled({ ...message("root", 0), discussion: discussionOf("Halo") })
+    ).toBe(false);
+    expect(
+      isTitled({
+        ...message("root", 0),
+        discussion: discussionOf("Kenapa gaya gesek berlawanan?"),
+      })
+    ).toBe(true);
+    expect(isTitled(message("plain", 0))).toBe(false);
   });
 
   it("opens a day above the first message of each day, after the opening message, and never on a page still loading above", () => {
@@ -126,5 +174,16 @@ describe("forum read marks", () => {
     expect(opensDay(days, 4, false, Option.none(), dayOf)).toEqual(
       Option.none()
     );
+  });
+
+  it("shows one to three emoji alone large, and keeps the bubble for anything else", () => {
+    expect(isJumbo("👍")).toBe(true);
+    expect(isJumbo(" 😂 😂 ")).toBe(true);
+    expect(isJumbo("👨‍👩‍👧🇮🇩❤️")).toBe(true);
+    expect(isJumbo("👍👍👍👍")).toBe(false);
+    expect(isJumbo("123")).toBe(false);
+    expect(isJumbo("Oke 👍")).toBe(false);
+    expect(isJumbo("")).toBe(false);
+    expect(isJumbo(null)).toBe(false);
   });
 });

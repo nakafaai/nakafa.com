@@ -14,6 +14,10 @@ const DISCUSSION_PATH = /\/classes\/fisika-x-1\/forum\/1$/u;
 
 const TITLE = "Kenapa gaya gesek berlawanan arah gerak?";
 
+/** The thread row of a discussion with no reply yet, and with its first reply. */
+const NO_REPLY = /^No reply yet/u;
+const ONE_REPLY = /^1 reply/u;
+
 /** The close button of the discussion's pane, which leads back to its channel; a phone's sheet closes by a swipe or Escape. */
 const CLOSE = "Close";
 
@@ -54,22 +58,23 @@ for (const viewport of [
       .fill("Tuliskan contohnya di sini.");
     await dialog.getByRole("button", { name: "Start" }).click();
     await expect(dialog).toBeHidden();
-    const numbered = page.getByRole("link", { name: `#1 ${TITLE}` });
-    await expect(numbered).toBeVisible({
+    await expect(page.getByText(`#1 ${TITLE}`)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
 
-    // The discussion opens at its own address, with its title as its heading, and in the path beside it from tablet
-    // width; on a phone it is a modal sheet, which takes the page behind it, the header's path included, out of reach.
-    await page.getByRole("link", { name: "Reply", exact: true }).click();
+    // The discussion opens from the thread row under its message, at its own address, with its title as its
+    // heading. The path keeps ending at the chat from tablet width, since the pane's heading already names the
+    // discussion; on a phone it is a modal sheet, which takes the page behind it, the header's path included, out of
+    // reach.
+    await page.getByRole("link", { name: NO_REPLY }).click();
     await page.waitForURL(DISCUSSION_PATH);
     await expect(
       page.getByRole("heading", { name: `#1 ${TITLE}`, level: 2 })
     ).toBeVisible();
     if (viewport.width >= 768) {
-      await expect(
-        page.getByRole("navigation", { name: "breadcrumb" })
-      ).toContainText("#1");
+      const path = page.getByRole("navigation", { name: "breadcrumb" });
+      await expect(path).toContainText("General");
+      await expect(path).not.toContainText("#1");
     }
     const discussion = page.locator("[data-slot=discussion]");
     await expect(
@@ -96,7 +101,7 @@ for (const viewport of [
     // The channel stays beside the discussion from tablet width and under its sheet on a phone,
     // and it counts the reply; closing the discussion leaves the channel where it was.
     if (viewport.width >= 768) {
-      await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
+      await expect(page.getByRole("link", { name: ONE_REPLY })).toBeVisible();
       // The discussion stands in the pane at the screen's right, and the pane's own edge widens it
       // as it is dragged toward the channel. The forum's rail keeps its own handle, which moves no pane.
       const panel = page.locator("[data-slot=discussion]");
@@ -120,14 +125,16 @@ for (const viewport of [
         .poll(async () => (await panel.boundingBox())?.width ?? 0)
         .toBeGreaterThan(narrow.width + 150);
     }
-    if (viewport.width < 768) {
-      await page.keyboard.press("Escape");
-    } else {
+    // Beside the chat the pane closes from its header; on a phone the sheet has no close button and closes by Escape,
+    // a swipe down or a tap outside.
+    if (viewport.width >= 1280) {
       await page.getByRole("button", { name: CLOSE, exact: true }).click();
+    } else {
+      await page.keyboard.press("Escape");
     }
     await page.waitForURL(CHANNEL_PATH);
     await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
+    await expect(page.getByRole("link", { name: ONE_REPLY })).toBeVisible();
     await context.close();
   });
 }

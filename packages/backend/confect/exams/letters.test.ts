@@ -4,10 +4,10 @@ import {
   isReasonOption,
   labelText,
   letterScript,
-  optionDirection,
   optionLetter,
-  optionLetters,
   optionPlace,
+  partDirection,
+  partLetter,
 } from "@repo/backend/confect/exams/letters";
 import { Array as Arr } from "effect";
 
@@ -92,15 +92,19 @@ describe("the letter of an option", () => {
   });
 
   it("names a set's options from its own labels, so every surface says the same letter", () => {
-    const arabic = optionLetters([label("القاهرة"), label("دمشق")]);
-    const latin = optionLetters([label("Jakarta"), label("Bandung")]);
-    expect([arabic(0), arabic(1)]).toEqual(["أ", "ب"]);
-    expect([latin(0), latin(1)]).toEqual(["A", "B"]);
+    const arabic = [{ label: label("القاهرة") }, { label: label("دمشق") }];
+    const latin = [{ label: label("Jakarta") }, { label: label("Bandung") }];
+    expect([partLetter(arabic, 0), partLetter(arabic, 1)]).toEqual(["أ", "ب"]);
+    expect([partLetter(latin, 0), partLetter(latin, 1)]).toEqual(["A", "B"]);
   });
 
   it("reads a set the way its letters run, so an Arabic set starts from the right", () => {
-    expect(optionDirection([label("القاهرة"), label("دمشق")])).toBe("rtl");
-    expect(optionDirection([label("Benar"), label("نعم")])).toBe("ltr");
+    expect(
+      partDirection([{ label: label("القاهرة") }, { label: label("دمشق") }])
+    ).toBe("rtl");
+    expect(
+      partDirection([{ label: label("Benar") }, { label: label("نعم") }])
+    ).toBe("ltr");
   });
 
   it("names an option of an Arabic set past the abjad as a Latin set names its place", () => {

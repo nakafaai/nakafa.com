@@ -8,6 +8,7 @@ import { PeriodAccess } from "@repo/backend/confect/tenancy/access";
 import {
   PeriodActive,
   PeriodDatesInvalid,
+  PeriodHold,
   PeriodInUse,
   PeriodNotActive,
   PeriodOverlaps,
@@ -27,6 +28,15 @@ const PeriodView = Schema.Struct({
 });
 
 /**
+ * One period as the periods list shows it: the period, and the first reason it stays in use, or
+ * none for a period its menu may offer to delete.
+ */
+const PeriodListed = Schema.Struct({
+  ...PeriodView.fields,
+  hold: Schema.NullOr(PeriodHold),
+});
+
+/**
  * The periods of a school. Its Admin creates, edits, opens, archives, restores and deletes them; the
  * roles that read the school's plan read them, and an archived school or period
  * refuses every write.
@@ -38,7 +48,7 @@ export default GroupSpec.make()
     FunctionSpec.publicPaginatedQuery({
       name: "list",
       args: () => ({ slug: TenantSlug, unitId: Id("tenantUnits") }),
-      item: () => PeriodView,
+      item: () => PeriodListed,
       error: () => AccessDenied,
     })
   )

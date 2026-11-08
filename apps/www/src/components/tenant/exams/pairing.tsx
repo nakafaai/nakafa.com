@@ -1,10 +1,11 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import { optionLetters } from "@repo/backend/confect/exams/letters";
+import { partLetter } from "@repo/backend/confect/exams/letters";
 import {
   Field,
   FieldDescription,
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
+import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import {
@@ -12,7 +13,7 @@ import {
   LinesItem,
   LinesProvider,
 } from "@/components/exams/lines/board";
-import { OptionSketch } from "@/components/tenant/exams/preview";
+import { OptionSketch } from "@/components/tenant/exams/sketch";
 
 /** The props of the key of one matching question. */
 interface MatchKeyProps {
@@ -37,8 +38,6 @@ interface MatchKeyProps {
  */
 export function MatchKey({ editable, match, onPair, pairs }: MatchKeyProps) {
   const t = useTranslations("Exams");
-  // The answers are named in the script of their labels: أ, ب, ج for answers written in Arabic.
-  const letterOf = optionLetters(Arr.map(match.targets, (part) => part.label));
 
   return (
     <Field>
@@ -59,7 +58,9 @@ export function MatchKey({ editable, match, onPair, pairs }: MatchKeyProps) {
               name={String(index + 1)}
               side="sources"
             >
-              <OptionSketch label={source.label} />
+              <LineWords>
+                <OptionSketch label={source.label} />
+              </LineWords>
             </LinesItem>
           ))}
         </LinesColumn>
@@ -68,10 +69,12 @@ export function MatchKey({ editable, match, onPair, pairs }: MatchKeyProps) {
             <LinesItem
               id={target.id}
               key={target.id}
-              name={letterOf(index)}
+              name={partLetter(match.targets, index)}
               side="targets"
             >
-              <OptionSketch label={target.label} />
+              <LineWords>
+                <OptionSketch label={target.label} />
+              </LineWords>
             </LinesItem>
           ))}
         </LinesColumn>
