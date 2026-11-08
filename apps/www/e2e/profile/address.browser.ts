@@ -69,38 +69,7 @@ test("a learner opens their own profile at the username address, which keeps the
   );
 });
 
-test("the retired id address leads its own learner to the username address for good, but not to a Markdown version that does not exist", async ({
-  baseURL,
-  page,
-}) => {
-  await runOnPage(page, baseURL, (origin) =>
-    Effect.gen(function* () {
-      const { learner } = yield* openChatPage(page, origin);
-
-      yield* Effect.promise(async () => {
-        const request = page.context().request;
-        for (const tab of ["", "/chat"]) {
-          const answer = await request.get(
-            `${origin}/en/user/${learner.userId}${tab}`,
-            { maxRedirects: 0 }
-          );
-          expect(answer.status(), tab).toBe(308);
-          expect(answer.headers().location, tab).toMatch(
-            new RegExp(`/en/@${learner.username}${tab}$`, "u")
-          );
-        }
-        // A profile has no Markdown version, so the request is not sent on.
-        const markdown = await request.get(
-          `${origin}/en/user/${learner.userId}.md`,
-          { maxRedirects: 0 }
-        );
-        expect(markdown.status()).toBe(404);
-      });
-    })
-  );
-});
-
-test("a visitor reads the profile of a learner but finds neither its chats nor the retired id address", async ({
+test("a visitor reads the profile of a learner but finds neither its chats nor an id address", async ({
   baseURL,
   browser,
   page,
