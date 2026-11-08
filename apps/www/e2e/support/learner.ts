@@ -1,8 +1,8 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
-import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
-import { Effect, FileSystem, Schema } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { seedLearner } from "@repo/backend/scripts/content/acceptance/learner";
+import { seedOperator } from "@repo/backend/scripts/content/acceptance/operator";
+import { Effect } from "effect";
+import { runFixture } from "@/e2e/support/acceptance";
 import { addSessionCookie } from "@/e2e/support/context";
 
 /**
@@ -11,53 +11,30 @@ import { addSessionCookie } from "@/e2e/support/context";
  * so each test starts from a learner with no attempts and no real account is
  * ever involved.
  */
-export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(
-  function* (context: BrowserContext, baseURL: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-learner-",
-    });
-    const output = `${directory}/cookie.json`;
-    // Convex stops a query or mutation after one second of its own code
-    // (https://docs.convex.dev/production/state/limits), and the local backend
-    // has no setting to raise that. A machine busy with other work stretches
-    // the functions this command calls past it now and then ("Function
-    // execution timed out (maximum duration: 1s)"), and the command only exits
-    // with a code, so any failure is tried again. The command writes the
-    // cookie file last, so a run that failed leaves no cookie and the next one
-    // signs in a new learner. The account of the failed run may stay in the
-    // local database, which is thrown away with the runtime.
-    yield* runAcceptanceCommand("learner", output).pipe(
-      Effect.retry({ times: 2 })
-    );
-    const cookie = yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
-    yield* addSessionCookie(context, cookie, baseURL);
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(function* (
+  context: BrowserContext,
+  baseURL: string
+) {
+  // Convex stops a query or mutation of the local backend after five seconds
+  // of its own code, and a machine busy with other work stretches the calls of
+  // a sign-in past it now and then. The seed removes what a failed attempt
+  // created, so any failure is tried again with a new learner.
+  const cookie = yield* runFixture(seedLearner()).pipe(
+    Effect.retry({ times: 2 })
+  );
+  yield* addSessionCookie(context, cookie, baseURL);
+});
 
 /**
  * Signs a new synthetic operator into one browser context: a learner whose account the
  * running local acceptance runtime granted operator access to.
  */
-export const signInOperator = Effect.fn("NakafaE2E.signInOperator")(
-  function* (context: BrowserContext, baseURL: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-operator-",
-    });
-    const output = `${directory}/cookie.json`;
-    yield* runAcceptanceCommand("operator", output).pipe(
-      Effect.retry({ times: 2 })
-    );
-    const cookie = yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
-    yield* addSessionCookie(context, cookie, baseURL);
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+export const signInOperator = Effect.fn("NakafaE2E.signInOperator")(function* (
+  context: BrowserContext,
+  baseURL: string
+) {
+  const cookie = yield* runFixture(seedOperator()).pipe(
+    Effect.retry({ times: 2 })
+  );
+  yield* addSessionCookie(context, cookie, baseURL);
+});

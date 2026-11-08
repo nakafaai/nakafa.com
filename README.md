@@ -115,6 +115,16 @@ Run the browser suites from the repository root in a second terminal:
 bun --filter www test:browser
 ```
 
+A browser test seeds its learners, schools and rows in its own process, through
+the local backend's admin HTTP API (`LocalConvex` in
+`packages/backend/scripts/content/acceptance/convex.ts`), so a fixture costs one
+call and no process. A person gets the same fixtures from the command line, for
+example a signed-in learner's cookie for a browser of their own:
+
+```sh
+bun run --cwd packages/backend acceptance learner /tmp/learner-cookie.json
+```
+
 Each checkout prepares its own runtime, and its backend takes free ports. To
 serve a second runtime beside another one, name the app's port with
 `ACCEPTANCE_PORT` in every acceptance command and in the browser suites.

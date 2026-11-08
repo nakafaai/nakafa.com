@@ -1,7 +1,9 @@
+import { localConvexLayer } from "@repo/backend/scripts/content/acceptance/convex";
 import {
-  encodeArguments,
-  seedMember,
-} from "@repo/backend/scripts/content/acceptance/member";
+  SessionCookie,
+  writeFixture,
+} from "@repo/backend/scripts/content/acceptance/fixture";
+import { seedSchoolMember } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
@@ -9,39 +11,34 @@ import {
 import { Effect, Schema } from "effect";
 
 /**
- * The address of the Teacher that `createAcceptanceClassTeacher` seeds for a
- * school. No account holds it until the teacher is signed in.
+ * The address of the Teacher that `seedClassTeacher` seeds for a school. No
+ * account holds it until the teacher is signed in.
  */
 export const classTeacherAddress = (slug: string) =>
   `class-teacher-${slug}@acceptance.example.test`;
 
 /**
  * Seeds a Teacher who teaches one class of an opened school, a class of a new
- * cohort in the school's first active period, and signs the account of the address
- * in, as `createAcceptanceTeacher` does. `classroom/seed:teacher` writes the class
- * and the Teacher's teaching of it.
+ * cohort in the school's first active period, signs the account of the address
+ * in, as `seedTeacher` does, and answers its session cookie.
+ * `classroom/seed:teacher` writes the class and the Teacher's teaching of it.
  */
-export const createAcceptanceClassTeacher = Effect.fn(
-  "contentAcceptance.createClassTeacher"
-)(function* (root: string, slug: string, output: string) {
-  const args = yield* encodeArguments({
-    email: classTeacherAddress(slug),
-    locale: "id",
-    name: "Acceptance Class Teacher",
-    slug,
-    subject: "Fisika",
-  });
-  yield* seedMember(
-    root,
-    {
+export const seedClassTeacher = Effect.fn("contentAcceptance.seedClassTeacher")(
+  function* (slug: string) {
+    return yield* seedSchoolMember({
       address: classTeacherAddress(slug),
-      args,
+      args: {
+        email: classTeacherAddress(slug),
+        locale: "id",
+        name: "Acceptance Class Teacher",
+        slug,
+        subject: "Fisika",
+      },
       label: "class teacher",
       seed: "classroom/seed:teacher",
-    },
-    output
-  );
-});
+    });
+  }
+);
 
 /** The usage of the class-teacher mode: the school of the Teacher, then the file for the session cookie. */
 const USAGE = "class-teacher <school-slug> <cookie-file>";
@@ -64,6 +61,9 @@ export const classTeacherMode = {
       ClassTeacherArguments,
       args
     );
-    return yield* createAcceptanceClassTeacher(root, slug, output);
+    const cookie = yield* seedClassTeacher(slug).pipe(
+      Effect.provide(localConvexLayer(root))
+    );
+    yield* writeFixture(output, SessionCookie, cookie);
   }),
 } satisfies AcceptanceMode;
