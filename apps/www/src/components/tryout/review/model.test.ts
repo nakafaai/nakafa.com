@@ -24,7 +24,11 @@ const answered = (
   },
 });
 
-const KEY = { correct: ["first"], kind: "choice" } as const;
+const KEY = {
+  correct: ["first"],
+  interaction: "choice",
+  kind: "choice",
+} as const;
 
 describe("verdictOfQuestion", () => {
   it("reads a question without an answer as unanswered", () => {
