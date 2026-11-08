@@ -4,6 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
   getTryoutCountryCatalogArtwork,
+  getTryoutSectionArtwork,
   getTryoutTrackCatalogArtwork,
   resolveTryoutExamArtwork,
 } from "@/lib/tryout/artwork";
@@ -122,7 +123,7 @@ describe("try-out artwork", () => {
             trackKey,
             trackKind: "subject",
           })
-        ).toBe(`/open-graph/subject/${locale}-${trackKey}.png`);
+        ).toBe(`/open-graph/tryout/indonesia/tka/${locale}-${trackKey}.png`);
         expect(
           getTryoutTrackCatalogArtwork(locale, {
             countryKey: "indonesia",
@@ -145,7 +146,9 @@ describe("try-out artwork", () => {
           trackKey: "compulsory-mathematics",
           trackKind: "subject",
         })
-      ).toBe(`/open-graph/subject/${locale}-mathematics.png`);
+      ).toBe(
+        `/open-graph/tryout/indonesia/tka/${locale}-compulsory-mathematics.png`
+      );
       for (const trackKey of [
         "mathematics",
         "matematika-wajib",
@@ -160,6 +163,39 @@ describe("try-out artwork", () => {
           })
         ).toBeUndefined();
       }
+    }
+  );
+
+  it.each(["en", "id", "de"] as const)(
+    "resolves the reviewed artwork of the three SNBT sections that have one in %s",
+    (locale) => {
+      for (const sectionKey of [
+        "general-reasoning",
+        "mathematical-reasoning",
+        "quantitative-knowledge",
+      ]) {
+        expect(
+          getTryoutSectionArtwork(locale, {
+            countryKey: "indonesia",
+            examKey: "snbt",
+            sectionKey,
+          })
+        ).toBe(`/open-graph/tryout/indonesia/snbt/${locale}-${sectionKey}.png`);
+        expect(
+          getTryoutSectionArtwork(locale, {
+            countryKey: "indonesia",
+            examKey: "tka",
+            sectionKey,
+          })
+        ).toBeUndefined();
+      }
+      expect(
+        getTryoutSectionArtwork(locale, {
+          countryKey: "indonesia",
+          examKey: "snbt",
+          sectionKey: "literacy-in-english",
+        })
+      ).toBeUndefined();
     }
   );
 
