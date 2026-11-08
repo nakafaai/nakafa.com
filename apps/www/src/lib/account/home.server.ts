@@ -32,7 +32,7 @@ export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const [status, messages, account, recentRows, trending] =
+      const [status, messages, account, recentRows, trending, own] =
         yield* Effect.all(
           [
             readRequired(onboarding.queries.getStatus, {}, token),
@@ -45,6 +45,7 @@ export const homeScreenHandler = accountHandler(
             ),
             // The icon families stay on the server: each list passes only the looks it shows.
             readHomeTrendingSubjects(locale),
+            readOptional(island.queries.own, {}, token),
           ],
           { concurrency: "unbounded" }
         );
@@ -74,6 +75,7 @@ export const homeScreenHandler = accountHandler(
       };
       const recentLooks = getMaterialLooks(recentRows ?? []);
       return {
+        island: own ?? undefined,
         name: Option.getOrUndefined(
           Option.map(
             Option.fromNullishOr(account),
