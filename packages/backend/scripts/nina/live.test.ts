@@ -35,7 +35,8 @@ const JOURNAL =
  * its deployment, and answers the functions of the gate the way the deployment
  * does. Like the real CLI, it loads the \`.env\` file of its folder first, and
  * that fills in only the settings that are not set. It fails the function that
- * LIVE_TEST_FAILS names, after it logs the call.
+ * LIVE_TEST_FAILS names, after it logs the call, and prints text that is no
+ * JSON value for the function that LIVE_TEST_GARBLES names.
  */
 const FAKE_CLI = `
 import { appendFileSync, existsSync } from "node:fs";
@@ -55,6 +56,10 @@ appendFileSync(log, JSON.stringify({ args, env, fn }) + "\\n");
 if (fn !== undefined && process.env.LIVE_TEST_FAILS === fn) {
   process.stderr.write("boom");
   process.exit(1);
+}
+if (fn !== undefined && process.env.LIVE_TEST_GARBLES === fn) {
+  process.stdout.write("not a value");
+  process.exit(0);
 }
 const last = args[args.length - 1];
 const answers = {
@@ -239,6 +244,32 @@ describe("the deployment of the release gate over the Convex CLI", () => {
         expect(error).toMatchObject({
           _tag: "NinaGateError",
           message: "Learner account failed: boom",
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+  );
+
+  it.live(
+    "reports a command that prints no JSON value as a failure of the gate",
+    () =>
+      Effect.gen(function* () {
+        const { cli } = yield* fixture;
+
+        const error = yield* Effect.gen(function* () {
+          const deployment = yield* Deployment;
+          return yield* deployment.signIn;
+        }).pipe(
+          Effect.provide(DeploymentLive),
+          settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" }),
+          Effect.provideService(ConvexCli, {
+            ...cli,
+            env: { LIVE_TEST_GARBLES: "adapter:create" },
+          }),
+          Effect.flip
+        );
+
+        expect(error).toMatchObject({
+          _tag: "NinaGateError",
+          message: "Learner account printed no JSON value.",
         });
       }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );

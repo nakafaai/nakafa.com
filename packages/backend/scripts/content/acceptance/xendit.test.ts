@@ -1,83 +1,43 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import {
   invoiceMode,
-  payAcceptanceInvoice,
-  seedAcceptanceXendit,
+  payInvoice,
+  seedXendit,
   xenditMode,
 } from "@repo/backend/scripts/content/acceptance/xendit";
-import {
-  Array as Arr,
-  Effect,
-  Exit,
-  FileSystem,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Effect } from "effect";
+import { TestClock } from "effect/testing";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
-
-/** The function each Convex CLI call runs, and the event type it records when it records one. */
-const Called = Schema.fromJsonString(
-  Schema.Struct({ type: Schema.optional(Schema.String) })
-);
-
-/** The session a school invoice's hosted payment records, as the Convex CLI receives it. */
-const SessionArgs = Schema.fromJsonString(
-  Schema.Struct({
-    accountId: Schema.String,
-    expiresAt: Schema.Finite,
-    invoiceId: Schema.String,
-    sessionId: Schema.String,
-    url: Schema.String,
-  })
-);
-
-/**
- * Records every command the seed runs, answering the prepare step with an
- * account and the event inbox with an event, as the local backend does.
- */
-const recordCommands = Effect.fn("acceptance.xendit.test.record")(function* (
-  root: string
-) {
-  const fs = yield* FileSystem.FileSystem;
-  mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
-  const specs = MutableList.make<CommandSpec>();
-  mocks.command.mockImplementation((spec: CommandSpec) =>
-    Effect.gen(function* () {
-      MutableList.append(specs, spec);
-      yield* fs.writeFileString(
-        spec.stdoutPath,
-        '{"accountId":"account_1","eventId":"event_1"}'
-      );
-    })
-  );
-  return specs;
-});
-
-/** The function path and the event type of each recorded Convex CLI call. */
-const callsOf = (specs: MutableList.MutableList<CommandSpec>) =>
-  Effect.forEach(MutableList.toArray(specs), (spec) =>
-    Schema.decodeEffect(Called)(
-      Option.getOrElse(Arr.last(spec.args), () => "{}")
-    ).pipe(Effect.map(({ type }) => [spec.args[2], type ?? null] as const))
-  );
+const NOW = 1_800_000_000_000;
+const INVOICE = {
+  _id: "invoice-1",
+  accountId: "account-1",
+  dueAt: NOW + 86_400_000,
+  number: "INV-2026-0001",
+};
+/** What the local backend answers: an account for the checkout, an event for the inbox, and one invoice. */
+const ANSWERS = {
+  "_system/cli/tableData": {
+    continueCursor: "",
+    isDone: true,
+    page: [INVOICE],
+  },
+  "billing/events:record": { eventId: "event-1" },
+  "billing/xendit/checkout:prepare": { accountId: "account-1" },
+};
 
 describe("acceptance xendit", () => {
   afterEach(() => {
@@ -88,145 +48,115 @@ describe("acceptance xendit", () => {
     "opens the checkout through its own steps and applies the webhook of a paid pass or of a plan's first month",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-xendit-test-",
-        });
-        const pass = yield* recordCommands(root);
-        yield* seedAcceptanceXendit(root, "user_1", "pass", 1000);
-        expect(yield* callsOf(pass)).toEqual([
-          ["billing/xendit/checkout:prepare", null],
-          ["billing/xendit/checkout:admit", null],
-          ["billing/events:record", "payment_session.completed"],
-          ["billing/events:apply", null],
-        ]);
-        const plan = yield* recordCommands(root);
-        yield* xenditMode.run(root, ["user_1", "plan"]);
-        expect(yield* callsOf(plan)).toEqual([
-          ["billing/xendit/checkout:prepare", null],
-          ["billing/xendit/checkout:admit", null],
-          ["billing/events:record", "payment_session.completed"],
-          ["billing/events:apply", null],
-        ]);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
+        yield* TestClock.setTime(NOW);
+        const pass = localConvexDouble(ANSWERS);
+        const plan = localConvexDouble(ANSWERS);
 
-  it.effect(
-    "seeds nothing without a local runtime, or for a purchase it does not know",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-xendit-test-",
-        });
-        mocks.read.mockReturnValue(Effect.void);
-        const exit = yield* Effect.exit(
-          seedAcceptanceXendit(root, "user_1", "pass", 1000)
+        yield* seedXendit("app-user-1", "pass").pipe(
+          Effect.provide(pass.layer)
         );
-        expect(Exit.isFailure(exit)).toBe(true);
-        expect(
-          yield* xenditMode.run(root, ["user_1", "gift"]).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message: "Usage: acceptance xendit <user-id> <pass|plan>",
+        yield* seedXendit("app-user-1", "plan").pipe(
+          Effect.provide(plan.layer)
+        );
+
+        expect(pass.paths()).toEqual([
+          "billing/xendit/checkout:prepare",
+          "billing/xendit/checkout:admit",
+          "billing/events:record",
+          "billing/events:apply",
+        ]);
+        expect(pass.argsOf("billing/xendit/checkout:prepare")).toEqual({
+          offer: "pro.pass.1",
+          userId: "app-user-1",
         });
-        expect(mocks.command).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+        expect(pass.argsOf("billing/events:apply")).toEqual({
+          eventId: "event-1",
+        });
+        expect(pass.argsOf("billing/events:record")).toMatchObject({
+          type: "payment_session.completed",
+        });
+        expect(pass.argsOf("billing/events:record")).not.toMatchObject({
+          payload: expect.stringContaining("payment_token_id"),
+        });
+        expect(plan.argsOf("billing/events:record")).toMatchObject({
+          payload: expect.stringContaining("payment_token_id"),
+        });
+      })
   );
 
   it.effect(
     "opens a school invoice's hosted payment as the session Xendit answers with, then applies the webhook of its payment",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-xendit-test-",
+        const opened = localConvexDouble(ANSWERS);
+        const paid = localConvexDouble(ANSWERS);
+
+        yield* payInvoice(INVOICE.number, "open").pipe(
+          Effect.provide(opened.layer)
+        );
+        yield* payInvoice(INVOICE.number, "paid").pipe(
+          Effect.provide(paid.layer)
+        );
+
+        expect(opened.argsOf("billing/xendit/invoice:record")).toEqual({
+          accountId: INVOICE.accountId,
+          expiresAt: INVOICE.dueAt,
+          invoiceId: INVOICE._id,
+          sessionId: `ps_acceptance_${INVOICE.number}`,
+          url: `https://checkout-staging.xendit.co/sessions/ps_acceptance_${INVOICE.number}`,
         });
-        mocks.read.mockReturnValue(
-          Effect.succeed({ backend: `${root}/backend` })
-        );
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              spec.args[2] === "billingInvoices"
-                ? '[{"_id":"invoice_2","accountId":"account_1","dueAt":2000,"number":"NKF-2026-000002"},{"_id":"invoice_1","accountId":"account_1","dueAt":2000,"number":"NKF-2026-000001"}]'
-                : '{"eventId":"event_1"}'
-            );
-          })
-        );
-
-        yield* payAcceptanceInvoice(root, "NKF-2026-000001", "open", 1000);
-        yield* invoiceMode.run(root, ["NKF-2026-000001", "paid"]);
-
-        const [read, record, event, apply] = MutableList.toArray(specs);
-        expect(Arr.take(Arr.drop(read?.args ?? [], 1), 2)).toEqual([
-          "data",
-          "billingInvoices",
+        expect(paid.paths()).toEqual([
+          "billing/events:record",
+          "billing/events:apply",
         ]);
-        expect(record?.args[2]).toBe("billing/xendit/invoice:record");
-        expect(
-          yield* Schema.decodeEffect(SessionArgs)(
-            Option.getOrThrow(Arr.last(record?.args ?? []))
-          )
-        ).toEqual({
-          accountId: "account_1",
-          expiresAt: 2000,
-          invoiceId: "invoice_1",
-          sessionId: "ps_acceptance_NKF-2026-000001",
-          url: "https://checkout-staging.xendit.co/sessions/ps_acceptance_NKF-2026-000001",
-        });
-        expect(event?.args[2]).toBe("billing/events:record");
-        expect(Option.getOrThrow(Arr.last(event?.args ?? []))).toContain(
-          "ps_acceptance_NKF-2026-000001"
-        );
-        expect(apply?.args[2]).toBe("billing/events:apply");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      })
   );
 
-  it.effect(
-    "pays nothing without a local runtime, for an invoice the runtime does not hold, or for a step it does not know",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-xendit-test-",
-        });
-        mocks.read.mockReturnValue(Effect.void);
-        expect(
-          Exit.isFailure(
-            yield* Effect.exit(
-              payAcceptanceInvoice(root, "NKF-2026-000001", "paid", 1000)
-            )
-          )
-        ).toBe(true);
-        expect(
-          yield* invoiceMode
-            .run(root, ["NKF-2026-000001", "refund"])
-            .pipe(Effect.flip)
-        ).toMatchObject({
-          message: "Usage: acceptance invoice <invoice-number> <open|paid>",
-        });
-        expect(mocks.command).not.toHaveBeenCalled();
+  it.effect("pays nothing for an invoice the runtime does not hold", () =>
+    Effect.gen(function* () {
+      const backend = localConvexDouble(ANSWERS);
 
-        mocks.read.mockReturnValue(
-          Effect.succeed({ backend: `${root}/backend` })
-        );
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          fs.writeFileString(spec.stdoutPath, "")
-        );
-        expect(
-          yield* payAcceptanceInvoice(
-            root,
-            "NKF-2026-000009",
-            "open",
-            1000
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          message: "The local runtime holds no invoice NKF-2026-000009.",
-        });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      expect(
+        yield* payInvoice("INV-0000", "open").pipe(
+          Effect.provide(backend.layer),
+          Effect.flip
+        )
+      ).toMatchObject({
+        _tag: "AcceptanceRuntimeError",
+        message: "The local runtime holds no invoice INV-0000.",
+      });
+      expect(backend.paths()).not.toContain("billing/xendit/invoice:record");
+    })
+  );
+
+  it.effect("runs the purchase and the invoice step the modes name", () =>
+    Effect.gen(function* () {
+      const backend = localConvexDouble(ANSWERS);
+      mocks.layer.mockReturnValue(backend.layer);
+
+      yield* xenditMode.run("/root", ["app-user-1", "pass"]);
+      yield* invoiceMode.run("/root", [INVOICE.number, "paid"]);
+
+      expect(backend.paths()).toContain("billing/xendit/checkout:admit");
+      expect(mocks.layer).toHaveBeenCalledWith("/root");
+    }).pipe(Effect.provide(nodePlatform))
+  );
+
+  it.effect("refuses a purchase or a step the modes do not know", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* xenditMode.run("/root", ["app-user-1", "year"]).pipe(Effect.flip)
+      ).toMatchObject({
+        message: "Usage: acceptance xendit <user-id> <pass|plan>",
+      });
+      expect(
+        yield* invoiceMode
+          .run("/root", [INVOICE.number, "later"])
+          .pipe(Effect.flip)
+      ).toMatchObject({
+        message: "Usage: acceptance invoice <invoice-number> <open|paid>",
+      });
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });
