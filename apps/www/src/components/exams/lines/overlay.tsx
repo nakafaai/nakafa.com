@@ -4,29 +4,39 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
+import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { type LinePair, useLines } from "@/components/exams/lines/context";
-import { linePath, nameOf, removePoint } from "@/components/exams/lines/curve";
+import {
+  linePath,
+  nameOf,
+  REMOVE_CLEARANCE,
+  removePoint,
+} from "@/components/exams/lines/curve";
 
 /** A line's stroke, bolder while it is pointed at or its statement is in hand. */
 const lineStroke = cva("stroke-primary fill-none transition-[stroke-width]", {
   variants: { lit: { false: "stroke-2", true: "stroke-3" } },
 });
 
-/** A line's remove control, shown while its line is pointed at or focused, and always on a touch screen. */
-const lineRemove = cva(
-  "bg-background absolute -translate-x-1/2 -translate-y-1/2 transition-opacity focus-visible:opacity-100 pointer-coarse:opacity-100",
-  { variants: { lit: { false: "opacity-0", true: "opacity-100" } } }
-);
+/**
+ * Whether a line's remove control shows: while its line is pointed at or focused, and always on a touch screen. The
+ * control and the hole the lines leave around it show together.
+ */
+const removeShown = cva("transition-opacity pointer-coarse:opacity-100", {
+  variants: { lit: { false: "opacity-0", true: "opacity-100" } },
+});
 
 /**
  * The lines of a board, under its columns, so a line shows only where it crosses the gap and every press on a part
  * reaches the part. A new line grows from its statement to its answer, a line a pull drew shows at once, and a line
- * taken away fades. Each line carries its remove control on its statement's row.
+ * taken away fades. Each line carries its remove control in the middle of the gap on its statement's row, and every
+ * line is cut around each control that shows, so no line runs under one.
  */
 export function LinesOverlay() {
   const { disabled, pairs } = useLines();
+  const holes = useId();
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -34,12 +44,22 @@ export function LinesOverlay() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 size-full overflow-visible"
       >
-        <AnimatePresence initial={false}>
-          {Arr.map(pairs, (pair) => (
-            <LinePath key={`${pair.source}:${pair.target}`} pair={pair} />
-          ))}
-        </AnimatePresence>
-        <PullPath />
+        <mask id={holes}>
+          <rect fill="white" height="100%" width="100%" />
+          {disabled
+            ? null
+            : Arr.map(pairs, (pair) => (
+                <RemoveHole key={pair.source} pair={pair} />
+              ))}
+        </mask>
+        <g mask={`url(#${holes})`}>
+          <AnimatePresence initial={false}>
+            {Arr.map(pairs, (pair) => (
+              <LinePath key={`${pair.source}:${pair.target}`} pair={pair} />
+            ))}
+          </AnimatePresence>
+          <PullPath />
+        </g>
       </svg>
       {disabled
         ? null
@@ -54,12 +74,7 @@ export function LinesOverlay() {
 function LinePath({ pair }: { readonly pair: LinePair }) {
   const { store } = useLines();
   const points = useStore(store, (state) => state.points);
-  const lit = useStore(
-    store,
-    (state) =>
-      Option.contains(state.lit, pair.source) ||
-      Option.contains(state.held, pair.source)
-  );
+  const lit = useLit(pair.source);
   const drawn = useStore(store, (state) =>
     Option.contains(state.drawn, pair.source)
   );
@@ -117,18 +132,46 @@ function PullPath() {
   );
 }
 
-/** The control that takes one line away, on its statement's row, a step into the gap toward its answer. */
+/** Whether a line's statement is pointed at, focused or in hand, which shows its remove control. */
+function useLit(source: string) {
+  const { store } = useLines();
+  return useStore(
+    store,
+    (state) =>
+      Option.contains(state.lit, source) || Option.contains(state.held, source)
+  );
+}
+
+/** The hole a line's remove control leaves in every line while it shows. */
+function RemoveHole({ pair }: { readonly pair: LinePair }) {
+  const { store } = useLines();
+  const points = useStore(store, (state) => state.points);
+  const lit = useLit(pair.source);
+  const from = Rec.get(points, pair.source);
+  const to = Rec.get(points, pair.target);
+  if (Option.isNone(from) || Option.isNone(to)) {
+    return null;
+  }
+  const place = removePoint(from.value, to.value);
+
+  return (
+    <circle
+      className={removeShown({ lit })}
+      cx={place.x}
+      cy={place.y}
+      fill="black"
+      r={REMOVE_CLEARANCE}
+    />
+  );
+}
+
+/** The control that takes one line away, round, in the middle of the gap on its statement's row. */
 function LineRemove({ pair }: { readonly pair: LinePair }) {
   const t = useTranslations("Exams");
   const board = useLines();
   const { store } = board;
   const points = useStore(store, (state) => state.points);
-  const lit = useStore(
-    store,
-    (state) =>
-      Option.contains(state.lit, pair.source) ||
-      Option.contains(state.held, pair.source)
-  );
+  const lit = useLit(pair.source);
   const from = Rec.get(points, pair.source);
   const to = Rec.get(points, pair.target);
   const name = nameOf(board.names, pair.source);
@@ -140,7 +183,11 @@ function LineRemove({ pair }: { readonly pair: LinePair }) {
   return (
     <Button
       aria-label={t("line-remove", { name: name.value })}
-      className={lineRemove({ lit })}
+      className={removeShown({
+        className:
+          "absolute -translate-x-1/2 -translate-y-1/2 rounded-full focus-visible:opacity-100",
+        lit,
+      })}
       data-line-remove={pair.source}
       onBlur={() => store.getState().light(Option.none())}
       onClick={() => {

@@ -4,50 +4,64 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
-import { useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
+import {
+  NewChat,
+  NewChatInput,
+  NewChatSuggestions,
+  useNewChatPrompt,
+} from "@/components/ai/chat/new";
+import { StartPrompt } from "@/components/ai/chat/start";
 import { useAi } from "@/components/ai/context";
-import { NinaInput, NinaSuggestions } from "@/components/ai/input";
-import { ConvexIsland } from "@/components/providers/island";
-import { useLiveSession } from "@/components/providers/live";
 import { EmptyNina } from "@/components/state/nina";
-import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /**
- * Renders Nina's empty state and starts a new study chat. Only a signed-in
- * learner's composer reads Convex: a visitor's and a pending session's composers
- * load no admission code and open no client, so the sheet renders on every page.
+ * Nina's sheet with no chat open: her welcome and the composer of a new chat, which renders on every page. The
+ * sheet stays open while its own admission completes, and a notice that opens the chat after the learner closed the
+ * sheet opens it, with the chat; a sheet closed while its admission is pending gets that notice, not a reopen. Asking
+ * for sign-in closes the sheet first. While the session loads the composer waits disabled.
  */
 export function SheetNew() {
-  const isSessionPending = useLiveSession((state) => state.isPending);
+  const open = useAi((state) => state.open);
+  const setActiveChatId = useAi((state) => state.setActiveChatId);
+  const setOpen = useAi((state) => state.setOpen);
+
   return (
-    <ConvexIsland
-      fallback={isSessionPending ? <PendingSheetNew /> : <VisitorSheetNew />}
+    <NewChat
+      admission={{
+        onComplete: (chatId) => {
+          setActiveChatId(chatId);
+          setOpen(true);
+        },
+        onSignIn: () => setOpen(false),
+        shown: open,
+      }}
+      holds={false}
     >
-      <SignedInSheetNew />
-    </ConvexIsland>
+      <NewChatSurface />
+    </NewChat>
   );
 }
 
-/** The welcome of a new chat, which its variant composes, and its composer, which every variant of the sheet shares. */
-function NewChatSurface({
-  children,
-  composer,
-}: {
-  children: ReactNode;
-  composer: ReactNode;
-}) {
+/** The sheet's new chat: the welcome, or the prompt on its way, above the composer and Nina's suggestions. */
+function NewChatSurface() {
+  const prompt = useNewChatPrompt();
+
   return (
     <div className="text-chat relative flex size-full min-w-0 flex-col overflow-hidden">
-      {children}
-
-      <div className="grid shrink-0 px-2 pb-2">{composer}</div>
+      <StartPrompt className="p-6" prompt={prompt}>
+        <NewChatWelcome />
+      </StartPrompt>
+      <div className="grid shrink-0 px-2 pb-2">
+        <NewChatInput autoFocus>
+          <NewChatSuggestions />
+        </NewChatInput>
+      </div>
     </div>
   );
 }
 
+/** Nina's welcome to a new chat. */
 function NewChatWelcome() {
   const t = useTranslations("Ai");
 
@@ -60,88 +74,5 @@ function NewChatWelcome() {
         </EmptyHeader>
       </Empty>
     </MessageScrollerItem>
-  );
-}
-
-/**
- * A visitor's composer. Its attach button and its send both ask for sign-in, as
- * the admission gate does for a signed-out learner, so no chat code loads.
- */
-function VisitorSheetNew() {
-  const navigate = useNavigate();
-  const authNavigation = useCurrentAuthNavigation();
-  const setOpen = useAi((state) => state.setOpen);
-
-  function signIn() {
-    setOpen(false);
-    navigate(authNavigation.readTarget());
-    return false;
-  }
-
-  return (
-    <NewChatSurface
-      composer={
-        <NinaInput
-          attachments={false}
-          onAttachRequest={signIn}
-          onSubmit={signIn}
-        >
-          <NinaSuggestions onSubmit={signIn} />
-        </NinaInput>
-      }
-    >
-      <StartPrompt className="p-6" prompt={null}>
-        <NewChatWelcome />
-      </StartPrompt>
-    </NewChatSurface>
-  );
-}
-
-/** A composer while the session loads: its send waits for the session, so it offers neither sign-in nor a send. */
-function PendingSheetNew() {
-  return (
-    <NewChatSurface
-      composer={
-        <NinaInput attachments={false} disabled onSubmit={() => false} />
-      }
-    >
-      <StartPrompt className="p-6" prompt={null}>
-        <NewChatWelcome />
-      </StartPrompt>
-    </NewChatSurface>
-  );
-}
-
-/** A signed-in learner's composer, whose admission and submission run on the page's client. */
-function SignedInSheetNew() {
-  const open = useAi((state) => state.open);
-  const setActiveChatId = useAi((state) => state.setActiveChatId);
-  const setOpen = useAi((state) => state.setOpen);
-  const { disabled, prompt, submit } = useStartChat({
-    // The sheet is open while its own admission completes. A notice that opens
-    // the chat after the learner closed the sheet opens it, with the chat. A
-    // sheet closed while its admission is pending gets that notice, not a reopen.
-    onComplete: (chatId) => {
-      setActiveChatId(chatId);
-      setOpen(true);
-    },
-    onSignIn: () => setOpen(false),
-    shown: open,
-  });
-
-  return (
-    <NewChatSurface
-      composer={
-        <NinaInput autoFocus disabled={disabled} onSubmit={submit}>
-          {prompt ? null : (
-            <NinaSuggestions disabled={disabled} onSubmit={submit} />
-          )}
-        </NinaInput>
-      }
-    >
-      <StartPrompt className="p-6" prompt={prompt}>
-        <NewChatWelcome />
-      </StartPrompt>
-    </NewChatSurface>
   );
 }
