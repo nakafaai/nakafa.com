@@ -5,12 +5,13 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect, HashSet, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForAnimations } from "@/e2e/support/quiet";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The search row's placeholder, which the check follows. */
 const PLACEHOLDER = app.Utils["search-bar-placeholder"];
-/** Longer than the sidebar's fold, so a toggle has finished moving. */
-const FOLD_MILLISECONDS = 600;
+/** The desktop sidebar, whose fold a toggle starts. */
+const SIDEBAR = '[data-slot="sidebar"]';
 
 /** The height of the placeholder on each frame the page drew it. */
 const Heights = Schema.Array(Schema.Finite);
@@ -55,10 +56,14 @@ const verifyFold = Effect.fn("NakafaE2E.verifySearchRowFold")(function* (
     page.addInitScript(watchPlaceholder, PLACEHOLDER)
   );
   yield* Effect.promise(() => page.goto("/en/try-out"));
+  // Each toggle is read once the sidebar's fold has finished moving.
+  const folded = Effect.promise(() =>
+    waitForAnimations(page.locator(SIDEBAR).first())
+  );
   yield* first;
-  yield* Effect.promise(() => page.waitForTimeout(FOLD_MILLISECONDS));
+  yield* folded;
   yield* second;
-  yield* Effect.promise(() => page.waitForTimeout(FOLD_MILLISECONDS));
+  yield* folded;
   const heights = yield* readHeights(page);
   yield* Effect.sync(() => {
     expect(heights.length).toBeGreaterThan(0);

@@ -17,8 +17,13 @@ const POST = "Hari ini belajar trigonometri.";
 const REFUSED = "Tulisan yang ditolak server.";
 const NEXT = "Tulisan berikutnya.";
 const KEPT = "Post dari server.";
+/** The phone the list's own states run on, and the first of the two widths a post's like and delete run at. */
+const PHONE = { name: "a phone", size: { width: 390, height: 844 } };
+/**
+ * Deleting a post asks first in a dialog, which a phone shows as a drawer, so that journey runs at both widths.
+ */
 const VIEWPORTS = [
-  { name: "a phone", size: { width: 390, height: 844 } },
+  PHONE,
   { name: "a desktop", size: { width: 1440, height: 900 } },
 ];
 /** The Convex name of the query that reads a profile's posts. */
@@ -129,199 +134,203 @@ for (const viewport of VIEWPORTS) {
         })
       );
     });
-
-    test("a post the server refuses leaves the list and gives its text back with a message, ahead of the next post", async ({
-      baseURL,
-      page,
-    }) => {
-      await runOnPage(page, baseURL, (origin) =>
-        Effect.gen(function* () {
-          const { changes, learner } = yield* openChatPage(page, origin);
-          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
-
-          yield* Effect.promise(async () => {
-            await typeOnceListed(page, REFUSED);
-
-            // The next change never reaches the server, and the server answers
-            // wait until the test releases them. While they wait the post shows,
-            // the text clears and the composer stays writable: nothing waits.
-            changes.failNext();
-            changes.hold();
-            await postButtonOf(page).click();
-            await expect(postOf(page, REFUSED)).toBeVisible();
-            await expect(composerOf(page)).toHaveValue("");
-            await expect(composerOf(page)).toBeEditable();
-            await composerOf(page).fill(NEXT);
-            changes.release();
-            await expect(
-              page.getByText(app.Toast["action-error"].title).first()
-            ).toBeVisible();
-            await expect(postOf(page, REFUSED)).toHaveCount(0);
-            // A refused post comes back to the composer, and the next post the
-            // author started meanwhile stays after it.
-            await expect(composerOf(page)).toHaveValue(`${REFUSED}\n\n${NEXT}`);
-          });
-        })
-      );
-    });
-
-    test("a first page that fails shows the server's page under the failure, and the list loads again on Retry", async ({
-      baseURL,
-      page,
-    }) => {
-      await runOnPage(page, baseURL, (origin) =>
-        Effect.gen(function* () {
-          const { changes, learner } = yield* openChatPage(page, origin);
-          yield* learner.writePost(KEPT);
-          // The live list answers its first page with the failure from now on,
-          // so the server's page is all the profile holds until the list recovers.
-          changes.failQuery(POSTS_LIST_QUERY, unreadable);
-          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
-
-          yield* Effect.promise(async () => {
-            await expect(postOf(page, KEPT)).toBeVisible({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
-            // The field still takes typing, and Post stays off while the list
-            // cannot show a post.
-            await composerOf(page).fill(NEXT);
-            await expect(postButtonOf(page)).toBeDisabled();
-
-            // Retry asks the server for the list anew, and the list holds the post.
-            changes.recoverQuery();
-            await page.getByRole("button", { name: app.Common.retry }).click();
-            await expect(postButtonOf(page)).toBeEnabled({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
-              0
-            );
-            await expect(postOf(page, KEPT)).toBeVisible();
-          });
-        })
-      );
-    });
-
-    test("a later page that fails keeps the posts already shown under the failure, and loads on Retry", async ({
-      baseURL,
-      page,
-    }) => {
-      await runOnPage(page, baseURL, (origin) =>
-        Effect.gen(function* () {
-          const { changes, learner } = yield* openChatPage(page, origin);
-          // One post more than a page, so the list has a second page to load.
-          yield* Effect.forEach(
-            Arr.makeBy(POST_PAGE_SIZE + 1, (index) => `Post ${index + 1}`),
-            (text) => learner.writePost(text),
-            { discard: true }
-          );
-          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
-
-          yield* Effect.promise(async () => {
-            // The composer is enabled once the live list holds its first page.
-            await expect(composerOf(page)).toBeEnabled({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
-
-            // Scrolling to the end asks for the second page, which fails: the
-            // rows stay, the failure shows, and nothing asks again by itself.
-            changes.failQuery(POSTS_LIST_QUERY, unreadable);
-            await rowsOf(page).last().scrollIntoViewIfNeeded();
-            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
-
-            // Retry asks for the list again, and the end of the rows brings the
-            // second page.
-            changes.recoverQuery();
-            await page.getByRole("button", { name: app.Common.retry }).click();
-            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
-              0,
-              { timeout: readinessTimeoutMilliseconds }
-            );
-            await rowsOf(page).last().scrollIntoViewIfNeeded();
-            await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE + 1, {
-              timeout: readinessTimeoutMilliseconds,
-            });
-          });
-        })
-      );
-    });
-
-    test("an error of the list that is no typed failure shows the failure above the server's page, and loads on Retry", async ({
-      baseURL,
-      page,
-    }) => {
-      await runOnPage(page, baseURL, (origin) =>
-        Effect.gen(function* () {
-          const { changes, learner } = yield* openChatPage(page, origin);
-          yield* learner.writePost(KEPT);
-          // The live list throws an error with no typed failure. The page catches
-          // it, so the header and the tabs stay and the failure shows above the
-          // server's page.
-          changes.failQuery(POSTS_LIST_QUERY, undefined);
-          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
-
-          yield* Effect.promise(async () => {
-            await expect(postOf(page, KEPT)).toBeVisible({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
-            // The field still takes typing, and Post stays off while the list
-            // cannot show a post.
-            await composerOf(page).fill(NEXT);
-            await expect(postButtonOf(page)).toBeDisabled();
-
-            changes.recoverQuery();
-            await page.getByRole("button", { name: app.Common.retry }).click();
-            await expect(postButtonOf(page)).toBeEnabled({
-              timeout: readinessTimeoutMilliseconds,
-            });
-            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
-              0
-            );
-            await expect(postOf(page, KEPT)).toBeVisible();
-          });
-        })
-      );
-    });
-
-    test("the Comments tab opens at its own address, and the Posts tab keeps the username address", async ({
-      baseURL,
-      page,
-    }) => {
-      await runOnPage(page, baseURL, (origin) =>
-        Effect.gen(function* () {
-          const { learner } = yield* openChatPage(page, origin);
-          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
-
-          yield* Effect.promise(async () => {
-            await page.getByRole("tab", { name: app.Common.comments }).click();
-            await expect(page).toHaveURL(
-              new RegExp(`/en/@${learner.username}/comments$`, "u"),
-              { timeout: readinessTimeoutMilliseconds }
-            );
-            // The page is the Comments tab, not a not-found page.
-            await expect(
-              page.getByRole("tab", { name: app.Common.comments })
-            ).toHaveAttribute("aria-selected", "true");
-            await page.getByRole("tab", { name: app.Common.posts }).click();
-            await expect(page).toHaveURL(
-              new RegExp(`/en/@${learner.username}$`, "u"),
-              { timeout: readinessTimeoutMilliseconds }
-            );
-          });
-        })
-      );
-    });
   });
 }
+
+/**
+ * The list's own states (a refused post, a failed page, an error of no typed failure, the tabs' addresses) open
+ * no dialog, drawer or menu that changes with the width, so one width proves each of them.
+ */
+test.describe(`posts on ${PHONE.name}`, () => {
+  test.use({ viewport: PHONE.size });
+
+  test("a post the server refuses leaves the list and gives its text back with a message, ahead of the next post", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+        yield* Effect.promise(async () => {
+          await typeOnceListed(page, REFUSED);
+
+          // The next change never reaches the server, and the server answers
+          // wait until the test releases them. While they wait the post shows,
+          // the text clears and the composer stays writable: nothing waits.
+          changes.failNext();
+          changes.hold();
+          await postButtonOf(page).click();
+          await expect(postOf(page, REFUSED)).toBeVisible();
+          await expect(composerOf(page)).toHaveValue("");
+          await expect(composerOf(page)).toBeEditable();
+          await composerOf(page).fill(NEXT);
+          changes.release();
+          await expect(
+            page.getByText(app.Toast["action-error"].title).first()
+          ).toBeVisible();
+          await expect(postOf(page, REFUSED)).toHaveCount(0);
+          // A refused post comes back to the composer, and the next post the
+          // author started meanwhile stays after it.
+          await expect(composerOf(page)).toHaveValue(`${REFUSED}\n\n${NEXT}`);
+        });
+      })
+    );
+  });
+
+  test("a first page that fails shows the server's page under the failure, and the list loads again on Retry", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        yield* learner.writePost(KEPT);
+        // The live list answers its first page with the failure from now on,
+        // so the server's page is all the profile holds until the list recovers.
+        changes.failQuery(POSTS_LIST_QUERY, unreadable);
+        yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+        yield* Effect.promise(async () => {
+          await expect(postOf(page, KEPT)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
+          // The field still takes typing, and Post stays off while the list
+          // cannot show a post.
+          await composerOf(page).fill(NEXT);
+          await expect(postButtonOf(page)).toBeDisabled();
+
+          // Retry asks the server for the list anew, and the list holds the post.
+          changes.recoverQuery();
+          await page.getByRole("button", { name: app.Common.retry }).click();
+          await expect(postButtonOf(page)).toBeEnabled({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.getByText(app.Common["load-error"])).toHaveCount(0);
+          await expect(postOf(page, KEPT)).toBeVisible();
+        });
+      })
+    );
+  });
+
+  test("a later page that fails keeps the posts already shown under the failure, and loads on Retry", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        // One post more than a page, so the list has a second page to load.
+        yield* Effect.forEach(
+          Arr.makeBy(POST_PAGE_SIZE + 1, (index) => `Post ${index + 1}`),
+          (text) => learner.writePost(text),
+          { discard: true }
+        );
+        yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+        yield* Effect.promise(async () => {
+          // The composer is enabled once the live list holds its first page.
+          await expect(composerOf(page)).toBeEnabled({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
+
+          // Scrolling to the end asks for the second page, which fails: the
+          // rows stay, the failure shows, and nothing asks again by itself.
+          changes.failQuery(POSTS_LIST_QUERY, unreadable);
+          await rowsOf(page).last().scrollIntoViewIfNeeded();
+          await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
+
+          // Retry asks for the list again, and the end of the rows brings the
+          // second page.
+          changes.recoverQuery();
+          await page.getByRole("button", { name: app.Common.retry }).click();
+          await expect(page.getByText(app.Common["load-error"])).toHaveCount(
+            0,
+            { timeout: readinessTimeoutMilliseconds }
+          );
+          await rowsOf(page).last().scrollIntoViewIfNeeded();
+          await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE + 1, {
+            timeout: readinessTimeoutMilliseconds,
+          });
+        });
+      })
+    );
+  });
+
+  test("an error of the list that is no typed failure shows the failure above the server's page, and loads on Retry", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        yield* learner.writePost(KEPT);
+        // The live list throws an error with no typed failure. The page catches
+        // it, so the header and the tabs stay and the failure shows above the
+        // server's page.
+        changes.failQuery(POSTS_LIST_QUERY, undefined);
+        yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+        yield* Effect.promise(async () => {
+          await expect(postOf(page, KEPT)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
+          // The field still takes typing, and Post stays off while the list
+          // cannot show a post.
+          await composerOf(page).fill(NEXT);
+          await expect(postButtonOf(page)).toBeDisabled();
+
+          changes.recoverQuery();
+          await page.getByRole("button", { name: app.Common.retry }).click();
+          await expect(postButtonOf(page)).toBeEnabled({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.getByText(app.Common["load-error"])).toHaveCount(0);
+          await expect(postOf(page, KEPT)).toBeVisible();
+        });
+      })
+    );
+  });
+
+  test("the Comments tab opens at its own address, and the Posts tab keeps the username address", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { learner } = yield* openChatPage(page, origin);
+        yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+        yield* Effect.promise(async () => {
+          await page.getByRole("tab", { name: app.Common.comments }).click();
+          await expect(page).toHaveURL(
+            new RegExp(`/en/@${learner.username}/comments$`, "u"),
+            { timeout: readinessTimeoutMilliseconds }
+          );
+          // The page is the Comments tab, not a not-found page.
+          await expect(
+            page.getByRole("tab", { name: app.Common.comments })
+          ).toHaveAttribute("aria-selected", "true");
+          await page.getByRole("tab", { name: app.Common.posts }).click();
+          await expect(page).toHaveURL(
+            new RegExp(`/en/@${learner.username}$`, "u"),
+            { timeout: readinessTimeoutMilliseconds }
+          );
+        });
+      })
+    );
+  });
+});
