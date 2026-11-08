@@ -68,6 +68,23 @@ every release-keyed entry (`lasting`), never the active pointer. Only a deploy s
 `NAKAFA_BUILD_STORE`, and `deployedWorkerBindings` never binds it. A store failure is a
 miss, so the build reads Convex.
 
+Amended on 8 November 2026: every read whose answer depends only on the content
+release goes through the content store (`apps/www/src/lib/content/store/query.ts`),
+including the article delivery that a page and its social image share, the article and
+lesson route models of the language switch, the article catalog pages, the discovery
+reads of the feed and llms files, the curriculum path and the try-out localized path.
+On 7 November, a day of 33 production deploys, those reads bypassed the store and were
+read again by every deploy, whether or not the release had changed: the article delivery
+alone made 1,337 calls (74.6 MB), and the five largest of them 147 MB of Database I/O. An operation that reads several values of one
+release passes the release it read first (`queryPinnedContentStore`), so the store keys
+each read by that release and fails with `PublishedReleaseMismatchError` instead of
+moving to another one, and the reader no longer compares releases itself. Five reads stay
+live, because their answer depends on more than the release: the content search (a free
+text query per visitor), the trending subjects (live analytics, kept an hour per isolate
+by their own entry), a try-out track's further set windows (the viewer's query, read as a
+visitor), the Quran identity that a stale snapshot is checked against, and the active
+release identity itself.
+
 ## Phase A as implemented
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the

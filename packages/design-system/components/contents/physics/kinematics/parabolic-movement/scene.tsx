@@ -15,6 +15,7 @@ import {
 import { ProjectileRange } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/ground";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
@@ -26,9 +27,9 @@ const PROJECTILE_COLORS = {
 
 /** The color of each launch's trail and ball. */
 const LAUNCH_COLORS = {
-  "low-angle": getColor("TEAL"),
-  "balanced-angle": getColor("ORANGE", 500),
-  "high-angle": getColor("VIOLET"),
+  "low-angle": PLOT_COLORS.teal,
+  "balanced-angle": PLOT_COLORS.orange,
+  "high-angle": PLOT_COLORS.violet,
 } satisfies Record<ParabolicLaunchId, string>;
 
 export function ProjectileBallScene() {

@@ -1,158 +1,146 @@
-import type { GenericId } from "@confect/core";
-import type { TenantPeriodsDoc } from "@repo/backend/confect/_generated/docs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { activeHomeroomOf } from "@repo/backend/confect/tenancy/authority";
 import type {
-  CohortHold,
-  PeriodHold,
-} from "@repo/backend/confect/tenancy/errors";
+  TenantCohortsDoc,
+  TenantPeriodsDoc,
+} from "@repo/backend/confect/_generated/docs";
+import type { TableNames } from "@repo/backend/confect/_generated/id";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  classCohortHolder,
+  classPeriodHolder,
+} from "@repo/backend/confect/classroom/classes/hold";
+import { sittingsHolder } from "@repo/backend/confect/exams/sittings/hold";
+import { insightHolder } from "@repo/backend/confect/insight/hold";
+import {
+  gradesHolder,
+  graduationsHolder,
+  lettersHolder,
+  reportsHolder,
+} from "@repo/backend/confect/records/hold";
+import { activeHomeroomOf } from "@repo/backend/confect/tenancy/authority";
+import type { PeriodHold } from "@repo/backend/confect/tenancy/errors";
+import type {
+  CohortHolder,
+  Holder,
+  PeriodHolder,
+  Reference,
+} from "@repo/backend/confect/tenancy/hold";
+import {
+  promotionCohortHolder,
+  promotionPeriodHolder,
+} from "@repo/backend/confect/tenancy/promotion/hold";
 import { Effect, Option } from "effect";
 
-/**
- * The first record that keeps a cohort in use, in the order a school would clear them, or none for a cohort that holds
- * nothing and may be deleted. A removed homeroom teacher's row does not count: deleting the cohort clears it. Each kind
- * is one indexed read of its first row.
- */
-export const cohortHold = Effect.fn("tenancy.write.holds.cohort")(function* (
-  cohortId: GenericId.GenericId<"tenantCohorts">
-) {
-  const reader = yield* DatabaseReader;
-  const held = yield* Effect.all(
-    [
-      reader
-        .table("tenantCohortMembers")
-        .index("by_cohortId_and_personId", (query) =>
-          query.eq("cohortId", cohortId)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof CohortHold.Type>("members"))
-        ),
-      Effect.map(
-        activeHomeroomOf(cohortId),
-        Option.as<typeof CohortHold.Type>("homeroom")
-      ),
-      reader
-        .table("classes")
-        .index("by_cohortId_and_status_and_nameKey", (query) =>
-          query.eq("cohortId", cohortId)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof CohortHold.Type>("classes"))
-        ),
-      reader
-        .table("examSittings")
-        .index("by_cohortId_and_state_and_opensAt", (query) =>
-          query.eq("cohortId", cohortId)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof CohortHold.Type>("sittings"))
-        ),
-      reader
-        .table("reportCards")
-        .index("by_cohortId_and_personId", (query) =>
-          query.eq("cohortId", cohortId)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof CohortHold.Type>("reports"))
-        ),
-      reader
-        .table("graduationLetters")
-        .index("by_cohortId_and_personId", (query) =>
-          query.eq("cohortId", cohortId)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof CohortHold.Type>("letters"))
-        ),
-    ],
-    { concurrency: "unbounded" }
-  );
-  return Option.firstSomeOf(held);
-});
+/** A student placed in the cohort. Their placement points at the cohort's period, which the cohort holds. */
+const membersHolder: CohortHolder = {
+  hold: "members",
+  holds: Effect.fn("tenancy.write.holds.members")(function* (cohort) {
+    const found = yield* (yield* DatabaseReader)
+      .table("tenantCohortMembers")
+      .index("by_cohortId_and_personId", (query) =>
+        query.eq("cohortId", cohort._id)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    return Option.isSome(found);
+  }),
+  references: ["tenantCohortMembers.cohortId"],
+};
+
+/** The cohort's homeroom teacher, while they still hold the slot: deleting the cohort clears a removed teacher's row. */
+const homeroomHolder: CohortHolder = {
+  hold: "homeroom",
+  holds: (cohort) => Effect.map(activeHomeroomOf(cohort._id), Option.isSome),
+  references: ["tenantAssignments.cohortId"],
+};
+
+/** A cohort of the period, which every row of the cohort leans on for its own period. */
+const cohortsHolder: PeriodHolder = {
+  hold: "cohorts",
+  holds: Effect.fn("tenancy.write.holds.cohorts")(function* (period) {
+    const found = yield* (yield* DatabaseReader)
+      .table("tenantCohorts")
+      .index("by_periodId_and_nameKey", (query) =>
+        query.eq("periodId", period._id)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    return Option.isSome(found);
+  }),
+  references: ["tenantCohorts.periodId"],
+};
+
+/** Every record that keeps a cohort in use, in the order a school would clear them. */
+export const cohortHolders: readonly CohortHolder[] = [
+  membersHolder,
+  homeroomHolder,
+  classCohortHolder,
+  sittingsHolder,
+  reportsHolder,
+  lettersHolder,
+  promotionCohortHolder,
+];
+
+/** Every record that keeps a period in use, in the order a school would clear them. */
+export const periodHolders: readonly PeriodHolder[] = [
+  cohortsHolder,
+  classPeriodHolder,
+  gradesHolder,
+  graduationsHolder,
+  promotionPeriodHolder,
+  insightHolder,
+];
 
 /**
- * The first reason a period stays in use, or none for a period that may be deleted: being the active period, or a
- * cohort, a class, a class grade, a graduation decision, or a promotion from or into it. Each of them points at the
- * period beside its cohorts, so each is read on its own, one indexed read of its first row.
+ * Period fields that no read needs, each beside the reference that covers it: the row's period is always the period of
+ * the cohort or class it belongs to, and that cohort or class holds the period while the row holds it.
  */
+export const coveredReferences: Readonly<Record<Reference, Reference>> = {
+  "classTeachers.periodId": "classes.periodId",
+  "graduationLetters.periodId": "tenantCohorts.periodId",
+  "reportCards.periodId": "tenantCohorts.periodId",
+  "tenantAssignments.periodId": "tenantCohorts.periodId",
+  "tenantCohortMembers.periodId": "tenantCohorts.periodId",
+};
+
+/**
+ * Tables whose references may outlive their subject by design: the journal keeps every removal it records (ADR 0041),
+ * and an inbox row reads its subject when it is opened and shows nothing of one that is gone (ADR 0027).
+ */
+export const keptTables: readonly TableNames[] = [
+  "journalEntries",
+  "notifications",
+];
+
+/** The first hold among the holders that the subject has, in their order, reading every holder at once. */
+const firstHold = <Subject, Hold>(
+  holders: readonly Holder<Subject, Hold>[],
+  subject: Subject
+) =>
+  Effect.map(
+    Effect.forEach(
+      holders,
+      (holder) =>
+        Effect.map(holder.holds(subject), (held) =>
+          held ? Option.some(holder.hold) : Option.none()
+        ),
+      { concurrency: "unbounded" }
+    ),
+    Option.firstSomeOf
+  );
+
+/** The first record that keeps a cohort in use, or none for a cohort that holds nothing and may be deleted. */
+export const cohortHold = Effect.fn("tenancy.write.holds.cohort")(function* (
+  cohort: Pick<TenantCohortsDoc, "_id" | "periodId">
+) {
+  return yield* firstHold(cohortHolders, cohort);
+});
+
+/** The first reason a period stays in use, being the active period or a record that points at it, or none. */
 export const periodHold = Effect.fn("tenancy.write.holds.period")(function* (
   period: Pick<TenantPeriodsDoc, "_id" | "status">
 ) {
   if (period.status === "active") {
     return Option.some<typeof PeriodHold.Type>("active");
   }
-  const reader = yield* DatabaseReader;
-  const held = yield* Effect.all(
-    [
-      reader
-        .table("tenantCohorts")
-        .index("by_periodId_and_nameKey", (query) =>
-          query.eq("periodId", period._id)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof PeriodHold.Type>("cohorts"))
-        ),
-      reader
-        .table("classes")
-        .index("by_periodId_and_slug", (query) =>
-          query.eq("periodId", period._id)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof PeriodHold.Type>("classes"))
-        ),
-      reader
-        .table("classGrades")
-        .index("by_periodId_and_state", (query) =>
-          query.eq("periodId", period._id)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof PeriodHold.Type>("grades"))
-        ),
-      reader
-        .table("graduations")
-        .index("by_periodId", (query) => query.eq("periodId", period._id))
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof PeriodHold.Type>("graduations"))
-        ),
-      reader
-        .table("tenantPromotions")
-        .index("by_sourcePeriodId_and_state", (query) =>
-          query.eq("sourcePeriodId", period._id)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof PeriodHold.Type>("promotions"))
-        ),
-      reader
-        .table("tenantPromotions")
-        .index("by_targetPeriodId_and_state", (query) =>
-          query.eq("targetPeriodId", period._id)
-        )
-        .first()
-        .pipe(
-          Effect.orDie,
-          Effect.map(Option.as<typeof PeriodHold.Type>("promotions"))
-        ),
-    ],
-    { concurrency: "unbounded" }
-  );
-  return Option.firstSomeOf(held);
+  return yield* firstHold(periodHolders, period);
 });

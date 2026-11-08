@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 
@@ -31,7 +31,7 @@ export function Graph({ title, description }: GraphProps) {
       data={[
         {
           points: linearPoints,
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           labels: [
             {
               text: <InlineMath math="y = f(x)" />,
@@ -61,7 +61,7 @@ export function Graph({ title, description }: GraphProps) {
         },
         {
           points: exponentialPoints,
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           labels: [
             {
               text: <InlineMath math="y = g(x)" />,

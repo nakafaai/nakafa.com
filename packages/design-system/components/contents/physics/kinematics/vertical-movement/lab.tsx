@@ -25,6 +25,7 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -104,7 +105,7 @@ export function VerticalMovementLab({
             <ambientLight intensity={0.72} />
             <hemisphereLight
               color={getColor("SLATE", 50)}
-              groundColor={getColor("SLATE")}
+              groundColor={PLOT_COLORS.slate}
               intensity={0.62}
             />
             <directionalLight
@@ -179,10 +180,7 @@ function VerticalMotionScene({ children }: { children: ReactNode }) {
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.82, 48]} />
-        <meshStandardMaterial
-          color={getColor("EMERALD", 100)}
-          roughness={0.8}
-        />
+        <meshStandardMaterial color={getColor("SLATE", 200)} roughness={0.8} />
       </mesh>
       {children}
     </group>
@@ -206,7 +204,7 @@ function VerticalTrail({ motion }: { motion: MotionState }) {
           >
             <sphereGeometry args={[0.045, 12, 8]} />
             <meshBasicMaterial
-              color={getColor("BLUE", 300)}
+              color={PLOT_COLORS.violet}
               opacity={0.42}
               transparent
             />
@@ -265,14 +263,11 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
       <group>
         <mesh castShadow>
           <sphereGeometry args={[BALL_RADIUS, 32, 32]} />
-          <meshStandardMaterial color={getColor("BLUE")} roughness={0.34} />
+          <meshStandardMaterial color={PLOT_COLORS.violet} roughness={0.34} />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[BALL_RADIUS + 0.004, 0.008, 8, 32]} />
-          <meshStandardMaterial
-            color={getColor("BLUE", 200)}
-            roughness={0.42}
-          />
+          <meshStandardMaterial color={PLOT_COLORS.violet} roughness={0.42} />
         </mesh>
       </group>
     </CameraBounds>

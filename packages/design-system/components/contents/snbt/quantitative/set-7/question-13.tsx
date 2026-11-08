@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
@@ -21,7 +21,7 @@ const pointQ = { x: 1.5, y: 0, z: 0 };
 const graphData = [
   {
     points: [pointA, pointB, pointC, pointA],
-    color: getColor("INDIGO"),
+    color: PLOT_COLORS.fuchsia,
     showPoints: true,
     smooth: false,
     labels: [
@@ -44,7 +44,7 @@ const graphData = [
   },
   {
     points: [pointC, pointP],
-    color: getColor("TEAL"),
+    color: PLOT_COLORS.teal,
     showPoints: true,
     smooth: false,
     labels: [
@@ -57,7 +57,7 @@ const graphData = [
   },
   {
     points: [pointA, pointQ],
-    color: getColor("VIOLET"),
+    color: PLOT_COLORS.violet,
     showPoints: true,
     smooth: false,
     labels: [
@@ -70,7 +70,7 @@ const graphData = [
   },
   {
     points: [pointB, pointR],
-    color: getColor("VIOLET"),
+    color: PLOT_COLORS.violet,
     showPoints: true,
     smooth: false,
     labels: [

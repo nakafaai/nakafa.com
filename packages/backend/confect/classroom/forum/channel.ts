@@ -1,5 +1,6 @@
 import type { ClassroomChannelsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { isArchived } from "@repo/backend/confect/classroom/archive";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
 
@@ -81,7 +82,7 @@ export const channelView = (
   latest: Pick<typeof ChannelView.Type, "last" | "unread">
 ) => ({
   ...latest,
-  archived: row.archivedAt !== undefined,
+  archived: isArchived(row),
   id: row._id,
   kind: row.kind,
   name: row.name,

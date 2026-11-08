@@ -19,6 +19,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 
@@ -66,12 +67,12 @@ export function RecruitmentChart({
         rejected: {
           cue: RECRUITMENT_CUES.rejected,
           label: rejectedLabel,
-          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+          colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
         },
         accepted: {
           cue: RECRUITMENT_CUES.accepted,
           label: acceptedLabel,
-          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+          colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
         },
       }) satisfies ChartConfig,
     [acceptedLabel, rejectedLabel]

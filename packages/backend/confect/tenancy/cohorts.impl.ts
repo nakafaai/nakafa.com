@@ -193,10 +193,8 @@ const restore = FunctionImpl.make(
   spec,
   "restore",
   Effect.fn("tenancy.cohorts.restore")(function* ({ cohortId }) {
-    const { person, tenant } = yield* Member;
-    return cohortView(
-      yield* restoreCohort(personActor(person), tenant._id, cohortId)
-    );
+    const { person } = yield* Member;
+    return cohortView(yield* restoreCohort(personActor(person), cohortId));
   })
 );
 

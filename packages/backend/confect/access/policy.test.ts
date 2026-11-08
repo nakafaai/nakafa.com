@@ -11,16 +11,19 @@ import { Authority } from "@repo/backend/confect/access/policy";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import {
+  cohortAuthority,
   personAuthority,
   tenantAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import type { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import { person } from "@repo/backend/confect/tenancy/kinds";
 import {
   defectOf,
+  foreignCohort,
   principal,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Exit, Order, Schema } from "effect";
+import { Array as Arr, Effect, Exit, Order, Schema, Struct } from "effect";
 
 const system = { kind: "system" } as const;
 const Named = Schema.Struct({ name: Schema.String });
@@ -128,6 +131,92 @@ describe("access/policy authority", () => {
             "roster.view",
           ],
         });
+      })
+  );
+
+  it.effect(
+    "loads a locked subject of the tenant for its lifecycle, denies a foreign or missing one, and refuses a restore its period still locks",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const foreign = yield* foreignCohort(fixture);
+        const tenantId = fixture.tenants.nf;
+        const unitId = fixture.units.smp;
+        const { cohortId, gone, periodId } = yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            const term = yield* writer.table("tenantPeriods").insert({
+              end: "2026-12-19",
+              name: "Ganjil",
+              start: "2026-07-13",
+              status: "archived",
+              tenantId,
+              unitId,
+            });
+            const cohort = { grade: 7, periodId: term, tenantId, unitId };
+            const kept = yield* writer.table("tenantCohorts").insert({
+              ...cohort,
+              name: "7A",
+              nameKey: "7a",
+              status: "archived",
+            });
+            const removed = yield* writer.table("tenantCohorts").insert({
+              ...cohort,
+              name: "7B",
+              nameKey: "7b",
+              status: "archived",
+            });
+            yield* writer.table("tenantCohorts").delete(removed);
+            return { cohortId: kept, gone: removed, periodId: term };
+          }).pipe(Effect.orDie)
+        );
+        const active: typeof CohortStatus.Type = "active";
+        const outcomes = yield* fixture.run(
+          Effect.gen(function* () {
+            const asOwner = Effect.provideService(
+              Member,
+              yield* principal(fixture.people.owner.personId)
+            );
+            const cohort = yield* (yield* DatabaseReader)
+              .table("tenantCohorts")
+              .get(cohortId)
+              .pipe(Effect.orDie);
+            const restored = Struct.assign(cohort, { status: active });
+            const before = [
+              yield* cohortAuthority
+                .authorize("cohort.manage", cohortId)
+                .pipe(verdict, asOwner),
+              yield* cohortAuthority
+                .lifecycle("cohort.manage", cohortId)
+                .pipe(outcome, asOwner),
+              yield* cohortAuthority
+                .lifecycle("cohort.manage", foreign.id)
+                .pipe(outcome, asOwner),
+              yield* cohortAuthority
+                .lifecycle("cohort.manage", gone)
+                .pipe(outcome, asOwner),
+              yield* cohortAuthority
+                .restorable("cohort.manage", restored)
+                .pipe(verdict, asOwner),
+            ];
+            yield* (yield* DatabaseWriter)
+              .table("tenantPeriods")
+              .patch(periodId, { status: "active" })
+              .pipe(Effect.orDie);
+            const after = yield* cohortAuthority
+              .restorable("cohort.manage", restored)
+              .pipe(verdict, asOwner);
+            return [...before, after];
+          })
+        );
+        expect(outcomes).toEqual([
+          "condition",
+          "7A",
+          "resource",
+          "resource",
+          "condition",
+          "allow",
+        ]);
       })
   );
 

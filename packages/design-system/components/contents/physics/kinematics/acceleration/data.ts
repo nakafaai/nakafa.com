@@ -1,4 +1,4 @@
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const AccelerationCaseIdSchema = Schema.Literals([
@@ -90,14 +90,14 @@ const SLOW_DOWN_END = getMotionPointAfterAcceleration(
 export const ACCELERATION_CASES: AccelerationCase[] = [
   createAccelerationCase(
     "speed-up",
-    getColor("TEAL"),
+    PLOT_COLORS.teal,
     MOTION_START,
     SPEED_UP_END
   ),
-  createAccelerationCase("steady", getColor("SKY"), SPEED_UP_END, STEADY_END),
+  createAccelerationCase("steady", PLOT_COLORS.slate, SPEED_UP_END, STEADY_END),
   createAccelerationCase(
     "slow-down",
-    getColor("VIOLET"),
+    PLOT_COLORS.violet,
     STEADY_END,
     SLOW_DOWN_END
   ),

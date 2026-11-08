@@ -1,10 +1,6 @@
 import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { periodAuthority } from "@repo/backend/confect/tenancy/authority";
@@ -25,23 +21,8 @@ export const remove = FunctionImpl.make(
   spec,
   "remove",
   Effect.fn("tenancy.periods.remove")(function* ({ periodId }) {
-    const { person, tenant } = yield* Member;
-    const period = yield* (yield* DatabaseReader)
-      .table("tenantPeriods")
-      .get(periodId)
-      .pipe(
-        Effect.catchTags({
-          DocumentDecodeError: Effect.die,
-          GetByIdFailure: () =>
-            new AccessDenied({ action: "period.manage", reason: "resource" }),
-        })
-      );
-    if (period.tenantId !== tenant._id) {
-      return yield* new AccessDenied({
-        action: "period.manage",
-        reason: "resource",
-      });
-    }
+    const { person } = yield* Member;
+    const period = yield* periodAuthority.lifecycle("period.manage", periodId);
     const hold = yield* periodHold(period);
     if (Option.isSome(hold)) {
       return yield* new PeriodInUse({ holds: hold.value });

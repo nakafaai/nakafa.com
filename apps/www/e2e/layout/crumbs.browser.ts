@@ -7,8 +7,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const SOME_ADDRESS = /./u;
 
 // A phone's width folds every ancestor of the path into the breadcrumb's More menu.
-// An article's path has Home, Articles and its category, so it folds; a lesson's
-// breadcrumb names only the lesson and never does.
+// An article's path has Home, Articles and its category, so it folds, and it ends at
+// the category: the article's title is the heading under it, and a long title in the
+// path would cut it. A lesson's breadcrumb names only the lesson and never folds.
 test.use({ viewport: { height: 844, width: 390 } });
 
 test("every breadcrumb item is a link, the current page included", async ({
@@ -16,10 +17,19 @@ test("every breadcrumb item is a link, the current page included", async ({
 }) => {
   await page.goto(pinnedRoutes.article.en);
   const path = page.getByRole("navigation", { name: "breadcrumb" });
-  const current = path.locator('[aria-current="page"]');
+  await expect(path.getByRole("button", { name: "More" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  for (const item of await path.getByRole("link").all()) {
+    await expect(item).toHaveAttribute("href", SOME_ADDRESS);
+  }
+
+  await page.goto(pinnedRoutes.material.en);
+  const current = page
+    .getByRole("navigation", { name: "breadcrumb" })
+    .locator('[aria-current="page"]');
   await expect(current).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(current).toHaveAttribute("href", SOME_ADDRESS);
-  await expect(path.getByRole("button", { name: "More" })).toBeVisible();
 });
 
 test("every folded breadcrumb item carries its icon", async ({ page }) => {

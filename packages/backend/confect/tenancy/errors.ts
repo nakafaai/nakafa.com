@@ -355,8 +355,8 @@ export class NpsnTaken extends Schema.TaggedError<NpsnTaken>()(
 ) {}
 
 /**
- * What keeps a period in use: being the active period, or a cohort, a class, a class grade, a graduation decision, or a
- * promotion that points at it.
+ * What keeps a period in use: being the active period, or a cohort, a class, a class grade, a graduation decision, a
+ * promotion, or the Insight of its students that points at it.
  */
 export const PeriodHold = Schema.Literals([
   "active",
@@ -364,6 +364,7 @@ export const PeriodHold = Schema.Literals([
   "cohorts",
   "grades",
   "graduations",
+  "insight",
   "promotions",
 ]);
 
@@ -373,21 +374,22 @@ export class PeriodInUse extends Schema.TaggedError<PeriodInUse>()(
   {
     ...refusal(
       "PERIOD_IN_USE",
-      "This period is active or still holds cohorts, classes, grades, a graduation or a promotion. Archive it instead."
+      "This period is active or still holds cohorts, classes, grades, a graduation, a promotion or Insight. Archive it instead."
     ),
     holds: PeriodHold,
   }
 ) {}
 
 /**
- * What keeps a cohort in use: a placed person, an active homeroom teacher, a class, an exam sitting, a report card, or
- * a graduation letter that points at it.
+ * What keeps a cohort in use: a placed person, an active homeroom teacher, a class, an exam sitting, a report card, a
+ * graduation letter, or a promotion that points at it.
  */
 export const CohortHold = Schema.Literals([
   "classes",
   "homeroom",
   "letters",
   "members",
+  "promotions",
   "reports",
   "sittings",
 ]);
@@ -398,7 +400,7 @@ export class CohortInUse extends Schema.TaggedError<CohortInUse>()(
   {
     ...refusal(
       "COHORT_IN_USE",
-      "This cohort still holds people, a homeroom teacher, classes, sittings or reports. Archive it instead."
+      "This cohort still holds people, a homeroom teacher, classes, sittings, reports or a promotion. Archive it instead."
     ),
     holds: CohortHold,
   }

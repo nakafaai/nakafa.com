@@ -3205,10 +3205,6 @@
       "title": "This answer does not fit.",
       "description": "Choose the options again."
     },
-    "sitting-stale-answer": {
-      "title": "A newer answer is saved.",
-      "description": "Your paper now shows the newer answer."
-    },
     "sitting-question-missing": {
       "title": "Question not in this exam.",
       "description": "Reload the sitting to see its questions."
@@ -3245,6 +3241,10 @@
       "title": "This period has a graduation.",
       "description": "Archive the period to keep its graduation."
     },
+    "school-refusal-period-in-use-insight": {
+      "title": "This period still holds Insight.",
+      "description": "Delete it once Insight is gone, 30 days after the archive."
+    },
     "school-refusal-period-in-use-classes": {
       "title": "This period still holds classes.",
       "description": "Archive the period to keep its classes and grades."
@@ -3268,6 +3268,10 @@
     "school-refusal-cohort-in-use-members": {
       "title": "This cohort still holds students.",
       "description": "Move its students out first, or archive the cohort."
+    },
+    "school-refusal-cohort-in-use-promotions": {
+      "title": "A promotion uses this cohort.",
+      "description": "Archive the cohort to keep its promotion."
     },
     "school-refusal-cohort-in-use-homeroom": {
       "title": "This cohort has a homeroom teacher.",

@@ -4,11 +4,11 @@ import { DeviceId } from "@repo/backend/confect/exams/sittings/schema";
 import { Option, Schema } from "effect";
 import {
   type Admission,
+  answerRefusalOf,
   entryRefusalMessage,
+  failureCopyOf,
   failureGroupCopyOf,
-  isFinalRefusal,
   isRetiredDevice,
-  isStaleAnswer,
   refusalCopyOf,
   sittingFailureMessage,
   startEntry,
@@ -75,14 +75,6 @@ describe("stepEntry", () => {
     const admitted = stepEntry(startEntry(Option.none()), admission(5));
 
     expect(stepEntry(admitted, admission(9))).toEqual(admission(9));
-  });
-});
-
-describe("isStaleAnswer", () => {
-  it("names only the answer that the server already holds or has replaced", () => {
-    expect(isStaleAnswer({ _tag: "StaleAnswer" })).toBe(true);
-    expect(isStaleAnswer({ _tag: "AttemptClosed" })).toBe(false);
-    expect(isStaleAnswer(new Error("lost"))).toBe(false);
   });
 });
 
@@ -165,27 +157,27 @@ describe("refusalCopyOf", () => {
   });
 });
 
-describe("isFinalRefusal", () => {
-  it("is final for a stale answer, which a newer saved answer already replaced", () => {
-    expect(isFinalRefusal({ _tag: "StaleAnswer" })).toBe(true);
+describe("answerRefusalOf", () => {
+  it("is quiet for a stale answer, which the server already holds or a newer one replaced", () => {
+    expect(answerRefusalOf({ _tag: "StaleAnswer" })).toBe("quiet");
   });
 
   it("is final for a refusal that the server will not take later", () => {
-    expect(isFinalRefusal({ _tag: "AttemptClosed" })).toBe(true);
-    expect(isFinalRefusal({ _tag: "ResponseDoesNotFit" })).toBe(true);
-    expect(isFinalRefusal({ _tag: "SecondDevice" })).toBe(true);
-    expect(isFinalRefusal({ _tag: "NotInSitting" })).toBe(true);
+    expect(answerRefusalOf({ _tag: "AttemptClosed" })).toBe("final");
+    expect(answerRefusalOf({ _tag: "ResponseDoesNotFit" })).toBe("final");
+    expect(answerRefusalOf({ _tag: "SecondDevice" })).toBe("final");
+    expect(answerRefusalOf({ _tag: "NotInSitting" })).toBe("final");
   });
 
-  it("is not final for a lock, which lifts and lets the kept answer go through", () => {
-    expect(isFinalRefusal({ _tag: "AttemptLocked" })).toBe(false);
-    expect(isFinalRefusal({ _tag: "SittingLocked" })).toBe(false);
+  it("holds the answer through a lock, which lifts and lets the kept answer go through", () => {
+    expect(answerRefusalOf({ _tag: "AttemptLocked" })).toBe("held");
+    expect(answerRefusalOf({ _tag: "SittingLocked" })).toBe("held");
   });
 
-  it("is not final for an error that is not a refusal", () => {
-    expect(isFinalRefusal({ _tag: "SittingClosed" })).toBe(false);
-    expect(isFinalRefusal({ _tag: "AccessDenied" })).toBe(false);
-    expect(isFinalRefusal(new Error("network"))).toBe(false);
+  it("is failed for an error that names no refusal of an answer", () => {
+    expect(answerRefusalOf({ _tag: "SittingClosed" })).toBe("failed");
+    expect(answerRefusalOf({ _tag: "AccessDenied" })).toBe("failed");
+    expect(answerRefusalOf(new Error("network"))).toBe("failed");
   });
 });
 
@@ -198,16 +190,24 @@ describe("isRetiredDevice", () => {
 });
 
 describe("stale answer copy", () => {
-  it("shows the stale toast for a stale answer, and no sentence on the paper", () => {
-    expect(refusalCopyOf({ _tag: "StaleAnswer" })).toEqual(
-      Option.some({
-        description: "sitting-stale-answer.description",
-        title: "sitting-stale-answer.title",
-      })
-    );
+  it("shows no toast and no sentence for a stale answer, since the paper shows what was saved", () => {
+    expect(refusalCopyOf({ _tag: "StaleAnswer" })).toEqual(Option.none());
     expect(sittingFailureMessage({ _tag: "StaleAnswer" })).toEqual(
       Option.none()
     );
+  });
+});
+
+describe("failureCopyOf", () => {
+  it("shows a refusal's own copy, and the generic copy for a failure that names none", () => {
+    expect(failureCopyOf({ _tag: "AttemptLocked" })).toEqual({
+      description: "sitting-attempt-locked.description",
+      title: "sitting-attempt-locked.title",
+    });
+    expect(failureCopyOf(new Error("network"))).toEqual({
+      description: "action-error.description",
+      title: "action-error.title",
+    });
   });
 });
 
