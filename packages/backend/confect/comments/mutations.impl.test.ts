@@ -1,4 +1,10 @@
 import { Ref } from "@confect/core";
+// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
+// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
+// file is collected, so no test pays it.
+import "@repo/backend/components/betterAuth/session";
+import "@repo/backend/convex/comments/mutations";
+import "@repo/backend/convex/comments/queries";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { TEXT_REFUSAL_MESSAGE } from "@repo/backend/confect/comments/text";
