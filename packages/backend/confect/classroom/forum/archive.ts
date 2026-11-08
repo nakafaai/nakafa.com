@@ -1,10 +1,11 @@
 import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { archiveMark } from "@repo/backend/confect/classroom/archive";
 import spec from "@repo/backend/confect/classroom/forum/channels.spec";
 import { ChannelFixed } from "@repo/backend/confect/classroom/forum/errors";
 import { classChannel } from "@repo/backend/confect/classroom/forum/lookup";
-import { Clock, Effect } from "effect";
+import { Effect } from "effect";
 
 /**
  * Archives a topic channel of a class, or brings one back. An archived channel stays readable and takes nothing
@@ -25,9 +26,7 @@ export const archive = FunctionImpl.make(
     }
     yield* (yield* DatabaseWriter)
       .table("classroomChannels")
-      .patch(channelId, {
-        archivedAt: archived ? yield* Clock.currentTimeMillis : undefined,
-      })
+      .patch(channelId, { archivedAt: yield* archiveMark(archived) })
       .pipe(Effect.orDie);
     return null;
   })

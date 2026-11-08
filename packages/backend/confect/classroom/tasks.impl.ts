@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { isArchived, onShelf } from "@repo/backend/confect/classroom/archive";
 import { classAccess } from "@repo/backend/confect/classroom/authority";
 import {
   ScoreOutOfRange,
@@ -63,16 +64,13 @@ const list = FunctionImpl.make(
       .index("by_classId_and_deadline", (query) => query.eq("classId", row._id))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    const shelf = Arr.filter(
-      found.page,
-      (task) => (task.archivedAt !== undefined) === archived
-    );
+    const shelf = onShelf(found.page, archived);
     const student = yield* readsAsStudent();
     // A student reads neither an archived task nor one for other students.
     const reached = student
       ? Arr.filter(
           shelf,
-          (task) => task.archivedAt === undefined && reaches(task, person._id)
+          (task) => !isArchived(task) && reaches(task, person._id)
         )
       : shelf;
     const views = yield* Effect.forEach(reached, taskView);

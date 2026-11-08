@@ -3,6 +3,7 @@ import type { ClassroomChannelsDoc } from "@repo/backend/confect/_generated/docs
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { isArchived } from "@repo/backend/confect/classroom/archive";
 import { ChannelArchived } from "@repo/backend/confect/classroom/forum/errors";
 import { Effect, Option } from "effect";
 
@@ -34,10 +35,7 @@ export const classChannel = Effect.fn("classroom.forum.lookup.channel")(
 /** Refuses a write into an archived channel, which stays readable and takes nothing new. */
 export const refuseArchived = (
   channel: Pick<ClassroomChannelsDoc, "archivedAt">
-) =>
-  channel.archivedAt === undefined
-    ? Effect.void
-    : Effect.fail(new ChannelArchived());
+) => (isArchived(channel) ? Effect.fail(new ChannelArchived()) : Effect.void);
 
 /**
  * Refuses a write to a message or a discussion unless its channel takes one. A channel that was removed and whose

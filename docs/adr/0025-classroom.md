@@ -313,6 +313,10 @@ teachers as a mention and gives the credits back.
 | Nina in the class | The school's setting is the limit. |
 | Archive | The class stays readable and takes no new message. It is the archived condition of ADR 0012. |
 
+### Archive inside a class
+
+An announcement, a task, a topic channel, and a discussion are archived and brought back by whoever wrote or teaches it. `archivedAt`, the time of the archive, is their one mark, and `confect/classroom/archive.ts` owns what it means: an archived row leaves its list and the class home, a list reads one shelf at a time, its view says `archived`, and it comes back as it stood. An archived channel refuses every new write (`ChannelArchived`), and a student meets an archived task as a missing one. A class is archived through its status instead, the locked condition of ADR 0012, and the library's trash is a bin before deletion, so neither carries this mark.
+
 A class can narrow what the school allows and never widen it. The school's values
 are its tenant settings (ADR 0011): whether students may open threads, which
 here means start a discussion, and whether Nina is on. Their change is
