@@ -9,7 +9,10 @@ vi.mock("@tanstack/react-start/server", () => ({
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
-class Missing extends Schema.TaggedError<Missing>()("Missing", {
+class Missing extends Schema.TaggedError<
+  Missing,
+  { readonly brand: unique symbol }
+>()("Missing", {
   id: Schema.String,
 }) {}
 

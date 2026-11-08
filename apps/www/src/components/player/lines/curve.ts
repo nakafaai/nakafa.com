@@ -1,6 +1,6 @@
 import { partLetter } from "@repo/backend/confect/exams/letters";
 import { Array as Arr, Option, Schema } from "effect";
-import type { MatchPart } from "@/components/exams/sitting/response";
+import type { MatchPart } from "@/components/player/response";
 
 /** A place on a board, in the board's own pixels, so a paper drawn at any zoom keeps its lines on its dots. */
 export const LinePoint = Schema.Struct({ x: Schema.Finite, y: Schema.Finite });

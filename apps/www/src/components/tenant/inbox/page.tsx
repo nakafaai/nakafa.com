@@ -1,13 +1,14 @@
 import { Globe02Icon, SchoolIcon } from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, DateTime, Option } from "effect";
 import { useTranslations } from "use-intl";
@@ -37,9 +38,9 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   return (
     <PageFrame width="column">
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {/* The school choice, then the page's two buttons in one group, ready and final from the first paint. */}
-        <InboxFilter all={all} />
+        {/* The school choice and the page's two buttons are one group of equal parts, ready and final from the first paint. */}
         <ButtonGroup>
+          <InboxFilter all={all} />
           <MarkAllRead scope={scope} />
           <SchoolPreferences />
         </ButtonGroup>
@@ -55,9 +56,10 @@ export function SchoolNotifications({ all }: { all: boolean }) {
 }
 
 /**
- * The header's choice of schools, as the unit choice of a settings page reads: this school's rows, or every school's,
- * kept in the page's address. It opens with its one-word label, and each school choice shows its icon. The trigger
- * shows the chosen icon and folds its words in a narrow header (`HeaderLabel`), as the header's buttons beside it do.
+ * The header's choice of schools: this school's rows, or every school's, kept in the page's address. Its button shows
+ * the chosen school's icon and folds its words in a narrow header (`HeaderLabel`), as the header's buttons beside it
+ * do, so the three stand as equal parts of one group on a phone. The menu opens with its one-word label, and each
+ * choice shows its icon.
  */
 function InboxFilter({ all }: { all: boolean }) {
   const t = useTranslations("Notifications");
@@ -78,30 +80,41 @@ function InboxFilter({ all }: { all: boolean }) {
   const chosen = all ? allSchools : thisSchool;
 
   return (
-    <Select
-      items={items}
-      onValueChange={(value) =>
-        navigate({
-          params: { slug },
-          search: value === "all" ? { schools: "all" } : {},
-          to: "/school/$slug/notifications",
-        })
-      }
-      value={chosen.value}
-    >
-      <SelectTrigger aria-label={common("menu-schools")} className="w-auto">
-        <SelectValue>
-          <HugeIcons icon={chosen.icon} />
-          <HeaderLabel>{chosen.label}</HeaderLabel>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent label={common("menu-schools")}>
-        {Arr.map(items, (item) => (
-          <SelectItem icon={item.icon} key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button aria-label={common("menu-schools")}>
+            <HugeIcons icon={chosen.icon} />
+            <HeaderLabel>{chosen.label}</HeaderLabel>
+          </Button>
+        }
+      />
+      <DropdownMenuContent
+        align="end"
+        className="w-56"
+        label={common("menu-schools")}
+      >
+        <DropdownMenuRadioGroup
+          onValueChange={(value) =>
+            navigate({
+              params: { slug },
+              search: value === "all" ? { schools: "all" } : {},
+              to: "/school/$slug/notifications",
+            })
+          }
+          value={chosen.value}
+        >
+          {Arr.map(items, (item) => (
+            <DropdownMenuRadioItem
+              icon={item.icon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

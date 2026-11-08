@@ -23,12 +23,10 @@ import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { finishSetupChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolHomeTarget } from "@/lib/routing/school/target";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
-
-const SOURCE = "components/tenant/setup/page";
 
 /** A code's name in the reader's language. */
 const nameOf = (locale: string, type: Intl.DisplayNamesType, code: string) =>
@@ -69,11 +67,12 @@ export function SchoolSetup() {
           disabled={isFinishing}
           onClick={() =>
             startFinishing(() =>
-              saveSchool(
-                () => finish({ slug }),
-                SOURCE,
-                // The finished setup has no page left to stay on, so the press lands on the school's home.
-                () => navigate(schoolHomeTarget(slug))
+              runSchoolWrite(
+                schoolCall(() => finish({ slug })),
+                {
+                  onSaved: // The finished setup has no page left to stay on, so the press lands on the school's home.
+                    () => navigate(schoolHomeTarget(slug)),
+                }
               )
             )
           }

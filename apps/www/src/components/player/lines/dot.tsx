@@ -5,13 +5,13 @@ import { Array as Arr, Option } from "effect";
 import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
-import { type LineSide, useLines } from "@/components/exams/lines/context";
+import { type LineSide, useLines } from "@/components/player/lines/context";
 import {
   boardPoint,
   isPull,
   type LinePoint,
   nameOf,
-} from "@/components/exams/lines/curve";
+} from "@/components/player/lines/curve";
 
 /** A dot's hit area: a press anywhere on its row works it on a paper no one writes on. */
 const lineDot = cva("shrink-0 touch-pan-y", {

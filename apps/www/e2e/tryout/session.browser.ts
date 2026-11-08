@@ -9,6 +9,7 @@ import {
 } from "@/e2e/support/entry";
 import { activate } from "@/e2e/support/input";
 import { questionArticle } from "@/e2e/support/player";
+import { waitForQuiet } from "@/e2e/support/quiet";
 
 /** The route the page reads its Convex token from. */
 const TOKEN_ROUTE = "**/api/auth/convex/token**";
@@ -32,8 +33,8 @@ const whileSessionReloads = Effect.fn("NakafaE2E.whileTryoutSessionReloads")(
     yield* Effect.promise(() =>
       expect.poll(() => MutableRef.get(refused)).toBeGreaterThan(0)
     );
-    // The refusal reaches the session store once the token read has answered.
-    yield* Effect.sleep("1 second");
+    // The refusal reaches the session store once the token read has answered, and the page draws it.
+    yield* Effect.promise(() => waitForQuiet(page));
     yield* check;
     yield* Effect.promise(() => page.unroute(TOKEN_ROUTE));
     yield* Effect.promise(() =>

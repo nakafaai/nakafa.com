@@ -1,7 +1,7 @@
 import { HashMap, Option, Schema } from "effect";
 import { createStore } from "zustand";
-import type { LineSide } from "@/components/exams/lines/context";
-import { LinePoint } from "@/components/exams/lines/curve";
+import type { LineSide } from "@/components/player/lines/context";
+import { LinePoint } from "@/components/player/lines/curve";
 
 /** The middle of each dot of a board, by the part it belongs to. */
 const LinePoints = Schema.Record(Schema.String, LinePoint);

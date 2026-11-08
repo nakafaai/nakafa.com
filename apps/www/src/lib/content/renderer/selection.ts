@@ -43,24 +43,24 @@ type SelectedRenderer =
   | { readonly kind: "semantic"; readonly name: string };
 
 /** A signed requirement has no physical implementation. */
-export class RendererImplementationMissing extends Schema.TaggedError<RendererImplementationMissing>()(
-  "RendererImplementationMissing",
-  {
-    componentName: Schema.String,
-    contentKey: ContentKeySchema,
-    rendererDomain: RendererDomainSchema,
-  }
-) {}
+export class RendererImplementationMissing extends Schema.TaggedError<
+  RendererImplementationMissing,
+  { readonly brand: unique symbol }
+>()("RendererImplementationMissing", {
+  componentName: Schema.String,
+  contentKey: ContentKeySchema,
+  rendererDomain: RendererDomainSchema,
+}) {}
 
 /** Multiple registries claim one signed component. */
-class RendererComponentCollision extends Schema.TaggedError<RendererComponentCollision>()(
-  "RendererComponentCollision",
-  {
-    componentName: Schema.String,
-    contentKey: ContentKeySchema,
-    rendererDomain: RendererDomainSchema,
-  }
-) {}
+class RendererComponentCollision extends Schema.TaggedError<
+  RendererComponentCollision,
+  { readonly brand: unique symbol }
+>()("RendererComponentCollision", {
+  componentName: Schema.String,
+  contentKey: ContentKeySchema,
+  rendererDomain: RendererDomainSchema,
+}) {}
 
 /** Registers every lightweight domain before Next replays cached client references. */
 export const rendererDomainImplementations = {

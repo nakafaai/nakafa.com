@@ -29,9 +29,7 @@ import {
   type PersonId,
   SchoolPersonPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/grant";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that gives a role of the whole school to a person: one the viewer chooses, or the `person` that the
@@ -72,18 +70,20 @@ export function SchoolGrantDialog({
             }
             setOpen(false);
             startAssigning(() =>
-              saveSchool(
-                () =>
+              runSchoolWrite(
+                schoolCall(() =>
                   assign({
                     personId,
                     role,
                     scope: { kind: "tenant" },
                     slug,
-                  }),
-                SOURCE,
-                () => {
-                  setChosen(undefined);
-                  setRole(undefined);
+                  })
+                ),
+                {
+                  onSaved: () => {
+                    setChosen(undefined);
+                    setRole(undefined);
+                  },
                 }
               )
             );

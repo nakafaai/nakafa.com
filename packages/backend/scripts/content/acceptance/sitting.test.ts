@@ -1,52 +1,37 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SittingFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
-  createAcceptanceSitting,
+  seedSitting,
   sittingMode,
 } from "@repo/backend/scripts/content/acceptance/sitting";
-import {
-  Array as Arr,
-  Effect,
-  Exit,
-  FileSystem,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
+/** A temporary folder for the files a mode writes. */
+const folder = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.makeTempDirectoryScoped({ prefix: "acceptance-mode-test-" });
+});
 
-/** The arguments of the seed function, as the Convex CLI receives them. */
-const SeedArgs = Schema.fromJsonString(
-  Schema.Struct({
-    crowd: Schema.optionalKey(Schema.Finite),
-    email: Schema.String,
-    slug: Schema.String,
-    essay: Schema.optionalKey(Schema.Literal(true)),
-    templates: Schema.optionalKey(Schema.Literal(true)),
-    upcoming: Schema.optionalKey(Schema.Literal(true)),
-  })
-);
-
-/** A runtime whose backend folder sits under the test's own temporary root. */
-const runtimeIn = (root: string) =>
-  mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
+const SITTING = {
+  examId: "exam-1",
+  sittingId: "sitting-1",
+  title: "Ujian Fisika",
+  token: "ABC123",
+};
+const SEED = "exams/seed:sitting";
 
 describe("acceptance sitting", () => {
   afterEach(() => {
@@ -54,363 +39,70 @@ describe("acceptance sitting", () => {
   });
 
   it.effect(
-    "seeds one sitting through the seed function and writes its exam, its sitting, and its token",
+    "seeds a sitting for the learner, with no crowd and no extra unless asked",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-sitting-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
-            );
-          })
+        const backend = localConvexDouble({ [SEED]: SITTING });
+
+        const plain = yield* seedSitting("acc-1", "siswa@example.test").pipe(
+          Effect.provide(backend.layer)
+        );
+        yield* seedSitting("acc-1", "siswa@example.test", 3, "essay").pipe(
+          Effect.provide(backend.layer)
         );
 
-        yield* createAcceptanceSitting(
-          root,
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/sitting.json`,
-          undefined
-        );
-
-        const [spec] = MutableList.toArray(specs);
-        expect(Arr.take(Arr.drop(spec?.args ?? [], 1), 2)).toEqual([
-          "run",
-          "exams/seed:sitting",
+        expect(plain).toEqual(SITTING);
+        expect(Arr.map(backend.calls(), (one) => one.call.args)).toEqual([
+          { email: "siswa@example.test", slug: "acc-1" },
+          { crowd: 3, email: "siswa@example.test", essay: true, slug: "acc-1" },
         ]);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({
-          email: "learner@acceptance.example.test",
-          slug: "acc-1234abcd",
-        });
-        const seeded = yield* fs
-          .readFileString(`${root}/sitting.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SittingFixture)));
-        expect(seeded).toEqual({
-          examId: "exam-1",
-          sittingId: "sitting-1",
-          title: "Ujian Acceptance",
-          token: "K7Q4XM",
-        });
-        expect((yield* fs.stat(`${root}/sitting.json`)).mode % 0o1000).toBe(
-          0o600
-        );
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect("passes a crowd to the seed as a number", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-sitting-test-",
-      });
-      runtimeIn(root);
-      const specs = MutableList.make<CommandSpec>();
-      mocks.command.mockImplementation((spec: CommandSpec) =>
-        Effect.gen(function* () {
-          MutableList.append(specs, spec);
-          yield* fs.writeFileString(
-            spec.stdoutPath,
-            '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
-          );
-        })
-      );
-
-      yield* createAcceptanceSitting(
-        root,
-        "acc-1234abcd",
-        "learner@acceptance.example.test",
-        `${root}/sitting.json`,
-        101
-      );
-
-      const [spec] = MutableList.toArray(specs);
-      const args = yield* Schema.decodeEffect(SeedArgs)(
-        Option.getOrThrow(Arr.last(spec?.args ?? []))
-      );
-      expect(args).toEqual({
-        crowd: 101,
-        email: "learner@acceptance.example.test",
-        slug: "acc-1234abcd",
-      });
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect("seeds no sitting when no local runtime is running", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-sitting-test-",
-      });
-      mocks.read.mockReturnValue(Effect.void);
-
-      const exit = yield* Effect.exit(
-        createAcceptanceSitting(
-          root,
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/sitting.json`,
-          undefined
-        )
-      );
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      })
   );
 
   it.effect(
-    "seeds the sitting with the crowd that the sitting mode names, into the file it names",
+    "writes the sitting the mode names, with its crowd and extra, to the file it names",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-sitting-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
-            );
-          })
-        );
+        const root = yield* folder;
+        const output = `${root}/sitting.json`;
+        const backend = localConvexDouble({ [SEED]: SITTING });
+        mocks.layer.mockReturnValue(backend.layer);
 
         yield* sittingMode.run(root, [
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/mode.json`,
-          "101",
-        ]);
-
-        const [spec] = MutableList.toArray(specs);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({
-          crowd: 101,
-          email: "learner@acceptance.example.test",
-          slug: "acc-1234abcd",
-        });
-        const seeded = yield* fs
-          .readFileString(`${root}/mode.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SittingFixture)));
-        expect(seeded.token).toBe("K7Q4XM");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect(
-    "seeds the upcoming sitting after the crowd when the sitting mode names it",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-sitting-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
-            );
-          })
-        );
-
-        yield* sittingMode.run(root, [
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/mode.json`,
-          "101",
+          "acc-1",
+          "siswa@example.test",
+          output,
+          "2",
           "upcoming",
         ]);
 
-        const [spec] = MutableList.toArray(specs);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({
-          crowd: 101,
-          email: "learner@acceptance.example.test",
-          slug: "acc-1234abcd",
+        expect(backend.argsOf(SEED)).toEqual({
+          crowd: 2,
+          email: "siswa@example.test",
+          slug: "acc-1",
           upcoming: true,
         });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect(
-    "seeds an essay with the sitting when the sitting mode names it",
-    () =>
-      Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-sitting-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
-            );
-          })
-        );
-
-        yield* sittingMode.run(root, [
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/mode.json`,
-          "101",
-          "essay",
-        ]);
-
-        const [spec] = MutableList.toArray(specs);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({
-          crowd: 101,
-          email: "learner@acceptance.example.test",
-          slug: "acc-1234abcd",
-          essay: true,
-        });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect(
-    "seeds a question of every template with the sitting when the sitting mode names templates",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-sitting-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
-            );
-          })
-        );
-
-        yield* sittingMode.run(root, [
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/mode.json`,
-          "0",
-          "templates",
-        ]);
-
-        const [spec] = MutableList.toArray(specs);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({
-          crowd: 0,
-          email: "learner@acceptance.example.test",
-          slug: "acc-1234abcd",
-          templates: true,
-        });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect(
-    "seeds the sitting without a crowd when the sitting mode names none",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-sitting-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
-            );
-          })
-        );
-
-        yield* sittingMode.run(root, [
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/mode.json`,
-        ]);
-
-        const [spec] = MutableList.toArray(specs);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({
-          email: "learner@acceptance.example.test",
-          slug: "acc-1234abcd",
-        });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect(
-    "refuses the sitting mode without its sitting file before any operation",
-    () =>
-      Effect.gen(function* () {
         expect(
-          yield* sittingMode
-            .run("/root", ["acc-1234abcd", "learner@acceptance.example.test"])
-            .pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay|prose|templates]",
-        });
-        expect(mocks.read).not.toHaveBeenCalled();
-        expect(mocks.command).not.toHaveBeenCalled();
-      }).pipe(Effect.provide(nodeServicesLayer))
+          yield* fs
+            .readFileString(output)
+            .pipe(
+              Effect.flatMap(
+                Schema.decodeEffect(Schema.fromJsonString(SittingFixture))
+              )
+            )
+        ).toEqual(SITTING);
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
-  it.effect(
-    "refuses a crowd that is not a number with the sitting usage before any operation",
-    () =>
-      Effect.gen(function* () {
-        runtimeIn("/root");
-        expect(
-          yield* sittingMode
-            .run("/root", [
-              "acc-1234abcd",
-              "learner@acceptance.example.test",
-              "/root/mode.json",
-              "abc",
-            ])
-            .pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay|prose|templates]",
-        });
-        expect(mocks.read).not.toHaveBeenCalled();
-        expect(mocks.command).not.toHaveBeenCalled();
-      }).pipe(Effect.provide(nodeServicesLayer))
+  it.effect("refuses an extra the sitting mode does not know", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* sittingMode
+          .run("/root", ["acc-1", "siswa@example.test", "/out", "0", "later"])
+          .pipe(Effect.flip)
+      ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

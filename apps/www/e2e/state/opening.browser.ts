@@ -2,7 +2,12 @@ import { type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { expectPopupOpensWhole } from "@/e2e/support/opening";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import {
+  createSchool,
+  hostAddress,
+  signInClassTeacher,
+  signInOwner,
+} from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A dialog on a desktop, and the drawer it becomes on a phone. */
@@ -34,6 +39,13 @@ for (const viewport of viewports) {
     test.slow();
     const school = await Effect.runPromise(createSchool());
     const host = `${school.slug}.localhost`;
+    // Insight names what questions test only for a class, so a class teacher
+    // opens the school's first class before the Owner reads the page.
+    const teacher = await browser.newContext();
+    await Effect.runPromise(
+      signInClassTeacher(teacher, school.slug, hostAddress(baseURL, host, "/"))
+    );
+    await teacher.close();
     const context = await browser.newContext({ viewport });
     await Effect.runPromise(
       signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
