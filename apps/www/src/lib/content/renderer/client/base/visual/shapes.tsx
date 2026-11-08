@@ -1,4 +1,4 @@
-import { LineEquation } from "@repo/design-system/components/three/line-equation";
+import { LineEquation } from "@repo/design-system/components/three/line";
 import { Region } from "@repo/design-system/components/three/region";
 import { Solid } from "@repo/design-system/components/three/solid";
 import { Surface } from "@repo/design-system/components/three/surface";
