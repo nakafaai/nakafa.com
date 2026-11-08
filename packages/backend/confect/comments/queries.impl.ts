@@ -6,7 +6,7 @@ import {
   QueryCtx as QueryCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
-import { photoViews } from "@repo/backend/confect/comments/photo";
+import { photoViews } from "@repo/backend/confect/comments/signed";
 import { readCommentPlace } from "@repo/backend/confect/comments/place";
 import spec from "@repo/backend/confect/comments/queries.spec";
 import {
