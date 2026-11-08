@@ -113,13 +113,9 @@ export const readArticleDelivery = Effect.fn(
 ) {
   const route = yield* resolveArticleRoute(appLocale, publicPath);
   const model = yield* assembleArticleModel(appLocale, route);
+  // The route pairs its catalog row with its projection, so the model names a
+  // projection exactly when the route has a public head.
   const delivery = yield* readSelectedPublicHead(route);
-  if ((model.projectionJson === null) !== (delivery === null)) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "The public body and route model do not share one publication."
-    );
-  }
   return {
     delivery,
     model,

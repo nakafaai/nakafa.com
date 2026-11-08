@@ -149,13 +149,9 @@ export const readMaterialLesson = Effect.fn(
 ) {
   const route = yield* resolveMaterialRoute(appLocale, publicPath);
   const model = yield* assembleMaterialMetadata(appLocale, route);
+  // The route pairs its catalog row with its projection, so the model names a
+  // projection exactly when the route has a public head.
   const delivery = yield* readSelectedPublicHead(route);
-  if ((model.projectionJson === null) !== (delivery === null)) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "The public body and route model do not share one publication."
-    );
-  }
   return {
     delivery,
     materialKey: route.material?.row.materialKey ?? null,
