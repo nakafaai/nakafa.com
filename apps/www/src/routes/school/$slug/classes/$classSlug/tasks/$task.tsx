@@ -1,4 +1,4 @@
-import { TaskAddress } from "@repo/backend/confect/classroom/tasks/task";
+import { TaskAddress } from "@repo/backend/confect/classroom/tasks/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";

@@ -1,6 +1,6 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import type { MissingStudent } from "@repo/backend/confect/classroom/tasks/task";
+import type { MissingStudent } from "@repo/backend/confect/classroom/tasks/schema";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";

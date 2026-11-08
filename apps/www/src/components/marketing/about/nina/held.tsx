@@ -1,4 +1,4 @@
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import { createContext, use } from "react";
 
 /**

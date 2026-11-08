@@ -8,12 +8,12 @@ import {
   isConstantCompositionModeId,
 } from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
 import { ConstantCompositionScene } from "@repo/design-system/components/contents/chemistry/constant-composition-law/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+} from "@repo/design-system/components/three/scene";
 import {
   ToggleGroup,
   ToggleGroupItem,

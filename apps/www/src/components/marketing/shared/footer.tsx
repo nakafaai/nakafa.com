@@ -266,10 +266,13 @@ function FooterGroup({
 /**
  * The text treatment that every footer destination shares. Each link is at least
  * 24 px tall, so a finger meets one target at a time in a stacked column (WCAG
- * 2.5.8).
+ * 2.5.8). A word longer than its column, such as German's
+ * "Auftragsverarbeitungsvertrag", breaks at a syllable of the page's language,
+ * or anywhere where the language has no hyphenation, so no link runs past the
+ * page's edge.
  */
 const linkItemVariants = cva(
-  "hover:text-primary inline-flex min-h-6 items-center text-sm transition-colors ease-out"
+  "hover:text-primary inline-flex min-h-6 items-center text-sm wrap-anywhere hyphens-auto transition-colors ease-out"
 );
 
 /** One footer link of the app, at a route target that the app chose. */
