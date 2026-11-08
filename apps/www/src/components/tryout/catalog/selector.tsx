@@ -2,15 +2,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
 import { createContext, use } from "react";
-import { useLocale } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -125,6 +123,7 @@ function TryoutCountrySelect({
   onValueChange?: (value: string | null) => void;
 }) {
   const { currentValue, label, options } = useTryoutCountrySelector();
+  const common = useTranslations("Common");
   const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,
@@ -162,22 +161,20 @@ function TryoutCountrySelect({
         align="end"
         alignItemWithTrigger={false}
         className="max-w-(--available-width) sm:w-max sm:min-w-(--anchor-width)"
+        label={common("menu-country")}
       >
-        <SelectGroup>
-          <SelectLabel>{label}</SelectLabel>
-          {Arr.map(options, (option) => (
-            <SelectItem
-              key={option.value}
-              render={<TryoutPageLink publicPath={option.value} />}
-              value={option.value}
-            >
-              <CountryFlagIcon countryCode={option.countryCode} />
-              <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
-                {option.title}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectGroup>
+        {Arr.map(options, (option) => (
+          <SelectItem
+            icon={<CountryFlagIcon countryCode={option.countryCode} />}
+            key={option.value}
+            render={<TryoutPageLink publicPath={option.value} />}
+            value={option.value}
+          >
+            <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
+              {option.title}
+            </span>
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
@@ -193,6 +190,7 @@ export function TryoutExamSelector({
   label: string;
   options: readonly TryoutExamSelectorOption[];
 }) {
+  const common = useTranslations("Common");
   const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,
@@ -236,22 +234,20 @@ export function TryoutExamSelector({
         align="end"
         alignItemWithTrigger={false}
         className="max-w-(--available-width) sm:w-max sm:min-w-(--anchor-width)"
+        label={common("menu-exam")}
       >
-        <SelectGroup>
-          <SelectLabel>{label}</SelectLabel>
-          {Arr.map(entries, ({ icon, option }) => (
-            <SelectItem
-              key={option.value}
-              render={<TryoutPageLink publicPath={option.value} />}
-              value={option.value}
-            >
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-              <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
-                {option.title}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectGroup>
+        {Arr.map(entries, ({ icon, option }) => (
+          <SelectItem
+            icon={icon}
+            key={option.value}
+            render={<TryoutPageLink publicPath={option.value} />}
+            value={option.value}
+          >
+            <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
+              {option.title}
+            </span>
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

@@ -2,7 +2,6 @@
 
 import { StarsIcon } from "@hugeicons/core-free-icons";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 
@@ -19,8 +18,12 @@ export function AiMenuItem({ contextTitle }: { contextTitle: string }) {
   }
 
   return (
-    <DropdownMenuItem onClick={handleOpen} onFocus={warm} onMouseEnter={warm}>
-      <HugeIcons icon={StarsIcon} />
+    <DropdownMenuItem
+      icon={StarsIcon}
+      onClick={handleOpen}
+      onFocus={warm}
+      onMouseEnter={warm}
+    >
       {t("ask-nina")}
     </DropdownMenuItem>
   );

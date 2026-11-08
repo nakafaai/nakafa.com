@@ -19,6 +19,7 @@ import {
   isFirstPage,
   withoutItem,
 } from "@/components/tenant/settings/state";
+import { changeLoaded, findLoaded, withPage } from "@/lib/data/loaded";
 
 /** One classroom of a period as the classrooms table shows it. */
 export type SchoolClass = PaginatedQueryItem<typeof classroom.classes.list>;
@@ -45,18 +46,9 @@ function changeClassLists(
   matches: (args: Ref.Args<typeof classroom.classes.list>) => boolean,
   change: (page: readonly SchoolClass[]) => SchoolClass[]
 ) {
-  for (const query of localStore.getAllQueries(classroom.classes.list)) {
-    if (Option.isSome(query.value) && matches(query.args)) {
-      localStore.setQuery(
-        classroom.classes.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, classroom.classes.list, (value, args) =>
+    matches(args) ? Option.some(withPage(value, change)) : Option.none()
+  );
 }
 
 /** Changes one classroom wherever a loaded page holds it, and keeps every other classroom as it is. */
@@ -81,15 +73,11 @@ function changeClass(
 export const createClassChange: OptimisticUpdate<
   typeof classroom.classes.create
 > = (localStore, { cohortId, subject }) => {
-  const placed = Arr.findFirst(
-    localStore.getAllQueries(tenancy.cohorts.list),
-    (query) =>
-      Option.flatMap(query.value, (cohorts) =>
-        Option.map(
-          Arr.findFirst(cohorts, (cohort) => cohort.id === cohortId),
-          (cohort) => ({ cohort, periodId: query.args.periodId })
-        )
-      )
+  const placed = findLoaded(localStore, tenancy.cohorts.list, (cohorts, args) =>
+    Option.map(
+      Arr.findFirst(cohorts, (cohort) => cohort.id === cohortId),
+      (cohort) => ({ cohort, periodId: args.periodId })
+    )
   );
   if (Option.isNone(placed)) {
     return;
@@ -146,18 +134,9 @@ function changeTeacherLists(
   matches: (args: Ref.Args<typeof classroom.teachers.list>) => boolean,
   change: (page: readonly ClassTeacher[]) => ClassTeacher[]
 ) {
-  for (const query of localStore.getAllQueries(classroom.teachers.list)) {
-    if (Option.isSome(query.value) && matches(query.args)) {
-      localStore.setQuery(
-        classroom.teachers.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, classroom.teachers.list, (value, args) =>
+    matches(args) ? Option.some(withPage(value, change)) : Option.none()
+  );
 }
 
 /**
@@ -168,12 +147,8 @@ function changeTeacherLists(
 export const assignTeacherChange: OptimisticUpdate<
   typeof classroom.teachers.assign
 > = (localStore, { classId, personId }) => {
-  const person = Arr.findFirst(
-    localStore.getAllQueries(tenancy.people.list),
-    (query) =>
-      Option.flatMap(query.value, (value) =>
-        Arr.findFirst(value.page, (row) => row.id === personId)
-      )
+  const person = findLoaded(localStore, tenancy.people.list, (value) =>
+    Arr.findFirst(value.page, (row) => row.id === personId)
   );
   if (Option.isNone(person)) {
     return;

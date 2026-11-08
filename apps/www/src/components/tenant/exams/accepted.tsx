@@ -91,10 +91,10 @@ function AcceptedRow({
       {onRemove === null ? null : (
         <InputGroupAddon align="inline-end">
           <InputGroupButton
-            aria-label={removeLabel}
             disabled={!editable}
             onClick={onRemove}
             size="icon-sm"
+            tooltip={removeLabel}
           >
             <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
           </InputGroupButton>

@@ -7,6 +7,7 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
 import { chosenVotes } from "@/components/tenant/classes/forum/tally";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /** One announcement of a class, as its home shows it. */
 export type ClassPost = Ref.Returns<
@@ -27,22 +28,14 @@ const changePages = (
     first: boolean
   ) => Option.Option<ClassPost[]>
 ) => {
-  for (const query of localStore.getAllQueries(list)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      const value = query.value.value;
-      const changed = change(
-        value.page,
-        query.args.paginationOpts.cursor === null
-      );
-      if (Option.isSome(changed)) {
-        localStore.setQuery(
-          list,
-          query.args,
-          Option.some({ ...value, page: changed.value })
-        );
-      }
-    }
-  }
+  changeLoaded(localStore, list, (value, args) =>
+    args.classId === classId
+      ? Option.map(
+          change(value.page, args.paginationOpts.cursor === null),
+          (page) => withPage(value, () => page)
+        )
+      : Option.none()
+  );
 };
 
 /** Shows an announcement the teacher posts first on the class home, before the server holds it. */
@@ -100,21 +93,15 @@ export const pinPostUpdate =
           )
         : Option.none()
     );
-    for (const query of localStore.getAllQueries(pinned)) {
-      if (Option.isSome(query.value) && query.args.classId === args.classId) {
-        const others = Arr.filter(
-          query.value.value,
-          (found) => found.id !== args.postId
-        );
-        localStore.setQuery(
-          pinned,
-          query.args,
-          Option.some(
-            args.pinned ? [{ ...post, pinned: true }, ...others] : others
-          )
-        );
+    changeLoaded(localStore, pinned, (posts, loaded) => {
+      if (loaded.classId !== args.classId) {
+        return Option.none();
       }
-    }
+      const others = Arr.filter(posts, (found) => found.id !== args.postId);
+      return Option.some(
+        args.pinned ? [{ ...post, pinned: true }, ...others] : others
+      );
+    });
   };
 
 /** Takes an announcement off the class home and its pins at once; a refusal brings it back. */
@@ -128,15 +115,11 @@ const leaveHome = (
       ? Option.some(Arr.filter(page, (post) => post.id !== postId))
       : Option.none()
   );
-  for (const query of localStore.getAllQueries(pinned)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      localStore.setQuery(
-        pinned,
-        query.args,
-        Option.some(Arr.filter(query.value.value, (post) => post.id !== postId))
-      );
-    }
-  }
+  changeLoaded(localStore, pinned, (posts, args) =>
+    args.classId === classId
+      ? Option.some(Arr.filter(posts, (post) => post.id !== postId))
+      : Option.none()
+  );
 };
 
 /** Takes an archived announcement off the class home and its pins at once. */
@@ -154,29 +137,17 @@ export const votePostUpdate: OptimisticUpdate<typeof classroom.posts.vote> = (
   localStore,
   args
 ) => {
-  for (const query of localStore.getAllQueries(votes)) {
-    if (
-      Option.isSome(query.value) &&
-      Arr.contains(query.args.postIds, args.postId)
-    ) {
-      const held = Option.match(
-        Arr.findFirst(
-          query.value.value,
-          (found) => found.postId === args.postId
-        ),
-        { onNone: () => [], onSome: (found) => found.votes }
-      );
-      localStore.setQuery(
-        votes,
-        query.args,
-        Option.some([
-          ...Arr.filter(
-            query.value.value,
-            (found) => found.postId !== args.postId
-          ),
-          { postId: args.postId, votes: chosenVotes(held, args.options) },
-        ])
-      );
+  changeLoaded(localStore, votes, (tallies, loaded) => {
+    if (!Arr.contains(loaded.postIds, args.postId)) {
+      return Option.none();
     }
-  }
+    const held = Option.match(
+      Arr.findFirst(tallies, (found) => found.postId === args.postId),
+      { onNone: () => [], onSome: (found) => found.votes }
+    );
+    return Option.some([
+      ...Arr.filter(tallies, (found) => found.postId !== args.postId),
+      { postId: args.postId, votes: chosenVotes(held, args.options) },
+    ]);
+  });
 };
