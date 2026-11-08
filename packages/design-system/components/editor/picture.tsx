@@ -1,5 +1,5 @@
 import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
-import { objectBar } from "@repo/design-system/components/editor/frame";
+import { objectBar } from "@repo/design-system/components/editor/bar";
 import { altText } from "@repo/design-system/components/editor/image";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { Button } from "@repo/design-system/components/ui/button";

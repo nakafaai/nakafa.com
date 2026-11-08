@@ -30,20 +30,6 @@ export const editorRow = cva(
   }
 );
 
-/** The line that sets one group of controls off from the next, in the toolbar and in an object's bar. */
-export const barLine = cva("bg-border h-5 w-px shrink-0", {
-  defaultVariants: { space: false },
-  variants: { space: { false: "", true: "mx-0.5" } },
-});
-
-/**
- * The bar of an object of the document, such as a table, which floats beside the object over the text:
- * the popover's surface, one row of the toolbar's controls, and above the text it covers.
- */
-export const objectBar = cva(
-  "bg-popover text-popover-foreground z-10 flex items-center gap-0.5 rounded-md border p-1 shadow-md"
-);
-
 /**
  * The room the text takes at least: a note takes a page of writing, a prompt on an exam's paper only its
  * own lines, so it stands where the student reads it, and a short text such as an
@@ -82,14 +68,12 @@ export const editorPlaceholder = cva(
  * the card or the paper around it gives the room, so its first line starts where a
  * lesson's and a try-out question's start, in the editor's canvas, the sitting and
  * the preview alike. Only a plain page, which draws its own field, keeps room inside
- * it. A selected picture or formula takes the focus ring, the selected cells of a table
- * the accent of a selected row, and the cursor between two blocks the text's own colour, so
- * a selection shows in every theme. A link and a highlight take the lesson's own classes on their elements
+ * it. A link and a highlight take the lesson's own classes on their elements
  * (`linkVariants`, `emphasisVariants`), in every text. A word longer than the column breaks anywhere, and the text
  * claims no room for it, so a grid or a flex row around it keeps its column on a phone.
  */
 export const editorDocument = cva(
-  "[&_.ProseMirror-gapcursor]:after:border-foreground [&_.ProseMirror-selectednode]:ring-ring/50 [&_.selectedCell]:bg-accent [&_.selectedCell]:text-accent-foreground [&_pre]:bg-muted relative min-h-full [font-feature-settings:'liga'_0] wrap-anywhere [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_.ProseMirror-selectednode]:rounded-md [&_.ProseMirror-selectednode]:ring-3 [&_hr]:my-3 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap",
+  "[&_pre]:bg-muted relative min-h-full [font-feature-settings:'liga'_0] wrap-anywhere [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_hr]:my-3 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap",
   {
     compoundVariants: [
       { class: "px-4 py-3 [&>*+*]:mt-2", size: "page", text: "plain" },

@@ -1,5 +1,6 @@
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { EditorArabicKeyboard } from "@repo/design-system/components/editor/arabic";
+import { barLine } from "@repo/design-system/components/editor/bar";
 import {
   DocumentLists,
   RichEditorBlocks,
@@ -11,7 +12,6 @@ import {
   RichEditorMarks,
 } from "@repo/design-system/components/editor/format";
 import {
-  barLine,
   editorBar,
   editorRow,
 } from "@repo/design-system/components/editor/frame";

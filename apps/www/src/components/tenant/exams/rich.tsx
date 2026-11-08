@@ -11,9 +11,11 @@ import {
   PicturesProvider,
   pictureFileHandler,
 } from "@repo/design-system/components/editor/picture";
+import { editorSelection } from "@repo/design-system/components/editor/selection";
 import { TableBar } from "@repo/design-system/components/editor/table";
 import type { Node } from "@tiptap/pm/model";
 import type { Transaction } from "@tiptap/pm/state";
+import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   type ComponentProps,
@@ -180,7 +182,10 @@ export function ExamDocument({
       >
         <FiguresProvider view={ExamFigure}>
           {opening ? <PreviewProse doc={stored} size={size} /> : null}
-          <div className={opening ? "hidden" : "contents"}>
+          {/* A selected table, picture or formula shows its selection in every theme. */}
+          <div
+            className={cn(editorSelection(), opening ? "hidden" : "contents")}
+          >
             <DocumentEditor
               content={content}
               extensions={allExtensions}

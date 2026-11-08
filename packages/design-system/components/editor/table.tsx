@@ -8,10 +8,7 @@ import {
   RowDeleteIcon,
   TableIcon,
 } from "@hugeicons/core-free-icons";
-import {
-  barLine,
-  objectBar,
-} from "@repo/design-system/components/editor/frame";
+import { barLine, objectBar } from "@repo/design-system/components/editor/bar";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { type Editor, findParentNode } from "@tiptap/core";
 import type { Selection } from "@tiptap/pm/state";
