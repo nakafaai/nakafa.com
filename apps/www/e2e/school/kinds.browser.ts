@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -28,6 +28,34 @@ const QUESTION_TYPE = /^Question type: /u;
 
 /** The word each text of a question takes, which the toolbar's bold control marks. */
 const WORD = "uji";
+
+/** How far a marker's middle may stand from the middle of its words' first line, in pixels. */
+const MARK_TOLERANCE = 2;
+
+/**
+ * How far each marker of a part's row, its letter, circle, dot or remove control, stands from the middle of the first
+ * line of the part's words, in whole pixels. A text outside a marked line, such as the prompt, has none.
+ */
+function markOffsets(text: Locator) {
+  return text.evaluate((element) => {
+    const row = element.closest('[data-slot="line-words"]')?.parentElement;
+    const first = element.firstElementChild;
+    if (row === null || row === undefined || first === null) {
+      return [];
+    }
+    const range = document.createRange();
+    range.selectNodeContents(first);
+    const line = range.getClientRects()[0] ?? first.getBoundingClientRect();
+    const middle = line.top + line.height / 2;
+    return Array.from(
+      row.querySelectorAll(':scope > [data-slot="line-mark"]'),
+      (mark) => {
+        const box = mark.getBoundingClientRect();
+        return Math.round(box.top + box.height / 2 - middle);
+      }
+    );
+  });
+}
 
 test("in every kind of question, each text of the question takes the toolbar's marks and tables, and a table left empty goes with Backspace", async ({
   baseURL,
@@ -91,6 +119,15 @@ test("in every kind of question, each text of the question takes the toolbar's m
         text.locator("table"),
         `${kind}: ${name} takes a table`
       ).toHaveCount(1);
+      // A part that holds its words and a table under them keeps its markers on the words' first line.
+      expect
+        .soft(
+          (await markOffsets(text)).filter(
+            (offset) => Math.abs(offset) > MARK_TOLERANCE
+          ),
+          `${kind}: ${name} keeps its markers on its first line over a table`
+        )
+        .toEqual([]);
       await page.keyboard.press("Backspace");
       await expect(
         text.locator("table"),
