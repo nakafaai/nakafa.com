@@ -58,7 +58,8 @@ test("the Quran index header searches every surah by number, name and meaning", 
           await search.fill("11");
           await expect(rows(page)).toHaveCount(6);
 
-          await search.fill("zzz");
+          // No surah has this number, and no name or meaning holds it.
+          await search.fill("999");
           await expect(rows(page)).toHaveCount(0);
           await expect(
             page.getByText(app.Holy["search-surah-none"], { exact: true })

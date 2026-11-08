@@ -53,7 +53,12 @@ describe("searchSurahs", () => {
     expect(kept("the")).toEqual([1, 2, 112]);
   });
 
+  it("counts a letter typed more than once in a row once", () => {
+    expect(kept("yaaasin")).toEqual([36]);
+    expect(kept("zzz")).toEqual(kept("z"));
+  });
+
   it("keeps nothing when no surah matches", () => {
-    expect(kept("zzz")).toEqual([]);
+    expect(kept("999")).toEqual([]);
   });
 });
