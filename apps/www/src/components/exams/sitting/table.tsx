@@ -1,3 +1,4 @@
+import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
@@ -46,7 +47,11 @@ export function SittingTable({
       statementLabel={t("statement-placeholder")}
       statements={Arr.map(table.statements, (statement) => ({
         id: statement.id,
-        label: <SittingDocument document={statement.label} size="line" />,
+        label: (
+          <LineWords>
+            <SittingDocument document={statement.label} size="line" />
+          </LineWords>
+        ),
         marked: Option.getOrUndefined(
           Option.map(
             Arr.findFirst(cells, (cell) => cell.statement === statement.id),

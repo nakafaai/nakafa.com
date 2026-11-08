@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
+import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Clock, Effect, type Result, Schema } from "effect";
 import { forumCall } from "@/components/tenant/classes/forum/call";
 import {
@@ -24,6 +25,27 @@ type Optimistic<U, Args, A, E> = (
   update: U,
   args: Args
 ) => Promise<Result.Result<A, E>>;
+
+/** The viewer as the school shows them: their Person and their account. */
+type Viewer = Pick<
+  Ref.Returns<typeof tenancy.viewer.get>,
+  "account" | "person"
+>;
+
+/**
+ * The viewer's face on the messages they send, before the server answers: their name in the school, their animal and
+ * the photo their account shows, as the server will draw them.
+ */
+export const viewerFace = ({
+  account,
+  person,
+}: Viewer): ForumMessage["author"] => ({
+  id: person.id,
+  mascot: account.mascot,
+  name: person.name,
+  nina: false,
+  photo: account.image ?? null,
+});
 
 /** What a message shows beyond its text before the server answers: its mentions, and the files of its send. */
 type Shown = Pick<ForumMessage, "attachments" | "mentions">;
@@ -114,6 +136,7 @@ export const openDiscussion = Effect.fn("classroom.forum.open")(function* <
     {
       lastReplyAt: null,
       number: 1,
+      repliers: [],
       replies: 0,
       title: args.title,
       unread: false,

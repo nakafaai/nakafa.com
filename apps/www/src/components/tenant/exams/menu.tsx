@@ -2,6 +2,7 @@ import {
   Copy01Icon,
   Delete02Icon,
   FileImportIcon,
+  TaskEdit01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -19,7 +20,11 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { SplitMenuTrigger } from "@/components/shared/split";
-import { DeleteExam } from "@/components/tenant/exams/delete";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
+import {
+  ExamDeleteConfirm,
+  useDeleteExam,
+} from "@/components/tenant/exams/delete";
 import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
 import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
 import { ExamLockMark } from "@/components/tenant/exams/lock";
@@ -40,6 +45,7 @@ export function ExamMenu() {
   const locked = useExamLocked();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
   const { isPending, press } = useDuplicateExam(exam, slug);
+  const remove = useDeleteExam(() => setDialog(null));
 
   // A gone exam has no try to open.
   if (gone) {
@@ -91,10 +97,13 @@ export function ExamMenu() {
         onOpenChange={(open) => setDialog(open ? "import" : null)}
         open={dialog === "import"}
       />
-      <DeleteExam
-        onOpenChange={(open) => setDialog(open ? "delete" : null)}
+      <ExamDeleteConfirm
+        onConfirm={remove.confirm}
         open={dialog === "delete"}
-      />
+        setOpen={(open) => setDialog(open ? "delete" : null)}
+      >
+        <ConfirmSubject icon={TaskEdit01Icon} name={remove.title} />
+      </ExamDeleteConfirm>
     </>
   );
 }

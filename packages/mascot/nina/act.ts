@@ -11,6 +11,14 @@ import {
 } from "@repo/mascot/nina/pose";
 import { balls, confetti, dots, sleep } from "@repo/mascot/nina/prop";
 import {
+  carrying,
+  counting,
+  graduating,
+  ringing,
+  stamping,
+  teaching,
+} from "@repo/mascot/nina/school";
+import {
   guarding,
   reading,
   searching,
@@ -34,6 +42,12 @@ export const ActSchema = Schema.Literals([
   "cheering",
   "sleeping",
   "hanging",
+  "teaching",
+  "carrying",
+  "stamping",
+  "graduating",
+  "ringing",
+  "counting",
 ]);
 
 /** Doing nothing in particular. */
@@ -183,15 +197,21 @@ function hanging(t: number): Pose {
  * the moment that shows the act best in a picture that does not move.
  */
 export const ACTS = {
+  carrying: { pose: carrying, still: 0.4 },
   cheering: { pose: cheering, still: 0.35 },
+  counting: { pose: counting, still: 3.1 },
+  graduating: { pose: graduating, still: 0.4 },
   guarding: { pose: guarding, still: 1.4 },
   hanging: { pose: hanging, still: 0.2 },
   juggling: { pose: juggling, still: 0.3 },
   pointing: { pose: pointing, still: 0.3 },
   reading: { pose: reading, still: 1.2 },
   relaxed: { pose: relaxed, still: 0.4 },
+  ringing: { pose: ringing, still: 0.2 },
   searching: { pose: searching, still: 0.7 },
   sleeping: { pose: sleeping, still: 1.2 },
+  stamping: { pose: stamping, still: 1.6 },
+  teaching: { pose: teaching, still: 2.2 },
   thinking: { pose: thinking, still: 0.5 },
   typing: { pose: typing, still: 0.2 },
   waving: { pose: waving, still: 0.2 },

@@ -32,6 +32,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { roleIcon } from "@/components/tenant/roles";
@@ -227,6 +228,7 @@ function SchoolInviteDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
+                <ChoiceLabel name="role" />
                 {Arr.map(roleItems, (item) => (
                   <SelectItem key={item.value} value={item.value}>
                     <HugeIcons icon={roleIcon(item.value)} />
@@ -256,6 +258,7 @@ function SchoolInviteDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
+                <ChoiceLabel name="language" />
                 {Arr.map(localeItems, (item) => (
                   <SelectItem key={item.value} value={item.value}>
                     <CountryFlagIcon countryCode={item.countryCode} />

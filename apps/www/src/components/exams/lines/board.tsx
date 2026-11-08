@@ -3,6 +3,7 @@ import {
   useIsomorphicEffect,
   useWindowEvent,
 } from "@mantine/hooks";
+import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactNode, useRef, useState } from "react";
@@ -41,16 +42,6 @@ const linesColumn = cva(
   "relative row-start-1 grid min-w-0 content-start gap-2",
   {
     variants: { side: { sources: "col-start-1", targets: "col-start-3" } },
-  }
-);
-
-/** One part's row, ringed while it is in hand or under a pull. */
-const linesItem = cva(
-  "relative flex min-h-10 min-w-0 items-center gap-2 rounded-lg px-2 py-1",
-  {
-    variants: {
-      marked: { false: "", true: "ring-primary ring-2" },
-    },
   }
 );
 
@@ -190,8 +181,10 @@ export function LinesColumn({
 }
 
 /**
- * One part of a board: its number or letter and its text, with its dot on the side that faces the other column.
- * An answer's whole row takes a pull's release, and a part ringed is in hand or under a pull.
+ * One part of a board: its outlined row, the number or letter that names it with its words, and its dot outside the
+ * row on the side that faces the other column, so a line leaves the dot in the open and touches no outline. The row
+ * reads chosen while its statement is in hand or a pull hovers its answer, and an answer's whole part takes a pull's
+ * release. The caller composes the row's words (`LineWords`) and anything at its end, such as a remove control.
  */
 export function LinesItem({
   children,
@@ -204,7 +197,7 @@ export function LinesItem({
   readonly name: string;
   readonly side: LineSide;
 }) {
-  const { store } = useLines();
+  const { store, stretch } = useLines();
   const marked = useStore(store, (state) =>
     side === "sources"
       ? Option.contains(state.held, id)
@@ -213,13 +206,23 @@ export function LinesItem({
 
   return (
     <li
-      className={linesItem({ marked })}
+      className="relative flex min-w-0 items-start gap-2"
       data-line-target={side === "targets" ? id : undefined}
     >
-      {side === "targets" ? <LineDot id={id} name={name} side={side} /> : null}
-      <span className="shrink-0 font-medium tabular-nums">{name}.</span>
-      <div className="min-w-0 flex-1">{children}</div>
-      {side === "sources" ? <LineDot id={id} name={name} side={side} /> : null}
+      {side === "targets" ? (
+        <LineMark beside>
+          <LineDot id={id} name={name} side={side} />
+        </LineMark>
+      ) : null}
+      <MarkedLine tone={marked ? "chosen" : "idle"} written={!stretch}>
+        <LineMark letter>{name}.</LineMark>
+        {children}
+      </MarkedLine>
+      {side === "sources" ? (
+        <LineMark beside>
+          <LineDot id={id} name={name} side={side} />
+        </LineMark>
+      ) : null}
     </li>
   );
 }

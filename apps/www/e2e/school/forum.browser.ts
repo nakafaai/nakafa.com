@@ -127,7 +127,7 @@ test("every class page draws its content in the browser, without an error state 
     .getByRole("textbox", { name: "First message" })
     .fill("Tuliskan contohnya di sini.");
   await dialog.getByRole("button", { name: "Start" }).click();
-  await expect(page.getByRole("link", { name: "#1 Gaya gesek" })).toBeVisible({
+  await expect(page.getByText("#1 Gaya gesek")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
 

@@ -28,8 +28,9 @@ import { remove } from "@repo/backend/confect/tenancy/periods.remove";
 import { restore } from "@repo/backend/confect/tenancy/periods.restore";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
 import { openTarget } from "@repo/backend/confect/tenancy/promotion/open";
+import { periodHold } from "@repo/backend/confect/tenancy/write/holds";
 import { archivePeriod } from "@repo/backend/confect/tenancy/write/period";
-import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
+import { Effect, Layer, Option, Struct } from "effect";
 
 /** Lists one school's periods, newest first. The roles that read the plan of a school read them. */
 const list = FunctionImpl.make(
@@ -47,7 +48,16 @@ const list = FunctionImpl.make(
       )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    return Struct.assign(page, { page: Arr.map(page.page, periodView) });
+    const listed = yield* Effect.forEach(
+      page.page,
+      (row) =>
+        Effect.map(periodHold(row), (hold) => ({
+          ...periodView(row),
+          hold: Option.getOrNull(hold),
+        })),
+      { concurrency: "unbounded" }
+    );
+    return Struct.assign(page, { page: listed });
   })
 );
 
