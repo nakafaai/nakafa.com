@@ -144,6 +144,7 @@ function TryoutReviewedEntry({
   readonly response: ExamResponse | null;
 }) {
   const t = useTranslations("Tryouts");
+  const player = useTranslations("Player");
   const format = useFormatter();
   const review = reviewEntry({
     decimal: decimalOf(useLocale()),
@@ -162,7 +163,7 @@ function TryoutReviewedEntry({
           {review.blank ? t("no-answer") : review.text}
           <span className="sr-only">
             {" "}
-            {t(review.earned ? "correct" : "incorrect")}
+            {player(review.earned ? "correct" : "incorrect")}
           </span>
         </LineWords>
       </MarkedLine>
