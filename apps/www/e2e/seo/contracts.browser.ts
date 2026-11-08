@@ -122,7 +122,7 @@ const readArticleJsonLd = Effect.fn("NakafaE2E.readArticleJsonLd")(function* (
 ) {
   const { ArticleJsonLdSchema } = yield* Effect.tryPromise({
     catch: () => contentSeoError(href, "article JSON-LD contract"),
-    try: () => import("@repo/seo/json-ld/article"),
+    try: () => import("@repo/seo/jsonld/article"),
   });
   const documents = yield* Effect.forEach(served.jsonLd, (text) =>
     decodeJsonText(text).pipe(

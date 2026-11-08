@@ -6,7 +6,7 @@ import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 export const NumberLine = withHydrationBoundary(
   lazy(() =>
     import(
-      "@repo/design-system/components/contents/mathematics/number-line"
+      "@repo/design-system/components/contents/mathematics/line/number"
     ).then((module) => ({ default: module.NumberLine }))
   )
 );

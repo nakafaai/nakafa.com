@@ -152,7 +152,7 @@ one channel React offers, so the module that holds a hook is React code.
 
 A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
 `test.setup.ts` or `test.helpers.ts`, which only tests load. Any other module
-that supports tests, such as `apps/www/src/test/content-page.ts`, is product code.
+that supports tests, such as `apps/www/src/test/published/page.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
 `.tsx`, imports the Vitest configuration API, or has a default export

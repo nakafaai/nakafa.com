@@ -66,7 +66,7 @@ learner, asks one question, reads the stored turn, and removes the chat and
 starts the deletion of the learner. It exits with 0 when the turn passes and
 with 1 when it does not, and it prints no message text.
 
-[ADR 0001](../../../docs/adr/0001-nina-engagement-architecture.md) says when to
+[ADR 0001](../../../docs/adr/0001-engagement.md) says when to
 run it and what it proves.
 
 ## Judgment measurement

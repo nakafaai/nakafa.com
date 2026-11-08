@@ -1,5 +1,5 @@
 import { lazy } from "@repo/design-system/lib/lazy";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import { useNavigate } from "@tanstack/react-router";
 import { Deferred, Effect, Option } from "effect";
 import {
