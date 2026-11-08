@@ -3267,6 +3267,10 @@
       "title": "Diese Periode hat einen Abschluss.",
       "description": "Archiviere die Periode, damit ihr Abschluss bleibt."
     },
+    "school-refusal-period-in-use-insight": {
+      "title": "Diese Periode hat noch Insight.",
+      "description": "Lösche sie, sobald Insight nach 30 Tagen weg ist."
+    },
     "school-refusal-period-in-use-classes": {
       "title": "Diese Periode hat noch Kurse.",
       "description": "Archiviere die Periode, damit Kurse und Noten bleiben."
@@ -3290,6 +3294,10 @@
     "school-refusal-cohort-in-use-members": {
       "title": "Diese Klasse hat noch Lernende.",
       "description": "Verschiebe zuerst die Lernenden, oder archiviere die Klasse."
+    },
+    "school-refusal-cohort-in-use-promotions": {
+      "title": "Eine Versetzung nutzt diese Klasse.",
+      "description": "Archiviere die Klasse, damit die Versetzung bleibt."
     },
     "school-refusal-cohort-in-use-homeroom": {
       "title": "Die Klasse hat noch eine Leitung.",

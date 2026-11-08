@@ -2,6 +2,7 @@ import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
+import { archiveMark } from "@repo/backend/confect/classroom/archive";
 import {
   classThread,
   missing,
@@ -10,7 +11,7 @@ import type { DiscussionNumber } from "@repo/backend/confect/classroom/forum/mes
 import { managesForum } from "@repo/backend/confect/classroom/forum/policy";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { Clock, Effect } from "effect";
+import { Effect } from "effect";
 
 /**
  * Archives a discussion, or restores it: an archived discussion leaves the class's list of
@@ -29,9 +30,7 @@ const shelve = Effect.fn("classroom.forum.threads.shelve")(function* (
   }
   yield* (yield* DatabaseWriter)
     .table("classroomThreads")
-    .patch(thread._id, {
-      archivedAt: archived ? yield* Clock.currentTimeMillis : undefined,
-    })
+    .patch(thread._id, { archivedAt: yield* archiveMark(archived) })
     .pipe(Effect.orDie);
   return null;
 });

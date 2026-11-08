@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import tryoutAttemptPlacements from "@repo/backend/confect/_generated/tables/tryoutAttemptPlacements";
 import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
@@ -38,7 +39,7 @@ import {
   loadSectionAttempt,
   startSectionAttempt,
 } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { Array as Arr, Effect, flow, Option, Schema } from "effect";
 
 /** The rows an admitted try-out finish works on. */
@@ -70,8 +71,8 @@ function attemptOf(attempt: Live["attempt"]) {
   };
 }
 
-/** The gate's state of a try-out attempt: in progress, submitted once completed, expired when its time ran out. */
-function attemptStateOf(status: Live["attempt"]["status"]) {
+/** The gate's state of a try-out attempt or section: in progress, submitted once completed, expired when its time ran out. */
+export function attemptStateOf(status: TryoutStatus) {
   if (status === "in-progress") {
     return "inProgress" as const;
   }

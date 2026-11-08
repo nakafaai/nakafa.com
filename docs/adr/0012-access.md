@@ -130,7 +130,13 @@ memoized relation checks:
    archived period, and an archived cohort are locked subjects, and an archived
    school locks its periods and cohorts too. A promotion is locked once it is
    opened, and when its school is archived. A role's write to a locked subject is
-   `condition` and never `role`.
+   `condition` and never `role`. Deleting or restoring a cohort, a period, or a
+   class, which ADR 0041 allows on a locked row, is the one exception: such a
+   function decides its role at the school level, and the kind's `lifecycle`
+   loads the subject for the caller's tenant alone, whatever its state, with the
+   same `resource` denial for a missing or foreign one. A restore is then refused
+   as `condition` while the subject, given back its active state, is still
+   locked by what holds it (`restorable`), such as an archived period or school.
 4. A roles rule allows an active grant whose scope covers the subject and whose
    role is Owner or listed.
 5. Otherwise the rule's relations decide, each checked at most once per

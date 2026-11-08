@@ -20782,18 +20782,6 @@ export declare const internal: {
           { attemptId: Id<"tryoutAttempts">; expiresAt: number },
           null
         >;
-        reconcileAttempts: FunctionReference<
-          "mutation",
-          "internal",
-          { before: number },
-          null
-        >;
-        reconcileSections: FunctionReference<
-          "mutation",
-          "internal",
-          { before: number; scheduledAttemptIds: Array<Id<"tryoutAttempts">> },
-          null
-        >;
         section: FunctionReference<
           "mutation",
           "internal",

@@ -7,12 +7,16 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/insight/retention.spec";
-import { Array as Arr, Duration, Effect, Layer } from "effect";
+import { Array as Arr, Duration, Effect, Layer, Option } from "effect";
 
 /** Rows of each table one run deletes. */
 const DELETE_BATCH = 200;
 
-/** Deletes a page of each table, unless the school restored the period, and runs again while a page came back full. */
+/**
+ * Deletes a page of each table, unless the school restored the period, and runs again while a page came back full. A
+ * school may delete an archived period once nothing holds it, Insight included (`periodHold`), so a run that finds no
+ * period has nothing left to delete.
+ */
 const run = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -22,8 +26,12 @@ const run = FunctionImpl.make(
     const period = yield* reader
       .table("tenantPeriods")
       .get(periodId)
-      .pipe(Effect.orDie);
-    if (period.status !== "archived") {
+      .pipe(
+        Effect.asSome,
+        Effect.catchTag("GetByIdFailure", () => Effect.succeedNone),
+        Effect.orDie
+      );
+    if (Option.isNone(period) || period.value.status !== "archived") {
       return null;
     }
     const writer = yield* DatabaseWriter;

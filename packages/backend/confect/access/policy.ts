@@ -188,6 +188,41 @@ const make = <
   });
 
   /**
+   * Loads a subject of the caller's tenant for an action that ADR 0041 allows on a locked row, deleting or restoring
+   * it, whatever its state. A locked subject refuses every write on its row (ADR 0012), so such a function's own
+   * school-level access decides the role, and this decides only the tenant: a missing subject and another tenant's
+   * are denied as `resource`, as `authorize` denies them. Every other write goes through `authorize`.
+   */
+  const lifecycle = Effect.fn("access.lifecycle")(function* (
+    action: typeof Action.Type,
+    id: GenericId.GenericId<K["table"]>
+  ) {
+    const { tenant } = yield* Member;
+    const row = yield* loadRow(id);
+    if (
+      Option.isNone(row) ||
+      implementation.tenantOf(row.value) !== tenant._id
+    ) {
+      return yield* unknownSubject(action);
+    }
+    return row.value;
+  });
+
+  /**
+   * Refuses a restore whose subject, given back its active state, would still be locked by what holds it, such as an
+   * archived period or school, as `condition`, the way a write on a locked subject is refused.
+   */
+  const restorable = Effect.fn("access.restorable")(function* (
+    action: typeof Action.Type,
+    restored: Row
+  ) {
+    const { locked } = yield* implementation.place(restored);
+    if (locked) {
+      return yield* new AccessDenied({ action, reason: "condition" });
+    }
+  });
+
+  /**
    * Whether an integration client may perform an action on a loaded subject (ADR 0029).
    * A client is decided by the rule, its action list, and its scope alone, so no relation
    * is read: `decide` returns before it reaches the relations for a client.
@@ -300,8 +335,10 @@ const make = <
     allowsClientOn,
     authorize,
     check,
+    lifecycle,
     middleware,
     record,
+    restorable,
   };
 };
 

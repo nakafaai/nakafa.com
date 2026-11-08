@@ -9,6 +9,11 @@ import {
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
 import {
+  archiveMark,
+  isArchived,
+  onShelf,
+} from "@repo/backend/confect/classroom/archive";
+import {
   classAccess,
   classAuthority,
 } from "@repo/backend/confect/classroom/authority";
@@ -76,7 +81,7 @@ const postViews = Effect.fn("classroom.posts.views")(function* (
         Arr.findFirst(authors, (candidate) => candidate._id === post.authorId)
       );
       return {
-        archived: post.archivedAt !== undefined,
+        archived: isArchived(post),
         author: { id: post.authorId, name: author.name },
         clientKey: post.clientKey,
         createdAt: post.createdAt,
@@ -116,12 +121,7 @@ const list = FunctionImpl.make(
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
     return Struct.assign(found, {
-      page: yield* postViews(
-        Arr.filter(
-          found.page,
-          (post) => (post.archivedAt !== undefined) === archived
-        )
-      ),
+      page: yield* postViews(onShelf(found.page, archived)),
     });
   })
 );
@@ -139,7 +139,7 @@ const pinnedPosts = Effect.fn("classroom.posts.pinnedPosts")(function* () {
     .take(PIN_LIMIT)
     .pipe(
       Effect.orDie,
-      Effect.map(Arr.filter((post) => post.archivedAt === undefined))
+      Effect.map((posts) => onShelf(posts, false))
     );
 });
 
@@ -354,9 +354,7 @@ const shelve = Effect.fn("classroom.posts.shelve")(function* (
   const post = yield* ownPost(postId);
   yield* (yield* DatabaseWriter)
     .table("classroomPosts")
-    .patch(post._id, {
-      archivedAt: archived ? yield* Clock.currentTimeMillis : undefined,
-    })
+    .patch(post._id, { archivedAt: yield* archiveMark(archived) })
     .pipe(Effect.orDie);
   return null;
 });
