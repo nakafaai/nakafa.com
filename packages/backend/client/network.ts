@@ -50,12 +50,12 @@ const networkRetryCodes = HashSet.fromIterable<string>(
   NetworkRetryCodeSchema.literals
 );
 /** One rejected fetch has only sanitized retry classification. */
-export class NetworkRequestError extends Schema.TaggedError<NetworkRequestError>()(
-  "NetworkRequestError",
-  {
-    networkCodes: Schema.Array(NetworkRetryCodeSchema),
-  }
-) {}
+export class NetworkRequestError extends Schema.TaggedError<
+  NetworkRequestError,
+  { readonly brand: unique symbol }
+>()("NetworkRequestError", {
+  networkCodes: Schema.Array(NetworkRetryCodeSchema),
+}) {}
 function isNetworkRetryCode(code: string): code is NetworkRetryCode {
   return HashSet.has(networkRetryCodes, code);
 }

@@ -340,6 +340,15 @@ function selectedRun(suite: string | undefined): {
 
 const RUN = selectedRun(process.env.PLAYWRIGHT_SUITE);
 
+/**
+ * Whether each test records a trace and a video, which it keeps when it fails.
+ * Recording costs every test CPU on a loaded machine, and a passing test throws
+ * it away, so a run records only when PLAYWRIGHT_RECORD is 1, as a rerun of a
+ * failure asks: `PLAYWRIGHT_RECORD=1 bunx playwright test <file>`.
+ */
+const RECORDING =
+  process.env.PLAYWRIGHT_RECORD === "1" ? "retain-on-failure" : "off";
+
 export default defineConfig({
   expect: {
     timeout: 5000,
@@ -359,8 +368,8 @@ export default defineConfig({
     baseURL,
     screenshot: "only-on-failure",
     serviceWorkers: "block",
-    trace: "retain-on-failure",
-    video: "retain-on-failure",
+    trace: RECORDING,
+    video: RECORDING,
   },
   workers: RUN.workers,
 });

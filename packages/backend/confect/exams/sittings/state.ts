@@ -30,14 +30,14 @@ export const Outcome = Schema.Struct({
 const RefusalReason = Schema.Literals(["state", "deadline"]);
 
 /** A proctor action that the table of ADR 0013 refuses for its attempt. */
-export class ProctorActionRefused extends Schema.TaggedError<ProctorActionRefused>()(
-  "ProctorActionRefused",
-  {
-    action: ProctorAction,
-    reason: RefusalReason,
-    state: AttemptState,
-  }
-) {}
+export class ProctorActionRefused extends Schema.TaggedError<
+  ProctorActionRefused,
+  { readonly brand: unique symbol }
+>()("ProctorActionRefused", {
+  action: ProctorAction,
+  reason: RefusalReason,
+  state: AttemptState,
+}) {}
 
 /** One cell of the table: the outcome of an action, or the reason it is refused. */
 type Cell = (

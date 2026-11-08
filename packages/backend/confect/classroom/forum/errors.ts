@@ -2,37 +2,55 @@ import { refusal } from "@repo/backend/confect/tenancy/errors";
 import { Schema } from "effect";
 
 /** Adding a channel to a class that already holds the most channels it can. */
-export class ChannelLimit extends Schema.TaggedError<ChannelLimit>()(
+export class ChannelLimit extends Schema.TaggedError<
+  ChannelLimit,
+  { readonly brand: unique symbol }
+>()(
   "ChannelLimit",
   refusal("CHANNEL_LIMIT", "This class holds the most channels it can.")
 ) {}
 
 /** A name that another channel of the same class already has, compared without case. */
-export class ChannelNameTaken extends Schema.TaggedError<ChannelNameTaken>()(
+export class ChannelNameTaken extends Schema.TaggedError<
+  ChannelNameTaken,
+  { readonly brand: unique symbol }
+>()(
   "ChannelNameTaken",
   refusal("CHANNEL_NAME_TAKEN", "Another channel of this class has this name.")
 ) {}
 
 /** A rename, an archive or a removal of a class's general channel, whose name the page translates for each reader. */
-export class ChannelFixed extends Schema.TaggedError<ChannelFixed>()(
+export class ChannelFixed extends Schema.TaggedError<
+  ChannelFixed,
+  { readonly brand: unique symbol }
+>()(
   "ChannelFixed",
   refusal("CHANNEL_FIXED", "The general channel keeps its name.")
 ) {}
 
 /** A write into an archived channel, which stays readable and takes nothing new. */
-export class ChannelArchived extends Schema.TaggedError<ChannelArchived>()(
+export class ChannelArchived extends Schema.TaggedError<
+  ChannelArchived,
+  { readonly brand: unique symbol }
+>()(
   "ChannelArchived",
   refusal("CHANNEL_ARCHIVED", "This channel is archived.")
 ) {}
 
 /** An edit of a message that a teacher hid: the message has no text left to change. */
-export class MessageHidden extends Schema.TaggedError<MessageHidden>()(
+export class MessageHidden extends Schema.TaggedError<
+  MessageHidden,
+  { readonly brand: unique symbol }
+>()(
   "MessageHidden",
   refusal("MESSAGE_HIDDEN", "A teacher hid this message.")
 ) {}
 
 /** A student opening a discussion while the school keeps discussions to teachers (`studentThreads` off). */
-export class DiscussionsClosed extends Schema.TaggedError<DiscussionsClosed>()(
+export class DiscussionsClosed extends Schema.TaggedError<
+  DiscussionsClosed,
+  { readonly brand: unique symbol }
+>()(
   "DiscussionsClosed",
   refusal(
     "DISCUSSIONS_CLOSED",
@@ -41,25 +59,37 @@ export class DiscussionsClosed extends Schema.TaggedError<DiscussionsClosed>()(
 ) {}
 
 /** A mention of someone who does not write in the class, or of everyone by a member who is not its subject teacher. */
-export class MentionRefused extends Schema.TaggedError<MentionRefused>()(
+export class MentionRefused extends Schema.TaggedError<
+  MentionRefused,
+  { readonly brand: unique symbol }
+>()(
   "MentionRefused",
   refusal("MENTION_REFUSED", "This message mentions someone it may not.")
 ) {}
 
 /** A message with no text, no file and no poll. */
-export class MessageEmpty extends Schema.TaggedError<MessageEmpty>()(
+export class MessageEmpty extends Schema.TaggedError<
+  MessageEmpty,
+  { readonly brand: unique symbol }
+>()(
   "MessageEmpty",
   refusal("MESSAGE_EMPTY", "Write something or add a file first.")
 ) {}
 
 /** An upload that is not the sender's own, or that is already gone. */
-export class UploadGone extends Schema.TaggedError<UploadGone>()(
+export class UploadGone extends Schema.TaggedError<
+  UploadGone,
+  { readonly brand: unique symbol }
+>()(
   "UploadGone",
   refusal("UPLOAD_GONE", "This file is no longer here. Add it again.")
 ) {}
 
 /** A file whose bytes name no image, PDF or office document. The file is deleted. */
-export class AttachmentRefused extends Schema.TaggedError<AttachmentRefused>()(
+export class AttachmentRefused extends Schema.TaggedError<
+  AttachmentRefused,
+  { readonly brand: unique symbol }
+>()(
   "AttachmentRefused",
   refusal(
     "ATTACHMENT_REFUSED",
@@ -68,13 +98,19 @@ export class AttachmentRefused extends Schema.TaggedError<AttachmentRefused>()(
 ) {}
 
 /** Another emoji on a message that already carries the most it can. */
-export class ReactionLimit extends Schema.TaggedError<ReactionLimit>()(
+export class ReactionLimit extends Schema.TaggedError<
+  ReactionLimit,
+  { readonly brand: unique symbol }
+>()(
   "ReactionLimit",
   refusal("REACTION_LIMIT", "This message carries the most emoji it can.")
 ) {}
 
 /** A vote that names a choice the poll does not hold, or several in a poll of one choice. */
-export class VoteRefused extends Schema.TaggedError<VoteRefused>()(
+export class VoteRefused extends Schema.TaggedError<
+  VoteRefused,
+  { readonly brand: unique symbol }
+>()(
   "VoteRefused",
   refusal("VOTE_REFUSED", "This poll does not take that vote.")
 ) {}

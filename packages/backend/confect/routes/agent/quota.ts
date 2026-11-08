@@ -51,9 +51,9 @@ export function agentQuotaHeaders(quota: typeof AgentQuota.Type) {
 }
 
 /** Expected public read quota exhaustion. */
-export class AgentRateLimitError extends Schema.TaggedError<AgentRateLimitError>()(
-  "AgentRateLimitError",
-  {
-    retryAfterMs: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
-  }
-) {}
+export class AgentRateLimitError extends Schema.TaggedError<
+  AgentRateLimitError,
+  { readonly brand: unique symbol }
+>()("AgentRateLimitError", {
+  retryAfterMs: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+}) {}

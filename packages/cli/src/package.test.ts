@@ -20,14 +20,14 @@ import {
   readPackageVersion,
 } from "#cli/package";
 
-class CliTestCommandError extends Schema.TaggedError<CliTestCommandError>()(
-  "CliTestCommandError",
-  {
-    command: Schema.String,
-    exitCode: Schema.Finite.pipe(Schema.check(Schema.isInt())),
-    stderr: Schema.String,
-  }
-) {}
+class CliTestCommandError extends Schema.TaggedError<
+  CliTestCommandError,
+  { readonly brand: unique symbol }
+>()("CliTestCommandError", {
+  command: Schema.String,
+  exitCode: Schema.Finite.pipe(Schema.check(Schema.isInt())),
+  stderr: Schema.String,
+}) {}
 
 const packageRoot = `${import.meta.dirname}/..`;
 const PackResultSchema = Schema.fromJsonString(

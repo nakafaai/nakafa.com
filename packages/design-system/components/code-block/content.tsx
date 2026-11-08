@@ -27,10 +27,10 @@ type CodeHighlightRequest = typeof CodeHighlightRequestSchema.Type &
   Pick<CodeHighlightOptions, "themes">;
 
 /** The highlighter's code could not load, so the block stays plain text. */
-class CodeHighlighterLoadError extends Schema.TaggedError<CodeHighlighterLoadError>()(
-  "CodeHighlighterLoadError",
-  { cause: Schema.Unknown }
-) {}
+class CodeHighlighterLoadError extends Schema.TaggedError<
+  CodeHighlighterLoadError,
+  { readonly brand: unique symbol }
+>()("CodeHighlighterLoadError", { cause: Schema.Unknown }) {}
 
 /** The highlighter, which only code that a server did not draw loads. */
 const loadHighlighter = Effect.tryPromise({

@@ -1,10 +1,5 @@
 import { HashtagIcon } from "@hugeicons/core-free-icons";
 import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Item,
@@ -21,8 +16,9 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
 import { useTableFilters } from "@/components/shared/table/toolbar";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { ChannelMenu } from "@/components/tenant/classes/forum/menu";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -83,12 +79,11 @@ export function ChannelRows({
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {Arr.isReadonlyArrayEmpty(rows) ? (
-        <Empty className="p-6 md:p-6">
-          <EmptyHeader>
-            <EmptyNina act="searching" />
-            <EmptyTitle className="text-base">{table("no-results")}</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          frame="table"
+          scene={<EmptyNina act="searching" />}
+          title={table("no-results")}
+        />
       ) : (
         <ItemGroup
           aria-label={t("channels-title")}

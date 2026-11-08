@@ -55,7 +55,10 @@ export const CurveSchema = Schema.Struct({
 export type Curve = typeof CurveSchema.Type;
 
 /** A curve that cannot be drawn: its declaration is invalid, or a label anchor is on no drawn branch. */
-export class CurveError extends Schema.TaggedError<CurveError>()("CurveError", {
+export class CurveError extends Schema.TaggedError<
+  CurveError,
+  { readonly brand: unique symbol }
+>()("CurveError", {
   message: Schema.String,
 }) {}
 

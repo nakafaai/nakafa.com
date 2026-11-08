@@ -27,13 +27,13 @@ const SHARED_FILES = [
 ] as const;
 
 /** Expected failure while reading a shared file that the check must compare. */
-export class SharedFileError extends Schema.TaggedError<SharedFileError>()(
-  "SharedFileError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class SharedFileError extends Schema.TaggedError<
+  SharedFileError,
+  { readonly brand: unique symbol }
+>()("SharedFileError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Reads the text of one shared file, failing with a typed error that names the reason. */
 const readShared = Effect.fn("RepositoryPolicy.readSharedFile")(function* (

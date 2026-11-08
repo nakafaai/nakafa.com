@@ -7,10 +7,10 @@ import {
 import { Effect, Schema } from "effect";
 
 /** The language that the account menu passed is not a language of Nakafa. */
-export class SchoolLanguageUnknown extends Schema.TaggedError<SchoolLanguageUnknown>()(
-  "SchoolLanguageUnknown",
-  { reason: Schema.Unknown }
-) {}
+export class SchoolLanguageUnknown extends Schema.TaggedError<
+  SchoolLanguageUnknown,
+  { readonly brand: unique symbol }
+>()("SchoolLanguageUnknown", { reason: Schema.Unknown }) {}
 
 /** How long the language cookie lasts in the browser: one year. */
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;

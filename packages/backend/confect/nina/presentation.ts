@@ -35,10 +35,12 @@ import { Array as Arr, Effect, Option, Schema, Stream } from "effect";
  */
 const SUGGESTION_MESSAGES = 16;
 
-class NinaPresentationError extends Schema.TaggedError<NinaPresentationError>()(
-  "NinaPresentationError",
-  { operation: Schema.Literals(["suggestions", "title"]) }
-) {}
+class NinaPresentationError extends Schema.TaggedError<
+  NinaPresentationError,
+  { readonly brand: unique symbol }
+>()("NinaPresentationError", {
+  operation: Schema.Literals(["suggestions", "title"]),
+}) {}
 
 /** The failure of the follow-ups, which the turn logs and goes on without. */
 const suggestionsUnavailable = () =>

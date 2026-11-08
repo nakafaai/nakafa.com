@@ -34,10 +34,10 @@ interface Offering {
  * allowed the call, for example a learner who paused memory while the turn ran.
  * The shared runner answers it like a refusal by the policy.
  */
-export class CapabilityDenied extends Schema.TaggedError<CapabilityDenied>()(
-  "CapabilityDenied",
-  { reason: Schema.String }
-) {}
+export class CapabilityDenied extends Schema.TaggedError<
+  CapabilityDenied,
+  { readonly brand: unique symbol }
+>()("CapabilityDenied", { reason: Schema.String }) {}
 
 /**
  * Lists the capabilities of a registry that the context offers, in the order of
