@@ -11,15 +11,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -32,9 +29,7 @@ import {
 } from "@/components/tenant/classes/library/optimistic";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
 import { useClassScope } from "@/components/tenant/classes/scope";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/classes/library/edit";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The choice that takes an item out of its folder, to the top of the library. */
 const NO_FOLDER = "none";
@@ -54,8 +49,8 @@ export function LibraryEditDialog({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const t = useTranslations("Classroom");
   const common = useTranslations("Common");
+  const t = useTranslations("Classroom");
   const settings = useTranslations("SchoolSettings");
   const { classId, slug } = useClassScope();
   const id = useId();
@@ -95,8 +90,8 @@ export function LibraryEditDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           edit({
             address: isLink ? nextAddress : null,
             classId,
@@ -104,29 +99,20 @@ export function LibraryEditDialog({
             itemId: item.id,
             slug,
             title: nextTitle,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("library-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {settings("save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {settings("save")}
+        </Button>
       }
+      description={t("library-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("library-edit-title")}
@@ -171,23 +157,18 @@ export function LibraryEditDialog({
               <SelectTrigger className="w-full" id={`${id}-folder`}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>{t("select-folder")}</SelectLabel>
-                  {Arr.map(folderItems, (choice) => (
-                    <SelectItem key={choice.value} value={choice.value}>
-                      <HugeIcons
-                        aria-hidden="true"
-                        icon={
-                          choice.value === NO_FOLDER
-                            ? LibraryIcon
-                            : Folder01Icon
-                        }
-                      />
-                      {choice.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
+              <SelectContent label={common("menu-folder")}>
+                {Arr.map(folderItems, (choice) => (
+                  <SelectItem
+                    icon={
+                      choice.value === NO_FOLDER ? LibraryIcon : Folder01Icon
+                    }
+                    key={choice.value}
+                    value={choice.value}
+                  >
+                    {choice.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>

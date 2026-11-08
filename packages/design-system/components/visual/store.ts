@@ -41,13 +41,13 @@ const INLINE: typeof VisualViewSchema.Type = {
 };
 
 /** The browser refused to show or leave a visual card with the Fullscreen API. */
-class VisualFullscreenError extends Schema.TaggedError<VisualFullscreenError>()(
-  "VisualFullscreenError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class VisualFullscreenError extends Schema.TaggedError<
+  VisualFullscreenError,
+  { readonly brand: unique symbol }
+>()("VisualFullscreenError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Puts the card in the browser's top layer, above everything in the page. */
 const requestFullscreen = Effect.fn("designSystem.visual.requestFullscreen")(

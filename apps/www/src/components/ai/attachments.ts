@@ -2,7 +2,7 @@ import {
   NINA_DOCUMENT_SIZE,
   NINA_FILE_COUNT,
 } from "@repo/backend/client/nina/uploads";
-import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
+import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt/files";
 import { Array as Arr, Match } from "effect";
 import type { useTranslations } from "use-intl";
 

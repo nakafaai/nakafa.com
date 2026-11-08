@@ -15,7 +15,7 @@ import type {
   ClassPersonKind,
 } from "@repo/backend/confect/classroom/people.spec";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
@@ -23,7 +23,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableName } from "@/components/shared/table/title";
@@ -31,7 +31,9 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -88,9 +90,9 @@ function PeopleBody() {
       </ClassHeader>
       <TablePageBody>
         {empty ? (
-          <TableEmpty
-            act="typing"
+          <EmptyState
             description={t("people-empty-description")}
+            scene={<EmptyNina act="typing" />}
             title={t("people-empty")}
           />
         ) : null}
@@ -206,9 +208,9 @@ function CopyItem({
   return (
     <DropdownMenuItem
       closeOnClick={false}
+      icon={clipboard.copied ? Tick01Icon : icon}
       onClick={() => clipboard.copy(value)}
     >
-      <HugeIcons icon={clipboard.copied ? Tick01Icon : icon} />
       {label}
     </DropdownMenuItem>
   );

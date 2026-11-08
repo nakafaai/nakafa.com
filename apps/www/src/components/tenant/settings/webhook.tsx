@@ -22,13 +22,11 @@ import {
   FieldSet,
 } from "@repo/design-system/components/ui/field";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -38,17 +36,14 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import {
   offeredChanges,
   toggleChange,
 } from "@/components/tenant/settings/changes";
 import { changeWebhookChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/settings/webhook";
 
 /** How many clients the dialog offers: more than a school keeps. */
 const CLIENT_PAGE = 100;
@@ -195,19 +190,21 @@ export function SchoolWebhookCreateDialog({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           create({
             changes: carried.value,
             clientId: client.value.id,
             slug,
             url: address.value,
-          }),
-        SOURCE,
-        (issued) => {
-          setOpen(false);
-          setUrl("");
-          onIssued(issued.secret);
+          })
+        ),
+        {
+          onSaved: (issued) => {
+            setOpen(false);
+            setUrl("");
+            onIssued(issued.secret);
+          },
         }
       )
     );
@@ -215,30 +212,21 @@ export function SchoolWebhookCreateDialog({
 
   return (
     <ResponsiveDialog
-      description={t("webhook-add-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={
-              Option.isNone(client) ||
-              Option.isNone(address) ||
-              Option.isNone(carried)
-            }
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            {t("webhook-create")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={
+            Option.isNone(client) ||
+            Option.isNone(address) ||
+            Option.isNone(carried)
+          }
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          {t("webhook-create")}
+        </Button>
       }
+      description={t("webhook-add-description")}
       open={open}
       setOpen={setOpen}
       title={t("webhook-add")}
@@ -266,16 +254,12 @@ export function SchoolWebhookCreateDialog({
             <SelectTrigger className="w-full" id={`${id}-client`}>
               <SelectValue placeholder={t("webhook-client-placeholder")} />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="client" />
-                {Arr.map(active, (each) => (
-                  <SelectItem key={each.id} value={each.id}>
-                    <HugeIcons icon={Key01Icon} />
-                    {each.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-client")}>
+              {Arr.map(active, (each) => (
+                <SelectItem icon={Key01Icon} key={each.id} value={each.id}>
+                  {each.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {hasNoClient ? (
@@ -320,7 +304,6 @@ export function SchoolWebhookEditDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const change = useMutation(integrations.webhooks.change).withOptimisticUpdate(
     changeWebhookChange
   );
@@ -340,42 +323,33 @@ export function SchoolWebhookEditDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           change({
             changes: carried.value,
             clientId: webhook.clientId,
             slug,
             url: address.value,
             webhookId: webhook.id,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("webhook-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(address) || Option.isNone(carried)}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            {t("webhook-save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(address) || Option.isNone(carried)}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          {t("webhook-save")}
+        </Button>
       }
+      description={t("webhook-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("webhook-edit")}

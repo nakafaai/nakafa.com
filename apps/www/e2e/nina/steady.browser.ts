@@ -3,6 +3,7 @@ import { Duration, Effect } from "effect";
 import { CHAT_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { NINA_SECTION } from "@/e2e/support/selector";
 
 const HOME = "/en";
@@ -54,12 +55,15 @@ const expectSteadyComposer = Effect.fn("NakafaE2E.expectSteadyComposer")(
             }, DIMMED)
           );
           const tab = yield* Effect.promise(() => context.newPage());
+          // The composer is read once the late session has answered and the tab has drawn it.
+          const answered = tab.waitForResponse(SESSION_READ);
           yield* Effect.promise(() => tab.goto(page.path));
           const composer = tab
             .locator(page.scope)
             .getByRole("textbox", { name: "Ask Nina anything..." });
           yield* Effect.promise(() => composer.scrollIntoViewIfNeeded());
-          yield* Effect.sleep(Duration.times(SESSION_DELAY, 2));
+          yield* Effect.promise(() => answered);
+          yield* Effect.promise(() => waitForQuiet(tab));
           yield* Effect.promise(async () => {
             await expect(composer).toBeEnabled();
             expect(

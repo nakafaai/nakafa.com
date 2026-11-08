@@ -8,9 +8,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { Function as Fn } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { useExam } from "@/components/tenant/exams/provider";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The delete of the open draft, as Canva asks before a design goes to the trash: the editor's menu (ExamMenu) asks with
@@ -37,9 +37,9 @@ export function useDeleteExam(close: () => void) {
       replace: true,
       to: "/school/$slug/exams",
     });
-    runExamAction(
-      sentAction(() => remove({ examId, slug })),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+    runSchoolWrite(
+      schoolCall(() => remove({ examId, slug })),
+      { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
     );
   }
 
@@ -56,7 +56,7 @@ export function ExamDeleteConfirm({
   open,
   setOpen,
 }: {
-  /** The body: the exam it removes, a `ConfirmSubject` with its title. */
+  /** The body: the exam it removes, a `ResponsiveDialogSubject` with its title. */
   children: ReactNode;
   onConfirm: () => void;
   open: boolean;
@@ -67,18 +67,13 @@ export function ExamDeleteConfirm({
 
   return (
     <ResponsiveDialog
-      description={t("delete-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button onClick={onConfirm} variant="destructive">
-            <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-            {common("delete")}
-          </Button>
-        </>
+      action={
+        <Button onClick={onConfirm} variant="destructive">
+          <HugeIcons aria-hidden="true" icon={Delete02Icon} />
+          {common("delete")}
+        </Button>
       }
+      description={t("delete-description")}
       open={open}
       setOpen={setOpen}
       title={t("delete-title")}

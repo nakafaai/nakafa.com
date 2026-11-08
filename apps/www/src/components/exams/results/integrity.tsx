@@ -2,7 +2,6 @@ import { QueryResult, useQuery } from "@confect/react";
 import { SecurityCheckIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { IntegrityRow } from "@repo/backend/confect/exams/results/contract";
-import { Button } from "@repo/design-system/components/ui/button";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -12,7 +11,6 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
 import { Array as Arr, Result } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
@@ -23,9 +21,10 @@ import {
 import { AwayCell } from "@/components/exams/results/students";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /** The signals a report counts beside the exits, in the order a row names them. */
@@ -80,9 +79,9 @@ function IntegrityRows() {
   const { rows, students } = report.value;
   if (Arr.isReadonlyArrayEmpty(rows)) {
     return (
-      <TableEmpty
-        act="reading"
+      <EmptyState
         description={t("integrity-empty")}
+        scene={<EmptyNina act="reading" />}
         title={t("integrity-empty-title")}
       />
     );
@@ -133,24 +132,22 @@ function IntegrityRows() {
 }
 
 /**
- * Integrity, in the results page's header row: it opens the sitting's integrity report (K25) in a sheet, read only
- * once the teacher opens it. Its footer says what the report is, an indication for a teacher to
+ * The sitting's integrity report (K25) in a sheet, which the results header's Analysis menu opens, read only once
+ * the teacher opens it. Its footer says what the report is, an indication for a teacher to
  * weigh, and it holds no action on a student, so nothing here decides anything.
  */
-export function IntegrityAction() {
+export function IntegritySheet({
+  onOpenChange,
+  open,
+}: {
+  readonly onOpenChange: (open: boolean) => void;
+  readonly open: boolean;
+}) {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
 
   return (
-    <Sheet>
-      <SheetTrigger
-        render={
-          <Button type="button" variant="outline">
-            <HugeIcons icon={SecurityCheckIcon} />
-            <span className="@max-3xl/header:sr-only">{t("integrity")}</span>
-          </Button>
-        }
-      />
+    <Sheet onOpenChange={onOpenChange} open={open}>
       <SheetContent className="sm:max-w-3xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
           <HugeIcons className="size-5 shrink-0" icon={SecurityCheckIcon} />

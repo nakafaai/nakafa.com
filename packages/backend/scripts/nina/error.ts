@@ -5,9 +5,9 @@ import { Schema } from "effect";
  * command did not answer as the gate needs, or the turn never settled. The
  * message names the step and never holds message text.
  */
-export class NinaGateError extends Schema.TaggedError<NinaGateError>()(
-  "NinaGateError",
-  { message: Schema.String }
-) {}
+export class NinaGateError extends Schema.TaggedError<
+  NinaGateError,
+  { readonly brand: unique symbol }
+>()("NinaGateError", { message: Schema.String }) {}
 
 export const gateError = (message: string) => new NinaGateError({ message });

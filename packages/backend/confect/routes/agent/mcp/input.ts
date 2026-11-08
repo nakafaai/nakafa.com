@@ -7,12 +7,12 @@ import { Effect, Option, Schema } from "effect";
 export const MAX_MCP_REQUEST_BYTES = 64 * 1024;
 
 /** Expected failure while bounding an MCP request before protocol classification. */
-class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>()(
-  "McpRequestBodyError",
-  {
-    reason: Schema.Literals(["invalid", "size"]),
-  }
-) {}
+class McpRequestBodyError extends Schema.TaggedError<
+  McpRequestBodyError,
+  { readonly brand: unique symbol }
+>()("McpRequestBodyError", {
+  reason: Schema.Literals(["invalid", "size"]),
+}) {}
 
 /**
  * Reads a POST once and keeps every protocol classification path under the cap.

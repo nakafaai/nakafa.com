@@ -8,7 +8,7 @@ import { answerRootDocument } from "@/lib/llms/negotiate.server";
 import { isRawProfileAddress } from "@/lib/profile/gate";
 import { readBrowserPage } from "@/lib/routing/browser.server";
 import { readBareAddress } from "@/lib/routing/locale/bare";
-import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
+import { notFoundPageOf, withContentLanguage } from "@/lib/routing/missing";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 import {

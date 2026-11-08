@@ -10,11 +10,8 @@ import {
   useTransition,
 } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import {
-  forumCall,
-  runForumCall,
-} from "@/components/tenant/classes/forum/call";
 import { useTenant } from "@/components/tenant/context";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** What a preview answers: the school's classes, its connection, and the courses it teaches. */
 export type Preview = NonNullable<
@@ -88,13 +85,13 @@ export function useLoadCourses() {
 
   const load = () =>
     startLoading(() =>
-      runForumCall(
-        forumCall(() => preview({ slug })).pipe(
+      runSchoolWrite(
+        schoolCall(() => preview({ slug })).pipe(
           Effect.tap((answer) =>
             Effect.sync(() => settle(Option.fromNullOr(answer)))
           )
         ),
-        fail
+        { onRefused: fail }
       )
     );
 

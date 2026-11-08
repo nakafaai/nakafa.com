@@ -9,19 +9,18 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { use } from "react";
 import { useTranslations } from "use-intl";
 import { HeadMenuContext } from "@/components/shared/table/align";
 import type { ColumnOption } from "@/components/shared/table/columns";
 import { TableHeadButton } from "@/components/shared/table/head";
+import { RemoteChoiceContext } from "@/components/shared/table/remote";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
 /**
@@ -64,47 +63,49 @@ export function ColumnFilter({
           </TableHeadButton>
         }
       />
-      <DropdownMenuContent align={align} className="min-w-48">
+      <DropdownMenuContent
+        align={align}
+        className="min-w-48"
+        label={common("menu-filter")}
+      >
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
-          <DropdownMenuGroup>
-            {Arr.isReadonlyArrayEmpty(options) ? (
-              <DropdownMenuItem disabled>
-                <HugeIcons icon={InformationCircleIcon} />
-                {t("no-values")}
-              </DropdownMenuItem>
-            ) : null}
-            {Arr.map(options, (option) => (
-              <DropdownMenuCheckboxItem
-                checked={Arr.contains(chosen, option.value)}
-                closeOnClick={false}
-                key={option.value}
-                onCheckedChange={(next) =>
-                  choose(
-                    column,
-                    next
-                      ? Arr.append(chosen, option.value)
-                      : Arr.filter(chosen, (value) => value !== option.value)
-                  )
-                }
-              >
-                <HugeIcons icon={option.icon} />
-                {option.label}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuGroup>
-          {filtered ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => choose(column, [])}>
-                  <HugeIcons icon={Cancel01Icon} />
-                  {t("reset")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </>
+          {Arr.isReadonlyArrayEmpty(options) ? (
+            <DropdownMenuItem disabled icon={InformationCircleIcon}>
+              {t("no-values")}
+            </DropdownMenuItem>
           ) : null}
+          {Arr.map(options, (option) => (
+            <DropdownMenuCheckboxItem
+              checked={Arr.contains(chosen, option.value)}
+              closeOnClick={false}
+              icon={option.icon}
+              key={option.value}
+              onCheckedChange={(next) =>
+                choose(
+                  column,
+                  next
+                    ? Arr.append(chosen, option.value)
+                    : Arr.filter(chosen, (value) => value !== option.value)
+                )
+              }
+            >
+              {option.label}
+            </DropdownMenuCheckboxItem>
+          ))}
         </DropdownMenuGroup>
+        {filtered ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                icon={Cancel01Icon}
+                onClick={() => choose(column, [])}
+              >
+                {t("reset")}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -129,13 +130,20 @@ export function ColumnChoice({
 }) {
   const t = useTranslations("DataTable");
   const common = useTranslations("Common");
+  const server = use(RemoteChoiceContext);
   const all = useTableFilters((state) => state.chosen);
-  const chosen = Option.getOrElse(Rec.get(all, column), () => []);
   const choose = useTableFilters((state) => state.choose);
   const align = use(HeadMenuContext);
   const first = Option.map(Arr.head(options), (option) => option.value);
+  // The value other than the first, which keeps every row: the address's for a list it filters, else the page's.
+  const picked = Option.filter(
+    server === undefined
+      ? Option.flatMap(Rec.get(all, column), Arr.head)
+      : Rec.get(server.chosen, column),
+    (chosen) => !Option.contains(first, chosen)
+  );
   const value = Option.getOrElse(
-    Option.orElse(Arr.head(chosen), () => first),
+    Option.orElse(picked, () => first),
     () => ""
   );
 
@@ -144,7 +152,7 @@ export function ColumnChoice({
       <DropdownMenuTrigger
         render={
           <TableHeadButton
-            active={Arr.isReadonlyArrayNonEmpty(chosen)}
+            active={Option.isSome(picked)}
             aria-label={t("filter-by", { column: title })}
             icon={FilterIcon}
           >
@@ -152,28 +160,34 @@ export function ColumnChoice({
           </TableHeadButton>
         }
       />
-      <DropdownMenuContent align={align} className="min-w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            onValueChange={(next) =>
-              choose(
-                column,
-                Option.contains(first, next) || !Schema.is(Schema.String)(next)
-                  ? []
-                  : [next]
-              )
+      <DropdownMenuContent
+        align={align}
+        className="min-w-48"
+        label={common("menu-filter")}
+      >
+        <DropdownMenuRadioGroup
+          onValueChange={(next) => {
+            if (!Schema.is(Schema.String)(next)) {
+              return;
             }
-            value={value}
-          >
-            {Arr.map(options, (option) => (
-              <DropdownMenuRadioItem key={option.value} value={option.value}>
-                <HugeIcons icon={option.icon} />
-                {option.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+            if (server !== undefined) {
+              server.choose(column, next);
+              return;
+            }
+            choose(column, Option.contains(first, next) ? [] : [next]);
+          }}
+          value={value}
+        >
+          {Arr.map(options, (option) => (
+            <DropdownMenuRadioItem
+              icon={option.icon}
+              key={option.value}
+              value={option.value}
+            >
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

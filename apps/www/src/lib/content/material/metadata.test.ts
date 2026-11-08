@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
-import { previewMetadata } from "@/test/content-preview";
+import { previewMetadata } from "@/test/manifest";
 
 describe("material metadata", () => {
   it("titles the page with the signed search title when the lesson has one", () => {

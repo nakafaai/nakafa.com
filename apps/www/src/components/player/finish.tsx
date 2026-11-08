@@ -3,7 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useEarlyPress } from "@repo/design-system/hooks/use-press";
+import { useEarlyPress } from "@repo/design-system/hooks/press";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";
@@ -44,7 +44,6 @@ export function PlayerFinish({
   title: string;
 }) {
   const t = useTranslations("Player");
-  const tCommon = useTranslations("Common");
   const overlay = usePlayer((state) => state.overlay);
   const waiting = usePlayer((state) => state.pending !== null);
   const open = usePlayer((state) => state.open);
@@ -67,26 +66,21 @@ export function PlayerFinish({
         <span className="max-sm:sr-only">{label}</span>
       </Button>
       <ResponsiveDialog
+        action={
+          <Button
+            aria-busy={pending || undefined}
+            disabled={locked}
+            inert={pending}
+            onClick={onFinish}
+            type="button"
+            variant="destructive"
+          >
+            {pending ? <Spinner /> : <HugeIcons icon={StopIcon} />}
+            {label}
+          </Button>
+        }
         description={description}
         finalFocus={!waiting}
-        footer={
-          <>
-            <Button onClick={close} type="button" variant="outline">
-              {tCommon("cancel")}
-            </Button>
-            <Button
-              aria-busy={pending || undefined}
-              disabled={locked}
-              inert={pending}
-              onClick={onFinish}
-              type="button"
-              variant="destructive"
-            >
-              {pending ? <Spinner /> : <HugeIcons icon={StopIcon} />}
-              {label}
-            </Button>
-          </>
-        }
         onOpenChangeComplete={(next) => {
           if (!next) {
             settle();

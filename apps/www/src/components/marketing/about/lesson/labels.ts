@@ -1,4 +1,4 @@
-import type { BacteriaLabItemProps } from "@repo/design-system/components/contents/biology/bacteria-scene";
+import type { BacteriaLabItemProps } from "@repo/design-system/components/contents/biology/bacteria/scene";
 import { ATOM_SHELL_SAMPLES } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import type { useTranslations } from "use-intl";
 

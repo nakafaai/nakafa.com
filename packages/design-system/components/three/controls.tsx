@@ -2,7 +2,6 @@
 
 import { GridIcon } from "@hugeicons/core-free-icons";
 import { DropdownMenuCheckboxItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import {
   createContext,
@@ -76,9 +75,9 @@ export function CoordinateControls({ inert = false }: { inert?: boolean }) {
       <DropdownMenuCheckboxItem
         checked={showGrid}
         closeOnClick
+        icon={GridIcon}
         onCheckedChange={toggleGrid}
       >
-        <HugeIcons icon={GridIcon} />
         {t("grid")}
       </DropdownMenuCheckboxItem>
     </VisualCardSceneActions>

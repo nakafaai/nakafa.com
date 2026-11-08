@@ -31,11 +31,6 @@ import {
 } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
@@ -45,7 +40,7 @@ import {
   shareOf,
   voteUpdate,
 } from "@/components/tenant/classes/forum/tally";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** One choice while the poll is written: its text, and an ID that keeps its field as others leave. */
 const PollChoice = Schema.Struct({ id: Schema.Int, text: Schema.String });
@@ -81,16 +76,15 @@ export function MessagePoll({ message }: { message: ForumMessage }) {
     <PollCard
       disabled={!canPost || isPending(message)}
       onChoose={(options) =>
-        runForumCall(
-          forumCall(() =>
+        runSchoolWrite(
+          schoolCall(() =>
             vote.withOptimisticUpdate(voteUpdate)({
               classId,
               messageId: message.id,
               options,
               slug,
             })
-          ),
-          toastForumFailure
+          )
         )
       }
       poll={message.poll}
@@ -198,7 +192,6 @@ export function NewPoll({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const id = useId();
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(FIRST_CHOICES);
@@ -229,17 +222,12 @@ export function NewPoll({
 
   return (
     <ResponsiveDialog
-      description={t("poll-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={!ready} onClick={send}>
-            {t("poll-send")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!ready} onClick={send}>
+          {t("poll-send")}
+        </Button>
       }
+      description={t("poll-description")}
       open={open}
       setOpen={setOpen}
       title={t("poll-title")}
@@ -277,21 +265,19 @@ export function NewPoll({
                 value={option.text}
               />
               {options.length > POLL_MIN_OPTIONS ? (
-                <IconTip label={t("poll-remove-option", { number: index + 1 })}>
-                  <Button
-                    aria-label={t("poll-remove-option", { number: index + 1 })}
-                    onClick={() =>
-                      setOptions(
-                        Arr.filter(options, (held) => held.id !== option.id)
-                      )
-                    }
-                    size="icon"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <HugeIcons icon={Cancel01Icon} />
-                  </Button>
-                </IconTip>
+                <Button
+                  onClick={() =>
+                    setOptions(
+                      Arr.filter(options, (held) => held.id !== option.id)
+                    )
+                  }
+                  size="icon"
+                  tooltip={t("poll-remove-option", { number: index + 1 })}
+                  type="button"
+                  variant="ghost"
+                >
+                  <HugeIcons icon={Cancel01Icon} />
+                </Button>
               ) : null}
             </div>
           ))}

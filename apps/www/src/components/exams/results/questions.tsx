@@ -10,6 +10,7 @@ import {
   CancelCircleIcon,
   ChartHistogramIcon,
   CheckmarkCircle02Icon,
+  HelpCircleIcon,
   HourglassIcon,
   MinusSignCircleIcon,
   UserGroupIcon,
@@ -45,7 +46,6 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
 import { Array as Arr, Option, Schema } from "effect";
 import { useState } from "react";
@@ -66,7 +66,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -76,6 +75,8 @@ import {
   useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useKeptRows } from "@/lib/data/kept";
 
 /** The look of each verdict of an answer: a check, a cross, a half mark and a wait, each in its tone. */
@@ -265,9 +266,9 @@ function AnswerList({
 
   if (results.length === 0 && !filtering) {
     return (
-      <TableEmpty
-        act="reading"
+      <EmptyState
         description={t("results-no-answers")}
+        scene={<EmptyNina act="reading" />}
         title={t("results-answers")}
       />
     );
@@ -321,9 +322,9 @@ function AnswerList({
         rowId={(answer) => answer.attemptId}
       />
       {exhausted && results.length === 0 ? (
-        <TableEmpty
-          act="reading"
+        <EmptyState
           description={t("filter-empty")}
+          scene={<EmptyNina act="reading" />}
           title={t("results-no-match")}
         />
       ) : null}
@@ -333,15 +334,18 @@ function AnswerList({
 }
 
 /**
- * Questions, in the results page's header row: it opens a sheet with the questions of the exam, one at a
- * time, however many there are. The sheet's footer steps through them or picks one from a
+ * The questions of the exam in a sheet, one at a time, however many there are, which the results header's
+ * Analysis menu opens. The sheet's footer steps through them or picks one from a
  * list, and stays in place while the statistics and answers scroll under it. The selection lives in this
- * component, so nothing above it is re-rendered. In a narrow header the button keeps its icon, so the page's
- * path keeps its room.
+ * component, so nothing above it is re-rendered.
  */
-export function QuestionsAction({
+export function QuestionsSheet({
+  onOpenChange,
+  open,
   questions,
 }: {
+  readonly onOpenChange: (open: boolean) => void;
+  readonly open: boolean;
   readonly questions: readonly Question[];
 }) {
   const t = useTranslations("Exams");
@@ -358,15 +362,7 @@ export function QuestionsAction({
   }));
 
   return (
-    <Sheet>
-      <SheetTrigger
-        render={
-          <Button type="button" variant="outline">
-            <HugeIcons icon={ChartHistogramIcon} />
-            <span className="@max-3xl/header:sr-only">{t("questions")}</span>
-          </Button>
-        }
-      />
+    <Sheet onOpenChange={onOpenChange} open={open}>
       <SheetContent className="sm:max-w-3xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
           <HugeIcons className="size-5 shrink-0" icon={ChartHistogramIcon} />
@@ -383,12 +379,11 @@ export function QuestionsAction({
               <SheetFooter className="flex-row items-center gap-2">
                 <ButtonGroup className="min-w-0 flex-1">
                   <Button
-                    aria-label={common("previous")}
                     disabled={selected === 0}
                     onClick={() => move(selected - 1)}
                     size="icon"
+                    tooltip={common("previous")}
                     type="button"
-                    variant="outline"
                   >
                     <HugeIcons icon={ArrowLeft01Icon} />
                   </Button>
@@ -408,21 +403,24 @@ export function QuestionsAction({
                     <SelectTrigger className="min-w-0 flex-1">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent label={common("menu-question")}>
                       {Arr.map(items, (item) => (
-                        <SelectItem key={item.value} value={item.value}>
+                        <SelectItem
+                          icon={HelpCircleIcon}
+                          key={item.value}
+                          value={item.value}
+                        >
                           {item.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <Button
-                    aria-label={common("next")}
                     disabled={selected === questions.length - 1}
                     onClick={() => move(selected + 1)}
                     size="icon"
+                    tooltip={common("next")}
                     type="button"
-                    variant="outline"
                   >
                     <HugeIcons icon={ArrowRight01Icon} />
                   </Button>

@@ -1,8 +1,6 @@
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import {
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSubContent,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
@@ -48,21 +46,25 @@ export function OpenInSubmenuContent() {
   const links = Arr.appendAll(sourceLinks, assistantLinks);
 
   return (
-    <DropdownMenuSubContent className="w-56">
-      <DropdownMenuGroup>
-        <DropdownMenuLabel>{t("open")}</DropdownMenuLabel>
-        {Arr.map(links, (item) => (
-          <DropdownMenuItem
-            key={item.title}
-            render={
-              <a href={item.href} rel="noopener noreferrer" target="_blank">
-                <BrandLogo name={item.logo} />
-                {item.title}
-              </a>
-            }
-          />
-        ))}
-      </DropdownMenuGroup>
+    <DropdownMenuSubContent className="w-56" label={t("menu-open")}>
+      {Arr.map(links, (item) => (
+        <DropdownMenuItem
+          icon={<BrandLogo name={item.logo} />}
+          key={item.title}
+          render={({ children, ...props }) => (
+            <a
+              {...props}
+              href={item.href}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {children}
+            </a>
+          )}
+        >
+          {item.title}
+        </DropdownMenuItem>
+      ))}
     </DropdownMenuSubContent>
   );
 }

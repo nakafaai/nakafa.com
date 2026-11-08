@@ -7,11 +7,9 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -19,14 +17,13 @@ import {
 import { Array as Arr, Function as Fn, Option, pipe } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   readingUpdate,
   sharedReadings,
 } from "@/components/tenant/exams/attached";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The reading a new choice of the field asks for, by its value. */
 const NO_READING = "none";
@@ -48,6 +45,7 @@ export function ReadingField({
   /** The question as the server holds it. */
   readonly question: Question;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const id = useId();
@@ -87,8 +85,8 @@ export function ReadingField({
           if (Option.isNone(source) || value === held) {
             return;
           }
-          runExamAction(
-            sentAction(() =>
+          runSchoolWrite(
+            schoolCall(() =>
               save({
                 examId: exam.id,
                 questionId: question.id,
@@ -96,7 +94,7 @@ export function ReadingField({
                 source: source.value,
               })
             ),
-            { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+            { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
           );
         }}
         value={held}
@@ -104,17 +102,16 @@ export function ReadingField({
         <SelectTrigger className="w-full" disabled={!editable} id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="passage" />
-
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons icon={BookOpen01Icon} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-passage")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={BookOpen01Icon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <FieldDescription>{t("reading-hint")}</FieldDescription>

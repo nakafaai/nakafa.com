@@ -14,11 +14,12 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useLongAction } from "@/components/shared/pending";
-import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -39,12 +40,10 @@ import {
   RosterUnitProvider,
   useRosterUnit,
 } from "@/components/tenant/roster/unit";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { UnitId } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
-
-const SOURCE = "components/tenant/roster/import";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The Dapodik import of the school (ADR 0015, K13): the Admin chooses the unit, reads a
@@ -147,27 +146,28 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
 
   const submit = (rows: readonly (typeof ReadRow.Type)[]) =>
     startApplying(() =>
-      saveSchool(
-        () => applyBatches(rows),
-        SOURCE,
-        () => {
-          toast.success(
-            {
-              description: "school-roster-imported.description",
-              title: "school-roster-imported.title",
-            },
-            {
-              action: {
-                label: "open",
-                onClick: () =>
-                  navigate({
-                    params: { slug },
-                    to: "/school/$slug/settings/members",
-                  }),
+      runSchoolWrite(
+        schoolCall(() => applyBatches(rows)),
+        {
+          onSaved: () => {
+            toast.success(
+              {
+                description: "school-roster-imported.description",
+                title: "school-roster-imported.title",
               },
-            }
-          );
-          setPreview(undefined);
+              {
+                action: {
+                  label: "open",
+                  onClick: () =>
+                    navigate({
+                      params: { slug },
+                      to: "/school/$slug/settings/members",
+                    }),
+                },
+              }
+            );
+            setPreview(undefined);
+          },
         }
       )
     );
@@ -183,7 +183,6 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
                 disabled={isApplying}
                 onClick={() => setPreview(undefined)}
                 type="button"
-                variant="outline"
               >
                 <HugeIcons icon={Cancel01Icon} />
                 <span className="max-sm:sr-only">{t("cancel")}</span>
@@ -261,19 +260,19 @@ function RosterImportEmpty({
 
   if (active.value === null) {
     return (
-      <TableEmpty
-        act="pointing"
+      <EmptyState
         description={t("no-period-description")}
+        scene={<EmptyNina act="pointing" />}
         title={t("no-period")}
       />
     );
   }
   return (
-    <TableEmpty
-      act={problem === undefined ? "reading" : "pointing"}
+    <EmptyState
       description={t(
         problem === undefined ? "empty-description" : `file-${problem}`
       )}
+      scene={<EmptyNina act={problem === undefined ? "reading" : "pointing"} />}
       title={t(problem === undefined ? "empty" : "file-refused")}
     />
   );

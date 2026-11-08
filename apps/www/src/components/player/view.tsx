@@ -3,7 +3,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -76,6 +75,7 @@ function useChooseView() {
  */
 function PlayerViewMenu() {
   const t = useTranslations("Player");
+  const common = useTranslations("Common");
   const mode = usePlayer((state) => state.mode);
   const onValueChange = useChooseView();
 
@@ -87,15 +87,12 @@ function PlayerViewMenu() {
           {t(mode === "single" ? "mode-single" : "mode-list")}
         </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" label={common("menu-view")}>
         <DropdownMenuRadioGroup onValueChange={onValueChange} value={mode}>
-          <DropdownMenuLabel>{t("mode")}</DropdownMenuLabel>
-          <DropdownMenuRadioItem value="list">
-            <HugeIcons icon={ListViewIcon} />
+          <DropdownMenuRadioItem icon={ListViewIcon} value="list">
             {t("mode-list")}
           </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="single">
-            <HugeIcons icon={File01Icon} />
+          <DropdownMenuRadioItem icon={File01Icon} value="single">
             {t("mode-single")}
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

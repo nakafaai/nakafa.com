@@ -94,10 +94,10 @@ export function PaneHeader({
       </div>
       {close === undefined ? null : (
         <Button
-          aria-label={t("close")}
           className="absolute end-2 top-2"
           onClick={close}
           size="icon-sm"
+          tooltip={t("close")}
           type="button"
           variant="ghost"
         >
@@ -123,9 +123,18 @@ export function PaneBody({ children }: { children: ReactNode }) {
 
 /**
  * A detail's body that one thing fills from edge to edge, with no padding of its own: a table, which scrolls inside it
- * with its heads in view and closes on its last row (`tableCardVariants`), or an empty state in its middle.
+ * with its heads in view and closes on its last row (`tableCardVariants`), or an empty state in its middle. What the
+ * table belongs to, such as the open row's facts, stands above it at a body's padding (`head`), on a rule that the
+ * table's heads meet, so the table still runs from edge to edge under it.
  */
-export function PaneFill({ children }: { children: ReactNode }) {
+export function PaneFill({
+  children,
+  head,
+}: {
+  children: ReactNode;
+  /** What stands above the table, such as the open row's facts (`PaneFacts`). */
+  head?: ReactNode;
+}) {
   return (
     <div
       className={cn(
@@ -134,6 +143,11 @@ export function PaneFill({ children }: { children: ReactNode }) {
       )}
       data-slot="pane-fill"
     >
+      {head === undefined ? null : (
+        <div className="shrink-0 border-b px-(--pane-end,1rem) py-4">
+          {head}
+        </div>
+      )}
       {children}
     </div>
   );

@@ -54,10 +54,10 @@ const FORMAT_OPTIONS = {
  * A school's time zone is not an IANA name that the platform knows, or it is a
  * fixed offset such as `+07:00`, which is not an IANA name.
  */
-export class SchoolTimeZoneError extends Schema.TaggedError<SchoolTimeZoneError>()(
-  "SchoolTimeZoneError",
-  { timeZone: Schema.String }
-) {}
+export class SchoolTimeZoneError extends Schema.TaggedError<
+  SchoolTimeZoneError,
+  { readonly brand: unique symbol }
+>()("SchoolTimeZoneError", { timeZone: Schema.String }) {}
 
 /**
  * Writes one instant in the time zone of a school and in the locale of the

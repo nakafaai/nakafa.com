@@ -18,11 +18,9 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -38,15 +36,12 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
 import { SchoolTrailAction } from "@/components/tenant/settings/trail";
-
-const SOURCE = "components/tenant/settings/policies";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The daily caps a school picks from: half an answer at the cap up to ten answers. */
 const NINA_DAILY_CREDIT_CHOICES = [25, 50, 100, 200, 500];
@@ -163,9 +158,8 @@ function SchoolSwitchPolicy({
         id={id}
         onCheckedChange={(value) => {
           startTransition(() =>
-            saveSchool(
-              () => setPolicy({ policy: buildPolicy(value), slug }),
-              SOURCE
+            runSchoolWrite(
+              schoolCall(() => setPolicy({ policy: buildPolicy(value), slug }))
             )
           );
         }}
@@ -180,6 +174,7 @@ function SchoolSwitchPolicy({
  * saves each choice at once, once Convex holds the session. A cap set elsewhere stays among the choices.
  */
 function SchoolNinaCreditsPolicy({ current }: { current: number }) {
+  const common = useTranslations("Common");
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const setPolicy = useMutation(
@@ -213,13 +208,13 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
             return;
           }
           startTransition(() =>
-            saveSchool(
-              () =>
+            runSchoolWrite(
+              schoolCall(() =>
                 setPolicy({
                   policy: { key: "ninaDailyCredits", value: chosen.value },
                   slug,
-                }),
-              SOURCE
+                })
+              )
             )
           );
         }}
@@ -228,16 +223,12 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
         <SelectTrigger className="w-40" disabled={!isSettled} id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="credits" />
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons icon={Coins01Icon} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-credits")}>
+          {Arr.map(items, (item) => (
+            <SelectItem icon={Coins01Icon} key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>
@@ -298,13 +289,13 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
               const value = parsedDomains(domains);
               if (Option.isSome(value)) {
                 startTransition(() =>
-                  saveSchool(
-                    () =>
+                  runSchoolWrite(
+                    schoolCall(() =>
                       setPolicy({
                         policy: { key: "emailDomains", value: value.value },
                         slug,
-                      }),
-                    SOURCE
+                      })
+                    )
                   )
                 );
               }

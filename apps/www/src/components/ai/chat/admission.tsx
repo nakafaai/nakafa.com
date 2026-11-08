@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Deferred, Effect } from "effect";

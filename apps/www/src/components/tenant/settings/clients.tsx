@@ -22,17 +22,17 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -41,6 +41,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -50,10 +52,10 @@ import {
 } from "@/components/tenant/settings/client";
 import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The look of each client status, in its table cell and in its column's filter: a plugged-in client,
@@ -63,8 +65,6 @@ const CLIENT_STATUS_LOOKS = {
   active: { icon: Plug01Icon, tone: "success" },
   revoked: { icon: Unlink01Icon, tone: "neutral" },
 } as const satisfies Record<typeof IntegrationStatus.Type, StatusLook>;
-
-const SOURCE = "components/tenant/settings/clients";
 
 /** How many clients one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -204,9 +204,9 @@ function SchoolClientTable() {
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="typing"
+          <EmptyState
             description={t("client-add-description")}
+            scene={<EmptyNina act="typing" />}
             title={t("clients-empty")}
           />
         }
@@ -227,7 +227,6 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
   const issueSecret = useIssueSecret();
   const clipboard = useClipboard({ timeout: 1500 });
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const rotate = useMutation(integrations.clients.rotate);
   const revoke = useMutation(integrations.clients.revoke).withOptimisticUpdate(
     revokeClientChange
@@ -238,71 +237,72 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("edit")}
+        >
           {t("client-edit")}
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={isPending}
+          icon={Key01Icon}
           onClick={() =>
             startTransition(() =>
-              saveSchool(
-                () => rotate({ clientId: client.id, slug }),
-                SOURCE,
-                (answer) => issueSecret(answer)
+              runSchoolWrite(
+                schoolCall(() => rotate({ clientId: client.id, slug })),
+                { onSaved: (answer) => issueSecret(answer) }
               )
             )
           }
         >
-          <HugeIcons icon={Key01Icon} />
           {t("client-rotate")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => clipboard.copy(client.id)}>
-          <HugeIcons icon={Copy01Icon} />
+        <DropdownMenuItem
+          icon={Copy01Icon}
+          onClick={() => clipboard.copy(client.id)}
+        >
           {t("client-id-copy")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => dialogs.show("connect")}>
-          <HugeIcons icon={CommandLineIcon} />
+        <DropdownMenuItem
+          icon={CommandLineIcon}
+          onClick={() => dialogs.show("connect")}
+        >
           {t("device-title")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          icon={Delete02Icon}
           onClick={() => dialogs.show("revoke")}
           variant="destructive"
         >
-          <HugeIcons icon={Delete02Icon} />
           {t("client-revoke")}
         </DropdownMenuItem>
       </RowItems>
       <ResponsiveDialog
-        description={t("client-revoke-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                dialogs.close();
-                startTransition(() =>
-                  saveSchool(
-                    () => revoke({ clientId: client.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("client-revoke-confirm")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              dialogs.close();
+              startTransition(() =>
+                runSchoolWrite(
+                  schoolCall(() => revoke({ clientId: client.id, slug }))
+                )
+              );
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("client-revoke-confirm")}
+          </Button>
         }
+        description={t("client-revoke-description")}
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("client-revoke-title")}
       >
-        <ConfirmSubject icon={Key01Icon} name={client.name} />
+        <ResponsiveDialogSubject icon={Key01Icon}>
+          {client.name}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
       {dialogs.kind === "edit" ? (
         <SchoolClientEditDialog

@@ -5,17 +5,17 @@ import {
   NAKAFA_AGENT_MAX_QUERIES,
 } from "@repo/contents/agent/search";
 import { Array as Arr, Effect, HashSet, Schema } from "effect";
-export class ContentSearchInputError extends Schema.TaggedError<ContentSearchInputError>()(
-  "ContentSearchInputError",
-  {
-    code: Schema.Literals([
-      "CONTENT_SEARCH_LIMIT_INVALID",
-      "CONTENT_SEARCH_OFFSET_INVALID",
-      "CONTENT_SEARCH_QUERY_COUNT_INVALID",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class ContentSearchInputError extends Schema.TaggedError<
+  ContentSearchInputError,
+  { readonly brand: unique symbol }
+>()("ContentSearchInputError", {
+  code: Schema.Literals([
+    "CONTENT_SEARCH_LIMIT_INVALID",
+    "CONTENT_SEARCH_OFFSET_INVALID",
+    "CONTENT_SEARCH_QUERY_COUNT_INVALID",
+  ]),
+  message: Schema.String,
+}) {}
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
 
 /** Validates bounded public search input and returns unique query texts. */

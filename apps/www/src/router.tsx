@@ -1,6 +1,6 @@
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createRouter } from "@tanstack/react-router";
-import type { NotFoundPage } from "@/lib/routing/not-found";
+import type { NotFoundPage } from "@/lib/routing/missing";
 import { holdsOffline } from "@/lib/routing/offline";
 import { routeRewrite } from "@/lib/routing/rewrite";
 import { makeScrollRestoration } from "@/lib/routing/scroll";

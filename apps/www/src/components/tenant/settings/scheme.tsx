@@ -25,7 +25,6 @@ import { startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
-import { saveSchool } from "@/components/tenant/settings/save";
 import {
   amendSchemeChange,
   checkedScheme,
@@ -36,8 +35,7 @@ import {
   SchemeVersionsContext,
   storeSchemeChange,
 } from "@/components/tenant/settings/versions";
-
-const SOURCE = "components/tenant/settings/scheme";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The grading page's one action, New version, and the dialog it opens. The button is ready from the first paint, and
@@ -75,7 +73,6 @@ export function SchemeVersionDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const { newest, ready } = use(SchemeVersionsContext);
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const store = useMutation(records.schemes.store).withOptimisticUpdate(
@@ -106,19 +103,20 @@ export function SchemeVersionDialog({
     startTransition(() =>
       Option.match(editing, {
         onNone: () =>
-          saveSchool(
-            () =>
+          runSchoolWrite(
+            schoolCall(() =>
               store({
                 ...checked.value,
                 effectiveFrom: nextEffectiveFrom(now, newest),
                 slug,
-              }),
-            SOURCE
+              })
+            )
           ),
         onSome: (version) =>
-          saveSchool(
-            () => amend({ ...checked.value, schemeId: version.id, slug }),
-            SOURCE
+          runSchoolWrite(
+            schoolCall(() =>
+              amend({ ...checked.value, schemeId: version.id, slug })
+            )
           ),
       })
     );
@@ -136,29 +134,20 @@ export function SchemeVersionDialog({
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={!ready || Option.isNone(checked)}
+          onClick={save}
+          type="button"
+        >
+          {t("grading-save")}
+        </Button>
+      }
       description={t(
         Option.isSome(editing)
           ? "grading-edit-description"
           : "grading-new-description"
       )}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!ready || Option.isNone(checked)}
-            onClick={save}
-            type="button"
-          >
-            {t("grading-save")}
-          </Button>
-        </>
-      }
       open={open}
       setOpen={setOpen}
       title={t(Option.isSome(editing) ? "grading-edit" : "grading-new")}
@@ -228,7 +217,6 @@ export function SchemeVersionDialog({
                 </NumberField>
               </Field>
               <Button
-                aria-label={t("grading-band-remove")}
                 onClick={() =>
                   setDraft({
                     ...draft,
@@ -239,6 +227,7 @@ export function SchemeVersionDialog({
                   })
                 }
                 size="icon"
+                tooltip={t("grading-band-remove")}
                 type="button"
                 variant="ghost"
               >

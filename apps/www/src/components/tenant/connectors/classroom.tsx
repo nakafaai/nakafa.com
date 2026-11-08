@@ -9,16 +9,13 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -29,15 +26,11 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
+import { EmptyNina } from "@/components/state/nina";
 import {
   type Course,
   type Preview,
@@ -46,10 +39,8 @@ import {
 } from "@/components/tenant/connectors/courses";
 import { useTenant } from "@/components/tenant/context";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/connectors/classroom";
 
 /** The value of the class picker that leaves a course unlinked. */
 const UNLINKED = "none";
@@ -157,18 +148,18 @@ function CourseTable({ preview }: { preview: Preview }) {
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
     return (
-      <TableEmpty
-        act="searching"
+      <EmptyState
         description={t("courses-none")}
+        scene={<EmptyNina act="searching" />}
         title={t("courses-none-title")}
       />
     );
   }
   if (needsClass(preview)) {
     return (
-      <TableEmpty
-        act="pointing"
+      <EmptyState
         description={t("courses-no-class")}
+        scene={<EmptyNina act="pointing" />}
         title={t("courses-no-class-title")}
       />
     );
@@ -249,6 +240,7 @@ function CourseClass({
   course: Course;
   preview: Preview;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Connectors");
   const { slug } = useTenant();
   const link = useMutation(connectors.classroom.link);
@@ -261,8 +253,8 @@ function CourseClass({
         : Schema.decodeUnknownOption(Id("classes"))(value);
     Option.map(picked, (classId) => {
       place(course.courseId, classId);
-      runForumCall(
-        forumCall(() =>
+      runSchoolWrite(
+        schoolCall(() =>
           link({
             classId,
             connectionId: preview.connectionId,
@@ -270,9 +262,10 @@ function CourseClass({
             slug,
           })
         ),
-        () => {
-          place(course.courseId, course.classId);
-          toastForumFailure();
+        {
+          onFailed: () => {
+            place(course.courseId, course.classId);
+          },
         }
       );
     });
@@ -280,29 +273,27 @@ function CourseClass({
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <HugeIcons icon={Mortarboard01Icon} />
+      <DropdownMenuSubTrigger icon={Mortarboard01Icon}>
         {t("course-class")}
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-56">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("course-class")}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            onValueChange={pick}
-            value={course.classId ?? UNLINKED}
-          >
-            <DropdownMenuRadioItem value={UNLINKED}>
-              <HugeIcons icon={Unlink01Icon} />
-              {t("course-unlinked")}
+      <DropdownMenuSubContent className="w-56" label={common("menu-class")}>
+        <DropdownMenuRadioGroup
+          onValueChange={pick}
+          value={course.classId ?? UNLINKED}
+        >
+          <DropdownMenuRadioItem icon={Unlink01Icon} value={UNLINKED}>
+            {t("course-unlinked")}
+          </DropdownMenuRadioItem>
+          {Arr.map(preview.classes, (klass) => (
+            <DropdownMenuRadioItem
+              icon={Mortarboard01Icon}
+              key={klass.id}
+              value={klass.id}
+            >
+              {klass.name}
             </DropdownMenuRadioItem>
-            {Arr.map(preview.classes, (klass) => (
-              <DropdownMenuRadioItem key={klass.id} value={klass.id}>
-                <HugeIcons icon={Mortarboard01Icon} />
-                {klass.name}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );
@@ -318,17 +309,19 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
   return (
     <DropdownMenuItem
       disabled={isImporting}
+      icon={<Spinner icon={UserAdd01Icon} isLoading={isImporting} />}
       onClick={() =>
         startImporting(() =>
-          saveSchool(
-            () => importRoster({ courseId, slug }),
-            SOURCE,
-            () => toast.success({ title: "school-roster-imported.title" })
+          runSchoolWrite(
+            schoolCall(() => importRoster({ courseId, slug })),
+            {
+              onSaved: () =>
+                toast.success({ title: "school-roster-imported.title" }),
+            }
           )
         )
       }
     >
-      <Spinner icon={UserAdd01Icon} isLoading={isImporting} />
       {t("course-import")}
     </DropdownMenuItem>
   );

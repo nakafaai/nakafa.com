@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import {
   createSchool,
   grantStudent,
@@ -23,9 +24,6 @@ const LONG =
 
 /** The dot of the matching's second statement, whatever it is joined to. */
 const SECOND_STATEMENT = /^Statement 2, /u;
-
-/** The quiet period of an option's save, with room for the server's answer. */
-const SAVED_MILLISECONDS = 2500;
 
 /** The question of the seeded exam that holds each answer type, by its number on the paper. */
 const QUESTIONS = {
@@ -155,7 +153,7 @@ for (const width of WIDTHS) {
     await rewrite(page, editors.empty, "");
     await pageOf(page, QUESTIONS.table).scrollIntoViewIfNeeded();
     await rewrite(page, editors.table, LONG);
-    await page.waitForTimeout(SAVED_MILLISECONDS);
+    await waitForQuiet(page);
 
     await expectSymmetric(page, `editor at ${width}`, '[data-page=""]');
     await expectSymmetric(

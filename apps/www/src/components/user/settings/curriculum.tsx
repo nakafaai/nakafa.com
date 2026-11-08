@@ -8,7 +8,6 @@ import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -44,19 +43,19 @@ const formSchema = Schema.toStandardSchemaV1(
   })
 );
 /** Expected failure when the submitted curriculum preference is invalid. */
-class CurriculumPreferenceValidationError extends Schema.TaggedError<CurriculumPreferenceValidationError>()(
-  "CurriculumPreferenceValidationError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class CurriculumPreferenceValidationError extends Schema.TaggedError<
+  CurriculumPreferenceValidationError,
+  { readonly brand: unique symbol }
+>()("CurriculumPreferenceValidationError", {
+  cause: Schema.Unknown,
+}) {}
 /** Expected failure when Convex cannot save the selected curriculum preference. */
-class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPreferenceMutationError>()(
-  "CurriculumPreferenceMutationError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class CurriculumPreferenceMutationError extends Schema.TaggedError<
+  CurriculumPreferenceMutationError,
+  { readonly brand: unique symbol }
+>()("CurriculumPreferenceMutationError", {
+  cause: Schema.Unknown,
+}) {}
 interface UserSettingsCurriculumProps {
   initialPreference:
     | Ref.Returns<typeof learningPreferences.queries.getCurrent>
@@ -118,6 +117,7 @@ function UserSettingsCurriculumForm({
 }) {
   const locale = useLocale();
   const t = useTranslations("Auth");
+  const common = useTranslations("Common");
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(programs);
   const latestSave = useRef(0);
   const selectItems = Arr.map(programs, (program) => ({
@@ -215,17 +215,23 @@ function UserSettingsCurriculumForm({
                   >
                     <SelectValue placeholder={t("curriculum-placeholder")} />
                   </SelectTrigger>
-                  <SelectContent className="max-w-(--available-width)">
-                    <SelectGroup>
-                      {Arr.map(programs, (program) => (
-                        <SelectItem key={program.key} value={program.key}>
+                  <SelectContent
+                    className="max-w-(--available-width)"
+                    label={common("menu-curriculum")}
+                  >
+                    {Arr.map(programs, (program) => (
+                      <SelectItem
+                        icon={
                           <CountryFlagIcon countryCode={program.countryCode} />
-                          <span className="min-w-0 leading-snug whitespace-normal">
-                            {program.title}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
+                        }
+                        key={program.key}
+                        value={program.key}
+                      >
+                        <span className="min-w-0 leading-snug whitespace-normal">
+                          {program.title}
+                        </span>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </Field>

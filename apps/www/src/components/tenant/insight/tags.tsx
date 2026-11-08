@@ -21,7 +21,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -32,12 +31,9 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/insight/tags";
 
 /** How many exams the dialog offers. */
 const EXAM_PAGE = 50;
@@ -59,6 +55,7 @@ const ShownTags = Schema.Struct({
  * keeps the fields of the last one until its own are read, so the body never blanks.
  */
 export function QuestionTags() {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
   const id = useId();
@@ -81,8 +78,7 @@ export function QuestionTags() {
         <HeaderLabel>{t("tags")}</HeaderLabel>
       </Button>
       <ResponsiveDialog
-        description={t("tags-description")}
-        footer={
+        action={
           hasNoExam ? (
             <Link
               className={buttonVariants()}
@@ -97,6 +93,7 @@ export function QuestionTags() {
             </Button>
           )
         }
+        description={t("tags-description")}
         open={open}
         setOpen={setOpen}
         title={t("tags")}
@@ -117,17 +114,16 @@ export function QuestionTags() {
                 <SelectTrigger className="w-full" id={`${id}-exam`}>
                   <SelectValue placeholder={t("exam-placeholder")} />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <ChoiceLabel name="exam" />
-
-                    {Arr.map(items, (item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        <HugeIcons icon={TaskEdit01Icon} />
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
+                <SelectContent label={common("menu-exam")}>
+                  {Arr.map(items, (item) => (
+                    <SelectItem
+                      icon={TaskEdit01Icon}
+                      key={item.value}
+                      value={item.value}
+                    >
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </Field>
@@ -217,9 +213,10 @@ function QuestionTag({
             return;
           }
           startSaving(() =>
-            saveSchool(
-              () => set({ competency, examId, questionId: tag.id, slug }),
-              SOURCE
+            runSchoolWrite(
+              schoolCall(() =>
+                set({ competency, examId, questionId: tag.id, slug })
+              )
             )
           );
         }}

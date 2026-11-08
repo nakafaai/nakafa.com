@@ -9,7 +9,6 @@ import {
 import { ALL_OR_NOTHING } from "@repo/backend/confect/exams/scoring";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Function as Fn, Option } from "effect";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   addQuestionUpdate,
   copyQuestionUpdate,
@@ -29,12 +28,13 @@ import {
   useExamSelectionStore,
 } from "@/components/tenant/exams/provider";
 import { afterRemoval } from "@/components/tenant/exams/selection";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** Runs an action of a page from a browser event, without any handler of its own. */
 const act = <A, E>(action: Effect.Effect<A, E>) =>
-  runExamAction(action, {
-    onFailure: Fn.constVoid,
-    onSuccess: Fn.constVoid,
+  runSchoolWrite(action, {
+    onFailed: Fn.constVoid,
+    onSaved: Fn.constVoid,
   });
 
 /**
@@ -133,7 +133,7 @@ export function useQuestionActions() {
       }).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
-            sentAction(() =>
+            schoolCall(() =>
               add.withOptimisticUpdate(addQuestionUpdate(shown))({
                 after,
                 examId: exam.id,
@@ -155,7 +155,7 @@ export function useQuestionActions() {
       placeholderDraft(question).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
-            sentAction(() =>
+            schoolCall(() =>
               copy.withOptimisticUpdate(copyQuestionUpdate(shown))({
                 examId: exam.id,
                 questionId: question.id,
@@ -170,7 +170,7 @@ export function useQuestionActions() {
 
   /** Moves a question to an index of the order, and shows the move at once. */
   const moveQuestion = (questionId: QuestionId, index: number) =>
-    act(sentAction(() => move({ examId: exam.id, index, questionId, slug })));
+    act(schoolCall(() => move({ examId: exam.id, index, questionId, slug })));
 
   /**
    * Removes a question, once the teacher confirmed it. A teacher on that question moves to its neighbour at
@@ -186,7 +186,7 @@ export function useQuestionActions() {
       select(next.value);
     }
     act(
-      sentAction(() => remove({ examId: exam.id, questionId, slug })).pipe(
+      schoolCall(() => remove({ examId: exam.id, questionId, slug })).pipe(
         Effect.tapError(() =>
           Effect.sync(() => {
             if (

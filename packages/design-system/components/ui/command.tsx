@@ -13,6 +13,7 @@ import {
   AutocompleteSeparator,
 } from "@repo/design-system/components/ui/autocomplete";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { cn } from "cn";
 import { Array as Arr, Predicate } from "effect";
 import type * as React from "react";
@@ -100,27 +101,29 @@ function CommandDialogPopup({
   title: React.ReactNode;
 }) {
   return (
-    <CommandDialogPortal {...portalProps}>
-      <CommandDialogBackdrop />
-      <CommandDialogViewport>
-        <CommandDialogPrimitive.Popup
-          className={cn(
-            "bg-popover text-popover-foreground duration-surface before:bg-muted/72 relative isolate row-start-2 flex h-[min(40rem,calc(100dvh-2rem))] min-h-0 w-full max-w-xl min-w-0 translate-y-[calc(-1.25rem*var(--nested-dialogs))] scale-[calc(1-0.1*var(--nested-dialogs))] flex-col overflow-hidden rounded-2xl border opacity-[calc(1-0.1*var(--nested-dialogs))] shadow-lg/5 transition-[scale,opacity,translate] outline-none *:relative *:z-10 not-dark:bg-clip-padding before:pointer-events-none before:absolute before:inset-0 before:z-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] data-nested:data-ending-style:translate-y-8 data-nested-dialog-open:origin-top data-nested:data-starting-style:translate-y-8 **:data-[slot=scroll-area-viewport]:data-has-overflow-y:pe-1 sm:h-[min(40rem,80dvh)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
-            className
-          )}
-          data-slot="command-dialog-popup"
-          {...props}
-        >
-          <CommandDialogPrimitive.Title className="sr-only">
-            {title}
-          </CommandDialogPrimitive.Title>
-          <CommandDialogPrimitive.Description className="sr-only">
-            {description}
-          </CommandDialogPrimitive.Description>
-          {children}
-        </CommandDialogPrimitive.Popup>
-      </CommandDialogViewport>
-    </CommandDialogPortal>
+    <ButtonGroupVariant value={undefined}>
+      <CommandDialogPortal {...portalProps}>
+        <CommandDialogBackdrop />
+        <CommandDialogViewport>
+          <CommandDialogPrimitive.Popup
+            className={cn(
+              "bg-popover text-popover-foreground duration-surface before:bg-muted/72 relative isolate row-start-2 flex h-[min(40rem,calc(100dvh-2rem))] min-h-0 w-full max-w-xl min-w-0 translate-y-[calc(-1.25rem*var(--nested-dialogs))] scale-[calc(1-0.1*var(--nested-dialogs))] flex-col overflow-hidden rounded-2xl border opacity-[calc(1-0.1*var(--nested-dialogs))] shadow-lg/5 transition-[scale,opacity,translate] outline-none *:relative *:z-10 not-dark:bg-clip-padding before:pointer-events-none before:absolute before:inset-0 before:z-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] data-nested:data-ending-style:translate-y-8 data-nested-dialog-open:origin-top data-nested:data-starting-style:translate-y-8 **:data-[slot=scroll-area-viewport]:data-has-overflow-y:pe-1 sm:h-[min(40rem,80dvh)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+              className
+            )}
+            data-slot="command-dialog-popup"
+            {...props}
+          >
+            <CommandDialogPrimitive.Title className="sr-only">
+              {title}
+            </CommandDialogPrimitive.Title>
+            <CommandDialogPrimitive.Description className="sr-only">
+              {description}
+            </CommandDialogPrimitive.Description>
+            {children}
+          </CommandDialogPrimitive.Popup>
+        </CommandDialogViewport>
+      </CommandDialogPortal>
+    </ButtonGroupVariant>
   );
 }
 

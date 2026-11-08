@@ -24,8 +24,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import { Array as Arr, Option, Schema } from "effect";
 import { type ComponentProps, startTransition, useState } from "react";
@@ -33,10 +36,8 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -48,6 +49,8 @@ import {
   TableSearch,
   useServerSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { LineDialog } from "@/components/tenant/line";
@@ -66,11 +69,9 @@ import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
-
-const SOURCE = "components/tenant/settings/members";
 
 /**
  * How each member status shows, in the list and in its column's filter: an icon that fits it and that no
@@ -234,9 +235,9 @@ function SchoolMembersBody() {
         columns={columns}
         data={members}
         empty={
-          <TableEmpty
-            act="waving"
+          <EmptyState
             description={t("members-empty-description")}
+            scene={<EmptyNina act="waving" />}
             title={t("members-empty")}
           />
         }
@@ -256,7 +257,6 @@ function SchoolMembersBody() {
 function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
   );
@@ -279,15 +279,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           invite({
             email: email.value,
             locale: sendLocale,
             personId: member.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
@@ -295,33 +295,39 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const removeMember = () => {
     dialogs.close();
     startTransition(() =>
-      saveSchool(() => remove({ personId: member.id, slug }), SOURCE)
+      runSchoolWrite(schoolCall(() => remove({ personId: member.id, slug })))
     );
   };
 
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("rename")}
+        >
           {t("person-rename")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => dialogs.show("give")}>
-          <HugeIcons icon={UserStar01Icon} />
+        <DropdownMenuItem
+          icon={UserStar01Icon}
+          onClick={() => dialogs.show("give")}
+        >
           {t("roles-assign-dialog")}
         </DropdownMenuItem>
         {member.status === "notInvited" ? (
           <DropdownMenuItem
             disabled={sendLocale === undefined}
+            icon={MailSend01Icon}
             onClick={() => dialogs.show("invite")}
           >
-            <HugeIcons icon={MailSend01Icon} />
             {t("invite-action")}
           </DropdownMenuItem>
         ) : null}
         {member.status === "notInvited" && cardOffered(member.roles) ? (
-          <DropdownMenuItem onClick={() => dialogs.show("card")}>
-            <HugeIcons icon={IdCardIcon} />
+          <DropdownMenuItem
+            icon={IdCardIcon}
+            onClick={() => dialogs.show("card")}
+          >
             {t("invite-card")}
           </DropdownMenuItem>
         ) : null}
@@ -329,10 +335,10 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              icon={UserRemove01Icon}
               onClick={() => dialogs.show("remove")}
               variant="destructive"
             >
-              <HugeIcons icon={UserRemove01Icon} />
               {t("member-remove")}
             </DropdownMenuItem>
           </>
@@ -377,26 +383,22 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       />
       <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
       <ResponsiveDialog
-        description={t("member-remove-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button onClick={removeMember} type="button" variant="destructive">
-              {t("member-remove-confirm")}
-            </Button>
-          </>
+        action={
+          <Button onClick={removeMember} type="button" variant="destructive">
+            {t("member-remove-confirm")}
+          </Button>
         }
+        description={t("member-remove-description")}
         open={dialogs.isOpen("remove")}
         setOpen={dialogs.setOpen}
         title={t("member-remove-title")}
       >
-        <ConfirmSubject
+        <ResponsiveDialogSubject
+          description={member.email ?? undefined}
           icon={UserCircleIcon}
-          name={member.name}
-          {...(member.email === null ? {} : { detail: member.email })}
-        />
+        >
+          {member.name}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </>
   );
