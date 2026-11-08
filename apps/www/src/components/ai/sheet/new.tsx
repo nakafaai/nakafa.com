@@ -13,7 +13,7 @@ import {
 } from "@/components/ai/chat/new";
 import { StartPrompt } from "@/components/ai/chat/start";
 import { useAi } from "@/components/ai/context";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 
 /**
  * Nina's sheet with no chat open: her welcome and the composer of a new chat, which renders on every page. The

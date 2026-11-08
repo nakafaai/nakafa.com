@@ -1,6 +1,7 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { Link } from "@/lib/routing/link";
 
@@ -13,8 +14,7 @@ export function NoActiveUnit() {
   const t = useTranslations("SchoolSettings");
 
   return (
-    <TableEmpty
-      act="pointing"
+    <EmptyState
       action={
         <Link
           className={buttonVariants({ variant: "outline" })}
@@ -25,6 +25,7 @@ export function NoActiveUnit() {
         </Link>
       }
       description={t("no-unit-description")}
+      scene={<EmptyNina act="pointing" />}
       title={t("no-unit-title")}
     />
   );

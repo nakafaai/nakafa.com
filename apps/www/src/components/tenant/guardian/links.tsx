@@ -32,7 +32,7 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import {
@@ -41,7 +41,9 @@ import {
   useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { TableViews } from "@/components/shared/table/views";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -157,9 +159,9 @@ function GuardianLinksBody() {
           {failed ? (
             <LoadFailure onRetry={reloadPage} />
           ) : (
-            <TableEmpty
-              act="typing"
+            <EmptyState
               description={t("links-empty-description")}
+              scene={<EmptyNina act="typing" />}
               title={t("links-empty")}
             />
           )}
