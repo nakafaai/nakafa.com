@@ -6,15 +6,18 @@ import { Period } from "@repo/backend/confect/tenancy/access";
 import { activeHomeroomOf } from "@repo/backend/confect/tenancy/authority";
 import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
+import { cohortHold } from "@repo/backend/confect/tenancy/write/holds";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** The most placements one cohort's count reads, past any class group a school forms. */
 const COHORT_COUNT_LIMIT = 300;
 
 /**
- * What a settings table shows of each cohort of one period: its homeroom teacher, and how many
- * students and active classes it holds. A count reads its rows, so this read costs each cohort its
- * placements and its classes. Only the settings tables ask for it, one query for the whole table.
+ * What a settings table shows of each cohort of one period: its homeroom teacher, how many
+ * students and classes it holds, archived classes included, and what keeps it from being deleted
+ * (`cohortHold`, the same rule its delete applies), so its menu offers Delete only for a cohort the
+ * server deletes. A count reads its rows, so this read costs each cohort its placements and its
+ * classes. Only the settings tables ask for it, one query for the whole table.
  */
 export const overview = FunctionImpl.make(
   databaseSchema,
@@ -45,10 +48,11 @@ export const overview = FunctionImpl.make(
           const classes = yield* reader
             .table("classes")
             .index("by_cohortId_and_status_and_nameKey", (query) =>
-              query.eq("cohortId", cohort._id).eq("status", "active")
+              query.eq("cohortId", cohort._id)
             )
             .take(CLASS_LIMIT)
             .pipe(Effect.orDie);
+          const hold = yield* cohortHold(cohort);
           const assignment = yield* activeHomeroomOf(cohort._id);
           const homeroom = Option.isSome(assignment)
             ? yield* reader
@@ -59,6 +63,7 @@ export const overview = FunctionImpl.make(
 
           return {
             classes: Arr.length(classes),
+            hold: Option.getOrNull(hold),
             homeroom: homeroom === null ? null : homeroom.name,
             id: cohort._id,
             name: cohort.name,

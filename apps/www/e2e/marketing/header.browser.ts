@@ -1,9 +1,21 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
+import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
-import { targetViewports, viewportSize } from "@/e2e/support/viewport";
+import {
+  desktopViewport,
+  targetViewports,
+  touchViewport,
+  viewportSize,
+} from "@/e2e/support/viewport";
+
+/** The School pricing page, which the School section of the header opens. */
+const SCHOOL_PRICING = /\/en\/school\/pricing$/u;
+
+/** The report cards section of the School landing, which the phone's drawer opens. */
+const SCHOOL_REPORTS = /\/en\/school#reports$/u;
 
 /** Nina, the line under the header and the header's links, measured as the eye sees them. */
 function readHeader() {
@@ -117,3 +129,105 @@ for (const viewport of targetViewports) {
     );
   });
 }
+
+test.describe("the header's sections at desktop", () => {
+  test.use({
+    viewport: { height: desktopViewport.height, width: desktopViewport.width },
+  });
+
+  test("open on hover, move between the products without closing, and close on Escape", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.gen(function* () {
+          yield* loadMarketingPage(page, "/en");
+          const header = page.locator("header");
+          const popup = page.locator('[data-slot="navigation-menu-popup"]');
+          yield* Effect.promise(() =>
+            header.getByRole("button", { name: "School" }).hover()
+          );
+          yield* Effect.promise(() =>
+            expect(popup.getByRole("link", { name: "Forum" })).toBeVisible()
+          );
+          yield* Effect.promise(() =>
+            header.getByRole("button", { name: "Learn" }).hover()
+          );
+          yield* Effect.promise(() =>
+            expect(popup.getByRole("link", { name: "Subjects" })).toBeVisible()
+          );
+          yield* Effect.promise(() => expect(popup).toHaveCount(1));
+          yield* Effect.promise(() => page.keyboard.press("Escape"));
+          yield* Effect.promise(() => expect(popup).toHaveCount(0));
+        })
+      )
+    );
+  });
+
+  test("open on press and lead to a School page from the main landing", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.gen(function* () {
+          yield* loadMarketingPage(page, "/en");
+          yield* Effect.promise(() =>
+            page
+              .locator("header")
+              .getByRole("button", { name: "School" })
+              .click()
+          );
+          const popup = page.locator('[data-slot="navigation-menu-popup"]');
+          yield* Effect.promise(() =>
+            popup.getByRole("link", { name: "Pricing" }).click()
+          );
+          yield* Effect.promise(() => expect(page).toHaveURL(SCHOOL_PRICING));
+          yield* Effect.promise(() => expect(popup).toHaveCount(0));
+        })
+      )
+    );
+  });
+});
+
+test.describe("the header's sections on a phone", () => {
+  test.use({
+    hasTouch: true,
+    viewport: { height: touchViewport.height, width: touchViewport.width },
+  });
+
+  test("open in the Menu drawer, which a tap outside and a link press close", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.gen(function* () {
+          yield* loadMarketingPage(page, "/en/school");
+          yield* Effect.promise(() =>
+            page.locator("header").getByRole("button", { name: "Menu" }).click()
+          );
+          const drawer = page.getByRole("dialog", { name: "Menu" });
+          yield* Effect.promise(() =>
+            expect(drawer.getByRole("link", { name: "Subjects" })).toBeVisible()
+          );
+          // The drawer draws no close button: a tap outside closes it.
+          yield* Effect.promise(() =>
+            expect(drawer.getByRole("button", { name: "Close" })).toHaveCount(0)
+          );
+          yield* Effect.promise(() => page.mouse.click(8, 8));
+          yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+          yield* Effect.promise(() =>
+            page.locator("header").getByRole("button", { name: "Menu" }).click()
+          );
+          yield* Effect.promise(() =>
+            drawer.getByRole("link", { name: "Report cards" }).click()
+          );
+          yield* Effect.promise(() => expect(page).toHaveURL(SCHOOL_REPORTS));
+          yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+        })
+      )
+    );
+  });
+});

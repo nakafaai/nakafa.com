@@ -6,6 +6,7 @@ import {
   Delete02Icon,
   DragDropVerticalIcon,
   MoreHorizontalIcon,
+  TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import type {
   Question,
@@ -177,7 +179,12 @@ export function PageActions({
         open={asking}
         setOpen={setAsking}
         title={t("remove-title")}
-      />
+      >
+        <ConfirmSubject
+          icon={TaskEdit01Icon}
+          name={t("question", { number })}
+        />
+      </ResponsiveDialog>
     </>
   );
 }

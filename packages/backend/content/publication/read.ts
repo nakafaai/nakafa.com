@@ -64,6 +64,13 @@ export const readActiveIdentity = Effect.fn(
             manifestHash: active.manifestHash,
             releaseId: active.releaseId,
             sequence: active.sequence,
+            snapshots: {
+              assessment:
+                active.signed.manifest.snapshots.assessment.resultSnapshotId,
+              program:
+                active.signed.manifest.snapshots.program.resultSnapshotId,
+              quran: active.signed.manifest.snapshots.quran.resultSnapshotId,
+            },
           }
         : null
     )

@@ -28,6 +28,7 @@ import { TargetLink, useLeafRoutePath } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 import {
   openSettingsGroups,
+  ownsLeafPath,
   type SchoolSettingsGroup,
 } from "@/lib/settings/school";
 
@@ -81,9 +82,8 @@ function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
   const leafPath = useLeafRoutePath();
   const t = useTranslations("SchoolSettings");
   const label = t(group.key);
-  const holdsPage = Arr.some(
-    group.sections,
-    (section) => section.target.to === leafPath
+  const holdsPage = Arr.some(group.sections, (section) =>
+    ownsLeafPath(section, leafPath)
   );
 
   return (
@@ -132,7 +132,7 @@ function SchoolSettingsNavItem({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        isActive={section.target.to === leafPath}
+        isActive={ownsLeafPath(section, leafPath)}
         render={<TargetLink target={section.target} />}
         tooltip={label}
       >
@@ -155,7 +155,7 @@ function SchoolSettingsNavSubItem({
   return (
     <SidebarMenuSubItem>
       <SidebarMenuSubButton
-        isActive={section.target.to === leafPath}
+        isActive={ownsLeafPath(section, leafPath)}
         render={<TargetLink target={section.target} />}
       >
         <span>{t(section.labelKey)}</span>
