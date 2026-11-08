@@ -34,8 +34,19 @@ const QUESTIONS = {
   table: 9,
 } as const;
 
-/** Writes words into one rich text of the editor, in place of what it held; no words leaves it empty. */
+/** One question's page of the editor, by its number, and none of the questions whose number starts with it. */
+const pageOf = (page: Page, number: number) =>
+  page.getByRole("region", { exact: true, name: `Question ${number}` });
+
+/**
+ * Writes words into one rich text of the editor, in place of what it held; no words leaves it empty. The canvas mounts
+ * a page's editors only near the view, so the page comes into view first and its text is awaited.
+ */
 async function rewrite(page: Page, editor: Locator, words: string) {
+  await editor.scrollIntoViewIfNeeded({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(editor).toBeEditable({ timeout: readinessTimeoutMilliseconds });
   await editor.click();
   await page.keyboard.press("ControlOrMeta+A");
   await page.keyboard.press("Backspace");
@@ -138,11 +149,12 @@ for (const width of WIDTHS) {
     };
     await rewrite(page, editors.choice, LONG);
     await rewrite(page, editors.emptyChoice, "");
+    await pageOf(page, QUESTIONS.match).scrollIntoViewIfNeeded();
     await rewrite(page, editors.statement, LONG);
     await rewrite(page, editors.answer, LONG);
     await rewrite(page, editors.empty, "");
+    await pageOf(page, QUESTIONS.table).scrollIntoViewIfNeeded();
     await rewrite(page, editors.table, LONG);
-    await page.getByRole("textbox", { name: "Question 1 text" }).click();
     await page.waitForTimeout(SAVED_MILLISECONDS);
 
     await expectSymmetric(page, `editor at ${width}`, '[data-page=""]');
@@ -154,9 +166,7 @@ for (const width of WIDTHS) {
     await photograph(page.locator('[data-page=""]'), `editor-${width}`);
 
     // Every state of the matching's parts, then of an option and of a table's statement.
-    const matching = page.getByRole("region", {
-      name: `Question ${QUESTIONS.match}`,
-    });
+    const matching = pageOf(page, QUESTIONS.match);
     const statementDot = matching.getByRole("button", {
       name: "Statement 1, joined to B",
     });
@@ -165,6 +175,9 @@ for (const width of WIDTHS) {
     });
     const answerRow = matching.locator("[data-line-target]").first();
     await matching.scrollIntoViewIfNeeded();
+    await expect(statementDot).toBeEnabled({
+      timeout: readinessTimeoutMilliseconds,
+    });
     await measureStates(page, matching, `matching-${width}`, [
       { enter: () => editors.statement.hover(), state: "hover" },
       {
@@ -199,10 +212,11 @@ for (const width of WIDTHS) {
         state: "drag",
       },
     ]);
-    const choice = page.getByRole("region", {
-      name: `Question ${QUESTIONS.choice}`,
-    });
+    const choice = pageOf(page, QUESTIONS.choice);
     await choice.scrollIntoViewIfNeeded();
+    await expect(editors.choice).toBeEditable({
+      timeout: readinessTimeoutMilliseconds,
+    });
     await measureStates(page, choice, `choice-${width}`, [
       { enter: () => editors.choice.hover(), state: "hover" },
       {
@@ -213,10 +227,11 @@ for (const width of WIDTHS) {
         state: "focus",
       },
     ]);
-    const table = page.getByRole("region", {
-      name: `Question ${QUESTIONS.table}`,
-    });
+    const table = pageOf(page, QUESTIONS.table);
     await table.scrollIntoViewIfNeeded();
+    await expect(editors.table).toBeEditable({
+      timeout: readinessTimeoutMilliseconds,
+    });
     await measureStates(page, table, `table-${width}`, [
       { enter: () => editors.table.hover(), state: "hover" },
     ]);
@@ -224,7 +239,10 @@ for (const width of WIDTHS) {
     // The student's paper draws the same parts through the player.
     const paper = await owner.newPage();
     await paper.goto(hostAddress(baseURL, host, `/exams/${examId}/try`));
-    const first = paper.getByRole("article", { name: "Question 1" });
+    const first = paper.getByRole("article", {
+      exact: true,
+      name: "Question 1",
+    });
     await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await expectSymmetric(paper, `paper at ${width}`, "article");
     await photograph(paper.getByRole("article"), `paper-${width}`);
