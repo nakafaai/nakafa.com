@@ -1,5 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test";
-import { Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
@@ -122,7 +122,8 @@ test("in every kind of question, each text of the question takes the toolbar's m
       // A part that holds its words and a table under them keeps its markers on the words' first line.
       expect
         .soft(
-          (await markOffsets(text)).filter(
+          Arr.filter(
+            await markOffsets(text),
             (offset) => Math.abs(offset) > MARK_TOLERANCE
           ),
           `${kind}: ${name} keeps its markers on its first line over a table`
