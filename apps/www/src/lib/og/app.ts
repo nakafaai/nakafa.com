@@ -2,10 +2,11 @@ import type { Locale } from "use-intl";
 import { type ArtworkIdentity, resolveSocialArtwork } from "@/lib/og/artwork";
 
 const APP_ARTWORK_IDENTITIES = {
-  "ask-nakafa": "app/ask-nakafa",
+  "ask-nina": "app/ask-nina",
   home: undefined,
   pricing: "app/pricing",
   quran: "quran/index",
+  school: "app/school",
   "try-out": "tryout/index",
 } as const satisfies Readonly<Record<string, ArtworkIdentity | undefined>>;
 

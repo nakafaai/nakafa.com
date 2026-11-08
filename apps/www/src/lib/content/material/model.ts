@@ -34,15 +34,19 @@ export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
       publicPath
     );
     if (!model.projection) {
-      if (source.runtimeJson !== null) {
+      if (source.delivery !== null) {
         return yield* makeMaterialProjectionError(input);
       }
       return Option.none();
     }
-    if (source.runtimeJson === null) {
+    if (source.delivery === null || source.model.projectionJson === null) {
       return yield* makeMaterialProjectionError(input);
     }
-    const data = yield* decodePublishedDelivery(input, source.runtimeJson);
+    const data = yield* decodePublishedDelivery(
+      { ...input, activeReleaseId: model.activeReleaseId, family: "material" },
+      source.delivery,
+      source.model.projectionJson
+    );
     const narrowed = yield* decodeMaterialData(data, input);
     yield* verifyMaterialPublication(
       {

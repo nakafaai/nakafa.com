@@ -177,7 +177,10 @@ export function SchoolCalculator() {
             </div>
           </div>
         </div>
-        <dl aria-live="polite" className="grid grid-cols-2 gap-6 border-t pt-6">
+        <dl
+          aria-live="polite"
+          className="bg-muted/50 grid grid-cols-2 gap-6 rounded-lg p-4"
+        >
           <CalculatorFigure label={t("calculator-accounts")}>
             {format.number(idr.accounts)}
           </CalculatorFigure>

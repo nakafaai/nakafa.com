@@ -205,7 +205,10 @@ for (const viewport of [
       .fill("https://example.com/lama");
     await dialog.getByRole("textbox", { name: "Title" }).fill("Video lama");
     await dialog.getByRole("button", { exact: true, name: "Add" }).click();
-    await expect(page.getByRole("link", { name: "Video lama" })).toBeVisible();
+    // An item's title opens it: a link item opens its address in a new tab.
+    await expect(
+      page.getByRole("button", { name: "Video lama" })
+    ).toBeVisible();
     await openRowMenu(page, "Video lama");
     await page.getByRole("menuitem", { name: "Edit" }).click();
     const edit = page.getByRole("dialog");
@@ -214,9 +217,12 @@ for (const viewport of [
       .fill("https://example.com/baru");
     await edit.getByRole("textbox", { name: "Title" }).fill("Video baru");
     await edit.getByRole("button", { name: "Save" }).click();
-    await expect(
-      page.getByRole("link", { name: "Video baru" })
-    ).toHaveAttribute("href", "https://example.com/baru");
+    await context.route("https://example.com/**", (route) =>
+      route.fulfill({ body: "ok", contentType: "text/plain" })
+    );
+    const opened = page.waitForEvent("popup");
+    await page.getByRole("button", { name: "Video baru" }).click();
+    await expect(await opened).toHaveURL("https://example.com/baru");
     await context.close();
   });
 }

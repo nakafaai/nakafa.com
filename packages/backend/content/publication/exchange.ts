@@ -5,16 +5,13 @@ import {
 import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
-import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   decodeArtifactJson,
   decodeProjectionJson,
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/confect/contentRelease/parse";
-import type { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
 import type { PublicRuntimeRow } from "@repo/backend/content/publication/spec";
-import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 export class PublicRuntimeReadError extends Schema.TaggedError<
   PublicRuntimeReadError,
@@ -60,28 +57,4 @@ export const decodePublicRuntimeRow = Effect.fn(
     sourcePath,
   };
   return response;
-});
-
-/** Binds one public body to the route model read in the same query transaction. */
-export const encodePublicDelivery = Effect.fn(
-  "contentRelease.encodePublicDelivery"
-)(function* (
-  runtime: Effect.Success<ReturnType<typeof readSelectedPublicRuntime>>,
-  model: {
-    readonly activeReleaseId: string;
-    readonly projectionJson: string | null;
-  }
-) {
-  if (
-    (model.projectionJson === null) !== (runtime === null) ||
-    (runtime !== null &&
-      (runtime.response.activeReleaseId !== model.activeReleaseId ||
-        runtime.projectionJson !== model.projectionJson))
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "The public body and route model do not share one publication."
-    );
-  }
-  return runtime === null ? null : encodeJsonText(runtime.response);
 });
