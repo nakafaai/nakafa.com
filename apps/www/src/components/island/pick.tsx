@@ -69,6 +69,7 @@ export function IslandPicker() {
       Result.isSuccess(
         applyOperations(layout, [operation], {
           level: facts.level,
+          materials: facts.materials,
           size,
           stars: facts.stars,
         })

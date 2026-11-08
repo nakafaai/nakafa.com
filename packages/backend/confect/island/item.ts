@@ -1,6 +1,12 @@
 import {
+  addMaterials,
+  Materials,
+  NO_MATERIALS,
+} from "@repo/backend/confect/island/material";
+import {
   Array as Arr,
   Effect,
+  Option,
   Record,
   Schema,
   SchemaIssue,
@@ -14,13 +20,32 @@ import {
  */
 const Kind = Schema.Literals(["block", "piece", "pond"]);
 
+/**
+ * How a plant grows (ADR 0042, D13): the watered days each step to its next
+ * stage takes, what a harvest of its last stage gives, and the stage it grows
+ * back from.
+ */
+const Growth = Schema.Struct({
+  days: Schema.NonEmptyArray(Schema.Int),
+  regrows: Schema.Int,
+  yields: Materials,
+});
+
 /** One entry of the catalog. */
 const Entry = Schema.Struct({
   code: Schema.Int,
   footprint: Schema.Tuple([Schema.Int, Schema.Int]),
+  /** A plant's growth; a plant is bought as a seed and grows by watering. */
+  grows: Schema.optionalKey(Growth),
   kind: Kind,
-  /** Each stage's price in Stars and the level that opens it. */
-  stages: Schema.Array(Schema.Struct({ level: Schema.Int, price: Schema.Int })),
+  /** Each stage's price in Stars, the materials it also costs, and the level that opens it. */
+  stages: Schema.Array(
+    Schema.Struct({
+      level: Schema.Int,
+      materials: Schema.optionalKey(Materials),
+      price: Schema.Int,
+    })
+  ),
 });
 
 /**
@@ -37,7 +62,7 @@ const ITEMS = {
     kind: "piece",
     stages: [
       { level: 1, price: 60 },
-      { level: 2, price: 150 },
+      { level: 2, materials: { petals: 0, wood: 6 }, price: 150 },
       { level: 4, price: 400 },
       { level: 6, price: 900 },
     ],
@@ -45,13 +70,9 @@ const ITEMS = {
   tree: {
     code: 2,
     footprint: [1, 1],
+    grows: { days: [2, 3, 4], regrows: 2, yields: { petals: 0, wood: 4 } },
     kind: "piece",
-    stages: [
-      { level: 1, price: 5 },
-      { level: 1, price: 12 },
-      { level: 1, price: 30 },
-      { level: 3, price: 60 },
-    ],
+    stages: [{ level: 1, price: 5 }],
   },
   pond: {
     code: 3,
@@ -92,7 +113,7 @@ const ITEMS = {
     code: 14,
     footprint: [1, 1],
     kind: "block",
-    stages: [{ level: 1, price: 4 }],
+    stages: [{ level: 1, materials: { petals: 0, wood: 1 }, price: 2 }],
   },
   brick: {
     code: 15,
@@ -121,6 +142,7 @@ const ITEMS = {
   flowers: {
     code: 30,
     footprint: [1, 1],
+    grows: { days: [2], regrows: 0, yields: { petals: 3, wood: 0 } },
     kind: "piece",
     stages: [{ level: 1, price: 3 }],
   },
@@ -148,6 +170,11 @@ const ITEMS = {
 export const Item = Schema.Literals(Record.keys(ITEMS));
 export type Item = typeof Item.Type;
 
+/** An item's catalog entry, read as the Schema's shape so optional fields read alike. */
+function entryOf(item: Item): typeof Entry.Type {
+  return ITEMS[item];
+}
+
 const ITEMS_BY_CODE = Record.fromEntries(
   Arr.map(Record.toEntries(ITEMS), ([item, entry]) => [
     String(entry.code),
@@ -169,10 +196,26 @@ export function kindOf(item: Item) {
 }
 
 /** An item's stages in order, with the Stars each costs and what opens it. */
-export function stagesOf(
-  item: Item
-): readonly (typeof Entry.Type)["stages"][number][] {
-  return ITEMS[item].stages;
+export function stagesOf(item: Item) {
+  return entryOf(item).stages;
+}
+
+/** How an item grows, none for an item that is not a plant. */
+export function growsOf(item: Item) {
+  return Option.fromNullishOr(entryOf(item).grows);
+}
+
+/** The materials an item's stages up to `stage` cost together. */
+export function materialsOf(item: Item, stage: number) {
+  return Arr.reduce(
+    Arr.take(stagesOf(item), stage + 1),
+    NO_MATERIALS,
+    (total, step) =>
+      Option.match(Option.fromNullishOr(step.materials), {
+        onNone: () => total,
+        onSome: (cost) => addMaterials(total, cost),
+      })
+  );
 }
 
 /**

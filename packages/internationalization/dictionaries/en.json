@@ -3758,6 +3758,39 @@
     },
     "island-stale": {
       "title": "Your island changed elsewhere, so we loaded it again."
+    },
+    "island-refused-grows": {
+      "title": "It grows when you water it."
+    },
+    "island-refused-rooted": {
+      "title": "It has taken root, so move it instead."
+    },
+    "island-refused-materials": {
+      "title": "You need more from your garden for this."
+    },
+    "island-farm-unlearned": {
+      "title": "Learn something today, then water your garden."
+    },
+    "island-farm-watered": {
+      "title": "Your garden is already watered today."
+    },
+    "island-farm-barren": {
+      "title": "Plant a tree or flowers first."
+    },
+    "island-farm-missing": {
+      "title": "That plant is no longer there."
+    },
+    "island-farm-unripe": {
+      "title": "It has not grown its harvest yet."
+    },
+    "island-watered": {
+      "title": "Your garden is watered."
+    },
+    "island-harvested-wood": {
+      "title": "You gathered wood."
+    },
+    "island-harvested-petals": {
+      "title": "You gathered petals."
     }
   },
   "Ai": {
@@ -4596,6 +4629,11 @@
     "item-flowers": "Flowers",
     "item-bush": "Bush",
     "item-rock": "Rock",
-    "item-lamp": "Lamp"
+    "item-lamp": "Lamp",
+    "water": "Water the garden",
+    "harvest": "Harvest",
+    "materials": "Garden",
+    "materials-value": "{wood} wood, {petals} petals",
+    "price-wood": "{stars} Stars, {wood} wood"
   }
 }

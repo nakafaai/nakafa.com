@@ -10,7 +10,7 @@ import {
   ShaderMaterial,
   Vector2,
 } from "three";
-import { DUCK, FISH, FLOWERS, NINA_PEEK } from "@/lib/island/animals";
+import { BUDS, DUCK, FISH, FLOWERS, NINA_PEEK } from "@/lib/island/animals";
 import { swimAt } from "@/lib/island/motion";
 import type { floraOf, wildlifeOf } from "@/lib/island/pieces";
 import { packAtlas } from "@/lib/island/sprite";
@@ -59,7 +59,13 @@ void main() {
 `;
 
 /** The animals' sprites, packed once into one atlas. */
-const SPRITES = { duck: DUCK, fish: FISH, flowers: FLOWERS, nina: NINA_PEEK };
+const SPRITES = {
+  buds: BUDS,
+  duck: DUCK,
+  fish: FISH,
+  flowers: FLOWERS,
+  nina: NINA_PEEK,
+};
 
 /** The atlas texture, the frames' places in it, and the quad every sprite draws on. */
 function useAtlas(count: number) {

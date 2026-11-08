@@ -14,7 +14,7 @@ import {
 import { COTTAGE, HUT } from "@/lib/island/models/house";
 import { BUSH, LAMP, ROCK, SAPLING, SEED } from "@/lib/island/models/nature";
 import { POND_DEPTH, POND_STAGES } from "@/lib/island/models/pond";
-import { BIG_TREE } from "@/lib/island/models/tree";
+import { BIG_TREE, FRUIT_TREE } from "@/lib/island/models/tree";
 import { Shape } from "@/lib/island/voxel";
 
 /**
@@ -86,7 +86,7 @@ const DRAWINGS: Record<Item, readonly Option.Option<Drawing>[]> = {
   soil: [inCell(SOIL_BLOCK)],
   stone: [inCell(STONE_BLOCK)],
   tile: [inCell(TILE_BLOCK)],
-  tree: [tree(SEED), tree(SAPLING), tree(BIG_TREE)],
+  tree: [tree(SEED), tree(SAPLING), tree(BIG_TREE), tree(FRUIT_TREE)],
 };
 
 /** The drawing of an item at a stage, none when that stage has none yet. */

@@ -34,6 +34,7 @@ export function useEditIsland() {
     }
     const applied = applyOperations(layout, operations, {
       level: owner.value.level,
+      materials: owner.value.materials,
       size,
       stars: owner.value.stars,
     });

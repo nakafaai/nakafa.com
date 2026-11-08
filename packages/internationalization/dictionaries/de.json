@@ -3758,6 +3758,39 @@
     },
     "island-stale": {
       "title": "Deine Insel hat sich anderswo geändert, wir haben sie neu geladen."
+    },
+    "island-refused-grows": {
+      "title": "Es wächst, wenn du es gießt."
+    },
+    "island-refused-rooted": {
+      "title": "Es hat Wurzeln geschlagen, verschiebe es lieber."
+    },
+    "island-refused-materials": {
+      "title": "Dafür brauchst du mehr aus deinem Garten."
+    },
+    "island-farm-unlearned": {
+      "title": "Lerne heute etwas, dann gieß deinen Garten."
+    },
+    "island-farm-watered": {
+      "title": "Dein Garten ist heute schon gegossen."
+    },
+    "island-farm-barren": {
+      "title": "Pflanze zuerst einen Baum oder Blumen."
+    },
+    "island-farm-missing": {
+      "title": "Diese Pflanze ist nicht mehr da."
+    },
+    "island-farm-unripe": {
+      "title": "Es ist noch nicht reif zur Ernte."
+    },
+    "island-watered": {
+      "title": "Dein Garten ist gegossen."
+    },
+    "island-harvested-wood": {
+      "title": "Du hast Holz gesammelt."
+    },
+    "island-harvested-petals": {
+      "title": "Du hast Blütenblätter gesammelt."
     }
   },
   "Ai": {
@@ -4596,6 +4629,11 @@
     "item-flowers": "Blumen",
     "item-bush": "Busch",
     "item-rock": "Felsen",
-    "item-lamp": "Laterne"
+    "item-lamp": "Laterne",
+    "water": "Garten gießen",
+    "harvest": "Ernten",
+    "materials": "Garten",
+    "materials-value": "{wood} Holz, {petals} Blütenblätter",
+    "price-wood": "{stars} Sterne, {wood} Holz"
   }
 }

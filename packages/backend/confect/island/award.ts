@@ -3,6 +3,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { completedBadges } from "@repo/backend/confect/island/badge";
+import { todayOf } from "@repo/backend/confect/island/day";
 import {
   AWARD_RULES,
   type AwardSource,
@@ -14,7 +15,7 @@ import {
 } from "@repo/backend/confect/island/schema";
 import { ensureIsland } from "@repo/backend/confect/island/store";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Clock, DateTime, Effect, Match, Option } from "effect";
+import { Array as Arr, Clock, Effect, Match, Option } from "effect";
 
 /** The one key a source holds for good, so the same learning never grants twice. */
 const keyOf = Match.type<AwardSource>().pipe(
@@ -53,9 +54,7 @@ export const grantAward = Effect.fn("island.grantAward")(function* (
   }
   const now = yield* Clock.currentTimeMillis;
   const island = yield* ensureIsland(userId);
-  const day = DateTime.formatIsoDate(
-    DateTime.makeZonedUnsafe(now, { timeZone: island.timeZone })
-  );
+  const day = yield* todayOf(island.timeZone);
   const today = yield* database
     .table("islandAwards")
     .index("by_userId_and_day", (query) =>

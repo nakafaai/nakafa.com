@@ -1,6 +1,21 @@
-import { Item, stagesOf } from "@repo/backend/confect/island/item";
-import { MAX_HEIGHT, Placement } from "@repo/backend/confect/island/layout";
+import {
+  growsOf,
+  Item,
+  materialsOf,
+  stagesOf,
+} from "@repo/backend/confect/island/item";
+import {
+  MAX_HEIGHT,
+  Placement,
+  replaceAt,
+} from "@repo/backend/confect/island/layout";
 import { MAX_SIZE } from "@repo/backend/confect/island/level";
+import {
+  addMaterials,
+  coversMaterials,
+  lessMaterials,
+  Materials,
+} from "@repo/backend/confect/island/material";
 import {
   carries,
   indexAt,
@@ -54,7 +69,10 @@ export class BuildRefused extends Schema.TaggedError<
     ...StandRefusal.literals,
     "missing",
     "carrying",
+    "grows",
     "locked",
+    "materials",
+    "rooted",
     "unaffordable",
     "starter",
     "top",
@@ -63,17 +81,19 @@ export class BuildRefused extends Schema.TaggedError<
 }) {}
 type Reason = BuildRefused["reason"];
 
-/** What the rules read besides the layout: the island's size, level and spendable Stars. */
+/** What the rules read besides the layout: the island's size, level, and spendable Stars and materials. */
 const BuildContext = Schema.Struct({
   level: Schema.Int,
+  materials: Materials,
   size: Schema.Int,
   stars: Schema.Finite,
 });
 type BuildContext = typeof BuildContext.Type;
 
-/** The layout and the Stars left after the changes so far. */
+/** The layout and the Stars and materials left after the changes so far. */
 const Built = Schema.Struct({
   layout: Schema.Array(Placement),
+  materials: Materials,
   stars: Schema.Finite,
 });
 type Built = typeof Built.Type;
@@ -85,15 +105,6 @@ const Edited = Schema.Struct({
 });
 
 const refuse = (reason: Reason) => Result.fail(reason);
-
-/** The layout with the placement at one index changed. */
-function replaceAt(
-  layout: readonly Placement[],
-  index: number,
-  placement: Placement
-) {
-  return Arr.map(layout, (current, at) => (at === index ? placement : current));
-}
 
 /** A change applied: the layout and Stars after it, and the change that undoes it. */
 function done(built: Built, undo: Operation) {
@@ -127,6 +138,7 @@ function placeItem(
     return refuse("locked");
   }
   const paid = Arr.reduce(bought, 0, (total, stage) => total + stage.price);
+  const cost = materialsOf(place.item, place.stage);
   const placement = {
     growth: 0,
     item: place.item,
@@ -136,16 +148,21 @@ function placeItem(
     ...place.at,
   };
   return Option.match(standing(built.layout, placement, context.size), {
-    onNone: () =>
-      paid > built.stars
-        ? refuse("unaffordable")
-        : done(
+    onNone: () => {
+      if (paid > built.stars) {
+        return refuse("unaffordable");
+      }
+      return coversMaterials(built.materials, cost)
+        ? done(
             {
               layout: Arr.append(built.layout, placement),
+              materials: lessMaterials(built.materials, cost),
               stars: built.stars - paid,
             },
             { _tag: "remove", at: place.at }
-          ),
+          )
+        : refuse("materials");
+    },
     onSome: refuse,
   });
 }
@@ -168,6 +185,7 @@ function moveItem(
           done(
             {
               layout: replaceAt(built.layout, index, moved),
+              materials: built.materials,
               stars: built.stars,
             },
             {
@@ -189,11 +207,19 @@ function removeItem(built: Built, at: Cell) {
     if (placement.paid === 0) {
       return refuse("starter");
     }
+    const grown = placement.stage > 0 || placement.growth > 0;
+    if (grown && Option.isSome(growsOf(placement.item))) {
+      return refuse("rooted");
+    }
     return carries(built.layout, placement)
       ? refuse("carrying")
       : done(
           {
             layout: Arr.remove(built.layout, index),
+            materials: addMaterials(
+              built.materials,
+              materialsOf(placement.item, placement.stage)
+            ),
             stars: built.stars + placement.paid,
           },
           {
@@ -207,31 +233,50 @@ function removeItem(built: Built, at: Cell) {
   });
 }
 
-/** Raises a placement one stage for that stage's price; a downgrade undoes that. */
+/** The materials one stage costs on top of the stages before it. */
+function stepMaterials(item: Item, stage: number) {
+  return lessMaterials(materialsOf(item, stage), materialsOf(item, stage - 1));
+}
+
+/**
+ * Raises a placement one stage for that stage's price and materials; a
+ * downgrade undoes that. A plant grows by watering instead.
+ */
 function upgradeItem(built: Built, at: Cell, context: BuildContext) {
-  return onPlacement(built, at, (placement, index) =>
-    Option.match(Arr.get(stagesOf(placement.item), placement.stage + 1), {
-      onNone: () => refuse("top"),
-      onSome: (next) => {
-        if (next.level > context.level) {
-          return refuse("locked");
-        }
-        return next.price > built.stars
-          ? refuse("unaffordable")
-          : done(
-              {
-                layout: replaceAt(built.layout, index, {
-                  ...placement,
-                  paid: placement.paid + next.price,
-                  stage: placement.stage + 1,
-                }),
-                stars: built.stars - next.price,
-              },
-              { _tag: "downgrade", at }
-            );
-      },
-    })
-  );
+  return onPlacement(built, at, (placement, index) => {
+    if (Option.isSome(growsOf(placement.item))) {
+      return refuse("grows");
+    }
+    return Option.match(
+      Arr.get(stagesOf(placement.item), placement.stage + 1),
+      {
+        onNone: () => refuse("top"),
+        onSome: (next) => {
+          if (next.level > context.level) {
+            return refuse("locked");
+          }
+          if (next.price > built.stars) {
+            return refuse("unaffordable");
+          }
+          const cost = stepMaterials(placement.item, placement.stage + 1);
+          return coversMaterials(built.materials, cost)
+            ? done(
+                {
+                  layout: replaceAt(built.layout, index, {
+                    ...placement,
+                    paid: placement.paid + next.price,
+                    stage: placement.stage + 1,
+                  }),
+                  materials: lessMaterials(built.materials, cost),
+                  stars: built.stars - next.price,
+                },
+                { _tag: "downgrade", at }
+              )
+            : refuse("materials");
+        },
+      }
+    );
+  });
 }
 
 /**
@@ -240,6 +285,9 @@ function upgradeItem(built: Built, at: Cell, context: BuildContext) {
  */
 function downgradeItem(built: Built, at: Cell) {
   return onPlacement(built, at, (placement, index) => {
+    if (Option.isSome(growsOf(placement.item))) {
+      return refuse("grows");
+    }
     if (placement.stage === 0) {
       return refuse("bottom");
     }
@@ -253,6 +301,10 @@ function downgradeItem(built: Built, at: Cell) {
               paid: placement.paid - refund,
               stage: placement.stage - 1,
             }),
+            materials: addMaterials(
+              built.materials,
+              stepMaterials(placement.item, placement.stage)
+            ),
             stars: built.stars + refund,
           },
           { _tag: "upgrade", at }
@@ -273,19 +325,25 @@ function applyOne(built: Built, operation: Operation, context: BuildContext) {
 
 /**
  * Applies a batch of changes in order, on the server and in the browser alike
- * (ADR 0042, D12), and returns the layout, the Stars left, and the batch that
- * undoes it. The first refused change refuses the whole batch, so the island
- * never keeps half an edit. Placing buys an item at its stage; removing returns
- * what it paid; an upgrade pays its step and a downgrade returns it; a starter
- * piece paid nothing, so it can be moved and upgraded but never removed or
- * taken below what it came with.
+ * (ADR 0042, D12, D13), and returns the layout, the Stars and materials left,
+ * and the batch that undoes it. The first refused change refuses the whole
+ * batch, so the island never keeps half an edit. Placing buys an item at its
+ * stage; removing returns what it paid; an upgrade pays its step and a
+ * downgrade returns it; a starter piece paid nothing, so it can be moved and
+ * upgraded but never removed or taken below what it came with. A plant is
+ * bought as a seed and grows by watering, so it takes no upgrade, and once it
+ * has grown it can be moved but not removed, which keeps every undo exact.
  */
 export function applyOperations(
   layout: readonly Placement[],
   operations: readonly Operation[],
   context: BuildContext
 ): Result.Result<typeof Edited.Type, BuildRefused> {
-  let built: Built = { layout, stars: context.stars };
+  let built: Built = {
+    layout,
+    materials: context.materials,
+    stars: context.stars,
+  };
   let undo: readonly Operation[] = [];
   for (let index = 0; index < operations.length; index += 1) {
     const next = applyOne(built, operations[index], context);
