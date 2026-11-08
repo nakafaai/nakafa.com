@@ -11,8 +11,9 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { PostRow } from "@/components/tenant/classes/home/post";
 import { WaitingPosts } from "@/components/tenant/classes/home/scheduled";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -85,9 +86,9 @@ export function ClassHome({ archived }: { archived: boolean }) {
         <WaitingPosts posts={scheduled.value} />
       ) : null}
       {Arr.isReadonlyArrayEmpty(pagination.results) ? (
-        <TableEmpty
-          act="reading"
+        <EmptyState
           description={t("posts-empty-description")}
+          scene={<EmptyNina act="reading" />}
           title={t("posts-empty")}
         />
       ) : (
@@ -125,9 +126,9 @@ function ArchivedPosts({
   return (
     <>
       {Arr.isReadonlyArrayEmpty(pagination.results) ? (
-        <TableEmpty
-          act="reading"
+        <EmptyState
           description={t("posts-archived-empty-description")}
+          scene={<EmptyNina act="reading" />}
           title={t("posts-archived-empty")}
         />
       ) : (

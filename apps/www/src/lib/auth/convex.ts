@@ -53,10 +53,13 @@ export const ConvexAuthContext = createContext<ConvexAuthStore | null>(null);
  * `retryable` says whether asking again can answer otherwise: a request that
  * failed on its way or a server failure can, a refused session cannot.
  */
-export class ConvexTokenReadError extends Schema.TaggedError<ConvexTokenReadError>()(
-  "ConvexTokenReadError",
-  { detail: Schema.String, retryable: Schema.Boolean }
-) {}
+export class ConvexTokenReadError extends Schema.TaggedError<
+  ConvexTokenReadError,
+  { readonly brand: unique symbol }
+>()("ConvexTokenReadError", {
+  detail: Schema.String,
+  retryable: Schema.Boolean,
+}) {}
 
 /** The part of Convex's React client that authentication drives. */
 type ConvexAuthClient = Pick<ConvexReactClient, "setAuth">;

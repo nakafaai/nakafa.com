@@ -2,13 +2,13 @@ import { readServerTranslator } from "@repo/internationalization/src/translator"
 import { Effect, Schema } from "effect";
 
 /** Expected failure while the copy of one translator namespace loads. */
-class CopyUnavailableError extends Schema.TaggedError<CopyUnavailableError>()(
-  "CopyUnavailableError",
-  {
-    cause: Schema.Unknown,
-    namespace: Schema.String,
-  }
-) {}
+class CopyUnavailableError extends Schema.TaggedError<
+  CopyUnavailableError,
+  { readonly brand: unique symbol }
+>()("CopyUnavailableError", {
+  cause: Schema.Unknown,
+  namespace: Schema.String,
+}) {}
 
 /** The locale and namespace of one translator, as the shared server translator takes them. */
 type CopyInput = Parameters<typeof readServerTranslator>[0];

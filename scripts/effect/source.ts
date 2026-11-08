@@ -39,22 +39,22 @@ export const SourceIdentity = Schema.Struct({
   tag: Schema.String,
   tree: Schema.String.pipe(Schema.check(Schema.isPattern(GIT_OBJECT_PATTERN))),
 });
-class EffectSourceFileError extends Schema.TaggedError<EffectSourceFileError>()(
-  "EffectSourceFileError",
-  { message: Schema.String }
-) {}
-class EffectSourceGitError extends Schema.TaggedError<EffectSourceGitError>()(
-  "EffectSourceGitError",
-  { message: Schema.String }
-) {}
-class EffectSourceMismatch extends Schema.TaggedError<EffectSourceMismatch>()(
-  "EffectSourceMismatch",
-  { message: Schema.String }
-) {}
-class EffectSourceUsageError extends Schema.TaggedError<EffectSourceUsageError>()(
-  "EffectSourceUsageError",
-  { message: Schema.String }
-) {}
+class EffectSourceFileError extends Schema.TaggedError<
+  EffectSourceFileError,
+  { readonly brand: unique symbol }
+>()("EffectSourceFileError", { message: Schema.String }) {}
+class EffectSourceGitError extends Schema.TaggedError<
+  EffectSourceGitError,
+  { readonly brand: unique symbol }
+>()("EffectSourceGitError", { message: Schema.String }) {}
+class EffectSourceMismatch extends Schema.TaggedError<
+  EffectSourceMismatch,
+  { readonly brand: unique symbol }
+>()("EffectSourceMismatch", { message: Schema.String }) {}
+class EffectSourceUsageError extends Schema.TaggedError<
+  EffectSourceUsageError,
+  { readonly brand: unique symbol }
+>()("EffectSourceUsageError", { message: Schema.String }) {}
 /** Translates one platform command failure into the CLI error contract. */
 function gitPlatformError(error: PlatformError.PlatformError) {
   return new EffectSourceGitError({ message: error.message });

@@ -2,12 +2,18 @@ import { refusal } from "@repo/backend/confect/tenancy/errors";
 import { Schema } from "effect";
 
 /** An exam that holds as many questions as it can, `MAX_EXAM_QUESTIONS`, so a new question is refused. */
-export class ExamFull extends Schema.TaggedError<ExamFull>()("ExamFull", {
+export class ExamFull extends Schema.TaggedError<
+  ExamFull,
+  { readonly brand: unique symbol }
+>()("ExamFull", {
   ...refusal("EXAM_FULL", "This exam holds as many questions as it can."),
 }) {}
 
 /** The last question of an exam. An exam keeps at least one question, so it is never empty. */
-export class ExamEmpty extends Schema.TaggedError<ExamEmpty>()("ExamEmpty", {
+export class ExamEmpty extends Schema.TaggedError<
+  ExamEmpty,
+  { readonly brand: unique symbol }
+>()("ExamEmpty", {
   ...refusal("EXAM_EMPTY", "An exam keeps at least one question."),
 }) {}
 
@@ -15,7 +21,10 @@ export class ExamEmpty extends Schema.TaggedError<ExamEmpty>()("ExamEmpty", {
  * A change to the questions of an exam that a sitting has finished. The questions, their order, and
  * their keys stay as the students sat them, so each result scores the exam that the student sat.
  */
-export class ExamFrozen extends Schema.TaggedError<ExamFrozen>()("ExamFrozen", {
+export class ExamFrozen extends Schema.TaggedError<
+  ExamFrozen,
+  { readonly brand: unique symbol }
+>()("ExamFrozen", {
   ...refusal(
     "EXAM_FROZEN",
     "A sitting of this exam has finished, so its questions can no longer change."
@@ -26,7 +35,10 @@ export class ExamFrozen extends Schema.TaggedError<ExamFrozen>()("ExamFrozen", {
  * A deletion of an exam that has a sitting, scheduled, running, or finished. The sitting and its
  * results read the exam, so the exam stays while any sitting of it remains.
  */
-export class ExamInUse extends Schema.TaggedError<ExamInUse>()("ExamInUse", {
+export class ExamInUse extends Schema.TaggedError<
+  ExamInUse,
+  { readonly brand: unique symbol }
+>()("ExamInUse", {
   ...refusal(
     "EXAM_IN_USE",
     "This exam has a sitting, so it cannot be deleted."
@@ -38,68 +50,68 @@ export class ExamInUse extends Schema.TaggedError<ExamInUse>()("ExamInUse", {
  * distinct single-answer choices, and any other interaction is refused. The reply names
  * no part of the answers.
  */
-export class AnswersDoNotFit extends Schema.TaggedError<AnswersDoNotFit>()(
-  "AnswersDoNotFit",
-  {
-    ...refusal(
-      "ANSWERS_DO_NOT_FIT",
-      "These answers do not fit a question of this kind."
-    ),
-  }
-) {}
+export class AnswersDoNotFit extends Schema.TaggedError<
+  AnswersDoNotFit,
+  { readonly brand: unique symbol }
+>()("AnswersDoNotFit", {
+  ...refusal(
+    "ANSWERS_DO_NOT_FIT",
+    "These answers do not fit a question of this kind."
+  ),
+}) {}
 
 /** A scoring rule for a question whose answer has no parts to share its points among. */
-export class ScoringDoesNotFit extends Schema.TaggedError<ScoringDoesNotFit>()(
-  "ScoringDoesNotFit",
-  {
-    ...refusal(
-      "SCORING_DOES_NOT_FIT",
-      "This question has no parts to score one by one."
-    ),
-  }
-) {}
+export class ScoringDoesNotFit extends Schema.TaggedError<
+  ScoringDoesNotFit,
+  { readonly brand: unique symbol }
+>()("ScoringDoesNotFit", {
+  ...refusal(
+    "SCORING_DOES_NOT_FIT",
+    "This question has no parts to score one by one."
+  ),
+}) {}
 
 /**
  * A question whose edits since its last saved snapshot take more than one read of the
  * step log, so a copy cannot hold its whole current text yet. The editor saves the
  * snapshot as the snapshot rule allows, and the copy is tried again then. It writes nothing.
  */
-export class QuestionHistoryLong extends Schema.TaggedError<QuestionHistoryLong>()(
-  "QuestionHistoryLong",
-  {
-    ...refusal(
-      "QUESTION_HISTORY_LONG",
-      "This question has too many edits since it was last saved to copy now. Copy it again once it is saved."
-    ),
-  }
-) {}
+export class QuestionHistoryLong extends Schema.TaggedError<
+  QuestionHistoryLong,
+  { readonly brand: unique symbol }
+>()("QuestionHistoryLong", {
+  ...refusal(
+    "QUESTION_HISTORY_LONG",
+    "This question has too many edits since it was last saved to copy now. Copy it again once it is saved."
+  ),
+}) {}
 
 /**
  * An answer key that does not fit its question: an option it names does not exist,
  * a choice marks more correct options than it allows, or an interaction has no answer.
  * The reply names no option, so a learner's content never reaches an error message.
  */
-export class KeyDoesNotFit extends Schema.TaggedError<KeyDoesNotFit>()(
-  "KeyDoesNotFit",
-  {
-    ...refusal(
-      "KEY_DOES_NOT_FIT",
-      "The key does not match the options of this question."
-    ),
-  }
-) {}
+export class KeyDoesNotFit extends Schema.TaggedError<
+  KeyDoesNotFit,
+  { readonly brand: unique symbol }
+>()("KeyDoesNotFit", {
+  ...refusal(
+    "KEY_DOES_NOT_FIT",
+    "The key does not match the options of this question."
+  ),
+}) {}
 
 /**
  * An edit made on a revision that is no longer current. The edit writes nothing,
  * and the reply carries the current revision, so the editor keeps the server's value.
  */
-export class RevisionStale extends Schema.TaggedError<RevisionStale>()(
-  "RevisionStale",
-  {
-    current: Schema.Natural,
-    ...refusal(
-      "REVISION_STALE",
-      "This question changed before your edit arrived."
-    ),
-  }
-) {}
+export class RevisionStale extends Schema.TaggedError<
+  RevisionStale,
+  { readonly brand: unique symbol }
+>()("RevisionStale", {
+  current: Schema.Natural,
+  ...refusal(
+    "REVISION_STALE",
+    "This question changed before your edit arrived."
+  ),
+}) {}

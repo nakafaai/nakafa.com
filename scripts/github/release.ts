@@ -25,13 +25,13 @@ export type GithubActionReleaseReview =
   typeof GithubActionReleaseReviewSchema.Type;
 
 /** Expected failure while reading upstream GitHub Action release metadata. */
-export class GithubActionReleaseError extends Schema.TaggedError<GithubActionReleaseError>()(
-  "GithubActionReleaseError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class GithubActionReleaseError extends Schema.TaggedError<
+  GithubActionReleaseError,
+  { readonly brand: unique symbol }
+>()("GithubActionReleaseError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /**
  * The longest one release read may take. It is the 10 second attempt budget of

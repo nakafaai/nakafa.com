@@ -12,9 +12,11 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableNote } from "@/components/shared/table/frame";
+import { TableNote } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { NarrativeMenu } from "@/components/tenant/insight/narrative";
 import {
@@ -77,9 +79,9 @@ export function SharedPractice({
         ]}
         data={rows}
         empty={
-          <TableEmpty
-            act="relaxed"
+          <EmptyState
             description={t("practice-class-note")}
+            scene={<EmptyNina act="relaxed" />}
             title={t("practice-empty")}
           />
         }
@@ -150,9 +152,9 @@ export function OwnPractice() {
         ]}
         data={isRead ? topics.value : []}
         empty={
-          <TableEmpty
-            act="relaxed"
+          <EmptyState
             description={t("practice-own-empty-description")}
+            scene={<EmptyNina act="relaxed" />}
             title={t("practice-empty")}
           />
         }

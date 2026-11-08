@@ -123,10 +123,12 @@ const FORBIDDEN_PROVENANCE = [
 ] as const;
 const SHELL_COMMENT = /(?<before>^|[ \t])#.*$/u;
 
-export class CliWorkflowPolicyError extends Schema.TaggedError<CliWorkflowPolicyError>()(
-  "CliWorkflowPolicyError",
-  { problems: Schema.NonEmptyArray(Schema.String) }
-) {}
+export class CliWorkflowPolicyError extends Schema.TaggedError<
+  CliWorkflowPolicyError,
+  { readonly brand: unique symbol }
+>()("CliWorkflowPolicyError", {
+  problems: Schema.NonEmptyArray(Schema.String),
+}) {}
 
 function executableSource(run: string | undefined) {
   return pipe(

@@ -50,15 +50,15 @@ export const emptySetPage = {
   page: [],
 };
 /** Stable client failure for invalid signed-catalog pagination. */
-export class PublishedSetPaginationError extends Schema.TaggedError<PublishedSetPaginationError>()(
-  "PublishedSetPaginationError",
-  {
-    code: Schema.Literals([
-      "INVALID_TRYOUT_SET_CURSOR",
-      "INVALID_TRYOUT_SET_PAGE_SIZE",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class PublishedSetPaginationError extends Schema.TaggedError<
+  PublishedSetPaginationError,
+  { readonly brand: unique symbol }
+>()("PublishedSetPaginationError", {
+  code: Schema.Literals([
+    "INVALID_TRYOUT_SET_CURSOR",
+    "INVALID_TRYOUT_SET_PAGE_SIZE",
+  ]),
+  message: Schema.String,
+}) {}
 /** Paginates one signed list and invalidates cursors when its rows move. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */

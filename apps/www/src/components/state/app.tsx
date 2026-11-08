@@ -1,5 +1,6 @@
 import type { Locale } from "@repo/internationalization/src/locale";
-import { Missing } from "@/components/state/missing";
+import { EmptyState } from "@/components/state/empty";
+import { DeferredFigure } from "@/components/state/mascot";
 import { ActionNavigation } from "@/components/state/navigation";
 import { Stage } from "@/components/state/stage";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
@@ -18,21 +19,26 @@ export function AppNotFound({ locale }: { readonly locale: Locale }) {
   return (
     <Stage>
       <meta content="noindex,nofollow" name="robots" />
-      <Missing
+      <EmptyState
+        action={
+          <>
+            <ActionNavigation
+              label={messages.State["home-button"]}
+              target={LANDING_TARGET}
+              variant="default"
+            />
+            <ActionNavigation
+              label={messages.NotFound["search-button"]}
+              target={SEARCH_TARGET}
+              variant="ghost"
+            />
+          </>
+        }
         description={messages.NotFound.description}
-        title={messages.NotFound.title}
-      >
-        <ActionNavigation
-          label={messages.State["home-button"]}
-          target={LANDING_TARGET}
-          variant="default"
-        />
-        <ActionNavigation
-          label={messages.NotFound["search-button"]}
-          target={SEARCH_TARGET}
-          variant="ghost"
-        />
-      </Missing>
+        frame="page"
+        scene={<DeferredFigure scene="missing" />}
+        title={<h1>{messages.NotFound.title}</h1>}
+      />
     </Stage>
   );
 }

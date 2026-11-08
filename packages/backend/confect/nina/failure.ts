@@ -6,14 +6,14 @@ import { Cause, Option, Schema } from "effect";
 /** The Nina step that failed: reading stored state or generating a new result. */
 export const NinaFailureOperation = Schema.Literals(["read", "generate"]);
 
-export class NinaGenerationError extends Schema.TaggedError<NinaGenerationError>()(
-  "NinaGenerationError",
-  {
-    reason: NinaFailureReason,
-    /** The gateway's routing facts when a model call failed. */
-    gateway: Schema.optional(GatewayFailure),
-  }
-) {}
+export class NinaGenerationError extends Schema.TaggedError<
+  NinaGenerationError,
+  { readonly brand: unique symbol }
+>()("NinaGenerationError", {
+  reason: NinaFailureReason,
+  /** The gateway's routing facts when a model call failed. */
+  gateway: Schema.optional(GatewayFailure),
+}) {}
 
 /**
  * The stored Nina reason for each gateway failure reason. A connection that

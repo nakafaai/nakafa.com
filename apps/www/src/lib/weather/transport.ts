@@ -4,13 +4,13 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 /** The longest one request to the weather service may wait for its answer. */
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";
 
-class WeatherClientRequestError extends Schema.TaggedError<WeatherClientRequestError>()(
-  "WeatherClientRequestError",
-  {
-    endpoint: Schema.String,
-    message: Schema.String,
-  }
-) {}
+class WeatherClientRequestError extends Schema.TaggedError<
+  WeatherClientRequestError,
+  { readonly brand: unique symbol }
+>()("WeatherClientRequestError", {
+  endpoint: Schema.String,
+  message: Schema.String,
+}) {}
 
 // Flat query values, as UrlParams reads them: a scalar, or an array that
 // repeats its key. UrlParams skips undefined values.

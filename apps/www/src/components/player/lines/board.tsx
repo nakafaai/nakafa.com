@@ -13,15 +13,12 @@ import {
   type LineSide,
   LinesContext,
   useLines,
-} from "@/components/exams/lines/context";
-import { boardPoint, lineNames } from "@/components/exams/lines/curve";
-import { LineDot } from "@/components/exams/lines/dot";
-import { LinesOverlay } from "@/components/exams/lines/overlay";
-import { createLines } from "@/components/exams/lines/store";
-import {
-  type MatchPart,
-  pairedWith,
-} from "@/components/exams/sitting/response";
+} from "@/components/player/lines/context";
+import { boardPoint, lineNames } from "@/components/player/lines/curve";
+import { LineDot } from "@/components/player/lines/dot";
+import { LinesOverlay } from "@/components/player/lines/overlay";
+import { createLines } from "@/components/player/lines/store";
+import { type MatchPart, pairedWith } from "@/components/player/response";
 
 /**
  * A board's three tracks: the statements, the gap the lines cross, and the answers. A paper leaves the lines a wide

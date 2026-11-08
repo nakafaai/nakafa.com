@@ -12,51 +12,51 @@ export const ProblemDetailsSchema = Schema.Struct({
   type: Schema.String,
 });
 
-export class InvocationError extends Schema.TaggedError<InvocationError>()(
-  "InvocationError",
-  { message: Schema.String }
-) {}
+export class InvocationError extends Schema.TaggedError<
+  InvocationError,
+  { readonly brand: unique symbol }
+>()("InvocationError", { message: Schema.String }) {}
 
-export class NetworkError extends Schema.TaggedError<NetworkError>()(
-  "NetworkError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class NetworkError extends Schema.TaggedError<
+  NetworkError,
+  { readonly brand: unique symbol }
+>()("NetworkError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
-export class ResponseDecodeError extends Schema.TaggedError<ResponseDecodeError>()(
-  "ResponseDecodeError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-    status: Schema.Finite.pipe(Schema.check(Schema.isInt())),
-  }
-) {}
+export class ResponseDecodeError extends Schema.TaggedError<
+  ResponseDecodeError,
+  { readonly brand: unique symbol }
+>()("ResponseDecodeError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+  status: Schema.Finite.pipe(Schema.check(Schema.isInt())),
+}) {}
 
-export class ApiResponseError extends Schema.TaggedError<ApiResponseError>()(
-  "ApiResponseError",
-  {
-    problem: ProblemDetailsSchema,
-    status: Schema.Finite.pipe(Schema.check(Schema.isInt())),
-  }
-) {}
+export class ApiResponseError extends Schema.TaggedError<
+  ApiResponseError,
+  { readonly brand: unique symbol }
+>()("ApiResponseError", {
+  problem: ProblemDetailsSchema,
+  status: Schema.Finite.pipe(Schema.check(Schema.isInt())),
+}) {}
 
-export class HttpResponseError extends Schema.TaggedError<HttpResponseError>()(
-  "HttpResponseError",
-  {
-    retryAfter: Schema.optional(Schema.String),
-    status: Schema.Finite.pipe(Schema.check(Schema.isInt())),
-  }
-) {}
+export class HttpResponseError extends Schema.TaggedError<
+  HttpResponseError,
+  { readonly brand: unique symbol }
+>()("HttpResponseError", {
+  retryAfter: Schema.optional(Schema.String),
+  status: Schema.Finite.pipe(Schema.check(Schema.isInt())),
+}) {}
 
-export class CliStartupError extends Schema.TaggedError<CliStartupError>()(
-  "CliStartupError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class CliStartupError extends Schema.TaggedError<
+  CliStartupError,
+  { readonly brand: unique symbol }
+>()("CliStartupError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Preserves actionable parser details in the stable invocation error shape. */
 export function makeInvocationError(error: CliError.CliError) {
@@ -76,7 +76,7 @@ export function makeInvocationError(error: CliError.CliError) {
  * the API error of a read, or a missing or expired sign-in, with its code and a sentence
  * that says what to do next.
  */
-export class SchoolError extends Schema.TaggedError<SchoolError>()(
-  "SchoolError",
-  { code: Schema.String, message: Schema.String }
-) {}
+export class SchoolError extends Schema.TaggedError<
+  SchoolError,
+  { readonly brand: unique symbol }
+>()("SchoolError", { code: Schema.String, message: Schema.String }) {}

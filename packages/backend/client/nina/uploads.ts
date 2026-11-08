@@ -35,15 +35,15 @@ export const NinaFileType = Schema.Literals([
   "application/pdf",
   "text/plain",
 ]);
-export class NinaUploadError extends Schema.TaggedError<NinaUploadError>()(
-  "NinaUploadError",
-  {
-    code: Schema.Literals([
-      "NINA_UPLOAD_INVALID",
-      "NINA_UPLOAD_LIMIT",
-      "NINA_UPLOAD_FAILED",
-      "NINA_UPLOAD_SIZE",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class NinaUploadError extends Schema.TaggedError<
+  NinaUploadError,
+  { readonly brand: unique symbol }
+>()("NinaUploadError", {
+  code: Schema.Literals([
+    "NINA_UPLOAD_INVALID",
+    "NINA_UPLOAD_LIMIT",
+    "NINA_UPLOAD_FAILED",
+    "NINA_UPLOAD_SIZE",
+  ]),
+  message: Schema.String,
+}) {}

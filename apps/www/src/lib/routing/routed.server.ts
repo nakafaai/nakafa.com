@@ -14,10 +14,10 @@ export type RouterHandler = (
 ) => Promise<Response>;
 
 /** An error that escaped a decision of the server entry, kept with its original cause. */
-export class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
-  "UncaughtRequestError",
-  { cause: Schema.Unknown }
-) {}
+export class UncaughtRequestError extends Schema.TaggedError<
+  UncaughtRequestError,
+  { readonly brand: unique symbol }
+>()("UncaughtRequestError", { cause: Schema.Unknown }) {}
 
 /**
  * Routes one request to the router. A failure that escapes the router is

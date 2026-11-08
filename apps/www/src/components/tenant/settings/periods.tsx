@@ -19,7 +19,6 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -28,6 +27,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -227,9 +228,9 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="thinking"
+          <EmptyState
             description={t("periods-description")}
+            scene={<EmptyNina act="thinking" />}
             title={t("periods-empty")}
           />
         }

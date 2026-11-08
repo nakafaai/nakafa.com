@@ -55,13 +55,13 @@ const tryoutStartScopeSchema = Schema.Struct({
 export type TryoutStartScope = typeof tryoutStartScopeSchema.Type;
 
 /** Expected domain failure raised while starting a try-out attempt. */
-export class TryoutStartError extends Schema.TaggedError<TryoutStartError>()(
-  "TryoutStartError",
-  {
-    code: Schema.Literals(["TRYOUT_START_FAILED"]),
-    message: Schema.String,
-  }
-) {
+export class TryoutStartError extends Schema.TaggedError<
+  TryoutStartError,
+  { readonly brand: unique symbol }
+>()("TryoutStartError", {
+  code: Schema.Literals(["TRYOUT_START_FAILED"]),
+  message: Schema.String,
+}) {
   declare readonly message: string;
 }
 
