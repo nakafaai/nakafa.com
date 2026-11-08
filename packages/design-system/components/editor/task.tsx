@@ -1,9 +1,9 @@
 import {
   editorTask,
-  editorTaskBox,
   editorTaskWords,
 } from "@repo/design-system/components/editor/frame";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
+import { lineMark } from "@repo/design-system/lib/mark";
 import {
   NodeViewContent,
   NodeViewWrapper,
@@ -27,7 +27,7 @@ function TaskNode({ editor, node, updateAttributes }: ReactNodeViewProps) {
 
   return (
     <NodeViewWrapper className={editorTask()}>
-      <span className={editorTaskBox()} contentEditable={false}>
+      <span className={lineMark()} contentEditable={false}>
         <Checkbox
           aria-labelledby={words}
           checked={node.attrs.checked === true}

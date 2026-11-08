@@ -7,13 +7,20 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { fileAddress } from "@repo/backend/confect/bucket/file";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { attachmentField } from "@repo/backend/confect/classroom/forum/attachment";
+import type { Face } from "@repo/backend/confect/classroom/forum/face";
+import { replierPeople } from "@repo/backend/confect/classroom/forum/face";
+import {
+  faceOf,
+  ninaFace,
+  readFaces,
+  replierFaces,
+} from "@repo/backend/confect/classroom/forum/faces";
 import { readMark } from "@repo/backend/confect/classroom/forum/mark";
 import {
   type MentionView,
   mentionedPeople,
 } from "@repo/backend/confect/classroom/forum/mention";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
-import { NINA_NAME } from "@repo/backend/confect/classroom/forum/nina";
 import {
   type PollView,
   pollField,
@@ -29,33 +36,48 @@ export const schoolKeys = (tenantId: GenericId.GenericId<"tenants">) =>
   readTenantKeys(tenantId).pipe(Effect.orDie);
 
 /**
- * A discussion as the viewer sees it: its title opened with the school key, and
- * unread when a reply came after the viewer's read mark in it. A discussion the
- * viewer never opened is unread once it holds a reply.
+ * A discussion as the viewer sees it: its title opened with the school key, the
+ * faces of who wrote its newest replies, found among `faces`, and unread when a
+ * reply came after the viewer's read mark in it. A discussion the viewer never
+ * opened is unread once it holds a reply.
  */
-export const discussionView = Effect.fn("classroom.forum.views.discussion")(
-  function* (thread: ClassroomThreadsDoc) {
-    const { person } = yield* Member;
-    const keys = yield* schoolKeys(thread.tenantId);
-    const mark = yield* readMark(person._id, {
-      channelId: thread.channelId,
-      threadId: thread._id,
-    });
-    const lastReplyAt = thread.lastReplyAt ?? null;
-    return {
-      lastReplyAt,
-      number: thread.number,
-      replies: thread.replies,
-      title: yield* openText(keys, titleField(thread), thread.sealedTitle).pipe(
-        Effect.orDie
-      ),
-      unread:
-        lastReplyAt !== null &&
-        Option.match(mark, {
-          onNone: () => true,
-          onSome: (found) => lastReplyAt > found.at,
-        }),
-    };
+const discussionView = Effect.fn("classroom.forum.views.discussion")(function* (
+  thread: ClassroomThreadsDoc,
+  faces: readonly (typeof Face.Type)[]
+) {
+  const { person } = yield* Member;
+  const keys = yield* schoolKeys(thread.tenantId);
+  const mark = yield* readMark(person._id, {
+    channelId: thread.channelId,
+    threadId: thread._id,
+  });
+  const lastReplyAt = thread.lastReplyAt ?? null;
+  return {
+    lastReplyAt,
+    number: thread.number,
+    repliers: replierFaces(faces, thread.repliers ?? []),
+    replies: thread.replies,
+    title: yield* openText(keys, titleField(thread), thread.sealedTitle).pipe(
+      Effect.orDie
+    ),
+    unread:
+      lastReplyAt !== null &&
+      Option.match(mark, {
+        onNone: () => true,
+        onSome: (found) => lastReplyAt > found.at,
+      }),
+  };
+});
+
+/** Some discussions as the viewer sees them, the faces of their repliers each read once. */
+export const discussionViews = Effect.fn("classroom.forum.views.discussions")(
+  function* (threads: readonly ClassroomThreadsDoc[]) {
+    const faces = yield* readFaces(
+      Arr.flatMap(threads, (thread) => replierPeople(thread.repliers ?? []))
+    );
+    return yield* Effect.forEach(threads, (thread) =>
+      discussionView(thread, faces)
+    );
   }
 );
 
@@ -132,66 +154,58 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
     const row = yield* Class;
     const reader = yield* DatabaseReader;
     const keys = yield* schoolKeys(row.tenantId);
-    // The authors and the mentioned Persons of the page, each read once. A mentioned
-    // Person who is gone is left out of its message's mentions.
-    const people = yield* Effect.forEach(
+    // The discussions the page's messages open, each read once.
+    const threads = yield* Effect.forEach(
       Arr.dedupe(
-        Arr.appendAll(
-          Arr.map(rows, (message) => message.authorId),
-          Arr.flatMap(rows, (message) => mentionedPeople(message.mentions))
+        Arr.flatMap(rows, (message) =>
+          message.startsThreadId === undefined ? [] : [message.startsThreadId]
         )
       ),
-      (personId) =>
-        reader.table("tenantPeople").get(personId).pipe(Effect.option),
+      (threadId) =>
+        reader.table("classroomThreads").get(threadId).pipe(Effect.orDie),
       { concurrency: "unbounded" }
-    ).pipe(Effect.map(Arr.getSomes));
+    );
+    // The authors, the mentioned Persons and the repliers of the page, each read once. A
+    // mentioned Person who is gone is left out of its message's mentions.
+    const faces = yield* readFaces(
+      Arr.flatten([
+        Arr.map(rows, (message) => message.authorId),
+        Arr.flatMap(rows, (message) => mentionedPeople(message.mentions)),
+        Arr.flatMap(threads, (thread) => replierPeople(thread.repliers ?? [])),
+      ])
+    );
     return yield* Effect.forEach(rows, (message) =>
       Effect.gen(function* () {
         // Every author was read above, so a message without its author is a defect.
         const author = yield* Effect.fromOption(
-          Arr.findFirst(
-            people,
-            (candidate) => candidate._id === message.authorId
-          )
+          faceOf(faces, message.authorId)
         );
         const mentions = Arr.flatMap(
           message.mentions ?? [],
           (mention): (typeof MentionView.Type)[] =>
             mention._tag === "person"
-              ? Option.match(
-                  Arr.findFirst(people, (found) => found._id === mention.id),
-                  {
-                    onNone: () => [],
-                    onSome: (found) => [
-                      {
-                        _tag: "person" as const,
-                        id: found._id,
-                        name: found.name,
-                      },
-                    ],
-                  }
-                )
+              ? Option.match(faceOf(faces, mention.id), {
+                  onNone: () => [],
+                  onSome: (found) => [
+                    { _tag: "person" as const, id: found.id, name: found.name },
+                  ],
+                })
               : [mention]
         );
         const text =
           message.sealedText === null
             ? null
             : yield* openText(keys, messageField(message), message.sealedText);
-        const discussion =
-          message.startsThreadId === undefined
-            ? null
-            : yield* discussionView(
-                yield* reader
-                  .table("classroomThreads")
-                  .get(message.startsThreadId)
-              );
+        const thread = Arr.findFirst(
+          threads,
+          (found) => found._id === message.startsThreadId
+        );
+        const discussion = Option.isSome(thread)
+          ? yield* discussionView(thread.value, faces)
+          : null;
         return {
           attachments: yield* attachmentViews(message, keys),
-          author: {
-            id: message.authorId,
-            name: message.nina === true ? NINA_NAME : author.name,
-            nina: message.nina === true,
-          },
+          author: message.nina === true ? ninaFace(author) : author,
           clientKey: message.clientKey,
           createdAt: message.createdAt,
           discussion,

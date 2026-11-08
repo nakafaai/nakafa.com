@@ -12,6 +12,7 @@ import {
   QueryRunner,
   VectorSearch,
 } from "@repo/backend/confect/_generated/services";
+import { nextRepliers } from "@repo/backend/confect/classroom/forum/face";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import {
   FORUM_INSTRUCTIONS,
@@ -285,6 +286,10 @@ const finish = FunctionImpl.make(
           thread._id,
           Struct.assign(Struct.omit(thread, ["_creationTime", "_id"]), {
             lastReplyAt: yield* Clock.currentTimeMillis,
+            repliers: nextRepliers(thread.repliers, {
+              _tag: "nina",
+              askedBy: question.authorId,
+            }),
             replies: thread.replies + 1,
           })
         )

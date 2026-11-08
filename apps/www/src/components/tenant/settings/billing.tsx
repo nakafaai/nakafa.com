@@ -257,7 +257,7 @@ function SchoolAccountsCard({ billing: overview }: { billing: SchoolBilling }) {
           <Button
             onClick={() => setIsAdding(true)}
             type="button"
-            variant={Option.isSome(running) ? "default" : "outline"}
+            variant="outline"
           >
             <HugeIcons icon={UserAdd01Icon} />
             {t("billing-add-accounts")}

@@ -1,3 +1,7 @@
+import {
+  ChartBubble01Icon,
+  ChartLineData01Icon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -5,11 +9,13 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -19,6 +25,7 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Option, Schema } from "effect";
 import { type ReactNode, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import type { PendingFigure } from "@/components/tenant/exams/editing";
 import {
   ChartMark,
@@ -112,11 +119,16 @@ function GraphFields({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Arr.map(GraphCurve.literals, (value) => (
-              <SelectItem key={value} value={value}>
-                {t(CURVE_NAME[value])}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <ChoiceLabel name="curve" />
+
+              {Arr.map(GraphCurve.literals, (value) => (
+                <SelectItem key={value} value={value}>
+                  <HugeIcons icon={ChartLineData01Icon} />
+                  {t(CURVE_NAME[value])}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </FigureField>
@@ -231,11 +243,16 @@ function ChartFields({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Arr.map(ChartMark.literals, (value) => (
-              <SelectItem key={value} value={value}>
-                {t(MARK_NAME[value])}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <ChoiceLabel name="mark" />
+
+              {Arr.map(ChartMark.literals, (value) => (
+                <SelectItem key={value} value={value}>
+                  <HugeIcons icon={ChartBubble01Icon} />
+                  {t(MARK_NAME[value])}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </FigureField>
