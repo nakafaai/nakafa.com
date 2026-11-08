@@ -23,10 +23,10 @@ import {
 } from "effect";
 
 /** A scripted stream that failed while it was read. */
-class ScriptedStreamError extends Schema.TaggedError<ScriptedStreamError>()(
-  "ScriptedStreamError",
-  { cause: Schema.Unknown }
-) {}
+class ScriptedStreamError extends Schema.TaggedError<
+  ScriptedStreamError,
+  { readonly brand: unique symbol }
+>()("ScriptedStreamError", { cause: Schema.Unknown }) {}
 
 /** The last step of a scripted model, which answers once its tool call returned. */
 export const finalAnswer = providerStep([

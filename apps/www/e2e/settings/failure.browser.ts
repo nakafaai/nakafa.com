@@ -131,7 +131,7 @@ const verifyClearWhileAdding = Effect.fn("NakafaE2E.verifyClearWhileAdding")(
       changes.release();
       await expect(editorOf(page)).toHaveCount(0);
       await saved(changes, before);
-      await page.waitForTimeout(1500);
+      await page.clock.runFor(1500);
       expect(changes.sent - before).toBe(2);
       await expect(page.getByText(MISSING)).toHaveCount(0);
       await reloadUntil(page, () =>

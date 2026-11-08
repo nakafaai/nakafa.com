@@ -28,10 +28,27 @@ const RESOURCE_IDLE_MILLISECONDS = 1000;
 const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const RESOURCE_POLL_MILLISECONDS = 100;
 /**
- * How many Resource Timing entries a measured page keeps. A browser keeps 250
- * and drops every later one, and a lesson loads more scripts than that alone.
+ * How many Resource Timing entries a page keeps. A browser keeps 250 and drops
+ * every later one, and a lesson or the home page loads more scripts than that
+ * alone.
  */
 const RESOURCE_TIMING_ENTRIES = 2000;
+
+/**
+ * Keeps every resource each document of the page loads in its Resource Timing
+ * entries, from before the page's own scripts run. Without it a list of what a
+ * page loaded misses whatever came after the browser's 250th entry.
+ */
+export const keepResourceTimings = Effect.fn("NakafaE2E.keepResourceTimings")(
+  function* (page: Page) {
+    yield* Effect.promise(() =>
+      page.addInitScript(
+        (entries) => performance.setResourceTimingBufferSize(entries),
+        RESOURCE_TIMING_ENTRIES
+      )
+    );
+  }
+);
 
 const createResourceRequestClassifier = (applicationOrigin: string) =>
   function classifyResourceRequest(
@@ -70,35 +87,35 @@ type LoadedJavascript = Omit<JavascriptRun, "encodedBodySize">;
 const COMPRESSION_CONCURRENCY = 8;
 
 /** A route did not return one successful document response. */
-class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
-  "JavascriptResourceResponseError",
-  {
-    href: Schema.String,
-    status: Schema.optional(Schema.Finite),
-  }
-) {}
+class JavascriptResourceResponseError extends Schema.TaggedError<
+  JavascriptResourceResponseError,
+  { readonly brand: unique symbol }
+>()("JavascriptResourceResponseError", {
+  href: Schema.String,
+  status: Schema.optional(Schema.Finite),
+}) {}
 
 /** A required JavaScript request did not complete. */
-class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResourceRequestError>()(
-  "JavascriptResourceRequestError",
-  {
-    href: Schema.String,
-    ...requestFailureFields,
-  }
-) {
+class JavascriptResourceRequestError extends Schema.TaggedError<
+  JavascriptResourceRequestError,
+  { readonly brand: unique symbol }
+>()("JavascriptResourceRequestError", {
+  href: Schema.String,
+  ...requestFailureFields,
+}) {
   get message() {
     return `JavaScript resource request failed: href=${this.href} ${formatRequestFailure(this)}`;
   }
 }
 
 /** Matching JavaScript resources continued loading beyond the fixed window. */
-class JavascriptResourceSettleTimeout extends Schema.TaggedError<JavascriptResourceSettleTimeout>()(
-  "JavascriptResourceSettleTimeout",
-  {
-    href: Schema.String,
-    timeoutMilliseconds: Schema.Finite,
-  }
-) {}
+class JavascriptResourceSettleTimeout extends Schema.TaggedError<
+  JavascriptResourceSettleTimeout,
+  { readonly brand: unique symbol }
+>()("JavascriptResourceSettleTimeout", {
+  href: Schema.String,
+  timeoutMilliseconds: Schema.Finite,
+}) {}
 
 const countJavascriptResources = Effect.fn(
   "NakafaE2E.countJavascriptResources"
@@ -290,12 +307,7 @@ export const measureRouteJavascript = Effect.fn(
             yield* signInLearner(context, baseURL);
           }
           const page = yield* Effect.promise(() => context.newPage());
-          yield* Effect.promise(() =>
-            page.addInitScript(
-              (entries) => performance.setResourceTimingBufferSize(entries),
-              RESOURCE_TIMING_ENTRIES
-            )
-          );
+          yield* keepResourceTimings(page);
           yield* seedAnalyticsConsent(page, "denied");
           const applicationOrigin = new URL(baseURL).origin;
           const classifyRequest =

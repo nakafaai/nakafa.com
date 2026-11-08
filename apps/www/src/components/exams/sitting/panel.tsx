@@ -41,7 +41,8 @@ import { DataFailure } from "@/components/shared/failure";
 import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import { PanesDetail } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
@@ -321,9 +322,9 @@ function SignalList({
     <div className="grid gap-2 text-sm">
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {Arr.isReadonlyArrayEmpty(signals.results) && !failed ? (
-        <TableEmpty
-          act="reading"
+        <EmptyState
           description={t("signals-empty")}
+          scene={<EmptyNina act="reading" />}
           title={t("signals-empty-title")}
         />
       ) : null}

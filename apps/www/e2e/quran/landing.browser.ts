@@ -1,9 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Duration, Effect } from "effect";
+import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet, waitForScrollRest } from "@/e2e/support/quiet";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -91,7 +92,9 @@ const expectLanded = Effect.fn("NakafaE2E.expectLanded")(function* (
       })
       .toBeLessThanOrEqual(1)
   );
-  yield* Effect.sleep(Duration.seconds(1));
+  // A jump that moves afterwards, as late verses draw above, was not a landing.
+  yield* Effect.promise(() => waitForQuiet(page));
+  yield* Effect.promise(() => waitForScrollRest(page));
   const gap = yield* Effect.promise(() => page.evaluate(readVerseGap, id));
   yield* Effect.sync(() => expect(Math.abs(gap)).toBeLessThanOrEqual(1));
 });

@@ -24,10 +24,10 @@ export type SettledTurn = Extract<NinaTurnsDoc, { phase: "settled" }>;
  * The seal could not write the sealed rows at the steps it named. The whole seal
  * is one transaction, so nothing of the turn is written when this is raised.
  */
-export class TurnSealError extends Schema.TaggedError<TurnSealError>()(
-  "TurnSealError",
-  {}
-) {}
+export class TurnSealError extends Schema.TaggedError<
+  TurnSealError,
+  { readonly brand: unique symbol }
+>()("TurnSealError", {}) {}
 
 /**
  * Rows one query reads of a turn. The seal reads pages until it reaches the prompt, so

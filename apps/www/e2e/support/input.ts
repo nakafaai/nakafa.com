@@ -101,10 +101,10 @@ export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
 const SwipeSurfaceSchema = Schema.Literals(["consent-drawer"]);
 
 /** One interactive surface did not expose measurable bounds for a gesture. */
-class SurfaceBoundsMissing extends Schema.TaggedError<SurfaceBoundsMissing>()(
-  "SurfaceBoundsMissing",
-  { surface: SwipeSurfaceSchema }
-) {
+class SurfaceBoundsMissing extends Schema.TaggedError<
+  SurfaceBoundsMissing,
+  { readonly brand: unique symbol }
+>()("SurfaceBoundsMissing", { surface: SwipeSurfaceSchema }) {
   get message() {
     return `Surface bounds are missing: surface=${this.surface}.`;
   }

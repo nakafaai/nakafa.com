@@ -22,10 +22,10 @@ const PUBLIC_PREFIX = "VITE_";
 const formatIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 
 /** One or more environment values failed the Schema of their key. */
-export class InvalidEnvironmentError extends Schema.TaggedError<InvalidEnvironmentError>()(
-  "InvalidEnvironmentError",
-  { details: Schema.String }
-) {
+export class InvalidEnvironmentError extends Schema.TaggedError<
+  InvalidEnvironmentError,
+  { readonly brand: unique symbol }
+>()("InvalidEnvironmentError", { details: Schema.String }) {
   get message() {
     return `Invalid environment variables: ${this.details}`;
   }

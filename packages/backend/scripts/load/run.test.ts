@@ -54,18 +54,18 @@ describe("load run", () => {
           connect: () => fake.open,
           output,
           plan,
-          run: (_operation, args) =>
+          run: (_operation, call) =>
             Effect.sync(() => {
-              if (args[1] === "exams/seed:load") {
-                return encodeJson({
+              if (call.path === "exams/seed:load") {
+                return {
                   examId: "e1",
                   sittings: [{ id: "s1", room: "Ruang 01", token: "AAAAAA" }],
-                });
+                };
               }
-              if (args[1] === "exams/seed:answers") {
+              if (call.path === "exams/seed:answers") {
                 // The answers come in two pages: this run's, then another run's after the cursor.
-                const first = args[2]?.includes('"cursor":null') ?? false;
-                return encodeJson({
+                const first = encodeJson(call.args).includes('"cursor":null');
+                return {
                   continueCursor: "after-a1",
                   isDone: !first,
                   page: first
@@ -86,11 +86,11 @@ describe("load run", () => {
                           version: 1,
                         },
                       ],
-                });
+                };
               }
-              return "";
+              return null;
             }),
-          school: () => Effect.succeed("sekolah"),
+          school: Effect.succeed("sekolah"),
         }).pipe(Effect.provide(recorderLayer(ledger)));
         expect(yield* fs.readFileString(ledger)).toContain('"attempt":"a1"');
         expect(report.audit).toMatchObject({

@@ -49,13 +49,13 @@ const DependencyPolicyInput = Schema.Struct({
 export type DependencyPolicyInput = typeof DependencyPolicyInput.Type;
 
 /** Expected failure while reading or decoding dependency policy files. */
-export class DependencyPolicyReadError extends Schema.TaggedError<DependencyPolicyReadError>()(
-  "DependencyPolicyReadError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class DependencyPolicyReadError extends Schema.TaggedError<
+  DependencyPolicyReadError,
+  { readonly brand: unique symbol }
+>()("DependencyPolicyReadError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 function readError(message: string, cause: unknown) {
   return new DependencyPolicyReadError({ cause, message });

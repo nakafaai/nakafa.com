@@ -15,9 +15,9 @@ import { cva } from "class-variance-authority";
 import { Array as Arr, Effect } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { sentAction } from "@/components/tenant/exams/action";
 import { useHeartbeat } from "@/components/tenant/exams/beat";
 import { useExam } from "@/components/tenant/exams/provider";
+import { schoolCall } from "@/components/tenant/write";
 
 /** The most avatars the row shows before it counts the rest in one more circle. */
 const SHOWN_EDITORS = 3;
@@ -68,7 +68,7 @@ function useExamHeartbeat(isOpen: boolean) {
   useHeartbeat({
     isOpen,
     join: (session) =>
-      sentAction(() => join({ examId, session, slug })).pipe(
+      schoolCall(() => join({ examId, session, slug })).pipe(
         Effect.map((joined) => joined.token)
       ),
     source: "components/tenant/exams/presence",
