@@ -109,7 +109,7 @@ function Toaster({
           actionButton: buttonVariants({ size: "sm" }),
           cancelButton: buttonVariants({ size: "sm", variant: "secondary" }),
           closeButton: cn(
-            buttonVariants({ size: "icon-xs", variant: "outline" }),
+            buttonVariants({ size: "icon-sm", variant: "outline" }),
             "absolute start-0 top-0 -translate-x-[35%] -translate-y-[35%]"
           ),
           content: "flex min-w-0 flex-1 flex-col gap-0.5",

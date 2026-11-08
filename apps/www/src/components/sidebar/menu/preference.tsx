@@ -6,9 +6,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -41,16 +39,6 @@ const ThemeSubmenuContent = lazy(() =>
   }))
 );
 
-/** Keeps the language control label identical across guest and account menus. */
-function LanguageMenuTriggerContent({ label }: { label: string }) {
-  return (
-    <>
-      <HugeIcons icon={TranslateIcon} />
-      <span className="truncate">{label}</span>
-    </>
-  );
-}
-
 /** Renders the nested language submenu and delegates route projection to the shared switcher seam. */
 function LanguageMenuItems() {
   const { isPending, replace } = useLocalizedRouteSwitch();
@@ -66,10 +54,10 @@ function LanguageMenuItems() {
       {Arr.map(languages, (language) => (
         <DropdownMenuItem
           disabled={isPending}
+          icon={<CountryFlagIcon countryCode={language.countryCode} />}
           key={language.value}
           onClick={() => handleChangeLocale(language.value)}
         >
-          <CountryFlagIcon countryCode={language.countryCode} />
           <span className="truncate">{language.label}</span>
           <ActiveBadge isActive={currentLocale === language.value} />
         </DropdownMenuItem>
@@ -91,7 +79,8 @@ export function GuestLanguageMenu() {
           openOnHover
           render={
             <SidebarMenuButton title={label}>
-              <LanguageMenuTriggerContent label={label} />
+              <HugeIcons icon={TranslateIcon} />
+              <span className="truncate">{label}</span>
               <HugeIcons
                 className="ml-auto opacity-80"
                 data-slot="language-menu-indicator"
@@ -103,13 +92,11 @@ export function GuestLanguageMenu() {
         <DropdownMenuContent
           align="start"
           className="w-max max-w-[calc(100vw-2rem)]"
+          label={t("menu-language")}
           side={side}
           sideOffset={4}
         >
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
-            <LanguageMenuItems />
-          </DropdownMenuGroup>
+          <LanguageMenuItems />
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>
@@ -123,17 +110,15 @@ export function SidebarLanguageSubmenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <LanguageMenuTriggerContent label={t("language")} />
+      <DropdownMenuSubTrigger icon={TranslateIcon}>
+        <span className="truncate">{t("language")}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent
         className="w-max max-w-[calc(100vw-2rem)]"
+        label={t("menu-language")}
         side={side}
       >
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("menu-language")}</DropdownMenuLabel>
-          <LanguageMenuItems />
-        </DropdownMenuGroup>
+        <LanguageMenuItems />
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );
@@ -146,8 +131,7 @@ export function SidebarThemeSubmenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <HugeIcons icon={PaintBoardIcon} />
+      <DropdownMenuSubTrigger icon={PaintBoardIcon}>
         <span className="truncate">{t("theme")}</span>
       </DropdownMenuSubTrigger>
       <Suspense fallback={null}>

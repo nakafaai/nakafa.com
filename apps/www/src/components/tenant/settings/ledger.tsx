@@ -11,7 +11,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useInvoiceDownload } from "@/components/billing/invoice";
@@ -155,13 +154,13 @@ function SchoolInvoiceMenu({
     <RowItems>
       <DropdownMenuItem
         disabled={!(hasNumber && isActiveLocale(locale)) || isPending}
+        icon={Download04Icon}
         onClick={() => {
           if (isActiveLocale(locale)) {
             download(() => draw({ locale, number: invoice.number, slug }));
           }
         }}
       >
-        <HugeIcons icon={Download04Icon} />
         {t("invoice-download")}
       </DropdownMenuItem>
       {invoice.status === "open" && hasNumber ? (
@@ -190,13 +189,14 @@ function SchoolInvoicePay({
 
   return link === null ? (
     <DropdownMenuItem
+      icon={Mail01Icon}
       render={<a href={transferMailto(number)} title={t("invoice-transfer")} />}
     >
-      <HugeIcons icon={Mail01Icon} />
       {t("invoice-transfer")}
     </DropdownMenuItem>
   ) : (
     <DropdownMenuItem
+      icon={CreditCardIcon}
       render={
         <a
           href={link}
@@ -206,7 +206,6 @@ function SchoolInvoicePay({
         />
       }
     >
-      <HugeIcons icon={CreditCardIcon} />
       {t("invoice-pay")}
     </DropdownMenuItem>
   );

@@ -1,8 +1,4 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuSubContent,
-} from "@repo/design-system/components/ui/dropdown-menu";
+import { DropdownMenuSubContent } from "@repo/design-system/components/ui/dropdown-menu";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { ThemeMenuItems } from "@/components/shared/theme/items";
@@ -22,12 +18,10 @@ export function ThemeSubmenuContent({
     <DropdownMenuSubContent
       className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
       keepMounted
+      label={common("menu-theme")}
       side={side}
     >
-      <DropdownMenuGroup>
-        <DropdownMenuLabel>{common("menu-theme")}</DropdownMenuLabel>
-        <ThemeMenuItems />
-      </DropdownMenuGroup>
+      <ThemeMenuItems />
     </DropdownMenuSubContent>
   );
 }
