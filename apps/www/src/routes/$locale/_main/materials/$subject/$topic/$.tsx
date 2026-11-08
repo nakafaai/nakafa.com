@@ -295,7 +295,7 @@ function MaterialPage() {
               {headings.length === 0 ? <ComingSoon /> : page.body}
             </LayoutContent>
             <MaterialPagination />
-            <FooterContent>
+            <FooterContent rule>
               <DeferredComments slug={route.contentKey} />
             </FooterContent>
             <SheetEntry contextTitle={metadata.title} />
