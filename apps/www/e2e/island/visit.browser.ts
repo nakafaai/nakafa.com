@@ -51,8 +51,10 @@ test("a learner shares their island, and a signed-out visitor opens it read only
       )
     )
   );
-  const address =
-    (await page.locator("html").getAttribute("data-shared")) ?? "";
+  // Share hands on the production address; the visitor opens its path on the build under test.
+  const address = new URL(
+    (await page.locator("html").getAttribute("data-shared")) ?? ""
+  ).pathname;
   const visitor = await browser.newContext({ baseURL: origin });
   const visit = await visitor.newPage();
   // A visitor who never answered the usage-data prompt would find it over the card's actions.
