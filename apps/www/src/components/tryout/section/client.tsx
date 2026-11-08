@@ -6,6 +6,7 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
+import { useNow } from "@/components/player/now";
 import { PlayerTimer } from "@/components/player/timer";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
@@ -30,7 +31,6 @@ import {
   getTryoutPublicPathHref,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
-import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
   TryoutStartProvider,
   useTryoutStartPhase,
@@ -220,7 +220,7 @@ function ResolvedTryoutSectionPage({
   const opening = useTryoutStartPhase() === "opening";
   const attempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
-  const now = useTryoutClock(
+  const now = useNow(
     attempt?.status === "in-progress" ||
       runtime?.section.status === "in-progress"
   );
