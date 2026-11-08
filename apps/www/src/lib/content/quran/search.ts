@@ -8,6 +8,12 @@ export const QuranIndexSurah = Schema.Struct({
   title: Schema.String,
 });
 
+/** A letter written more than once in a row, which a search counts once. */
+const REPEATED_LETTER = /(?<letter>\p{L})\k<letter>+/gu;
+
+/** A closing "h" after a vowel, which readers add or leave out. */
+const CLOSING_H = /(?<vowel>[aeiou])h$/u;
+
 /**
  * Words as a search compares them: lower case, with no marks, so Arabic without
  * its vowel signs and a name without its accents still match, and with no space,
@@ -21,8 +27,8 @@ function fold(words: string) {
     .replace(/\p{M}/gu, "")
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]/gu, "")
-    .replace(/(\p{L})\1+/gu, "$1")
-    .replace(/([aeiou])h$/u, "$1");
+    .replace(REPEATED_LETTER, "$<letter>")
+    .replace(CLOSING_H, "$<vowel>");
 }
 
 /**
