@@ -46,15 +46,15 @@ export function SchoolTasks() {
   const [graded, waiting, late] = DEMO_HANDERS;
 
   return (
-    <FeatureRow id="tasks">
+    <FeatureRow id="tasks" layout="stack">
       <SchoolFeatureText feature="tasks">
         <Nina act="writing" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureCard>
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
           <div className="grid min-w-0 gap-1">
             <p className="flex min-w-0 items-center gap-2 font-medium">
-              <HugeIcons icon={Task01Icon} />
+              <HugeIcons className="size-4" icon={Task01Icon} />
               <span className="truncate">{t("demo-task-title")}</span>
             </p>
             <p className="text-muted-foreground text-sm">

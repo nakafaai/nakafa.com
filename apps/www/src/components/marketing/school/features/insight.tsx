@@ -69,7 +69,7 @@ export function SchoolInsight() {
             </li>
           ))}
         </ol>
-        <div className="grid gap-3 border-t pt-4">
+        <div className="grid gap-3">
           <p className="text-sm font-medium">{t("demo-insight-attention")}</p>
           <ul className="grid gap-3">
             {Arr.map(

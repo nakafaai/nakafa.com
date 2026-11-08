@@ -2647,7 +2647,8 @@
     "school-insight": "Einblicke",
     "school-graduation": "Abschluss",
     "school-parents": "Eltern",
-    "school-home": "Nakafa School"
+    "school-home": "Nakafa School",
+    "learn-home": "Nakafa"
   },
   "Weather": {
     "loading": "Wetter wird geladen...",
@@ -4461,7 +4462,7 @@
     "demo-task-in": "Abgegeben",
     "demo-task-late": "Verspätet",
     "demo-exam-title": "Physik-Klausur",
-    "demo-exam-question": "Ein 2-kg-Ball rollt mit 3 m/s. Wie groß ist sein Impuls?",
+    "demo-exam-question": "Ein <mass></mass> schwerer Ball rollt mit <speed></speed>. Wie groß ist sein Impuls?",
     "demo-exam-answer": "Antwort",
     "demo-exam-progress": "Frage {current} von {total}",
     "demo-report-term": "Halbjahreszeugnis",

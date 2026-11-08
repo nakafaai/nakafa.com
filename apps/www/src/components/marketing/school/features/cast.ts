@@ -7,8 +7,17 @@ const SCHOOL_SEED = "nakafa-school";
 /** How many people the landing's demos show, each with an animal of their own. */
 const SCHOOL_PEOPLE = 21;
 
-/** The animals of the School landing, from one cast, so no animal appears twice on the page. */
-const SCHOOL_CAST = cast(SCHOOL_SEED, SCHOOL_PEOPLE);
+/** How many animals the landing's toys take: six around the hero's title, and two where each of five parts begins. */
+const SCHOOL_TOYS = 16;
+
+/**
+ * The animals of the School landing, from one cast: the people of its demos
+ * first, then its toys, so no animal appears twice on the page.
+ */
+const SCHOOL_CAST = cast(SCHOOL_SEED, SCHOOL_PEOPLE + SCHOOL_TOYS);
+
+/** The animals of the landing's toys, after its people. */
+export const SCHOOL_TOY_HERD = Arr.drop(SCHOOL_CAST, SCHOOL_PEOPLE);
 
 /** One person of a demo: their name and the animal at their place in the cast. */
 function person(name: string, place: number) {

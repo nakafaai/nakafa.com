@@ -33,12 +33,12 @@ export function SchoolReports() {
   const format = useFormatter();
 
   return (
-    <FeatureRow id="reports">
+    <FeatureRow id="reports" layout="end">
       <SchoolFeatureText feature="reports">
         <Nina act="stamping" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureCard>
-        <div className="flex items-center gap-3 border-b pb-4">
+        <div className="flex items-center gap-3">
           <PersonAvatar mascot={DEMO_REPORTED.mascot} size="lg" />
           <div className="grid min-w-0 gap-0.5">
             <p className="truncate font-medium">{DEMO_REPORTED.name}</p>
@@ -60,7 +60,7 @@ export function SchoolReports() {
           <div
             className={stepVariants({
               className:
-                "flex items-center justify-between gap-4 border-t pt-3",
+                "flex items-center justify-between gap-4",
               step: 5,
             })}
           >
@@ -73,16 +73,19 @@ export function SchoolReports() {
         <div
           className={stepVariants({
             className:
-              "flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm",
+              "flex flex-wrap items-center justify-between gap-3 text-sm",
             step: 6,
           })}
         >
           <p className="flex items-center gap-2">
-            <HugeIcons className="text-success" icon={CheckmarkCircle02Icon} />
+            <HugeIcons
+              className="text-success size-4"
+              icon={CheckmarkCircle02Icon}
+            />
             {t("demo-report-signed")}
           </p>
           <p className="text-muted-foreground flex items-center gap-2">
-            <HugeIcons icon={QrCodeIcon} />
+            <HugeIcons className="size-4" icon={QrCodeIcon} />
             {t("demo-report-verify")}
           </p>
         </div>

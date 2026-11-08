@@ -34,7 +34,7 @@ function LibraryEntry({
         step,
       })}
     >
-      <HugeIcons className="text-muted-foreground" icon={icon} />
+      <HugeIcons className="text-muted-foreground size-4" icon={icon} />
       <span className="min-w-0 flex-1 truncate text-sm">{name}</span>
       <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
         {children}
@@ -54,16 +54,16 @@ export function SchoolLibrary() {
     format.number(value, { style: "unit", unit });
 
   return (
-    <FeatureRow id="library">
+    <FeatureRow id="library" layout="end">
       <SchoolFeatureText feature="library">
         <Nina act="carrying" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureCard>
-        <p className="flex min-w-0 items-center gap-2 border-b pb-4 font-medium">
-          <HugeIcons icon={LibraryIcon} />
+        <p className="flex min-w-0 items-center gap-2 font-medium">
+          <HugeIcons className="size-4" icon={LibraryIcon} />
           <span className="truncate">{t("demo-class")}</span>
         </p>
-        <ul className="-my-2 divide-y">
+        <ul className="-my-2 grid">
           <LibraryEntry
             icon={Folder01Icon}
             name={t("demo-library-folder")}

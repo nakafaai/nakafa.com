@@ -1,32 +1,58 @@
 import { Card } from "@repo/design-system/components/ui/card";
+import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**
- * One feature of a marketing page, read in one glance: its words on the start
- * side and one card of the real product on the end side, the same in every
- * feature, so the page keeps one rhythm. On a phone the words come first.
+ * How a feature lays out its words and its product, so a page can vary its rhythm as the home does:
+ * `start` puts the words on the start side, `end` puts them on the end side, `stack` puts them
+ * centred above the product, which takes the column's middle, and `wide` does the same over a product
+ * as wide as the page. On a phone the words always come first.
+ */
+const featureVariants = cva("group/feature mx-auto grid w-full gap-12", {
+  defaultVariants: { layout: "start" },
+  variants: {
+    layout: {
+      end: "max-w-7xl items-center lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 lg:*:first:order-last",
+      stack: "max-w-3xl",
+      wide: "max-w-6xl",
+      start:
+        "max-w-7xl items-center lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16",
+    },
+  },
+});
+
+/**
+ * One feature of a marketing page, read in one glance: its words and one card of the real product,
+ * on either side or the words above it (`layout`). On a phone the words come first.
  */
 export function FeatureRow({
   children,
+  layout,
   ...section
 }: {
   children: ReactNode;
   id: string;
-}) {
+} & VariantProps<typeof featureVariants>) {
   return (
     <MarketingSection {...section}>
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+      <div
+        className={featureVariants({ layout })}
+        data-centred={layout === "stack" || layout === "wide" ? "" : undefined}
+      >
         {children}
       </div>
     </MarketingSection>
   );
 }
 
-/** The words of a feature: Nina doing what fits it, its title, and one sentence. They rise into place as they scroll in. */
+/**
+ * The words of a feature: Nina doing what fits it, its title, and one sentence. They rise into place
+ * as they scroll in, and centre themselves above a stacked feature's product.
+ */
 export function FeatureText({ children }: { children: ReactNode }) {
   return (
-    <div className="rise-on-scroll grid min-w-0 content-center justify-items-start gap-3">
+    <div className="rise-on-scroll grid min-w-0 content-center justify-items-start gap-3 group-data-centred/feature:justify-items-center group-data-centred/feature:text-center">
       {children}
     </div>
   );

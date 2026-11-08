@@ -2647,7 +2647,8 @@
     "school-insight": "Insight",
     "school-graduation": "Kelulusan",
     "school-parents": "Orang tua",
-    "school-home": "Nakafa School"
+    "school-home": "Nakafa School",
+    "learn-home": "Nakafa"
   },
   "Weather": {
     "loading": "Lagi muat cuaca...",
@@ -4461,7 +4462,7 @@
     "demo-task-in": "Terkumpul",
     "demo-task-late": "Terlambat",
     "demo-exam-title": "UTS Fisika",
-    "demo-exam-question": "Bola 2 kg menggelinding dengan kecepatan 3 m/s. Berapa momentumnya?",
+    "demo-exam-question": "Bola <mass></mass> menggelinding dengan kecepatan <speed></speed>. Berapa momentumnya?",
     "demo-exam-answer": "Jawaban",
     "demo-exam-progress": "Soal {current} dari {total}",
     "demo-report-term": "Rapor semester 1",

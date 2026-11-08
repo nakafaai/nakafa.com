@@ -2647,7 +2647,8 @@
     "school-insight": "Insight",
     "school-graduation": "Graduation",
     "school-parents": "Parents",
-    "school-home": "Nakafa School"
+    "school-home": "Nakafa School",
+    "learn-home": "Nakafa"
   },
   "Weather": {
     "loading": "Loading weather...",
@@ -4461,7 +4462,7 @@
     "demo-task-in": "Handed in",
     "demo-task-late": "Late",
     "demo-exam-title": "Physics midterm",
-    "demo-exam-question": "A 2 kg ball rolls at 3 m/s. What is its momentum?",
+    "demo-exam-question": "A <mass></mass> ball rolls at <speed></speed>. What is its momentum?",
     "demo-exam-answer": "Answer",
     "demo-exam-progress": "Question {current} of {total}",
     "demo-report-term": "Semester 1 report",
