@@ -111,7 +111,12 @@ function TrendTrack({
 
   return (
     <group>
-      <Line color={colors.rail} lineWidth={2} points={railPoints} />
+      <Line
+        color={colors.rail}
+        lineWidth={2}
+        points={railPoints}
+        toneMapped={false}
+      />
       <ArrowHelper
         arrowSize={0.16}
         color={color}

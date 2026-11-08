@@ -6,6 +6,7 @@
     "types": [
       "vite/client",
       "@repo/internationalization/i18n.d.ts",
+      "@repo/design-system/types/p5.d.ts",
       "vitest/globals"
     ],
     "paths": {

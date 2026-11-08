@@ -11,6 +11,7 @@ const SURFACES = {
   chosen: "default-outline",
   correct: "success-outline",
   idle: "outline",
+  key: "success-outline",
   wrong: "destructive-outline",
 } as const;
 
@@ -20,8 +21,12 @@ const SURFACES = {
  * words take the base size and stand on the side the set reads from, whatever each line is written in.
  */
 const markedLine = cva("flex min-w-0 items-start gap-2", {
-  defaultVariants: { framed: true, written: false },
+  defaultVariants: { dashed: false, framed: true, written: false },
   variants: {
+    dashed: {
+      false: "",
+      true: "border-dashed",
+    },
     framed: {
       false: "",
       true: "h-auto w-full flex-1 shrink justify-start p-2 text-base font-normal whitespace-normal ltr:text-left rtl:text-right",
@@ -36,7 +41,8 @@ const markedLine = cva("flex min-w-0 items-start gap-2", {
 /**
  * One marked line: a marker, the words it names, and what stands at its end, such as a remove control, all on the
  * words' first line however many lines they wrap to. An outlined tone draws the row as an answer: open (`idle`),
- * chosen, correct or wrong; `bare` draws only the parts, for a row inside a table's cell. `written` marks a row whose
+ * chosen, correct, wrong, or the `key` a learner did not mark, which is correct and dashed, so it never reads as
+ * the learner's pick; `bare` draws only the parts, for a row inside a table's cell. `written` marks a row whose
  * words are edited in place, so a press places the caret and the row holds still under it. It renders a `div`, or the element `render` names, such as
  * the `label` of a choice whose circle it holds. Compose `LineMark` and `LineWords` inside it.
  */
@@ -56,7 +62,11 @@ export function MarkedLine({
       {
         className: cn(
           tone === "bare" ? "" : buttonVariants({ variant: SURFACES[tone] }),
-          markedLine({ framed: tone !== "bare", written }),
+          markedLine({
+            dashed: tone === "key",
+            framed: tone !== "bare",
+            written,
+          }),
           className
         ),
       },

@@ -135,14 +135,17 @@ const pickerItemVariants = cva("group/picker-item text-sm sm:text-sm", {
  */
 function Picker({
   children,
+  defaultOpen = false,
   search,
 }: {
   children: ReactNode;
+  /** Opens the picker as it mounts, for a picker whose code the press that opens it loads. */
+  defaultOpen?: boolean | undefined;
   /** The server's search, for a list too long to send at once. Without it the picker filters its own options. */
   search?: ServerSearch | undefined;
 }) {
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, {});
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const change = (next: boolean) => {
     setOpen(next);
     if (!next) {

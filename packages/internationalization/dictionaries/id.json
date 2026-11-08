@@ -72,10 +72,10 @@
   "SchoolGuardians": {
     "email": "Email",
     "request-ask": "Tanya sekolah",
-    "request-description": "Tulis kebutuhan Anda secara singkat, dan tata usaha menjawabnya.",
-    "request-placeholder": "Yang Anda perlukan dari tata usaha",
+    "request-description": "Tulis singkat apa yang kamu butuhkan, nanti tata usaha menjawabnya.",
+    "request-placeholder": "Yang kamu perlukan dari tata usaha",
     "request-kind": "Permintaan",
-    "request-text": "Catatan Anda",
+    "request-text": "Catatanmu",
     "request-state": "Status",
     "request-student": "Siswa",
     "request-send": "Kirim",
@@ -103,15 +103,15 @@
     "sign-in": "Masuk",
     "resend-code": "Kirim ulang",
     "change-address": "Pakai alamat lain",
-    "failed": "Tidak dapat terhubung. Coba lagi.",
-    "home-title": "Anak saya",
+    "failed": "Belum bisa terhubung. Coba lagi.",
+    "home-title": "Anakku",
     "home-empty": "Belum ada anak yang ditautkan.",
-    "home-empty-description": "Minta sekolah menautkan email Anda ke data anak.",
+    "home-empty-description": "Minta sekolah menautkan emailmu ke data anakmu.",
     "child-pending": "Tautan menunggu pemeriksaan.",
     "child-verified": "Tautan terverifikasi.",
     "child-expired": "Tautan sudah kedaluwarsa.",
     "child-revoked": "Sekolah mengakhiri tautan ini.",
-    "child-withdrawn": "Anda menarik persetujuan.",
+    "child-withdrawn": "Kamu menarik persetujuan.",
     "child-staff-check": "Sekolah akan memeriksa tautan ini.",
     "child-ended-hint": "Hubungi sekolah untuk menautkan lagi.",
     "nisn-label": "NISN anak",
@@ -119,9 +119,9 @@
     "nisn-refused": "Data ini tidak cocok.",
     "nisn-submit": "Periksa",
     "withdraw": "Tarik persetujuan",
-    "withdraw-hint": "Anda dapat menarik persetujuan kapan saja.",
+    "withdraw-hint": "Kamu bisa menarik persetujuan kapan saja.",
     "withdraw-title": "Tarik persetujuan?",
-    "withdraw-description": "Anda tidak akan melihat nilai anak lagi sampai sekolah menautkan ulang.",
+    "withdraw-description": "Kamu tidak akan melihat nilai anakmu lagi sampai sekolah menautkannya ulang.",
     "grades-empty": "Belum ada nilai yang dirilis.",
     "grade-class": "Kelas",
     "grade-value": "Nilai",
@@ -131,7 +131,7 @@
     "link-add": "Tautkan orang tua",
     "link-add-description": "Orang tua meminta kode masuk sendiri di halaman orang tua sekolah.",
     "links-empty": "Belum ada orang tua yang ditautkan.",
-    "links-empty-description": "Tautkan email orang tua ke siswa agar mereka dapat masuk.",
+    "links-empty-description": "Tautkan email orang tua ke siswa supaya mereka bisa masuk.",
     "links-search": "Cari siswa atau email",
     "student": "Siswa",
     "guardian-name": "Nama orang tua",
@@ -150,7 +150,7 @@
     "link-readdress-save": "Simpan email",
     "link-revoke": "Akhiri tautan",
     "link-revoke-title": "Akhiri tautan ini?",
-    "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi.",
+    "link-revoke-description": "Orang tua tidak bisa melihat data anaknya lagi.",
     "link-detail": "Tautan orang tua",
     "links-views": "Tautan dan permintaan",
     "view-links": "Tautan",
@@ -324,7 +324,7 @@
     "locked-frozen": "Satu sesi ujian ini sudah selesai, jadi soalnya tetap seperti yang dijawab siswa. Duplikat ujian ini untuk memakainya lagi.",
     "duplicate-action": "Duplikat ujian",
     "duplicate-suffix": "(salinan)",
-    "gone-note": "Ujian ini sudah dihapus atau ditutup untuk Anda, jadi perubahan di sini tidak tersimpan.",
+    "gone-note": "Ujian ini sudah dihapus atau ditutup untukmu, jadi perubahan di sini tidak tersimpan.",
     "room-cancel": "Batalkan ruang",
     "room-cancel-title": "Batalkan ruang ini?",
     "room-cancel-description": "Siswa tidak bisa masuk ke ruang ini lagi.",
@@ -379,7 +379,7 @@
     "results-finished": "Selesai",
     "results-empty-title": "Belum ada hasil",
     "results-empty": "Hasil muncul di sini setelah siswa menyelesaikan sesi.",
-    "results-unavailable": "Kamu tidak dapat melihat hasil ini.",
+    "results-unavailable": "Kamu tidak bisa melihat hasil ini.",
     "results-share": "{share}% benar",
     "results-counted": "{answered} dari {counted} menjawab.",
     "results-incomplete": "Hanya {counted} jawaban pertama yang dihitung.",
@@ -435,7 +435,7 @@
     "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",
     "rooms-filter-empty": "Tidak ada ruang dengan status ini",
     "rooms-filter-empty-description": "Pilih status lain untuk melihat ruang yang lain.",
-    "rooms-unavailable": "Anda tidak dapat melihat ruang ujian ini.",
+    "rooms-unavailable": "Kamu tidak bisa melihat ruang ujian ini.",
     "rooms-group": "Kelompok",
     "rooms-opens": "Dibuka",
     "rooms-closes": "Ditutup",
@@ -556,13 +556,13 @@
     "media-link": "Tautan YouTube",
     "media-link-hint": "Tautan video publik atau tidak terdaftar.",
     "media-alt": "Isi",
-    "media-alt-hint": "Dibaca siswa yang tidak dapat mendengar atau melihatnya.",
+    "media-alt-hint": "Dibaca siswa yang tidak bisa mendengar atau melihatnya.",
     "media-remove": "Hapus {name}",
     "reading": "Bacaan bersama",
     "reading-none": "Tanpa bacaan",
     "reading-new": "Bacaan sendiri",
     "reading-same": "Sama dengan soal {number}",
-    "reading-hint": "Teks yang menjadi dasar soal. Beberapa soal dapat memakai satu bacaan.",
+    "reading-hint": "Teks yang menjadi dasar soal. Beberapa soal bisa memakai satu bacaan.",
     "reading-text": "Bacaan soal {number}",
     "reading-placeholder": "Tulis bacaan",
     "template-reason": "Jawaban dan alasan",
@@ -587,7 +587,7 @@
     "figure-name-placeholder": "Nilai tiap kelas",
     "figure-alt-placeholder": "Nilai naik dari kelas X ke kelas XII",
     "figure-alt": "Isi gambar",
-    "figure-alt-hint": "Dibacakan untuk siswa yang tidak dapat melihatnya.",
+    "figure-alt-hint": "Dibacakan untuk siswa yang tidak bisa melihatnya.",
     "figure-curve": "Kurva",
     "figure-line": "Garis, y = ax + b",
     "figure-quadratic": "Parabola, y = ax² + bx + c",
@@ -967,7 +967,7 @@
     "invite-google-admin-note": "Admin perlu alamat Google, karena Admin tidak mendapat kartu login.",
     "invite-revoke": "Cabut",
     "invite-revoke-title": "Cabut undangan ini?",
-    "invite-revoke-description": "Alamat ini tidak dapat lagi menerima undangan ini.",
+    "invite-revoke-description": "Alamat ini tidak bisa lagi menerima undangan ini.",
     "invite-revoke-confirm": "Cabut",
     "client-name": "Nama",
     "client-id": "ID klien",
@@ -1216,7 +1216,7 @@
       }
     },
     "role-description": {
-      "owner": "Dapat melakukan semua hal di sekolah ini.",
+      "owner": "Bisa melakukan semua hal di sekolah ini.",
       "admin": "Mengelola pengaturan, orang, unit, periode, undangan, dan akses sekolah.",
       "principal": "Melihat rencana dan catatan sekolah, dan menyetujui kenaikan kelas.",
       "deputy": "Melihat rencana, orang, dan kenaikan kelas sekolah.",
@@ -1224,7 +1224,7 @@
       "counselor": "Melihat orang di sekolah.",
       "staff": "Melihat rencana, orang, dan kenaikan kelas sekolah.",
       "student": "Belajar di sekolah dan mengerjakan ujiannya sendiri.",
-      "guardian": "Mengikuti siswa yang terhubung dengannya dan mencatat persetujuan untuk siswa tersebut.",
+      "guardian": "Mengikuti siswa yang terhubung dengannya dan mencatat persetujuan untuk siswa itu.",
       "proctor": "Menjalankan ruang ujian sekolah: token, kunci, tambahan waktu, dan penutupan.",
       "auditor": "Melihat catatan dan jejak audit sekolah tanpa mengubahnya.",
       "integration": "Membaca data sekolah melalui aksi yang dimiliki kliennya."
@@ -1573,7 +1573,7 @@
     "library-empty": "Belum ada isi",
     "library-empty-description": "Berkas dan tautan kelas tampil di sini, yang terbaru di atas.",
     "library-add": "Tambah ke pustaka",
-    "library-add-description": "Semua anggota kelas dapat membukanya.",
+    "library-add-description": "Semua anggota kelas bisa membukanya.",
     "library-file": "Berkas",
     "library-link": "Tautan",
     "library-title": "Judul",
@@ -1801,7 +1801,7 @@
     "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
     "detail": "Nilai siswa",
     "kktp": "KKTP",
-    "own-title": "Nilai saya",
+    "own-title": "Nilaiku",
     "own-search": "Cari kelas",
     "own-class": "Kelas",
     "own-period": "Periode",
@@ -1850,7 +1850,7 @@
     "result": "Hasil",
     "kktp-reached": "Mencapai KKTP",
     "kktp-notReached": "Belum mencapai KKTP",
-    "own-title": "Rapor saya",
+    "own-title": "Raporku",
     "own-search": "Cari rombel",
     "own-empty": "Belum ada rapor yang dikunci.",
     "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya.",
@@ -2142,7 +2142,7 @@
     "arabic-decimal": "Tanda desimal",
     "arabic-fraction": "Garis miring pecahan",
     "arabic-minus": "Tanda minus",
-    "load-error": "Data ini belum dapat dimuat.",
+    "load-error": "Data ini belum bisa dimuat.",
     "load-error-title": "Terjadi kesalahan",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
@@ -2285,7 +2285,6 @@
     "lowest": "Terendah",
     "range": "Jangkauan",
     "mean": "Rata-rata",
-    "series-mean": "Rata-rata {series}",
     "points": "Titik",
     "input": "Masukan",
     "output": "Keluaran",
@@ -2482,6 +2481,11 @@
   "Holy": {
     "holy": "Suci",
     "quran": "Al-Qur'an",
+    "search-surah": "Cari surah",
+    "search-surah-none": "Surah tidak ditemukan",
+    "search-surah-none-description": "Cari dengan nomor, nama, atau makna.",
+    "menu-surah": "Surah",
+    "surah-empty": "Surah tidak ditemukan.",
     "quran-description": "Baca 114 surah Al-Qur'an dalam bahasa Arab dengan terjemahan dan tafsir per ayat, gratis di Nakafa.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
@@ -2647,7 +2651,8 @@
     "school-insight": "Insight",
     "school-graduation": "Kelulusan",
     "school-parents": "Orang tua",
-    "school-home": "Nakafa School"
+    "school-home": "Nakafa School",
+    "learn-home": "Nakafa"
   },
   "Weather": {
     "loading": "Lagi muat cuaca...",
@@ -2875,7 +2880,7 @@
     "formula-left": "Geser ke kiri",
     "formula-right": "Geser ke kanan",
     "formula-delete": "Hapus",
-    "formula-invalid": "Rumus ini tidak dapat digambar:",
+    "formula-invalid": "Rumus ini tidak bisa digambar:",
     "latex": "LaTeX",
     "image": "Gambar",
     "image-add": "Tambah gambar",
@@ -3007,7 +3012,7 @@
     },
     "action-error": {
       "title": "Tindakan ini belum berhasil.",
-      "description": "Silakan coba lagi."
+      "description": "Coba lagi."
     },
     "exam-in-use": {
       "title": "Ujian ini sudah punya jadwal.",
@@ -3094,7 +3099,7 @@
       "title": "Teks terlalu panjang untuk memori."
     },
     "interpretation-error": {
-      "title": "Tafsir ayat ini belum dapat dimuat.",
+      "title": "Tafsir ayat ini belum bisa dimuat.",
       "description": "Coba lagi."
     },
     "interpretation-refreshing": {
@@ -3393,7 +3398,7 @@
     },
     "school-refusal-person-claimed": {
       "title": "Orang ini sudah punya akun.",
-      "description": "Minta orang ini masuk dengan akun tersebut."
+      "description": "Minta orang ini masuk dengan akun itu."
     },
     "school-refusal-access": {
       "title": "Akses ke sekolah ini sudah berubah.",
@@ -3725,6 +3730,72 @@
     "classroom-refusal-file-size": {
       "title": "Berkasnya terlalu besar.",
       "description": "Pilih berkas yang lebih kecil."
+    },
+    "island-refused-outside": {
+      "title": "Itu tidak muat di pulaumu."
+    },
+    "island-refused-overlap": {
+      "title": "Sudah ada yang berdiri di sana."
+    },
+    "island-refused-unsupported": {
+      "title": "Ini perlu blok di bawahnya."
+    },
+    "island-refused-carrying": {
+      "title": "Ada yang berdiri di atasnya."
+    },
+    "island-refused-locked": {
+      "title": "Ini terbuka di level yang lebih tinggi."
+    },
+    "island-refused-unaffordable": {
+      "title": "Bintangmu belum cukup untuk ini."
+    },
+    "island-refused-starter": {
+      "title": "Ini bawaan pulaumu, jadi tetap di sini."
+    },
+    "island-refused-missing": {
+      "title": "Benda itu sudah tidak ada."
+    },
+    "island-refused-top": {
+      "title": "Ini sudah di tahap tertinggi."
+    },
+    "island-refused-bottom": {
+      "title": "Ini sudah di tahap pertama."
+    },
+    "island-stale": {
+      "title": "Pulaumu berubah di tempat lain, jadi kami memuatnya lagi."
+    },
+    "island-refused-grows": {
+      "title": "Ini tumbuh saat kamu menyiramnya."
+    },
+    "island-refused-rooted": {
+      "title": "Ini sudah berakar, jadi pindahkan saja."
+    },
+    "island-refused-materials": {
+      "title": "Hasil kebunmu belum cukup untuk ini."
+    },
+    "island-farm-unlearned": {
+      "title": "Belajar dulu hari ini, lalu siram kebunmu."
+    },
+    "island-farm-watered": {
+      "title": "Kebunmu sudah disiram hari ini."
+    },
+    "island-farm-barren": {
+      "title": "Tanam pohon atau bunga dulu."
+    },
+    "island-farm-missing": {
+      "title": "Tanaman itu sudah tidak ada."
+    },
+    "island-farm-unripe": {
+      "title": "Ini belum siap dipanen."
+    },
+    "island-watered": {
+      "title": "Kebunmu sudah disiram."
+    },
+    "island-harvested-wood": {
+      "title": "Kamu mengumpulkan kayu."
+    },
+    "island-harvested-petals": {
+      "title": "Kamu mengumpulkan kelopak bunga."
     }
   },
   "Ai": {
@@ -3746,7 +3817,7 @@
     },
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa saja...",
-    "error-message": "Nina belum berhasil menyelesaikan jawaban ini. Silakan coba lagi. Jika masalah berlanjut, hubungi dukungan Nakafa.",
+    "error-message": "Nina belum berhasil menyelesaikan jawaban ini. Coba lagi, ya. Kalau masalahnya berlanjut, hubungi dukungan Nakafa.",
     "retry": "Coba lagi",
     "rate-limit-message": "Batas pengiriman pesan sementara sudah tercapai. Tunggu sebentar, lalu kirim lagi.",
     "nakafa-search": "hasil Nakafa",
@@ -3897,9 +3968,9 @@
     "share-chat": "Bagikan obrolan",
     "share-chat-description": "Hati-hati saat membagikan link ke orang asing ya.",
     "private": "Pribadi",
-    "private-description": "Obrolan hanya dapat dilihat oleh kamu.",
+    "private-description": "Hanya kamu yang bisa melihat obrolan ini.",
     "public": "Publik",
-    "public-description": "Obrolan dapat dilihat oleh siapa saja yang punya link.",
+    "public-description": "Siapa saja yang punya link bisa melihat obrolan ini.",
     "create-link": "Buat link",
     "copy-link": "Salin link",
     "share-link-error": "Link belum bisa dimuat.",
@@ -4017,7 +4088,7 @@
     "q17": "Apakah materi belajar dasar akan tetap gratis?",
     "a17": "Ya, selamanya dan untuk semua orang.",
     "q20": "Apakah Nakafa bisa digunakan di ponsel?",
-    "a20": "Bisa. Nakafa dapat dibuka melalui browser di ponsel, tablet, atau komputer tanpa memasang aplikasi."
+    "a20": "Bisa. Kamu bisa membuka Nakafa lewat browser di ponsel, tablet, atau komputer tanpa memasang aplikasi."
   },
   "Faq": {
     "q4": "Mata pelajaran dan kelas apa yang tercakup?",
@@ -4160,9 +4231,9 @@
     "status-pending": "Pilihanmu sedang dimuat.",
     "status-prompt": "Belum ada pilihan.",
     "policy": "Izinkan jika kamu berusia 18 tahun ke atas, atau 13 sampai 17 tahun dengan persetujuan wali, sesuai <privacy-policy>Kebijakan Privasi</privacy-policy>.",
-    "load-error": "Pilihanmu belum dapat dimuat, jadi pembagian data tetap nonaktif selama kami mencoba lagi.",
+    "load-error": "Pilihanmu belum bisa dimuat, jadi pembagian data tetap nonaktif selama kami mencoba lagi.",
     "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tetap seperti semula.",
-    "save-error": "Pilihanmu tidak dapat disimpan, jadi pembagian data tetap nonaktif."
+    "save-error": "Pilihanmu tidak bisa disimpan, jadi pembagian data tetap nonaktif."
   },
   "SEO": {
     "subject": {
@@ -4350,6 +4421,8 @@
     "plan-pro": "Pro",
     "plan-max": "Max",
     "plan-trial": "Gratis {days} hari",
+    "plan-free-price": "Gratis",
+    "plan-trial-for": "selama {days} hari",
     "plan-month": "/bulan",
     "plan-billed-free": "Tanpa pembayaran, tanpa kartu",
     "plan-accounts": "{count, number} akun semua peran",
@@ -4433,7 +4506,9 @@
     "tasks-title": "Beri tugas, kumpulkan, lalu nilai",
     "tasks-lead": "Setiap kiriman dan nilai tetap di kelasnya.",
     "exams-title": "Ujian yang langsung dinilai",
-    "exams-lead": "Setiap kuis dan try-out berjalan di tampilan yang sama.",
+    "exams-lead": "Tulis tiap soal dengan rumus dan gambar, lalu atur kuncinya di sampingnya.",
+    "player-title": "Satu player untuk semua ujian",
+    "player-lead": "Ada timer, navigator, dan tanda, dengan setiap rumus tampil seperti ditulis.",
     "reports-title": "Rapor dari nilai yang sudah kamu beri",
     "reports-lead": "Sekolah menandatangani, dan kode QR membuktikan keasliannya.",
     "insight-title": "Lihat siapa yang butuh bantuan lebih awal",
@@ -4449,28 +4524,40 @@
     "demo-forum-nina": "Aku taruh ringkasan bab 3 di sebelahnya.",
     "demo-forum-replies": "{count} balasan",
     "demo-library-folder": "Bab 3: Momentum",
-    "demo-library-files": "{count} file",
     "demo-library-worksheet": "Lembar kerja momentum.pdf",
     "demo-library-summary": "Ringkasan bab 3",
-    "demo-library-video": "Praktikum tumbukan.mp4",
+    "demo-library-video": "Video praktikum tumbukan",
     "demo-library-formulas": "Lembar rumus.png",
     "demo-task-title": "Lembar kerja momentum",
-    "demo-task-due": "Tenggat Jumat, 12.00",
     "demo-task-handed": "{done} dari {total} sudah mengumpulkan",
-    "demo-task-graded": "Dinilai",
-    "demo-task-in": "Terkumpul",
-    "demo-task-late": "Terlambat",
+    "demo-task-lab": "Laporan praktikum bandul",
+    "demo-task-quiz": "Kuis vektor",
+    "demo-task-essay": "Energi di sekitar kita",
+    "demo-head-title": "Judul",
+    "demo-head-deadline": "Tenggat",
+    "demo-head-status": "Status",
+    "demo-head-type": "Jenis",
+    "demo-head-by": "Ditambahkan oleh",
+    "demo-head-student": "Siswa",
+    "demo-head-skills": "Kemampuan",
+    "demo-head-mastery": "Penguasaan",
+    "demo-head-narrative": "Narasi",
+    "demo-narrative-none": "Belum ditulis",
+    "demo-narrative-saved": "Ditulis",
+    "demo-narrative-shared": "Dibagikan",
+    "demo-kind-folder": "Folder",
+    "demo-kind-pdf": "PDF",
+    "demo-kind-image": "Gambar",
+    "demo-kind-link": "Tautan",
     "demo-exam-title": "UTS Fisika",
-    "demo-exam-question": "Bola 2 kg menggelinding dengan kecepatan 3 m/s. Berapa momentumnya?",
+    "demo-exam-question": "Bola <mass></mass> menggelinding dengan kecepatan <speed></speed>. Berapa momentumnya?",
+    "demo-exam-explanation": "Momentum adalah massa kali kecepatan: <formula></formula>.",
     "demo-exam-answer": "Jawaban",
     "demo-exam-progress": "Soal {current} dari {total}",
     "demo-report-term": "Rapor semester 1",
     "demo-report-average": "Rata-rata",
     "demo-report-signed": "Ditandatangani sekolah",
     "demo-report-verify": "Pindai untuk cek",
-    "demo-insight-title": "Rata-rata kelas",
-    "demo-insight-week": "M{week}",
-    "demo-insight-attention": "Perlu dibantu",
     "demo-graduation-year": "Tahun ajaran {year}",
     "demo-graduation-graduated": "Lulus",
     "demo-graduation-students": "{count} siswa",
@@ -4509,5 +4596,49 @@
     "faq-credits-answer": "Nina, AI Nakafa, memakai kredit untuk setiap jawaban. Seluruh sekolah berbagi satu kuota, dan paket 1.000 kredit tambahan berlaku 12 bulan.",
     "faq-change-question": "Bisakah ganti paket nanti?",
     "faq-change-answer": "Bisa. Pindah antara Pro dan Max atau tambah akun kapan saja, dan perubahannya berlaku mulai tagihan berikutnya yang dibayar."
+  },
+  "Island": {
+    "title": "Pulau",
+    "description": "Pulaumu tumbuh di setiap materi dan try-out.",
+    "name": "Pulau {name}",
+    "level": "Level {level}",
+    "stars": "Bintang",
+    "next": "Level berikutnya",
+    "next-value": "{stars} Bintang",
+    "top": "Level tertinggi",
+    "turn-left": "Putar ke kiri",
+    "turn-right": "Putar ke kanan",
+    "build": "Bangun",
+    "done": "Selesai",
+    "undo": "Urungkan",
+    "redo": "Ulangi",
+    "rotate": "Putar",
+    "move": "Pindah",
+    "remove": "Hapus",
+    "upgrade": "Tingkatkan",
+    "items": "Barang",
+    "price": "{stars} Bintang",
+    "locked": "Level {level}",
+    "item-house": "Rumah",
+    "item-tree": "Pohon",
+    "item-pond": "Kolam",
+    "item-grass": "Rumput",
+    "item-soil": "Tanah",
+    "item-stone": "Batu",
+    "item-sand": "Pasir",
+    "item-planks": "Papan",
+    "item-brick": "Bata",
+    "item-glass": "Kaca",
+    "item-tile": "Genteng merah",
+    "item-slate": "Genteng biru",
+    "item-flowers": "Bunga",
+    "item-bush": "Semak",
+    "item-rock": "Batu besar",
+    "item-lamp": "Lampu",
+    "water": "Siram kebun",
+    "harvest": "Panen",
+    "materials": "Kebun",
+    "materials-value": "{wood} kayu, {petals} kelopak",
+    "price-wood": "{stars} Bintang, {wood} kayu"
   }
 }

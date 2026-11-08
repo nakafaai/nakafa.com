@@ -1,97 +1,124 @@
-import { Badge } from "@repo/design-system/components/ui/badge";
+import {
+  CheckmarkCircle02Icon,
+  Note01Icon,
+  NoteEditIcon,
+  StudentIcon,
+} from "@hugeicons/core-free-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { PersonAvatar } from "@repo/design-system/components/ui/person";
-import { Array as Arr } from "effect";
-import { useFormatter, useTranslations } from "use-intl";
-import { DEMO_STRUGGLING } from "@/components/marketing/school/features/cast";
-import { stepVariants } from "@/components/marketing/school/features/step";
+import { useTranslations } from "use-intl";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
-import { FeatureCard, FeatureRow } from "@/components/marketing/shared/feature";
+import {
+  FeatureProduct,
+  FeatureRow,
+} from "@/components/marketing/shared/feature";
+import { tableColumns } from "@/components/shared/table/columns";
+import { DataTable } from "@/components/shared/table/data";
+import { TablePageBody } from "@/components/shared/table/frame";
+import { RowCopy } from "@/components/shared/table/menu";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import { TableTitle } from "@/components/shared/table/title";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 
-/** The class average of each of the last six weeks, out of 100. */
-const WEEKLY_AVERAGES = [
-  { average: 72, week: 1 },
-  { average: 75, week: 2 },
-  { average: 74, week: 3 },
-  { average: 79, week: 4 },
-  { average: 81, week: 5 },
-  { average: 84, week: 6 },
+/** The look of each state of a student's narrative, as the class's insight table draws it. */
+const NARRATIVE_LOOKS = {
+  none: { icon: NoteEditIcon, tone: "neutral" },
+  saved: { icon: Note01Icon, tone: "info" },
+  shared: { icon: CheckmarkCircle02Icon, tone: "success" },
+} as const satisfies Record<string, StatusLook>;
+
+/** The students of one class as insight reads them: the skills measured, the mastery over them, and where the teacher's narrative stands. */
+const DEMO_STUDENTS = [
+  { mastery: 58, name: "Bima", narrative: "none", skills: 12 },
+  { mastery: 61, name: "Citra", narrative: "saved", skills: 12 },
+  { mastery: 79, name: "Raka", narrative: "saved", skills: 12 },
+  { mastery: 84, name: "Nadia", narrative: "shared", skills: 12 },
+  { mastery: 91, name: "Fajar", narrative: "shared", skills: 12 },
 ] as const;
 
-/** The subject and the grade that put each struggling student on the list. */
-const STRUGGLES = [
-  { score: 58, subject: "physics" },
-  { score: 61, subject: "mathematics" },
-] as const;
+/** One student of the demo's table. */
+type DemoStudent = (typeof DEMO_STUDENTS)[number];
+
+/** The columns of the demo's student table. */
+const studentColumns = tableColumns<DemoStudent>();
 
 /**
- * The insight row: the class average over six weeks as bars, and the students
- * who need help, each with the subject and the grade that shows it, before any
- * report is due.
+ * The columns of the class's student table, as its teacher reads it in insight: each student, the
+ * skills measured, the mastery over them, where the narrative stands, and the row's menu. Every head
+ * filters its column, so the teacher finds the lowest mastery first.
+ */
+function useDemoColumns() {
+  const t = useTranslations("SchoolSite");
+
+  return [
+    studentColumns.text((row) => row.name, {
+      cell: (info) => (
+        <TableTitle icon={StudentIcon}>{info.getValue()}</TableTitle>
+      ),
+      header: t("demo-head-student"),
+      id: "student",
+    }),
+    studentColumns.number((row) => row.skills, {
+      header: t("demo-head-skills"),
+      id: "skills",
+    }),
+    studentColumns.number((row) => row.mastery, {
+      header: t("demo-head-mastery"),
+      id: "mastery",
+    }),
+    studentColumns.values((row) => row.narrative, {
+      cell: (info) => (
+        <TableStatus
+          {...NARRATIVE_LOOKS[info.row.original.narrative]}
+          label={t(`demo-narrative-${info.row.original.narrative}`)}
+        />
+      ),
+      header: t("demo-head-narrative"),
+      id: "narrative",
+      options: [
+        {
+          icon: NoteEditIcon,
+          label: t("demo-narrative-none"),
+          value: "none",
+        },
+        {
+          icon: Note01Icon,
+          label: t("demo-narrative-saved"),
+          value: "saved",
+        },
+        {
+          icon: CheckmarkCircle02Icon,
+          label: t("demo-narrative-shared"),
+          value: "shared",
+        },
+      ],
+    }),
+    studentColumns.menu((info) => <RowCopy value={info.row.original.name} />),
+  ];
+}
+
+/**
+ * The insight part: one class's students in the School's own insight table, with the mastery that
+ * shows who needs help and where each narrative stands, before any report is due.
  */
 export function SchoolInsight() {
-  const t = useTranslations("SchoolSite");
-  const tSubject = useTranslations("Subject");
-  const format = useFormatter();
+  const columns = useDemoColumns();
 
   return (
     <FeatureRow id="insight">
       <SchoolFeatureText feature="insight">
         <Nina act="searching" label="" size={88} whole />
       </SchoolFeatureText>
-      <FeatureCard>
-        <div className="flex items-center justify-between gap-4">
-          <p className="truncate font-medium">{t("demo-insight-title")}</p>
-          <p className="text-muted-foreground truncate text-sm">
-            {t("demo-class")}
-          </p>
-        </div>
-        <ol className="flex h-40 items-end gap-3">
-          {Arr.map(WEEKLY_AVERAGES, ({ average, week }) => (
-            <li
-              className={stepVariants({
-                className:
-                  "flex h-full flex-1 flex-col items-center justify-end gap-2",
-                step: week,
-              })}
-              key={week}
-            >
-              <span className="text-muted-foreground text-xs tabular-nums">
-                {format.number(average)}
-              </span>
-              <span
-                className="bg-chart-1 w-full rounded-t-md"
-                style={{ height: `${average - 40}%` }}
-              />
-              <span className="text-muted-foreground text-xs">
-                {t("demo-insight-week", { week })}
-              </span>
-            </li>
-          ))}
-        </ol>
-        <div className="grid gap-3 border-t pt-4">
-          <p className="text-sm font-medium">{t("demo-insight-attention")}</p>
-          <ul className="grid gap-3">
-            {Arr.map(
-              Arr.zip(DEMO_STRUGGLING, STRUGGLES),
-              ([student, { score, subject }]) => (
-                <li className="flex items-center gap-3" key={student.name}>
-                  <PersonAvatar mascot={student.mascot} />
-                  <span className="min-w-0 flex-1 truncate text-sm">
-                    {student.name}
-                  </span>
-                  <span className="text-muted-foreground text-sm">
-                    {tSubject(subject)}
-                  </span>
-                  <Badge className="tabular-nums" variant="destructive-subtle">
-                    {format.number(score)}
-                  </Badge>
-                </li>
-              )
-            )}
-          </ul>
-        </div>
-      </FeatureCard>
+      <FeatureProduct>
+        <TableFiltersProvider>
+          <TablePageBody>
+            <DataTable
+              columns={columns}
+              data={DEMO_STUDENTS}
+              rowId={(row) => row.name}
+            />
+          </TablePageBody>
+        </TableFiltersProvider>
+      </FeatureProduct>
     </FeatureRow>
   );
 }

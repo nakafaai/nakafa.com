@@ -1,8 +1,11 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranSurahRow,
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
-import { Schema, Struct } from "effect";
+import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
+import { Array as Arr, Schema, Struct } from "effect";
+import type { QuranIndexSurah } from "@/lib/content/quran/search";
 
 type QuranName = Pick<QuranSurahRow["name"], "transliteration">;
 /** Surah link fields: the number and the transliterated name the links read. */
@@ -57,4 +60,20 @@ function getQuranPaginationItem(surah: QuranSurahMetadata) {
 /** Returns the source-authenticated transliterated name for one Quran surah. */
 export function getQuranSurahName(name: QuranName) {
   return name.transliteration;
+}
+
+/**
+ * The surahs of the catalog as a surah search lists them, in the page's language:
+ * each one's number, its two names and the meaning of its name.
+ */
+export function toQuranIndexSurahs(
+  surahs: readonly Pick<QuranSurahRow, "name" | "number">[],
+  locale: AppLocaleCode
+): (typeof QuranIndexSurah.Type)[] {
+  return Arr.map(surahs, (surah) => ({
+    arabic: surah.name.arabic,
+    meaning: selectQuranMeaning(surah.name.meaning, locale).text,
+    number: surah.number,
+    title: getQuranSurahName(surah.name),
+  }));
 }

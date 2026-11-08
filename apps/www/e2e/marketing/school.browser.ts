@@ -28,8 +28,11 @@ const readOverflow = (page: Page) =>
     )
   );
 
-/** The name of the exam's right answer: the momentum of a 2 kg ball at 3 m/s. */
-const MOMENTUM = /6 kg·m\/s/u;
+/**
+ * The name of the exam's right answer, the momentum of a 2 kg ball at 3 m/s: its formula reads 6, and no
+ * other answer holds that digit.
+ */
+const MOMENTUM = /6/u;
 
 /** The sections of the School landing, one per feature, in the order the page shows them. */
 const FEATURE_SECTIONS = [
@@ -62,7 +65,7 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
       );
     }
     // The exam answers itself with the momentum of a 2 kg ball at 3 m/s.
-    const exam = page.locator("#exams");
+    const exam = page.locator("#player");
     yield* Effect.promise(() => exam.scrollIntoViewIfNeeded());
     yield* Effect.promise(() =>
       expect(exam.getByRole("radio", { checked: true })).toHaveAccessibleName(

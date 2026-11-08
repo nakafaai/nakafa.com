@@ -1,32 +1,18 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import {
-  ContentRuntimeFailureError,
-  ContentRuntimeMissingError,
   ContentRuntimeVerificationError,
   ContentTransportError,
 } from "@repo/backend/client/content/errors";
-import {
-  readPublicContent,
-  readPublicContentEvidence,
-  readPublicContentEvidenceBatch,
-  verifyPublicContentDelivery,
-} from "@repo/backend/client/content/public";
-import {
-  CONTENT_RUNTIME_RESPONSE_HEADER,
-  CONTENT_RUNTIME_RESPONSE_MARKER,
-  PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-  PUBLIC_CONTENT_RUNTIME_PATH,
-} from "@repo/backend/content/endpoint";
+import { verifyPublicContentFound } from "@repo/backend/client/content/public";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
@@ -36,15 +22,8 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
-import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
-const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
-const batchEndpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_BATCH_PATH}`;
-const target = {
-  siteUrl: "https://example.convex.site/ignored/path",
-  token: "runtime-test-token",
-};
 const input = {
   appLocale: AppLocaleSchema.make("en"),
   publicPath: PublicPathSchema.make("test/head-0"),
@@ -55,46 +34,21 @@ const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
 const RendererJsonSchema = Schema.fromJsonString(
   RendererManifestEnvelopeSchema
 );
-const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@nakafa/aksara-contracts/runtime/verify", () => ({
   verifyContentRuntimeExchange: verifyMock,
 }));
 
-/** Creates one response with the immutable network URL populated. */
-function createResponse(
-  body: unknown,
-  status: number,
-  marked = true,
-  responseEndpoint = endpoint
-) {
-  const headers = new Headers({ "content-type": "application/json" });
-  if (marked) {
-    headers.set(
-      CONTENT_RUNTIME_RESPONSE_HEADER,
-      CONTENT_RUNTIME_RESPONSE_MARKER
-    );
-  }
-  const response = new Response(encodeJsonText(body), {
-    headers,
-    status,
-  });
-  Object.defineProperty(response, "url", { value: responseEndpoint });
-  return response;
-}
-
 /** Creates one structurally complete public found response. */
-function foundResponse(title?: string) {
+function foundResponse() {
   return {
     activeManifestHash: TEST_MANIFEST_HASH,
     activeReleaseId: TEST_RELEASE_ID,
     artifact: Schema.decodeSync(ArtifactJsonSchema)(testArtifactJson()),
     delivery: "public",
     kind: "found",
-    projection: Schema.decodeSync(ProjectionJsonSchema)(
-      testProjectionJson({ ...(title === undefined ? {} : { title }) })
-    ),
+    projection: Schema.decodeSync(ProjectionJsonSchema)(testProjectionJson()),
     projectionHash: TEST_DIGEST,
     release: Schema.decodeSync(ReleaseJsonSchema)(testReleaseJson()),
     rendererManifest: Schema.decodeSync(RendererJsonSchema)(testRendererJson()),
@@ -102,27 +56,14 @@ function foundResponse(title?: string) {
   };
 }
 
-/** Reads the JSON body of the one request that reached Fetch. */
-const sentJson = () =>
-  Effect.promise(
-    (): Promise<unknown> =>
-      new Response(fetchMock.mock.calls[0]?.[1]?.body).json()
-  );
-
 beforeEach(() => {
-  fetchMock.mockReset();
   verifyMock.mockReset();
   verifyMock.mockImplementation(({ response }) => Effect.succeed(response));
-  vi.stubGlobal("fetch", fetchMock);
 });
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
-describe("public content runtime client", () => {
+describe("public content verification", () => {
   it.effect(
-    "verifies a coherent query envelope with the same live signature policy",
+    "verifies a composed public response with the live renderer and returns it",
     () =>
       Effect.gen(function* () {
         const response = foundResponse();
@@ -130,301 +71,51 @@ describe("public content runtime client", () => {
           testRendererJson()
         );
         expect(
-          yield* verifyPublicContentDelivery(
-            input,
-            yield* Schema.encodeEffect(JsonTextSchema)(response),
-            renderer
-          )
+          yield* verifyPublicContentFound(input, response, renderer)
         ).toEqual(response);
         expect(verifyContentRuntimeExchange).toHaveBeenCalledWith({
           request: { ...input, delivery: "public" },
           response,
           rendererManifest: renderer,
         });
-        expect(fetchMock).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect.each([
-    ["{", "json-syntax"],
-    ["{}", "response-contract"],
-    ["x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES + 1), "response-size"],
-  ] as const)(
-    "rejects a malformed coherent query envelope",
-    ([source, reason]) =>
-      Effect.gen(function* () {
-        expect(
-          yield* verifyPublicContentDelivery(input, source, {}).pipe(
-            Effect.flip
-          )
-        ).toEqual(new ContentTransportError({ reason }));
-        expect(verifyMock).not.toHaveBeenCalled();
-        expect(fetchMock).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect("preserves signature failure from coherent query delivery", () =>
-    Effect.gen(function* () {
-      verifyMock.mockReturnValueOnce(Effect.fail("invalid-signature"));
-      expect(
-        yield* verifyPublicContentDelivery(
-          input,
-          yield* Schema.encodeEffect(JsonTextSchema)(foundResponse()),
-          {}
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "ContentRuntimeVerificationError",
-      });
-      expect(fetchMock).not.toHaveBeenCalled();
-    })
-  );
-  it.effect(
-    "rejects invalid public routes before transport or verification",
-    () =>
-      Effect.gen(function* () {
-        const invalid = { ...input, publicPath: "" };
-        expect(
-          yield* verifyPublicContentDelivery(invalid, "{}", {}).pipe(
-            Effect.flip
-          )
-        ).toEqual(new ContentTransportError({ reason: "request" }));
-        expect(
-          yield* readPublicContentEvidence(target, invalid).pipe(Effect.flip)
-        ).toEqual(new ContentTransportError({ reason: "request" }));
-        expect(
-          yield* readPublicContentEvidenceBatch(target, [invalid]).pipe(
-            Effect.flip
-          )
-        ).toEqual(new ContentTransportError({ reason: "request" }));
-        expect(fetchMock).not.toHaveBeenCalled();
-        expect(verifyMock).not.toHaveBeenCalled();
       })
   );
 
   it.effect(
-    "rejects malformed batch errors and single-item absence at the batch endpoint",
+    "rejects a composed value that is not a found response before verification",
     () =>
       Effect.gen(function* () {
-        fetchMock.mockResolvedValueOnce(
-          createResponse({ unexpected: true }, 500, true, batchEndpoint)
-        );
-        fetchMock.mockResolvedValueOnce(
-          createResponse({ kind: "missing" }, 404, true, batchEndpoint)
-        );
-        for (let index = 0; index < 2; index += 1) {
+        for (const value of [{}, { kind: "missing" }]) {
           expect(
-            yield* readPublicContentEvidenceBatch(target, [input]).pipe(
-              Effect.flip
-            )
+            yield* verifyPublicContentFound(input, value, {}).pipe(Effect.flip)
           ).toEqual(new ContentTransportError({ reason: "response-contract" }));
         }
         expect(verifyMock).not.toHaveBeenCalled();
       })
   );
-  it.live("posts, verifies, and returns one active public artifact", () =>
-    Effect.gen(function* () {
-      const found = foundResponse();
-      fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
+  it.effect("keeps a signature failure as the verification error", () =>
+    Effect.gen(function* () {
+      const cause = new Error("signature mismatch");
+      verifyMock.mockReturnValueOnce(Effect.fail(cause));
       expect(
-        yield* readPublicContent(target, input, found.rendererManifest)
-      ).toMatchObject({ kind: "found" });
-      expect(fetchMock.mock.calls[0]?.[0]).toEqual(new URL(endpoint));
-      expect(yield* sentJson()).toEqual({
-        appLocale: input.appLocale,
-        delivery: "public",
-        publicPath: input.publicPath,
-      });
-      expect(verifyContentRuntimeExchange).toHaveBeenCalledOnce();
+        yield* verifyPublicContentFound(input, foundResponse(), {}).pipe(
+          Effect.flip
+        )
+      ).toEqual(new ContentRuntimeVerificationError({ cause }));
     })
   );
 
-  it.live("posts one ordered eight-item batch without singular fallback", () =>
+  it.effect("rejects an invalid public route before verification", () =>
     Effect.gen(function* () {
-      const found = foundResponse();
-      const inputs = Array.from({ length: 8 }, (_, index) => ({
-        appLocale: input.appLocale,
-        publicPath: `test/head-${index}`,
-      }));
-      fetchMock.mockResolvedValue(
-        createResponse(
-          { responses: Array.from({ length: 8 }, () => found) },
-          200,
-          true,
-          batchEndpoint
-        )
-      );
-
       expect(
-        yield* readPublicContentEvidenceBatch(target, inputs)
-      ).toHaveLength(8);
-      expect(fetchMock).toHaveBeenCalledOnce();
-      expect(fetchMock.mock.calls[0]?.[0]).toEqual(new URL(batchEndpoint));
-      expect(yield* sentJson()).toEqual({
-        requests: Arr.map(inputs, ({ appLocale, publicPath }) => ({
-          appLocale,
-          delivery: "public",
-          publicPath,
-        })),
-      });
-      expect(verifyMock).toHaveBeenCalledTimes(8);
-      expect(
-        Arr.map(
-          verifyMock.mock.calls,
-          ([exchange]) => exchange.request.publicPath
-        )
-      ).toEqual(Arr.map(inputs, ({ publicPath }) => publicPath));
-    })
-  );
-
-  it.live("rejects more than eight requests before making a network call", () =>
-    Effect.gen(function* () {
-      const inputs = Array.from({ length: 9 }, (_, index) => ({
-        appLocale: input.appLocale,
-        publicPath: `test/head-${index}`,
-      }));
-
-      expect(
-        yield* readPublicContentEvidenceBatch(target, inputs).pipe(Effect.flip)
+        yield* verifyPublicContentFound(
+          { ...input, publicPath: "" },
+          foundResponse(),
+          {}
+        ).pipe(Effect.flip)
       ).toEqual(new ContentTransportError({ reason: "request" }));
-      expect(fetchMock).not.toHaveBeenCalled();
       expect(verifyMock).not.toHaveBeenCalled();
     })
-  );
-
-  it.live("preserves exact item absence and batch-level runtime failure", () =>
-    Effect.gen(function* () {
-      fetchMock
-        .mockResolvedValueOnce(
-          createResponse(
-            { responses: [{ kind: "missing" }] },
-            200,
-            true,
-            batchEndpoint
-          )
-        )
-        .mockResolvedValueOnce(
-          createResponse(
-            { code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" },
-            500,
-            true,
-            batchEndpoint
-          )
-        );
-
-      expect(
-        yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
-      ).toEqual(
-        new ContentRuntimeMissingError({
-          request: { delivery: "public", ...input },
-        })
-      );
-      expect(
-        yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
-      ).toEqual(
-        new ContentRuntimeFailureError({
-          code: "CONTENT_RUNTIME_INTERNAL",
-          status: 500,
-        })
-      );
-    })
-  );
-
-  it.live("rejects a response with different batch cardinality", () =>
-    Effect.gen(function* () {
-      const inputs = [input, { ...input, publicPath: "test/second-head" }];
-      fetchMock.mockResolvedValue(
-        createResponse(
-          { responses: [foundResponse()] },
-          200,
-          true,
-          batchEndpoint
-        )
-      );
-
-      expect(
-        yield* readPublicContentEvidenceBatch(target, inputs).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
-      expect(verifyMock).not.toHaveBeenCalled();
-    })
-  );
-
-  it.live("rejects one batch item above the Aksara singular byte ceiling", () =>
-    Effect.gen(function* () {
-      const oversized = foundResponse(
-        "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES)
-      );
-      fetchMock.mockResolvedValue(
-        createResponse({ responses: [oversized] }, 200, true, batchEndpoint)
-      );
-
-      expect(
-        yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
-      expect(verifyMock).not.toHaveBeenCalled();
-    })
-  );
-
-  it.live("distinguishes exact absence from sanitized runtime failure", () =>
-    Effect.gen(function* () {
-      fetchMock
-        .mockResolvedValueOnce(createResponse({ kind: "missing" }, 404))
-        .mockResolvedValueOnce(
-          createResponse(
-            { code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" },
-            500
-          )
-        );
-
-      expect(
-        yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
-      ).toEqual(
-        new ContentRuntimeMissingError({
-          request: { delivery: "public", ...input },
-        })
-      );
-      expect(
-        yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
-      ).toEqual(
-        new ContentRuntimeFailureError({
-          code: "CONTENT_RUNTIME_INTERNAL",
-          status: 500,
-        })
-      );
-    })
-  );
-
-  it.live("classifies valid JSON outside the public response contract", () =>
-    Effect.gen(function* () {
-      fetchMock
-        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
-        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
-
-      expect(
-        yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
-      expect(
-        yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
-      expect(verifyContentRuntimeExchange).not.toHaveBeenCalled();
-    })
-  );
-
-  it.live(
-    "preserves signature failures in the typed verification boundary",
-    () =>
-      Effect.gen(function* () {
-        const cause = new Error("signature mismatch");
-        fetchMock.mockResolvedValue(createResponse(foundResponse(), 200));
-        verifyMock.mockReturnValue(Effect.fail(cause));
-
-        expect(
-          yield* readPublicContent(
-            target,
-            input,
-            foundResponse().rendererManifest
-          ).pipe(Effect.flip)
-        ).toEqual(new ContentRuntimeVerificationError({ cause }));
-      })
   );
 });
