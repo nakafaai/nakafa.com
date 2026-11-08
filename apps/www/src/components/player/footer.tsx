@@ -100,7 +100,7 @@ export function PlayerNote({
 }
 
 /** Goes to the question before the current one; disabled on the first. */
-function PlayerPrevious() {
+export function PlayerPrevious() {
   const t = useTranslations("Player");
   const tCommon = useTranslations("Common");
   const available = usePlayer((state) =>
@@ -129,7 +129,7 @@ function PlayerPrevious() {
  * leads on. A finished paper has nothing to finish, so there it is disabled on the last, as previous is on
  * the first.
  */
-function PlayerNext() {
+export function PlayerNext() {
   const t = useTranslations("Player");
   const tCommon = useTranslations("Common");
   const last = usePlayer(

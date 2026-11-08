@@ -14,7 +14,6 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
@@ -45,21 +44,6 @@ type PlatformBounds = typeof PlatformBoundsSchema.Type;
 export function AverageMotionStage({ children }: { children: ReactNode }) {
   return (
     <Suspense>
-      <ambientLight intensity={0.72} />
-      <hemisphereLight
-        color={getColor("SLATE", 50)}
-        groundColor={getColor("STONE", 600)}
-        intensity={0.72}
-      />
-      <directionalLight
-        castShadow
-        intensity={1.34}
-        position={[4.8, 6.4, 4.6]}
-        shadow-bias={-0.0006}
-        shadow-mapSize-height={1024}
-        shadow-mapSize-width={1024}
-        shadow-normalBias={0.02}
-      />
       <CameraControls
         cameraPosition={AVERAGE_VELOCITY_SPEED_CAMERA.cameraPosition}
         cameraTarget={AVERAGE_VELOCITY_SPEED_CAMERA.cameraTarget}
@@ -252,6 +236,7 @@ function DisplacementGuide({ motion }: { motion: AverageVelocitySpeedState }) {
           color={AVERAGE_VELOCITY_SPEED_COLORS.displacement}
           depthWrite={false}
           opacity={0.82}
+          toneMapped={false}
           transparent
         />
       </mesh>
@@ -269,6 +254,7 @@ function DisplacementGuide({ motion }: { motion: AverageVelocitySpeedState }) {
         [start.x, TRACK_Y + 0.16, start.z],
         [end.x, TRACK_Y + 0.16, end.z],
       ]}
+      toneMapped={false}
       transparent
     />
   );
@@ -294,6 +280,7 @@ function GhostBalls({ motion }: { motion: AverageVelocitySpeedState }) {
                   color={AVERAGE_VELOCITY_SPEED_COLORS.ghost}
                   depthWrite={false}
                   opacity={0.3}
+                  toneMapped={false}
                   transparent
                 />
               </mesh>
@@ -303,6 +290,7 @@ function GhostBalls({ motion }: { motion: AverageVelocitySpeedState }) {
                   color={AVERAGE_VELOCITY_SPEED_COLORS.distance}
                   depthWrite={false}
                   opacity={0.95}
+                  toneMapped={false}
                   transparent
                 />
               </mesh>

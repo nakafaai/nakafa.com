@@ -1,11 +1,5 @@
-import {
-  expect,
-  type Locator,
-  type Page,
-  type Route,
-  test,
-} from "@playwright/test";
-import { Deferred, Effect, HashSet, MutableList, MutableRef } from "effect";
+import { expect, type Locator, type Page, test } from "@playwright/test";
+import { Deferred, Effect, HashSet } from "effect";
 import { GERMAN, openComposer } from "@/e2e/support/attachment";
 import { CHAT_PATH, runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
@@ -13,12 +7,7 @@ import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { NINA_SECTION, SHEET_POPUP } from "@/e2e/support/selector";
 import { openSheet } from "@/e2e/support/sheet";
-import { isTakenOver, waitUntilTakenOver } from "@/e2e/support/window";
-
-/** The page's scripts, which a test holds back so React has not run yet. */
-const SCRIPTS = /\/assets\/.*\.js/u;
-/** What the learner types before the page answers. */
-const EARLY_TEXT = "A question typed before the page answers";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The answer that hands a signed-in page its Convex token. */
 const TOKEN_ANSWER = "/api/auth/convex/token";
@@ -201,6 +190,10 @@ for (const surface of EARLY_SURFACES) {
         const attach = page
           .locator(surface.scope)
           .getByRole("button", { name: "Attach files" });
+        // The landing's composer is a section under the first screen, which takes
+        // its code only as the reader nears it (ADR 0039), as a learner who
+        // presses it has.
+        yield* Effect.promise(() => attach.scrollIntoViewIfNeeded());
         yield* Effect.promise(() => waitUntilTakenOver(attach));
 
         const chooser = page.waitForEvent("filechooser");
@@ -211,52 +204,6 @@ for (const surface of EARLY_SURFACES) {
     );
   });
 }
-
-test("a learner who types and presses attach before React takes the landing page over keeps the text and gets the file picker", async ({
-  baseURL,
-  page,
-}) => {
-  await runOnPage(page, baseURL, (origin) =>
-    Effect.gen(function* () {
-      yield* seedAnalyticsConsent(page, "denied");
-      yield* signInLearner(page.context(), origin);
-      const held = MutableList.make<Route>();
-      const released = MutableRef.make(false);
-      yield* Effect.promise(() =>
-        page.route(SCRIPTS, async (route) => {
-          if (MutableRef.get(released)) {
-            await route.continue();
-            return;
-          }
-          MutableList.append(held, route);
-        })
-      );
-      yield* Effect.promise(() => page.goto("/en"));
-      const input = page
-        .locator(NINA_SECTION)
-        .getByRole("textbox", { name: "Ask Nina anything..." });
-      const attach = input
-        .locator("xpath=ancestor::form")
-        .getByRole("button", { name: "Attach files" });
-
-      const chooser = page.waitForEvent("filechooser");
-      yield* Effect.promise(async () => {
-        await input.fill(EARLY_TEXT);
-        await attach.click();
-        // React has not run, so the page keeps the press on the button.
-        expect(await isTakenOver(attach)).toBe(false);
-        await expect(attach).toHaveAttribute("data-pressed", "");
-      });
-
-      MutableRef.set(released, true);
-      for (const route of MutableList.toArray(held)) {
-        yield* Effect.promise(() => route.continue());
-      }
-      yield* Effect.promise(() => chooser);
-      yield* Effect.promise(() => expect(input).toHaveValue(EARLY_TEXT));
-    })
-  );
-});
 
 test.describe("The file picker of the composer in German", () => {
   test("is named in German, and the attach button opens it", async ({

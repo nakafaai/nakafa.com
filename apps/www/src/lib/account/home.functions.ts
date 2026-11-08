@@ -45,3 +45,11 @@ export const notificationsScreenFn = createServerFn({ method: "GET" })
     );
     return notificationsScreenHandler(options);
   });
+
+/** The owner's island: the island as it stands and the account's name. */
+export const islandScreenFn = createServerFn({ method: "GET" })
+  .validator(Schema.toStandardSchemaV1(LocaleInput))
+  .handler(async (options) => {
+    const { islandScreenHandler } = await import("@/lib/account/home.server");
+    return islandScreenHandler(options);
+  });

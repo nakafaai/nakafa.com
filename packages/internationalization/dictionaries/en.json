@@ -2285,7 +2285,6 @@
     "lowest": "Lowest",
     "range": "Range",
     "mean": "Mean",
-    "series-mean": "Mean of {series}",
     "points": "Points",
     "input": "Input",
     "output": "Output",
@@ -2482,6 +2481,11 @@
   "Holy": {
     "holy": "Holy",
     "quran": "Quran",
+    "search-surah": "Search surahs",
+    "search-surah-none": "No surah found",
+    "search-surah-none-description": "Search by number, name or meaning.",
+    "menu-surah": "Surah",
+    "surah-empty": "No surah found.",
     "quran-description": "Read all 114 surahs of the Quran in Arabic with a verse-by-verse translation, free on Nakafa.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
@@ -2655,7 +2659,8 @@
     "school-insight": "Insight",
     "school-graduation": "Graduation",
     "school-parents": "Parents",
-    "school-home": "Nakafa School"
+    "school-home": "Nakafa School",
+    "learn-home": "Nakafa"
   },
   "Weather": {
     "loading": "Loading weather...",
@@ -3733,6 +3738,72 @@
     "classroom-refusal-file-size": {
       "title": "The file is too large.",
       "description": "Choose a smaller file."
+    },
+    "island-refused-outside": {
+      "title": "That does not fit on your island."
+    },
+    "island-refused-overlap": {
+      "title": "Something already stands there."
+    },
+    "island-refused-unsupported": {
+      "title": "It needs blocks under it."
+    },
+    "island-refused-carrying": {
+      "title": "Something stands on it."
+    },
+    "island-refused-locked": {
+      "title": "This opens at a higher level."
+    },
+    "island-refused-unaffordable": {
+      "title": "You need more Stars for this."
+    },
+    "island-refused-starter": {
+      "title": "This came with your island, so it stays."
+    },
+    "island-refused-missing": {
+      "title": "That piece is no longer there."
+    },
+    "island-refused-top": {
+      "title": "It is already at its highest stage."
+    },
+    "island-refused-bottom": {
+      "title": "It is already at its first stage."
+    },
+    "island-stale": {
+      "title": "Your island changed elsewhere, so we loaded it again."
+    },
+    "island-refused-grows": {
+      "title": "It grows when you water it."
+    },
+    "island-refused-rooted": {
+      "title": "It has taken root, so move it instead."
+    },
+    "island-refused-materials": {
+      "title": "You need more from your garden for this."
+    },
+    "island-farm-unlearned": {
+      "title": "Learn something today, then water your garden."
+    },
+    "island-farm-watered": {
+      "title": "Your garden is already watered today."
+    },
+    "island-farm-barren": {
+      "title": "Plant a tree or flowers first."
+    },
+    "island-farm-missing": {
+      "title": "That plant is no longer there."
+    },
+    "island-farm-unripe": {
+      "title": "It has not grown its harvest yet."
+    },
+    "island-watered": {
+      "title": "Your garden is watered."
+    },
+    "island-harvested-wood": {
+      "title": "You gathered wood."
+    },
+    "island-harvested-petals": {
+      "title": "You gathered petals."
     }
   },
   "Ai": {
@@ -4358,6 +4429,8 @@
     "plan-pro": "Pro",
     "plan-max": "Max",
     "plan-trial": "Free for {days} days",
+    "plan-free-price": "Free",
+    "plan-trial-for": "for {days} days",
     "plan-month": "/month",
     "plan-billed-free": "No payment, no card",
     "plan-accounts": "{count, number} accounts of every role",
@@ -4441,7 +4514,9 @@
     "tasks-title": "Give work, collect it, grade it",
     "tasks-lead": "Every hand-in and grade stays with its class.",
     "exams-title": "Exams that score themselves",
-    "exams-lead": "Every quiz and try-out runs in the same player.",
+    "exams-lead": "Write each question with formulas and pictures, and set its key beside it.",
+    "player-title": "One player for every exam",
+    "player-lead": "A clock, a navigator and flags, with every formula as it is written.",
     "reports-title": "Report cards from the grades you gave",
     "reports-lead": "The school signs, and a QR code proves each one.",
     "insight-title": "See who needs help early",
@@ -4457,28 +4532,40 @@
     "demo-forum-nina": "I put a short summary of chapter 3 next to it.",
     "demo-forum-replies": "{count, plural, one {# reply} other {# replies}}",
     "demo-library-folder": "Chapter 3: Momentum",
-    "demo-library-files": "{count, plural, one {# file} other {# files}}",
     "demo-library-worksheet": "Momentum worksheet.pdf",
     "demo-library-summary": "Chapter 3 summary",
-    "demo-library-video": "Collision lab.mp4",
+    "demo-library-video": "Collision lab video",
     "demo-library-formulas": "Formula sheet.png",
     "demo-task-title": "Momentum worksheet",
-    "demo-task-due": "Due Friday, 12:00",
     "demo-task-handed": "{done} of {total} handed in",
-    "demo-task-graded": "Graded",
-    "demo-task-in": "Handed in",
-    "demo-task-late": "Late",
+    "demo-task-lab": "Pendulum lab report",
+    "demo-task-quiz": "Vectors quiz",
+    "demo-task-essay": "Energy around us",
+    "demo-head-title": "Title",
+    "demo-head-deadline": "Deadline",
+    "demo-head-status": "Status",
+    "demo-head-type": "Type",
+    "demo-head-by": "Added by",
+    "demo-head-student": "Student",
+    "demo-head-skills": "Skills",
+    "demo-head-mastery": "Mastery",
+    "demo-head-narrative": "Narrative",
+    "demo-narrative-none": "Not written",
+    "demo-narrative-saved": "Written",
+    "demo-narrative-shared": "Shared",
+    "demo-kind-folder": "Folder",
+    "demo-kind-pdf": "PDF",
+    "demo-kind-image": "Image",
+    "demo-kind-link": "Link",
     "demo-exam-title": "Physics midterm",
-    "demo-exam-question": "A 2 kg ball rolls at 3 m/s. What is its momentum?",
+    "demo-exam-question": "A <mass></mass> ball rolls at <speed></speed>. What is its momentum?",
+    "demo-exam-explanation": "Momentum is mass times velocity: <formula></formula>.",
     "demo-exam-answer": "Answer",
     "demo-exam-progress": "Question {current} of {total}",
     "demo-report-term": "Semester 1 report",
     "demo-report-average": "Average",
     "demo-report-signed": "Signed by the school",
     "demo-report-verify": "Scan to verify",
-    "demo-insight-title": "Class average",
-    "demo-insight-week": "W{week}",
-    "demo-insight-attention": "Needs help",
     "demo-graduation-year": "School year {year}",
     "demo-graduation-graduated": "Graduated",
     "demo-graduation-students": "{count, plural, one {# student} other {# students}}",
@@ -4517,5 +4604,49 @@
     "faq-credits-answer": "Nina, Nakafa's AI, spends credits on each answer. The whole school shares one pool, and a pack of 1,000 more lasts 12 months.",
     "faq-change-question": "Can we change plans later?",
     "faq-change-answer": "Yes. Move between Pro and Max or add accounts at any time, and the change applies from the next paid invoice."
+  },
+  "Island": {
+    "title": "Island",
+    "description": "Your island grows with every lesson and try-out.",
+    "name": "{name}'s Island",
+    "level": "Level {level}",
+    "stars": "Stars",
+    "next": "Next level",
+    "next-value": "{stars} Stars",
+    "top": "Highest level",
+    "turn-left": "Turn left",
+    "turn-right": "Turn right",
+    "build": "Build",
+    "done": "Done",
+    "undo": "Undo",
+    "redo": "Redo",
+    "rotate": "Turn",
+    "move": "Move",
+    "remove": "Remove",
+    "upgrade": "Upgrade",
+    "items": "Items",
+    "price": "{stars} Stars",
+    "locked": "Level {level}",
+    "item-house": "House",
+    "item-tree": "Tree",
+    "item-pond": "Pond",
+    "item-grass": "Grass",
+    "item-soil": "Soil",
+    "item-stone": "Stone",
+    "item-sand": "Sand",
+    "item-planks": "Planks",
+    "item-brick": "Brick",
+    "item-glass": "Glass",
+    "item-tile": "Red tiles",
+    "item-slate": "Blue tiles",
+    "item-flowers": "Flowers",
+    "item-bush": "Bush",
+    "item-rock": "Rock",
+    "item-lamp": "Lamp",
+    "water": "Water the garden",
+    "harvest": "Harvest",
+    "materials": "Garden",
+    "materials-value": "{wood} wood, {petals} petals",
+    "price-wood": "{stars} Stars, {wood} wood"
   }
 }

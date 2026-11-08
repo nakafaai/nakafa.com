@@ -176,7 +176,7 @@ export function BreadcrumbHeaderPath({
 /**
  * A path folded whole into its ellipsis menu, as Google Drive shows it on a phone: Home
  * and every item go into the menu, and the page names itself beside it. A header whose
- * own title is the current page, such as a surah's, shows this on a phone so the title
+ * own title is the current page, such as a try-out's, shows this on a phone so the title
  * shares the row.
  */
 export function BreadcrumbHeaderFold({

@@ -3,5 +3,6 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 export const artifact = registeredFunctions.artifact;
 export const dates = registeredFunctions.dates;
 export const frame = registeredFunctions.frame;
+export const head = registeredFunctions.head;
 export const read = registeredFunctions.read;
 export const experimental_reuseContext = true;

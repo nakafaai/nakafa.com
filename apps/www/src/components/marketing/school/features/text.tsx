@@ -10,7 +10,8 @@ import {
 /**
  * The words of one School feature, as every row of the landing draws them: Nina
  * doing what fits the feature, which the caller gives as children, its title and
- * its one line.
+ * its one line. Her place has the id `<feature>-nina`, where the page's toys put
+ * the Nina that can be carried.
  */
 export function SchoolFeatureText({
   children,
@@ -23,7 +24,9 @@ export function SchoolFeatureText({
 
   return (
     <FeatureText>
-      <span className="inline-block">{children}</span>
+      <span className="inline-block" id={`${feature}-nina`}>
+        {children}
+      </span>
       <FeatureTitle>{t(`${feature}-title`)}</FeatureTitle>
       <FeatureLead>{t(`${feature}-lead`)}</FeatureLead>
     </FeatureText>
