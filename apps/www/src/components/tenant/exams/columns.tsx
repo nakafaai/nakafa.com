@@ -1,26 +1,21 @@
 import { AddToListIcon, ListPlusIcon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import {
-  letterScript,
-  optionLetter,
-} from "@repo/backend/confect/exams/letters";
+import { partLetter } from "@repo/backend/confect/exams/letters";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { LinesColumn, LinesItem } from "@/components/exams/lines/board";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
-import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { type MatchSide, withPartLabel } from "@/components/tenant/exams/match";
-import type { Question } from "@/components/tenant/exams/optimistic";
-import { OptionRow } from "@/components/tenant/exams/option";
+import { OptionRemove, OptionRow } from "@/components/tenant/exams/option";
+import { useQuestionPage } from "@/components/tenant/exams/page";
 import { ExamDocument } from "@/components/tenant/exams/rich";
-import { PaperPartText } from "@/components/tenant/exams/sheet";
+import { PartAdd } from "@/components/tenant/exams/sheet";
 import type { Unstored } from "@/components/tenant/exams/writer";
 
 /** One part of a match or a table: its ID and its rich text. */
@@ -61,22 +56,16 @@ interface PartColumnProps {
     readonly label: string;
     readonly run: () => void;
   } | null;
-  /** Whether the page is the chosen one, which shows the action that adds a part. */
-  readonly chosen: boolean;
-  /** Whether the exam is locked, so the parts take no change. */
-  readonly frozen: boolean;
   /** What the column holds, which names its parts. */
   readonly kind: PartKind;
-  /** The number of the question, which names each part for assistive technology. */
-  readonly number: number;
   /** Saves the label a part's editor holds. Calls `unstored` when the server does not store it. */
   readonly onLabel: (
     partId: string,
     label: OptionLabel,
     unstored: Unstored
   ) => void;
-  /** Removes a part, or none while the column holds the fewest it may. */
-  readonly onRemove: ((partId: string) => void) | null;
+  /** Removes a part; absent while the column holds the fewest it may. */
+  readonly onRemove?: (partId: string) => void;
   /** The parts as the page shows them, with every change the teacher made. */
   readonly parts: readonly Part[];
   /** The parts as the server holds them, whose labels the editors start from. */
@@ -84,45 +73,39 @@ interface PartColumnProps {
 }
 
 /**
- * One column of parts on a question's paper, as the student's paper sets it: each part with its letter or number,
- * its rich text, and the dot its line starts or ends at. The teacher's control removes a part, and the action below
- * adds one.
+ * One column of parts on a question's paper, as the student's paper sets it: each part on its outlined row with its
+ * letter or number, its rich text, the teacher's control that removes it, and the dot its line starts or ends at
+ * outside the row. The action below adds one.
  */
 function PartColumn({
   add,
-  chosen,
-  frozen,
   kind,
-  number,
   onLabel,
   onRemove,
   parts,
   saved,
 }: PartColumnProps) {
   const t = useTranslations("Exams");
+  const { chosen, locked, number } = useQuestionPage();
   const words = PART_WORDS[kind];
-  // Answers are named in the script of their labels: أ, ب, ج for answers written in Arabic.
-  const script = letterScript(Arr.map(parts, (part) => part.label));
 
   return (
     <LinesColumn
       footer={
-        add === null || frozen ? null : (
-          <div className={chosen ? undefined : "invisible"}>
-            <Button onClick={add.run} size="sm" type="button" variant="outline">
-              <HugeIcons aria-hidden="true" icon={add.icon} />
-              {add.label}
-            </Button>
-          </div>
+        add === null || locked ? null : (
+          <PartAdd
+            icon={add.icon}
+            label={add.label}
+            onAdd={add.run}
+            shown={chosen}
+          />
         )
       }
       side={kind === "statements" ? "sources" : "targets"}
     >
       {Arr.map(parts, (part, index) => {
         const name =
-          kind === "statements"
-            ? String(index + 1)
-            : optionLetter(index, script);
+          kind === "statements" ? String(index + 1) : partLetter(parts, index);
         return (
           <LinesItem
             id={part.id}
@@ -136,39 +119,29 @@ function PartColumn({
                 Arr.findFirst(saved, (item) => item.id === part.id),
                 { onNone: () => part.label, onSome: (item) => item.label }
               )}
-              locked={frozen}
-              onRemove={onRemove === null ? null : () => onRemove(part.id)}
               onSave={(label: OptionLabel, unstored: Unstored) =>
                 onLabel(part.id, label, unstored)
               }
-              removeName={t(words.remove, { name, number })}
             >
-              <PaperPartText>
+              <LineWords>
                 <ExamDocument
                   label={t(words.editor, { name, number })}
                   placeholder={t(words.placeholder)}
                   size="line"
                 />
-              </PaperPartText>
+              </LineWords>
+              {onRemove === undefined ? null : (
+                <OptionRemove
+                  name={t(words.remove, { name, number })}
+                  onRemove={() => onRemove(part.id)}
+                />
+              )}
             </OptionRow>
           </LinesItem>
         );
       })}
     </LinesColumn>
   );
-}
-
-/** The props of one side of a matching or a table question. */
-interface SideProps {
-  /** Whether the page is the chosen one, which shows the action that adds a part. */
-  readonly chosen: boolean;
-  readonly editing: QuestionEditing;
-  /** Whether the exam is locked, so the parts take no change. */
-  readonly frozen: boolean;
-  /** The number of the question, which names each part for assistive technology. */
-  readonly number: number;
-  /** The question as the server holds it, whose labels each part's editor starts from. */
-  readonly question: Question;
 }
 
 /**
@@ -178,12 +151,12 @@ interface SideProps {
 export function MatchColumn({
   match,
   side,
-  ...props
-}: SideProps & {
+}: {
   readonly match: Extract<Interaction, { kind: "match" }>;
   readonly side: MatchSide;
 }) {
   const t = useTranslations("Exams");
+  const { editing, question } = useQuestionPage();
   const parts = match[side];
   const statements = side === "sources";
 
@@ -194,16 +167,13 @@ export function MatchColumn({
           ? {
               icon: statements ? ListPlusIcon : AddToListIcon,
               label: t(statements ? "statement-add" : "match-answer-add"),
-              run: () => props.editing.addPart(side),
+              run: () => editing.addPart(side),
             }
           : null
       }
-      chosen={props.chosen}
-      frozen={props.frozen}
       kind={statements ? "statements" : "answers"}
-      number={props.number}
       onLabel={(partId, label, unstored) =>
-        props.editing.saveAnswers(
+        editing.saveAnswers(
           (draft) => ({
             ...draft,
             answers: withPartLabel(draft.answers, partId, label),
@@ -211,11 +181,11 @@ export function MatchColumn({
           unstored
         )
       }
-      onRemove={
-        parts.length > CHOICE_OPTIONS_MIN ? props.editing.removePart : null
-      }
+      {...(parts.length > CHOICE_OPTIONS_MIN
+        ? { onRemove: editing.removePart }
+        : {})}
       parts={parts}
-      saved={Arr.flatMap(props.question.answers, (answer) =>
+      saved={Arr.flatMap(question.answers, (answer) =>
         answer.kind === "match" ? answer[side] : []
       )}
     />

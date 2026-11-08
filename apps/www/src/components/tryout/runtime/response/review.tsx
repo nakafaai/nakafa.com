@@ -5,10 +5,8 @@ import {
   type ExamResponse,
   markedCells,
 } from "@repo/backend/confect/assessment/response";
-import {
-  optionDirection,
-  optionLetters,
-} from "@repo/backend/confect/exams/letters";
+import { partDirection, partLetter } from "@repo/backend/confect/exams/letters";
+import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr, Option } from "effect";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
@@ -51,7 +49,11 @@ export function TryoutReviewedFields({
             )
           ),
           id: statement.id,
-          label: <TryoutResponseLabel document={statement.label} />,
+          label: (
+            <LineWords>
+              <TryoutResponseLabel document={statement.label} />
+            </LineWords>
+          ),
           marked: Option.getOrUndefined(
             Option.map(
               Arr.findFirst(cells, (cell) => cell.statement === statement.id),
@@ -66,12 +68,11 @@ export function TryoutReviewedFields({
     return null;
   }
   const chosen = chosenOptions(response ?? []);
-  const labels = Arr.map(interaction.options, (option) => option.label);
-  const letterOf = optionLetters(labels);
+  const parts = interaction.options;
   return (
     <div
       className="grid grid-cols-1 gap-2 md:grid-cols-2"
-      dir={optionDirection(labels)}
+      dir={partDirection(parts)}
     >
       {Arr.map(interaction.options, (option, index) => {
         const isCorrect = Arr.contains(answer.correct, option.id);
@@ -81,7 +82,7 @@ export function TryoutReviewedFields({
             id={optionLabelId(id, option.id)}
             isCorrect={isCorrect}
             key={option.id}
-            letter={letterOf(index)}
+            letter={partLetter(parts, index)}
           >
             <TryoutResponseLabel
               correctness={isCorrect}

@@ -8,10 +8,19 @@ import { articleProse } from "@repo/design-system/components/editor/prose";
 import { documentSizeGuard } from "@repo/design-system/components/editor/size";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  Fragment,
+  type ReactNode,
+  use,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "use-intl";
 import {
   holdsLabel,
@@ -20,6 +29,7 @@ import {
   optionEditOf,
 } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
+import { useQuestionPage } from "@/components/tenant/exams/page";
 import { refusePaste } from "@/components/tenant/exams/picture";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
 import type { Unstored } from "@/components/tenant/exams/writer";
@@ -41,49 +51,42 @@ const OPTION_EXTENSIONS = [
   documentSizeGuard(MAX_DOCUMENT_BYTES, refusePaste),
 ];
 
+/**
+ * What the option row around a remove control holds for it: whether the row takes no change, and the drop of the
+ * row's pending save, which a removal makes stale. It holds a function, which no Schema describes as data.
+ */
+const OptionRowContext = createContext<{
+  readonly drop: () => void;
+  readonly locked: boolean;
+} | null>(null);
+
 /** The props of one option row: the option it shows, and the teacher's controls beside it. */
 interface OptionRowProps {
   /**
-   * The option the caller composes: its letter's frame around an `ExamDocument`, named for assistive
-   * technology, such as "Question 1, option A", with the text its empty editor shows.
+   * The parts the caller composes on the row's line: an `ExamDocument` in its `LineWords`, named for assistive
+   * technology, such as "Question 1, option A", with its remove control, or the framed line that holds them.
    */
   readonly children: ReactNode;
   /** The label the option holds as the server saved it, which the editor starts with. */
   readonly label: OptionLabel;
-  /** Whether the option is locked, so its text and its controls take no change. */
-  readonly locked: boolean;
-  /**
-   * Removes the option, or none for a part that stays: an option while the question holds the fewest it may take,
-   * or a column of a true or false table.
-   */
-  readonly onRemove: (() => void) | null;
   /**
    * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
    */
   readonly onSave: (label: OptionLabel, unstored: Unstored) => void;
-  /** The name of the remove control for assistive technology. */
-  readonly removeName: string;
 }
 
 /**
- * One option of a question: the letter and the rich text the caller composes, framed as the player
- * frames it, as wide as the student reads it, with the teacher's remove control over its end. The row wires the text it holds. The key of the question is marked in the teacher's layer,
- * not here. Every answer type removes a part with this one control: at the row's end, centered on the row however
- * tall its text grows, 32 pixels square, shown when the part may go, on hover or focus, and always on a touch
- * screen. The row is at least as tall as the control, so a pointer finds it anywhere along the row. The text saves after its quiet period once the teacher types in it. A change that edits no
- * text, such as the editor taking its lock, saves nothing. Removing the option drops the pending save
- * of its text. A label the server refused goes back into the editor, unless the teacher has typed on since. A
- * save the server never answered keeps the teacher's words in the editor, with a retry under them, since the
- * server may still take them. An option the server has not saved yet is locked.
+ * The editor of one part of a question, an option, a statement, an answer or a column: it wires the rich text it holds
+ * and lays the caller's parts out on one marked line, such as the part's framed line with its circle, its words
+ * (`LineWords`) and its remove control (`OptionRemove`). The key of the question is marked in the teacher's layer, not
+ * here. The text saves after its quiet period once the teacher types in it. A change that edits no text, such as the
+ * editor taking its lock, saves nothing. Removing the part drops the pending save of its text. A label the server
+ * refused goes back into the editor, unless the teacher has typed on since. A save the server never answered keeps the
+ * teacher's words in the editor, with a retry under them, since the server may still take them. A part of a locked
+ * exam takes no change.
  */
-export function OptionRow({
-  children,
-  label,
-  locked,
-  onRemove,
-  onSave,
-  removeName,
-}: OptionRowProps) {
+export function OptionRow({ children, label, onSave }: OptionRowProps) {
+  const { locked } = useQuestionPage();
   const t = useTranslations("Exams");
   const tCommon = useTranslations("Common");
   const editor = useRef<DocumentEditorInstance | null>(null);
@@ -150,13 +153,6 @@ export function OptionRow({
     }
   };
 
-  // Removing the option drops the quiet save of its label first. The removal makes that save stale,
-  // since it would send the answers of a revision the server has already moved past.
-  const remove = () => {
-    Effect.runFork(saver.cancel);
-    onRemove?.();
-  };
-
   // The editor takes a label the server holds once it changes, as a save of this option lands after the editor
   // opened, or another editor saves it. An editor that no longer holds the label it had before has the teacher's
   // own typing, which waits for its save and wins.
@@ -211,7 +207,7 @@ export function OptionRow({
   }, [saver]);
 
   return (
-    <div className="group/option relative flex min-h-8 flex-col justify-center pointer-coarse:has-[[data-remove]]:[--option-end:--spacing(8)]">
+    <div className="group/option flex min-w-0 flex-1 flex-col">
       <ExamDocumentWiringProvider
         content={Node.fromJSON(assessmentSchema, label).toJSON()}
         extensions={OPTION_EXTENSIONS}
@@ -234,22 +230,14 @@ export function OptionRow({
           next.setEditable(!locked, false);
         }}
       >
-        <Fragment key={editorRound}>{children}</Fragment>
-      </ExamDocumentWiringProvider>
-      {onRemove === null ? null : (
-        <Button
-          aria-label={removeName}
-          className="absolute end-1 top-1/2 -translate-y-1/2 opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
-          data-remove=""
-          disabled={locked}
-          onClick={remove}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
+        <OptionRowContext
+          value={{ drop: () => Effect.runFork(saver.cancel), locked }}
         >
-          <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-        </Button>
-      )}
+          <MarkedLine className="flex-1" tone="bare">
+            <Fragment key={editorRound}>{children}</Fragment>
+          </MarkedLine>
+        </OptionRowContext>
+      </ExamDocumentWiringProvider>
       {unsaved ? (
         <div
           className="flex items-center justify-between gap-2 pt-1"
@@ -262,5 +250,45 @@ export function OptionRow({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The control that removes the part of the option row around it, in the band at the end of the row's first line, on
+ * one line with the part's letter, circle and dot, with a gap to them and to the row's outline. It shows on hover or
+ * focus, and always on a touch screen, and keeps its band either way, so the words never run under it. A removal
+ * drops the row's pending save first, since it would send the answers of a revision the server has moved past.
+ */
+export function OptionRemove({
+  name,
+  onRemove,
+}: {
+  /** The name of the control for assistive technology, such as "Question 1, remove option A". */
+  readonly name: string;
+  readonly onRemove: () => void;
+}) {
+  const row = use(OptionRowContext);
+  if (row === null) {
+    throw new Error("OptionRemove must be used within OptionRow");
+  }
+
+  return (
+    <LineMark>
+      <Button
+        aria-label={name}
+        className="opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
+        data-remove=""
+        disabled={row.locked}
+        onClick={() => {
+          row.drop();
+          onRemove();
+        }}
+        size="icon-sm"
+        type="button"
+        variant="ghost"
+      >
+        <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+      </Button>
+    </LineMark>
   );
 }
