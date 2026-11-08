@@ -1,10 +1,22 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
+import {
+  ChartHistogramIcon,
+  SecurityCheckIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Number as Num } from "effect";
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
@@ -12,8 +24,8 @@ import {
   ResultsScopeContext,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { IntegrityAction } from "@/components/exams/results/integrity";
-import { QuestionsAction } from "@/components/exams/results/questions";
+import { IntegritySheet } from "@/components/exams/results/integrity";
+import { QuestionsSheet } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
 import { StudentsTable } from "@/components/exams/results/students";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
@@ -105,6 +117,9 @@ function SittingResultsContent({
     [canGrade, timeZone, total]
   );
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const [questionsOpen, setQuestionsOpen] = useState(false);
+  const [integrityOpen, setIntegrityOpen] = useState(false);
 
   if (QueryResult.isFailure(overview)) {
     if (isLostAccess(overview.error)) {
@@ -137,10 +152,36 @@ function SittingResultsContent({
               room={sitting.room}
               sittingId={scope.sittingId}
             >
+              {/* The header holds the search, one secondary action and the primary: the questions and the
+                  integrity report open from one Analysis menu. */}
               <ButtonGroup>
                 <TableSearch placeholder={t("results-search")} />
-                <QuestionsAction questions={questions} />
-                <IntegrityAction />
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button tooltip={t("results-analysis")} type="button">
+                        <HugeIcons icon={ChartHistogramIcon} />
+                        <span className="@max-3xl/header:sr-only">
+                          {t("results-analysis")}
+                        </span>
+                      </Button>
+                    }
+                  />
+                  <DropdownMenuContent align="end" label={common("menu-view")}>
+                    <DropdownMenuItem
+                      icon={ChartHistogramIcon}
+                      onClick={() => setQuestionsOpen(true)}
+                    >
+                      {t("questions")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      icon={SecurityCheckIcon}
+                      onClick={() => setIntegrityOpen(true)}
+                    >
+                      {t("integrity")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </ButtonGroup>
               <ReleaseAction
                 canRelease={canRelease}
@@ -148,6 +189,15 @@ function SittingResultsContent({
                 sitting={sitting}
               />
             </ResultsHeader>
+            <QuestionsSheet
+              onOpenChange={setQuestionsOpen}
+              open={questionsOpen}
+              questions={questions}
+            />
+            <IntegritySheet
+              onOpenChange={setIntegrityOpen}
+              open={integrityOpen}
+            />
             <Panes id="results">
               <PanesList>
                 <TablePageBody>

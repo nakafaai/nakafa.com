@@ -663,7 +663,8 @@
     "room-move-description": "Schüler und Token bleiben, und die Hinweise gehen erneut hinaus.",
     "room-move-save": "Speichern",
     "student-closed-description": "Sie nimmt keine Antworten mehr an.",
-    "student-locked-description": "Er nimmt gerade keine Antworten an."
+    "student-locked-description": "Er nimmt gerade keine Antworten an.",
+    "results-analysis": "Analyse"
   },
   "SchoolSettings": {
     "setup-title": "Schule einrichten",

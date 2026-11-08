@@ -38,7 +38,7 @@ const CATEGORY_ICONS = {
   schedule: Calendar03Icon,
 };
 
-/** The header's filter of `services` by category, which stands out while one is chosen. */
+/** The header's filter of `services` by category, which shows itself pressed while one is chosen. */
 export function ServiceFilter({
   services,
 }: {
@@ -59,10 +59,11 @@ export function ServiceFilter({
       <DropdownMenuTrigger
         render={
           <Button
+            aria-pressed={Option.isSome(category)}
             size="icon"
             tooltip={t("filter")}
             type="button"
-            variant={Option.isSome(category) ? "secondary" : "outline"}
+            variant="outline"
           >
             <HugeIcons icon={FilterHorizontalIcon} />
           </Button>

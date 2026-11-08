@@ -46,7 +46,6 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
 import { Array as Arr, Option, Schema } from "effect";
 import { useState } from "react";
@@ -334,15 +333,18 @@ function AnswerList({
 }
 
 /**
- * Questions, in the results page's header row: it opens a sheet with the questions of the exam, one at a
- * time, however many there are. The sheet's footer steps through them or picks one from a
+ * The questions of the exam in a sheet, one at a time, however many there are, which the results header's
+ * Analysis menu opens. The sheet's footer steps through them or picks one from a
  * list, and stays in place while the statistics and answers scroll under it. The selection lives in this
- * component, so nothing above it is re-rendered. In a narrow header the button keeps its icon, so the page's
- * path keeps its room.
+ * component, so nothing above it is re-rendered.
  */
-export function QuestionsAction({
+export function QuestionsSheet({
+  onOpenChange,
+  open,
   questions,
 }: {
+  readonly onOpenChange: (open: boolean) => void;
+  readonly open: boolean;
   readonly questions: readonly Question[];
 }) {
   const t = useTranslations("Exams");
@@ -359,15 +361,7 @@ export function QuestionsAction({
   }));
 
   return (
-    <Sheet>
-      <SheetTrigger
-        render={
-          <Button type="button" variant="outline">
-            <HugeIcons icon={ChartHistogramIcon} />
-            <span className="@max-3xl/header:sr-only">{t("questions")}</span>
-          </Button>
-        }
-      />
+    <Sheet onOpenChange={onOpenChange} open={open}>
       <SheetContent className="sm:max-w-3xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
           <HugeIcons className="size-5 shrink-0" icon={ChartHistogramIcon} />

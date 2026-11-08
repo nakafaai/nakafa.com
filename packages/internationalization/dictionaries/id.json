@@ -663,7 +663,8 @@
     "room-move-description": "Siswa dan tokennya tetap, dan pengingatnya dikirim lagi.",
     "room-move-save": "Simpan",
     "student-closed-description": "Ujian ini tidak menerima jawaban lagi.",
-    "student-locked-description": "Percobaan ini belum menerima jawaban."
+    "student-locked-description": "Percobaan ini belum menerima jawaban.",
+    "results-analysis": "Analisis"
   },
   "SchoolSettings": {
     "setup-title": "Siapkan sekolah",

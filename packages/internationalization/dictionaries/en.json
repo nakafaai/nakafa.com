@@ -663,7 +663,8 @@
     "room-move-description": "Its students and token stay, and its notices go out again.",
     "room-move-save": "Save",
     "student-closed-description": "It takes no more answers.",
-    "student-locked-description": "It takes no answers for now."
+    "student-locked-description": "It takes no answers for now.",
+    "results-analysis": "Analysis"
   },
   "SchoolSettings": {
     "setup-title": "Set up school",
