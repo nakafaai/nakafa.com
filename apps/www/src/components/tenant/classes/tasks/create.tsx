@@ -3,6 +3,7 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
+import { PencilEdit02Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -11,11 +12,14 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -170,11 +174,20 @@ function TaskExamField({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
+          <SelectGroup>
+            <SelectLabel>{t("select-questions")}</SelectLabel>
+            {Arr.map(items, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                <HugeIcons
+                  aria-hidden="true"
+                  icon={
+                    item.value === WRITTEN ? PencilEdit02Icon : TaskEdit01Icon
+                  }
+                />
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
       <FieldDescription>{t("task-exam-description")}</FieldDescription>

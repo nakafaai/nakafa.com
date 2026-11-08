@@ -3,7 +3,7 @@ import {
   Archive02Icon,
   ArrowTurnBackwardIcon,
   Delete02Icon,
-  MoreHorizontalIcon,
+  Megaphone01Icon,
   PencilEdit02Icon,
   PinIcon,
   PinOffIcon,
@@ -17,7 +17,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -45,6 +45,7 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   archivePostUpdate,
   type ClassPost,
@@ -54,6 +55,7 @@ import {
   restorePostUpdate,
 } from "@/components/tenant/classes/home/optimistic";
 import { PostPoll } from "@/components/tenant/classes/home/poll";
+import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
 
 /**
@@ -159,17 +161,7 @@ function PostActions({
   return (
     <ItemActions>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
+        <PostMenuTrigger />
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
@@ -199,6 +191,7 @@ function PostActions({
                     {t("message-edit")}
                   </DropdownMenuItem>
                 ) : null}
+                <DropdownMenuSeparator />
                 {post.archived ? (
                   <DropdownMenuItem
                     onClick={() =>
@@ -236,7 +229,10 @@ function PostActions({
                     {t("post-archive")}
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => setRemoving(true)}>
+                <DropdownMenuItem
+                  onClick={() => setRemoving(true)}
+                  variant="destructive"
+                >
                   <HugeIcons icon={Delete02Icon} />
                   {t("post-remove")}
                 </DropdownMenuItem>
@@ -260,7 +256,9 @@ function PostActions({
         open={removing}
         setOpen={setRemoving}
         title={t("post-remove-title")}
-      />
+      >
+        <LossItem icon={Megaphone01Icon} name={post.text} />
+      </ResponsiveDialog>
     </ItemActions>
   );
 }

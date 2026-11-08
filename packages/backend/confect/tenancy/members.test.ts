@@ -46,7 +46,7 @@ describe("tenancy/cohorts members", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const made = yield* cohort(fixture, period.id, "7A", 10);
         const outsider = yield* fixture
           .as("student")
           .query(members, { ...firstPage, cohortId: made.id, slug: nf })
@@ -65,7 +65,7 @@ describe("tenancy/cohorts members", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const made = yield* cohort(fixture, period.id, "7A", 10);
         const refused = yield* fixture
           .as("counselor")
           .query(members, { ...firstPage, cohortId: made.id, slug: nf })

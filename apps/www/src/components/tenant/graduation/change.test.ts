@@ -27,6 +27,7 @@ const overview = (
   periodId: typeof genap,
   decision: GraduationOverview["decision"]
 ): GraduationOverview => ({
+  _tag: "Graduating",
   can: ["graduation.decide", "graduation.issue"],
   cohort: { id: cohortOf(name), name, period: "Genap", periodId },
   decision,
@@ -34,11 +35,18 @@ const overview = (
   unit: { name: "SMP Nakafa", npsn: null },
 });
 
+/** The page of a class group of the period that does not graduate. */
+const elsewhere: Ref.Returns<typeof records.graduations.get> = {
+  _tag: "NotGraduating",
+  cohort: { grade: 8, id: cohortOf("VIII-A"), name: "VIII-A" },
+  unit: { last: 9, name: "SMP Nakafa" },
+};
+
 /** What the store records of one write: the page it stores. */
 type Written = Option.Option<Ref.Returns<typeof records.graduations.get>>;
 
 describe("decideChange", () => {
-  it("shows the decision on every class group of its period, keeping the letters it issued", () => {
+  it("shows the decision on every graduating class group of its period, keeping the letters it issued", () => {
     const getAllQueries = vi.fn();
     getAllQueries.mockReturnValue([
       { args: { slug }, value: Option.some(overview("IX-A", genap, null)) },
@@ -47,6 +55,7 @@ describe("decideChange", () => {
         value: Option.some(overview("IX-B", genap, { ...DECISION, issued: 3 })),
       },
       { args: { slug }, value: Option.some(overview("VI-A", ganjil, null)) },
+      { args: { slug }, value: Option.some(elsewhere) },
       { args: { slug }, value: Option.none() },
     ]);
     const setQuery =
@@ -57,10 +66,13 @@ describe("decideChange", () => {
     );
     expect(setQuery).toHaveBeenCalledTimes(2);
     expect(
-      Option.getOrThrow(setQuery.mock.calls[0]?.[2] ?? Option.none()).decision
-    ).toEqual({ ...DECISION, issued: 0, nip: "196501011990032001" });
+      Option.getOrThrow(setQuery.mock.calls[0]?.[2] ?? Option.none())
+    ).toEqual({
+      ...overview("IX-A", genap, null),
+      decision: { ...DECISION, issued: 0, nip: "196501011990032001" },
+    });
     expect(
-      Option.getOrThrow(setQuery.mock.calls[1]?.[2] ?? Option.none()).decision
-    ).toMatchObject({ issued: 3 });
+      Option.getOrThrow(setQuery.mock.calls[1]?.[2] ?? Option.none())
+    ).toMatchObject({ decision: { issued: 3 } });
   });
 });

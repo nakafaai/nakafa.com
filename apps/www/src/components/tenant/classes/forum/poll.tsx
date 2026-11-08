@@ -61,7 +61,7 @@ type ForumPoll = NonNullable<ForumMessage["poll"]>;
 /** One choice of a poll, marked when the viewer took it. */
 const pollChoice = cva(
   "relative flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-xl border px-3 py-2 text-start text-sm disabled:cursor-default",
-  { variants: { mine: { false: "", true: "border-primary" } } }
+  { variants: { mine: { false: "", true: "border-foreground" } } }
 );
 
 /**
@@ -158,7 +158,7 @@ export function PollCard({
           >
             <span
               aria-hidden="true"
-              className="bg-primary/10 absolute inset-y-0 start-0 transition-[width] motion-reduce:transition-none"
+              className="bg-muted absolute inset-y-0 start-0 transition-[width] motion-reduce:transition-none"
               style={{ width: `${share}%` }}
             />
             <span
@@ -166,10 +166,7 @@ export function PollCard({
               dir="auto"
             >
               {chosen ? (
-                <HugeIcons
-                  className="text-primary size-4"
-                  icon={CheckmarkCircle02Icon}
-                />
+                <HugeIcons className="size-4" icon={CheckmarkCircle02Icon} />
               ) : null}
               {option}
             </span>

@@ -64,7 +64,7 @@ export function DiscussionReplies({
   }
   return (
     <TargetLink
-      className="text-primary flex w-fit items-center gap-2 px-3 text-sm font-medium underline-offset-4 hover:underline"
+      className="text-foreground flex w-fit items-center gap-2 px-3 text-sm font-medium underline underline-offset-4"
       target={schoolClassDiscussionTarget(slug, classSlug, discussion.number)}
     >
       {discussion.replies === 0
@@ -74,7 +74,7 @@ export function DiscussionReplies({
         <>
           <span
             aria-hidden="true"
-            className="bg-primary size-2 shrink-0 rounded-full"
+            className="bg-foreground size-2 shrink-0 rounded-full"
             data-slot="unread-dot"
           />
           <span className="sr-only">{t("unread")}</span>

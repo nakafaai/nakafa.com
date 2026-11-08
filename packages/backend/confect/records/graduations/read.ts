@@ -5,14 +5,17 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   GraduationAction,
   type GraduationCohort,
+  type GraduationElsewhere,
   type GraduationOverview,
   suggestedDate,
 } from "@repo/backend/confect/records/graduation";
 import {
   finalUnit,
+  graduates,
   graduationOf,
   graduationView,
   lineOf,
+  unitOf,
 } from "@repo/backend/confect/records/graduations/facts";
 import spec from "@repo/backend/confect/records/graduations.spec";
 import type { ReadinessRow } from "@repo/backend/confect/records/letter";
@@ -22,7 +25,7 @@ import {
   cohortAuthority,
   periodAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { lastGradeOf } from "@repo/backend/confect/tenancy/promotion/destination";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
 /** The most units, and the most class groups of one period, the graduation pages list. */
@@ -92,9 +95,11 @@ export const cohorts = FunctionImpl.make(
 );
 
 /**
- * A graduating class group's page: the class group and its period, the unit's name and NPSN,
- * the unit's decision or none, the date the rules suggest for it, and what the viewer may do:
- * record the decision on the period, and issue the class group's letters.
+ * A class group's graduation page. A graduating class group's holds the class group and its
+ * period, the unit's name and NPSN, the unit's decision or none, the date the rules suggest for
+ * it, and what the viewer may do: record the decision on the period, and issue the class group's
+ * letters. A class group outside its unit's last grade answers that it does not graduate, with
+ * its grade and the grade that does, so its address reads a truthful page and no refusal.
  */
 export const get = FunctionImpl.make(
   databaseSchema,
@@ -102,7 +107,18 @@ export const get = FunctionImpl.make(
   "get",
   Effect.fn("records.graduations.get")(function* () {
     const row = yield* Cohort;
-    const unit = yield* finalUnit(row);
+    const unit = yield* unitOf(row);
+    if (!graduates(unit, row)) {
+      const elsewhere: typeof GraduationElsewhere.Type = {
+        _tag: "NotGraduating",
+        cohort: { grade: row.grade, id: row._id, name: row.name },
+        unit: {
+          last: Option.getOrNull(lastGradeOf(unit.level)),
+          name: unit.name,
+        },
+      };
+      return elsewhere;
+    }
     const period = yield* (yield* DatabaseReader)
       .table("tenantPeriods")
       .get(row.periodId)
@@ -113,6 +129,7 @@ export const get = FunctionImpl.make(
       cohortAuthority.allowed(row),
     ]);
     const overview: typeof GraduationOverview.Type = {
+      _tag: "Graduating",
       can: Arr.filter(GraduationAction.literals, (action) =>
         Arr.contains(
           action === "graduation.decide" ? onPeriod : onCohort,

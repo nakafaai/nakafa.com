@@ -189,7 +189,10 @@ export function PaneFacts({ children }: { children: ReactNode }) {
   return <dl className="flex flex-col gap-4">{children}</dl>;
 }
 
-/** The row's main cell: its name, as a button that opens the row beside the list. */
+/**
+ * The row's main cell: its name, as a button that opens the row beside the list. It fills the width its column holds and
+ * keeps the name on one line, ending in an ellipsis past it, which the first column shows whole on hover (`TableLead`).
+ */
 export function PaneOpen({
   children,
   id,
@@ -201,7 +204,7 @@ export function PaneOpen({
 
   return (
     <button
-      className="block max-w-52 min-w-36 text-start font-medium wrap-break-word whitespace-normal underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none sm:max-w-80"
+      className="block w-full truncate text-start font-medium underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
       dir="auto"
       onClick={() => show(id)}
       type="button"

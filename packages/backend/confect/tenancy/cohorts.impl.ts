@@ -32,6 +32,7 @@ import { cohortMembers } from "@repo/backend/confect/tenancy/members";
 import { overview } from "@repo/backend/confect/tenancy/overview";
 import {
   checkCohorts,
+  gradeTaught,
   insertCohort,
 } from "@repo/backend/confect/tenancy/write/cohort";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
@@ -144,8 +145,9 @@ const members = FunctionImpl.make(
 );
 
 /**
- * Creates an active cohort in a period. Its name is unique within the period
- * without regard to case, and a period holds at most COHORT_LIMIT cohorts.
+ * Creates an active cohort in a period. Its grade is one its unit's level teaches,
+ * its name is unique within the period without regard to case, and a period holds
+ * at most COHORT_LIMIT cohorts.
  */
 const create = FunctionImpl.make(
   databaseSchema,
@@ -154,6 +156,7 @@ const create = FunctionImpl.make(
   Effect.fn("tenancy.cohorts.create")(function* ({ grade, name }) {
     const { person } = yield* Member;
     const period = yield* Period;
+    yield* gradeTaught(period.unitId, grade);
     yield* checkCohorts(period, [{ grade, name }]);
     return cohortView(
       yield* insertCohort(personActor(person), period, { grade, name })

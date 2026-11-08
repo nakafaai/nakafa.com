@@ -47,6 +47,31 @@ describe("class page path", () => {
     );
   });
 
+  it("passes through each folder above the open one, each a link to its own page", () => {
+    const outer = Schema.decodeUnknownSync(Id("classroomFolders"))("materi");
+    const path = classPath(
+      {
+        _tag: "folder",
+        folderId: Schema.decodeUnknownSync(Id("classroomFolders"))("bab-1"),
+      },
+      root,
+      none,
+      Option.some("Bab 1"),
+      [{ id: outer, label: "Materi" }]
+    );
+    expect(Arr.map(path, (item) => item.label)).toEqual([
+      "Fisika X-1",
+      "Library",
+      "Materi",
+      "Bab 1",
+    ]);
+    expect(path[2]?.target).toEqual(
+      expect.objectContaining({
+        params: expect.objectContaining({ folder: outer }),
+      })
+    );
+  });
+
   it("names a folder after a link to the library", () => {
     const folder = classPath(
       {

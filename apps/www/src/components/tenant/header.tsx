@@ -8,6 +8,11 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { SidebarContext } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
@@ -94,7 +99,8 @@ export function SchoolHeader({
 
 /**
  * The action of a school page's header that adds a record, under its name. On a phone it keeps a plus, so the page's
- * path stays readable beside it, and its name stays for assistive technology.
+ * path stays readable beside it, and its name stays for assistive technology and in its tooltip, which every button
+ * that may show only an icon carries.
  */
 export function SchoolHeaderAdd({
   label,
@@ -105,18 +111,25 @@ export function SchoolHeaderAdd({
   onClick: () => void;
 }) {
   return (
-    <Button
-      className="@sm/header:has-[>svg]:px-4"
-      onClick={onClick}
-      type="button"
-    >
-      <HugeIcons
-        aria-hidden="true"
-        className="@sm/header:hidden"
-        icon={Add01Icon}
-      />
-      <span className="@max-sm/header:sr-only">{label}</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            className="@sm/header:has-[>svg]:px-4"
+            onClick={onClick}
+            type="button"
+          />
+        }
+      >
+        <HugeIcons
+          aria-hidden="true"
+          className="@sm/header:hidden"
+          icon={Add01Icon}
+        />
+        <span className="@max-sm/header:sr-only">{label}</span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
   );
 }
 

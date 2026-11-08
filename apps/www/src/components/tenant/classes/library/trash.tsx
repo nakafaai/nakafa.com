@@ -41,6 +41,7 @@ import {
   restoreItemUpdate,
 } from "@/components/tenant/classes/library/optimistic";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
+import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
@@ -252,6 +253,12 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
   return (
     <ConfirmRowMenu
       action={t("library-purge")}
+      body={
+        <LossItem
+          icon={KIND_ICONS[shownOf(row).kind]}
+          name={shownOf(row).title}
+        />
+      }
       confirm={t("library-purge")}
       description={t("library-purge-description")}
       icon={Delete02Icon}
