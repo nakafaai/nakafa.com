@@ -17,13 +17,13 @@ import { requireConvexOnline } from "@/lib/convex/online";
  * while the client is offline (`NINA_OFFLINE`) never started, so nothing is
  * unconfirmed and nothing is reported.
  */
-export class NinaConnectionError extends Schema.TaggedError<NinaConnectionError>()(
-  "NinaConnectionError",
-  {
-    code: Schema.Literals(["NINA_CONNECTION_FAILED", "NINA_OFFLINE"]),
-    message: Schema.String,
-  }
-) {}
+export class NinaConnectionError extends Schema.TaggedError<
+  NinaConnectionError,
+  { readonly brand: unique symbol }
+>()("NinaConnectionError", {
+  code: Schema.Literals(["NINA_CONNECTION_FAILED", "NINA_OFFLINE"]),
+  message: Schema.String,
+}) {}
 
 /** A call refused while offline shows the connection failure and its retry, without a report. */
 export function requireNinaConnection(

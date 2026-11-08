@@ -18,10 +18,10 @@ import {
 import { Effect, flow, Result, Schema } from "effect";
 
 /** Request JSON could not satisfy the exact public runtime contract. */
-class PublicRuntimeRequestError extends Schema.TaggedError<PublicRuntimeRequestError>()(
-  "PublicRuntimeRequestError",
-  {}
-) {}
+class PublicRuntimeRequestError extends Schema.TaggedError<
+  PublicRuntimeRequestError,
+  { readonly brand: unique symbol }
+>()("PublicRuntimeRequestError", {}) {}
 /** Strictly parses one bounded UTF-8 public request. */
 const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
   function* (source: string, byteLength: number) {

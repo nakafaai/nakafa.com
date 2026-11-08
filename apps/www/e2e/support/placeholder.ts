@@ -11,10 +11,10 @@ const PartSchema = Schema.Struct({
 });
 
 /** A field has no part of this name in the shadow tree the browser draws it from. */
-class FieldPartMissing extends Schema.TaggedError<FieldPartMissing>()(
-  "FieldPartMissing",
-  { part: Schema.String, selector: Schema.String }
-) {
+class FieldPartMissing extends Schema.TaggedError<
+  FieldPartMissing,
+  { readonly brand: unique symbol }
+>()("FieldPartMissing", { part: Schema.String, selector: Schema.String }) {
   get message() {
     return `The field ${this.selector} has no part named ${this.part}.`;
   }

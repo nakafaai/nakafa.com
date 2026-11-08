@@ -10,76 +10,76 @@ import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** The billing state could not be read or changed safely. */
-export class BillingStateError extends Schema.TaggedError<BillingStateError>()(
-  "BillingStateError",
-  {
-    code: Schema.Literal("BILLING_STATE_FAILED"),
-    message: Schema.Literal("Unable to read or update billing state."),
-  }
-) {}
+export class BillingStateError extends Schema.TaggedError<
+  BillingStateError,
+  { readonly brand: unique symbol }
+>()("BillingStateError", {
+  code: Schema.Literal("BILLING_STATE_FAILED"),
+  message: Schema.Literal("Unable to read or update billing state."),
+}) {}
 
 /** No school carries the slug an operator named, so the command has nothing to record against. */
-export class TenantNotFound extends Schema.TaggedError<TenantNotFound>()(
-  "TenantNotFound",
-  {
-    slug: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class TenantNotFound extends Schema.TaggedError<
+  TenantNotFound,
+  { readonly brand: unique symbol }
+>()("TenantNotFound", {
+  slug: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** A subscription's offer is for one kind of owner, and the account it bills names another. */
-export class GrantOwnerMismatch extends Schema.TaggedError<GrantOwnerMismatch>()(
-  "GrantOwnerMismatch",
-  {
-    message: Schema.String,
-  }
-) {}
+export class GrantOwnerMismatch extends Schema.TaggedError<
+  GrantOwnerMismatch,
+  { readonly brand: unique symbol }
+>()("GrantOwnerMismatch", {
+  message: Schema.String,
+}) {}
 
 /** A row the billing model points at is gone, which means an invariant broke. The write it guards does not happen. */
-export class BillingRowMissing extends Schema.TaggedError<BillingRowMissing>()(
-  "BillingRowMissing",
-  {
-    table: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class BillingRowMissing extends Schema.TaggedError<
+  BillingRowMissing,
+  { readonly brand: unique symbol }
+>()("BillingRowMissing", {
+  table: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** A provider event names a row on another rail than the one that sent it, so the event is not applied. */
-export class RailMismatch extends Schema.TaggedError<RailMismatch>()(
-  "RailMismatch",
-  {
-    rail: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class RailMismatch extends Schema.TaggedError<
+  RailMismatch,
+  { readonly brand: unique symbol }
+>()("RailMismatch", {
+  rail: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** No invoice carries the number an operator named, so there is nothing to record a payment against. */
-export class InvoiceNotFound extends Schema.TaggedError<InvoiceNotFound>()(
-  "InvoiceNotFound",
-  {
-    number: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class InvoiceNotFound extends Schema.TaggedError<
+  InvoiceNotFound,
+  { readonly brand: unique symbol }
+>()("InvoiceNotFound", {
+  number: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** A school contract ends no later than it starts, so it grants no time. */
-export class ContractWindowInvalid extends Schema.TaggedError<ContractWindowInvalid>()(
-  "ContractWindowInvalid",
-  {
-    contractId: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class ContractWindowInvalid extends Schema.TaggedError<
+  ContractWindowInvalid,
+  { readonly brand: unique symbol }
+>()("ContractWindowInvalid", {
+  contractId: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** Raised when Convex IO fails while recomputing one user's plan from its billing grants. */
 export const planSyncIoFailedCode = "PLAN_SYNC_IO_FAILED";
-export class PlanSyncIoError extends Schema.TaggedError<PlanSyncIoError>()(
-  "PlanSyncIoError",
-  {
-    code: Schema.Literal(planSyncIoFailedCode),
-    message: Schema.String,
-  }
-) {}
+export class PlanSyncIoError extends Schema.TaggedError<
+  PlanSyncIoError,
+  { readonly brand: unique symbol }
+>()("PlanSyncIoError", {
+  code: Schema.Literal(planSyncIoFailedCode),
+  message: Schema.String,
+}) {}
 
 export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
 const checkoutSessionIoErrorCode = "CHECKOUT_SESSION_IO_FAILED";
@@ -143,51 +143,51 @@ export const checkoutAdmissionValidator = Schema.Union([
 export type CheckoutAdmission = typeof checkoutAdmissionValidator.Type;
 
 /** Raised when account revalidation withholds a newly created checkout. */
-export class CheckoutUnavailable extends Schema.TaggedError<CheckoutUnavailable>()(
-  "CheckoutUnavailable",
-  {
-    code: Schema.Literal(accountUnavailableCode),
-    message: Schema.String,
-  }
-) {
+export class CheckoutUnavailable extends Schema.TaggedError<
+  CheckoutUnavailable,
+  { readonly brand: unique symbol }
+>()("CheckoutUnavailable", {
+  code: Schema.Literal(accountUnavailableCode),
+  message: Schema.String,
+}) {
   declare readonly code: typeof accountUnavailableCode;
   declare readonly message: string;
 }
 
 export const topupRequiresProCode = "TOPUP_REQUIRES_PRO";
 /** A top-up pack is sold to a learner on Pro only, and this learner is not on Pro. */
-export class TopupRequiresPro extends Schema.TaggedError<TopupRequiresPro>()(
-  "TopupRequiresPro",
-  {
-    code: Schema.Literal(topupRequiresProCode),
-    message: Schema.String,
-  }
-) {
+export class TopupRequiresPro extends Schema.TaggedError<
+  TopupRequiresPro,
+  { readonly brand: unique symbol }
+>()("TopupRequiresPro", {
+  code: Schema.Literal(topupRequiresProCode),
+  message: Schema.String,
+}) {
   declare readonly code: typeof topupRequiresProCode;
   declare readonly message: string;
 }
 
 /** The success URL is not an absolute URL on the primary site. */
-export class InvalidCheckoutSuccessUrl extends Schema.TaggedError<InvalidCheckoutSuccessUrl>()(
-  "InvalidCheckoutSuccessUrl",
-  {
-    code: Schema.Literal(invalidCheckoutSuccessUrlCode),
-    message: Schema.String,
-  }
-) {
+export class InvalidCheckoutSuccessUrl extends Schema.TaggedError<
+  InvalidCheckoutSuccessUrl,
+  { readonly brand: unique symbol }
+>()("InvalidCheckoutSuccessUrl", {
+  code: Schema.Literal(invalidCheckoutSuccessUrlCode),
+  message: Schema.String,
+}) {
   declare readonly code: typeof invalidCheckoutSuccessUrlCode;
   declare readonly message: string;
 }
 
 /** A Convex boundary failure while a checkout session is prepared. */
-export class CheckoutSessionIoError extends Schema.TaggedError<CheckoutSessionIoError>()(
-  "CheckoutSessionIoError",
-  {
-    code: Schema.Literal(checkoutSessionIoErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class CheckoutSessionIoError extends Schema.TaggedError<
+  CheckoutSessionIoError,
+  { readonly brand: unique symbol }
+>()("CheckoutSessionIoError", {
+  code: Schema.Literal(checkoutSessionIoErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof checkoutSessionIoErrorCode;
   declare readonly message: string;
 }
@@ -207,13 +207,13 @@ export const BillingStateErrorWire = publicFailure(BillingStateError);
 
 /** Raised when a Pro checkout is asked for while the user already holds Pro, through a grant or a subscription that is active or past due. */
 export const proAlreadyHeldCode = "BILLING_PRO_ALREADY_HELD";
-export class ProAlreadyHeld extends Schema.TaggedError<ProAlreadyHeld>()(
-  "ProAlreadyHeld",
-  {
-    code: Schema.Literal(proAlreadyHeldCode),
-    message: Schema.String,
-  }
-) {
+export class ProAlreadyHeld extends Schema.TaggedError<
+  ProAlreadyHeld,
+  { readonly brand: unique symbol }
+>()("ProAlreadyHeld", {
+  code: Schema.Literal(proAlreadyHeldCode),
+  message: Schema.String,
+}) {
   declare readonly code: typeof proAlreadyHeldCode;
   declare readonly message: string;
 }
@@ -221,14 +221,14 @@ export const ProAlreadyHeldWire = publicFailure(ProAlreadyHeld);
 
 /** Raised when a Xendit recurring plan could not be turned off, so the account deletion that needs it retries. */
 export const xenditDeactivateErrorCode = "XENDIT_DEACTIVATE_ERROR";
-export class XenditDeactivateError extends Schema.TaggedError<XenditDeactivateError>()(
-  "XenditDeactivateError",
-  {
-    code: Schema.Literal(xenditDeactivateErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class XenditDeactivateError extends Schema.TaggedError<
+  XenditDeactivateError,
+  { readonly brand: unique symbol }
+>()("XenditDeactivateError", {
+  code: Schema.Literal(xenditDeactivateErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof xenditDeactivateErrorCode;
   declare readonly message: string;
 }
@@ -236,14 +236,14 @@ export const XenditDeactivateErrorWire = publicFailure(XenditDeactivateError);
 
 /** Raised when Xendit would not return a payment that bought nothing, so an operator refunds it by hand. */
 export const xenditRefundErrorCode = "XENDIT_REFUND_ERROR";
-export class XenditRefundError extends Schema.TaggedError<XenditRefundError>()(
-  "XenditRefundError",
-  {
-    code: Schema.Literal(xenditRefundErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class XenditRefundError extends Schema.TaggedError<
+  XenditRefundError,
+  { readonly brand: unique symbol }
+>()("XenditRefundError", {
+  code: Schema.Literal(xenditRefundErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof xenditRefundErrorCode;
   declare readonly message: string;
 }
@@ -251,27 +251,27 @@ export const XenditRefundErrorWire = publicFailure(XenditRefundError);
 
 /** Raised when Xendit would not open the recurring plan of a paid first month, after every retry, so an operator opens it. */
 export const xenditPlanErrorCode = "XENDIT_PLAN_ERROR";
-export class XenditPlanError extends Schema.TaggedError<XenditPlanError>()(
-  "XenditPlanError",
-  {
-    code: Schema.Literal(xenditPlanErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class XenditPlanError extends Schema.TaggedError<
+  XenditPlanError,
+  { readonly brand: unique symbol }
+>()("XenditPlanError", {
+  code: Schema.Literal(xenditPlanErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof xenditPlanErrorCode;
   declare readonly message: string;
 }
 
 /** Raised when the offer is not sold to this buyer now: its rail does not sell it in the buyer's currency, or Xendit is not set up on this deployment. */
 export const checkoutOfferUnavailableCode = "BILLING_OFFER_UNAVAILABLE";
-export class CheckoutOfferUnavailable extends Schema.TaggedError<CheckoutOfferUnavailable>()(
-  "CheckoutOfferUnavailable",
-  {
-    code: Schema.Literal(checkoutOfferUnavailableCode),
-    message: Schema.String,
-  }
-) {
+export class CheckoutOfferUnavailable extends Schema.TaggedError<
+  CheckoutOfferUnavailable,
+  { readonly brand: unique symbol }
+>()("CheckoutOfferUnavailable", {
+  code: Schema.Literal(checkoutOfferUnavailableCode),
+  message: Schema.String,
+}) {
   declare readonly code: typeof checkoutOfferUnavailableCode;
   declare readonly message: string;
 }
@@ -281,14 +281,14 @@ export const CheckoutOfferUnavailableWire = publicFailure(
 
 /** Raised when Xendit could not open a hosted checkout, or answered with a body Nakafa cannot read. */
 export const xenditCheckoutErrorCode = "XENDIT_CHECKOUT_ERROR";
-export class XenditCheckoutError extends Schema.TaggedError<XenditCheckoutError>()(
-  "XenditCheckoutError",
-  {
-    code: Schema.Literal(xenditCheckoutErrorCode),
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {
+export class XenditCheckoutError extends Schema.TaggedError<
+  XenditCheckoutError,
+  { readonly brand: unique symbol }
+>()("XenditCheckoutError", {
+  code: Schema.Literal(xenditCheckoutErrorCode),
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {
   declare readonly code: typeof xenditCheckoutErrorCode;
   declare readonly message: string;
 }
@@ -296,13 +296,13 @@ export const XenditCheckoutErrorWire = publicFailure(XenditCheckoutError);
 
 /** Raised when a school asks to add accounts while no paid plan runs to add them to. */
 export const schoolPlanMissingCode = "SCHOOL_PLAN_MISSING";
-export class SchoolPlanMissing extends Schema.TaggedError<SchoolPlanMissing>()(
-  "SchoolPlanMissing",
-  {
-    code: Schema.Literal(schoolPlanMissingCode),
-    message: Schema.String,
-  }
-) {
+export class SchoolPlanMissing extends Schema.TaggedError<
+  SchoolPlanMissing,
+  { readonly brand: unique symbol }
+>()("SchoolPlanMissing", {
+  code: Schema.Literal(schoolPlanMissingCode),
+  message: Schema.String,
+}) {
   declare readonly code: typeof schoolPlanMissingCode;
   declare readonly message: string;
 }

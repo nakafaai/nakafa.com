@@ -11,6 +11,7 @@ import { NINA_SIZE } from "@/components/state/size";
 import { expectNoOverflow } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { keepResourceTimings } from "@/e2e/support/resources";
 import { APP_CHUNK_PATH, openRoute } from "@/e2e/support/route";
 import { STATE_FIGURE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -69,6 +70,9 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
   page: Page,
   target: (typeof ROUTES)[number]
 ) {
+  // The home page loads more chunks than the browser's 250 timing entries, and a
+  // chunk the list left out would fail as if the deploy had removed it.
+  yield* keepResourceTimings(page);
   yield* openRoute(page, target.href, "denied");
   yield* waitForCommittedAppRouter(
     page,

@@ -13,10 +13,10 @@ import { languageModel } from "@repo/backend/confect/gateway/model";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { Cause, Effect, Option, Schema } from "effect";
 
-class NinaDiagnosticsError extends Schema.TaggedError<NinaDiagnosticsError>()(
-  "NinaDiagnosticsError",
-  {}
-) {}
+class NinaDiagnosticsError extends Schema.TaggedError<
+  NinaDiagnosticsError,
+  { readonly brand: unique symbol }
+>()("NinaDiagnosticsError", {}) {}
 
 /** What PostHog needs of a context to queue an exception: the scheduler that delivers it. */
 type Delivery = Parameters<PostHog["captureException"]>[0];

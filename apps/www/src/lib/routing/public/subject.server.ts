@@ -9,10 +9,13 @@ import {
 import { hasStaticRelease } from "@/lib/routing/release";
 
 /** The release holds no readable map for a locale: a defect of its build, never a reader's miss. */
-export class SubjectMapUnavailable extends Schema.TaggedError<SubjectMapUnavailable>()(
-  "SubjectMapUnavailable",
-  { locale: Schema.String, status: Schema.optionalKey(Schema.Int) }
-) {}
+export class SubjectMapUnavailable extends Schema.TaggedError<
+  SubjectMapUnavailable,
+  { readonly brand: unique symbol }
+>()("SubjectMapUnavailable", {
+  locale: Schema.String,
+  status: Schema.optionalKey(Schema.Int),
+}) {}
 
 /**
  * The public path that succeeds one retired subject lesson, from the map that the

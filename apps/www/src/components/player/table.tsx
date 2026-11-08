@@ -69,7 +69,7 @@ const choiceCell = cva(
  * and not through the row's group, so the exam editor draws this same table around the editors of its statements
  * and columns, as the student meets it, and a statement being written never reads as disabled.
  */
-export function TryoutChoiceTable({
+export function ChoiceTable({
   columns,
   disabled,
   label,
@@ -86,7 +86,7 @@ export function TryoutChoiceTable({
   readonly statementLabel?: string;
   readonly statements: readonly ChoiceTableStatement[];
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Player");
   const id = useId();
   const locked = disabled || onMark === undefined;
 
@@ -145,10 +145,10 @@ function ChoiceTableRow({
   readonly number: number;
   readonly statement: ChoiceTableStatement;
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Player");
   const table = use(ChoiceTableContext);
   if (table === null) {
-    throw new Error("ChoiceTableRow must be used within TryoutChoiceTable");
+    throw new Error("ChoiceTableRow must be used within ChoiceTable");
   }
   const labelId = `${table.headerId}-${statement.id}-label`;
 

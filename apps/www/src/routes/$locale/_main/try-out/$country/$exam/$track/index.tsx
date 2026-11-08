@@ -116,7 +116,6 @@ function TryoutTrackPage() {
         <TryoutSetTable
           bootstrap={route.list}
           key={`${locale}:${route.page.track.publicPath}`}
-          title={route.page.track.title}
         />
       </LayoutMaterialContent>
     </LayoutMaterial>

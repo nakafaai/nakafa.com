@@ -9,7 +9,7 @@ import {
 import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-import { LinesColumn, LinesItem } from "@/components/exams/lines/board";
+import { LinesColumn, LinesItem } from "@/components/player/lines/board";
 import type { OptionLabel } from "@/components/tenant/exams/answer";
 import { type MatchSide, withPartLabel } from "@/components/tenant/exams/match";
 import { OptionRemove, OptionRow } from "@/components/tenant/exams/option";
