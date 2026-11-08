@@ -1,33 +1,28 @@
 import { describe, expect, it } from "@effect/vitest";
+import { ConvexCall } from "@repo/backend/scripts/content/acceptance/convex";
 import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
 import { seedRun } from "@repo/backend/scripts/load/seed";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { Array as Arr, Effect, MutableList, Schema } from "effect";
 
-/** The arguments of one seats call, as the Convex CLI receives them. */
-const SeatsArgs = Schema.fromJsonString(
-  Schema.Struct({
-    kind: Schema.String,
-    seats: Schema.Array(
-      Schema.Struct({
-        key: Schema.String,
-        name: Schema.String,
-        token: Schema.String,
-      })
-    ),
-    slug: Schema.String,
-  })
-);
-
-/** One call of the Convex CLI that the seed made, with the values it keeps secret. */
-const Call = Schema.Struct({
-  args: Schema.Array(Schema.String),
-  sensitive: Schema.Array(Schema.String),
+/** The arguments of one seats call. */
+const SeatsArgs = Schema.Struct({
+  kind: Schema.String,
+  seats: Schema.Array(
+    Schema.Struct({
+      key: Schema.String,
+      name: Schema.String,
+      token: Schema.String,
+    })
+  ),
+  slug: Schema.String,
 });
 
-const encodeJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+/** One call that the seed made, with the values it keeps secret. */
+const Call = Schema.Struct({
+  call: ConvexCall,
+  sensitive: Schema.Array(Schema.String),
+});
 
 const plan = LoadPlan.make({
   ...BLUEPRINT_PLAN,
@@ -43,33 +38,30 @@ describe("load seed", () => {
       Effect.gen(function* () {
         const calls = MutableList.make<typeof Call.Type>();
         const seeded = yield* seedRun(
-          (_operation, args, sensitive = []) => {
-            MutableList.append(calls, { args, sensitive });
+          (_operation, call, sensitive = []) => {
+            MutableList.append(calls, { call, sensitive });
             return Effect.succeed(
-              args[1] === "exams/seed:load"
-                ? encodeJson({
+              call.path === "exams/seed:load"
+                ? {
                     examId: "e1",
                     sittings: [
                       { id: "s1", room: "Ruang 01", token: "AAAAAA" },
                       { id: "s2", room: "Ruang 02", token: "BBBBBB" },
                     ],
-                  })
-                : ""
+                  }
+                : null
             );
           },
           plan,
           "sekolah"
         );
         const made = MutableList.toArray(calls);
-        expect(Arr.take(made[0]?.args ?? [], 2)).toEqual([
-          "run",
-          "exams/seed:load",
-        ]);
-        expect(made[0]?.args[2]).toBe(
-          encodeJson({ questions: 40, rooms: 2, slug: "sekolah" })
-        );
-        const batches = Arr.map(Arr.drop(made, 1), (call) =>
-          Schema.decodeSync(SeatsArgs)(call.args[2] ?? "")
+        expect(made[0]?.call).toEqual({
+          args: { questions: 40, rooms: 2, slug: "sekolah" },
+          path: "exams/seed:load",
+        });
+        const batches = Arr.map(Arr.drop(made, 1), ({ call }) =>
+          Schema.decodeUnknownSync(SeatsArgs)(call.args)
         );
         expect(
           Arr.map(batches, (batch) => [batch.kind, batch.seats.length])
@@ -107,19 +99,17 @@ describe("load seed", () => {
           Effect.gen(function* () {
             const attempts = MutableList.make<string>();
             const exit = yield* seedRun(
-              (_operation, args) => {
-                if (args[1] === "exams/seed:load") {
-                  return Effect.succeed(
-                    encodeJson({
-                      examId: "e1",
-                      sittings: [{ id: "s1", room: "Ruang 01", token: "A" }],
-                    })
-                  );
+              (_operation, call) => {
+                if (call.path === "exams/seed:load") {
+                  return Effect.succeed({
+                    examId: "e1",
+                    sittings: [{ id: "s1", room: "Ruang 01", token: "A" }],
+                  });
                 }
-                MutableList.append(attempts, args[1] ?? "");
+                MutableList.append(attempts, call.path);
                 return MutableList.toArray(attempts).length <= failures
                   ? Effect.fail("timed out")
-                  : Effect.succeed("");
+                  : Effect.succeed(null);
               },
               LoadPlan.make({ ...plan, proctors: 1, rooms: 1, students: 1 }),
               "sekolah"
