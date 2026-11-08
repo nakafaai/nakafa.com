@@ -10,7 +10,7 @@ import {
 } from "@/lib/content/preview/config";
 import { PreviewEventError } from "@/lib/content/preview/errors";
 import { openPreviewEvents } from "@/lib/content/preview/events";
-import { previewConfig, previewRoute } from "@/test/content-preview";
+import { previewConfig, previewRoute } from "@/test/manifest";
 
 vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
   ...(await importOriginal()),

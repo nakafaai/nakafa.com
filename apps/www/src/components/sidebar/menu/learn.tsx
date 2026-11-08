@@ -22,8 +22,8 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { useNavigate } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactNode } from "react";

@@ -3,7 +3,7 @@ import type { CircleArcLineProps } from "@repo/design-system/components/contents
 import type {
   Props as LineEquationProps,
   LineLabel,
-} from "@repo/design-system/components/three/line-equation";
+} from "@repo/design-system/components/three/line";
 import { LineEndpointsSchema } from "@repo/design-system/lib/geometry/endpoint";
 import { Point3Schema } from "@repo/design-system/lib/geometry/point";
 import { Schema } from "effect";

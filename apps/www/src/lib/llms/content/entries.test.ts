@@ -5,10 +5,7 @@ import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projecti
 import { Array as Arr, Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
-import {
-  previewNextProjection,
-  previewProjection,
-} from "@/test/content-preview";
+import { previewNextProjection, previewProjection } from "@/test/manifest";
 
 const mockReadPublishedArticleBucket = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());

@@ -8,7 +8,7 @@ import {
   getCurriculumRouteSocialImage,
   resolveCurriculumCatalogArtwork,
 } from "@/lib/curriculum/artwork";
-import { testProgramClass, testProgramRoot } from "@/test/content-program";
+import { testProgramClass, testProgramRoot } from "@/test/published/program";
 
 describe("curriculum artwork", () => {
   it("resolves exact and English-default program artwork", () => {

@@ -19,7 +19,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import {
   TaskStanding as Standing,
   standingOf,
-} from "@repo/backend/confect/classroom/tasks/task";
+} from "@repo/backend/confect/classroom/tasks/schema";
 import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";

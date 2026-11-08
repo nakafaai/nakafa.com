@@ -6,7 +6,7 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { LatePolicy } from "@repo/backend/confect/classroom/tasks/task";
+import { LatePolicy } from "@repo/backend/confect/classroom/tasks/schema";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {

@@ -3,7 +3,7 @@ import {
   makeBreadcrumbNodes,
   makeFaqPageNode,
   makeProductNode,
-} from "@repo/seo/json-ld/node";
+} from "@repo/seo/jsonld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
