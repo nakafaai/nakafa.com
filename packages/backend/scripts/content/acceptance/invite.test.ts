@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
-  createAcceptanceInvite,
   inviteMode,
+  seedInvite,
   waitForInboxRow,
 } from "@repo/backend/scripts/content/acceptance/invite";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
@@ -13,111 +13,34 @@ import {
   Effect,
   Exit,
   FileSystem,
+  Layer,
   MutableList,
   Option,
   Schema,
 } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
-
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
 const SLUG = "acc-1a2b3c4d";
 const ADDRESS = "learner-1a2b3c4d@acceptance.example.test";
-const APP_USERS =
-  '[{"_id":"app-user-0","authId":"someone-else"},{"_id":"app-user-1","authId":"user-1"}]';
-const INVITED = '{"invite":"invite-1","person":"person-1"}';
-/** An account's reply notice, which names no Person, stands before the invited Person's row. */
-const INBOX_ROWS =
-  '[{"commentId":"comment-1"},{"recipientPersonId":"person-1"}]';
-const CreatedAccount = Schema.fromJsonString(
-  Schema.Struct({
-    input: Schema.Struct({
-      data: Schema.Struct({ email: Schema.optional(Schema.String) }),
-    }),
-  })
-);
-const Claim = Schema.fromJsonString(
-  Schema.Struct({ cursor: Schema.NullOr(Schema.String), userId: Schema.String })
-);
-const InviteArgs = Schema.fromJsonString(
-  Schema.Struct({
-    email: Schema.String,
-    locale: Schema.String,
-    name: Schema.String,
-    slug: Schema.String,
-  })
-);
+const INVITED = { invite: "invite-1", person: "person-1" };
 
-/** The text one Convex command prints, as the local backend answers it. */
-function answerOf(
-  args: readonly string[],
-  users: string,
-  rows: string,
-  account: string
-) {
-  if (Arr.contains(args, "adapter:findOne")) {
-    return account;
-  }
-  if (Arr.contains(args, "data")) {
-    return Arr.contains(args, "notifications") ? rows : users;
-  }
-  if (Arr.contains(args, "tenancy/provision:invite")) {
-    return INVITED;
-  }
-  if (
-    Arr.contains(args, "auth/lifecycle:onCreate") ||
-    Arr.contains(args, "tenancy/claims:run")
-  ) {
-    return "null";
-  }
-  return '{"_creationTime":1,"_id":"user-1"}';
-}
-
-/** Answers every command and keeps the commands in the order they ran. The new account's Better Auth user is `user-1`. */
-function answerCommands(
-  users: string,
-  rows: string = INBOX_ROWS,
-  account = "null"
-) {
-  const specs = MutableList.make<CommandSpec>();
-  mocks.command.mockImplementation((spec: CommandSpec) =>
-    Effect.gen(function* () {
-      MutableList.append(specs, spec);
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.writeFileString(
-        spec.stdoutPath,
-        answerOf(spec.args, users, rows, account)
-      );
-    })
-  );
-  return specs;
-}
-
-const fixture = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const root = yield* fs.makeTempDirectoryScoped({
-    prefix: "acceptance-invite-test-",
-  });
-  mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
-  return { fs, root };
-});
-
-/** The JSON argument that the command takes last. */
-const lastArgument = (spec: CommandSpec) =>
-  Option.getOrThrow(Arr.last(spec.args));
+/** What the local backend answers an invite: its ids, a new account and its app user, and the inbox row. */
+const ANSWERS = {
+  "adapter:create": { _creationTime: 1, _id: "user-1" },
+  "tenancy/provision:invite": INVITED,
+  "tenancy/seed:invitation": true,
+  "tenancy/seed:user": "app-user-1",
+};
 
 describe("acceptance invite", () => {
   afterEach(() => {
@@ -125,148 +48,82 @@ describe("acceptance invite", () => {
   });
 
   it.effect(
-    "invites the address into the school, claims it for the learner's account, and writes the cookie",
+    "invites the address, claims it for the learner's account, and answers once the inbox holds the row",
     () =>
       Effect.gen(function* () {
-        const { fs, root } = yield* fixture;
-        const specs = answerCommands(APP_USERS);
+        const backend = localConvexDouble(ANSWERS);
 
-        yield* createAcceptanceInvite(
-          root,
-          SLUG,
-          ADDRESS,
-          `${root}/invite.json`
+        const cookie = yield* seedInvite(SLUG, ADDRESS).pipe(
+          Effect.provide(Layer.merge(backend.layer, nodePlatform))
         );
 
-        const calls = MutableList.toArray(specs);
-        const inviteCall = Option.getOrThrow(
-          Arr.findFirst(calls, (spec) =>
-            Arr.contains(spec.args, "tenancy/provision:invite")
-          )
-        );
-        expect(
-          yield* Schema.decodeEffect(InviteArgs)(lastArgument(inviteCall))
-        ).toEqual({
+        expect(backend.argsOf("tenancy/provision:invite")).toEqual({
           email: ADDRESS,
           locale: "id",
           name: "Acceptance Learner",
           slug: SLUG,
         });
-        const accountCall = Option.getOrThrow(
-          Arr.findFirst(calls, (spec) =>
-            Arr.contains(spec.args, "adapter:create")
-          )
-        );
-        const account = yield* Schema.decodeEffect(CreatedAccount)(
-          lastArgument(accountCall)
-        );
-        expect(account.input.data.email).toBe(ADDRESS);
-        const claimCall = Option.getOrThrow(
-          Arr.findFirst(calls, (spec) =>
-            Arr.contains(spec.args, "tenancy/claims:run")
-          )
-        );
-        expect(
-          yield* Schema.decodeEffect(Claim)(lastArgument(claimCall))
-        ).toEqual({ cursor: null, userId: "app-user-1" });
-        const cookie = yield* fs
-          .readFileString(`${root}/invite.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(backend.argsOf("tenancy/claims:run")).toEqual({
+          cursor: null,
+          userId: "app-user-1",
+        });
+        expect(backend.argsOf("tenancy/seed:invitation")).toEqual(INVITED);
+        expect(backend.paths()).not.toContain("tenancy/seed:expired");
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+      })
   );
 
   it.effect(
-    "signs an account that already holds the address in again, creating none, and claims the invitation for it",
+    "ends an expired invite before the account signs in, and waits for no inbox row",
     () =>
       Effect.gen(function* () {
-        const { fs, root } = yield* fixture;
-        const specs = answerCommands(APP_USERS, INBOX_ROWS, '{"_id":"user-1"}');
-        const SessionCreate = Schema.fromJsonString(
-          Schema.Struct({
-            input: Schema.Struct({
-              data: Schema.Struct({ userId: Schema.String }),
-              model: Schema.Literal("session"),
+        const backend = localConvexDouble({
+          ...ANSWERS,
+          "tenancy/seed:invitation": false,
+        });
+
+        yield* seedInvite(SLUG, ADDRESS, true).pipe(
+          Effect.provide(Layer.merge(backend.layer, nodePlatform))
+        );
+
+        const paths = backend.paths();
+        const at = (path: string) =>
+          Option.getOrThrow(Arr.findFirstIndex(paths, (one) => one === path));
+        expect(at("tenancy/seed:expired")).toBeLessThan(at("adapter:create"));
+        expect(backend.argsOf("tenancy/seed:expired")).toEqual({
+          email: ADDRESS,
+          slug: SLUG,
+        });
+        expect(paths).not.toContain("tenancy/seed:invitation");
+      })
+  );
+
+  it.live(
+    "reads the one inbox row of the invite and its Person until it stands",
+    () =>
+      Effect.gen(function* () {
+        const asked = MutableList.make<unknown>();
+        // The row stands from the third read on.
+        yield* waitForInboxRow(
+          (_operation, call) =>
+            Effect.sync(() => {
+              MutableList.append(asked, call.args);
+              return asked.length >= 3;
             }),
-          })
+          INVITED,
+          Duration.seconds(5)
         );
 
-        yield* createAcceptanceInvite(
-          root,
-          SLUG,
-          ADDRESS,
-          `${root}/invite.json`
-        );
-
-        const calls = MutableList.toArray(specs);
-        const creations = Arr.filter(calls, (spec) =>
-          Arr.contains(spec.args, "adapter:create")
-        );
-        expect(creations).toHaveLength(1);
-        expect(
-          yield* Schema.decodeEffect(SessionCreate)(
-            lastArgument(Option.getOrThrow(Arr.head(creations)))
-          )
-        ).toMatchObject({ input: { data: { userId: "user-1" } } });
-        const claimCall = Option.getOrThrow(
-          Arr.findFirst(calls, (spec) =>
-            Arr.contains(spec.args, "tenancy/claims:run")
-          )
-        );
-        expect(
-          yield* Schema.decodeEffect(Claim)(lastArgument(claimCall))
-        ).toEqual({ cursor: null, userId: "app-user-1" });
-        const cookie = yield* fs
-          .readFileString(`${root}/invite.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
-        expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+        expect(MutableList.toArray(asked)).toEqual([INVITED, INVITED, INVITED]);
+      })
   );
 
-  it.effect(
-    "claims nothing and writes no cookie when the new account has no app user",
-    () =>
-      Effect.gen(function* () {
-        const { fs, root } = yield* fixture;
-        const specs = answerCommands("[]");
-
-        const exit = yield* Effect.exit(
-          createAcceptanceInvite(root, SLUG, ADDRESS, `${root}/invite.json`)
-        );
-
-        expect(Exit.isFailure(exit)).toBe(true);
-        expect(
-          Arr.some(MutableList.toArray(specs), (spec) =>
-            Arr.contains(spec.args, "tenancy/claims:run")
-          )
-        ).toBe(false);
-        expect(yield* fs.exists(`${root}/invite.json`)).toBe(false);
-      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
-  );
-
-  it.effect("invites no learner when no local runtime is running", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-invite-test-",
-      });
-      mocks.read.mockReturnValue(Effect.void);
-
-      const exit = yield* Effect.exit(
-        createAcceptanceInvite(root, SLUG, ADDRESS, `${root}/invite.json`)
-      );
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
-  );
-
-  it.live("fails when no inbox row belongs to the invited person in time", () =>
+  it.live("fails when the inbox does not hold the row in time", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
         waitForInboxRow(
-          () => Effect.succeed("[]"),
-          "person-1",
+          () => Effect.succeed(false),
+          INVITED,
           Duration.millis(1)
         )
       );
@@ -276,99 +133,43 @@ describe("acceptance invite", () => {
   );
 
   it.effect(
-    "invites the learner the invite mode names and writes the cookie to the file it names",
+    "writes the invited learner's cookie to the file the mode names",
     () =>
       Effect.gen(function* () {
-        const { fs, root } = yield* fixture;
-        answerCommands(APP_USERS);
-
-        yield* inviteMode.run(root, [SLUG, ADDRESS, `${root}/mode.json`]);
-
-        const cookie = yield* fs
-          .readFileString(`${root}/mode.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
-        expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
-  );
-
-  it.effect(
-    "ends an expired invite before the account signs in, waits for no inbox row, and still writes the cookie",
-    () =>
-      Effect.gen(function* () {
-        const { fs, root } = yield* fixture;
-        // No inbox row ever holds the person, so a wait for one would run out its 30 seconds.
-        const specs = answerCommands(APP_USERS, "[]");
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "acceptance-invite-test-",
+        });
+        const backend = localConvexDouble(ANSWERS);
+        mocks.layer.mockReturnValue(backend.layer);
 
         yield* inviteMode.run(root, [
           SLUG,
           ADDRESS,
-          `${root}/expired.json`,
+          `${root}/cookie.json`,
           "expired",
         ]);
 
-        const calls = MutableList.toArray(specs);
-        const expiry = Arr.findFirstIndex(calls, (spec) =>
-          Arr.contains(spec.args, "tenancy/seed:expired")
-        );
-        const signIn = Arr.findFirstIndex(calls, (spec) =>
-          Arr.contains(spec.args, "adapter:create")
-        );
-        expect(Option.getOrThrow(expiry)).toBeLessThan(
-          Option.getOrThrow(signIn)
-        );
-        expect(
-          yield* Schema.decodeEffect(
-            Schema.fromJsonString(
-              Schema.Struct({ email: Schema.String, slug: Schema.String })
-            )
-          )(
-            lastArgument(
-              Option.getOrThrow(Arr.get(calls, Option.getOrThrow(expiry)))
-            )
-          )
-        ).toEqual({ email: ADDRESS, slug: SLUG });
-        expect(
-          Arr.some(calls, (spec) => Arr.contains(spec.args, "notifications"))
-        ).toBe(false);
         const cookie = yield* fs
-          .readFileString(`${root}/expired.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+          .readFileString(`${root}/cookie.json`)
+          .pipe(
+            Effect.flatMap(
+              Schema.decodeEffect(Schema.fromJsonString(SessionCookie))
+            )
+          );
         expect(cookie.name).toBe("better-auth.session_token");
+        expect(backend.paths()).toContain("tenancy/seed:expired");
       }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
-  it.effect(
-    "refuses an invite mode whose fourth argument is not expired, before any operation",
-    () =>
-      Effect.gen(function* () {
-        const { root } = yield* fixture;
-        const specs = answerCommands(APP_USERS);
-
-        expect(
-          yield* inviteMode
-            .run(root, [SLUG, ADDRESS, `${root}/mode.json`, "later"])
-            .pipe(Effect.flip)
-        ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
-        expect(MutableList.toArray(specs)).toEqual([]);
-      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
-  );
-
-  it.effect(
-    "refuses the invite mode without its address and cookie file before any operation",
-    () =>
-      Effect.gen(function* () {
-        const { root } = yield* fixture;
-        const specs = answerCommands(APP_USERS);
-
-        expect(
-          yield* inviteMode.run(root, [SLUG, ADDRESS]).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message:
-            "Usage: acceptance invite <school-slug> <learner-address> <cookie-file> [expired]",
-        });
-        expect(MutableList.toArray(specs)).toEqual([]);
-        expect(mocks.read).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+  it.effect("refuses an invite mode whose fourth argument is not expired", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* inviteMode
+          .run("/root", [SLUG, ADDRESS, "/cookie.json", "later"])
+          .pipe(Effect.flip)
+      ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

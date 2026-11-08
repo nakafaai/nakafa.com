@@ -9,13 +9,13 @@ import { Effect, flow, Schema } from "effect";
 const tryoutScoreAnalyticsFailedCode = "TRYOUT_SCORE_ANALYTICS_FAILED";
 
 /** Raised when a completed-score event cannot resolve its immutable graph. */
-class TryoutScoreAnalyticsError extends Schema.TaggedError<TryoutScoreAnalyticsError>()(
-  "TryoutScoreAnalyticsError",
-  {
-    code: Schema.Literal(tryoutScoreAnalyticsFailedCode),
-    message: Schema.String,
-  }
-) {}
+class TryoutScoreAnalyticsError extends Schema.TaggedError<
+  TryoutScoreAnalyticsError,
+  { readonly brand: unique symbol }
+>()("TryoutScoreAnalyticsError", {
+  code: Schema.Literal(tryoutScoreAnalyticsFailedCode),
+  message: Schema.String,
+}) {}
 
 /** Maps trigger reads and analytics scheduling into one typed error channel. */
 function toTryoutScoreAnalyticsError(error: unknown) {

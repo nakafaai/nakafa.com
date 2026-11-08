@@ -11,15 +11,15 @@ import {
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { Option } from "effect";
 import type { ReactNode } from "react";
-import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
+import type { ChoiceAppearance } from "@/components/player/tone";
 import {
-  getTryoutPreviewChoiceTone,
-  getTryoutReviewedChoiceTone,
-  getTryoutToneMark,
-} from "@/lib/tryout/appearance";
+  choiceTone,
+  getChoiceReviewedTone,
+  toneMark,
+} from "@/components/player/tone";
 
-interface TryoutSelectableRadioOptionProps {
-  readonly appearance?: TryoutPreviewChoiceAppearance;
+interface ChoiceRadioProps {
+  readonly appearance?: ChoiceAppearance;
   checked: boolean;
   children: ReactNode;
   disabled: boolean;
@@ -29,7 +29,7 @@ interface TryoutSelectableRadioOptionProps {
 }
 
 /** One radio option: its circle on the first line of its answer, in a marked line whose label holds the circle. */
-export function TryoutSelectableRadioOption({
+export function ChoiceRadio({
   appearance = { kind: "selectable" },
   checked,
   children,
@@ -37,9 +37,9 @@ export function TryoutSelectableRadioOption({
   id,
   letter,
   value,
-}: TryoutSelectableRadioOptionProps) {
+}: ChoiceRadioProps) {
   return (
-    <ChoiceLine tone={getTryoutPreviewChoiceTone({ appearance, checked })}>
+    <ChoiceLine tone={choiceTone({ appearance, checked })}>
       <LineMark>
         <Radio
           aria-labelledby={`${id}-label`}
@@ -55,8 +55,8 @@ export function TryoutSelectableRadioOption({
   );
 }
 
-interface TryoutSelectableMultipleChoiceProps {
-  readonly appearance?: TryoutPreviewChoiceAppearance;
+interface ChoiceCheckProps {
+  readonly appearance?: ChoiceAppearance;
   checked: boolean;
   children: ReactNode;
   disabled: boolean;
@@ -66,7 +66,7 @@ interface TryoutSelectableMultipleChoiceProps {
 }
 
 /** One independently selectable option for an exact-set response, its check box on its answer's first line. */
-export function TryoutSelectableMultipleChoice({
+export function ChoiceCheck({
   appearance = { kind: "selectable" },
   checked,
   children,
@@ -74,9 +74,9 @@ export function TryoutSelectableMultipleChoice({
   id,
   letter,
   onCheckedChange,
-}: TryoutSelectableMultipleChoiceProps) {
+}: ChoiceCheckProps) {
   return (
-    <ChoiceLine tone={getTryoutPreviewChoiceTone({ appearance, checked })}>
+    <ChoiceLine tone={choiceTone({ appearance, checked })}>
       <LineMark>
         <Checkbox
           aria-labelledby={`${id}-label`}
@@ -93,7 +93,7 @@ export function TryoutSelectableMultipleChoice({
   );
 }
 
-interface TryoutReviewedChoiceProps {
+interface ChoiceReviewedProps {
   checked: boolean;
   children: ReactNode;
   id: string;
@@ -102,15 +102,15 @@ interface TryoutReviewedChoiceProps {
 }
 
 /** One locked terminal choice without a mutation Interface. */
-export function TryoutReviewedChoice({
+export function ChoiceReviewed({
   checked,
   children,
   id,
   isCorrect,
   letter,
-}: TryoutReviewedChoiceProps) {
+}: ChoiceReviewedProps) {
   return (
-    <ChoiceLine tone={getTryoutReviewedChoiceTone({ checked, isCorrect })}>
+    <ChoiceLine tone={getChoiceReviewedTone({ checked, isCorrect })}>
       <LineMark>
         <Checkbox
           aria-labelledby={`${id}-label`}
@@ -135,13 +135,13 @@ function ChoiceLine({
   tone,
 }: {
   children: ReactNode;
-  tone: ReturnType<typeof getTryoutPreviewChoiceTone>;
+  tone: ReturnType<typeof choiceTone>;
 }) {
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.
     <MarkedLine render={<Label />} tone={tone}>
       {children}
-      <TryoutToneMark tone={tone} />
+      <ToneMark tone={tone} />
     </MarkedLine>
   );
 }
@@ -151,12 +151,8 @@ function ChoiceLine({
  * picked or not, and a cross on a pick that misses it. The words beside it already say whether the answer is
  * correct, so the mark is hidden from assistive technology.
  */
-export function TryoutToneMark({
-  tone,
-}: {
-  tone: ReturnType<typeof getTryoutPreviewChoiceTone>;
-}) {
-  return Option.match(getTryoutToneMark(tone), {
+export function ToneMark({ tone }: { tone: ReturnType<typeof choiceTone> }) {
+  return Option.match(toneMark(tone), {
     onNone: () => null,
     onSome: (icon) => (
       <LineMark aria-hidden="true">

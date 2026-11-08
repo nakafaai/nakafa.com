@@ -21,10 +21,12 @@ type ContentViewDeviceStorage = Readonly<
 const contentViewDeviceStorageFailedCode = "CONTENT_VIEW_DEVICE_STORAGE_FAILED";
 
 /** Raised when the browser cannot read, keep, or remove the identifier. */
-export class ContentViewDeviceStorageFailed extends Schema.TaggedError<ContentViewDeviceStorageFailed>()(
-  "ContentViewDeviceStorageFailed",
-  { code: Schema.Literal(contentViewDeviceStorageFailedCode) }
-) {}
+export class ContentViewDeviceStorageFailed extends Schema.TaggedError<
+  ContentViewDeviceStorageFailed,
+  { readonly brand: unique symbol }
+>()("ContentViewDeviceStorageFailed", {
+  code: Schema.Literal(contentViewDeviceStorageFailedCode),
+}) {}
 
 const contentViewDeviceStorageFailure = () =>
   new ContentViewDeviceStorageFailed({

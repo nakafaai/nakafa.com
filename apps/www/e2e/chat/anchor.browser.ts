@@ -2,10 +2,14 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { pictures } from "@/e2e/support/prose";
+import { waitForFrames } from "@/e2e/support/quiet";
 import { TRANSCRIPT_ROW } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { exchange, said, THREAD } from "@/e2e/support/transcript/message";
 import { showChat, startTranscript } from "@/e2e/support/transcript/open";
+
+/** The frames between two checks that the question stays whole in view. */
+const CHECK_FRAMES = 18;
 
 /** An earlier answer, longer than the screen, so the chat scrolls above its last question. */
 const EARLIER = exchange({
@@ -102,7 +106,7 @@ test("opens a chat on its whole last question, picture included, while the answe
         });
         for (let check = 0; check < 4; check += 1) {
           yield* Effect.promise(() => nextFrames(page));
-          yield* Effect.sleep("300 millis");
+          yield* Effect.promise(() => waitForFrames(page, CHECK_FRAMES));
           const whole = yield* Effect.promise(() =>
             wholeInView(page.locator(QUESTION_ROW))
           );

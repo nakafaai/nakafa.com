@@ -19,7 +19,6 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -28,6 +27,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -37,7 +38,6 @@ import {
   SchoolPeriodMenu,
   SchoolPeriodRestore,
 } from "@/components/tenant/settings/period";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
 import { createPeriodChange } from "@/components/tenant/settings/terms";
@@ -46,6 +46,7 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The look of each period status, in its table cell and in its column's filter: a planned calendar, a
@@ -56,8 +57,6 @@ const PERIOD_STATUS_LOOKS = {
   archived: { icon: Archive02Icon, tone: "neutral" },
   planned: { icon: Calendar03Icon, tone: "info" },
 } as const satisfies Record<typeof PeriodStatus.Type, StatusLook>;
-
-const SOURCE = "components/tenant/settings/periods";
 
 /** How many periods one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -229,9 +228,9 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="thinking"
+          <EmptyState
             description={t("periods-description")}
+            scene={<EmptyNina act="thinking" />}
             title={t("periods-empty")}
           />
         }
@@ -268,10 +267,9 @@ function SchoolPeriodAdd({ unitId }: { unitId: UnitId }) {
         key={round}
         onSave={(fields) =>
           startTransition(() =>
-            saveSchool(
-              () => create({ ...fields, slug, unitId }),
-              SOURCE,
-              () => setRound((count) => count + 1)
+            runSchoolWrite(
+              schoolCall(() => create({ ...fields, slug, unitId })),
+              { onSaved: () => setRound((count) => count + 1) }
             )
           )
         }

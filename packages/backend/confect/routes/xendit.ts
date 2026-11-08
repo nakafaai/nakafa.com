@@ -16,12 +16,12 @@ import { Config, DateTime, Effect, Redacted, Schema } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** The body could not be read, or it is not a Xendit webhook envelope. */
-class XenditRouteMalformed extends Schema.TaggedError<XenditRouteMalformed>()(
-  "XenditRouteMalformed",
-  {
-    message: Schema.String,
-  }
-) {}
+class XenditRouteMalformed extends Schema.TaggedError<
+  XenditRouteMalformed,
+  { readonly brand: unique symbol }
+>()("XenditRouteMalformed", {
+  message: Schema.String,
+}) {}
 
 /**
  * Receives one Xendit webhook. The route checks the callback token, stores the

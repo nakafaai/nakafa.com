@@ -17,10 +17,7 @@ import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { createContext, type ReactNode, use, useId } from "react";
 import { useTranslations } from "use-intl";
-import {
-  getTryoutReviewedChoiceTone,
-  getTryoutToneMark,
-} from "@/lib/tryout/appearance";
+import { getChoiceReviewedTone, toneMark } from "@/components/player/tone";
 
 /** One column of the table, such as true or false, with its header. */
 interface ChoiceTableColumn {
@@ -91,7 +88,7 @@ const cellLine = cva("justify-center", {
  * and not through the row's group, so the exam editor draws this same table around the editors of its statements
  * and columns, as the student meets it, and a statement being written never reads as disabled.
  */
-export function TryoutChoiceTable({
+export function ChoiceTable({
   columns,
   disabled,
   label,
@@ -108,7 +105,7 @@ export function TryoutChoiceTable({
   readonly statementLabel?: string;
   readonly statements: readonly ChoiceTableStatement[];
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Player");
   const id = useId();
   const locked = disabled || onMark === undefined;
 
@@ -169,7 +166,7 @@ function ChoiceTableRow({
 }) {
   const table = use(ChoiceTableContext);
   if (table === null) {
-    throw new Error("ChoiceTableRow must be used within TryoutChoiceTable");
+    throw new Error("ChoiceTableRow must be used within ChoiceTable");
   }
   const labelId = `${table.headerId}-${statement.id}-label`;
 
@@ -201,7 +198,7 @@ function ChoiceTableRow({
 
 /**
  * One choice's cell: its radio under its column's header, and once the key shows, the tone and the mark an option
- * takes (`getTryoutReviewedChoiceTone`, `getTryoutToneMark`): the learner's mark that earns the key, a mark that
+ * takes (`getChoiceReviewedTone`, `toneMark`): the learner's mark that earns the key, a mark that
  * misses it, or the key the learner did not mark, which is dashed so it never reads as a mark.
  */
 function ChoiceTableCell({
@@ -211,13 +208,13 @@ function ChoiceTableCell({
   readonly column: string;
   readonly statement: ChoiceTableStatement;
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Player");
   const table = use(ChoiceTableContext);
   if (table === null) {
-    throw new Error("ChoiceTableCell must be used within TryoutChoiceTable");
+    throw new Error("ChoiceTableCell must be used within ChoiceTable");
   }
   const reviewed = statement.correct !== undefined;
-  const tone = getTryoutReviewedChoiceTone({
+  const tone = getChoiceReviewedTone({
     checked: statement.marked === column,
     isCorrect: reviewed ? statement.correct === column : undefined,
   });
@@ -237,7 +234,7 @@ function ChoiceTableCell({
         </LineMark>
         {reviewed ? (
           <LineMark aria-hidden="true" className="min-w-4">
-            {Option.match(getTryoutToneMark(tone), {
+            {Option.match(toneMark(tone), {
               onNone: () => null,
               onSome: (icon) => <HugeIcons icon={icon} />,
             })}

@@ -2,12 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { Option } from "effect";
 import {
-  getTryoutPreviewChoiceTone,
-  getTryoutReviewedChoiceTone,
-  getTryoutToneMark,
-} from "@/lib/tryout/appearance";
+  choiceTone,
+  getChoiceReviewedTone,
+  toneMark,
+} from "@/components/player/tone";
 
-describe("getTryoutReviewedChoiceTone", () => {
+describe("getChoiceReviewedTone", () => {
   it.each([
     [false, false, "idle"],
     [true, false, "wrong"],
@@ -17,14 +17,12 @@ describe("getTryoutReviewedChoiceTone", () => {
   ] as const)(
     "maps checked=%s correct=%s to %s",
     (checked, isCorrect, expected) => {
-      expect(getTryoutReviewedChoiceTone({ checked, isCorrect })).toBe(
-        expected
-      );
+      expect(getChoiceReviewedTone({ checked, isCorrect })).toBe(expected);
     }
   );
 });
 
-describe("getTryoutPreviewChoiceTone", () => {
+describe("choiceTone", () => {
   it.each([
     [false, { kind: "selectable" }, "idle"],
     [true, { kind: "selectable" }, "chosen"],
@@ -35,19 +33,17 @@ describe("getTryoutPreviewChoiceTone", () => {
   ] as const)(
     "maps checked=%s appearance=%o to %s",
     (checked, appearance, expected) => {
-      expect(getTryoutPreviewChoiceTone({ appearance, checked })).toBe(
-        expected
-      );
+      expect(choiceTone({ appearance, checked })).toBe(expected);
     }
   );
 });
 
-describe("getTryoutToneMark", () => {
+describe("toneMark", () => {
   it("checks the key picked or not, crosses a pick that misses it, and marks nothing open", () => {
-    expect(getTryoutToneMark("correct")).toEqual(Option.some(Tick02Icon));
-    expect(getTryoutToneMark("key")).toEqual(Option.some(Tick02Icon));
-    expect(getTryoutToneMark("wrong")).toEqual(Option.some(Cancel01Icon));
-    expect(getTryoutToneMark("idle")).toEqual(Option.none());
-    expect(getTryoutToneMark("chosen")).toEqual(Option.none());
+    expect(toneMark("correct")).toEqual(Option.some(Tick02Icon));
+    expect(toneMark("key")).toEqual(Option.some(Tick02Icon));
+    expect(toneMark("wrong")).toEqual(Option.some(Cancel01Icon));
+    expect(toneMark("idle")).toEqual(Option.none());
+    expect(toneMark("chosen")).toEqual(Option.none());
   });
 });

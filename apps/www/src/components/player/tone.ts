@@ -9,7 +9,7 @@ type ChoiceTone = Exclude<
   "bare"
 >;
 
-const TryoutPreviewChoiceAppearanceSchema = Schema.Union([
+const ChoiceAppearanceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("selectable"),
   }),
@@ -19,22 +19,21 @@ const TryoutPreviewChoiceAppearanceSchema = Schema.Union([
   }),
 ]);
 
-export type TryoutPreviewChoiceAppearance =
-  typeof TryoutPreviewChoiceAppearanceSchema.Type;
+export type ChoiceAppearance = typeof ChoiceAppearanceSchema.Type;
 
 /** The tone of an answer while it stays answerable, or once a demo reveals its key. */
-export function getTryoutPreviewChoiceTone({
+export function choiceTone({
   appearance,
   checked,
 }: {
-  appearance: TryoutPreviewChoiceAppearance;
+  appearance: ChoiceAppearance;
   checked: boolean;
 }): ChoiceTone {
   if (appearance.kind === "selectable") {
     return checked ? "chosen" : "idle";
   }
 
-  return getTryoutReviewedChoiceTone({
+  return getChoiceReviewedTone({
     checked,
     isCorrect: appearance.isCorrect,
   });
@@ -45,7 +44,7 @@ export function getTryoutPreviewChoiceTone({
  * that earns the key, a pick that misses it, the key the learner did not pick, which is dashed so it never reads
  * as a pick, or open.
  */
-export function getTryoutReviewedChoiceTone({
+export function getChoiceReviewedTone({
   checked,
   isCorrect,
 }: {
@@ -63,7 +62,7 @@ export function getTryoutReviewedChoiceTone({
  * The mark at the end of an answer's line, the same on an option and on a table's cell: a check on the key, picked
  * or not, a cross on a pick that misses it, and none on an open answer.
  */
-export const getTryoutToneMark = (tone: ChoiceTone) =>
+export const toneMark = (tone: ChoiceTone) =>
   Match.value(tone).pipe(
     Match.when(Match.is("correct", "key"), () => Option.some(Tick02Icon)),
     Match.when("wrong", () => Option.some(Cancel01Icon)),

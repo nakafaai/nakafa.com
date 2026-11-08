@@ -29,24 +29,23 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
 import { useServerSearch } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { revokeGrantChange } from "@/components/tenant/settings/grants";
 import { SchoolRoleChangeDialog } from "@/components/tenant/settings/roles/change";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
-
-const SOURCE = "components/tenant/settings/roles/grants";
 
 /** How many grants the table reads each time its end comes near. */
 const PAGE_SIZE = 25;
@@ -124,9 +123,9 @@ export function SchoolGrantTable() {
         columns={columns}
         data={Option.getOrElse(kept, () => [])}
         empty={
-          <TableEmpty
-            act="juggling"
+          <EmptyState
             description={t("roles-grants-description")}
+            scene={<EmptyNina act="juggling" />}
             title={t("roles-empty")}
           />
         }
@@ -211,17 +210,18 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
                 }
                 // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
                 let ended = false;
-                await saveSchool(
-                  () => revoke({ grantId: grant.id, slug }),
-                  SOURCE,
-                  own
-                    ? () => {
-                        ended = true;
-                        toast.success({
-                          title: "school-own-role-ended.title",
-                        });
-                      }
-                    : undefined
+                await runSchoolWrite(
+                  schoolCall(() => revoke({ grantId: grant.id, slug })),
+                  {
+                    onSaved: own
+                      ? () => {
+                          ended = true;
+                          toast.success({
+                            title: "school-own-role-ended.title",
+                          });
+                        }
+                      : undefined,
+                  }
                 );
                 if (ended) {
                   await router.invalidate();
