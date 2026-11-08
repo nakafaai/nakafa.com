@@ -21,9 +21,10 @@ export const sheetFile = async (
 });
 
 /**
- * Opens one period, then adds one cohort of grade 7 to it, as the school's Owner, on a page that has not loaded
- * yet. Each change is answered before the page leaves, since a navigation drops a change still on its way, and the
- * cohort is read back after a reload, so a caller builds on a cohort the server holds.
+ * Opens one period, then adds one cohort of grade 10, the first grade of the acceptance school's SMA unit, to it, as
+ * the school's Owner, on a page that has not loaded yet. Each change is answered before the page leaves, since a
+ * navigation drops a change still on its way, and the cohort is read back after a reload, so a caller builds on a
+ * cohort the server holds.
  */
 export async function openPeriodWithCohort(
   page: Page,
@@ -58,7 +59,7 @@ export async function openPeriodWithCohort(
   const cohortDialog = page.getByRole("dialog");
   await cohortDialog.getByLabel("Name").fill(cohort);
   await cohortDialog.getByRole("combobox", { name: "Grade" }).click();
-  await page.getByRole("option", { exact: true, name: "7" }).click();
+  await page.getByRole("option", { exact: true, name: "10" }).click();
   const addedBefore = changes.sent;
   await cohortDialog.getByRole("button", { name: "Add cohort" }).click();
   await expect(

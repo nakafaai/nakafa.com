@@ -1,6 +1,10 @@
 import type { GenericId } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { gradesOf } from "@repo/backend/confect/tenancy/grades";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
@@ -73,15 +77,26 @@ export const sdUnit = Effect.fn("test.classroom.sdUnit")(function* (
   );
 });
 
-/** Creates one cohort of a period as the school's Admin. */
+/** Creates one cohort of a period as the school's Admin, in the first grade its unit's level teaches. */
 export const cohort = Effect.fn("test.classroom.cohort")(function* (
   fixture: Fixture,
   periodId: GenericId.GenericId<"tenantPeriods">,
   name: string
 ) {
-  return yield* fixture
-    .as("admin")
-    .mutation(cohorts.create, { grade: 10, name, periodId, slug: nf });
+  const level = yield* fixture.run(
+    Effect.gen(function* () {
+      const reader = yield* DatabaseReader;
+      const period = yield* reader.table("tenantPeriods").get(periodId);
+      const unit = yield* reader.table("tenantUnits").get(period.unitId);
+      return unit.level;
+    }).pipe(Effect.orDie)
+  );
+  return yield* fixture.as("admin").mutation(cohorts.create, {
+    grade: Arr.headNonEmpty(gradesOf(level)),
+    name,
+    periodId,
+    slug: nf,
+  });
 });
 
 /**

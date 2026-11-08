@@ -25,7 +25,7 @@ import {
   cohortAuthority,
   periodAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { lastGradeOf } from "@repo/backend/confect/tenancy/promotion/destination";
+import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
 /** The most units, and the most class groups of one period, the graduation pages list. */

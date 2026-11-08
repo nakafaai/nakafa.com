@@ -11,9 +11,11 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr } from "effect";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 import { ChoiceLabel } from "@/components/tenant/choice";
-import { gradeItems } from "@/components/tenant/settings/choices";
+import { gradeItemsOf } from "@/components/tenant/settings/choices";
+import { CohortLevelContext } from "@/components/tenant/settings/cohort/level";
 
 /** The name of a cohort, as the dialogs that add and edit one ask for it. */
 export function CohortNameField({
@@ -40,7 +42,10 @@ export function CohortNameField({
   );
 }
 
-/** The school year of a cohort, one of the grades a cohort may hold, until one is chosen a placeholder. */
+/**
+ * The school year of a cohort, one of the grades its unit's level teaches, until one is chosen a placeholder. The
+ * cohorts page provides the level of the unit it shows.
+ */
 export function CohortGradeField({
   id,
   onChange,
@@ -51,6 +56,11 @@ export function CohortGradeField({
   value: string | null;
 }) {
   const t = useTranslations("SchoolSettings");
+  const level = use(CohortLevelContext);
+  if (level === null) {
+    throw new Error("CohortGradeField must be used within the cohorts page");
+  }
+  const gradeItems = gradeItemsOf(level);
 
   return (
     <Field>

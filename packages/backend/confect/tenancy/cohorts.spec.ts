@@ -14,6 +14,7 @@ import {
   CohortStatus,
 } from "@repo/backend/confect/tenancy/cohort";
 import {
+  CohortGradeOutsideLevel,
   CohortHold,
   CohortInUse,
   CohortLimit,
@@ -123,7 +124,13 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => CohortView,
-      error: () => Schema.Union([AccessDenied, CohortLimit, CohortNameTaken]),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          CohortGradeOutsideLevel,
+          CohortLimit,
+          CohortNameTaken,
+        ]),
     }).middleware(PeriodAccess, { action: "cohort.manage", arg: "periodId" })
   )
   .addFunction(
@@ -136,7 +143,8 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => CohortView,
-      error: () => Schema.Union([AccessDenied, CohortNameTaken]),
+      error: () =>
+        Schema.Union([AccessDenied, CohortGradeOutsideLevel, CohortNameTaken]),
     }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })
   )
   .addFunction(

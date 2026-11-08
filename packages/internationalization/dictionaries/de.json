@@ -3270,6 +3270,10 @@
       "title": "Diesen Namen gibt es schon.",
       "description": "Wähle für diese Periode einen anderen Namen."
     },
+    "school-refusal-cohort-grade": {
+      "title": "Diese Stufe gibt es hier nicht.",
+      "description": "Wähle eine Klassenstufe dieser Schulform."
+    },
     "school-refusal-cohort-limit": {
       "title": "Diese Periode ist voll.",
       "description": "Lege die Kohorte stattdessen in einer anderen Periode an."

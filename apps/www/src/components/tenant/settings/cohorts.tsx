@@ -26,6 +26,7 @@ import {
   CohortGradeField,
   CohortNameField,
 } from "@/components/tenant/settings/cohort/fields";
+import { CohortLevelContext } from "@/components/tenant/settings/cohort/level";
 import { SchoolCohortTable } from "@/components/tenant/settings/cohort/table";
 import { createCohortChange } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -106,7 +107,9 @@ function SchoolCohortsContent() {
     <CohortsUnitContext
       value={{ onChoose: setChosenUnit, unitId: unit.id, units }}
     >
-      <SchoolCohortsOfUnit />
+      <CohortLevelContext value={unit.level}>
+        <SchoolCohortsOfUnit />
+      </CohortLevelContext>
     </CohortsUnitContext>
   );
 }
