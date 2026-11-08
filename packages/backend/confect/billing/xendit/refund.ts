@@ -5,7 +5,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { endSubscriptionGrant } from "@repo/backend/confect/billing/grantEnd";
+import { endSubscriptionGrant } from "@repo/backend/confect/billing/end";
 import { scheduleProjection } from "@repo/backend/confect/billing/grants";
 import { readSubscription } from "@repo/backend/confect/billing/subscriptions";
 import { XenditRefund } from "@repo/backend/confect/billing/xendit/contract";

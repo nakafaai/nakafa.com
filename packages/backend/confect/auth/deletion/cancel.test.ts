@@ -1,7 +1,7 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { cancelAccountDeletionAttemptByToken } from "@repo/backend/confect/auth/deletion/attemptCancellation";
+import { cancelAccountDeletionAttemptByToken } from "@repo/backend/confect/auth/deletion/attempt";
 import {
   cancelAccountDeletion,
   cleanupFinalizedAccountDeletion,

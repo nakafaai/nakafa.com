@@ -25,11 +25,11 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { getLineSeriesCue } from "@repo/design-system/lib/charts/cue";
 import {
   formatLongMonthYear,
   formatShortMonthYear,
 } from "@repo/design-system/lib/charts/month";
-import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";

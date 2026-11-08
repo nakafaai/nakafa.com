@@ -11,7 +11,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { TaskPoints } from "@repo/backend/confect/classroom/tasks/task";
+import { TaskPoints } from "@repo/backend/confect/classroom/tasks/schema";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   NumberField,

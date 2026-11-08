@@ -113,13 +113,19 @@ export const readAuthoredTree = Effect.fn("RepositoryPolicy.readAuthoredTree")(
     const path = yield* Path.Path;
     const read = (directory: string) =>
       readRepositoryFiles(path.join(root, directory), IGNORED_DIRECTORIES);
-    const { agents, apps, packages, scripts } = yield* Effect.all({
+    const { agents, apps, docs, packages, scripts } = yield* Effect.all({
       agents: read(".agents"),
       apps: read("apps"),
+      docs: read("docs"),
       packages: read("packages"),
       scripts: read("scripts"),
     });
-    return { agents, scripts, workspaces: Arr.appendAll(apps, packages) };
+    return {
+      agents,
+      docs,
+      scripts,
+      workspaces: Arr.appendAll(apps, packages),
+    };
   }
 );
 

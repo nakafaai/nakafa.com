@@ -12,7 +12,7 @@ import {
   LinesColumn,
   LinesItem,
   LinesProvider,
-} from "@/components/exams/lines/board";
+} from "@/components/player/lines/board";
 import { OptionSketch } from "@/components/tenant/exams/sketch";
 
 /** The props of the key of one matching question. */

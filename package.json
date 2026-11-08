@@ -68,7 +68,7 @@
     "changeset": "changeset",
     "check": "bun run check:patches && bun run check:tests",
     "check:patches": "node scripts/check/patches.ts",
-    "check:site": "bunx --no-install --cwd apps/www vitest run --config vitest.afdocs.mts --coverage.enabled=false",
+    "check:site": "bunx --no-install --cwd apps/www vitest run --config afdocs.config.mts --coverage.enabled=false",
     "check:tests": "node scripts/check/tests.ts",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules .cache apps/*/.cache packages/*/.cache apps/*/.turbo packages/*/.turbo apps/*/.ruff_cache apps/*/.pytest_cache apps/*/.venv apps/*/.coverage .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email coverage apps/*/coverage packages/*/coverage && find apps packages -name __pycache__ -type d -prune -exec rm -rf {} +",
     "dev": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",

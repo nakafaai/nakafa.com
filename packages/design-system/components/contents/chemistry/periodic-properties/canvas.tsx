@@ -4,9 +4,9 @@ import {
   type PeriodicPropertyModeId,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import { PeriodicPropertiesScene } from "@repo/design-system/components/contents/chemistry/periodic-properties/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense, useEffect } from "react";
