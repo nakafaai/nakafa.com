@@ -136,7 +136,8 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   const overridden = yield* shownAtOpen(page, withView(address, "list"));
   yield* Effect.sync(() => expect(overridden).toBeGreaterThan(1));
 
-  // Choosing a view again keeps the address in step, so a reload cannot undo it.
+  // Choosing a view again keeps the address in step, so a reload cannot undo it; the fresh page goes quiet first.
+  yield* Effect.promise(() => waitForQuiet(page));
   yield* chooseView(page, hasTouch, "One question");
   yield* Effect.promise(() =>
     expect(page).toHaveURL(SINGLE_VIEW_ADDRESS, {
