@@ -14,7 +14,7 @@ const DISCUSSION_PATH = /\/classes\/fisika-x-1\/forum\/1$/u;
 
 const TITLE = "Kenapa gaya gesek berlawanan arah gerak?";
 
-/** The close button of the discussion's pane, or of its sheet on a phone, which leads back to its channel. */
+/** The close button of the discussion's pane, which leads back to its channel; a phone's sheet closes by a swipe or Escape. */
 const CLOSE = "Close";
 
 /** The address of the channel the discussion belongs to. */
@@ -120,7 +120,11 @@ for (const viewport of [
         .poll(async () => (await panel.boundingBox())?.width ?? 0)
         .toBeGreaterThan(narrow.width + 150);
     }
-    await page.getByRole("button", { name: CLOSE, exact: true }).click();
+    if (viewport.width < 768) {
+      await page.keyboard.press("Escape");
+    } else {
+      await page.getByRole("button", { name: CLOSE, exact: true }).click();
+    }
     await page.waitForURL(CHANNEL_PATH);
     await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();

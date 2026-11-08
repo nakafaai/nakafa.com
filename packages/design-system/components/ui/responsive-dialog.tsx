@@ -47,9 +47,9 @@ interface Props {
 
 /**
  * A dialog on a wide screen and a drawer on a phone, with one anatomy on both: a header with the title and its
- * sentence, the body, and a footer with the way out beside the action. The dialog closes from the X in its top right
- * corner, as shadcn's dialog has it; the drawer draws no close button and closes as an iPhone sheet does, from its
- * handle, a swipe down or a press outside.
+ * sentence, the body, and a footer with the way out beside the action. The dialog shows its close in the top right
+ * corner, as shadcn's does; the drawer closes as an iPhone sheet does, by its handle, a swipe or a press outside,
+ * so it draws no close button.
  */
 export function ResponsiveDialog({
   open,
@@ -111,12 +111,7 @@ export function ResponsiveDialog({
   }
 
   return (
-    <Drawer
-      onOpenChange={change}
-      onOpenChangeComplete={complete}
-      open={open}
-      showSwipeHandle
-    >
+    <Drawer onOpenChange={change} onOpenChangeComplete={complete} open={open}>
       <DrawerContent finalFocus={finalFocus}>
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>

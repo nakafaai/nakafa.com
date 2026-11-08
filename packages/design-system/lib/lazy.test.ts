@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { lazy, readChunk } from "@repo/design-system/lib/lazy";
-import { Effect, Fiber, MutableList } from "effect";
+import {
+  GOING_ATTRIBUTE,
+  lazy,
+  readChunk,
+  readPageGoing,
+} from "@repo/design-system/lib/lazy";
+import { Cause, Effect, Exit, Fiber, MutableList } from "effect";
 import { createElement, Suspense } from "react";
 import { renderToReadableStream } from "react-dom/server";
 
@@ -48,6 +53,95 @@ describe("readChunk", () => {
       yield* Fiber.interrupt(waiting);
 
       expect(removal).toHaveBeenCalledWith("online", expect.any(Function));
+    })
+  );
+});
+
+describe("a page that is going", () => {
+  const root = document.documentElement;
+
+  afterEach(() => {
+    root.removeAttribute(GOING_ATTRIBUTE);
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("says why the page goes, and says nothing during server rendering", () => {
+    expect(readPageGoing()).toBeNull();
+    root.setAttribute(GOING_ATTRIBUTE, "reload");
+    expect(readPageGoing()).toBe("reload");
+
+    vi.stubGlobal("document", undefined);
+
+    expect(readPageGoing()).toBeNull();
+  });
+
+  it.live(
+    "holds a failed import while the page goes, and reads it again once a press shows the page stayed",
+    () =>
+      Effect.gen(function* () {
+        const load = vi
+          .fn<() => Promise<string>>()
+          .mockImplementationOnce(() => {
+            // The stale-chunk script marks the page as it reloads for the failure.
+            root.setAttribute(GOING_ATTRIBUTE, "reload");
+            return Promise.reject(CHUNK_GONE);
+          })
+          .mockImplementationOnce(() => {
+            // The press that ended the stopped reload reloads it again.
+            root.setAttribute(GOING_ATTRIBUTE, "reload");
+            return Promise.reject(CHUNK_GONE);
+          })
+          .mockResolvedValueOnce("chunk");
+
+        const waiting = yield* Effect.forkChild(readChunk(load));
+        yield* Effect.sleep("10 millis");
+        // A reason that changes is still a page that goes.
+        root.setAttribute(GOING_ATTRIBUTE, "leave");
+        yield* Effect.sleep("10 millis");
+        expect(load).toHaveBeenCalledOnce();
+
+        root.removeAttribute(GOING_ATTRIBUTE);
+        yield* Effect.sleep("10 millis");
+        expect(load).toHaveBeenCalledTimes(2);
+        root.removeAttribute(GOING_ATTRIBUTE);
+
+        expect(yield* Fiber.join(waiting)).toBe("chunk");
+        expect(load).toHaveBeenCalledTimes(3);
+      })
+  );
+
+  it.live(
+    "hands on the failure of a page that stayed and still misses its chunk",
+    () =>
+      Effect.gen(function* () {
+        root.setAttribute(GOING_ATTRIBUTE, "leave");
+        const waiting = yield* Effect.forkChild(
+          readChunk(() => Promise.reject(CHUNK_GONE))
+        );
+        yield* Effect.sleep("10 millis");
+
+        root.removeAttribute(GOING_ATTRIBUTE);
+        const exit = yield* Fiber.await(waiting);
+
+        expect(Exit.isFailure(exit) && Cause.squash(exit.cause)).toBe(
+          CHUNK_GONE
+        );
+      })
+  );
+
+  it.live("stops watching the page when the read is interrupted", () =>
+    Effect.gen(function* () {
+      root.setAttribute(GOING_ATTRIBUTE, "reload");
+      const disconnect = vi.spyOn(MutationObserver.prototype, "disconnect");
+
+      const waiting = yield* Effect.forkChild(
+        readChunk(() => Promise.reject(CHUNK_GONE))
+      );
+      yield* Effect.sleep("10 millis");
+      yield* Fiber.interrupt(waiting);
+
+      expect(disconnect).toHaveBeenCalled();
     })
   );
 });
