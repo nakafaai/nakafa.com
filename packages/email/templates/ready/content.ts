@@ -42,11 +42,11 @@ const accountReadyEmailCopy = {
     subject: "Akun Nakafa kamu sudah siap",
   },
   ms: {
-    body: "Akaun anda sudah sedia. Terokai mata pelajaran atau mulakan percubaan bila-bila masa anda bersedia.",
+    body: "Akaun kamu sudah sedia. Terokai mata pelajaran atau mulakan percubaan bila-bila masa kamu bersedia.",
     cta: "Teruskan belajar",
     footerReason:
-      "Kami menghantar e-mel ini kerana anda telah mencipta akaun Nakafa.",
-    subject: "Akaun Nakafa anda sudah sedia",
+      "Kami menghantar e-mel ini kerana kamu telah mencipta akaun Nakafa.",
+    subject: "Akaun Nakafa kamu sudah sedia",
   },
 } satisfies Record<AppLocaleCode, AccountReadyEmailCopy>;
 

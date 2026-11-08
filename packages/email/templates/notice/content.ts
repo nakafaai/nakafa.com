@@ -48,11 +48,11 @@ const noticeEmailCopy = {
     subject: "Pengumuman baru di kelasmu",
   },
   ms: {
-    body: "Ada pengumuman baharu dalam kelas anda di Nakafa. Buka kelas untuk membacanya.",
+    body: "Ada pengumuman baharu dalam kelas kamu di Nakafa. Buka kelas untuk membacanya.",
     cta: "Buka kelas",
     footerReason:
-      "Kami menghantar e-mel ini kerana guru anda memilih untuk turut menghantar pengumuman ini melalui e-mel.",
-    subject: "Pengumuman baharu dalam kelas anda",
+      "Kami menghantar e-mel ini kerana guru kamu memilih untuk turut menghantar pengumuman ini melalui e-mel.",
+    subject: "Pengumuman baharu dalam kelas kamu",
   },
 } satisfies Record<AppLocaleCode, typeof NoticeEmailCopySchema.Type>;
 
