@@ -10,6 +10,7 @@ import {
   releasePageArgs,
   releasePageValidator,
 } from "@repo/backend/confect/contentRelease/spec";
+import { publicHeadValidator } from "@repo/backend/content/publication/spec";
 import { Schema, Struct } from "effect";
 
 const materialPageValidator = releasePageValidator(Schema.String);
@@ -68,9 +69,9 @@ export default GroupSpec.make()
       }),
       returns: () =>
         Schema.Struct({
+          delivery: Schema.NullOr(publicHeadValidator),
           materialKey: Schema.Union([Schema.String, Schema.Null]),
           model: materialModelValidator.mapFields(Struct.omit(["siblingJson"])),
-          runtimeJson: Schema.Union([Schema.String, Schema.Null]),
         }),
       error: () => ReleaseError,
     })
