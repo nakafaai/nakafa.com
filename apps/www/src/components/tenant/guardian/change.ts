@@ -7,6 +7,7 @@ import { LINK_TERM } from "@repo/backend/confect/guardians/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, DateTime, Duration, Option, Schema } from "effect";
 import { draftText } from "@/components/tenant/settings/state";
+import { changeLoaded, findLoaded, withPage } from "@/lib/data/loaded";
 
 /** One guardian link as the Staff list shows it. */
 export type LinkItem = Ref.Returns<typeof guardians.links.list>["page"][number];
@@ -46,22 +47,11 @@ function changeLinkPages(
   matches: (args: Ref.Args<typeof guardians.links.list>) => boolean,
   change: (page: readonly LinkItem[]) => LinkItem[]
 ) {
-  for (const query of localStore.getAllQueries(guardians.links.list)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.slug === slug &&
-      matches(query.args)
-    ) {
-      localStore.setQuery(
-        guardians.links.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, guardians.links.list, (value, args) =>
+    args.slug === slug && matches(args)
+      ? Option.some(withPage(value, change))
+      : Option.none()
+  );
 }
 
 /** The name of a student that a loaded list of the school's students holds. */
@@ -70,15 +60,12 @@ function studentNameOf(
   slug: TenantSlug,
   personId: LinkItem["student"]["id"]
 ) {
-  return Arr.findFirst(
-    localStore.getAllQueries(tenancy.people.students),
-    (query) =>
-      query.args.slug === slug && Option.isSome(query.value)
-        ? Arr.findFirst(
-            query.value.value.page,
-            (student) => student.id === personId
-          ).pipe(Option.map((student) => student.name))
-        : Option.none()
+  return findLoaded(localStore, tenancy.people.students, (value, args) =>
+    args.slug === slug
+      ? Arr.findFirst(value.page, (student) => student.id === personId).pipe(
+          Option.map((student) => student.name)
+        )
+      : Option.none()
   );
 }
 
