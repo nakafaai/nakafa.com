@@ -36,7 +36,7 @@ import {
 } from "effect";
 
 /** The served locale a fixture of a release names, which every fixture of this file is in. */
-const servedLocale = Schema.decodeSync(ActiveAppLocaleCodeSchema);
+const servedLocale = Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema);
 
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema

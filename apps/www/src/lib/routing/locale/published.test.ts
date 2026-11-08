@@ -14,8 +14,7 @@ import {
   testProgramSubject,
 } from "@/test/published/program";
 
-/** The served locale a fixture of a release names, which every fixture of this file is in. */
-const servedLocale = Schema.decodeSync(ActiveAppLocaleCodeSchema);
+const servedLocale = Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema);
 
 const publishedMocks = vi.hoisted(() => ({
   articleCategory: vi.fn(),

@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranSurahRow,
   QuranSurahRowSchema,
@@ -68,7 +68,7 @@ export function getQuranSurahName(name: QuranName) {
  */
 export function toQuranIndexSurahs(
   surahs: readonly Pick<QuranSurahRow, "name" | "number">[],
-  locale: AppLocaleCode
+  locale: ActiveAppLocaleCode
 ): (typeof QuranIndexSurah.Type)[] {
   return Arr.map(surahs, (surah) => ({
     arabic: surah.name.arabic,
