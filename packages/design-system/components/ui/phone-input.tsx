@@ -1,16 +1,15 @@
 import {
   ArrowDown01Icon,
   Call02Icon,
-  Search02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   Autocomplete,
   AutocompleteEmpty,
   AutocompleteGroup,
-  AutocompleteInput,
   AutocompleteItem,
   AutocompleteList,
+  AutocompleteSearch,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -131,7 +130,8 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
+        className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))]"
+        flush
       >
         <Autocomplete
           autoHighlight="always"
@@ -145,12 +145,9 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
           open
           value={searchQuery}
         >
-          <AutocompleteInput
-            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
+          <AutocompleteSearch
             clearLabel={t("clear-search")}
             placeholder={t("search-country-placeholder")}
-            showClear
-            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
           />
           <AutocompleteEmpty>{t("no-country-found")}</AutocompleteEmpty>
           <AutocompleteList className="p-0" scrollArea={false}>

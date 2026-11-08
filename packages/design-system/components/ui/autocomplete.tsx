@@ -1,5 +1,9 @@
 import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomplete";
-import { ArrowDown01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowDown01Icon,
+  Cancel01Icon,
+  Search02Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { PortalContainer } from "@repo/design-system/lib/portal";
@@ -96,6 +100,27 @@ function AutocompleteInput({
         />
       )}
     </AutocompletePrimitive.InputGroup>
+  );
+}
+
+/**
+ * The search bar of a picker that opens in a popover (`PopoverContent flush`): the search icon at the start, a clear
+ * button at the end, and the rule under it, flush with the popover's edges, so the list starts right under it.
+ */
+function AutocompleteSearch({
+  className,
+  ...props
+}: Omit<AutocompleteInputProps, "showClear" | "startAddon">) {
+  return (
+    <AutocompleteInput
+      className={cn(
+        "focus-visible:border-border rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0",
+        className
+      )}
+      showClear
+      startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
+      {...props}
+    />
   );
 }
 
@@ -342,6 +367,7 @@ export {
   AutocompleteList,
   AutocompletePopup,
   AutocompleteRow,
+  AutocompleteSearch,
   AutocompleteSeparator,
   AutocompleteStatus,
   AutocompleteTrigger,

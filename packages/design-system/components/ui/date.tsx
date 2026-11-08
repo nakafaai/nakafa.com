@@ -96,7 +96,7 @@ function DatePicker({
             : placeholder}
         </span>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto p-0">
+      <PopoverContent align="start" className="w-auto" flush>
         <Calendar
           autoFocus
           {...Option.match(

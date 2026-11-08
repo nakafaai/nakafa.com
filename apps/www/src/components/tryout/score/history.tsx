@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   ArrowDown01Icon,
-  Search02Icon,
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
@@ -14,9 +13,9 @@ import {
   AutocompleteEmpty,
   AutocompleteGroup,
   AutocompleteGroupLabel,
-  AutocompleteInput,
   AutocompleteItem,
   AutocompleteList,
+  AutocompleteSearch,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -205,7 +204,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
       >
         <TryoutAttemptFace>{label.value}</TryoutAttemptFace>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-0">
+      <PopoverContent align="start" className="w-80" flush>
         <Autocomplete
           autoHighlight="always"
           inline
@@ -216,12 +215,9 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
           keepHighlight
           open
         >
-          <AutocompleteInput
-            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
+          <AutocompleteSearch
             clearLabel={tCommon("clear-search")}
             placeholder={tTryouts("attempt-menu-search-placeholder")}
-            showClear
-            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
           />
           <AutocompleteEmpty>
             {tTryouts("attempt-menu-empty")}
