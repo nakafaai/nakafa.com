@@ -2481,6 +2481,9 @@
   "Holy": {
     "holy": "Suci",
     "quran": "Al-Qur'an",
+    "search-surah": "Cari surah",
+    "search-surah-none": "Surah tidak ditemukan",
+    "search-surah-none-description": "Cari dengan nomor, nama, atau makna.",
     "quran-description": "Baca 114 surah Al-Qur'an dalam bahasa Arab dengan terjemahan dan tafsir per ayat, gratis di Nakafa.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",

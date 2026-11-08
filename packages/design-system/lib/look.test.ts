@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { IconSvgElement } from "@hugeicons/react";
 import {
-  getTileIcon,
   getTileLooks,
   getTileShifts,
   TILE_HUE_GAP,
@@ -392,13 +391,5 @@ describe("getTileLooks", () => {
     expect(Arr.filter(among, (row) => !Predicate.isString(row))).toEqual(
       getTileLooks(tiles)
     );
-  });
-});
-
-describe("getTileIcon", () => {
-  it("gives a tile on its own the icon its seed points at", () => {
-    expect(getTileIcon(POOL, "aljabar")).toBe(POOL[1]);
-    expect(getTileIcon(POOL, "gerak")).toBe(POOL[3]);
-    expect(getTileIcon(ALONE, "aljabar")).toBe(ALONE[0]);
   });
 });
