@@ -1,9 +1,6 @@
 import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import {
-  makeCollectionPageNode,
-  makeFaqPageNode,
-} from "@repo/seo/json-ld/node";
+import { makeCollectionPageNode, makeFaqPageNode } from "@repo/seo/jsonld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { createTranslator } from "use-intl/core";

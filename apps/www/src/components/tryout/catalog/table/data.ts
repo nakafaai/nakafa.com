@@ -10,7 +10,7 @@ import {
   requestKey,
   selectionKey,
 } from "@/components/tryout/catalog/table/keys";
-import type { TryoutSetTableProps } from "@/components/tryout/catalog/table/table";
+import type { TryoutSetTableProps } from "@/components/tryout/catalog/table/sets";
 import type {
   TryoutSetData,
   TryoutSetRequest,

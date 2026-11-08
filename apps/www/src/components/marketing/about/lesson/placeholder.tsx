@@ -26,7 +26,7 @@ import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import {
   NumberField,
   NumberFieldDecrement,

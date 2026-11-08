@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
+import { useControllableState } from "@repo/design-system/hooks/controllable";
 import { lineMark } from "@repo/design-system/lib/mark";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";

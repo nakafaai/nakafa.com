@@ -1,7 +1,7 @@
 import {
   PRESS_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
-} from "@repo/design-system/hooks/use-press";
+} from "@repo/design-system/hooks/press";
 
 /** Set on the document while a pointer is down, from before the page's own listeners exist. */
 export const POINTER_DOWN_ATTRIBUTE = "data-pointer-down";

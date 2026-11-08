@@ -1,4 +1,4 @@
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 
 /** The spinner of a scene that is still loading, centred in the frame that holds it. */

@@ -38,7 +38,7 @@ import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/questi
 import {
   loadSectionAttempt,
   startSectionAttempt,
-} from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
+} from "@repo/backend/confect/tryouts/runtime/section/start";
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { Array as Arr, Effect, flow, Option, Schema } from "effect";
 

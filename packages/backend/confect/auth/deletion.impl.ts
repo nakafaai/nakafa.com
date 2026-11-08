@@ -10,7 +10,7 @@ import {
   toUserCleanupError,
   tryUserCleanup,
 } from "@repo/backend/confect/auth/cleanup/spec";
-import { cancelAccountDeletionAttemptByToken } from "@repo/backend/confect/auth/deletion/attemptCancellation";
+import { cancelAccountDeletionAttemptByToken } from "@repo/backend/confect/auth/deletion/attempt";
 import {
   cancelAccountDeletion as cancelAccountDeletionProgram,
   sweepAccountDeletionCancellationsProgram,
