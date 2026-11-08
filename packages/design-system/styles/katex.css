@@ -1,1 +1,14 @@
 @import "katex/dist/katex.min.css";
+
+/*
+ * KaTeX draws a phantom (\phantom, \vphantom, \hphantom) as real glyphs and
+ * hides them only with an inline `color:transparent`. A text stroke or shadow
+ * does not follow the fill color, and an outlined label such as a 3D scene
+ * label passes its `-webkit-text-stroke` down to every glyph, so the hidden
+ * glyph would show as an outline: the "X" that a nuclide's \vphantom{X} keeps
+ * for its cap height. Phantom glyphs only hold space, so they paint nothing.
+ */
+.katex [style*="color:transparent"] {
+  -webkit-text-stroke-width: 0;
+  text-shadow: none;
+}

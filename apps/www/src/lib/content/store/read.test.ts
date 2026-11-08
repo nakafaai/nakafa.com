@@ -7,7 +7,10 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { Data, Effect, Record as Rec, Schema } from "effect";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
-import { readContentStore } from "@/lib/content/store/read";
+import {
+  readContentStore,
+  readImmutableContentStore,
+} from "@/lib/content/store/read";
 import {
   resetTestRuntimeCache,
   STORE_KEY_PATTERN,
@@ -428,5 +431,52 @@ describe("content store reads", () => {
         ).toBe("loaded 2");
         expect(testRuntimeCache.set).not.toHaveBeenCalled();
       })
+  );
+});
+
+describe("immutable content store reads", () => {
+  it.effect(
+    "keeps a value by its own address across releases without asking which release is active",
+    () =>
+      Effect.gen(function* () {
+        const load = makeLoader();
+        const read = {
+          kind: "artifact",
+          load: Effect.suspend(load),
+          parts: [`sha256:${"f".repeat(64)}`],
+          schema: TextSchema,
+        };
+
+        expect(yield* readImmutableContentStore(read)).toBe("loaded 1");
+        activate("release-b", PROGRAM_TWO);
+        expect(yield* readImmutableContentStore(read)).toBe("loaded 1");
+
+        expect(load).toHaveBeenCalledOnce();
+        expect(activeMocks.read).not.toHaveBeenCalled();
+        expect(activeMocks.load).not.toHaveBeenCalled();
+        expect(testRuntimeCache.set).toHaveBeenCalledWith(
+          expect.stringMatching(STORE_KEY_PATTERN),
+          expect.anything(),
+          expect.objectContaining({ tags: ["content-immutable"] })
+        );
+      })
+  );
+
+  it.effect("answers and keeps nothing when the load finds no value", () =>
+    Effect.gen(function* () {
+      const load = vi.fn(() => Effect.succeed(null));
+      const read = {
+        kind: "artifact",
+        load: Effect.suspend(load),
+        parts: [`sha256:${"f".repeat(64)}`],
+        schema: TextSchema,
+      };
+
+      expect(yield* readImmutableContentStore(read)).toBeNull();
+      expect(yield* readImmutableContentStore(read)).toBeNull();
+
+      expect(load).toHaveBeenCalledTimes(2);
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
+    })
   );
 });

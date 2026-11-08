@@ -32,6 +32,26 @@ describe("signedInHead", () => {
     });
   });
 
+  it("shares the site's image, or the artwork a screen names", () => {
+    const seo = {
+      canonicalPath: "/en/chat",
+      description: "Ask Nina",
+      indexable: false,
+      locale: "en",
+      title: "New chat",
+    } as const;
+    expect(signedInHead(seo).meta).toContainEqual({
+      content: "https://nakafa.com/og.png",
+      property: "og:image",
+    });
+    expect(
+      signedInHead(seo, "/open-graph/app/en-ask-nina.png").meta
+    ).toContainEqual({
+      content: "https://nakafa.com/open-graph/app/en-ask-nina.png",
+      property: "og:image",
+    });
+  });
+
   it("marks a private screen noindex", () => {
     const head = signedInHead({
       canonicalPath: "/en",
@@ -43,25 +63,6 @@ describe("signedInHead", () => {
     expect(head.meta).toContainEqual({
       content: "noindex,nofollow",
       name: "robots",
-    });
-  });
-
-  it("shows the site's card, or the screen's own image when it names one", () => {
-    const screen = {
-      canonicalPath: "/en/island/nabil",
-      description: "Visit Nabil's island",
-      indexable: false,
-      locale: "en",
-      title: "Nabil's Island",
-    } as const;
-    expect(signedInHead(screen).meta).toContainEqual({
-      content: "https://nakafa.com/og.png",
-      property: "og:image",
-    });
-    const snapshot = "https://account.r2.test/files/islands/one/two";
-    expect(signedInHead({ ...screen, image: snapshot }).meta).toContainEqual({
-      content: snapshot,
-      property: "og:image",
     });
   });
 });

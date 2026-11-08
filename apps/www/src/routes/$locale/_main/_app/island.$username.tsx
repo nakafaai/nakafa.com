@@ -16,7 +16,9 @@ export const Route = createFileRoute("/$locale/_main/_app/island/$username")({
       data: { locale: params.locale, username: params.username },
     }),
   head: ({ loaderData }) =>
-    loaderData === undefined ? {} : signedInHead(loaderData.seo),
+    loaderData === undefined
+      ? {}
+      : signedInHead(loaderData.seo, loaderData.island.snapshot),
   component: VisitPage,
 });
 

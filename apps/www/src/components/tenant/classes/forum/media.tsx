@@ -14,6 +14,7 @@ import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
+import { documentCard } from "@/components/tenant/classes/forum/chips";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { photoRatio } from "@/components/tenant/classes/forum/photo";
 
@@ -22,14 +23,6 @@ type ForumFile = ForumMessage["attachments"][number];
 
 /** The bytes of one megabyte. */
 const BYTES_IN_MEGABYTE = 1024 * 1024;
-
-/**
- * A document of a message: one width for every document, so a column of them lines up, with the same inset on all
- * four sides, its name breaking anywhere, and the whole card one press.
- */
-const documentCard = cva(
-  "w-72 max-w-full gap-3 rounded-xl has-data-[slot=attachment-content]:p-3 has-data-[slot=attachment-media]:p-3"
-);
 
 /** The photos of a message: one at its own shape, and several in equal squares, as a chat's album. */
 const photoGrid = cva("grid w-full max-w-sm gap-1", {

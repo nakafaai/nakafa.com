@@ -9,6 +9,7 @@ import {
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
@@ -53,7 +54,7 @@ export function TimeScene({
       </mesh>
       <mesh position={[0, 1.45, 0]}>
         <boxGeometry args={[0.46, 0.28, 0.24]} />
-        <meshStandardMaterial color={METAL_COLOR} metalness={0.25} />
+        <MetalMaterial color={METAL_COLOR} />
       </mesh>
 
       {Arr.map(tickMarks, (tick) => (

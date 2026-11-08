@@ -11,8 +11,6 @@ import {
 export const ScreenSeo = Schema.Struct({
   canonicalPath: LocalizedPath,
   description: Schema.String,
-  /** The screen's own social image, such as a shared island's snapshot; the site's card without one. */
-  image: Schema.optionalKey(Schema.String),
   indexable: Schema.Boolean,
   locale: LocaleSchema,
   title: Schema.String,
@@ -20,13 +18,16 @@ export const ScreenSeo = Schema.Struct({
 
 export type ScreenSeo = typeof ScreenSeo.Type;
 
-/** The router head entries of one signed-in screen, built by the head seam from its facts. */
-export function signedInHead(seo: ScreenSeo) {
+/**
+ * The router head entries of one signed-in screen, built by the head seam from its facts. A
+ * screen with reviewed artwork, such as Nina's chat, shares it; any other shares the site's image.
+ */
+export function signedInHead(seo: ScreenSeo, image = "/og.png") {
   return toRouterHead(
     createSeoHead({
       canonicalPath: seo.canonicalPath,
       description: seo.description,
-      image: seo.image ?? "/og.png",
+      image,
       indexable: seo.indexable,
       jsonLd: [],
       locale: seo.locale,

@@ -15,9 +15,13 @@ import {
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  GlassMaterial,
+  LiquidMaterial,
+} from "@repo/design-system/components/three/physical";
 import { Array as Arr, Schema } from "effect";
 import { useRef } from "react";
-import { DoubleSide, type Group } from "three";
+import type { Group } from "three";
 
 const BEFORE_BEAKER_X = -1.08;
 const AFTER_BEAKER_X = 1.08;
@@ -201,14 +205,7 @@ function BeakerGlass() {
             true,
           ]}
         />
-        <meshStandardMaterial
-          color={colors.glass}
-          depthWrite={false}
-          opacity={GLASS_OPACITY}
-          roughness={0.1}
-          side={DoubleSide}
-          transparent
-        />
+        <GlassMaterial color={colors.glass} opacity={GLASS_OPACITY} />
       </mesh>
 
       <mesh
@@ -216,14 +213,14 @@ function BeakerGlass() {
         rotation={[Math.PI / 2, 0, 0]}
       >
         <torusGeometry args={[BEAKER_TOP_RADIUS, 0.018, 16, 72]} />
-        <meshStandardMaterial color={colors.glass} opacity={0.58} transparent />
+        <GlassMaterial color={colors.glass} opacity={0.58} />
       </mesh>
 
       <mesh position={[0, -BEAKER_WALL_HEIGHT / 2, 0]}>
         <cylinderGeometry
           args={[BEAKER_BOTTOM_RADIUS, BEAKER_BOTTOM_RADIUS, 0.04, 64]}
         />
-        <meshStandardMaterial color={colors.glass} opacity={0.34} transparent />
+        <GlassMaterial color={colors.glass} opacity={0.34} />
       </mesh>
     </group>
   );
@@ -238,13 +235,7 @@ function Liquid({ color }: { color: string }) {
       <cylinderGeometry
         args={[LIQUID_RADIUS, LIQUID_RADIUS, LIQUID_HEIGHT, 64]}
       />
-      <meshStandardMaterial
-        color={color}
-        depthWrite={false}
-        opacity={LIQUID_OPACITY}
-        roughness={0.36}
-        transparent
-      />
+      <LiquidMaterial color={color} opacity={LIQUID_OPACITY} />
     </mesh>
   );
 }
