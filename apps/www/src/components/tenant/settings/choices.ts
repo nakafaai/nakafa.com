@@ -16,6 +16,7 @@ import {
   RulerIcon,
   School01Icon,
   SchoolIcon,
+  TranslateIcon,
   User02Icon,
   UserAccountIcon,
   UserCheck01Icon,
@@ -77,6 +78,7 @@ export function countryChoices(locale: string) {
 
 /** The page languages a unit may choose, from the platform's list of languages, each named in itself. */
 export const languageItems = Arr.map(languages, (language) => ({
+  icon: TranslateIcon,
   label: language.label,
   value: language.value,
 }));
