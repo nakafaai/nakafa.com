@@ -39,7 +39,7 @@ const planCardVariants = cva("md:row-span-4 md:grid md:grid-rows-subgrid", {
     tier: {
       free: "",
       max: "",
-      pro: "ring-primary ring-2",
+      pro: "ring-primary relative ring-2",
     },
   },
 });
@@ -168,12 +168,13 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
 /**
  * The three School plans side by side from `md`, sharing four rows so their
  * prices, lists and actions line up, one under another on a phone. Nina drums
- * on the top edge of Pro's card: the card is drawn over her, so its line cuts
- * her body.
+ * behind the top edge of Pro's card and peeks over it: the card is drawn over
+ * her, so its edge cuts her body, and the row leaves her room under the words
+ * above it.
  */
 export function SchoolPlans() {
   return (
-    <div className="grid w-full gap-x-4 gap-y-18 md:grid-cols-3 md:grid-rows-[auto_auto_1fr_auto] md:gap-y-6">
+    <div className="mt-10 grid w-full gap-x-4 gap-y-18 md:grid-cols-3 md:grid-rows-[auto_auto_1fr_auto] md:gap-y-6">
       <SchoolPlanCard tier="free" />
       <div className="relative grid md:row-span-4 md:grid-rows-subgrid">
         <span className="absolute end-6 bottom-[calc(100%-0.5rem)]">
