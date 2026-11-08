@@ -101,12 +101,18 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
         return nextIdentity - 1;
       };
       const visibility = { checkOpacity: true, checkVisibilityCSS: true };
-      // What the frame draws of an element: its rendered text, without the
-      // text of the inline scripts a server page carries until it hydrates.
-      const words = (element: Element) =>
-        (element instanceof HTMLElement ? element.innerText : "")
-          .replace(/\s+/gu, " ")
-          .trim();
+      // The words of an element, without the text of the inline scripts a
+      // server page carries until it hydrates, which the frame never draws.
+      const words = (element: Element) => {
+        const copy = element.cloneNode(true);
+        if (!(copy instanceof Element)) {
+          return "";
+        }
+        for (const script of copy.querySelectorAll("script, style")) {
+          script.remove();
+        }
+        return (copy.textContent ?? "").replace(/\s+/gu, " ").trim();
+      };
       // A page's own `<main>` can stand inside the shell's, so each element counts once.
       const shown = (mains: readonly Element[], selector: string) => [
         ...new Set(
