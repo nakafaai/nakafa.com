@@ -2,8 +2,9 @@ import { expect, type Page, test } from "@playwright/test";
 import standalone from "@repo/internationalization/dictionaries/standalone/en.json" with {
   type: "json",
 };
-import { HashSet } from "effect";
+import { Effect, HashSet } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
+import { keepResourceTimings } from "@/e2e/support/resources";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SIGN_IN = "/en/auth";
@@ -32,6 +33,8 @@ async function openSignIn(page: Page) {
     },
     { broke: BROKE, title: standalone.Error.title }
   );
+  // `deployUnder` lists what the page loaded, past the browser's 250 timing entries.
+  await Effect.runPromise(keepResourceTimings(page));
   await page.goto(SIGN_IN);
   const theme = page.getByRole("button", { exact: true, name: "Theme" });
   await waitUntilTakenOver(theme);
@@ -195,6 +198,11 @@ test("keeps its page when a press asks for a chunk and the network is gone", asy
 
   await expect(title).toHaveText(lesson);
   await context.setOffline(false);
-  await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+  const search = page.getByRole("dialog", { name: "Search" });
+  await expect(search).toBeVisible();
+  // The open dialog hides the page from its readers, so the lesson is read
+  // again once the dialog closes.
+  await page.keyboard.press("Escape");
+  await expect(search).toBeHidden();
   await expect(title).toHaveText(lesson);
 });

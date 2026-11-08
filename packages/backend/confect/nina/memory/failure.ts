@@ -14,15 +14,15 @@ import { Effect, Option, pipe, Schema } from "effect";
  * cost, which the call spent all the same, as far as the provider counted them.
  * None of them holds the message, a memory, or the answer.
  */
-export class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
-  "NinaMemoryError",
-  {
-    gateway: Schema.optional(GatewayFailure),
-    operation: Schema.Literals(["read", "judge", "generate", "unknown"]),
-    rejected: Schema.Boolean,
-    spent: Schema.optional(NinaUpkeepCall),
-  }
-) {}
+export class NinaMemoryError extends Schema.TaggedError<
+  NinaMemoryError,
+  { readonly brand: unique symbol }
+>()("NinaMemoryError", {
+  gateway: Schema.optional(GatewayFailure),
+  operation: Schema.Literals(["read", "judge", "generate", "unknown"]),
+  rejected: Schema.Boolean,
+  spent: Schema.optional(NinaUpkeepCall),
+}) {}
 
 /** Turns what a model call raised into the typed error: a rejected answer with its tokens, or the gateway's routing facts. */
 export function generationFailure(error: unknown) {

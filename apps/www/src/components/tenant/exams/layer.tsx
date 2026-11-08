@@ -33,7 +33,6 @@ import { Array as Arr, Function as Fn, Option, Schema } from "effect";
 import { type ReactNode, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   acceptedOf,
   type Choice,
@@ -59,6 +58,7 @@ import { ReadingField } from "@/components/tenant/exams/reading";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { ScoringField } from "@/components/tenant/exams/scoring";
 import { tableOf } from "@/components/tenant/exams/table";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
 const ExamText = lazy(() =>
@@ -98,11 +98,11 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
     if (next === null || next === points || !Number.isInteger(next)) {
       return;
     }
-    runExamAction(
-      sentAction(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         save({ examId: exam.id, points: next, questionId, slug })
       ),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+      { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
     );
   };
 

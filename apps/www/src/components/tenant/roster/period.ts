@@ -5,10 +5,10 @@ import type { UnitId } from "@/components/tenant/settings/unit";
 import { readOnce } from "@/lib/convex/read";
 
 /** A unit with no active period, which an import or an export of its roster needs. */
-export class RosterPeriodMissing extends Schema.TaggedError<RosterPeriodMissing>()(
-  "RosterPeriodMissing",
-  {}
-) {}
+export class RosterPeriodMissing extends Schema.TaggedError<
+  RosterPeriodMissing,
+  { readonly brand: unique symbol }
+>()("RosterPeriodMissing", {}) {}
 
 /**
  * The unit's active period, read when an import or an export needs it. The page's header draws its

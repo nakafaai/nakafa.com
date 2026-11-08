@@ -23,10 +23,8 @@ import {
   type PersonId,
   SchoolTeacherPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { CohortDetail } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/homeroom";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The homeroom teacher of a cohort, as one card of the settings column above the cohort's
@@ -63,10 +61,11 @@ export function SchoolHomeroomCard({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () => assign({ cohortId: cohort.id, personId: teacherId, slug }),
-        SOURCE,
-        () => setTeacherId(undefined)
+      runSchoolWrite(
+        schoolCall(() =>
+          assign({ cohortId: cohort.id, personId: teacherId, slug })
+        ),
+        { onSaved: () => setTeacherId(undefined) }
       )
     );
   };
@@ -76,7 +75,7 @@ export function SchoolHomeroomCard({
       return;
     }
     startTransition(() =>
-      saveSchool(() => unassign({ cohortId: cohort.id, slug }), SOURCE)
+      runSchoolWrite(schoolCall(() => unassign({ cohortId: cohort.id, slug })))
     );
   };
 

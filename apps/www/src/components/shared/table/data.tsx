@@ -1,14 +1,3 @@
-import {
-  ArrowDown02Icon,
-  ArrowUp02Icon,
-  Calendar03Icon,
-  FilterIcon,
-} from "@hugeicons/core-free-icons";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -16,46 +5,29 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import {
-  type Cell,
-  type Header,
-  type RowData,
-  useTable,
-} from "@tanstack/react-table";
-import { Array as Arr, Match, Option } from "effect";
-import { type ComponentProps, type ReactNode, use, useState } from "react";
+import { type Cell, type RowData, useTable } from "@tanstack/react-table";
+import { Array as Arr, Option } from "effect";
+import { type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { PaneTableRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
 import { pressesRow } from "@/components/shared/row";
-import {
-  columnAlign,
-  HeadAlignContext,
-  headPlace,
-  menuPlaceOf,
-  placeOf,
-} from "@/components/shared/table/align";
-import { HeadDays } from "@/components/shared/table/calendar";
+import { columnAlign, placeOf } from "@/components/shared/table/align";
 import { tableBoxVariants } from "@/components/shared/table/card";
-import { ColumnChoice, ColumnFilter } from "@/components/shared/table/column";
 import type {
   HeadFilter,
   TableColumn,
 } from "@/components/shared/table/columns";
 import { dataTableFeatures } from "@/components/shared/table/features";
 import { columnFiltersOf } from "@/components/shared/table/filter";
-import { TableHeadButton } from "@/components/shared/table/head";
+import { DataTableHead } from "@/components/shared/table/heading";
 import { RowMenu } from "@/components/shared/table/menu";
+import { ColumnHeads } from "@/components/shared/table/panel";
 import {
-  ColumnHead,
-  ColumnHeads,
-  HeadPanel,
-  HeadRange,
-  HeadReset,
-  HeadSort,
-  HeadText,
-  useIsFiltered,
-} from "@/components/shared/table/panel";
+  RemoteChoiceContext,
+  type RemoteList,
+  remoteSorting,
+} from "@/components/shared/table/remote";
 import {
   TableLead,
   TableText,
@@ -66,13 +38,11 @@ import {
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { TableWaitingContext } from "@/components/shared/table/waiting";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 
 /** The link of a row's first column, which is the row's primary action. */
 const ROW_LINK = "td:first-child a[href]";
-
-/** The arrow of a column's head while it sorts the rows each way. */
-const sortIcons = { asc: ArrowUp02Icon, desc: ArrowDown02Icon };
 
 /**
  * A data table, as shadcn builds the table on TanStack Table, and the one way Nakafa draws a list of records: as the
@@ -84,7 +54,8 @@ const sortIcons = { asc: ArrowUp02Icon, desc: ArrowDown02Icon };
  * menu column gives it (`RowItems`), so a table cannot put a text button in a row. The heads are true before the rows
  * are read, so they stand from the first frame and the rows fill in under them. A list that holds no record shows its `empty` state under the heads, and a filter that leaves no row shows Nina searching in
  * the rows' place. On a page with panes, pressing a row opens it beside the list. A column's meta places its head and
- * cells: a column of badges in the middle, a column of numbers or the row's menu at the end.
+ * cells: a column of badges in the middle, a column of numbers or the row's menu at the end. A list that the server sorts,
+ * filters and reads a window at a time, as the try-out catalog does, gives `server`.
  */
 export function DataTable<TData extends RowData>({
   children,
@@ -96,6 +67,7 @@ export function DataTable<TData extends RowData>({
   plain = false,
   rowId,
   search,
+  server,
 }: {
   /** The rows under the body, such as a footer of totals. */
   children?: ReactNode;
@@ -112,17 +84,25 @@ export function DataTable<TData extends RowData>({
   rowId: (row: TData) => string;
   /** The column that the header's search box filters by its text, when the page has one. */
   search?: string;
+  /** A list the server sorts, filters and reads a window at a time (`RemoteList`). */
+  server?: RemoteList;
 }) {
   const t = useTranslations("DataTable");
   const hasPanes = useHasPanes();
   const text = useTableFilters((state) => state.search);
   const chosen = useTableFilters((state) => state.chosen);
+  const sorting = remoteSorting(server);
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
   const table = useTable({
     columns,
     data,
     features: dataTableFeatures,
     getRowId: rowId,
-    state: { columnFilters: columnFiltersOf(chosen, search, text) },
+    ...sorting.options,
+    state: {
+      columnFilters: columnFiltersOf(chosen, search, text),
+      ...sorting.state,
+    },
   });
   const rows = table.getRowModel().rows;
   const [drawn, setDrawn] = useState(pageSize ?? rows.length);
@@ -134,13 +114,14 @@ export function DataTable<TData extends RowData>({
     isBare && !waiting && empty !== undefined && text.trim() === "";
 
   return (
-    <>
+    <RemoteChoiceContext value={server}>
       <Table
         aria-busy={waiting}
         containerClassName={tableBoxVariants({
           closes: !isBare,
           fills: !showsEmpty,
         })}
+        viewportRef={setViewport}
       >
         <ColumnHeads>
           {Arr.map(table.getHeaderGroups(), (group) => (
@@ -169,17 +150,20 @@ export function DataTable<TData extends RowData>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length}>
-                <Empty className="p-6 md:p-6">
-                  <EmptyHeader>
-                    <EmptyNina act="searching" />
-                    <EmptyTitle className="text-base">
-                      {t(waiting ? "searching" : "no-results")}
-                    </EmptyTitle>
-                  </EmptyHeader>
-                </Empty>
+                <EmptyState
+                  frame="table"
+                  scene={<EmptyNina act="searching" />}
+                  title={t(waiting ? "searching" : "no-results")}
+                />
               </TableCell>
             </TableRow>
           )}
+          <RemoteEnd
+            colSpan={columns.length}
+            count={data.length}
+            list={server}
+            root={viewport}
+          />
         </TableBody>
         {children}
       </Table>
@@ -190,7 +174,45 @@ export function DataTable<TData extends RowData>({
           onIntersect={() => setDrawn(drawn + pageSize)}
         />
       ) : null}
-    </>
+    </RemoteChoiceContext>
+  );
+}
+
+/**
+ * The end of the rows of a remote list: a row of one pixel that reads the next window as it comes near inside the
+ * table's own scroll, so a short list, such as a filtered one, keeps reading until it fills the table or the list ends.
+ * It mounts again for each answer and each window, so a window that leaves it in view reads the next one.
+ */
+function RemoteEnd({
+  colSpan,
+  count,
+  list,
+  root,
+}: {
+  colSpan: number;
+  /** How many rows the list holds, which names each window. */
+  count: number;
+  /** The list, when the server reads it a window at a time. */
+  list: RemoteList | undefined;
+  root: HTMLDivElement | null;
+}) {
+  return Option.match(
+    Option.flatMap(Option.fromNullishOr(list), (remote) => remote.more),
+    {
+      onNone: () => null,
+      onSome: (more) => (
+        <TableRow aria-hidden="true" className="h-px">
+          <TableCell className="p-0" colSpan={colSpan}>
+            <Intersection
+              className="h-px"
+              key={`${list?.snapshot}:${count}`}
+              onIntersect={more}
+              root={root}
+            />
+          </TableCell>
+        </TableRow>
+      ),
+    }
   );
 }
 
@@ -279,142 +301,5 @@ function DataTableValue({
     <TableValue>{children}</TableValue>
   ) : (
     children
-  );
-}
-
-/**
- * A column's head, in its place in the line: the button that opens what filters the column, or, over the row's menu, the
- * one column with nothing to filter by, a name that only a screen reader reads, so every head of the table is named.
- */
-function DataTableHead<TData extends RowData>({
-  children,
-  header,
-  index,
-}: {
-  children: ReactNode;
-  header: Header<typeof dataTableFeatures, TData>;
-  index: number;
-}) {
-  const common = useTranslations("Common");
-  const column = header.column;
-  const { align, filter, title = "", wide } = column.columnDef.meta ?? {};
-  const place = placeOf(index, align);
-
-  if (header.isPlaceholder || filter === undefined) {
-    return (
-      <ColumnHead place={place} width="menu">
-        <span className="sr-only">{common("menu-actions")}</span>
-      </ColumnHead>
-    );
-  }
-  return (
-    <ColumnHead
-      menu={menuPlaceOf(
-        index,
-        Option.getOrElse(
-          Arr.findLastIndex(
-            header.headerGroup?.headers ?? [],
-            (head) => head.column.columnDef.meta?.filter !== undefined
-          ),
-          () => index
-        )
-      )}
-      place={place}
-      sorted={column.getCanSort() ? column.getIsSorted() || "none" : undefined}
-      width={wide === true ? "wide" : filter.kind}
-    >
-      <HeadAlignContext value={headPlace[place]}>
-        <HeadControl filter={filter} header={header} title={title}>
-          {children}
-        </HeadControl>
-      </HeadAlignContext>
-    </ColumnHead>
-  );
-}
-
-/** What a head holds: a menu of the values a column holds, or the panel of a column of text, numbers or moments. */
-function HeadControl<TData extends RowData>({
-  children,
-  filter,
-  header,
-  title,
-}: {
-  children: ReactNode;
-  filter: HeadFilter;
-  header: Header<typeof dataTableFeatures, TData>;
-  title: string;
-}) {
-  const id = header.column.id;
-
-  return Match.value(filter).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      choice: ({ options }) => (
-        <ColumnChoice column={id} options={options} title={title} />
-      ),
-      days: () => (
-        <SortingHead header={header} kind="days" name={children}>
-          <HeadDays column={id} />
-        </SortingHead>
-      ),
-      number: () => (
-        <SortingHead header={header} kind="number" name={children}>
-          <HeadRange column={id} label={title} />
-        </SortingHead>
-      ),
-      text: () => (
-        <SortingHead header={header} kind="text" name={children}>
-          <HeadText column={id} label={title} />
-        </SortingHead>
-      ),
-      values: ({ options }) => (
-        <ColumnFilter column={id} options={options} title={title} />
-      ),
-    })
-  );
-}
-
-/**
- * The head of a column that sorts the rows: its button, which shows the way the rows sort or that the column filters
- * them, and the panel that sorts them each way above what filters the column (`children`).
- */
-function SortingHead<TData extends RowData>({
-  children,
-  header,
-  kind,
-  name,
-}: {
-  children: ReactNode;
-  header: Header<typeof dataTableFeatures, TData>;
-  kind: ComponentProps<typeof HeadSort>["kind"];
-  name: ReactNode;
-}) {
-  const column = header.column;
-  const sorted = column.getIsSorted() || "none";
-  const filtered = useIsFiltered(column.id);
-  const markSorted = useTableFilters((state) => state.markSorted);
-  const idle = kind === "days" ? Calendar03Icon : FilterIcon;
-
-  return (
-    <HeadPanel
-      trigger={
-        <TableHeadButton
-          active={sorted !== "none" || filtered}
-          icon={sorted === "none" ? idle : sortIcons[sorted]}
-        >
-          {name}
-        </TableHeadButton>
-      }
-    >
-      <HeadSort
-        kind={kind}
-        onSort={(descending) => {
-          markSorted();
-          column.toggleSorting(descending);
-        }}
-        sorted={sorted}
-      />
-      {children}
-      <HeadReset column={column.id} />
-    </HeadPanel>
   );
 }

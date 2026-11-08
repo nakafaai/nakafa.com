@@ -37,23 +37,16 @@ import {
   archiveChannelUpdate,
   removeChannelUpdate,
 } from "@/components/tenant/classes/forum/archive";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { markUpdate } from "@/components/tenant/classes/forum/optimistic";
 import { renameChannelUpdate } from "@/components/tenant/classes/forum/rename";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { LineDialog } from "@/components/tenant/line";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { TargetLink } from "@/lib/routing/link";
 import {
   schoolClassChannelTarget,
   schoolClassForumTarget,
 } from "@/lib/routing/school/target";
-
-const SOURCE = "components/tenant/classes/forum/menu";
 
 /**
  * A channel's menu: Open, its messages, Mark as read, which clears its unread dot at once and marks
@@ -116,9 +109,9 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
               disabled={!channel.unread}
               icon={CheckmarkCircle02Icon}
               onClick={() =>
-                runForumCall(
+                runSchoolWrite(
                   Effect.flatMap(Clock.currentTimeMillis, (at) =>
-                    forumCall(() =>
+                    schoolCall(() =>
                       mark.withOptimisticUpdate(markUpdate)({
                         at,
                         classId,
@@ -127,7 +120,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
                       })
                     )
                   ),
-                  Fn.constVoid
+                  { onRefused: Fn.constVoid }
                 )
               }
             >
@@ -149,16 +142,15 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
                 <DropdownMenuItem
                   icon={channel.archived ? ArchiveRestoreIcon : Archive02Icon}
                   onClick={() =>
-                    runForumCall(
-                      forumCall(() =>
+                    runSchoolWrite(
+                      schoolCall(() =>
                         archive({
                           archived: !channel.archived,
                           channelId: channel.id,
                           classId,
                           slug,
                         })
-                      ),
-                      toastForumFailure
+                      )
                     )
                   }
                 >
@@ -187,9 +179,10 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
           label={t("channel-name")}
           onSave={(name) =>
             startTransition(() =>
-              saveSchool(
-                () => rename({ channelId: channel.id, classId, name, slug }),
-                SOURCE
+              runSchoolWrite(
+                schoolCall(() =>
+                  rename({ channelId: channel.id, classId, name, slug })
+                )
               )
             )
           }
@@ -205,11 +198,10 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
             onClick={() => {
               dialogs.close();
               navigate(schoolClassForumTarget(slug, classSlug));
-              runForumCall(
-                forumCall(() =>
+              runSchoolWrite(
+                schoolCall(() =>
                   remove({ channelId: channel.id, classId, slug })
-                ),
-                toastForumFailure
+                )
               );
             }}
             type="button"

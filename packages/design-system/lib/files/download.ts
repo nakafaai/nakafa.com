@@ -9,14 +9,14 @@ const FileDownloadRequest = Schema.Struct({
 /** Schema-derived input accepted by the browser download program. */
 type FileDownloadRequest = typeof FileDownloadRequest.Type;
 /** Expected browser failure while preparing, activating, or cleaning a download. */
-export class BrowserFileDownloadError extends Schema.TaggedError<BrowserFileDownloadError>()(
-  "BrowserFileDownloadError",
-  {
-    cause: Schema.Unknown,
-    filename: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class BrowserFileDownloadError extends Schema.TaggedError<
+  BrowserFileDownloadError,
+  { readonly brand: unique symbol }
+>()("BrowserFileDownloadError", {
+  cause: Schema.Unknown,
+  filename: Schema.String,
+  message: Schema.String,
+}) {}
 function downloadError(filename: string, cause: unknown) {
   return new BrowserFileDownloadError({
     cause,

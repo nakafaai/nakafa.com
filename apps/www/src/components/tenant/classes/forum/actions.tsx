@@ -30,11 +30,6 @@ import { Effect, Option, Schema } from "effect";
 import { type ReactNode, startTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { isPending } from "@/components/tenant/classes/forum/marks";
 import { useOpening } from "@/components/tenant/classes/forum/open";
 import {
@@ -47,10 +42,8 @@ import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import { ReactButton } from "@/components/tenant/classes/forum/tallies";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { LineDialog } from "@/components/tenant/line";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { schoolClassDiscussionTarget } from "@/lib/routing/school/target";
-
-const SOURCE = "components/tenant/classes/forum/actions";
 
 /**
  * What the viewer may do with a message: edit their own, manage the forum, and open the message's thread, which any
@@ -132,8 +125,8 @@ function ThreadButton({ message }: { message: ForumMessage }) {
       return;
     }
     mark(Option.some(message.clientKey));
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         start({
           classId: scope.classId,
           messageId: message.id,
@@ -156,8 +149,7 @@ function ThreadButton({ message }: { message: ForumMessage }) {
           )
         ),
         Effect.ensuring(Effect.sync(() => mark(Option.none())))
-      ),
-      toastForumFailure
+      )
     );
   };
 
@@ -282,15 +274,15 @@ export function MessageMenu({
           label={t("discussion-title")}
           onSave={(title) =>
             startTransition(() =>
-              saveSchool(
-                () =>
+              runSchoolWrite(
+                schoolCall(() =>
                   rename({
                     classId: scope.classId,
                     number: discussion.number,
                     slug: scope.slug,
                     title,
-                  }),
-                SOURCE
+                  })
+                )
               )
             )
           }
@@ -320,15 +312,14 @@ function HideMessage({
 
   const confirm = () => {
     setOpen(false);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         hide.withOptimisticUpdate(hideUpdate)({
           classId: scope.classId,
           messageId: message.id,
           slug: scope.slug,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 

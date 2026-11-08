@@ -1,27 +1,22 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import {
   connectionMode,
-  createAcceptanceConnection,
+  seedConnection,
 } from "@repo/backend/scripts/content/acceptance/connection";
-import { Array as Arr, Effect, Exit, FileSystem, MutableList } from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Effect } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
-
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
 describe("acceptance connection", () => {
   afterEach(() => {
@@ -29,45 +24,48 @@ describe("acceptance connection", () => {
   });
 
   it.effect(
-    "seeds the connection the mode names through the seed function",
+    "stores the Classroom connection of the school in the state it names",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-connection-test-",
+        const backend = localConvexDouble();
+
+        yield* seedConnection("acc-1", "reconnect").pipe(
+          Effect.provide(backend.layer)
+        );
+
+        expect(backend.paths()).toEqual(["connectors/seed:connection"]);
+        expect(backend.argsOf("connectors/seed:connection")).toEqual({
+          slug: "acc-1",
+          status: "reconnect",
         });
-        mocks.read.mockReturnValue(
-          Effect.succeed({ backend: `${root}/backend` })
-        );
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(spec.stdoutPath, "null");
-          })
-        );
-
-        yield* connectionMode.run(root, ["acc-1234abcd", "reconnect"]);
-
-        const [spec] = MutableList.toArray(specs);
-        expect(Arr.drop(spec?.args ?? [], 1)).toEqual([
-          "run",
-          "connectors/seed:connection",
-          '{"slug":"acc-1234abcd","status":"reconnect"}',
-        ]);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      })
   );
 
-  it.effect("seeds no connection when no local runtime is running", () =>
+  it.effect("runs what the mode names against the runtime of the root", () =>
     Effect.gen(function* () {
-      mocks.read.mockReturnValue(Effect.void);
+      const backend = localConvexDouble();
+      mocks.layer.mockReturnValue(backend.layer);
 
-      const exit = yield* Effect.exit(
-        createAcceptanceConnection("/root", "acc-1234abcd", "active")
-      );
+      yield* connectionMode.run("/root", ["acc-1", "reconnect"]);
 
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      expect(backend.argsOf("connectors/seed:connection")).toEqual({
+        slug: "acc-1",
+        status: "reconnect",
+      });
+      expect(mocks.layer).toHaveBeenCalledWith("/root");
+    }).pipe(Effect.provide(nodePlatform))
+  );
+
+  it.effect("refuses the mode without its arguments", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* connectionMode.run("/root", []).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "AcceptanceRuntimeError",
+        message:
+          "Usage: acceptance connection <school-slug> <active|reconnect>",
+      });
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

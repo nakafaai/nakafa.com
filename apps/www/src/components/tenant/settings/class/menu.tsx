@@ -28,9 +28,7 @@ import {
   type SchoolClass,
 } from "@/components/tenant/settings/class/changes";
 import { ClassTeachersDialog } from "@/components/tenant/settings/class/teachers";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/class/menu";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The restore action of an archived classroom. The classroom shows as active at once. */
 export function SchoolClassRestore({
@@ -51,7 +49,7 @@ export function SchoolClassRestore({
         icon={ArchiveRestoreIcon}
         onClick={() =>
           startTransition(() =>
-            saveSchool(() => restore({ classId: row.id, slug }), SOURCE)
+            runSchoolWrite(schoolCall(() => restore({ classId: row.id, slug })))
           )
         }
       >
@@ -117,25 +115,27 @@ export function SchoolClassMenu({
           icon={Archive02Icon}
           onClick={() =>
             startTransition(() =>
-              saveSchool(
-                () => archive({ classId: row.id, slug }),
-                SOURCE,
-                () =>
-                  toast.success(
-                    { title: "school-class-archived.title" },
-                    {
-                      action: {
-                        label: "undo",
-                        onClick: () =>
-                          startTransition(() =>
-                            saveSchool(
-                              () => restore({ classId: row.id, slug }),
-                              SOURCE
-                            )
-                          ),
-                      },
-                    }
-                  )
+              runSchoolWrite(
+                schoolCall(() => archive({ classId: row.id, slug })),
+                {
+                  onSaved: () =>
+                    toast.success(
+                      { title: "school-class-archived.title" },
+                      {
+                        action: {
+                          label: "undo",
+                          onClick: () =>
+                            startTransition(() =>
+                              runSchoolWrite(
+                                schoolCall(() =>
+                                  restore({ classId: row.id, slug })
+                                )
+                              )
+                            ),
+                        },
+                      }
+                    ),
+                }
               )
             )
           }
@@ -152,9 +152,10 @@ export function SchoolClassMenu({
           label={t("class-subject")}
           onSave={(subject) =>
             startTransition(() =>
-              saveSchool(
-                () => changeSubject({ classId: row.id, slug, subject }),
-                SOURCE
+              runSchoolWrite(
+                schoolCall(() =>
+                  changeSubject({ classId: row.id, slug, subject })
+                )
               )
             )
           }
@@ -181,7 +182,9 @@ export function SchoolClassMenu({
           label={t("class-name")}
           onSave={(name) =>
             startTransition(() =>
-              saveSchool(() => rename({ classId: row.id, name, slug }), SOURCE)
+              runSchoolWrite(
+                schoolCall(() => rename({ classId: row.id, name, slug }))
+              )
             )
           }
           open={dialogs.isOpen("rename")}

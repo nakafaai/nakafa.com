@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
+import { waitForQuiet } from "@/e2e/support/quiet";
 
 /**
  * The owner's rule (31 Oct): in a group means really joined, in one frame, or else a clear gap. Reads every header
@@ -166,9 +167,6 @@ const GROUP_CONTROLS =
 const OPEN_OVERLAY =
   '[role="menu"]:visible, [role="dialog"]:visible, [data-slot="popover-content"]:visible';
 
-/** How long a page's groups must stand unchanged to count as at rest. */
-const SETTLED_MS = 500;
-
 /** What is open and not on its way out. */
 const STAYS_OPEN =
   '[role="menu"]:not([data-closed]):visible, [role="dialog"]:not([data-closed]):visible, [data-slot="popover-content"]:not([data-closed]):visible';
@@ -259,7 +257,7 @@ export const expectGroupsKeepShape = Effect.fn(
         yield* Effect.promise(() =>
           expect(async () => {
             const before = await readPartRadii(page);
-            await page.waitForTimeout(SETTLED_MS);
+            await waitForQuiet(page);
             expect(await readPartRadii(page)).toEqual(before);
           }).toPass()
         );

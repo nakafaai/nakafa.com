@@ -1,6 +1,9 @@
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { signInInvitedMember } from "@repo/backend/scripts/content/acceptance/member";
+import { localConvexLayer } from "@repo/backend/scripts/content/acceptance/convex";
+import {
+  SessionCookie,
+  writeFixture,
+} from "@repo/backend/scripts/content/acceptance/fixture";
+import { seedInvitedMember } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
@@ -9,31 +12,23 @@ import { ownerAddress } from "@repo/backend/scripts/content/acceptance/school";
 import { Effect, Schema } from "effect";
 
 /**
- * Signs in the first Owner of a school that `createAcceptanceSchool` opened.
- * The new account holds the Owner's address, so the school's invite waits for
- * it. The account is then a member of the school, and its session cookie goes
- * to `output`.
+ * Signs in the first Owner of a school that `seedSchool` opened and answers its
+ * session cookie. The new account holds the Owner's address, so the school's
+ * invite waits for it, and the account is then a member of the school.
  */
-export const createAcceptanceOwner = Effect.fn("contentAcceptance.createOwner")(
-  function* (root: string, slug: string, output: string) {
-    const runtime = yield* readLocalRuntime(root);
-    if (runtime === undefined) {
-      return yield* acceptanceRuntimeError(
-        "Run bun run acceptance:prepare and start acceptance before creating an owner."
-      );
-    }
-    yield* signInInvitedMember(runtime, ownerAddress(slug), output);
-  }
-);
+export const seedOwner = Effect.fn("contentAcceptance.seedOwner")(function* (
+  slug: string
+) {
+  return yield* seedInvitedMember(ownerAddress(slug));
+});
 
 /** The usage of the owner mode: the school of the Owner, then the file for the session cookie. */
 const USAGE = "owner <school-slug> <cookie-file>";
 const OwnerArguments = Schema.Tuple([Schema.String, Schema.String]);
 
 /**
- * The owner mode of the acceptance command line: signs in the first Owner of the
- * school that the command names, and writes its session cookie to the file that
- * the command names.
+ * The owner mode of the acceptance command line: signs in the Owner of the school
+ * that the command names, and writes its session cookie to the file it names.
  */
 export const ownerMode = {
   mode: "owner",
@@ -47,6 +42,9 @@ export const ownerMode = {
       OwnerArguments,
       args
     );
-    return yield* createAcceptanceOwner(root, slug, output);
+    const cookie = yield* seedOwner(slug).pipe(
+      Effect.provide(localConvexLayer(root))
+    );
+    yield* writeFixture(output, SessionCookie, cookie);
   }),
 } satisfies AcceptanceMode;

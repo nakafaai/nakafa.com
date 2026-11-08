@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Effect } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { runFixture } from "@/e2e/support/acceptance";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -134,7 +135,7 @@ test("a pass holder sees when the pass ends, finds the receipt in Payments, and 
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
-      yield* runAcceptanceCommand("xendit", learner.userId, "pass");
+      yield* runFixture(seedXendit(learner.userId, "pass"));
       yield* Effect.promise(async () => {
         await page.goto(SUBSCRIPTIONS);
         await expect(page.getByText("Your Pro pass runs until")).toBeVisible();
@@ -169,7 +170,7 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
-      yield* runAcceptanceCommand("xendit", learner.userId, "plan");
+      yield* runFixture(seedXendit(learner.userId, "plan"));
       yield* Effect.promise(async () => {
         await page.goto(SUBSCRIPTIONS);
         await expect(page.getByText("Xendit", { exact: true })).toBeVisible();

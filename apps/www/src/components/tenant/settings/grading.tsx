@@ -31,7 +31,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -39,10 +38,11 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
 import {
   SchemeVersionAdd,
   SchemeVersionDialog,
@@ -53,8 +53,7 @@ import {
   type SchemeVersion,
   SchemeVersionsContext,
 } from "@/components/tenant/settings/versions";
-
-const SOURCE = "components/tenant/settings/grading";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many versions one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -143,11 +142,11 @@ function GradingTable({
     return failed ? (
       <LoadFailure onRetry={reloadPage} />
     ) : (
-      <TableEmpty
-        act="thinking"
+      <EmptyState
         description={t("grading-empty-description", {
           kktp: DEFAULT_GRADING_SCHEME.kktp,
         })}
+        scene={<EmptyNina act="thinking" />}
         title={t("grading-empty")}
       />
     );
@@ -284,7 +283,9 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
             onClick={() => {
               dialogs.close();
               startTransition(() =>
-                saveSchool(() => remove({ schemeId: version.id, slug }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => remove({ schemeId: version.id, slug }))
+                )
               );
             }}
             variant="destructive"
