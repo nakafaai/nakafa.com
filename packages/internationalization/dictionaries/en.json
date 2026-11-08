@@ -2282,7 +2282,6 @@
     "lowest": "Lowest",
     "range": "Range",
     "mean": "Mean",
-    "series-mean": "Mean of {series}",
     "points": "Points",
     "input": "Input",
     "output": "Output",

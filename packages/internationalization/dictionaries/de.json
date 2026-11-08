@@ -2282,7 +2282,6 @@
     "lowest": "Niedrigster Wert",
     "range": "Spannweite",
     "mean": "Mittelwert",
-    "series-mean": "Mittelwert von {series}",
     "points": "Punkte",
     "input": "Eingabe",
     "output": "Ausgabe",
