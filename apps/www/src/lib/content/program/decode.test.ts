@@ -11,7 +11,7 @@ import {
   testProgramRoot,
   testProgramRowJson,
   testPublishedProgram,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 describe("published program decoding", () => {
   it.effect("decodes exact program and curriculum rows", () =>

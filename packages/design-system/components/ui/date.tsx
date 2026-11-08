@@ -11,7 +11,7 @@ import { TimeSelect } from "@repo/design-system/components/ui/time";
 import {
   getCalendarDayKey,
   parseCalendarDayKey,
-} from "@repo/design-system/lib/calendar/day-key";
+} from "@repo/design-system/lib/calendar/day";
 import {
   joinLocalTime,
   type LocalTimeParts,

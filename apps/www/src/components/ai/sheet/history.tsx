@@ -16,7 +16,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { useChatList } from "@/components/ai/chat/chats";
+import { useChatList } from "@/components/ai/chat/list";
 import { useAi } from "@/components/ai/context";
 import { Authenticated } from "@/components/auth/gate";
 

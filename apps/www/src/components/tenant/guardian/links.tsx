@@ -1,5 +1,9 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import { Link01Icon } from "@hugeicons/core-free-icons";
+import {
+  InboxIcon,
+  Link01Icon,
+  UserMultipleIcon,
+} from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -36,6 +40,7 @@ import {
   TableSearch,
   useServerSearch,
 } from "@/components/shared/table/toolbar";
+import { TableViews } from "@/components/shared/table/views";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
@@ -110,7 +115,9 @@ export function GuardianLinksSettings() {
 /**
  * The links of the school, read a page at a time, in the one card of a settings table: the
  * table, which loads more rows as its end comes into view, beside the open link; or the empty
- * state while the school has no link. The card stands from the first frame.
+ * state while the school has no link. While a parent's request waits, Links and Requests views
+ * stand above the card, and Requests fills it with the waiting requests. The card stands from
+ * the first frame.
  */
 function GuardianLinksBody() {
   const t = useTranslations("SchoolGuardians");
@@ -139,42 +146,118 @@ function GuardianLinksBody() {
   const failed = PaginatedQueryResult.isFailure(pagination);
   // Both reads arrive before the list draws, so a waiting request never pushes the table down.
   if (Option.isNone(kept) || PaginatedQueryResult.isLoadingFirstPage(waiting)) {
-    return <LinksFrame links={[]}>{null}</LinksFrame>;
+    return (
+      <LinksFrame links={[]}>
+        <TablePageBody>{null}</TablePageBody>
+      </LinksFrame>
+    );
   }
   if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
     return (
       <LinksFrame links={kept.value}>
-        {failed ? (
-          <LoadFailure onRetry={reloadPage} />
-        ) : (
-          <EmptyState
-            description={t("links-empty-description")}
-            scene={<EmptyNina act="typing" />}
-            title={t("links-empty")}
-          />
-        )}
+        <TablePageBody>
+          {failed ? (
+            <LoadFailure onRetry={reloadPage} />
+          ) : (
+            <EmptyState
+              description={t("links-empty-description")}
+              scene={<EmptyNina act="typing" />}
+              title={t("links-empty")}
+            />
+          )}
+        </TablePageBody>
       </LinksFrame>
     );
   }
 
   return (
     <LinksFrame links={kept.value}>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <WaitingRequests requests={waiting.results} />
-      {PaginatedQueryResult.isCanLoadMore(waiting) ? (
-        <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
-      ) : null}
-      <GuardianLinkTable />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
+      <LinkViews
+        requests={<WaitingList />}
+        waits={!Arr.isReadonlyArrayEmpty(waiting.results)}
+      >
+        {failed ? <DataFailure onRetry={reloadPage} /> : null}
+        <GuardianLinkTable />
+        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+        ) : null}
+      </LinkViews>
     </LinksFrame>
   );
 }
 
 /**
- * The one card of a settings table, in the list's pane, beside the open link: the links it holds
- * are the ones the table lists and the open link is found in.
+ * The one card of the links page, under the Links and Requests views while a parent's request waits: the links the
+ * caller composes, or the waiting requests (`requests`). The views stand only while a request waits, so the last
+ * answer takes them away and brings the links back.
+ */
+function LinkViews({
+  children,
+  requests,
+  waits,
+}: {
+  children: ReactNode;
+  /** The waiting requests, which the Requests view shows in the links' place. */
+  requests: ReactNode;
+  /** Whether a parent's request waits for an answer. */
+  waits: boolean;
+}) {
+  const t = useTranslations("SchoolGuardians");
+  const [view, setView] = useState<"links" | "requests">("links");
+  const shown = waits ? view : "links";
+
+  return (
+    <TablePageBody
+      views={
+        waits ? (
+          <TableViews
+            label={t("links-views")}
+            onChoose={setView}
+            view={shown}
+            views={[
+              {
+                icon: UserMultipleIcon,
+                label: t("view-links"),
+                value: "links",
+              },
+              {
+                icon: InboxIcon,
+                label: t("view-requests"),
+                value: "requests",
+              },
+            ]}
+          />
+        ) : null
+      }
+    >
+      {shown === "requests" ? requests : children}
+    </TablePageBody>
+  );
+}
+
+/** The waiting requests, read a page at a time, the next page loading as the table's end comes into view. */
+function WaitingList() {
+  const { slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const waiting = usePaginatedQuery(
+    guardians.requests.waiting,
+    isSettled ? { slug } : "skip",
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  return (
+    <>
+      <WaitingRequests requests={waiting.results} />
+      {PaginatedQueryResult.isCanLoadMore(waiting) ? (
+        <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * The list's pane of the links page, beside the open link, around the one card of a settings table that the caller
+ * composes: the links it holds are the ones the table lists and the open link is found in.
  */
 function LinksFrame({
   children,
@@ -188,9 +271,7 @@ function LinksFrame({
   return (
     <LinksContext value={links}>
       <Panes id="links">
-        <PanesList>
-          <TablePageBody>{children}</TablePageBody>
-        </PanesList>
+        <PanesList>{children}</PanesList>
         <PanesDetail label={t("link-detail")}>
           <GuardianLinkDetail />
         </PanesDetail>

@@ -12,8 +12,8 @@ import {
   toWorldRoutePoint,
   type WorldPoint2,
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Schema } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef } from "react";

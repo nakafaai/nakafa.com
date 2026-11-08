@@ -17,11 +17,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import { usePromptInputAttachments } from "@repo/design-system/lib/prompt/context";
 import type {
   PromptInputFile,
   PromptInputRefusal,
-} from "@repo/design-system/lib/prompt-input/files";
+} from "@repo/design-system/lib/prompt/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
 import { type ReactNode, useEffect, useRef } from "react";
