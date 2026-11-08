@@ -2,13 +2,19 @@ import { refusal } from "@repo/backend/confect/tenancy/errors";
 import { Schema } from "effect";
 
 /** The account is not an active Nakafa operator, so an operator command refuses it. */
-export class NotOperator extends Schema.TaggedError<NotOperator>()(
+export class NotOperator extends Schema.TaggedError<
+  NotOperator,
+  { readonly brand: unique symbol }
+>()(
   "NotOperator",
   refusal("NOT_OPERATOR", "Only an active Nakafa operator may do this.")
 ) {}
 
 /** The school is suspended, so an operator may not change it or ask it for a visit. */
-export class TenantSuspended extends Schema.TaggedError<TenantSuspended>()(
+export class TenantSuspended extends Schema.TaggedError<
+  TenantSuspended,
+  { readonly brand: unique symbol }
+>()(
   "TenantSuspended",
   refusal(
     "TENANT_SUSPENDED",
@@ -17,7 +23,10 @@ export class TenantSuspended extends Schema.TaggedError<TenantSuspended>()(
 ) {}
 
 /** The operator already has a requested or approved visit to this school. */
-export class VisitOpen extends Schema.TaggedError<VisitOpen>()(
+export class VisitOpen extends Schema.TaggedError<
+  VisitOpen,
+  { readonly brand: unique symbol }
+>()(
   "VisitOpen",
   refusal(
     "VISIT_OPEN",
@@ -26,7 +35,10 @@ export class VisitOpen extends Schema.TaggedError<VisitOpen>()(
 ) {}
 
 /** A visit the school has already answered, or that is not requested at all. */
-export class VisitNotPending extends Schema.TaggedError<VisitNotPending>()(
+export class VisitNotPending extends Schema.TaggedError<
+  VisitNotPending,
+  { readonly brand: unique symbol }
+>()(
   "VisitNotPending",
   refusal(
     "VISIT_NOT_PENDING",
@@ -35,13 +47,19 @@ export class VisitNotPending extends Schema.TaggedError<VisitNotPending>()(
 ) {}
 
 /** Ending a visit that the school never approved. */
-export class VisitNotApproved extends Schema.TaggedError<VisitNotApproved>()(
+export class VisitNotApproved extends Schema.TaggedError<
+  VisitNotApproved,
+  { readonly brand: unique symbol }
+>()(
   "VisitNotApproved",
   refusal("VISIT_NOT_APPROVED", "Only an approved visit can be ended.")
 ) {}
 
 /** Replacing the Owners of a school that a signed-in Owner holds. */
-export class OwnerClaimed extends Schema.TaggedError<OwnerClaimed>()(
+export class OwnerClaimed extends Schema.TaggedError<
+  OwnerClaimed,
+  { readonly brand: unique symbol }
+>()(
   "OwnerClaimed",
   refusal(
     "OWNER_CLAIMED",
@@ -50,7 +68,10 @@ export class OwnerClaimed extends Schema.TaggedError<OwnerClaimed>()(
 ) {}
 
 /** Approving an operator who already holds a person of another kind in the school. */
-export class OperatorHasPerson extends Schema.TaggedError<OperatorHasPerson>()(
+export class OperatorHasPerson extends Schema.TaggedError<
+  OperatorHasPerson,
+  { readonly brand: unique symbol }
+>()(
   "OperatorHasPerson",
   refusal(
     "OPERATOR_HAS_PERSON",
@@ -59,7 +80,10 @@ export class OperatorHasPerson extends Schema.TaggedError<OperatorHasPerson>()(
 ) {}
 
 /** Granting operator access to an account ID that names no account. */
-export class AccountNotFound extends Schema.TaggedError<AccountNotFound>()(
+export class AccountNotFound extends Schema.TaggedError<
+  AccountNotFound,
+  { readonly brand: unique symbol }
+>()(
   "AccountNotFound",
   refusal("ACCOUNT_NOT_FOUND", "No account has this ID.")
 ) {}

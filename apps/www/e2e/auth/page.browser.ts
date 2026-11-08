@@ -1,9 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { COVER } from "@repo/design-system/components/pool/cover";
-import { Array as Arr, Duration, Effect, MutableList, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Schema } from "effect";
 import { expectSignInParts, NINA } from "@/e2e/support/auth";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForFrames } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const SIGN_IN = "/en/auth";
@@ -18,8 +19,8 @@ const SENTENCE = "So your progress stays saved.";
 const GOOGLE = "Continue with Google";
 const CONSENT =
   "By signing in, you agree to the Terms of Service and the Privacy Policy.";
-/** Two reads this far apart show whether the pool still moves, in milliseconds. */
-const READS_APART_MILLISECONDS = 500;
+/** Two reads this many frames apart show whether the pool still moves. */
+const READS_APART_FRAMES = 30;
 /** A member may reach this far past the column's edge, in pixels, from rounding alone. */
 const EDGE_SLACK = 0.5;
 /** A drag ends this far to the left of the column, in pixels. */
@@ -184,7 +185,7 @@ const waitForRest = Effect.fn("NakafaE2E.waitForPoolRest")(function* (
       const first = await transformsOf(page);
       expect(first.length).toBeGreaterThan(0);
       expect(Arr.every(first, (transform) => transform !== "")).toBe(true);
-      await page.waitForTimeout(READS_APART_MILLISECONDS);
+      await waitForFrames(page, READS_APART_FRAMES);
       expect(await transformsOf(page)).toEqual(first);
     }).toPass({ timeout: readinessTimeoutMilliseconds })
   );
@@ -337,7 +338,7 @@ const verifyStill = Effect.fn("NakafaE2E.verifyPoolStillWithReducedMotion")(
     yield* openSignIn(page);
     yield* waitForPlaced(page);
     const first = yield* Effect.promise(() => transformsOf(page));
-    yield* Effect.sleep(Duration.millis(READS_APART_MILLISECONDS));
+    yield* Effect.promise(() => waitForFrames(page, READS_APART_FRAMES));
     expect(yield* Effect.promise(() => transformsOf(page))).toEqual(first);
   }
 );

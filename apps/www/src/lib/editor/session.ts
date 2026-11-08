@@ -8,7 +8,10 @@ import type { EditorState, Transaction } from "@tiptap/pm/state";
 import { type Effect, type Ref, Schema, type Semaphore } from "effect";
 
 /** A call to the server that failed for a reason the loop does not decide: the network, a denied access, a refused read, or a refused batch. */
-export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
+export class SyncFailed extends Schema.TaggedError<
+  SyncFailed,
+  { readonly brand: unique symbol }
+>()("SyncFailed", {
   reason: Schema.String,
 }) {}
 
@@ -18,10 +21,10 @@ export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
  * short wait. A round that still meets the fold when its waits end fails with it, and
  * `tickThroughFold` runs the round again on the cadence of `FOLD_RETRY`.
  */
-export class SyncFolding extends Schema.TaggedError<SyncFolding>()(
-  "SyncFolding",
-  {}
-) {}
+export class SyncFolding extends Schema.TaggedError<
+  SyncFolding,
+  { readonly brand: unique symbol }
+>()("SyncFolding", {}) {}
 
 /**
  * A step that does not apply to a document: ProseMirror refused it, it threw while
@@ -29,12 +32,12 @@ export class SyncFolding extends Schema.TaggedError<SyncFolding>()(
  * makes nests past the bound of the contract. The reason is the text ProseMirror gave,
  * or the bound it passes. The loop skips or drops the step, and logs the reason.
  */
-export class StepRejected extends Schema.TaggedError<StepRejected>()(
-  "StepRejected",
-  {
-    reason: Schema.String,
-  }
-) {}
+export class StepRejected extends Schema.TaggedError<
+  StepRejected,
+  { readonly brand: unique symbol }
+>()("StepRejected", {
+  reason: Schema.String,
+}) {}
 
 /**
  * Steps of this editor that the document no longer takes: another editor changed the
@@ -44,22 +47,22 @@ export class StepRejected extends Schema.TaggedError<StepRejected>()(
  * once, from the first round that completes after the change, so the editor can tell
  * its user once.
  */
-export class SyncDropped extends Schema.TaggedClass<SyncDropped>()(
-  "SyncDropped",
-  {
-    count: Schema.Natural,
-  }
-) {}
+export class SyncDropped extends Schema.TaggedClass<
+  SyncDropped,
+  { readonly brand: unique symbol }
+>()("SyncDropped", {
+  count: Schema.Natural,
+}) {}
 
 /**
  * The editor closed while the loop worked on it, so its view takes no more changes. A change
  * to a closed editor is neither applied nor stale, so the port fails with this error, and the
  * loop stops there.
  */
-export class EditorClosed extends Schema.TaggedError<EditorClosed>()(
-  "EditorClosed",
-  {}
-) {}
+export class EditorClosed extends Schema.TaggedError<
+  EditorClosed,
+  { readonly brand: unique symbol }
+>()("EditorClosed", {}) {}
 
 /**
  * The server calls the loop makes. Each one wraps a Convex function, and maps every failure to

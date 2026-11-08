@@ -22,10 +22,10 @@ export const MEMORY_PAUSED = denied(
  * the failure, because the call was given the learner's query and what the
  * platform says of a failed call is not ours to keep.
  */
-export class MemoryReadError extends Schema.TaggedError<MemoryReadError>()(
-  "MemoryReadError",
-  {}
-) {}
+export class MemoryReadError extends Schema.TaggedError<
+  MemoryReadError,
+  { readonly brand: unique symbol }
+>()("MemoryReadError", {}) {}
 
 /** Ends a read that failed in any way, without its message. */
 function unreadable() {

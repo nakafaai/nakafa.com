@@ -13,6 +13,7 @@ import {
   visibleShare,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { holdChunkHolding, openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
@@ -161,7 +162,7 @@ test("home lesson window mounts its visual once half of the window is on the scr
                 LAB_VISIBLE_SHARE - EDGE_STEP
               );
               yield* expectWindowShare(root, LAB_VISIBLE_SHARE - EDGE_STEP);
-              yield* Effect.promise(() => page.waitForTimeout(500));
+              yield* Effect.promise(() => waitForQuiet(page));
               yield* Effect.promise(() => expect(visual).toHaveCount(0));
 
               // Just past half, the observer crosses the share and the lab mounts.
@@ -220,7 +221,7 @@ test("home lesson window keeps its visual mounted once the window has left the s
                   window.scrollTo(0, document.documentElement.scrollHeight)
                 )
               );
-              yield* Effect.promise(() => page.waitForTimeout(500));
+              yield* Effect.promise(() => waitForQuiet(page));
               const box = yield* Effect.promise(() => visual.boundingBox());
               expect(box?.y).toBeLessThan(0);
               yield* Effect.promise(() => expect(visual).toBeAttached());
@@ -265,7 +266,7 @@ test("home lesson window draws no layout shift in its section while it is reveal
                   timeout: readinessTimeoutMilliseconds,
                 })
               );
-              yield* Effect.promise(() => page.waitForTimeout(500));
+              yield* Effect.promise(() => waitForQuiet(page));
 
               const shiftsAfter = yield* Effect.promise(() =>
                 countSectionShifts(page)

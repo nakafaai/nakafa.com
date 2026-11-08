@@ -7,22 +7,22 @@ import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 export const XENDIT_ORIGIN = "https://api.xendit.co";
 
 /** Xendit answered with a status Nakafa does not expect, or the call never got an answer. */
-export class XenditRequestFailed extends Schema.TaggedError<XenditRequestFailed>()(
-  "XenditRequestFailed",
-  {
-    status: Schema.Int,
-    errorCode: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class XenditRequestFailed extends Schema.TaggedError<
+  XenditRequestFailed,
+  { readonly brand: unique symbol }
+>()("XenditRequestFailed", {
+  status: Schema.Int,
+  errorCode: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** Xendit answered with a body that does not match the documented contract. */
-export class XenditDecodeFailed extends Schema.TaggedError<XenditDecodeFailed>()(
-  "XenditDecodeFailed",
-  {
-    message: Schema.String,
-  }
-) {}
+export class XenditDecodeFailed extends Schema.TaggedError<
+  XenditDecodeFailed,
+  { readonly brand: unique symbol }
+>()("XenditDecodeFailed", {
+  message: Schema.String,
+}) {}
 
 /** The Basic credentials for one call: the secret key as the user name, an empty password. */
 const readXenditSecret = Config.Redacted("XENDIT_API_KEY");

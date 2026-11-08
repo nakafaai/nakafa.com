@@ -16,9 +16,11 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   type FamilyItem,
@@ -26,9 +28,7 @@ import {
 } from "@/components/tenant/guardian/change";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/family";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * A student's parents: the links the student and the school started, each with its state,
@@ -69,9 +69,9 @@ function FamilyList() {
   }
   if (Arr.isReadonlyArrayEmpty(links.value)) {
     return (
-      <TableEmpty
-        act="typing"
+      <EmptyState
         description={t("family-empty-description")}
+        scene={<EmptyNina act="typing" />}
         title={t("links-empty")}
       />
     );
@@ -153,18 +153,20 @@ function ParentInviteDialog({
     const studentId = viewer.value.person.id;
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           start({
             email: address.value,
             guardianName: guardianName.value,
             slug,
             studentId,
-          }),
-        SOURCE,
-        () => {
-          setName("");
-          setEmail("");
+          })
+        ),
+        {
+          onSaved: () => {
+            setName("");
+            setEmail("");
+          },
         }
       )
     );

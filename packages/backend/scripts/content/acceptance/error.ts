@@ -31,10 +31,10 @@ export const sanitizeAcceptanceCommandError = (
 };
 
 /** Expected failure during isolated fixture preparation or local lifecycle control. */
-export class AcceptanceRuntimeError extends Schema.TaggedError<AcceptanceRuntimeError>()(
-  "AcceptanceRuntimeError",
-  { message: Schema.String }
-) {}
+export class AcceptanceRuntimeError extends Schema.TaggedError<
+  AcceptanceRuntimeError,
+  { readonly brand: unique symbol }
+>()("AcceptanceRuntimeError", { message: Schema.String }) {}
 
 export const acceptanceRuntimeError = (message: string) =>
   new AcceptanceRuntimeError({ message });

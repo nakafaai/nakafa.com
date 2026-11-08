@@ -8,6 +8,7 @@ import {
   showLessonWindow,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForFrames } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
@@ -17,8 +18,8 @@ const PROJECTILE_TAB_INDEX = 0;
 const ATOM_TAB_INDEX = 2;
 const CELL_TAB_INDEX = 3;
 
-/** How long the scene is left between its two captures, so a running frame loop would move it. */
-const STILL_WAIT_MS = 800;
+/** The frames the scene is left between its two captures, so a running frame loop would move it. */
+const STILL_FRAMES = 48;
 
 /**
  * With reduced motion a lab's scene is drawn on demand, so after its first frame
@@ -42,7 +43,7 @@ const expectSceneStill = Effect.fn("NakafaE2E.expectSceneStill")(function* (
     expect(canvas).toBeAttached({ timeout: readinessTimeoutMilliseconds })
   );
   const first = yield* Effect.promise(() => canvas.screenshot());
-  yield* Effect.promise(() => page.waitForTimeout(STILL_WAIT_MS));
+  yield* Effect.promise(() => waitForFrames(page, STILL_FRAMES));
   const second = yield* Effect.promise(() => canvas.screenshot());
   expect(second.equals(first)).toBe(true);
 });

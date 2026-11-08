@@ -66,10 +66,10 @@ type ToastSend = (sonner: typeof SonnerToast) => void;
 const PENDING_TOAST_LIMIT = 20;
 
 /** Raised when the Sonner library cannot load. The held calls wait for the next toast to load it again. */
-class ToastLoadFailed extends Schema.TaggedError<ToastLoadFailed>()(
-  "ToastLoadFailed",
-  { cause: Schema.Unknown }
-) {}
+class ToastLoadFailed extends Schema.TaggedError<
+  ToastLoadFailed,
+  { readonly brand: unique symbol }
+>()("ToastLoadFailed", { cause: Schema.Unknown }) {}
 
 const toastRequested = MutableRef.make(false);
 const sonnerLoading = MutableRef.make(false);

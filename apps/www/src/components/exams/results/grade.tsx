@@ -19,7 +19,7 @@ import {
   gradedStudents,
   typedPoints,
 } from "@/components/exams/results/graded";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The points a teacher gives one answer, as a teacher writes a mark beside an answer on a paper: a whole
@@ -118,8 +118,8 @@ export function GradeField({
     if (typed.value === answer.points) {
       return;
     }
-    runExamAction(
-      sentAction(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         grade({
           attemptId: answer.attemptId,
           points: typed.value,
@@ -128,7 +128,7 @@ export function GradeField({
           slug,
         })
       ),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+      { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
     );
   };
 

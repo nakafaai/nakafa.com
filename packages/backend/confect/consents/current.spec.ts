@@ -12,15 +12,15 @@ import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 /** The browser's pending decision belongs to a different signed-in account. */
-export class ConsentAccountChanged extends Schema.TaggedError<ConsentAccountChanged>()(
-  "ConsentAccountChanged",
-  {
-    code: Schema.Literal("CONSENT_ACCOUNT_CHANGED"),
-    message: Schema.Literal(
-      "The active account changed before consent could be saved."
-    ),
-  }
-) {}
+export class ConsentAccountChanged extends Schema.TaggedError<
+  ConsentAccountChanged,
+  { readonly brand: unique symbol }
+>()("ConsentAccountChanged", {
+  code: Schema.Literal("CONSENT_ACCOUNT_CHANGED"),
+  message: Schema.Literal(
+    "The active account changed before consent could be saved."
+  ),
+}) {}
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({

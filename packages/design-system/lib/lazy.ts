@@ -7,10 +7,10 @@ type LazyComponent = Awaited<
 >["default"];
 
 /** An import failed. It carries the failure, which the caller reads as the import threw it. */
-class ChunkReadFailed extends Schema.TaggedError<ChunkReadFailed>()(
-  "ChunkReadFailed",
-  { cause: Schema.Unknown }
-) {}
+class ChunkReadFailed extends Schema.TaggedError<
+  ChunkReadFailed,
+  { readonly brand: unique symbol }
+>()("ChunkReadFailed", { cause: Schema.Unknown }) {}
 
 /**
  * The attribute of the root element that says the page is going, and why: the
