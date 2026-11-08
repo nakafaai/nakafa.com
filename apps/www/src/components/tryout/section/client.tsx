@@ -1,5 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
@@ -8,7 +9,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { useNow } from "@/components/player/now";
 import { PlayerTimer } from "@/components/player/timer";
-import { PlayerViewSwitch } from "@/components/player/view";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
@@ -23,6 +23,7 @@ import {
 import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
+  TryoutReviewView,
 } from "@/components/tryout/review/frame";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
 import {
@@ -41,7 +42,9 @@ import {
   isTryoutRuntimeRunning,
   isTryoutStateLive,
   selectActionAttempt,
+  type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
@@ -273,53 +276,75 @@ function ResolvedTryoutSectionPage({
     );
   }
 
-  const score = actionAttempt?.section?.score ?? null;
+  return (
+    <TryoutPage>
+      <SectionLock binding={binding} />
+      <TryoutSectionBody
+        binding={binding}
+        header={
+          <TryoutSectionHeader
+            actionAttempt={actionAttempt}
+            activeAttempt={activeAttempt}
+            binding={binding}
+            sectionStatus={sectionStatus}
+          >
+            <TryoutReviewView />
+          </TryoutSectionHeader>
+        }
+        pending={actionAttempt === undefined}
+        runtimeState={runtimeState}
+        score={actionAttempt?.section?.score ?? null}
+      >
+        {children}
+      </TryoutSectionBody>
+    </TryoutPage>
+  );
+}
+
+/**
+ * The section page under its header once nothing runs: a finished section's review in the player that ran
+ * it, or the section's card, which says its facts, its score, or nothing while the learner's read is pending.
+ */
+function TryoutSectionBody({
+  binding,
+  children,
+  header,
+  pending,
+  runtimeState,
+  score,
+}: Pick<TryoutSectionPageClientProps, "binding" | "children"> & {
+  /** The page's header, which joins the review's frame in a review. */
+  header: ReactNode;
+  /** The learner read that decides the card has not answered yet. */
+  pending: boolean;
+  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
+  score: TryoutScoreResult | null;
+}) {
+  const { page } = useTryoutSectionPage();
   if (binding && score && runtimeState.kind === "review") {
     return (
-      <TryoutPage>
-        <SectionLock binding={binding} />
-        <TryoutReviewFrame
-          header={
-            <TryoutSectionHeader
-              actionAttempt={actionAttempt}
-              activeAttempt={activeAttempt}
-              binding={binding}
-              sectionStatus={sectionStatus}
-            >
-              <PlayerViewSwitch />
-            </TryoutSectionHeader>
-          }
-          limit={Option.some(page.section.timeLimitSeconds)}
-          mode={binding.mode}
-          runtime={runtimeState.runtime}
-          score={score}
-        >
-          {children}
-        </TryoutReviewFrame>
-      </TryoutPage>
+      <TryoutReviewFrame
+        header={header}
+        limit={Option.some(page.section.timeLimitSeconds)}
+        mode={binding.mode}
+        runtime={runtimeState.runtime}
+        score={score}
+      >
+        {children}
+      </TryoutReviewFrame>
     );
   }
 
   return (
-    <TryoutPage>
-      <SectionLock binding={binding} />
-      <TryoutSectionHeader
-        actionAttempt={actionAttempt}
-        activeAttempt={activeAttempt}
-        binding={binding}
-        sectionStatus={sectionStatus}
-      />
+    <>
+      {header}
       <TryoutPageBody>
         <TryoutSectionSummary
-          value={{
-            pending: actionAttempt === undefined,
-            score,
-            section: page.section,
-          }}
+          value={{ pending, score, section: page.section }}
         />
-        <TryoutFinishedPlace pending={actionAttempt === undefined} />
+        <TryoutFinishedPlace pending={pending} />
       </TryoutPageBody>
-    </TryoutPage>
+    </>
   );
 }
 

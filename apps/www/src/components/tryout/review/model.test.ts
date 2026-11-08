@@ -67,10 +67,8 @@ describe("verdictOfQuestion", () => {
 describe("readsWhole", () => {
   it("reads a section whole only when every question carries its key", () => {
     const keyed = { ...makeTryoutBody("a"), key: KEY };
-    expect(readsWhole([{ body: keyed }, { body: keyed }])).toBe(true);
-    expect(readsWhole([{ body: keyed }, { body: makeTryoutBody("b") }])).toBe(
-      false
-    );
+    expect(readsWhole([keyed, keyed])).toBe(true);
+    expect(readsWhole([keyed, makeTryoutBody("b")])).toBe(false);
   });
 });
 

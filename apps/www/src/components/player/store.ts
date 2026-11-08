@@ -108,17 +108,13 @@ function jumpTo(previous: PlayerJump | null, key: string): PlayerJump {
 
 /**
  * Creates the store of one player, so two players never share their state. It
- * starts in the view the server resolved, on the question its address names,
- * which it reveals as it mounts and holds as a jump does, or on the first one.
+ * starts on the first question, in the view the server resolved.
  */
 export function createPlayerStore(input: {
   keys: readonly string[];
   mode: PlayerMode;
   review?: boolean;
-  /** The question the page's address names, among `keys`. */
-  start?: Option.Option<string>;
 }) {
-  const start = input.start ?? Option.none();
   return createStore<PlayerStore>()((set, get) => {
     /** Reveals a question now, or once the open overlay has finished closing. */
     function reveal(key: string) {
@@ -159,15 +155,13 @@ export function createPlayerStore(input: {
         return "reverted";
       }),
       close: () => set({ overlay: "none" }),
-      current: Option.getOrNull(
-        Option.orElse(start, () => Arr.head(input.keys))
-      ),
+      current: Option.getOrNull(Arr.head(input.keys)),
       focus: (key) => set({ anchor: null, current: key, pinned: true }),
       goTo: (key) => {
         set({ anchor: null, current: key, pinned: true });
         reveal(key);
       },
-      jump: Option.getOrNull(Option.map(start, (key) => jumpTo(null, key))),
+      jump: null,
       keys: input.keys,
       mode: input.mode,
       moved: (position) =>
@@ -184,7 +178,7 @@ export function createPlayerStore(input: {
       open: (overlay) => set({ overlay }),
       overlay: "none",
       pending: null,
-      pinned: Option.isSome(start),
+      pinned: false,
       review: input.review ?? false,
       saved: input.mode,
       settle: () => {

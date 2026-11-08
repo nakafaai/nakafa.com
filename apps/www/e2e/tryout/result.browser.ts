@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect, Order } from "effect";
+import { Array as Arr, Effect, Option, Order } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import {
@@ -84,9 +84,12 @@ async function clearanceOf(page: Page, target: Locator) {
 const addressedQuestion = (page: Page) =>
   new URL(page.url()).searchParams.get("question");
 
-/** The middle value of some numbers. */
+/** The middle value of some numbers, or 0 for none. */
 const median = (values: readonly number[]) =>
-  Arr.get(Arr.sort(values, Order.Number), Math.floor(values.length / 2));
+  Option.getOrElse(
+    Arr.get(Arr.sort(values, Order.Number), Math.floor(values.length / 2)),
+    () => 0
+  );
 
 /**
  * Counts each write of the pane's width to the browser's storage, and records the time between frames,
@@ -219,11 +222,10 @@ test.describe("The result of a finished try-out", () => {
           yield* watchPane(page);
           yield* Effect.sleep("1 second");
           const idle = yield* takeFrameGaps(page);
-          const grip = yield* Effect.promise(() => edge.boundingBox());
+          const grip = yield* Effect.promise(() => edge.boundingBox()).pipe(
+            Effect.flatMap(Effect.fromNullishOr)
+          );
           yield* Effect.promise(async () => {
-            if (grip === null) {
-              throw new Error("The pane's edge has no box.");
-            }
             const y = grip.y + grip.height / 2;
             await page.mouse.move(grip.x + grip.width / 2, y);
             await page.mouse.down();
@@ -245,14 +247,10 @@ test.describe("The result of a finished try-out", () => {
               ""
             );
           });
-          yield* Effect.sync(() => {
-            const idleMedian = median(idle);
-            const dragMedian = median(dragged);
-            test.info().annotations.push({
-              description: `idle median ${String(idleMedian)} ms, drag median ${String(dragMedian)} ms over ${dragged.length} frames`,
-              type: "frames",
-            });
-          });
+          // The numbers the pull request reports, against the 83 ms median measured on production.
+          yield* Effect.log(
+            `idle median ${String(median(idle))} ms, drag median ${String(median(dragged))} ms over ${dragged.length} frames`
+          );
 
           // One question at a time shows the current one alone, Next moves on, and the address follows.
           yield* chooseView(page, false, "One question");

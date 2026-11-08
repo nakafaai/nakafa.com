@@ -1,6 +1,14 @@
 import { useDebouncedCallback } from "@mantine/hooks";
 import { Option } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { useStore } from "zustand";
 import {
   addressOf,
@@ -50,21 +58,25 @@ export function PlayerProvider({
   /** Whether the paper is finished, to read with nothing to answer, flag or finish. */
   review?: boolean;
 }) {
-  const [store] = useState(() =>
-    createPlayerStore({
-      keys,
-      mode,
-      review,
-      start: address
-        ? readAddressedKey(window.location.search, keys)
-        : Option.none(),
-    })
-  );
+  const [store] = useState(() => createPlayerStore({ keys, mode, review }));
+  // Before the first paint, so a reload never shows the first question before the one the address names.
+  const openAddressed = useEffectEvent(() => {
+    Option.map(
+      readAddressedKey(window.location.search, keys),
+      store.getState().goTo
+    );
+  });
   const write = useDebouncedCallback(
     (current: string | null) =>
       replaceSearchParam(PLAYER_QUESTION_PARAM, addressOf(keys, current)),
     ADDRESS_WAIT
   );
+
+  useLayoutEffect(() => {
+    if (address) {
+      openAddressed();
+    }
+  }, [address]);
 
   useEffect(() => {
     if (!address) {
