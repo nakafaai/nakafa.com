@@ -204,10 +204,10 @@ export function NinaInput({
           {attachments ? null : (
             <InputGroupButton
               {...attachPress}
-              aria-label={t("attach-files")}
               className="rounded-full"
               disabled={disabled}
               size="icon"
+              tooltip={t("attach-files")}
               type="button"
               variant="outline"
             >
@@ -216,11 +216,11 @@ export function NinaInput({
           )}
           <div className="flex items-center gap-1">
             <InputGroupButton
-              aria-label={stopping ? t("stop-response") : t("send-message")}
               className="rounded-full"
               disabled={disabled}
               onClick={stopping ? onStop : undefined}
               size="icon"
+              tooltip={stopping ? t("stop-response") : t("send-message")}
               type={stopping ? "button" : "submit"}
               variant="secondary"
             >

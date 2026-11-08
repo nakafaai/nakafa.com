@@ -1,6 +1,7 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
@@ -32,19 +33,29 @@ const buttonGroupVariants = cva(
   }
 );
 
+/**
+ * Joins controls of one kind. The group names the one variant its buttons wear, outline unless it says otherwise,
+ * and every `Button` inside takes it, one drawn by another component included: the page's primary stands alone,
+ * and a pressed part says so with `aria-pressed`, never with a variant of its own.
+ */
 function ButtonGroup({
   className,
   orientation,
+  variant = "outline",
   ...props
 }: React.ComponentProps<"fieldset"> &
-  VariantProps<typeof buttonGroupVariants>) {
+  VariantProps<typeof buttonGroupVariants> & {
+    variant?: NonNullable<React.ContextType<typeof ButtonGroupVariant>>;
+  }) {
   return (
-    <fieldset
-      className={cn(buttonGroupVariants({ orientation }), className)}
-      data-orientation={orientation}
-      data-slot="button-group"
-      {...props}
-    />
+    <ButtonGroupVariant value={variant}>
+      <fieldset
+        className={cn(buttonGroupVariants({ orientation }), className)}
+        data-orientation={orientation}
+        data-slot="button-group"
+        {...props}
+      />
+    </ButtonGroupVariant>
   );
 }
 

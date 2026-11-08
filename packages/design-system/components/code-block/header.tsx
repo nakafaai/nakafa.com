@@ -11,9 +11,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -163,7 +161,7 @@ export function CodeBlockSelectValue(props: CodeBlockSelectValueProps) {
 /** Render-prop contract for projecting sources into language options. */
 type CodeBlockSelectContentProps = Omit<
   ComponentProps<typeof SelectContent>,
-  "children"
+  "children" | "label"
 > & {
   children: (item: CodeBlockData) => ReactNode;
 };
@@ -177,22 +175,25 @@ export function CodeBlockSelectContent({
   const data = useCodeBlock((state) => state.data);
 
   return (
-    <SelectContent {...props}>
-      <SelectGroup>
-        <SelectLabel>{t("language")}</SelectLabel>
-        {Arr.map(data, children)}
-      </SelectGroup>
+    <SelectContent label={t("menu-language")} {...props}>
+      {Arr.map(data, children)}
     </SelectContent>
   );
 }
 
 /** Menu-item attributes for one selectable language. */
-type CodeBlockSelectItemProps = ComponentProps<typeof SelectItem>;
+type CodeBlockSelectItemProps = Omit<ComponentProps<typeof SelectItem>, "icon">;
 
-/** Applies the code-block typography to one language option. */
+/** Applies the code-block typography to one language option, which shows the code icon. */
 export function CodeBlockSelectItem({
   className,
   ...props
 }: CodeBlockSelectItemProps) {
-  return <SelectItem className={cn("text-sm", className)} {...props} />;
+  return (
+    <SelectItem
+      className={cn("text-sm", className)}
+      icon={TerminalIcon}
+      {...props}
+    />
+  );
 }

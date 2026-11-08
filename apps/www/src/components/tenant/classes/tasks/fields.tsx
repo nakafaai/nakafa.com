@@ -15,7 +15,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   NumberField,
@@ -27,9 +26,7 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -65,6 +62,7 @@ export function TaskFields({
   onChange: (draft: typeof TaskDraft.Type) => void;
   pointsFixed: boolean;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Classroom");
   const id = useId();
   const timeZone = useClockZone();
@@ -146,19 +144,16 @@ export function TaskFields({
             <SelectTrigger className="w-full" id={`${id}-late`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>{t("select-late")}</SelectLabel>
-                {Arr.map(policies, (policy) => (
-                  <SelectItem key={policy.value} value={policy.value}>
-                    <HugeIcons
-                      aria-hidden="true"
-                      icon={LATE_ICONS[policy.value]}
-                    />
-                    {policy.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-lateness")}>
+              {Arr.map(policies, (policy) => (
+                <SelectItem
+                  icon={LATE_ICONS[policy.value]}
+                  key={policy.value}
+                  value={policy.value}
+                >
+                  {policy.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
@@ -190,6 +185,7 @@ function TaskReachField({
   draft: typeof TaskDraft.Type;
   onChange: (draft: typeof TaskDraft.Type) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Classroom");
   const id = useId();
   const { classId, slug } = useClassScope();
@@ -220,19 +216,16 @@ function TaskReachField({
           <SelectTrigger className="w-full" id={`${id}-reach`}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>{t("select-reach")}</SelectLabel>
-              {Arr.map(reaches, (reach) => (
-                <SelectItem key={reach.value} value={reach.value}>
-                  <HugeIcons
-                    aria-hidden="true"
-                    icon={REACH_ICONS[reach.value]}
-                  />
-                  {reach.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+          <SelectContent label={common("menu-audience")}>
+            {Arr.map(reaches, (reach) => (
+              <SelectItem
+                icon={REACH_ICONS[reach.value]}
+                key={reach.value}
+                value={reach.value}
+              >
+                {reach.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </Field>

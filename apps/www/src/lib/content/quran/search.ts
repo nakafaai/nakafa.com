@@ -11,14 +11,18 @@ export const QuranIndexSurah = Schema.Struct({
 /**
  * Words as a search compares them: lower case, with no marks, so Arabic without
  * its vowel signs and a name without its accents still match, and with no space,
- * dash or apostrophe, so "al baqarah", "albaqarah" and "Al-Baqarah" are one.
+ * dash or apostrophe. A doubled letter counts once and a closing "h" after a
+ * vowel not at all, so the spellings readers use for one name meet: "al baqarah"
+ * and "Al-Baqara", "fatihah" and "Al-Faatiha".
  */
 function fold(words: string) {
   return words
     .normalize("NFKD")
     .replace(/\p{M}/gu, "")
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]/gu, "");
+    .replace(/[^\p{L}\p{N}]/gu, "")
+    .replace(/(\p{L})\1+/gu, "$1")
+    .replace(/([aeiou])h$/u, "$1");
 }
 
 /**

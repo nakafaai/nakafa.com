@@ -15,7 +15,7 @@ const FATIHAH = "/en/quran/1";
 const BAQARAH = /\/en\/quran\/2$/u;
 
 /** The name of Al-Baqarah's option in the search's list. */
-const BAQARAH_OPTION = /Al-Baqarah/u;
+const BAQARAH_OPTION = /Al-Baqara\b/u;
 
 /** The header of the surah page. */
 const header = (page: Page) => page.locator('[data-slot="page-header"]');

@@ -2,9 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import { searchSurahs } from "@/lib/content/quran/search";
 
+/** The names as the catalog spells them, which readers spell their own way. */
 const surahs = [
-  { arabic: "الفاتحة", meaning: "The Opening", number: 1, title: "Al-Fatihah" },
-  { arabic: "البقرة", meaning: "The Cow", number: 2, title: "Al-Baqarah" },
+  { arabic: "الفاتحة", meaning: "The Opening", number: 1, title: "Al-Faatiha" },
+  { arabic: "البقرة", meaning: "The Cow", number: 2, title: "Al-Baqara" },
   { arabic: "يس", meaning: "Ya Sin", number: 36, title: "Ya-Sin" },
   {
     arabic: "الإخلاص",
@@ -30,9 +31,15 @@ describe("searchSurahs", () => {
   });
 
   it("finds a surah by its name however the reader spells its dashes, spaces and case", () => {
-    expect(kept("al baqarah")).toEqual([2]);
-    expect(kept("ALBAQARAH")).toEqual([2]);
+    expect(kept("al baqara")).toEqual([2]);
+    expect(kept("ALBAQARA")).toEqual([2]);
     expect(kept("yasin")).toEqual([36]);
+  });
+
+  it("finds a surah by the spellings readers use, with a closing h or a single vowel", () => {
+    expect(kept("al baqarah")).toEqual([2]);
+    expect(kept("Al-Fatihah")).toEqual([1]);
+    expect(kept("faati")).toEqual([1]);
   });
 
   it("finds a surah by its Arabic name, with or without vowel signs", () => {

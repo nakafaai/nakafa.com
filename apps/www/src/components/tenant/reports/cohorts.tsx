@@ -11,7 +11,6 @@ import {
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -147,16 +146,16 @@ function ReportCohortMenu({
   return (
     <RowItems>
       <DropdownMenuItem
+        icon={Certificate01Icon}
         render={
           <Link
             params={{ cohortId, slug }}
             to="/school/$slug/reports/$cohortId"
-          >
-            <HugeIcons icon={Certificate01Icon} />
-            {common("open")}
-          </Link>
+          />
         }
-      />
+      >
+        {common("open")}
+      </DropdownMenuItem>
     </RowItems>
   );
 }

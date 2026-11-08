@@ -20,7 +20,6 @@ import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahFind } from "@/components/shared/quran/find";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
-import { QuranSurahName } from "@/components/shared/quran/name";
 import { QuranSurahsContext } from "@/components/shared/quran/surahs";
 import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
@@ -124,11 +123,9 @@ function QuranSurahPage() {
                     <AiMenuItem contextTitle={page.title} />
                   </OpenContent>
                 }
+                arabic={page.arabic}
                 meaning={page.meaning.text}
                 meaningLanguage={page.meaning.appLocale}
-                name={
-                  <QuranSurahName arabic={page.arabic} title={page.title} />
-                }
                 quranLabel={labels.quran}
                 search={<QuranSurahFind />}
                 title={page.title}
