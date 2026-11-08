@@ -18,6 +18,7 @@ import { NotificationsList } from "@/components/notifications/list";
 import { MarkAllRead } from "@/components/notifications/read";
 import { InboxTabs } from "@/components/notifications/tabs";
 import { SchoolInboxTopic } from "@/components/notifications/topic";
+import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -57,17 +58,26 @@ export function SchoolNotifications({ all }: { all: boolean }) {
 
 /**
  * The header's choice of schools, as the unit choice of a settings page reads: this school's rows, or every school's,
- * kept in the page's address. It opens with its one-word label, and each school choice shows its icon.
+ * kept in the page's address. It opens with its one-word label, and each school choice shows its icon. The trigger
+ * shows the chosen icon and folds its words in a narrow header (`HeaderLabel`), as the header's buttons beside it do.
  */
 function InboxFilter({ all }: { all: boolean }) {
   const t = useTranslations("Notifications");
   const common = useTranslations("Common");
   const { slug } = useTenant();
   const navigate = useNavigate();
-  const items = [
-    { icon: SchoolIcon, label: t("this-school"), value: "school" },
-    { icon: Globe02Icon, label: t("all-schools"), value: "all" },
-  ] as const;
+  const thisSchool = {
+    icon: SchoolIcon,
+    label: t("this-school"),
+    value: "school",
+  } as const;
+  const allSchools = {
+    icon: Globe02Icon,
+    label: t("all-schools"),
+    value: "all",
+  } as const;
+  const items = [thisSchool, allSchools] as const;
+  const chosen = all ? allSchools : thisSchool;
 
   return (
     <Select
@@ -79,13 +89,13 @@ function InboxFilter({ all }: { all: boolean }) {
           to: "/school/$slug/notifications",
         })
       }
-      value={all ? "all" : "school"}
+      value={chosen.value}
     >
-      <SelectTrigger
-        aria-label={common("menu-schools")}
-        className="w-auto max-w-28 sm:max-w-xs @max-sm/header:max-w-16 @max-xs/header:max-w-10"
-      >
-        <SelectValue />
+      <SelectTrigger aria-label={common("menu-schools")} className="w-auto">
+        <SelectValue>
+          <HugeIcons icon={chosen.icon} />
+          <HeaderLabel>{chosen.label}</HeaderLabel>
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
