@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -7,6 +7,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { useNavigate } from "@tanstack/react-router";
 import { Function as Fn } from "effect";
 import { useTranslations } from "use-intl";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { useExam } from "@/components/tenant/exams/provider";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
@@ -67,6 +68,8 @@ export function DeleteExam({
       open={open}
       setOpen={onOpenChange}
       title={t("delete-title")}
-    />
+    >
+      <ConfirmSubject icon={TaskEdit01Icon} name={exam.title} />
+    </ResponsiveDialog>
   );
 }

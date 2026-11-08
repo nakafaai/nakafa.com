@@ -77,8 +77,15 @@ export function setPeriodStatus(
   periodId: Period["id"],
   status: Period["status"]
 ) {
+  // An active period is held by being active; one that leaves it stays held until the server says what holds it now.
   return Arr.map(page, (period) =>
-    period.id === periodId ? { ...period, status } : period
+    period.id === periodId
+      ? {
+          ...period,
+          hold: status === "active" ? "active" : period.hold,
+          status,
+        }
+      : period
   );
 }
 

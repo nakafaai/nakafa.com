@@ -12,7 +12,10 @@ import {
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -23,6 +26,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
@@ -167,6 +171,7 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
           <HugeIcons icon={UserEdit01Icon} />
           {t("grant-change")}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={!grant.revocable}
           onClick={() => dialogs.show("revoke")}
@@ -241,7 +246,15 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("grant-revoke-title")}
-      />
+      >
+        <ConfirmSubject
+          icon={UserStar01Icon}
+          name={grant.person.name}
+          {...(grant.person.email === null
+            ? {}
+            : { detail: grant.person.email })}
+        />
+      </ResponsiveDialog>
     </>
   );
 }

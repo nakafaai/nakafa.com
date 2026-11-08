@@ -14,6 +14,7 @@ import {
   CohortStatus,
 } from "@repo/backend/confect/tenancy/cohort";
 import {
+  CohortHold,
   CohortInUse,
   CohortLimit,
   CohortNameTaken,
@@ -30,9 +31,14 @@ const CohortView = Schema.Struct({
   status: CohortStatus,
 });
 
-/** What a settings table shows of one cohort beside its own fields. */
+/**
+ * What a settings table shows of one cohort beside its own fields: its classes, archived ones
+ * included, and the first record that keeps it from being deleted, or none for a cohort its menu
+ * may offer to delete.
+ */
 const CohortOverview = Schema.Struct({
   classes: Schema.Finite,
+  hold: Schema.NullOr(CohortHold),
   homeroom: Schema.NullOr(PersonName),
   id: Id("tenantCohorts"),
   name: CohortName,

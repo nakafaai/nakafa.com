@@ -5,6 +5,7 @@ import {
   Cancel01Icon,
   ChartBarLineIcon,
   DashboardSquare01Icon,
+  Door01Icon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -82,13 +83,14 @@ export function RoomMenu({
         action={t("room-cancel")}
         confirm={t("room-cancel-confirm")}
         description={t("room-cancel-description")}
-        disabled={!room.canChange}
         icon={Cancel01Icon}
+        offered={room.canChange}
         onConfirm={() =>
           startTransition(() =>
             saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
           )
         }
+        subject={{ icon: Door01Icon, name: room.room }}
         title={t("room-cancel-title")}
       >
         <DropdownMenuItem

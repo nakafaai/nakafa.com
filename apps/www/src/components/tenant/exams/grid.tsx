@@ -2,6 +2,7 @@ import {
   Add01Icon,
   Copy01Icon,
   Delete02Icon,
+  TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import { useHotkeys } from "@mantine/hooks";
 import { questionGap } from "@repo/backend/confect/exams/parts";
@@ -14,6 +15,7 @@ import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { type KeyboardEvent, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import type {
@@ -352,7 +354,12 @@ export function ExamGrid() {
         open={asking}
         setOpen={setAsking}
         title={t("remove-many-title", { count: chosen.length })}
-      />
+      >
+        <ConfirmSubject
+          icon={TaskEdit01Icon}
+          name={t("selected-count", { count: chosen.length })}
+        />
+      </ResponsiveDialog>
     </ScrollArea>
   );
 }
