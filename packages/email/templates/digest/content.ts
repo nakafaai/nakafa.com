@@ -166,42 +166,42 @@ const digestEmailCopy = {
   },
   ms: {
     accountReason:
-      "Kami menghantar e-mel ini kerana anda memberi komen di Nakafa.",
-    cta: "Buka peti masuk anda",
+      "Kami menghantar e-mel ini kerana kamu memberi komen di Nakafa.",
+    cta: "Buka peti masuk kamu",
     footerReason:
-      "Kami menghantar e-mel ini kerana anda ahli sebuah sekolah di Nakafa.",
+      "Kami menghantar e-mel ini kerana kamu ahli sebuah sekolah di Nakafa.",
     sentences: {
       "comment.replied": {
-        one: "Seseorang telah membalas komen anda.",
-        several: "Ada {count} balasan kepada komen anda.",
+        one: "Seseorang telah membalas komen kamu.",
+        several: "Ada {count} balasan kepada komen kamu.",
       },
       "assignment.missed": {
-        one: "Anak anda tidak menghantar tugasan tepat pada masanya.",
+        one: "Anak kamu tidak menghantar tugasan tepat pada masanya.",
         several:
-          "Anak anda tidak menghantar {count} tugasan tepat pada masanya.",
+          "Anak kamu tidak menghantar {count} tugasan tepat pada masanya.",
       },
       "assignment.published": {
-        one: "Ada tugasan baharu dalam kelas anda.",
-        several: "Ada {count} tugasan baharu dalam kelas anda.",
+        one: "Ada tugasan baharu dalam kelas kamu.",
+        several: "Ada {count} tugasan baharu dalam kelas kamu.",
       },
       "exam.reminder": {
-        one: "Anak anda akan menduduki peperiksaan.",
-        several: "Anak anda akan menduduki {count} peperiksaan.",
+        one: "Anak kamu akan menduduki peperiksaan.",
+        several: "Anak kamu akan menduduki {count} peperiksaan.",
       },
       "exam.starting": {
-        one: "Peperiksaan anda akan bermula tidak lama lagi.",
-        several: "{count} peperiksaan anda akan bermula tidak lama lagi.",
+        one: "Peperiksaan kamu akan bermula tidak lama lagi.",
+        several: "{count} peperiksaan kamu akan bermula tidak lama lagi.",
       },
       "forum.mentioned": {
-        one: "Seseorang menyebut anda dalam kelas anda.",
-        several: "Anda disebut {count} kali dalam kelas anda.",
+        one: "Seseorang menyebut kamu dalam kelas kamu.",
+        several: "Kamu disebut {count} kali dalam kelas kamu.",
       },
       "grade.released": {
         one: "Markah baharu telah dikeluarkan.",
         several: "{count} markah baharu telah dikeluarkan.",
       },
     },
-    subject: "Perkara baharu di sekolah anda",
+    subject: "Perkara baharu di sekolah kamu",
   },
 } satisfies Record<AppLocaleCode, typeof DigestEmailCopySchema.Type>;
 

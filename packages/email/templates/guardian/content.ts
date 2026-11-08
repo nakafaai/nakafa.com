@@ -43,11 +43,11 @@ const guardianCodeCopy = {
     subject: "Kode masuk Nakafa Anda",
   },
   ms: {
-    body: "Masukkan kod ini di halaman log masuk ibu bapa sekolah anda. Kod ini sah selama lima minit.",
-    ignore: "Jika anda tidak meminta kod, abaikan e-mel ini.",
+    body: "Masukkan kod ini di halaman log masuk ibu bapa sekolah kamu. Kod ini sah selama lima minit.",
+    ignore: "Jika kamu tidak meminta kod, abaikan e-mel ini.",
     reason:
       "Kami menghantar e-mel ini kerana kod log masuk ibu bapa telah diminta dengan alamat ini.",
-    subject: "Kod log masuk Nakafa anda",
+    subject: "Kod log masuk Nakafa kamu",
   },
 };
 

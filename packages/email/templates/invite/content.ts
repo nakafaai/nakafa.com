@@ -55,7 +55,7 @@ const inviteEmailCopy = {
     body: "Log masuk dengan alamat e-mel ini untuk menyertai.",
     cta: "Log masuk",
     footerReason: `Kami menghantar e-mel ini kerana ${organisation} telah menjemput alamat ini ke Nakafa.`,
-    subject: `${organisation} menjemput anda ke Nakafa`,
+    subject: `${organisation} menjemput kamu ke Nakafa`,
   }),
 } satisfies Record<
   AppLocaleCode,

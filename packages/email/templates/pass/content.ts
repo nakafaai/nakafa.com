@@ -54,11 +54,11 @@ const passEndingEmailCopy = {
     subject: `Pass Pro kamu berakhir pada ${endsOn}`,
   }),
   ms: (endsOn) => ({
-    body: `Pas Pro anda tamat pada ${endsOn}. Pas seterusnya bermula tepat pada masa itu, jadi anda tidak terlepas sehari pun Pro.`,
+    body: `Pas Pro kamu tamat pada ${endsOn}. Pas seterusnya bermula tepat pada masa itu, jadi kamu tidak terlepas sehari pun Pro.`,
     cta: "Lanjutkan Pro",
     footerReason:
-      "Kami menghantar e-mel ini kerana anda telah membeli pas Nakafa Pro.",
-    subject: `Pas Pro anda tamat pada ${endsOn}`,
+      "Kami menghantar e-mel ini kerana kamu telah membeli pas Nakafa Pro.",
+    subject: `Pas Pro kamu tamat pada ${endsOn}`,
   }),
 } satisfies Record<
   AppLocaleCode,

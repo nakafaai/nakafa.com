@@ -44,16 +44,16 @@
   },
   "SchoolEntry": {
     "username-placeholder": "ayu.lestari",
-    "password-placeholder": "Kata laluan anda",
+    "password-placeholder": "Kata laluan kamu",
     "password-new-placeholder": "Pilih kata laluan",
-    "card-password-missing": "Pilih kata laluan untuk menyelesaikan log masuk pertama anda.",
+    "card-password-missing": "Pilih kata laluan untuk menyelesaikan log masuk pertama kamu.",
     "card-code-label": "Kod kad, pilihan",
-    "card-hint": "Log masuk dengan nama pengguna dan kad daripada pentadbir anda.",
+    "card-hint": "Log masuk dengan nama pengguna dan kad daripada pentadbir kamu.",
     "card-code-placeholder": "Log masuk pertama atau kad baharu",
-    "card-expired": "Minta kad baharu daripada guru atau pentadbir anda, kerana kad ini sudah tamat tempoh.",
+    "card-expired": "Minta kad baharu daripada guru atau pentadbir kamu, kerana kad ini sudah tamat tempoh.",
     "card-invalid": "Nama pengguna atau kod kad tidak betul.",
     "card-rate-limited": "Tunggu beberapa minit sebelum mencuba lagi pada peranti ini.",
-    "card-used": "Minta kad baharu daripada guru atau pentadbir anda, kerana kad ini sudah digunakan.",
+    "card-used": "Minta kad baharu daripada guru atau pentadbir kamu, kerana kad ini sudah digunakan.",
     "failed": "Log masuk tidak berjaya, jadi cuba lagi.",
     "outsider-card": "Guna kad",
     "outsider-description": "{account} belum mempunyai jemputan di sini, jadi minta kepada pentadbir atau log masuk dengan alamat yang dijemput.",
@@ -62,8 +62,8 @@
     "password-label": "Kata laluan",
     "password-too-long": "Kata laluan terlalu panjang.",
     "password-too-short": "Kata laluan terlalu pendek.",
-    "sign-in-missing": "Taip nama pengguna dan kata laluan sekolah anda.",
-    "sign-in-refused": "Nama pengguna atau kata laluan tidak betul, jadi semak kedua-duanya atau tanya guru anda jika masih gagal.",
+    "sign-in-missing": "Taip nama pengguna dan kata laluan sekolah kamu.",
+    "sign-in-refused": "Nama pengguna atau kata laluan tidak betul, jadi semak kedua-duanya atau tanya guru kamu jika masih gagal.",
     "submit": "Log masuk",
     "username-action": "Guna nama pengguna",
     "username-label": "Nama pengguna sekolah",
@@ -72,10 +72,10 @@
   "SchoolGuardians": {
     "email": "E-mel",
     "request-ask": "Tanya sekolah",
-    "request-description": "Tulis keperluan anda dalam beberapa perkataan, dan pejabat sekolah akan menjawabnya.",
-    "request-placeholder": "Perkara yang anda perlukan daripada pejabat sekolah",
+    "request-description": "Tulis keperluan kamu dalam beberapa perkataan, dan pejabat sekolah akan menjawabnya.",
+    "request-placeholder": "Perkara yang kamu perlukan daripada pejabat sekolah",
     "request-kind": "Permohonan",
-    "request-text": "Catatan anda",
+    "request-text": "Catatan kamu",
     "request-state": "Status",
     "request-student": "Pelajar",
     "request-send": "Hantar",
@@ -87,9 +87,9 @@
     "request-state-approved": "Diluluskan",
     "request-state-declined": "Ditolak",
     "family-title": "Ibu bapa saya",
-    "family-pending": "Ibu bapa anda melengkapkan pautan dengan kod yang dihantar ke alamat ini.",
+    "family-pending": "Ibu bapa kamu melengkapkan pautan dengan kod yang dihantar ke alamat ini.",
     "family-invite": "Jemput ibu bapa",
-    "family-empty-description": "Tambah e-mel ibu bapa anda supaya mereka boleh log masuk dan melihat markah anda.",
+    "family-empty-description": "Tambah e-mel ibu bapa kamu supaya mereka boleh log masuk dan melihat markah kamu.",
     "sign-in-action": "Log masuk ibu bapa",
     "email-label": "E-mel ibu bapa",
     "email-placeholder": "ibubapa@example.com",
@@ -106,22 +106,22 @@
     "failed": "Tidak dapat bersambung. Cuba lagi.",
     "home-title": "Anak saya",
     "home-empty": "Belum ada anak yang dipautkan.",
-    "home-empty-description": "Minta sekolah memautkan e-mel anda kepada anak anda.",
+    "home-empty-description": "Minta sekolah memautkan e-mel kamu kepada anak kamu.",
     "child-pending": "Pautan sedang menunggu semakan.",
     "child-verified": "Pautan telah disahkan.",
     "child-expired": "Pautan sudah tamat tempoh.",
     "child-revoked": "Sekolah telah menamatkan pautan ini.",
-    "child-withdrawn": "Anda telah menarik balik persetujuan.",
+    "child-withdrawn": "Kamu telah menarik balik persetujuan.",
     "child-staff-check": "Sekolah akan menyemak pautan ini.",
     "child-ended-hint": "Hubungi sekolah untuk memaut semula.",
     "nisn-label": "NISN anak",
-    "nisn-hint": "Masukkan NISN anak anda untuk mengesahkan pautan ini.",
+    "nisn-hint": "Masukkan NISN anak kamu untuk mengesahkan pautan ini.",
     "nisn-refused": "Butiran ini tidak sepadan.",
     "nisn-submit": "Semak",
     "withdraw": "Tarik balik persetujuan",
-    "withdraw-hint": "Anda boleh menarik balik persetujuan pada bila-bila masa.",
+    "withdraw-hint": "Kamu boleh menarik balik persetujuan bila-bila masa.",
     "withdraw-title": "Tarik balik persetujuan?",
-    "withdraw-description": "Anda tidak akan melihat markah anak anda sehingga sekolah memautkan anda semula.",
+    "withdraw-description": "Kamu tidak akan melihat markah anak kamu sehingga sekolah memautkan kamu semula.",
     "grades-empty": "Belum ada markah yang dikeluarkan.",
     "grade-class": "Kelas",
     "grade-value": "Markah",
@@ -173,7 +173,7 @@
     "empty": "Import pelajar.",
     "empty-description": "Pilih senarai Dapodik atau zip CSV OneRoster, yang kekal pada peranti ini.",
     "no-period": "Belum ada penggal aktif.",
-    "no-period-description": "Buka penggal sebelum anda mengimport pelajar.",
+    "no-period-description": "Buka penggal sebelum kamu mengimport pelajar.",
     "file-refused": "Fail ini tidak boleh diimport.",
     "file-unreadable": "Pilih fail XLSX daripada Dapodik atau zip CSV OneRoster.",
     "file-header": "Fail ini tidak mempunyai lajur senarai pelajar.",
@@ -202,10 +202,10 @@
     "join-qr-label": "Kod QR yang membuka bilik ini dengan tokennya",
     "join-show": "Tunjukkan kod QR bilik, token {token}",
     "join-not-admitted": "{school} tidak membenarkan akaun ini menyertai sebagai pelajar, jadi tanya pentadbirnya atau tukar akaun.",
-    "join-member-description": "Taip token daripada pengawas anda untuk membuka bilik peperiksaan.",
-    "join-not-open": "Bilik ini belum dibuka, jadi tunggu pengawas anda membukanya dan cuba lagi.",
+    "join-member-description": "Taip token daripada pengawas kamu untuk membuka bilik peperiksaan.",
+    "join-not-open": "Bilik ini belum dibuka, jadi tunggu pengawas kamu membukanya dan cuba lagi.",
     "join-room-action": "Sertai bilik",
-    "join-room-description": "Log masuk sebagai {account}, taip token pengawas anda untuk menyertai {school}.",
+    "join-room-description": "Log masuk sebagai {account}, taip token pengawas kamu untuk menyertai {school}.",
     "join-room-title": "Sertai bilik peperiksaan ini",
     "join-seat-limit": "{school} tiada lagi tempat pelajar, jadi minta pentadbirnya menambah satu.",
     "close-sitting": "Tutup sesi",
@@ -277,28 +277,28 @@
     "confirm-close-title": "Tutup sesi sekarang?",
     "confirm-close-description": "Percubaan yang belum dihantar akan dihantar dengan jawapan terakhir yang disimpan.",
     "confirm-close-action": "Tutup sesi",
-    "sitting-unavailable": "Anda tidak boleh melihat sesi ini.",
+    "sitting-unavailable": "Kamu tidak boleh melihat sesi ini.",
     "sitting-not-in-exam": "Sesi ini bukan milik peperiksaan ini.",
     "student-room-line": "Bilik {room}.",
     "sitting": "Sesi",
     "student-enter": "Masuk sesi",
-    "student-enter-footer": "Pengawas anda memberikan token.",
+    "student-enter-footer": "Pengawas kamu memberikan token.",
     "student-token-placeholder": "Masukkan token",
-    "student-token-hint": "Pengawas anda menunjukkannya.",
+    "student-token-hint": "Pengawas kamu menunjukkannya.",
     "student-token-refused": "Token tidak sepadan, jadi semak dan cuba lagi.",
     "student-too-many-tries": "Terlalu banyak cubaan, jadi tunggu seminit dan cuba lagi.",
-    "student-not-in-sitting": "Anda tidak berada dalam sesi ini, jadi tanya pengawas anda jika anda rasa ini salah.",
+    "student-not-in-sitting": "Kamu tidak berada dalam sesi ini, jadi tanya pengawas kamu jika kamu rasa ini salah.",
     "student-not-open": "Sesi ini belum dibuka, jadi kembali pada waktu pembukaannya.",
-    "student-closed": "Sesi ini sudah ditutup, jadi tanya guru anda tentang sesi lain.",
-    "student-locked-school": "Sesi ini dikunci, jadi tanya guru anda langkah seterusnya.",
+    "student-closed": "Sesi ini sudah ditutup, jadi tanya guru kamu tentang sesi lain.",
+    "student-locked-school": "Sesi ini dikunci, jadi tanya guru kamu langkah seterusnya.",
     "student-no-answer": "Tiada jawapan",
-    "student-attempt-closed": "Percubaan ini sudah ditutup, jadi tanya pengawas anda jika anda rasa masanya salah.",
-    "student-second-device": "Percubaan ini milik peranti lain, jadi minta pengawas anda membenarkan peranti kedua.",
-    "student-device-retired": "Pengawas anda telah menghentikan peranti ini, jadi tanya pengawas anda peranti mana yang boleh digunakan.",
-    "student-locked": "Pengawas anda telah mengunci percubaan ini, jadi tunggu sehingga kuncinya dibuka sebelum anda menjawab.",
-    "student-unavailable": "Sesi ini tidak dibuka untuk anda, jadi tanya guru anda jika anda rasa ini salah.",
+    "student-attempt-closed": "Percubaan ini sudah ditutup, jadi tanya pengawas kamu jika kamu rasa masanya salah.",
+    "student-second-device": "Percubaan ini milik peranti lain, jadi minta pengawas kamu membenarkan peranti kedua.",
+    "student-device-retired": "Pengawas kamu telah menghentikan peranti ini, jadi tanya pengawas kamu peranti mana yang boleh digunakan.",
+    "student-locked": "Pengawas kamu telah mengunci percubaan ini, jadi tunggu sehingga kuncinya dibuka sebelum kamu menjawab.",
+    "student-unavailable": "Sesi ini tidak dibuka untuk kamu, jadi tanya guru kamu jika kamu rasa ini salah.",
     "finish-title": "Selesaikan peperiksaan?",
-    "finish-description": "Anda tidak boleh menukar jawapan selepas selesai.",
+    "finish-description": "Kamu tidak boleh menukar jawapan selepas selesai.",
     "title": "Peperiksaan",
     "empty": "Belum ada peperiksaan.",
     "exams-search": "Cari peperiksaan",
@@ -312,7 +312,7 @@
     "mine-finished": "Selesai",
     "mine-score-waiting": "Belum dikeluarkan",
     "mine-empty": "Belum ada peperiksaan",
-    "mine-empty-description": "Peperiksaan anda dipaparkan di sini sebaik sahaja sekolah menjadualkannya.",
+    "mine-empty-description": "Peperiksaan kamu dipaparkan di sini sebaik sahaja sekolah menjadualkannya.",
     "untitled": "Peperiksaan tanpa tajuk",
     "title-label": "Tajuk peperiksaan",
     "unavailable": "Peperiksaan ini tidak tersedia.",
@@ -321,7 +321,7 @@
     "locked-frozen": "Satu sesi peperiksaan ini sudah selesai, jadi soalannya kekal seperti yang dijawab oleh pelajar. Buat salinan untuk menggunakannya semula.",
     "duplicate-action": "Buat salinan peperiksaan",
     "duplicate-suffix": "(salinan)",
-    "gone-note": "Peperiksaan ini telah dipadam atau ditutup kepada anda, jadi apa-apa yang anda ubah di sini tidak disimpan.",
+    "gone-note": "Peperiksaan ini telah dipadam atau ditutup kepada kamu, jadi apa-apa yang kamu ubah di sini tidak disimpan.",
     "room-cancel": "Batalkan bilik",
     "room-cancel-title": "Batalkan bilik ini?",
     "room-cancel-description": "Pelajar tidak lagi boleh memasuki bilik ini.",
@@ -376,7 +376,7 @@
     "results-finished": "Selesai",
     "results-empty-title": "Belum ada keputusan",
     "results-empty": "Keputusan dipaparkan di sini sebaik sahaja pelajar selesai menduduki sesi.",
-    "results-unavailable": "Anda tidak boleh melihat keputusan ini.",
+    "results-unavailable": "Kamu tidak boleh melihat keputusan ini.",
     "results-share": "{share}% betul",
     "results-counted": "{answered} daripada {counted} dijawab.",
     "results-incomplete": "Hanya {counted} jawapan pertama yang dikira.",
@@ -387,17 +387,17 @@
     "verdict-incorrect": "Salah",
     "verdict-pending": "Menunggu semakan",
     "release-title": "Keluarkan keputusan kepada pelajar?",
-    "release-description": "Setiap pelajar melihat skor dan jawapannya sendiri sebaik sahaja anda mengeluarkannya.",
+    "release-description": "Setiap pelajar melihat skor dan jawapannya sendiri sebaik sahaja kamu mengeluarkannya.",
     "release-action": "Keluarkan keputusan",
     "released": "Dikeluarkan",
-    "student-finished": "Anda telah selesai menjawab peperiksaan ini.",
+    "student-finished": "Kamu telah selesai menjawab peperiksaan ini.",
     "student-closed-title": "Peperiksaan ini sudah ditutup.",
     "student-locked-title": "Percubaan ini dikunci.",
     "student-score": "{points} daripada {total} mata",
-    "student-results-footer": "Guru anda mengeluarkan keputusan selepas sesi ditutup.",
-    "student-answer": "Jawapan anda: <typed>{answer}</typed>",
-    "student-answers": "Jawapan anda",
-    "student-results-released": "Guru anda telah mengeluarkan keputusan ini.",
+    "student-results-footer": "Guru kamu mengeluarkan keputusan selepas sesi ditutup.",
+    "student-answer": "Jawapan kamu: <typed>{answer}</typed>",
+    "student-answers": "Jawapan kamu",
+    "student-results-released": "Guru kamu telah mengeluarkan keputusan ini.",
     "schedule": "Jadual",
     "schedule-title": "Jadualkan peperiksaan",
     "schedule-description": "Pilih siapa yang menduduki peperiksaan ini, di mana dan bila.",
@@ -432,7 +432,7 @@
     "rooms-empty-description": "Setiap bilik muncul di sini sebaik sahaja peperiksaan dijadualkan.",
     "rooms-filter-empty": "Tiada bilik dalam keadaan ini",
     "rooms-filter-empty-description": "Pilih keadaan lain untuk melihat bilik yang lain.",
-    "rooms-unavailable": "Anda tidak boleh melihat bilik peperiksaan ini.",
+    "rooms-unavailable": "Kamu tidak boleh melihat bilik peperiksaan ini.",
     "rooms-group": "Kumpulan",
     "rooms-opens": "Dibuka",
     "rooms-closes": "Ditutup",
@@ -458,8 +458,8 @@
     "page-no-key": "Belum ada skema",
     "page-empty-choice": "Pilihan kosong",
     "page-empty-part": "Bahagian kosong",
-    "page-gap-empty": "Isi sebelum anda menjadualkan peperiksaan.",
-    "page-gap-key": "Tetapkan jawapan sebelum anda menjadualkan peperiksaan.",
+    "page-gap-empty": "Isi sebelum kamu menjadualkan peperiksaan.",
+    "page-gap-key": "Tetapkan jawapan sebelum kamu menjadualkan peperiksaan.",
     "add-below": "Tambah soalan di bawah",
     "add-below-of": "Tambah soalan di bawah soalan {number}",
     "question-text": "Teks soalan {number}",
@@ -503,7 +503,7 @@
     "remove-many-description": "Soalan dan jawapannya dikeluarkan daripada peperiksaan ini.",
     "student-retry": "Sesi ini tidak dapat dimuatkan, jadi cuba lagi sebentar nanti.",
     "student-opens-at": "Sesi ini dibuka {time}.",
-    "student-entry-waiting": "Anda akan masuk sebaik sahaja kembali dalam talian.",
+    "student-entry-waiting": "Kamu akan masuk sebaik sahaja kembali dalam talian.",
     "student-second-tab-title": "Peperiksaan ini dibuka dalam tab lain.",
     "student-second-tab-description": "Kembali ke tab itu, atau tutupnya dan tab ini akan mengambil alih.",
     "student-scheduled-footer": "Ruang token dibuka bersama sesi.",
@@ -610,7 +610,7 @@
     "cause-both-false": "Pernyataan dan sebab salah",
     "template-short": "Jawapan pendek",
     "template-numeric": "Jawapan berangka",
-    "short-placeholder": "Taip jawapan anda",
+    "short-placeholder": "Taip jawapan kamu",
     "number-placeholder": "Taip nombor",
     "number-key": "Nombor yang betul",
     "number-value-placeholder": "0.75",
@@ -632,9 +632,9 @@
     "accepted-of": "Jawapan diterima {index} bagi soalan {number}",
     "accepted-remove-of": "Buang jawapan diterima {index} bagi soalan {number}",
     "accepted-add": "Tambah jawapan",
-    "accepted-hint": "Huruf besar kecil dan ruang tambahan tidak dikira, dan jawapan lain menunggu semakan anda.",
+    "accepted-hint": "Huruf besar kecil dan ruang tambahan tidak dikira, dan jawapan lain menunggu semakan kamu.",
     "template-essay": "Esei",
-    "essay-placeholder": "Tulis jawapan anda",
+    "essay-placeholder": "Tulis jawapan kamu",
     "verdict-partial": "Betul sebahagian",
     "results-points": "Mata",
     "grade-of": "Mata {name}",
@@ -681,14 +681,14 @@
     "setup-classes": "Kelas",
     "setup-classes-description": "Tambah kelas bagi setiap mata pelajaran yang dipelajari oleh kumpulan kelas.",
     "setup-teachers": "Guru",
-    "setup-teachers-description": "Jemput guru anda melalui e-mel.",
+    "setup-teachers-description": "Jemput guru kamu melalui e-mel.",
     "setup-parents": "Ibu bapa",
     "setup-parents-description": "Pautkan setiap pelajar kepada ibu bapa.",
     "setup-exam": "Peperiksaan pertama",
     "setup-exam-description": "Tulis satu peperiksaan dan cuba sebagai pelajar.",
     "setup-check": "Semak tetapan lalai",
     "setup-plan": "Pelan",
-    "setup-plan-description": "Lihat pelan, pelajar dan bayaran sekolah anda.",
+    "setup-plan-description": "Lihat pelan, pelajar dan bayaran sekolah kamu.",
     "setup-country": "Negara dan mata wang",
     "setup-clock": "Zon waktu dan bahasa",
     "setup-policies": "Dasar",
@@ -728,7 +728,7 @@
     "webhook-revoke-title": "Batalkan webhook ini?",
     "webhook-revoke-description": "Ia berhenti menghantar perubahan serta-merta.",
     "webhook-secret-title": "Rahsia tandatangan",
-    "webhook-secret-description": "Salin sekarang, kerana sistem anda menyemak setiap permintaan dengannya dan ia tidak akan ditunjukkan lagi.",
+    "webhook-secret-description": "Salin sekarang, kerana sistem kamu menyemak setiap permintaan dengannya dan ia tidak akan ditunjukkan lagi.",
     "webhook-deliveries": "Penghantaran",
     "webhook-deliveries-empty": "Belum ada perubahan yang dihantar.",
     "deliveries-footer": "Penghantaran yang gagal boleh dihantar semula.",
@@ -793,7 +793,7 @@
     "back-to-school": "Kembali ke {school}",
     "manage-settings": "Tetapan",
     "address-copy": "Salin alamat",
-    "address-footer": "Salin untuk dikongsi dengan sekolah anda.",
+    "address-footer": "Salin untuk dikongsi dengan sekolah kamu.",
     "logo-title": "Logo sekolah",
     "logo-description": "Ia dipaparkan di bar sisi, di halaman log masuk dan pada kad laporan.",
     "address-title": "Alamat sekolah",
@@ -931,7 +931,7 @@
     "placement-add-footer": "Seorang pelajar berada dalam satu kumpulan kelas bagi setiap penggal.",
     "placement-student": "Pelajar",
     "placement-move": "Pindah",
-    "placement-move-footer": "Pelajar meninggalkan kumpulan kelas ini ke kumpulan kelas yang anda pilih.",
+    "placement-move-footer": "Pelajar meninggalkan kumpulan kelas ini ke kumpulan kelas yang kamu pilih.",
     "placement-move-to": "Pindah ke",
     "placement-move-placeholder": "Pilih kumpulan kelas",
     "placement-move-save": "Pindah",
@@ -1342,7 +1342,7 @@
     "student-add-title": "Tambah pelajar",
     "student-add-description": "Pelajar mendapat nama log masuk dan kad log masuk pertama, ditambah serentak.",
     "student-add-name": "Nama",
-    "student-add-footer": "Cetak kad sebelum anda menutupnya, kerana kod hanya ditunjukkan sekali.",
+    "student-add-footer": "Cetak kad sebelum kamu menutupnya, kerana kod hanya ditunjukkan sekali.",
     "student-add-seats": "{count} daripada {limit} akaun digunakan.",
     "student-add-submit": "Tambah pelajar",
     "invites-empty": "Tiada jemputan yang menunggu.",
@@ -1407,7 +1407,7 @@
     "locale-currency": "Mata wang",
     "locale-footer": "Setiap perubahan direkodkan dalam jejak audit.",
     "homeroom-description": "Seorang guru memimpin setiap kumpulan kelas.",
-    "webhook-changes-description": "Sistem anda dimaklumkan setiap kali salah satu daripada ini berlaku.",
+    "webhook-changes-description": "Sistem kamu dimaklumkan setiap kali salah satu daripada ini berlaku.",
     "webhook-changes-none": "Klien ini tidak membaca apa-apa yang dihantar oleh webhook, jadi sunting tindakannya dahulu.",
     "webhook-client-none": "Webhook milik klien API, jadi cipta satu dahulu.",
     "class-students": "Pelajar",
@@ -1420,13 +1420,13 @@
     "billing-plan-trial": "Percubaan",
     "billing-plan-pro": "Pro",
     "billing-plan-max": "Max",
-    "billing-trial-description": "Setiap ciri dengan data sebenar anda sehingga {date}.",
-    "billing-paid-description": "Pelan anda berjalan sehingga {date}.",
+    "billing-trial-description": "Setiap ciri dengan data sebenar kamu sehingga {date}.",
+    "billing-paid-description": "Pelan kamu berjalan sehingga {date}.",
     "billing-credits": "Kredit AI",
     "billing-credits-trial": "{total} kredit untuk seluruh tempoh percubaan",
     "billing-credits-used": "{used} daripada {total} digunakan bulan ini",
     "billing-drive": "Drive",
-    "billing-trial-footer": "Pilih Pro atau Max untuk mengekalkan data anda selepas tempoh percubaan.",
+    "billing-trial-footer": "Pilih Pro atau Max untuk mengekalkan data kamu selepas tempoh percubaan.",
     "billing-renew-footer": "Perbaharui sebelum pelan tamat. Tiada yang diperbaharui secara automatik.",
     "billing-open-footer": "Bayar invois yang belum dibayar sebelum {date}.",
     "billing-choose": "Pilih pelan",
@@ -1434,7 +1434,7 @@
     "billing-accounts": "Akaun",
     "billing-accounts-description": "Setiap pelajar, guru, kakitangan, pentadbir dan ibu bapa dikira sekali.",
     "billing-accounts-used": "{used} daripada {total} akaun digunakan",
-    "billing-accounts-footer": "Akaun tambahan dibilkan bagi baki hari dalam pelan anda.",
+    "billing-accounts-footer": "Akaun tambahan dibilkan bagi baki hari dalam pelan kamu.",
     "billing-accounts-trial": "Tempoh percubaan memuatkan {limit} akaun. Pilih pelan untuk lebih.",
     "billing-add-accounts": "Tambah akaun",
     "billing-order-title": "Pilih pelan",
@@ -1468,7 +1468,7 @@
     "billing-plan-school": "Sekolah",
     "billing-seats-buy": "Beli tempat",
     "billing-seats-title": "Beli tempat di Polar",
-    "billing-seats-description": "Satu tempat bagi setiap {seats} akaun yang belum dibayar oleh mana-mana pelan, diperbaharui sehingga anda membatalkan.",
+    "billing-seats-description": "Satu tempat bagi setiap {seats} akaun yang belum dibayar oleh mana-mana pelan, diperbaharui sehingga kamu membatalkan.",
     "billing-seats-month": "Setiap bulan",
     "billing-seats-year": "Setiap tahun",
     "billing-seats-each": "{price} bagi setiap tempat",
@@ -1504,14 +1504,14 @@
     "discussion-first-placeholder": "Perkara yang patut dibincangkan oleh kelas",
     "discussion-title-placeholder": "Soalan untuk kelas",
     "discussion-title-hint": "Namakan perkara yang akan dibincangkan oleh kelas.",
-    "handin-placeholder": "Jawapan anda, atau pautan kepada kerja anda",
+    "handin-placeholder": "Jawapan kamu, atau pautan kepada kerja kamu",
     "library-title-placeholder": "Modul kinematik",
     "task-day-placeholder": "Pilih hari",
     "task-text-placeholder": "Apa yang dihantar oleh pelajar, dan bagaimana",
     "task-time-placeholder": "Pilih masa",
     "task-title-placeholder": "Latihan bab 3",
     "send-message": "Hantar",
-    "send-failed": "Mesej anda tidak dihantar.",
+    "send-failed": "Mesej kamu tidak dihantar.",
     "send-retry": "Cuba lagi",
     "message-hidden": "Seorang guru telah menyembunyikan mesej ini.",
     "message-edited": "Disunting",
@@ -1538,7 +1538,7 @@
     "discussion-text": "Mesej pertama",
     "discussion-start": "Mulakan",
     "discussions-closed": "Hanya guru yang membuka perbincangan dalam sekolah ini.",
-    "discussion-failed": "Perbincangan anda tidak dimulakan.",
+    "discussion-failed": "Perbincangan kamu tidak dimulakan.",
     "reply-placeholder": "Tulis balasan",
     "posts": "Pengumuman",
     "posts-empty": "Belum ada pengumuman",
@@ -1551,7 +1551,7 @@
     "post-schedule": "Siarkan kemudian",
     "post-schedule-when": "Disiarkan pada",
     "post-schedule-submit": "Jadualkan",
-    "post-schedule-description": "Hanya anda yang melihatnya sehingga tiba masanya.",
+    "post-schedule-description": "Hanya kamu yang melihatnya sehingga tiba masanya.",
     "post-schedule-cancel": "Batalkan siaran",
     "post-scheduled": "Dijadualkan",
     "post-new-poll": "Undian baharu",
@@ -1631,7 +1631,7 @@
     "task-handed-in-late": "Dihantar lewat",
     "task-scored": "{score} daripada {points} mata",
     "task-standing-scored": "Diberi markah",
-    "task-work": "Kerja anda",
+    "task-work": "Kerja kamu",
     "task-student": "Pelajar",
     "task-hand-in": "Hantar",
     "task-closed": "Tugasan ini ditutup pada tarikh akhirnya.",
@@ -1662,9 +1662,9 @@
     "channel-remove-title": "Padam sembang ini",
     "channel-remove-description": "Mesej dan failnya hilang untuk semua orang, dan tidak boleh dikembalikan.",
     "chat-preview": "{author}: {text}",
-    "chat-preview-mine": "Anda: {text}",
+    "chat-preview-mine": "Kamu: {text}",
     "chat-pick": "Pilih sembang",
-    "chat-pick-description": "Sembang kelas berada di sebelah kiri, dan yang anda buka dibaca di sini.",
+    "chat-pick-description": "Sembang kelas berada di sebelah kiri, dan yang kamu buka dibaca di sini.",
     "attach-add": "Tambah foto, dokumen atau undian",
     "attach-photo": "Foto",
     "attach-document": "Dokumen",
@@ -1701,7 +1701,7 @@
     "poll-title": "Undian baharu",
     "poll-description": "Semua orang dalam sembang mengundi, dan kelas melihat kiraannya.",
     "poll-question": "Soalan",
-    "poll-question-placeholder": "Bilakah ujian patut diadakan?",
+    "poll-question-placeholder": "Bila ujian patut diadakan?",
     "poll-options": "Pilihan",
     "poll-option": "Pilihan {number}",
     "poll-add-option": "Tambah pilihan",
@@ -1770,12 +1770,12 @@
     "post-restore": "Pulihkan",
     "posts-archived": "Diarkibkan",
     "posts-archived-empty": "Tiada pengumuman yang diarkibkan",
-    "posts-archived-empty-description": "Pengumuman yang anda arkibkan menunggu di sini, dan Pulihkan membawanya kembali.",
+    "posts-archived-empty-description": "Pengumuman yang kamu arkibkan menunggu di sini, dan Pulihkan membawanya kembali.",
     "threads-archived": "Diarkibkan",
     "discussion-archive": "Arkibkan",
     "discussion-restore": "Pulihkan",
     "tasks-archived-empty": "Tiada tugasan yang diarkibkan",
-    "tasks-archived-empty-description": "Tugasan yang anda arkibkan menunggu di sini, dan Pulihkan membawanya kembali."
+    "tasks-archived-empty-description": "Tugasan yang kamu arkibkan menunggu di sini, dan Pulihkan membawanya kembali."
   },
   "SchoolGrades": {
     "email": "E-mel",
@@ -1850,7 +1850,7 @@
     "own-title": "Kad laporan saya",
     "own-search": "Cari kumpulan kelas",
     "own-empty": "Belum ada kad laporan yang dikunci.",
-    "own-empty-description": "Kad laporan anda dipaparkan di sini sebaik sahaja pengetua meluluskannya.",
+    "own-empty-description": "Kad laporan kamu dipaparkan di sini sebaik sahaja pengetua meluluskannya.",
     "unit": "Unit"
   },
   "SchoolGraduation": {
@@ -1911,10 +1911,10 @@
     "export-readiness": "Eksport untuk e-Ijazah"
   },
   "SchoolStart": {
-    "metadata-title": "Buka sekolah anda",
-    "metadata-description": "Jawab lima soalan dan Nakafa School anda sedia untuk digunakan.",
+    "metadata-title": "Buka sekolah kamu",
+    "metadata-description": "Jawab lima soalan dan Nakafa School kamu sedia untuk digunakan.",
     "progress": "Soalan {current} daripada {total}",
-    "name-title": "Apakah nama sekolah anda?",
+    "name-title": "Apa nama sekolah kamu?",
     "name-label": "Nama sekolah",
     "name-placeholder": "Harapan Bangsa",
     "name-error": "Masukkan nama sekurang-kurangnya 3 aksara.",
@@ -1923,7 +1923,7 @@
     "address-taken": "Sekolah lain menggunakan alamat ini.",
     "address-reserved": "Alamat ini dikhaskan.",
     "address-invalid": "Guna 2 hingga 63 huruf kecil, nombor atau tanda sempang.",
-    "country-title": "Di manakah sekolah anda?",
+    "country-title": "Di mana sekolah kamu?",
     "country-description": "Ini menetapkan mata wang, bahasa dan tahun persekolahan.",
     "country": {
       "ID": "Indonesia",
@@ -1932,7 +1932,7 @@
       "DE": "Jerman",
       "US": "Amerika Syarikat"
     },
-    "levels-title": "Peringkat manakah yang anda ajar?",
+    "levels-title": "Peringkat mana yang kamu ajar?",
     "levels-description": "Setiap peringkat menjadi unitnya sendiri.",
     "levels-error": "Pilih sekurang-kurangnya satu peringkat.",
     "level": {
@@ -1990,8 +1990,8 @@
       "other": "Lain-lain"
     },
     "unit-name": "{name} {level}",
-    "role-title": "Apakah peranan anda?",
-    "role-description": "Anda tetap pemilik sekolah.",
+    "role-title": "Apa peranan kamu?",
+    "role-description": "Kamu tetap pemilik sekolah.",
     "role": {
       "principal": {
         "title": "Pengetua",
@@ -2010,8 +2010,8 @@
         "description": "Memiliki satu atau lebih sekolah."
       }
     },
-    "size-title": "Berapakah bilangan pelajar anda?",
-    "size-description": "Percuma untuk bermula. Kami cadangkan pelan mengikut saiz anda.",
+    "size-title": "Berapa bilangan pelajar kamu?",
+    "size-description": "Percuma untuk bermula. Kami cadangkan pelan mengikut saiz kamu.",
     "size": {
       "s": "Kurang daripada 100",
       "m": "100 hingga 499",
@@ -2031,9 +2031,9 @@
     "required-error": "Pilih satu jawapan.",
     "school-limit-line": "Mengasaskan lebih banyak sekolah memerlukan perbincangan terlebih dahulu.",
     "address-check-failed": "Kami tidak dapat menyemak alamat ini, jadi taip semula untuk mencuba lagi.",
-    "entry-title": "Pergi ke sekolah anda",
-    "entry-student": "Taip alamat sekolah anda, atau imbas kod QR daripada guru anda.",
-    "entry-parent": "Taip alamat sekolah anak anda untuk pergi ke sana.",
+    "entry-title": "Pergi ke sekolah kamu",
+    "entry-student": "Taip alamat sekolah kamu, atau imbas kod QR daripada guru kamu.",
+    "entry-parent": "Taip alamat sekolah anak kamu untuk pergi ke sana.",
     "entry-field": "Alamat sekolah",
     "entry-hint": "Alamat ini ada dalam pautan daripada sekolah, seperti harapan.nakafa.com.",
     "entry-invalid": "Contohnya harapan.nakafa.com.",
@@ -2122,7 +2122,7 @@
     "menu-sources": "Sumber",
     "menu-theme": "Tema",
     "menu-type": "Bentuk",
-    "offline-note": "Perubahan anda disimpan sebaik sahaja anda kembali dalam talian.",
+    "offline-note": "Perubahan kamu disimpan sebaik sahaja kamu kembali dalam talian.",
     "popup-empty": "Belum ada apa-apa untuk dipilih.",
     "page-navigation": "Navigasi halaman",
     "contributor-description": "Orang ini membantu membina Nakafa.",
@@ -2141,7 +2141,7 @@
     "arabic-minus": "Tanda tolak",
     "load-error": "Kami tidak dapat memuatkan data ini.",
     "load-error-title": "Sesuatu tidak kena",
-    "part-denied": "Bahagian sekolah ini tidak dibuka untuk anda.",
+    "part-denied": "Bahagian sekolah ini tidak dibuka untuk kamu.",
     "loading": "Memuatkan",
     "month": "Bulan",
     "year": "Tahun",
@@ -2311,7 +2311,7 @@
   },
   "LearningPrograms": {
     "metadata-title": "Mula belajar dengan Nakafa",
-    "metadata-description": "Pilih perkara yang anda perlukan bantuan dan satu langkah pertama.",
+    "metadata-description": "Pilih perkara yang kamu perlukan bantuan dan satu langkah pertama.",
     "curriculum-index-metadata-title": "Kurikulum sekolah di Nakafa",
     "curriculum-index-metadata-description": "Pilih laluan kurikulum sekolah dan layari mata pelajaran Nakafa mengikut standard setiap negara.",
     "curriculum-index-title": "Kurikulum sekolah",
@@ -2319,7 +2319,7 @@
     "curriculum-route-action": "Lihat pilihan",
     "onboarding": {
       "progress": "Soalan {current} daripada {total}",
-      "role-title": "Siapakah anda?",
+      "role-title": "Siapa kamu?",
       "role": {
         "student": {
           "title": "Pelajar",
@@ -2331,11 +2331,11 @@
         },
         "parent": {
           "title": "Ibu bapa",
-          "description": "Sokong anak anda."
+          "description": "Sokong anak kamu."
         }
       },
-      "region-title": "Di negara manakah anda berada?",
-      "region-description": "Ini menetapkan bahasa dan kurikulum anda.",
+      "region-title": "Di negara mana kamu berada?",
+      "region-description": "Ini menetapkan bahasa dan kurikulum kamu.",
       "region": {
         "indonesia": {
           "title": "Indonesia"
@@ -2356,7 +2356,7 @@
           "title": "Antarabangsa"
         }
       },
-      "focus-title": "Apakah yang anda mahu lakukan?",
+      "focus-title": "Apa yang kamu mahu lakukan?",
       "focus": {
         "learning": {
           "title": "Belajar",
@@ -2377,14 +2377,14 @@
   "Notifications": {
     "title": "Pemberitahuan",
     "preferences": "Keutamaan",
-    "preferences-description": "Pilih perkara yang sampai kepada anda. Peti masuk sentiasa menyimpan setiap notis.",
-    "preferences-footer": "Pilihan anda mengikut akaun anda.",
+    "preferences-description": "Pilih perkara yang sampai kepada kamu. Peti masuk sentiasa menyimpan setiap notis.",
+    "preferences-footer": "Pilihan kamu mengikut akaun kamu.",
     "preferences-kind": "Notis",
     "channel-push": "Tolak",
     "channel-email": "E-mel",
     "channel-on": "Hidup",
     "channel-off": "Mati",
-    "kind-commentReply": "Balasan kepada komen anda",
+    "kind-commentReply": "Balasan kepada komen kamu",
     "kind-forumMention": "Sebutan dalam kelas",
     "kind-classAnnouncement": "Pengumuman kelas",
     "kind-taskPublished": "Tugasan baharu",
@@ -2402,11 +2402,11 @@
     "topic-comments": "Komen",
     "topic-school": "Sekolah",
     "topic-empty": "Belum ada apa-apa di sini.",
-    "empty": "Anda belum mempunyai pemberitahuan.",
-    "person-invited": "Anda telah dijemput untuk menyertai sekolah ini.",
-    "forum-mentioned": "{actor} menyebut anda dalam {className}.",
-    "forum-mentioned-gone": "Anda disebut dalam kelas yang tidak lagi anda baca.",
-    "comment-replied": "Membalas komen anda.",
+    "empty": "Kamu belum mempunyai pemberitahuan.",
+    "person-invited": "Kamu telah dijemput untuk menyertai sekolah ini.",
+    "forum-mentioned": "{actor} menyebut kamu dalam {className}.",
+    "forum-mentioned-gone": "Kamu disebut dalam kelas yang tidak lagi kamu baca.",
+    "comment-replied": "Membalas komen kamu.",
     "comment-replied-gone": "Balasan ini telah dipadam.",
     "announcement-posted": "{actor} menyiarkan pengumuman dalam {className}.",
     "announcement-posted-gone": "Pengumuman yang sudah tiada.",
@@ -2420,14 +2420,14 @@
     "exam-starting": "{examTitle} dibuka pada {opensAt, time, short} di {room}.",
     "exam-reminder": "{student} menduduki {examTitle} pada {opensAt, date, long} pukul {opensAt, time, short} di {room}.",
     "exam-gone": "Peperiksaan yang tidak lagi menunggu untuk dibuka.",
-    "grade-released": "Markah anda dalam {className} telah dikeluarkan.",
+    "grade-released": "Markah kamu dalam {className} telah dikeluarkan.",
     "grade-released-child": "Markah {student} dalam {className} telah dikeluarkan.",
     "grade-gone": "Markah yang tidak lagi dikeluarkan."
   },
   "Posts": {
     "placeholder": "Apa yang baharu?",
     "post": "Siarkan",
-    "empty": "Anda belum menyiarkan apa-apa.",
+    "empty": "Kamu belum menyiarkan apa-apa.",
     "delete-title": "Padam siaran?",
     "delete-description": "Siaran dan sukaannya dipadam untuk selama-lamanya."
   },
@@ -2446,7 +2446,7 @@
     "vocational-school": "Sekolah Vokasional",
     "university": "Universiti",
     "grade": "Gred {grade}",
-    "grade-description": "Pilih mata pelajaran yang sepadan dengan gred anda.",
+    "grade-description": "Pilih mata pelajaran yang sepadan dengan gred kamu.",
     "chapter": "Bab",
     "mathematics": "Matematik",
     "physics": "Fizik",
@@ -2497,14 +2497,14 @@
     "verses": "Ayat"
   },
   "Tryouts": {
-    "title": "Percubaan apa yang anda mahu hari ini?",
+    "title": "Percubaan apa yang kamu mahu hari ini?",
     "hub-search-title": "Peperiksaan Percubaan Dalam Talian Percuma dengan Skor Segera",
-    "metadata-description": "Peperiksaan percubaan bermasa, dimarkah sebaik sahaja anda selesai. Percuma dan tanpa had di Nakafa.",
-    "route-metadata-description": "Peperiksaan percubaan {name} bermasa, dimarkah sebaik sahaja anda selesai. Percuma dan tanpa had di Nakafa.",
+    "metadata-description": "Peperiksaan percubaan bermasa, dimarkah sebaik sahaja kamu selesai. Percuma dan tanpa had di Nakafa.",
+    "route-metadata-description": "Peperiksaan percubaan {name} bermasa, dimarkah sebaik sahaja kamu selesai. Percuma dan tanpa had di Nakafa.",
     "search-title": "Peperiksaan Percubaan {name} Percuma",
-    "track-metadata-description": "Pilih set percubaan {exam} di Nakafa: bermasa, dan dimarkah sebaik sahaja anda selesai.",
-    "set-metadata-description": "Jawab {exam} {set} di Nakafa: percubaan bermasa, dimarkah sebaik sahaja anda selesai.",
-    "section-metadata-description": "Berlatih {section} daripada {exam} {set} di Nakafa: percubaan bermasa, dimarkah sebaik sahaja anda selesai.",
+    "track-metadata-description": "Pilih set percubaan {exam} di Nakafa: bermasa, dan dimarkah sebaik sahaja kamu selesai.",
+    "set-metadata-description": "Jawab {exam} {set} di Nakafa: percubaan bermasa, dimarkah sebaik sahaja kamu selesai.",
+    "section-metadata-description": "Berlatih {section} daripada {exam} {set} di Nakafa: percubaan bermasa, dimarkah sebaik sahaja kamu selesai.",
     "country-selector-label": "Negara",
     "exam-selector-label": "Peperiksaan",
     "open-country-cta": "Lihat peperiksaan",
@@ -2518,23 +2518,23 @@
     "action-loading": "Memuatkan",
     "cancel-cta": "Batal",
     "start-dialog-title": "Mulakan percubaan ini?",
-    "start-dialog-description": "Percubaan anda kekal aktif sehingga 3 hari, dan sebaik sahaja anda bermula, anda boleh memilih bahagian yang hendak dijawab dahulu.",
+    "start-dialog-description": "Percubaan kamu kekal aktif sehingga 3 hari, dan sebaik sahaja kamu bermula, kamu boleh memilih bahagian yang hendak dijawab dahulu.",
     "free-dialog-title": "Mulakan percubaan percuma",
-    "free-dialog-description": "Ulang sesuka hati dengan skor anda disimpan, setiap cubaan kekal aktif selama 3 hari, dan penyelesaian disertakan dengan Nakafa Pro.",
-    "free-entry-dialog-description": "Ulang sesuka hati dengan skor anda disimpan, pemasa bermula apabila anda bermula, dan penyelesaian disertakan dengan Nakafa Pro.",
+    "free-dialog-description": "Ulang sesuka hati dengan skor kamu disimpan, setiap cubaan kekal aktif selama 3 hari, dan penyelesaian disertakan dengan Nakafa Pro.",
+    "free-entry-dialog-description": "Ulang sesuka hati dengan skor kamu disimpan, pemasa bermula apabila kamu bermula, dan penyelesaian disertakan dengan Nakafa Pro.",
     "restart-dialog-title": "Mulakan percubaan ini dari awal?",
-    "restart-dialog-description": "Keputusan anda sebelum ini kekal disimpan.",
-    "restart-entry-dialog-description": "Pemasa bermula serta-merta, dan keputusan anda sebelum ini kekal disimpan.",
-    "start-entry-dialog-description": "Pemasa bermula sebaik sahaja anda bermula.",
+    "restart-dialog-description": "Keputusan kamu sebelum ini kekal disimpan.",
+    "restart-entry-dialog-description": "Pemasa bermula serta-merta, dan keputusan kamu sebelum ini kekal disimpan.",
+    "start-entry-dialog-description": "Pemasa bermula sebaik sahaja kamu bermula.",
     "paywall-title": "{count, plural, one {Lihat penyelesaian soalan ini} other {Lihat penyelesaian kesemua # soalan}}",
     "paywall-description": "Pelajari langkah dan penaakulan di sebalik setiap jawapan, dan tanya Nina apabila ada yang kurang jelas.",
     "paywall-compare": "Bandingkan pelan",
-    "paywall-footer": "Batal pada bila-bila masa.",
+    "paywall-footer": "Batal bila-bila masa.",
     "ask-nina-prompt": "Bantu saya memahami soalan {number}.",
     "score-label-estimated": "Anggaran skor",
     "score-label-standard": "Skor",
     "correct-answers-label": "Jawapan betul",
-    "finished-panel": "Keputusan anda",
+    "finished-panel": "Keputusan kamu",
     "menu-history": "Sejarah",
     "attempt-menu-search-placeholder": "Cari cubaan...",
     "attempt-menu-empty": "Tiada cubaan yang sepadan ditemui.",
@@ -2557,7 +2557,7 @@
     "time-seconds-short": "saat",
     "complete-part-cta": "Selesai",
     "complete-part-title": "Selesaikan bahagian ini?",
-    "complete-part-description": "Jika anda selesai sekarang, jawapan dalam bahagian ini akan dikunci.",
+    "complete-part-description": "Jika kamu selesai sekarang, jawapan dalam bahagian ini akan dikunci.",
     "back-to-set-cta": "Kembali",
     "set-column-duration": "Tempoh",
     "set-duration-minutes": "{minutes, number} min",
@@ -2569,8 +2569,8 @@
     "explanation": "Penyelesaian",
     "prompt": "Soalan",
     "reading": "Petikan",
-    "start-timer": "Pemasa berjalan sebaik sahaja anda bermula",
-    "start-history": "Jawapan anda kekal dalam sejarah anda"
+    "start-timer": "Pemasa berjalan sebaik sahaja kamu bermula",
+    "start-history": "Jawapan kamu kekal dalam sejarah kamu"
   },
   "Player": {
     "navigator": "Soalan",
@@ -2607,22 +2607,22 @@
   "Utils": {
     "clear-search": "Kosongkan carian",
     "search-bar-placeholder": "Cari kandungan...",
-    "search-placeholder": "Cari apa yang anda mahu...",
+    "search-placeholder": "Cari apa yang kamu mahu...",
     "search-not-found": "Kami tidak menemui apa-apa yang sepadan.",
     "search-loading": "Mencari hasil...",
     "search-error": "Ralat berlaku semasa mencari.",
     "search-title": "Cari Bahan Pembelajaran",
     "search-results": "Hasil carian",
-    "search-description": "Cari bahan pembelajaran percuma, artikel pendidikan, latihan dan sumber ulang kaji. Temui topik yang sedang anda pelajari."
+    "search-description": "Cari bahan pembelajaran percuma, artikel pendidikan, latihan dan sumber ulang kaji. Temui topik yang sedang kamu pelajari."
   },
   "Home": {
     "greeting": "Hai, {name}",
-    "title": "Apakah yang anda mahu pelajari?",
+    "title": "Apa yang kamu mahu pelajari?",
     "contribute": "Sumbang",
     "videos": "Video",
     "trending-subjects": "Mata Pelajaran Popular Minggu Ini",
     "explore-materials": "Teroka Bahan",
-    "guest": "anda",
+    "guest": "kamu",
     "continue-learning": "Teruskan Belajar"
   },
   "Marketing": {
@@ -2635,7 +2635,7 @@
     "explore": "Teroka",
     "features": "Ciri",
     "start": "Mula",
-    "school-enter": "Sekolah anda",
+    "school-enter": "Sekolah kamu",
     "school-forum": "Forum",
     "school-library": "Perpustakaan",
     "school-tasks": "Tugasan",
@@ -2667,21 +2667,21 @@
   },
   "Auth": {
     "agents": "Ejen",
-    "agents-description": "Ejen yang anda benarkan boleh menggunakan akaun anda.",
+    "agents-description": "Ejen yang kamu benarkan boleh menggunakan akaun kamu.",
     "agents-empty": "Belum ada ejen yang mempunyai akses.",
     "agents-footer": "Membatalkan ejen menamatkan aksesnya.",
     "agents-revoke": "Batalkan",
-    "agent-address": "Anda kembali ke {host} selepas ini.",
+    "agent-address": "Kamu kembali ke {host} selepas ini.",
     "agent-allow": "Benarkan",
     "agent-deny": "Tolak",
-    "agent-description": "Ejen ini boleh membaca dan mengubah segala yang boleh anda lakukan di Nakafa. Benarkan hanya ejen yang anda percayai.",
-    "agent-failed": "Jawapan anda tidak disimpan, jadi cuba lagi.",
-    "agent-title": "Benarkan {name} menggunakan akaun anda?",
+    "agent-description": "Ejen ini boleh membaca dan mengubah segala yang boleh kamu lakukan di Nakafa. Benarkan hanya ejen yang kamu percayai.",
+    "agent-failed": "Jawapan kamu tidak disimpan, jadi cuba lagi.",
+    "agent-title": "Benarkan {name} menggunakan akaun kamu?",
     "agent-unnamed": "Ejen ini",
     "back-to-nakafa": "Kembali ke Nakafa",
     "continue-with-google": "Teruskan dengan Google",
     "sign-in-title": "Log masuk ke Nakafa",
-    "sign-in-description": "Supaya kemajuan anda kekal disimpan.",
+    "sign-in-description": "Supaya kemajuan kamu kekal disimpan.",
     "logout": "Log keluar",
     "login": "Log masuk",
     "login-cta-title": "Teruskan belajar",
@@ -2690,27 +2690,27 @@
     "pricing-cta": "Lihat pelan",
     "account": "Akaun",
     "learning": "Pembelajaran",
-    "learning-description": "Pilih peranan dan kurikulum yang membentuk pengalaman pembelajaran anda.",
+    "learning-description": "Pilih peranan dan kurikulum yang membentuk pengalaman pembelajaran kamu.",
     "billing": "Pengebilan",
     "personal": "Peribadi",
     "ai": "AI",
     "settings": "Tetapan",
-    "settings-description": "Urus tetapan akaun, keutamaan dan maklumat profil Nakafa anda untuk memperibadikan pengalaman pembelajaran anda.",
+    "settings-description": "Urus tetapan akaun, keutamaan dan maklumat profil Nakafa kamu untuk memperibadikan pengalaman pembelajaran kamu.",
     "profile": "Profil",
     "profile-description": "Lihat profil pembelajaran pengguna dengan sumbangan pendidikan, komen, kemajuan belajar dan aktiviti komuniti.",
     "chat": "Sembang",
     "chat-description": "Guna pembantu pembelajaran AI untuk bantuan kerja rumah, penjelasan konsep dan perbincangan ulang kaji.",
     "subscriptions": "Langganan",
-    "subscriptions-description": "Urus Nakafa Pro, {credits, number} kredit AI bulanan dan portal pembayaran anda.",
-    "plan-free-footer": "Anda menggunakan Percuma.",
-    "plan-pro-description": "Pelan Nakafa Pro anda aktif.",
-    "plan-pro-ending-description": "Pelan Nakafa Pro anda tamat pada akhir tempoh ini.",
-    "plan-pro-past-due-description": "Pembayaran terakhir anda tidak berjaya.",
-    "plan-pro-footer": "Tukar pada bila-bila masa.",
+    "subscriptions-description": "Urus Nakafa Pro, {credits, number} kredit AI bulanan dan portal pembayaran kamu.",
+    "plan-free-footer": "Kamu menggunakan Percuma.",
+    "plan-pro-description": "Pelan Nakafa Pro kamu aktif.",
+    "plan-pro-ending-description": "Pelan Nakafa Pro kamu tamat pada akhir tempoh ini.",
+    "plan-pro-past-due-description": "Pembayaran terakhir kamu tidak berjaya.",
+    "plan-pro-footer": "Tukar bila-bila masa.",
     "plan-pro-past-due-footer": "Pembayaran gagal.",
     "plan-granted-description": "Pro aktif pada akaun ini.",
     "plan-granted-footer": "Nakafa tidak mengenakan bayaran untuknya.",
-    "plan-pass-description": "Pas Pro anda berjalan sehingga {date}.",
+    "plan-pass-description": "Pas Pro kamu berjalan sehingga {date}.",
     "plan-pass-footer": "Baki masa dibawa ke hadapan.",
     "plan-pass-extend": "Lanjutkan",
     "plan-xendit-footer": "Tiada komitmen.",
@@ -2730,7 +2730,7 @@
     "manage-billing": "Urus",
     "upgrade": "Naik taraf",
     "credits": "Kredit Nina",
-    "credits-description": "Nina menggunakan kredit apabila menjawab soalan anda.",
+    "credits-description": "Nina menggunakan kredit apabila menjawab soalan kamu.",
     "credits-free-footer": "Pro memberi lebih banyak kredit.",
     "credits-pro-footer": "{price} untuk {credits, number}.",
     "credits-today": "Hari ini",
@@ -2739,23 +2739,23 @@
     "credits-resets": "Ditetapkan semula {date}",
     "credits-left": "Baki {left, number} daripada {total, number} kredit",
     "school-credits": "Kredit sekolah hari ini",
-    "school-credits-footer": "Sekolah anda memberikan kredit ini setiap hari.",
+    "school-credits-footer": "Sekolah kamu memberikan kredit ini setiap hari.",
     "plan-free": "Percuma",
     "plan-pro": "Pro",
     "name": "Nama",
-    "name-description": "Nama ini akan dipaparkan pada profil dan komen anda.",
-    "name-footer": "Sila guna antara 3 hingga 32 aksara.",
-    "name-placeholder": "Masukkan nama anda...",
+    "name-description": "Nama ini akan dipaparkan pada profil dan komen kamu.",
+    "name-footer": "Guna antara 3 hingga 32 aksara.",
+    "name-placeholder": "Masukkan nama kamu...",
     "picture": "Gambar profil",
-    "picture-description": "Dipaparkan di sebelah nama anda, pada profil dan dalam komen anda.",
+    "picture-description": "Dipaparkan di sebelah nama kamu, pada profil dan dalam komen kamu.",
     "picture-animal": "Haiwan",
     "picture-photo": "Foto Google",
     "picture-footer-animal": "Setiap kocokan menunjukkan haiwan lain.",
     "animal-shuffle": "Kocok haiwan",
     "username": "Nama pengguna",
     "username-placeholder": "alex_rivera",
-    "username-description": "Alamat anda di Nakafa ialah {address}.",
-    "username-footer": "Alamat lama tidak berfungsi lagi apabila anda menyimpan.",
+    "username-description": "Alamat kamu di Nakafa ialah {address}.",
+    "username-footer": "Alamat lama tidak berfungsi lagi apabila kamu menyimpan.",
     "username-available": "Tersedia.",
     "username-characters": "Hanya a-z, 0-9 dan garis bawah.",
     "username-letter-first": "Mesti bermula dengan huruf.",
@@ -2763,29 +2763,29 @@
     "username-taken": "Sudah digunakan.",
     "username-too-short": "Sekurang-kurangnya 3 aksara.",
     "bio": "Bio",
-    "bio-description": "Pilihan, dipaparkan pada profil anda.",
-    "bio-placeholder": "Tulis beberapa baris tentang diri anda...",
-    "bio-footer": "Menyimpan akan menggantikan bio semasa anda.",
-    "bio-too-long": "Pendekkan bio anda untuk menyimpannya.",
+    "bio-description": "Pilihan, dipaparkan pada profil kamu.",
+    "bio-placeholder": "Tulis beberapa baris tentang diri kamu...",
+    "bio-footer": "Menyimpan akan menggantikan bio semasa kamu.",
+    "bio-too-long": "Pendekkan bio kamu untuk menyimpannya.",
     "edit-profile": "Sunting profil",
     "share-profile": "Kongsi profil",
     "role": "Peranan",
-    "role-footer": "Anda boleh menukar peranan anda pada bila-bila masa.",
+    "role-footer": "Kamu boleh menukar peranan kamu bila-bila masa.",
     "role-placeholder": "Pilih peranan",
     "curriculum": "Kurikulum",
-    "curriculum-footer": "Anda boleh menukar kurikulum anda pada bila-bila masa.",
+    "curriculum-footer": "Kamu boleh menukar kurikulum kamu bila-bila masa.",
     "curriculum-placeholder": "Pilih kurikulum",
     "memory": "Memori",
-    "memory-description": "Apa yang Nina tahu tentang anda dan gunakan dalam setiap sembang.",
+    "memory-description": "Apa yang Nina tahu tentang kamu dan gunakan dalam setiap sembang.",
     "connectors": "Penyambung",
-    "connectors-description": "Google Drive dan Kalendar yang dibaca oleh Nina untuk anda seorang.",
+    "connectors-description": "Google Drive dan Kalendar yang dibaca oleh Nina untuk kamu seorang.",
     "delete-account": "Padam akaun",
-    "delete-account-description": "Padam profil dan data peribadi anda daripada Nakafa secara kekal.",
+    "delete-account-description": "Padam profil dan data peribadi kamu daripada Nakafa secara kekal.",
     "delete-account-footer": "Tindakan ini tidak boleh dibatalkan.",
     "delete-account-dialog-title": "Padam akaun?",
-    "delete-account-dialog-description": "Ini memadam profil dan data anda selama-lamanya dan membatalkan Nakafa Pro.",
+    "delete-account-dialog-description": "Ini memadam profil dan data kamu selama-lamanya dan membatalkan Nakafa Pro.",
     "delete-account-session-expired": "Sesi ini sudah terlalu lama, jadi log masuk semula.",
-    "delete-account-error": "Kami tidak dapat memadam akaun anda, jadi cuba lagi sebentar nanti.",
+    "delete-account-error": "Kami tidak dapat memadam akaun kamu, jadi cuba lagi sebentar nanti.",
     "delete-account-sign-in-again": "Log masuk semula",
     "teacher": "Guru",
     "student": "Pelajar",
@@ -2803,8 +2803,8 @@
     "payments": "Pembayaran",
     "payments-description": "Pembayaran yang berjaya, yang terbaharu dahulu.",
     "payments-sheet-footer": "Tulis kepada {email} tentang sebarang pembayaran.",
-    "payments-card-description": "Sejarah anda dan invois bagi setiap pembayaran.",
-    "payments-footer": "Dapatkan invois anda.",
+    "payments-card-description": "Sejarah kamu dan invois bagi setiap pembayaran.",
+    "payments-footer": "Dapatkan invois kamu.",
     "payments-view": "Lihat",
     "payment-download": "Muat turun invois",
     "payment-portal": "Buka dalam Polar",
@@ -2816,9 +2816,9 @@
     "payment-cycle": "Langganan Pro",
     "payment-invoice": "Invois",
     "payment-pass": "Pas Pro",
-    "role-description": "Cara anda menggunakan Nakafa.",
-    "curriculum-description": "Kurikulum yang anda pelajari.",
-    "username-about": "Alamat anda di Nakafa."
+    "role-description": "Cara kamu menggunakan Nakafa.",
+    "curriculum-description": "Kurikulum yang kamu pelajari.",
+    "username-about": "Alamat kamu di Nakafa."
   },
   "Editor": {
     "arabic": "Papan kekunci Arab",
@@ -2887,7 +2887,7 @@
   },
   "Memory": {
     "remember": "Benarkan Nina menyimpan dan menggunakan memori",
-    "footer": "Memori kekal sehingga anda memadamnya.",
+    "footer": "Memori kekal sehingga kamu memadamnya.",
     "clear": "Padam semua",
     "clear-title": "Padam semua memori?",
     "clear-description": "Ini tidak boleh dibatalkan.",
@@ -2896,13 +2896,13 @@
     "memory": "Memori",
     "new": "Memori baharu",
     "empty": "Belum ada memori",
-    "empty-description": "Ceritakan tentang diri anda kepada Nina dalam sembang, atau tambah memori di sini.",
+    "empty-description": "Ceritakan tentang diri kamu kepada Nina dalam sembang, atau tambah memori di sini.",
     "no-result": "Tiada memori ditemui",
     "edit": "Sunting memori",
     "delete": "Padam memori",
     "delete-title": "Padam memori ini?",
     "delete-description": "Nina tidak akan mengingatinya lagi.",
-    "written-by-you": "Ditulis oleh anda {time}",
+    "written-by-you": "Ditulis oleh kamu {time}",
     "saved-by-nina": "Disimpan oleh Nina {time}",
     "ends": "Tamat {date}",
     "text": "Teks memori",
@@ -2915,7 +2915,7 @@
   },
   "Toast": {
     "offline-move": {
-      "title": "Anda di luar talian.",
+      "title": "Kamu di luar talian.",
       "description": "Sambung semula untuk membuka halaman ini."
     },
     "chat-deleted": {
@@ -3004,7 +3004,7 @@
     },
     "action-error": {
       "title": "Kami tidak dapat menyelesaikan tindakan ini.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "exam-in-use": {
       "title": "Peperiksaan ini mempunyai sesi.",
@@ -3018,7 +3018,7 @@
     },
     "curriculum-preference-error": {
       "title": "Pilihan kurikulum tidak disimpan.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "onboarding-finish-error": {
       "title": "Pendaftaran awal tidak selesai.",
@@ -3028,7 +3028,7 @@
       "title": "Jawab setiap soalan."
     },
     "onboarding-save-error": {
-      "title": "Jawapan anda tidak disimpan.",
+      "title": "Jawapan kamu tidak disimpan.",
       "description": "Cuba lagi."
     },
     "link-copied": {
@@ -3036,50 +3036,50 @@
     },
     "provider-error": {
       "title": "Kami tidak dapat meneruskan dengan Google.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "checkout-error": {
       "title": "Kami tidak dapat membuka pembayaran Pro.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "invoice-error": {
       "title": "Invois tidak dapat dimuat turun.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "portal-error": {
       "title": "Portal langganan tidak dibuka.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "mode-error": {
-      "title": "Kami tidak dapat menyimpan paparan anda.",
-      "description": "Sila cuba lagi."
+      "title": "Kami tidak dapat menyimpan paparan kamu.",
+      "description": "Cuba lagi."
     },
     "tryout-attempt-not-in-progress": {
       "title": "Sesi ini telah tamat.",
-      "description": "Sila mulakan sesi baharu untuk terus berlatih."
+      "description": "Mulakan sesi baharu untuk terus berlatih."
     },
     "tryout-complete-part-error": {
       "title": "Belum dapat menyelesaikan bahagian ini.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "tryout-preference-error": {
       "title": "Pilihan percubaan belum disimpan."
     },
     "tryout-start-error": {
       "title": "Kami belum dapat memulakan percubaan.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "tryout-start-part-error": {
       "title": "Kami belum dapat memulakan bahagian ini.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "tryout-submit-answer-error": {
-      "title": "Kami tidak dapat menyimpan jawapan anda.",
-      "description": "Sila cuba lagi."
+      "title": "Kami tidak dapat menyimpan jawapan kamu.",
+      "description": "Cuba lagi."
     },
     "tryout-flag-error": {
-      "title": "Kami tidak dapat menyimpan tanda anda.",
-      "description": "Sila cuba lagi."
+      "title": "Kami tidak dapat menyimpan tanda kamu.",
+      "description": "Cuba lagi."
     },
     "memory-limit": {
       "title": "Tunggu sebentar sebelum menyimpan lagi."
@@ -3104,11 +3104,11 @@
     },
     "failure-admission": {
       "title": "Nina tidak dapat menyimpan permintaan ini.",
-      "description": "Sila cuba lagi."
+      "description": "Cuba lagi."
     },
     "failure-attachment-failed": {
       "title": "Nina tidak dapat membaca atau menyimpannya.",
-      "description": "Sila cuba muat naik lampiran itu sekali lagi."
+      "description": "Cuba muat naik lampiran itu sekali lagi."
     },
     "failure-attachment-invalid": {
       "title": "Satu lampiran tidak lagi sah.",
@@ -3123,8 +3123,8 @@
       "description": "Jumlah dokumen dalam satu mesej paling banyak {size, number} MiB."
     },
     "failure-authentication": {
-      "title": "Kami tidak dapat mengesahkan sesi anda.",
-      "description": "Sila cuba lagi."
+      "title": "Kami tidak dapat mengesahkan sesi kamu.",
+      "description": "Cuba lagi."
     },
     "failure-busy": {
       "title": "Nina masih membalas dalam sembang ini.",
@@ -3132,19 +3132,19 @@
     },
     "failure-chat-access": {
       "title": "Tiada kebenaran untuk menghantar dalam sembang ini.",
-      "description": "Mulakan sembang anda sendiri untuk meneruskan."
+      "description": "Mulakan sembang kamu sendiri untuk meneruskan."
     },
     "failure-connection": {
       "title": "Kami tidak dapat mengesahkan permintaan ini.",
-      "description": "Semak sambungan anda dan cuba lagi."
+      "description": "Semak sambungan kamu dan cuba lagi."
     },
     "failure-context": {
       "title": "Bahan pembelajaran tidak dimuatkan.",
-      "description": "Nina tidak dapat membukanya, jadi hantar soalan anda sekali lagi."
+      "description": "Nina tidak dapat membukanya, jadi hantar soalan kamu sekali lagi."
     },
     "failure-credits": {
       "title": "Kredit tidak mencukupi untuk jawapan ini.",
-      "description": "Semak peruntukan anda dan tarikh tetapan semula seterusnya dalam tetapan langganan."
+      "description": "Semak peruntukan kamu dan tarikh tetapan semula seterusnya dalam tetapan langganan."
     },
     "failure-message-size": {
       "title": "Terlalu panjang untuk Nina dalam satu giliran.",
@@ -3152,37 +3152,37 @@
     },
     "failure-missing-chat": {
       "title": "Sembang ini tidak lagi tersedia.",
-      "description": "Anda boleh memulakan sembang baharu."
+      "description": "Kamu boleh memulakan sembang baharu."
     },
     "failure-rate-limit": {
       "title": "Had mesej jangka pendek dicapai.",
-      "description": "Tunggu sebentar, kemudian hantar mesej anda sekali lagi."
+      "description": "Tunggu sebentar, kemudian hantar mesej kamu sekali lagi."
     },
     "failure-request-conflict": {
       "title": "Permintaan ini sudah digunakan.",
-      "description": "Hantar soalan anda sekali lagi sebagai mesej baharu."
+      "description": "Hantar soalan kamu sekali lagi sebagai mesej baharu."
     },
     "failure-retry-unavailable": {
       "title": "Mesej ini tidak boleh dicuba semula.",
-      "description": "Hantar soalan anda sebagai mesej baharu."
+      "description": "Hantar soalan kamu sebagai mesej baharu."
     },
     "failure-session": {
-      "title": "Sesi anda telah tamat.",
+      "title": "Sesi kamu telah tamat.",
       "description": "Log masuk semula untuk meneruskan."
     },
     "admitted-elsewhere": {
       "title": "Nina sedang menjawab dalam sembang baharu"
     },
     "sign-out-error": {
-      "title": "Kami tidak dapat log keluar anda.",
-      "description": "Semak sambungan anda, kemudian cuba lagi."
+      "title": "Kami tidak dapat log keluar kamu.",
+      "description": "Semak sambungan kamu, kemudian cuba lagi."
     },
     "school-open-error": {
       "title": "Sekolah tidak dibuka.",
       "description": "Cuba lagi."
     },
     "school-limit": {
-      "title": "Anda sudah mengendalikan 3 sekolah.",
+      "title": "Kamu sudah mengendalikan 3 sekolah.",
       "description": "Berbincang dengan pengasas untuk lebih."
     },
     "school-rate": {
@@ -3191,10 +3191,10 @@
     },
     "school-login-account": {
       "title": "Log masuk sekolah tidak boleh membuka sekolah.",
-      "description": "Log masuk dengan akaun anda sendiri untuk membukanya."
+      "description": "Log masuk dengan akaun kamu sendiri untuk membukanya."
     },
     "school-save-error": {
-      "title": "Jawapan anda tidak disimpan.",
+      "title": "Jawapan kamu tidak disimpan.",
       "description": "Cuba lagi."
     },
     "school-cohort-archived": {
@@ -3245,32 +3245,32 @@
       "title": "Penggal dipadam."
     },
     "sitting-not-in": {
-      "title": "Anda tidak berada dalam sesi ini.",
-      "description": "Tanya pengawas anda jika anda rasa ini salah."
+      "title": "Kamu tidak berada dalam sesi ini.",
+      "description": "Tanya pengawas kamu jika kamu rasa ini salah."
     },
     "sitting-locked": {
       "title": "Sesi ini dikunci.",
-      "description": "Tanya guru anda langkah seterusnya."
+      "description": "Tanya guru kamu langkah seterusnya."
     },
     "sitting-answers-unsent": {
       "title": "Sebahagian jawapan mungkin tidak disimpan.",
-      "description": "Sebahagiannya mungkin tidak sampai ke peperiksaan, jadi beritahu pengawas anda."
+      "description": "Sebahagiannya mungkin tidak sampai ke peperiksaan, jadi beritahu pengawas kamu."
     },
     "sitting-attempt-closed": {
       "title": "Percubaan ini sudah ditutup.",
-      "description": "Tanya pengawas anda jika anda rasa masanya salah."
+      "description": "Tanya pengawas kamu jika kamu rasa masanya salah."
     },
     "sitting-attempt-locked": {
       "title": "Percubaan ini dikunci.",
-      "description": "Tunggu sehingga pengawas anda membuka kuncinya, kemudian cuba lagi."
+      "description": "Tunggu sehingga pengawas kamu membuka kuncinya, kemudian cuba lagi."
     },
     "sitting-second-device": {
       "title": "Peranti lain memegang percubaan ini.",
-      "description": "Minta pengawas anda membenarkan peranti kedua."
+      "description": "Minta pengawas kamu membenarkan peranti kedua."
     },
     "sitting-device-retired": {
       "title": "Peranti ini telah dihentikan.",
-      "description": "Tanya pengawas anda peranti mana yang boleh digunakan."
+      "description": "Tanya pengawas kamu peranti mana yang boleh digunakan."
     },
     "sitting-response-refused": {
       "title": "Jawapan ini tidak sesuai.",
@@ -3290,7 +3290,7 @@
     },
     "school-refusal-period-active": {
       "title": "Penggal lain sudah aktif.",
-      "description": "Arkibkan penggal aktif sebelum anda membuka penggal ini."
+      "description": "Arkibkan penggal aktif sebelum kamu membuka penggal ini."
     },
     "school-refusal-period-not-active": {
       "title": "Penggal ini tidak aktif.",
@@ -3393,8 +3393,8 @@
       "description": "Minta orang itu log masuk dengan akaun tersebut."
     },
     "school-refusal-access": {
-      "title": "Akses sekolah anda telah berubah.",
-      "description": "Minta pentadbir sekolah ini menyemak akses anda."
+      "title": "Akses sekolah kamu telah berubah.",
+      "description": "Minta pentadbir sekolah ini menyemak akses kamu."
     },
     "school-refusal-action-closed": {
       "title": "Satu tindakan ditutup kepada klien API.",
@@ -3422,7 +3422,7 @@
     },
     "school-refusal-grant-limit": {
       "title": "Orang ini sudah memegang cukup peranan.",
-      "description": "Buang satu peranan sebelum anda memberikan yang lain."
+      "description": "Buang satu peranan sebelum kamu memberikan yang lain."
     },
     "school-refusal-seat-limit": {
       "title": "Setiap akaun sedang digunakan.",
@@ -3481,15 +3481,15 @@
       "description": "Unit lain sekolah ini sudah memilikinya."
     },
     "import-reading": {
-      "title": "Nina sedang membaca fail anda.",
+      "title": "Nina sedang membaca fail kamu.",
       "description": "Setiap soalan dipaparkan dalam peperiksaan semasa dia membacanya."
     },
     "import-done": {
-      "title": "Soalan anda sudah ada dalam peperiksaan.",
+      "title": "Soalan kamu sudah ada dalam peperiksaan.",
       "description": "Setiap soalan mempunyai jawapan yang betul."
     },
     "import-keyless": {
-      "title": "Soalan anda sudah ada dalam peperiksaan.",
+      "title": "Soalan kamu sudah ada dalam peperiksaan.",
       "description": "Tandakan jawapan betul yang tidak ditandakan oleh fail itu."
     },
     "import-mathtype": {
@@ -3583,10 +3583,10 @@
     },
     "audit-export-error": {
       "title": "Kami tidak dapat mengeksport jejak.",
-      "description": "Semak sambungan anda, kemudian cuba lagi."
+      "description": "Semak sambungan kamu, kemudian cuba lagi."
     },
     "school-own-role-ended": {
-      "title": "Peranan anda telah tamat."
+      "title": "Peranan kamu telah tamat."
     },
     "school-letters-issued": {
       "title": "Surat telah dikeluarkan.",
@@ -3613,7 +3613,7 @@
     },
     "school-refusal-graduation-undecided": {
       "title": "Belum ada keputusan tamat sekolah.",
-      "description": "Rekodkan keputusan sebelum anda mengeluarkan surat."
+      "description": "Rekodkan keputusan sebelum kamu mengeluarkan surat."
     },
     "school-refusal-room-opened": {
       "title": "Bilik ini sudah dibuka.",
@@ -3625,7 +3625,7 @@
     },
     "school-refusal-scheme-not-later": {
       "title": "Versi yang lebih baharu sudah disimpan.",
-      "description": "Muat semula halaman untuk melihatnya, kemudian simpan versi anda."
+      "description": "Muat semula halaman untuk melihatnya, kemudian simpan versi kamu."
     },
     "school-refusal-scheme-used": {
       "title": "Versi ini kekal seperti sedia ada.",
@@ -3743,9 +3743,9 @@
     },
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa sahaja...",
-    "error-message": "Nina tidak dapat menyelesaikan jawapan ini. Sila cuba lagi. Jika masih berlaku, hubungi sokongan Nakafa.",
+    "error-message": "Nina tidak dapat menyelesaikan jawapan ini. Cuba lagi. Jika masih berlaku, hubungi sokongan Nakafa.",
     "retry": "Cuba lagi",
-    "rate-limit-message": "Anda telah mencapai had mesej jangka pendek. Tunggu sebentar, kemudian hantar mesej anda sekali lagi.",
+    "rate-limit-message": "Kamu telah mencapai had mesej jangka pendek. Tunggu sebentar, kemudian hantar mesej kamu sekali lagi.",
     "nakafa-search": "Hasil Nakafa",
     "nakafa-search-results": "Kandungan ditemui",
     "nakafa-search-articles": "Artikel ditemui",
@@ -3869,7 +3869,7 @@
     "open-diagram": "Buka gambar rajah lebih besar",
     "download-file": "Muat turun fail",
     "copy-code": "Salin kod",
-    "new-chat-title": "Apakah yang anda mahu pelajari?",
+    "new-chat-title": "Apa yang kamu mahu pelajari?",
     "new-chat-description": "Tanya sahaja, jangan segan!",
     "suggestion-current-material": "bahan ini",
     "suggestion-explain": "Terangkan ini",
@@ -3882,9 +3882,9 @@
     "resize": "Tukar lebar",
     "wider": "Lebarkan",
     "narrower": "Sempitkan",
-    "sheet-description": "Tanya Nina, tutor AI Nakafa, tentang apa yang sedang anda pelajari.",
+    "sheet-description": "Tanya Nina, tutor AI Nakafa, tentang apa yang sedang kamu pelajari.",
     "chats": "Sembang",
-    "search-chats": "Cari sembang anda...",
+    "search-chats": "Cari sembang kamu...",
     "search-older": "Cari sembang lama",
     "rename-chat": "Namakan semula sembang",
     "chat-title-placeholder": "Namakan sembang ini",
@@ -3894,14 +3894,14 @@
     "share-chat": "Kongsi sembang",
     "share-chat-description": "Berhati-hati apabila berkongsi pautan ini dengan orang yang tidak dikenali.",
     "private": "Peribadi",
-    "private-description": "Hanya anda yang boleh melihat sembang ini.",
+    "private-description": "Hanya kamu yang boleh melihat sembang ini.",
     "public": "Awam",
     "public-description": "Sesiapa yang mempunyai pautan boleh melihat sembang ini.",
     "create-link": "Cipta pautan",
     "copy-link": "Salin pautan",
     "share-link-error": "Kami tidak dapat memuatkan pautan.",
     "private-chat-error": "Akses ditolak",
-    "chat-unavailable": "Sembang ini tidak tersedia untuk anda.",
+    "chat-unavailable": "Sembang ini tidak tersedia untuk kamu.",
     "chat-failed": "Sesuatu tidak kena",
     "chat-failed-description": "Nakafa tidak dapat memuatkan sembang ini.",
     "credits-label": "Kredit",
@@ -3955,21 +3955,21 @@
     "free-feature-1": "Ratusan bahan pembelajaran",
     "free-feature-2": "Soalan latihan dan jawapan berpandu dalam setiap bahan",
     "free-feature-3": "Kredit harian untuk bertanya kepada Nina",
-    "free-feature-4": "Setiap ujian latihan, tanpa had, dengan skor anda",
+    "free-feature-4": "Setiap ujian latihan, tanpa had, dengan skor kamu",
     "free-feature-5": "Komuniti di Discord",
     "free-cta": "Mula belajar",
     "pro-title": "Pro",
-    "pro-description": "Apabila anda sedang mengejar sesuatu matlamat.",
+    "pro-description": "Apabila kamu sedang mengejar sesuatu matlamat.",
     "pro-period": "/bulan",
     "pro-yearly": "Atau {price} setahun, harga 10 bulan.",
     "pro-feature-1": "Semua dalam Percuma",
     "pro-feature-2": "{credits, number} kredit setiap bulan untuk bertanya kepada Nina",
     "pro-feature-3": "Penyelesaian lengkap bagi setiap ujian latihan, termasuk cubaan terdahulu",
-    "pro-feature-5": "Bantuan keutamaan apabila anda memerlukan bimbingan",
+    "pro-feature-5": "Bantuan keutamaan apabila kamu memerlukan bimbingan",
     "pro-cta": "Dapatkan Pro",
     "offer-title": "Pilih cara membayar",
     "offer-description": "Pelan bulanan diperbaharui secara automatik, dan pas dibayar sekali.",
-    "offer-pass-description": "Pas dibayar sekali dan bermula apabila pas semasa anda tamat.",
+    "offer-pass-description": "Pas dibayar sekali dan bermula apabila pas semasa kamu tamat.",
     "offer-monthly": "Bulanan",
     "offer-monthly-method": "Diperbaharui setiap bulan melalui kad.",
     "offer-pass": "Pas {months, number} bulan",
@@ -3993,34 +3993,34 @@
     "per-day-note-other": "Lebih kurang harga bulanan dibahagi 30.",
     "answers-title": "{answers, number} jawapan daripada Nina",
     "answers-note": "Lebih kurang {perDay} jawapan sehari.",
-    "q6": "Bolehkah saya belajar tanpa akaun?",
-    "a6": "Boleh, bahan awam tidak memerlukan akaun, dan log masuk menyimpan kemajuan anda serta membuka Nina dan ujian latihan.",
-    "q9": "Apakah itu kredit?",
-    "a9": "Nina menggunakan {cost} kredit bagi setiap jawapan kepada soalan anda.",
-    "q10": "Bilakah kredit diperbaharui?",
+    "q6": "Boleh saya belajar tanpa akaun?",
+    "a6": "Boleh, bahan awam tidak memerlukan akaun, dan log masuk menyimpan kemajuan kamu serta membuka Nina dan ujian latihan.",
+    "q9": "Apa itu kredit?",
+    "a9": "Nina menggunakan {cost} kredit bagi setiap jawapan kepada soalan kamu.",
+    "q10": "Bila kredit diperbaharui?",
     "a10": "Kredit Percuma diperbaharui setiap hari, dan kredit Pro diperbaharui pada awal setiap bulan.",
     "q11": "Adakah kredit yang tidak digunakan dibawa ke tempoh seterusnya?",
     "a11": "Tidak, kredit yang tidak digunakan luput apabila tempoh baharu bermula.",
-    "q12": "Apakah yang berlaku apabila kredit saya habis?",
-    "a12": "Nina kembali pada pembaharuan kredit anda yang seterusnya atau dengan Pro, dan bahan serta soalan latihan kekal tersedia.",
+    "q12": "Apa yang berlaku apabila kredit saya habis?",
+    "a12": "Nina kembali pada pembaharuan kredit kamu yang seterusnya atau dengan Pro, dan bahan serta soalan latihan kekal tersedia.",
     "q13": "Adakah jawapan Nina yang gagal masih menggunakan kredit?",
     "a13": "Tidak, jawapan yang tidak dapat diselesaikan oleh Nina tidak menggunakan kredit.",
     "q14": "Adakah Pro bulanan atau tahunan?",
-    "a14": "Kedua-duanya, jadi pilih bulanan atau tahunan pada harga 10 bulan semasa pembayaran, selepas anda log masuk.",
-    "q15": "Bagaimanakah saya mengurus atau membatalkan Pro?",
+    "a14": "Kedua-duanya, jadi pilih bulanan atau tahunan pada harga 10 bulan semasa pembayaran, selepas kamu log masuk.",
+    "q15": "Bagaimana saya mengurus atau membatalkan Pro?",
     "a15": "Log masuk, pilih butang Pro dan urus atau batalkan Pro dalam portal pelanggan.",
-    "q16": "Apakah yang berlaku selepas Pro tamat?",
-    "a16": "Akaun anda kembali ke pelan Percuma dan menerima kredit Percuma harian.",
+    "q16": "Apa yang berlaku selepas Pro tamat?",
+    "a16": "Akaun kamu kembali ke pelan Percuma dan menerima kredit Percuma harian.",
     "q17": "Adakah bahan asas akan kekal percuma?",
     "a17": "Ya, selama-lamanya dan untuk semua orang.",
-    "q20": "Bolehkah saya menggunakan Nakafa pada telefon?",
+    "q20": "Boleh saya menggunakan Nakafa pada telefon?",
     "a20": "Boleh. Nakafa berfungsi dalam pelayar pada telefon, tablet dan komputer tanpa perlu memasang aplikasi."
   },
   "Faq": {
-    "q4": "Apakah mata pelajaran dan peringkat yang diliputi?",
+    "q4": "Apa mata pelajaran dan peringkat yang diliputi?",
     "a4": "Kami meliputi sekolah hingga universiti. Matematik, Fizik, Kimia, Biologi, Sains Komputer dan banyak lagi. Daripada asas sekolah rendah hingga kursus universiti lanjutan.",
-    "q7": "Bagaimanakah Nakafa memastikan ketepatan kandungan?",
-    "a7": "Semua kandungan dihasilkan oleh penyumbang yang berkelayakan dan disemak oleh komuniti. Pendekatan sumber terbuka untuk semakan kami bermaksud sesiapa sahaja boleh memeriksa bahan dan mencadangkan penambahbaikan. Latihan disertakan dengan penjelasan supaya anda belajar daripada kesilapan, bukan sekadar skor."
+    "q7": "Bagaimana Nakafa memastikan ketepatan kandungan?",
+    "a7": "Semua kandungan dihasilkan oleh penyumbang yang berkelayakan dan disemak oleh komuniti. Pendekatan sumber terbuka untuk semakan kami bermaksud sesiapa sahaja boleh memeriksa bahan dan mencadangkan penambahbaikan. Latihan disertakan dengan penjelasan supaya kamu belajar daripada kesilapan, bukan sekadar skor."
   },
   "Landing": {
     "hero-title": "Belajar sampai <mark>faham.</mark>",
@@ -4065,13 +4065,13 @@
       }
     },
     "tryout-title": "Ujian latihan yang terus memberi skor",
-    "tryout-lead": "Anda boleh mengulanginya pada bila-bila masa.",
-    "nina-title": "Nina tahu bahagian mana yang anda maksudkan",
-    "nina-lead": "Tanya daripada soalan atau bahan yang sedang anda buka.",
+    "tryout-lead": "Kamu boleh mengulanginya bila-bila masa.",
+    "nina-title": "Nina tahu bahagian mana yang kamu maksudkan",
+    "nina-lead": "Tanya daripada soalan atau bahan yang sedang kamu buka.",
     "nina-chat-ask": "Kenapa 13 salah?",
-    "nina-chat-answer": "\\(13\\) anda datang daripada mengambil \\(m = 3\\). Itu memberi \\(5(2) + 9/3 = 13\\), tetapi \\(m = 3\\) tidak sesuai dengan soalan.\n\nSemak dengan apa yang diberikan oleh soalan:\n\n\\[\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\\]\n\nDengan \\(m = 1\\) ia sesuai: \\(2(2) + 4/1 = 8\\). Jadi \\(m\\) mesti \\(1\\), dan jawapannya ialah \\(19\\).",
-    "memory-title": "Nina mula mengenali anda",
-    "memory-lead": "Anda boleh membaca, mengubah, menjeda atau memadam apa yang diingatinya pada bila-bila masa.",
+    "nina-chat-answer": "\\(13\\) kamu datang daripada mengambil \\(m = 3\\). Itu memberi \\(5(2) + 9/3 = 13\\), tetapi \\(m = 3\\) tidak sesuai dengan soalan.\n\nSemak dengan apa yang diberikan oleh soalan:\n\n\\[\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\\]\n\nDengan \\(m = 1\\) ia sesuai: \\(2(2) + 4/1 = 8\\). Jadi \\(m\\) mesti \\(1\\), dan jawapannya ialah \\(19\\).",
+    "memory-title": "Nina mula mengenali kamu",
+    "memory-lead": "Kamu boleh membaca, mengubah, menjeda atau memadam apa yang diingatinya bila-bila masa.",
     "memory-said-1": "Saya pelajar Tingkatan 5, aliran sains.",
     "memory-said-2": "Tolong terangkan dengan contoh dahulu.",
     "memory-said-3": "Saya menyasarkan SPM 2027.",
@@ -4081,46 +4081,46 @@
     "memory-when-week": "Minggu ketiga",
     "memory-when-month": "Bulan kedua",
     "privacy-title": "Peribadi sejak awal",
-    "privacy-lead": "Apa yang diingati oleh Nina dan tajuk sembang anda disimpan berkunci, dengan kunci milik anda sendiri.",
+    "privacy-lead": "Apa yang diingati oleh Nina dan tajuk sembang kamu disimpan berkunci, dengan kunci milik kamu sendiri.",
     "privacy-words": "Apa yang diingati oleh Nina",
-    "curricula-title": "Kurikulum anda mungkin berbeza. Cara anda belajar tetap sama.",
+    "curricula-title": "Kurikulum kamu mungkin berbeza. Cara kamu belajar tetap sama.",
     "curricula-list": "Kurikulum yang tersedia",
     "letter-hello": "Hai, saya Nabil.",
     "letter-student": "Saya juga pernah menjadi pelajar. Saya tahu rasanya terpaksa memilih antara belajar dan makan.",
     "letter-fair": "Saya rasa itu tidak adil. Faham atau tidak sesuatu perkara tidak sepatutnya bergantung pada isi dompet.",
     "letter-free": "Jadi <mark>akses asas Nakafa adalah percuma. Selama-lamanya.</mark>",
     "letter-open": "Nakafa masih jauh daripada siap. Jika ada yang kurang, beritahu saya. Saya membacanya.",
-    "letter-slow": "Ambil masa anda. Yang penting anda faham.",
+    "letter-slow": "Ambil masa kamu. Yang penting kamu faham.",
     "letter-founder": "Pengasas Nakafa",
     "letter-signature": "Tandatangan Nabil",
-    "medals-title": "Rakan belajar anda datang dari sini",
-    "medals-hook": "Sekolah anda?",
+    "medals-title": "Rakan belajar kamu datang dari sini",
+    "medals-hook": "Sekolah kamu?",
     "medals-label": "Sekolah dan kampus",
     "prices-title": "Percuma bermaksud benar-benar percuma",
     "school-title": "Nakafa juga untuk seluruh sekolah",
     "school-lead": "Peperiksaan, pengawasan dan Nina untuk setiap kelas, percuma untuk bermula.",
     "school-class": "Satu kelas haiwan",
     "faq-title": "Soalan lazim",
-    "faq-subjects-question": "Apakah mata pelajaran dan peringkat yang diliputi?",
+    "faq-subjects-question": "Apa mata pelajaran dan peringkat yang diliputi?",
     "faq-subjects-answer": "Dari sekolah rendah hingga universiti: Matematik, Fizik, Kimia, Biologi, Sains Komputer dan banyak lagi.",
-    "faq-account-question": "Bolehkah saya belajar tanpa akaun?",
-    "faq-account-answer": "Boleh, bahan awam tidak memerlukan akaun, dan log masuk menyimpan kemajuan anda serta membuka Nina dan percubaan.",
+    "faq-account-question": "Boleh saya belajar tanpa akaun?",
+    "faq-account-answer": "Boleh, bahan awam tidak memerlukan akaun, dan log masuk menyimpan kemajuan kamu serta membuka Nina dan percubaan.",
     "faq-phone-question": "Adakah ia berfungsi pada telefon?",
     "faq-phone-answer": "Ya, Nakafa berjalan dalam pelayar pada telefon, tablet atau komputer, tanpa perlu memasang apa-apa.",
-    "faq-credits-question": "Apakah itu kredit AI?",
-    "faq-credits-answer": "Nina menggunakan {cost} kredit AI bagi setiap jawapan kepada soalan anda.",
-    "faq-empty-question": "Apakah yang berlaku apabila kredit saya habis?",
-    "faq-empty-answer": "Nina kembali apabila kredit anda diperbaharui, dan bahan, latihan serta percubaan terus berfungsi.",
-    "faq-accuracy-question": "Bagaimanakah Nakafa memastikan kandungannya tepat?",
+    "faq-credits-question": "Apa itu kredit AI?",
+    "faq-credits-answer": "Nina menggunakan {cost} kredit AI bagi setiap jawapan kepada soalan kamu.",
+    "faq-empty-question": "Apa yang berlaku apabila kredit saya habis?",
+    "faq-empty-answer": "Nina kembali apabila kredit kamu diperbaharui, dan bahan, latihan serta percubaan terus berfungsi.",
+    "faq-accuracy-question": "Bagaimana Nakafa memastikan kandungannya tepat?",
     "faq-accuracy-answer": "Penyumbang yang berkelayakan menulis setiap bahan, dan kerana sumbernya terbuka kepada umum, sesiapa sahaja boleh mencadangkan pembetulan.",
-    "faq-languages-question": "Dalam bahasa apakah Nakafa tersedia?",
+    "faq-languages-question": "Dalam bahasa apa Nakafa tersedia?",
     "faq-languages-answer": "Bahasa Melayu, Inggeris, Indonesia dan Jerman.",
     "faq-nina-question": "Adakah Nina sentiasa betul?",
     "faq-nina-answer": "Tidak sentiasa, jadi semak apa yang Nina katakan dengan bahan atau soalan.",
-    "faq-memory-question": "Di manakah saya mengurus apa yang diingati oleh Nina?",
-    "faq-memory-answer": "Dalam Tetapan, Memori membolehkan anda membaca, mengubah, menjeda atau memadam apa yang diingati oleh Nina.",
-    "faq-data-question": "Adakah data anda masih milik anda?",
-    "faq-data-answer": "Nakafa tidak menjual data peribadi anda, dan anda boleh memadam mana-mana sembang atau memori yang disimpan oleh Nina.",
+    "faq-memory-question": "Di mana saya mengurus apa yang diingati oleh Nina?",
+    "faq-memory-answer": "Dalam Tetapan, Memori membolehkan kamu membaca, mengubah, menjeda atau memadam apa yang diingati oleh Nina.",
+    "faq-data-question": "Adakah data kamu masih milik kamu?",
+    "faq-data-answer": "Nakafa tidak menjual data peribadi kamu, dan kamu boleh memadam mana-mana sembang atau memori yang disimpan oleh Nina.",
     "community-title": "Belajar bersama lebih baik",
     "community-lead": "Tanya, jawab dan saling membantu.",
     "community-cta": "Sertai Discord",
@@ -4141,25 +4141,25 @@
     "terms-and-policies": "Terma dan Dasar",
     "terms-of-service": "Terma Perkhidmatan",
     "privacy-policy": "Dasar Privasi",
-    "legal-description": "Dengan log masuk, anda bersetuju dengan <terms-of-service>Terma Perkhidmatan</terms-of-service> dan <privacy-policy>Dasar Privasi</privacy-policy>."
+    "legal-description": "Dengan log masuk, kamu bersetuju dengan <terms-of-service>Terma Perkhidmatan</terms-of-service> dan <privacy-policy>Dasar Privasi</privacy-policy>."
   },
   "AnalyticsConsent": {
     "title": "Data penggunaan",
     "prompt-description": "Berkongsi butiran adalah pilihan.",
-    "prompt-footer": "Anda boleh menukarnya kemudian.",
-    "description": "Nakafa mengira lawatan tanpa kuki, dan dengan persetujuan anda ia turut melihat ciri yang anda gunakan, bukan skrin anda.",
+    "prompt-footer": "Kamu boleh menukarnya kemudian.",
+    "description": "Nakafa mengira lawatan tanpa kuki, dan dengan persetujuan kamu ia turut melihat ciri yang kamu gunakan, bukan skrin kamu.",
     "allow": "Benarkan",
     "decline": "Tolak",
     "manage": "Data penggunaan",
     "status-granted": "Perkongsian penggunaan terperinci dihidupkan.",
     "status-denied": "Perkongsian penggunaan terperinci dimatikan.",
-    "status-browser-signal": "Tetapan privasi pelayar anda mengekalkan perkongsian terperinci dimatikan.",
-    "status-pending": "Kami sedang memuatkan pilihan anda.",
-    "status-prompt": "Anda belum membuat pilihan.",
+    "status-browser-signal": "Tetapan privasi pelayar kamu mengekalkan perkongsian terperinci dimatikan.",
+    "status-pending": "Kami sedang memuatkan pilihan kamu.",
+    "status-prompt": "Kamu belum membuat pilihan.",
     "policy": "Benarkan jika berumur 18 tahun ke atas, atau 13 hingga 17 tahun dengan kelulusan penjaga, seperti yang diterangkan dalam <privacy-policy>Dasar Privasi</privacy-policy>.",
-    "load-error": "Kami tidak dapat memuatkan pilihan anda, jadi perkongsian kekal dimatikan semasa kami mencuba lagi.",
-    "runtime-error": "Pilihan anda disimpan, tetapi perkongsian kekal seperti sebelumnya.",
-    "save-error": "Kami tidak dapat menyimpan pilihan anda, jadi perkongsian kekal dimatikan."
+    "load-error": "Kami tidak dapat memuatkan pilihan kamu, jadi perkongsian kekal dimatikan semasa kami mencuba lagi.",
+    "runtime-error": "Pilihan kamu disimpan, tetapi perkongsian kekal seperti sebelumnya.",
+    "save-error": "Kami tidak dapat menyimpan pilihan kamu, jadi perkongsian kekal dimatikan."
   },
   "SEO": {
     "subject": {
@@ -4169,7 +4169,7 @@
     },
     "exercise": {
       "title": "{number, select, 0 {} other {Soalan {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) - Nakafa",
-      "description": "Jawab latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} dengan {questionCount, plural, =0 {soalan latihan} =1 {1 soalan} other {{questionCount} soalan}} dan penjelasan untuk menyemak penaakulan anda.",
+      "description": "Jawab latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} dengan {questionCount, plural, =0 {soalan latihan} =1 {1 soalan} other {{questionCount} soalan}} dan penjelasan untuk menyemak penaakulan kamu.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soalan latihan, penyelesaian, peperiksaan"
     },
     "exercise-program": {
@@ -4197,10 +4197,10 @@
     "classroom-line": "Kelas, pelajar dan tugasan.",
     "forms": "Google Forms",
     "forms-line": "Jadikan borang sebagai peperiksaan.",
-    "drive-line": "Fail yang anda pilih, untuk kelas dan nota anda.",
-    "calendar-line": "Acara anda, untuk dibaca oleh Nina.",
+    "drive-line": "Fail yang kamu pilih, untuk kelas dan nota kamu.",
+    "calendar-line": "Acara kamu, untuk dibaca oleh Nina.",
     "holder-school": "Sekolah ini",
-    "holder-personal": "Akaun anda",
+    "holder-personal": "Akaun kamu",
     "search": "Cari penyambung",
     "search-none": "Tiada penyambung ditemui",
     "search-none-description": "Cuba nama lain.",
@@ -4236,7 +4236,7 @@
     "reconnect-hint": "Google berhenti menerima sambungan ini.",
     "disconnect": "Putuskan",
     "disconnect-title": "Putuskan {name}",
-    "disconnect-description": "Nakafa berhenti membacanya serta-merta, dan buang juga Nakafa dalam akaun Google anda untuk menamatkan aksesnya di sana.",
+    "disconnect-description": "Nakafa berhenti membacanya serta-merta, dan buang juga Nakafa dalam akaun Google kamu untuk menamatkan aksesnya di sana.",
     "courses-none": "Tiada kursus aktif dalam akaun Classroom ini.",
     "course": "Kursus",
     "course-students": "Pelajar",
@@ -4285,29 +4285,29 @@
     "empty": "Belum ada apa-apa untuk dipaparkan",
     "empty-description": "Setiap peperiksaan yang dikeluarkan dipaparkan di sini.",
     "narrative-title": "Naratif untuk {student}",
-    "narrative-description": "Ibu bapa hanya membaca kata-kata anda tentang pelajar ini selepas anda berkongsinya.",
+    "narrative-description": "Ibu bapa hanya membaca kata-kata kamu tentang pelajar ini selepas kamu berkongsinya.",
     "narrative-placeholder": "Kekuatan pelajar ini, dan apa yang membantunya seterusnya",
     "narrative-save": "Simpan",
     "narrative-share": "Kongsi dengan ibu bapa",
     "narrative-withdraw": "Tarik balik",
     "narrative-ask": "Tanya Nina",
     "narrative-drafting": "Nina sedang menulis draf.",
-    "narrative-draft": "Draf Nina, berdasarkan angka sahaja. Jadikan ia milik anda sebelum menyimpan.",
+    "narrative-draft": "Draf Nina, berdasarkan angka sahaja. Jadikan ia milik kamu sebelum menyimpan.",
     "narrative-use": "Guna draf ini",
     "practice": "Latihan dikongsi",
     "practice-sets": "Set",
     "practice-mean": "Skor purata",
     "practice-shared": "Dikongsi",
     "practice-unshared": "Tidak dikongsi",
-    "practice-share": "Kongsi {topic} dengan sekolah anda",
-    "practice-note": "Hanya topik yang anda hidupkan sampai kepada guru anda, dan anda boleh mematikannya pada bila-bila masa.",
+    "practice-share": "Kongsi {topic} dengan sekolah kamu",
+    "practice-note": "Hanya topik yang kamu hidupkan sampai kepada guru kamu, dan kamu boleh mematikannya bila-bila masa.",
     "tags": "Kompetensi",
     "tags-description": "Namakan apa yang diuji oleh setiap soalan sebelum keputusan dikeluarkan, dan soalan yang dibiarkan kosong dikira di bawah peperiksaannya.",
     "exam": "Peperiksaan",
     "question": "Soalan {number}",
     "no-class": "Belum ada kelas",
     "no-class-description": "Wawasan menunjukkan kedudukan setiap pelajar dalam kelas, jadi ia bermula dengan satu kelas.",
-    "no-class-member": "Wawasan menunjukkan kedudukan setiap pelajar dalam kelas yang anda ajar, jadi minta pentadbir menambah anda ke satu kelas.",
+    "no-class-member": "Wawasan menunjukkan kedudukan setiap pelajar dalam kelas yang kamu ajar, jadi minta pentadbir menambah kamu ke satu kelas.",
     "no-class-action": "Buka kelas",
     "class-empty": "Belum ada peperiksaan yang dikeluarkan",
     "class-empty-description": "Keluarkan keputusan peperiksaan yang diduduki oleh kelas ini, dan kedudukan setiap pelajar dipaparkan di sini.",
@@ -4333,7 +4333,7 @@
     "students-empty-description": "Setiap pelajar yang ditempatkan dalam kelas ini dipaparkan di sini.",
     "practice-empty": "Belum ada latihan dikongsi",
     "practice-class-note": "Hanya topik yang dihidupkan oleh pelajar dipaparkan di sini.",
-    "practice-own-empty-description": "Latihan percubaan anda dipaparkan di sini, dan anda memilih apa yang hendak dikongsi."
+    "practice-own-empty-description": "Latihan percubaan kamu dipaparkan di sini, dan kamu memilih apa yang hendak dikongsi."
   },
   "SchoolSite": {
     "breadcrumb": "Sekolah",
@@ -4356,12 +4356,12 @@
     "plan-everything": "Setiap ciri School",
     "plan-start": "Mulakan percubaan percuma",
     "plan-choose": "Pilih {plan}",
-    "tax-note": "Harga tidak termasuk cukai dan dibayar terlebih dahulu bagi tempoh yang anda pilih.",
+    "tax-note": "Harga tidak termasuk cukai dan dibayar terlebih dahulu bagi tempoh yang kamu pilih.",
     "pricing-title": "Satu harga untuk seluruh sekolah",
     "period-label": "Tempoh pengebilan",
     "period-option": "{months, plural, one {Bulanan} other {# bulan}}",
     "calculator-title": "Tambah akaun mulai satu",
-    "calculator-lead": "Setiap akaun menambah {credits} kredit AI sebulan dan {size} Drive, pada invois pelan anda.",
+    "calculator-lead": "Setiap akaun menambah {credits} kredit AI sebulan dan {size} Drive, pada invois pelan kamu.",
     "calculator-plan": "Pelan",
     "calculator-added": "Akaun untuk ditambah",
     "calculator-preset": "Tambah {count, number} akaun",
@@ -4372,11 +4372,11 @@
     "calculator-total": "Dibilkan setiap {months, plural, one {bulan} other {# bulan}}",
     "calculator-unit": "setiap akaun sebulan",
     "addons-title": "Tambahan",
-    "addons-lead": "Beli lebih banyak kredit AI atau storan pada bila-bila masa, di samping pelan anda.",
+    "addons-lead": "Beli lebih banyak kredit AI atau storan bila-bila masa, di samping pelan kamu.",
     "addon-credits-title": "{count, number} kredit AI",
     "addon-credits-text": "Dibayar sekali dan boleh digunakan selama {months} bulan, tidak pernah ditambah secara automatik.",
     "addon-drive-title": "{size} Drive tambahan",
-    "addon-drive-text": "Dibilkan setiap bulan di samping pelan anda, tanpa diskaun tempoh.",
+    "addon-drive-text": "Dibilkan setiap bulan di samping pelan kamu, tanpa diskaun tempoh.",
     "addon-once": "sekali",
     "compare-title": "Bandingkan setiap pelan",
     "compare-feature": "Ciri",
@@ -4419,9 +4419,9 @@
     "group-assessment-text": "Peperiksaan, percubaan dan kad laporan pada satu enjin.",
     "group-school-text": "Wawasan, tamat sekolah, ibu bapa dan Nina untuk setiap kelas.",
     "group-billing-text": "Cara pelan dibayar dan diperbaharui.",
-    "metadata-title": "Nakafa School: satu platform untuk seluruh sekolah anda",
+    "metadata-title": "Nakafa School: satu platform untuk seluruh sekolah kamu",
     "metadata-description": "Sembang kelas, perpustakaan, tugasan, peperiksaan, kad laporan, wawasan, tamat sekolah dan ibu bapa pada satu platform, bersama Nina, AI Nakafa. Percuma selama 30 hari.",
-    "hero-title": "Satu platform untuk <mark>seluruh sekolah</mark> anda",
+    "hero-title": "Satu platform untuk <mark>seluruh sekolah</mark> kamu",
     "hero-lead": "Dari kelas pertama hingga hari tamat sekolah, dengan Nina di sisi setiap guru.",
     "forum-title": "Setiap kelas berbincang di satu tempat",
     "forum-lead": "Bebenang, fail dan undian, dengan Nina turut menjawab.",
@@ -4431,7 +4431,7 @@
     "tasks-lead": "Setiap kerja yang dihantar dan markah kekal bersama kelasnya.",
     "exams-title": "Peperiksaan yang memberi markah sendiri",
     "exams-lead": "Setiap kuiz dan percubaan berjalan dalam pemain yang sama.",
-    "reports-title": "Kad laporan daripada markah yang anda berikan",
+    "reports-title": "Kad laporan daripada markah yang kamu berikan",
     "reports-lead": "Sekolah menandatangani, dan kod QR membuktikan setiap satu.",
     "insight-title": "Kenal pasti siapa yang perlukan bantuan lebih awal",
     "insight-lead": "Setiap kelas dan pelajar, sebelum laporan perlu disiapkan.",
@@ -4441,7 +4441,7 @@
     "parents-lead": "Hanya anak mereka sendiri, dari tugasan hingga kad laporan.",
     "demo-class": "Fizik 4 Bestari",
     "demo-teacher": "Cikgu Rina",
-    "demo-forum-ask": "Bilakah tarikh akhir tugasan momentum?",
+    "demo-forum-ask": "Bila tarikh akhir tugasan momentum?",
     "demo-forum-answer": "Jumaat pukul 12 tengah hari. Lembaran kerja ada dalam perpustakaan.",
     "demo-forum-nina": "Saya letakkan ringkasan pendek bab 3 di sebelahnya.",
     "demo-forum-replies": "{count, plural, one {# balasan} other {# balasan}}",
@@ -4458,7 +4458,7 @@
     "demo-task-in": "Dihantar",
     "demo-task-late": "Lewat",
     "demo-exam-title": "Peperiksaan pertengahan tahun Fizik",
-    "demo-exam-question": "Sebiji bola 2 kg bergolek pada 3 m/s. Berapakah momentumnya?",
+    "demo-exam-question": "Sebiji bola 2 kg bergolek pada 3 m/s. Berapa momentumnya?",
     "demo-exam-answer": "Jawapan",
     "demo-exam-progress": "Soalan {current} daripada {total}",
     "demo-report-term": "Laporan Semester 1",
@@ -4481,30 +4481,30 @@
     "closing-topic-2": "setiap peperiksaan",
     "closing-topic-3": "kad laporan",
     "closing-topic-4": "hari tamat sekolah",
-    "pricing-lead": "Setiap pelan memuatkan setiap ciri. Pilih saiz yang diperlukan oleh sekolah anda.",
+    "pricing-lead": "Setiap pelan memuatkan setiap ciri. Pilih saiz yang diperlukan oleh sekolah kamu.",
     "plan-yearly": "{price} sebulan apabila dibayar untuk 12 bulan",
     "row-discount": "Diskaun tempoh",
     "value-discount": "{percent}% untuk {months} bulan",
     "calculator-saving": "Diskaun {percent}%",
-    "faq-accounts-question": "Siapakah yang dikira sebagai akaun?",
+    "faq-accounts-question": "Siapa yang dikira sebagai akaun?",
     "faq-accounts-answer": "Setiap orang yang mempunyai akses: pelajar, guru, kakitangan, pentadbir dan ibu bapa. Seorang dengan beberapa peranan tetap satu akaun.",
-    "faq-trial-question": "Apakah yang berlaku selepas percubaan percuma?",
+    "faq-trial-question": "Apa yang berlaku selepas percubaan percuma?",
     "faq-trial-answer": "Naik taraf ke Pro atau Max dan kekalkan segala-galanya. Tanpa naik taraf, sekolah kekal dibuka untuk dibaca selama 7 hari lagi.",
     "faq-features-question": "Adakah semua pelan mempunyai ciri yang sama?",
     "faq-features-answer": "Ya. Gratis, Pro dan Max memuatkan setiap ciri School. Hanya akaun, kredit AI dan storan Drive yang berbeza.",
-    "faq-languages-question": "Dalam bahasa apakah Nakafa School tersedia?",
+    "faq-languages-question": "Dalam bahasa apa Nakafa School tersedia?",
     "faq-languages-answer": "Bahasa Melayu, Indonesia, Inggeris dan Jerman, dan setiap orang memilih bahasanya sendiri.",
     "faq-devices-question": "Adakah ia berfungsi pada telefon?",
     "faq-devices-answer": "Ya. Setiap skrin berfungsi dalam pelayar pada telefon, tablet dan komputer, tanpa perlu memasang apa-apa.",
-    "faq-added-question": "Bolehkah kami menambah akaun satu demi satu?",
-    "faq-added-answer": "Boleh. Tambah sebarang bilangan mulai satu, setiap satu dengan 6 kredit AI sebulan dan 200 MB Drive. Ia menyertai invois pelan anda.",
-    "faq-pay-question": "Bagaimanakah kami membayar?",
+    "faq-added-question": "Boleh kami menambah akaun satu demi satu?",
+    "faq-added-answer": "Boleh. Tambah sebarang bilangan mulai satu, setiap satu dengan 6 kredit AI sebulan dan 200 MB Drive. Ia menyertai invois pelan kamu.",
+    "faq-pay-question": "Bagaimana kami membayar?",
     "faq-pay-answer": "Bayar terlebih dahulu untuk 1, 3, 6 atau 12 bulan, dengan diskaun 3% untuk 6 bulan dan 5% untuk 12 bulan. Sekolah di Malaysia membayar dalam ringgit, sekolah di Indonesia dalam rupiah, yang lain dalam dolar atau euro.",
     "faq-tax-question": "Adakah cukai termasuk?",
     "faq-tax-answer": "Tidak. Setiap harga adalah sebelum cukai, dan invois menambah cukai yang berkenaan.",
-    "faq-credits-question": "Apakah itu kredit AI?",
+    "faq-credits-question": "Apa itu kredit AI?",
     "faq-credits-answer": "Nina, AI Nakafa, menggunakan kredit bagi setiap jawapan. Seluruh sekolah berkongsi satu kumpulan kredit, dan pek 1,000 tambahan tahan selama 12 bulan.",
-    "faq-change-question": "Bolehkah kami menukar pelan kemudian?",
-    "faq-change-answer": "Boleh. Bertukar antara Pro dan Max atau tambah akaun pada bila-bila masa, dan perubahan berkuat kuasa mulai invois berbayar seterusnya."
+    "faq-change-question": "Boleh kami menukar pelan kemudian?",
+    "faq-change-answer": "Boleh. Bertukar antara Pro dan Max atau tambah akaun bila-bila masa, dan perubahan berkuat kuasa mulai invois berbayar seterusnya."
   }
 }
