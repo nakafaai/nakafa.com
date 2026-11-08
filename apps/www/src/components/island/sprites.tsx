@@ -10,9 +10,26 @@ import {
   ShaderMaterial,
   Vector2,
 } from "three";
-import { BUDS, DUCK, FISH, FLOWERS, NINA_PEEK } from "@/lib/island/animals";
+import { useSkyStore } from "@/components/island/sky";
+import {
+  BUDS,
+  DUCK,
+  FIREFLY,
+  FISH,
+  FLOWERS,
+  NINA_PEEK,
+  SMOKE,
+} from "@/lib/island/animals";
+import {
+  type chimneysOf,
+  type firefliesOf,
+  flyAt,
+  PUFFS_PER_CHIMNEY,
+  puffAt,
+} from "@/lib/island/life";
 import { swimAt } from "@/lib/island/motion";
 import type { floraOf, wildlifeOf } from "@/lib/island/pieces";
+import { gradeOf } from "@/lib/island/sky";
 import { packAtlas } from "@/lib/island/sprite";
 import { pixelTexture } from "@/lib/island/texture";
 
@@ -62,9 +79,11 @@ void main() {
 const SPRITES = {
   buds: BUDS,
   duck: DUCK,
+  firefly: FIREFLY,
   fish: FISH,
   flowers: FLOWERS,
   nina: NINA_PEEK,
+  smoke: SMOKE,
 };
 
 /** The atlas texture, the frames' places in it, and the quad every sprite draws on. */
@@ -103,22 +122,32 @@ function useAtlas(count: number) {
 }
 
 /**
- * The island's animals as pixel sprites standing in the 3D world (ADR 0042,
- * D16, D28): each frame moves them along their swims and picks their animation
- * frame from the clock.
+ * The island's life as pixel sprites standing in the 3D world (ADR 0042, D16,
+ * D18, D28): each frame moves the animals along their swims, raises smoke from
+ * every chimney, sends fireflies round the plants on a fine night, and picks
+ * each sprite's animation frame from the clock. A hidden sprite draws an empty
+ * frame.
  */
 export function Wildlife({
   animals,
+  chimneys,
+  flies,
   flora,
 }: {
   animals: ReturnType<typeof wildlifeOf>;
+  chimneys: ReturnType<typeof chimneysOf>;
+  flies: ReturnType<typeof firefliesOf>;
   flora: ReturnType<typeof floraOf>;
 }) {
+  const puffs = chimneys.length * PUFFS_PER_CHIMNEY;
   const { frames, geometry, material } = useAtlas(
-    animals.length + flora.length
+    animals.length + flora.length + flies.length + puffs
   );
+  const sky = useSkyStore();
   useFrame((state) => {
     const time = state.clock.elapsedTime;
+    const { phase, weather } = sky.getState();
+    const night = gradeOf(phase, weather).flies;
     material.uniforms.resolution.value.set(
       state.gl.domElement.width,
       state.gl.domElement.height
@@ -160,6 +189,44 @@ export function Wildlife({
         placed?.width ?? 0,
         placed?.height ?? 0
       );
+    });
+    const place = (
+      index: number,
+      at: Pick<ReturnType<typeof puffAt>, "x" | "y" | "z">,
+      shown: Option.Option<(typeof frames)["smoke"][number]>
+    ) => {
+      const placed = Option.getOrUndefined(shown);
+      offset.setXYZ(index, at.x, at.y, at.z);
+      heading.setXYZ(index, 1, 0, 0);
+      frame.setXYZW(
+        index,
+        placed?.x ?? 0,
+        placed?.y ?? 0,
+        placed?.width ?? 0,
+        placed?.height ?? 0
+      );
+    };
+    const fliesFrom = animals.length + flora.length;
+    Arr.forEach(flies, (fly, at) => {
+      const moment = flyAt(fly, time);
+      place(
+        fliesFrom + at,
+        moment,
+        Arr.get(frames.firefly, moment.glowing ? 0 : 1).pipe(
+          Option.filter(() => night)
+        )
+      );
+    });
+    const puffsFrom = fliesFrom + flies.length;
+    Arr.forEach(chimneys, (chimney, at) => {
+      Arr.forEach(Arr.range(0, PUFFS_PER_CHIMNEY - 1), (puff) => {
+        const moment = puffAt(chimney, puff, time);
+        place(
+          puffsFrom + at * PUFFS_PER_CHIMNEY + puff,
+          moment,
+          Arr.get(frames.smoke, moment.frame)
+        );
+      });
     });
     offset.needsUpdate = true;
     frame.needsUpdate = true;
