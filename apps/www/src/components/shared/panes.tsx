@@ -414,7 +414,6 @@ export function PanesDetail({
           }
         }}
         open={!wide && sheet}
-        showSwipeHandle
       >
         <DrawerContent>
           <PaneModeContext value={{ close, place: "sheet" }}>
