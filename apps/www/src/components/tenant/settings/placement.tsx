@@ -32,11 +32,9 @@ import {
   type PersonId,
   SchoolStudentPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SelectField } from "@/components/tenant/settings/select";
 import type { Cohort, CohortMember } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/placement";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The ID of one cohort, as the cohort page names it. */
 type CohortId = Cohort["id"];
@@ -77,13 +75,14 @@ export function SchoolPlacementAdd({
     setIsOpen(false);
     setRefusal(null);
     startPlacing(() =>
-      saveSchool(
-        () => place({ cohortId, personId, slug }),
-        SOURCE,
-        () => setPersonId(undefined),
-        (copy) => {
-          setRefusal(copy);
-          setIsOpen(true);
+      runSchoolWrite(
+        schoolCall(() => place({ cohortId, personId, slug })),
+        {
+          onSaved: () => setPersonId(undefined),
+          onRefused: (copy) => {
+            setRefusal(copy);
+            setIsOpen(true);
+          },
         }
       )
     );
@@ -168,10 +167,9 @@ export function SchoolPlacementMove({
     }
     dialogs.close();
     startTransition(() =>
-      saveSchool(
-        () => move({ cohortId: target, personId: member.id, slug }),
-        SOURCE,
-        () => setTarget(null)
+      runSchoolWrite(
+        schoolCall(() => move({ cohortId: target, personId: member.id, slug })),
+        { onSaved: () => setTarget(null) }
       )
     );
   };

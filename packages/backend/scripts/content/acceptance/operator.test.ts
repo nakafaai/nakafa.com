@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   createAcceptanceOperator,
@@ -31,19 +32,23 @@ vi.mock(
 
 type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
-/** What the local backend prints for the app users of the runtime. */
-const USERS = '[{"_id":"app-1","authId":"user-1"}]';
+/** What `tenancy/seed:user` prints for the new account: the id of its app user. */
+const APP_USER = '"app-1"';
 
 /** Answers each Convex command the way the local backend does. */
-function answerCommands(users = USERS) {
+function answerCommands(appUser: string | null = APP_USER) {
   const specs = MutableList.make<CommandSpec>();
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
       MutableList.append(specs, spec);
       const fs = yield* FileSystem.FileSystem;
-      const output = Arr.contains(spec.args, "data")
-        ? users
+      // The seed of the app user prints its id, and fails for an account without one.
+      const output = Arr.contains(spec.args, "tenancy/seed:user")
+        ? appUser
         : '{"_creationTime":1,"_id":"user-1"}';
+      if (output === null) {
+        return yield* acceptanceRuntimeError("The account has no app user.");
+      }
       yield* fs.writeFileString(spec.stdoutPath, output);
     })
   );
@@ -104,7 +109,7 @@ describe("synthetic acceptance operator", () => {
   it.effect("writes no cookie when the account has no app user", () =>
     Effect.gen(function* () {
       const { fs, root } = yield* fixture;
-      answerCommands("[]");
+      answerCommands(null);
 
       const error = yield* createAcceptanceOperator(
         root,
@@ -113,7 +118,7 @@ describe("synthetic acceptance operator", () => {
 
       expect(error).toMatchObject({
         _tag: "AcceptanceRuntimeError",
-        message: "The new account has no app user.",
+        message: "The account has no app user.",
       });
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(nodePlatform))

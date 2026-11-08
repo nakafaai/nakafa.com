@@ -25,7 +25,6 @@ import { startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
-import { saveSchool } from "@/components/tenant/settings/save";
 import {
   amendSchemeChange,
   checkedScheme,
@@ -36,8 +35,7 @@ import {
   SchemeVersionsContext,
   storeSchemeChange,
 } from "@/components/tenant/settings/versions";
-
-const SOURCE = "components/tenant/settings/scheme";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The grading page's one action, New version, and the dialog it opens. The button is ready from the first paint, and
@@ -105,19 +103,20 @@ export function SchemeVersionDialog({
     startTransition(() =>
       Option.match(editing, {
         onNone: () =>
-          saveSchool(
-            () =>
+          runSchoolWrite(
+            schoolCall(() =>
               store({
                 ...checked.value,
                 effectiveFrom: nextEffectiveFrom(now, newest),
                 slug,
-              }),
-            SOURCE
+              })
+            )
           ),
         onSome: (version) =>
-          saveSchool(
-            () => amend({ ...checked.value, schemeId: version.id, slug }),
-            SOURCE
+          runSchoolWrite(
+            schoolCall(() =>
+              amend({ ...checked.value, schemeId: version.id, slug })
+            )
           ),
       })
     );

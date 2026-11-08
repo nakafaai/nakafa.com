@@ -7,6 +7,7 @@ import standalone from "@repo/internationalization/dictionaries/standalone/en.js
 };
 import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import {
   createSchool,
   hostAddress,
@@ -121,7 +122,7 @@ async function opensWithoutError(
   if (failure.answer === "unavailable") {
     // Every attempt of the read failed: Better Auth asks again when the
     // network returns, and until then the page waits as it renders.
-    await page.waitForTimeout(1000);
+    await waitForQuiet(page);
     expect(changes.askedSignedOut(read)).toBe(false);
     await page.evaluate(() => window.dispatchEvent(new Event("online")));
   }

@@ -29,7 +29,6 @@ import {
 import { CohortLevelContext } from "@/components/tenant/settings/cohort/level";
 import { SchoolCohortTable } from "@/components/tenant/settings/cohort/table";
 import { createCohortChange } from "@/components/tenant/settings/groups";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { Period } from "@/components/tenant/settings/state";
 import {
@@ -37,9 +36,8 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/settings/cohorts";
 
 /** The unit whose cohorts the tab shows, the school's units, and the choice of another one. */
 const CohortsUnitContext = createContext<{
@@ -278,18 +276,20 @@ function SchoolCohortAdd({
     }
     setIsOpen(false);
     startSaving(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           create({
             grade: grade.value,
             name: next,
             periodId,
             slug,
-          }),
-        SOURCE,
-        () => {
-          setName("");
-          setGradeValue(null);
+          })
+        ),
+        {
+          onSaved: () => {
+            setName("");
+            setGradeValue(null);
+          },
         }
       )
     );

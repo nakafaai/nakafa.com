@@ -30,11 +30,9 @@ import {
   toggleAction,
 } from "@/components/tenant/settings/actions";
 import { updateClientChange } from "@/components/tenant/settings/edits";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SelectField } from "@/components/tenant/settings/select";
 import type { Client } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/client";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * Renders the dialog that creates an integration client of the school: its name, the
@@ -95,18 +93,20 @@ export function SchoolClientCreateDialog({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           create({
             actions: held,
             name: clientName.value,
             scope: covered.value.scope,
             slug,
-          }),
-        SOURCE,
-        (issued) => {
-          setOpen(false);
-          onIssued(issued);
+          })
+        ),
+        {
+          onSaved: (issued) => {
+            setOpen(false);
+            onIssued(issued);
+          },
         }
       )
     );
@@ -234,15 +234,15 @@ export function SchoolClientEditDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           update({
             actions: held,
             clientId: client.id,
             name: clientName.value,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };

@@ -5,6 +5,7 @@ import {
   createAcceptanceClassTeacher,
 } from "@repo/backend/scripts/content/acceptance/classes";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { nodePlatform } from "@repo/backend/test/platform";
 import {
@@ -33,6 +34,9 @@ vi.mock(
 
 type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
+/** What `tenancy/seed:user` prints for the new account: the id of its app user. */
+const APP_USER = '"app-user-1"';
+
 const SLUG = "acc-1a2b3c4d";
 const ClassSeedArguments = Schema.fromJsonString(
   Schema.Struct({
@@ -52,10 +56,7 @@ const CreatedAccount = Schema.fromJsonString(
 );
 
 /** The text one Convex command prints, as the local backend answers it. */
-function answerOf(args: readonly string[], users: string) {
-  if (Arr.contains(args, "data")) {
-    return users;
-  }
+function answerOf(args: readonly string[]) {
   // No account holds the address yet, and the CLI prints nothing for a null result.
   if (Arr.contains(args, "adapter:findOne")) {
     return "";
@@ -71,13 +72,20 @@ function answerOf(args: readonly string[], users: string) {
 }
 
 /** Answers every command and keeps the commands in the order they ran. */
-function answerCommands(users: string) {
+function answerCommands(appUser: string | null) {
   const specs = MutableList.make<CommandSpec>();
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
       MutableList.append(specs, spec);
+      // The seed of the app user prints its id, and fails for an account without one.
+      const answer = Arr.contains(spec.args, "tenancy/seed:user")
+        ? appUser
+        : answerOf(spec.args);
+      if (answer === null) {
+        return yield* acceptanceRuntimeError("The account has no app user.");
+      }
       const fs = yield* FileSystem.FileSystem;
-      yield* fs.writeFileString(spec.stdoutPath, answerOf(spec.args, users));
+      yield* fs.writeFileString(spec.stdoutPath, answer);
     })
   );
   return specs;
@@ -106,9 +114,7 @@ describe("acceptance class teacher", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        const specs = answerCommands(
-          '[{"_id":"app-user-0","authId":"someone-else"},{"_id":"app-user-1","authId":"user-1"}]'
-        );
+        const specs = answerCommands(APP_USER);
 
         yield* createAcceptanceClassTeacher(
           root,
@@ -169,7 +175,7 @@ describe("acceptance class teacher", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        answerCommands('[{"_id":"app-user-1","authId":"user-1"}]');
+        answerCommands(APP_USER);
 
         yield* classTeacherMode.run(root, [
           SLUG,
@@ -189,7 +195,7 @@ describe("acceptance class teacher", () => {
     () =>
       Effect.gen(function* () {
         const { root } = yield* fixture;
-        const specs = answerCommands("[]");
+        const specs = answerCommands(null);
 
         expect(
           yield* classTeacherMode.run(root, [SLUG]).pipe(Effect.flip)
