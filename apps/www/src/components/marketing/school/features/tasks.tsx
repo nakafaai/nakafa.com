@@ -51,7 +51,7 @@ export function SchoolTasks() {
         <Nina act="writing" label="" size={88} whole />
       </SchoolFeatureText>
       <FeatureCard>
-        <div className="flex items-start justify-between gap-4 border-b pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b pb-4">
           <div className="grid min-w-0 gap-1">
             <p className="flex min-w-0 items-center gap-2 font-medium">
               <HugeIcons icon={Task01Icon} />

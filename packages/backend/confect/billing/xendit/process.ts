@@ -4,7 +4,7 @@ import {
   BillingCurrency,
   billingOffer,
 } from "@repo/backend/confect/billing/catalog";
-import { endSubscriptionGrant } from "@repo/backend/confect/billing/grantEnd";
+import { endSubscriptionGrant } from "@repo/backend/confect/billing/end";
 import { syncSubscriptionGrant } from "@repo/backend/confect/billing/grants";
 import { recordPayment } from "@repo/backend/confect/billing/payments";
 import {

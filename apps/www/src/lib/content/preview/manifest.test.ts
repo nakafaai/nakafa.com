@@ -7,7 +7,7 @@ import {
   readPreviewManifest,
   readPreviewSnapshot,
 } from "@/lib/content/preview/manifest";
-import { makePendingManifest } from "@/test/content-preview";
+import { makePendingManifest } from "@/test/manifest";
 
 /** Builds one response whose final URL matches the Fetch contract. */
 function response(body: BodyInit | null) {

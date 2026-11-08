@@ -13,7 +13,7 @@ import {
   makeTestArticleProjection,
   testArticleIdProjection,
   testArticleProjection,
-} from "@/test/content-article";
+} from "@/test/published/article";
 
 const identity = {
   appLocale: testArticleProjection.appLocale,

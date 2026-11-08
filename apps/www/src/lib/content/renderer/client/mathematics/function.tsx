@@ -30,7 +30,7 @@ export const FunctionAndNonFunctionRelationVisualizer = withHydrationBoundary(
 export const FunctionMachine = withHydrationBoundary(
   lazy(() =>
     import(
-      "@repo/design-system/components/contents/mathematics/function-machine"
+      "@repo/design-system/components/contents/mathematics/function/machine"
     ).then((module) => ({ default: module.FunctionMachine }))
   )
 );

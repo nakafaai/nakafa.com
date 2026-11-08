@@ -4,7 +4,7 @@ import {
   SheetContent,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { useResizable } from "@repo/design-system/hooks/resizable";
 import { elementById } from "@repo/design-system/lib/element";
 import { Function as Fn } from "effect";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
