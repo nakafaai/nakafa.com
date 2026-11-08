@@ -80,7 +80,9 @@ vi.mock("@/lib/content/published/body", () => ({
 
 /** The Convex answers that the found response of each test is composed from. */
 const parts = () =>
-  makeFound().pipe(Effect.map((found) => makePublishedParts(found, "material")));
+  makeFound().pipe(
+    Effect.map((found) => makePublishedParts(found, "material"))
+  );
 
 beforeEach(() => {
   readMock.mockReset().mockImplementation(() => makeFound());

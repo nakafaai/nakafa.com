@@ -22,11 +22,11 @@ import {
 } from "@/lib/content/published/article";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import { previewProjection } from "@/test/manifest";
+import { makePublishedParts } from "@/test/parts";
 import {
   testArticleProjection as projection,
   testArticleSourcePath as sourcePath,
 } from "@/test/published/article";
-import { makePublishedParts } from "@/test/parts";
 
 /** The verifier, which answers each test's found response. */
 const readMock = vi.hoisted(() => vi.fn());
