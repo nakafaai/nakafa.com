@@ -365,12 +365,12 @@ export const rendererJson = Schema.encodeSync(
   Schema.fromJsonString(RendererManifestEnvelopeSchema)
 )(TEST_PROOF_RENDERER);
 
-class ObservedProofFailure extends Schema.TaggedError<ObservedProofFailure>()(
-  "ObservedProofFailure",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class ObservedProofFailure extends Schema.TaggedError<
+  ObservedProofFailure,
+  { readonly brand: unique symbol }
+>()("ObservedProofFailure", {
+  cause: Schema.Unknown,
+}) {}
 
 export class UnexpectedProofTestState extends Data.TaggedError(
   "UnexpectedProofTestState"

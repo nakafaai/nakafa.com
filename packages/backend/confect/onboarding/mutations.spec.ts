@@ -17,13 +17,13 @@ import {
 import { onboardingFinishResultValidator } from "@repo/backend/confect/onboarding/spec";
 import { Schema } from "effect";
 /** A managed account role cannot be replaced through learner onboarding. */
-export class OnboardingRoleError extends Schema.TaggedError<OnboardingRoleError>()(
-  "OnboardingRoleError",
-  {
-    code: Schema.Literal("UNAUTHORIZED"),
-    message: Schema.String,
-  }
-) {}
+export class OnboardingRoleError extends Schema.TaggedError<
+  OnboardingRoleError,
+  { readonly brand: unique symbol }
+>()("OnboardingRoleError", {
+  code: Schema.Literal("UNAUTHORIZED"),
+  message: Schema.String,
+}) {}
 
 export default GroupSpec.make()
   .addFunction(

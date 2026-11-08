@@ -20,7 +20,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -28,7 +28,9 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { HOME_TARGET } from "@/lib/routing/target";
 
 /** How many schools one page of the list loads, and each page after it. */
@@ -103,9 +105,9 @@ function OperatorSchools() {
   }
   if (failed && pagination.error._tag === "NotOperator") {
     return (
-      <TableEmpty
-        act="typing"
+      <EmptyState
         description={t("refused-description")}
+        scene={<EmptyNina act="typing" />}
         title={t("refused")}
       />
     );
@@ -115,9 +117,9 @@ function OperatorSchools() {
       return <LoadFailure onRetry={reloadPage} />;
     }
     return (
-      <TableEmpty
-        act="typing"
+      <EmptyState
         description={t("open-description")}
+        scene={<EmptyNina act="typing" />}
         title={t("empty")}
       />
     );

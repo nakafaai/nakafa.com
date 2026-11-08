@@ -31,7 +31,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -39,7 +38,9 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -141,11 +142,11 @@ function GradingTable({
     return failed ? (
       <LoadFailure onRetry={reloadPage} />
     ) : (
-      <TableEmpty
-        act="thinking"
+      <EmptyState
         description={t("grading-empty-description", {
           kktp: DEFAULT_GRADING_SCHEME.kktp,
         })}
+        scene={<EmptyNina act="thinking" />}
         title={t("grading-empty")}
       />
     );

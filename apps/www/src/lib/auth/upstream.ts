@@ -73,10 +73,10 @@ function isNeverConnectedError(error: NetworkRequestError) {
 }
 
 /** The proxy did not answer within its deadline. */
-export class AuthProxyDeadline extends Schema.TaggedError<AuthProxyDeadline>()(
-  "AuthProxyDeadline",
-  {}
-) {}
+export class AuthProxyDeadline extends Schema.TaggedError<
+  AuthProxyDeadline,
+  { readonly brand: unique symbol }
+>()("AuthProxyDeadline", {}) {}
 
 /**
  * Calls one Better Auth method and reads its whole body, so the deadline covers

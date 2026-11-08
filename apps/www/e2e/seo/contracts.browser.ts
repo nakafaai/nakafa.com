@@ -93,10 +93,13 @@ const contentRouteGroups = [
 ] satisfies readonly ContentRouteGroup[];
 
 /** A rendered content page broke one of its SEO contracts. */
-class ContentSeoContractError extends Schema.TaggedError<ContentSeoContractError>()(
-  "ContentSeoContractError",
-  { href: Schema.String, surface: Schema.String }
-) {}
+class ContentSeoContractError extends Schema.TaggedError<
+  ContentSeoContractError,
+  { readonly brand: unique symbol }
+>()("ContentSeoContractError", {
+  href: Schema.String,
+  surface: Schema.String,
+}) {}
 
 function contentSeoError(href: string, surface: string) {
   return new ContentSeoContractError({ href, surface });
@@ -370,10 +373,10 @@ const openPage = Effect.fn("NakafaE2E.openPage")(function* (
 });
 
 /** The browser has not recorded the expected number of content views yet. */
-class RecordedViewsPending extends Schema.TaggedError<RecordedViewsPending>()(
-  "RecordedViewsPending",
-  { recordedViews: Schema.Finite }
-) {}
+class RecordedViewsPending extends Schema.TaggedError<
+  RecordedViewsPending,
+  { readonly brand: unique symbol }
+>()("RecordedViewsPending", { recordedViews: Schema.Finite }) {}
 
 /** Reads the content-view storage once it holds the expected recorded views. */
 const readRecordedViews = Effect.fn("NakafaE2E.readRecordedViews")(function* (

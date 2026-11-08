@@ -12,31 +12,31 @@ import {
 import { Config, Effect, Record as Rec, Redacted, Schema } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
-class PolarWebhookReadError extends Schema.TaggedError<PolarWebhookReadError>()(
-  "PolarWebhookReadError",
-  {
-    message: Schema.String,
-  }
-) {}
-class PolarWebhookVerificationError extends Schema.TaggedError<PolarWebhookVerificationError>()(
-  "PolarWebhookVerificationError",
-  {
-    message: Schema.String,
-  }
-) {}
+class PolarWebhookReadError extends Schema.TaggedError<
+  PolarWebhookReadError,
+  { readonly brand: unique symbol }
+>()("PolarWebhookReadError", {
+  message: Schema.String,
+}) {}
+class PolarWebhookVerificationError extends Schema.TaggedError<
+  PolarWebhookVerificationError,
+  { readonly brand: unique symbol }
+>()("PolarWebhookVerificationError", {
+  message: Schema.String,
+}) {}
 /** A correctly signed event whose type the SDK does not know; acknowledged so Polar stops retrying it. */
-class PolarWebhookUnknownEventError extends Schema.TaggedError<PolarWebhookUnknownEventError>()(
-  "PolarWebhookUnknownEventError",
-  {
-    message: Schema.String,
-  }
-) {}
-class PolarWebhookSdkError extends Schema.TaggedError<PolarWebhookSdkError>()(
-  "PolarWebhookSdkError",
-  {
-    message: Schema.String,
-  }
-) {}
+class PolarWebhookUnknownEventError extends Schema.TaggedError<
+  PolarWebhookUnknownEventError,
+  { readonly brand: unique symbol }
+>()("PolarWebhookUnknownEventError", {
+  message: Schema.String,
+}) {}
+class PolarWebhookSdkError extends Schema.TaggedError<
+  PolarWebhookSdkError,
+  { readonly brand: unique symbol }
+>()("PolarWebhookSdkError", {
+  message: Schema.String,
+}) {}
 
 /** Reads the body through the Effect error channel. */
 const readPolarWebhookBody = Effect.fn("routes.polar.readBody")(

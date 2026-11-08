@@ -29,7 +29,7 @@ import { Panes, PanesDetail, PanesList } from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -38,6 +38,8 @@ import {
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { TableViews } from "@/components/shared/table/views";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
@@ -307,15 +309,15 @@ function TaskEmpty({ archived }: { archived: boolean }) {
   const t = useTranslations("Classroom");
 
   return archived ? (
-    <TableEmpty
-      act="reading"
+    <EmptyState
       description={t("tasks-archived-empty-description")}
+      scene={<EmptyNina act="reading" />}
       title={t("tasks-archived-empty")}
     />
   ) : (
-    <TableEmpty
-      act="writing"
+    <EmptyState
       description={t("tasks-empty-description")}
+      scene={<EmptyNina act="writing" />}
       title={t("tasks-empty")}
     />
   );

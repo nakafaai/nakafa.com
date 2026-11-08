@@ -19,11 +19,12 @@ import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
-import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { AddChannel } from "@/components/tenant/classes/add";
 import {
   CHANNEL_PAGE_SIZE,
@@ -140,9 +141,9 @@ function ChatList() {
         {empty ? null : <ChatFilters filter={filter} />}
       </div>
       {empty ? (
-        <TableEmpty
-          act="typing"
+        <EmptyState
           description={t("channels-empty-description")}
+          scene={<EmptyNina act="typing" />}
           title={t("channels-empty")}
         />
       ) : (

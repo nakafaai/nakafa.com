@@ -7,10 +7,10 @@ type ContentSearchResponse = Ref.Returns<typeof contents.queries.search.search>;
 export type ContentSearchResultItem = ContentSearchResponse["items"][number];
 
 /** A content search could not be read, so the results show the failure. */
-export class SearchReadError extends Schema.TaggedError<SearchReadError>()(
-  "SearchReadError",
-  { cause: Schema.Unknown }
-) {}
+export class SearchReadError extends Schema.TaggedError<
+  SearchReadError,
+  { readonly brand: unique symbol }
+>()("SearchReadError", { cause: Schema.Unknown }) {}
 
 /** The newest query on screen, and its answer once the read of that query settles. */
 export interface SearchAnswers<Item> {

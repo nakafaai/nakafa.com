@@ -13,16 +13,16 @@ const PromptInputMessageSchema = Schema.Struct({
 export type PromptInputMessage = typeof PromptInputMessageSchema.Type;
 
 /** Expected failure raised by the consumer-owned prompt submit callback. */
-export class PromptInputSubmitError extends Schema.TaggedError<PromptInputSubmitError>()(
-  "PromptInputSubmitError",
-  { cause: Schema.Unknown }
-) {}
+export class PromptInputSubmitError extends Schema.TaggedError<
+  PromptInputSubmitError,
+  { readonly brand: unique symbol }
+>()("PromptInputSubmitError", { cause: Schema.Unknown }) {}
 
 /** Expected failure raised while applying local success state after submission. */
-export class PromptInputCompletionError extends Schema.TaggedError<PromptInputCompletionError>()(
-  "PromptInputCompletionError",
-  { cause: Schema.Unknown }
-) {}
+export class PromptInputCompletionError extends Schema.TaggedError<
+  PromptInputCompletionError,
+  { readonly brand: unique symbol }
+>()("PromptInputCompletionError", { cause: Schema.Unknown }) {}
 
 /** Every expected failure produced by a prompt submission. */
 export type PromptInputError =

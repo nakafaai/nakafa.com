@@ -16,13 +16,13 @@ export const resend = new Resend(components.resend, {
  * A message to a placeholder address of a school login. No mail reaches that
  * address, so the sender refuses it before the provider is called.
  */
-export class LoginAddressRefused extends Schema.TaggedError<LoginAddressRefused>()(
-  "LoginAddressRefused",
-  {
-    code: Schema.Literal("LOGIN_ADDRESS_REFUSED"),
-    message: Schema.String,
-  }
-) {}
+export class LoginAddressRefused extends Schema.TaggedError<
+  LoginAddressRefused,
+  { readonly brand: unique symbol }
+>()("LoginAddressRefused", {
+  code: Schema.Literal("LOGIN_ADDRESS_REFUSED"),
+  message: Schema.String,
+}) {}
 
 /** Whether any recipient field of a message, `to`, `cc`, or `bcc`, names a login address. */
 const namesLoginAddress = (message: SendEmailOptions) =>
