@@ -7,7 +7,7 @@ import {
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";
-import { Array as Arr, Match, Option, String as Str } from "effect";
+import { Array as Arr, Match, Option, pipe, String as Str } from "effect";
 
 /** A question the learner answers by typing: a short answer, or a number with its unit, as SNBT sets them. */
 export type Entry = Extract<
@@ -25,12 +25,11 @@ export const entryResponse = (typed: string): ExamResponse | null =>
 
 /** The decimal point of a locale's numbers: a comma in Indonesian and German, a period in English. */
 export const decimalOf = (locale: string) =>
-  Option.match(
-    Arr.findFirst(
-      new Intl.NumberFormat(locale).formatToParts(1.5),
-      (part) => part.type === "decimal"
-    ),
-    { onNone: () => ".", onSome: (part) => part.value }
+  pipe(
+    new Intl.NumberFormat(locale).formatToParts(1.5),
+    Arr.filter((part) => part.type === "decimal"),
+    Arr.map((part) => part.value),
+    Arr.join("")
   );
 
 /**
