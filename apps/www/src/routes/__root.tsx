@@ -30,6 +30,7 @@ import {
   LocalizedNotFound,
   useRouteFailure,
 } from "@/components/state/localized";
+import { AD_ACCOUNT_META } from "@/lib/ads/account";
 import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { STALE_CHUNK_SCRIPT } from "@/lib/chunks/stale";
@@ -84,6 +85,9 @@ export const Route = createRootRoute({
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
+      // AdSense verifies the site from any of its documents, so the root names
+      // the account once for every page. No ad script loads here.
+      AD_ACCOUNT_META,
     ],
     links: [
       { rel: "stylesheet", href: appCss },
