@@ -7,12 +7,10 @@ import {
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -20,7 +18,6 @@ import {
 import { Array as Arr, Schema } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import {
   type NumberSetting,
   ToleranceKind,
@@ -128,6 +125,7 @@ export function NumberKey({
   readonly onChange: (setting: NumberSetting) => void;
   readonly setting: NumberSetting;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const id = useId();
   // A tolerance the teacher chose whose distance is not written yet, which the key takes once it is.
@@ -189,17 +187,12 @@ export function NumberKey({
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <ChoiceLabel name="tolerance" />
-
-              {Arr.map(ToleranceKind.literals, (value) => (
-                <SelectItem key={value} value={value}>
-                  <HugeIcons icon={Target02Icon} />
-                  {t(TOLERANCE_NAME[value])}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+          <SelectContent label={common("menu-tolerance")}>
+            {Arr.map(ToleranceKind.literals, (value) => (
+              <SelectItem icon={Target02Icon} key={value} value={value}>
+                {t(TOLERANCE_NAME[value])}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {kind === "exact" ? null : (

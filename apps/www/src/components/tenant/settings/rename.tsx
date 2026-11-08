@@ -34,7 +34,6 @@ export function PersonRenameDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const rename = useMutation(tenancy.people.rename).withOptimisticUpdate(
@@ -61,21 +60,12 @@ export function PersonRenameDialog({
 
   return (
     <ResponsiveDialog
-      description={t("person-rename-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {t("person-rename-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {t("person-rename-save")}
+        </Button>
       }
+      description={t("person-rename-description")}
       open={open}
       setOpen={setOpen}
       title={person.name}

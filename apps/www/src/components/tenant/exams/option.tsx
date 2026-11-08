@@ -263,7 +263,7 @@ export function OptionRemove({
   name,
   onRemove,
 }: {
-  /** The name of the control for assistive technology, such as "Question 1, remove option A". */
+  /** What the control does in words, its tooltip and its name, such as "Question 1, remove option A". */
   readonly name: string;
   readonly onRemove: () => void;
 }) {
@@ -275,7 +275,6 @@ export function OptionRemove({
   return (
     <LineMark>
       <Button
-        aria-label={name}
         className="opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
         data-remove=""
         disabled={row.locked}
@@ -284,6 +283,7 @@ export function OptionRemove({
           onRemove();
         }}
         size="icon-sm"
+        tooltip={name}
         type="button"
         variant="ghost"
       >

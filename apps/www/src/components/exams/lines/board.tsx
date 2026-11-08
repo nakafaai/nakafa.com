@@ -25,14 +25,16 @@ import {
 
 /**
  * A board's three tracks: the statements, the gap the lines cross, and the answers. A paper leaves the lines a wide
- * gap from a tablet up and a narrow one on a phone; the key in the teacher's panel keeps the narrow one.
+ * gap from a tablet up and a narrow one on a phone; the key in the teacher's panel keeps the narrow one. A board never
+ * draws narrower than its least width, where every part's words still read a dozen letters to a line beside its
+ * letter, its remove control and its dot; on a narrower screen it scrolls sideways inside its paper, as a table does.
  */
-const linesBoard = cva("relative grid min-w-0 items-start", {
+const linesBoard = cva("relative grid items-start", {
   variants: {
     size: {
-      key: "grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)]",
+      key: "min-w-md grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)]",
       paper:
-        "grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]",
+        "min-w-lg grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]",
     },
   },
 });
@@ -153,9 +155,11 @@ export function LinesProvider({
         stretch,
       }}
     >
-      <div className={linesBoard({ size })} data-lines="" ref={root}>
-        <LinesOverlay />
-        {children}
+      <div className="min-w-0 overflow-x-auto overscroll-x-contain">
+        <div className={linesBoard({ size })} data-lines="" ref={root}>
+          <LinesOverlay />
+          {children}
+        </div>
       </div>
     </LinesContext>
   );
