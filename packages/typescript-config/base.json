@@ -135,7 +135,7 @@
           "returnEffectInGen": "error",
           "runEffectInsideEffect": "error",
           "runOfExitToRunExit": "error",
-          "schemaClassMissingBrand": "off",
+          "schemaClassMissingBrand": "error",
           "schemaClassObjectLiteral": "error",
           "schemaLiteralNonFinite": "error",
           "schemaNumber": "error",

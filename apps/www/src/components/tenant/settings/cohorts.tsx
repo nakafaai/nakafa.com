@@ -11,11 +11,12 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -191,9 +192,9 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   if (QueryResult.isFailure(active)) {
     return (
       <SettingsTablePage actions={<CohortsActions slug={slug} />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           description={t("cohorts-unavailable-description")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohorts-unavailable")}
         />
       </SettingsTablePage>
@@ -209,8 +210,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   if (periodId === null) {
     return (
       <SettingsTablePage actions={<CohortsActions slug={slug} />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           action={
             <Link
               className={buttonVariants({ variant: "outline" })}
@@ -221,6 +221,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
             </Link>
           }
           description={t("cohorts-no-period")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohorts-no-period-title")}
         />
       </SettingsTablePage>

@@ -37,10 +37,10 @@ export const RepositorySource = Schema.Struct({
 export const Binding = Schema.Literals(["global", "import", "local"]);
 
 /** The native compiler could not inspect repository sources. */
-export class TestCompilerError extends Schema.TaggedError<TestCompilerError>()(
-  "TestCompilerError",
-  { cause: Schema.Unknown, message: Schema.String }
-) {}
+export class TestCompilerError extends Schema.TaggedError<
+  TestCompilerError,
+  { readonly brand: unique symbol }
+>()("TestCompilerError", { cause: Schema.Unknown, message: Schema.String }) {}
 
 /**
  * One in-memory native project. Without libraries or module resolution a name

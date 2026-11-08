@@ -1,13 +1,13 @@
 import { Effect, Schema, Stdio, Stream } from "effect";
 
 /** Expected failure while writing repository maintenance output. */
-export class RepositoryOutputError extends Schema.TaggedError<RepositoryOutputError>()(
-  "RepositoryOutputError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class RepositoryOutputError extends Schema.TaggedError<
+  RepositoryOutputError,
+  { readonly brand: unique symbol }
+>()("RepositoryOutputError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Writes one repository maintenance message to standard output. */
 export const writeOutput = Effect.fn("RepositoryPolicy.writeOutput")(

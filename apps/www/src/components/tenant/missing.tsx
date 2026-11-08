@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { Missing } from "@/components/state/missing";
+import { EmptyState } from "@/components/state/empty";
+import { DeferredFigure } from "@/components/state/mascot";
 
 /**
  * The state of a school address that no page answers, with the one way on that the caller
@@ -10,8 +11,12 @@ export function TenantMissing({ children }: { children: ReactNode }) {
   const t = useTranslations("NotFound");
 
   return (
-    <Missing description={t("description")} title={t("title")}>
-      {children}
-    </Missing>
+    <EmptyState
+      action={children}
+      description={t("description")}
+      frame="page"
+      scene={<DeferredFigure scene="missing" />}
+      title={<h1>{t("title")}</h1>}
+    />
   );
 }

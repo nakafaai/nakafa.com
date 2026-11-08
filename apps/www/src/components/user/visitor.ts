@@ -23,10 +23,10 @@ export interface VisitorListPage<Item> {
 }
 
 /** A visitor's next page could not be read, so the list shows the failure above its rows. */
-class VisitorPageReadError extends Schema.TaggedError<VisitorPageReadError>()(
-  "VisitorPageReadError",
-  { cause: Schema.Unknown }
-) {}
+class VisitorPageReadError extends Schema.TaggedError<
+  VisitorPageReadError,
+  { readonly brand: unique symbol }
+>()("VisitorPageReadError", { cause: Schema.Unknown }) {}
 
 /** Starts a visitor's list from the loader's first page, or from a failed read when the server could not read one. */
 export function startVisitorList<Item>(
