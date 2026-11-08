@@ -2020,8 +2020,8 @@
       "l": "500 sampai 999",
       "xl": "1.000 atau lebih"
     },
-    "plan-free": "Uji coba gratis 30 hari, sampai {limit} akun.",
-    "plan-school": "Pro atau Max, setiap peran dihitung satu akun.",
+    "plan-free": "Gratis 30 hari, sampai {limit} akun.",
+    "plan-school": "Pro atau Max, tiap peran satu akun.",
     "plan-founder": "Paket School, dibantu pendiri.",
     "founder-line": "Pendiri bisa membantu sekolah besar bersiap.",
     "founder-link": "Bicara dengan pendiri",
