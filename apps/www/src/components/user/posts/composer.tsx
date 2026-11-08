@@ -12,9 +12,11 @@ import {
   type SubmitEventHandler,
   use,
   useLayoutEffect,
+  useRef,
 } from "react";
 import { useTranslations } from "use-intl";
 import { SignedInIsland } from "@/components/providers/island";
+import { useEarlyTyping } from "@/components/shared/typed";
 import { FeedAvatar, FeedForm } from "@/components/user/feed";
 import { insertDraftPost } from "@/components/user/posts/mutation";
 import { usePostDraft } from "@/components/user/posts/provider";
@@ -27,8 +29,10 @@ import type { PublicProfile } from "@/lib/profile/public";
  * Writes a new post at the top of the owner's posts, in the first row of the
  * list. It stands above the list and draws the same field from the page's first
  * HTML on, so the author can type from the moment the page paints, and the field
- * keeps its words and its focus when the client arrives. Post stays at the end of
- * the row and turns on once the text can be posted and the list can show it.
+ * keeps its words and its focus when the client arrives: the draft takes the
+ * words typed before React took the page over (`useEarlyTyping`). Post stays at
+ * the end of the row and turns on once the text can be posted and the list can
+ * show it.
  */
 export function PostComposer({ profile }: { profile: PublicProfile }) {
   const ready = usePostDraft((draft) => draft.ready);
@@ -137,6 +141,8 @@ function PostComposerFields() {
   const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);
   const setText = usePostDraft((draft) => draft.setText);
+  const field = useRef<HTMLTextAreaElement>(null);
+  useEarlyTyping(field, text, setText);
   const body = readLearnerText(text);
   const remaining = remainingToShow(text);
   return (
@@ -148,6 +154,7 @@ function PostComposerFields() {
         name="text"
         onChange={(event) => setText(event.target.value)}
         placeholder={t("placeholder")}
+        ref={field}
         value={text}
       />
       <div className="flex shrink-0 items-center gap-3 pt-1">
