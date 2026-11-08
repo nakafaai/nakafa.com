@@ -1,43 +1,31 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   cardMode,
-  createAcceptanceCard,
+  seedCard,
 } from "@repo/backend/scripts/content/acceptance/card";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { CardFixture } from "@repo/backend/scripts/content/acceptance/fixture";
-import {
-  Array as Arr,
-  Effect,
-  Exit,
-  FileSystem,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Effect, FileSystem, Schema } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
+/** A temporary folder for the files a mode writes. */
+const folder = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.makeTempDirectoryScoped({ prefix: "acceptance-mode-test-" });
+});
 
-/** The arguments of the seed function, as the Convex CLI receives them. */
-const SeedArgs = Schema.fromJsonString(Schema.Struct({ slug: Schema.String }));
-
-/** A runtime whose backend folder sits under the test's own temporary root. */
-const runtimeIn = (root: string) =>
-  mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
+const ANSWER = { code: "ABCDE-FGHJK", loginName: "siswa.uji" };
 
 describe("acceptance card", () => {
   afterEach(() => {
@@ -45,108 +33,54 @@ describe("acceptance card", () => {
   });
 
   it.effect(
-    "seeds one card through the seed function and writes its login name and code",
+    "seeds through identity/seed:card and answers what it returned",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-card-test-",
-        });
-        runtimeIn(root);
-        const specs = MutableList.make<CommandSpec>();
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            yield* fs.writeFileString(
-              spec.stdoutPath,
-              '{"code":"ABCDE-FGHJK","loginName":"siswa.uji"}'
-            );
-          })
+        const backend = localConvexDouble({ "identity/seed:card": ANSWER });
+
+        const seeded = yield* seedCard("acc-1234abcd").pipe(
+          Effect.provide(backend.layer)
         );
 
-        yield* createAcceptanceCard(root, "acc-1234abcd", `${root}/card.json`);
-
-        const [spec] = MutableList.toArray(specs);
-        expect(Arr.take(Arr.drop(spec?.args ?? [], 1), 2)).toEqual([
-          "run",
-          "identity/seed:card",
-        ]);
-        const args = yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        );
-        expect(args).toEqual({ slug: "acc-1234abcd" });
-        const seeded = yield* fs
-          .readFileString(`${root}/card.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(CardFixture)));
-        expect(seeded).toEqual({
-          code: "ABCDE-FGHJK",
-          loginName: "siswa.uji",
+        expect(seeded).toEqual(ANSWER);
+        expect(backend.argsOf("identity/seed:card")).toEqual({
+          slug: "acc-1234abcd",
         });
-        expect((yield* fs.stat(`${root}/card.json`)).mode % 0o1000).toBe(0o600);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      })
   );
 
-  it.effect("seeds no card when no local runtime is running", () =>
+  it.effect("writes what the mode seeded to the file it names, mode 600", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-card-test-",
-      });
-      mocks.read.mockReturnValue(Effect.void);
-
-      const exit = yield* Effect.exit(
-        createAcceptanceCard(root, "acc-1234abcd", `${root}/card.json`)
+      const root = yield* folder;
+      const output = `${root}/mode.json`;
+      mocks.layer.mockReturnValue(
+        localConvexDouble({ "identity/seed:card": ANSWER }).layer
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
+      yield* cardMode.run(root, ["acc-1234abcd", output, "ignored"]);
 
-  it.effect(
-    "seeds the card the card mode names and writes it to the file it names",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-card-test-",
-        });
-        runtimeIn(root);
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          fs.writeFileString(
-            spec.stdoutPath,
-            '{"code":"ABCDE-FGHJK","loginName":"siswa.uji"}'
+      const fs = yield* FileSystem.FileSystem;
+      expect(
+        yield* fs
+          .readFileString(output)
+          .pipe(
+            Effect.flatMap(
+              Schema.decodeEffect(Schema.fromJsonString(CardFixture))
+            )
           )
-        );
-
-        yield* cardMode.run(root, [
-          "acc-1234abcd",
-          `${root}/mode.json`,
-          "ignored",
-        ]);
-
-        const seeded = yield* fs
-          .readFileString(`${root}/mode.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(CardFixture)));
-        expect(seeded).toEqual({
-          code: "ABCDE-FGHJK",
-          loginName: "siswa.uji",
-        });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      ).toEqual(ANSWER);
+      expect((yield* fs.stat(output)).mode % 0o1000).toBe(0o600);
+      expect(mocks.layer).toHaveBeenCalledWith(root);
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
-  it.effect(
-    "refuses the card mode without its card file before any operation",
-    () =>
-      Effect.gen(function* () {
-        expect(
-          yield* cardMode.run("/root", ["acc-1234abcd"]).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message: "Usage: acceptance card <school-slug> <card-file>",
-        });
-        expect(mocks.read).not.toHaveBeenCalled();
-        expect(mocks.command).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  it.effect("refuses the mode without its arguments", () =>
+    Effect.gen(function* () {
+      expect(yield* cardMode.run("/root", []).pipe(Effect.flip)).toMatchObject({
+        _tag: "AcceptanceRuntimeError",
+        message: "Usage: acceptance card <school-slug> <card-file>",
+      });
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });
