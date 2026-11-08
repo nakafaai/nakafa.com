@@ -3,7 +3,7 @@ import { formatMathData } from "@repo/backend/confect/nina/math/format";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import type { MathData } from "@repo/math/schema/data";
 import type { MathRequest } from "@repo/math/schema/request";
-import { MathToolInputSchema } from "@repo/math/schema/tool-input";
+import { MathToolInputSchema } from "@repo/math/schema/tool/input";
 import { MathService } from "@repo/math/service";
 import { Array as Arr, Effect, Result, Schema } from "effect";
 

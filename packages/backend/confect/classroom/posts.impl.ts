@@ -29,7 +29,7 @@ import {
 import {
   PIN_LIMIT,
   postField,
-} from "@repo/backend/confect/classroom/posts/post";
+} from "@repo/backend/confect/classroom/posts/schema";
 import spec from "@repo/backend/confect/classroom/posts.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";

@@ -3,7 +3,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import {

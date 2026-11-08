@@ -5,8 +5,8 @@ import {
   useMergedRef,
   useReducedMotion,
 } from "@mantine/hooks";
-import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
-import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
+import { useMousePosition } from "@repo/design-system/hooks/mouse";
+import { useStableMutableValue } from "@repo/design-system/hooks/stable";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { createSeededRandom } from "@repo/design-system/lib/random";
