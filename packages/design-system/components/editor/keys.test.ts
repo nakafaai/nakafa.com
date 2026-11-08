@@ -32,4 +32,24 @@ describe("the formula keypad's keys", () => {
       String.raw`\frac{\square}{\square}`
     );
   });
+
+  it("draws a limit's range under it, so the key holds the whole face", () => {
+    expect(keyFace(String.raw`\lim_{#?\to#?}`)).toBe(
+      String.raw`\lim\limits_{\square\to\square}`
+    );
+  });
+
+  it.effect.each([
+    String.raw`\ce{#?}`,
+    String.raw`\mathrm{#@}`,
+    String.raw`\pu{#?}`,
+  ])(
+    "shows what the key %s makes, where its slot alone would draw one empty square",
+    (latex) =>
+      Effect.gen(function* () {
+        const face = keyFace(latex);
+        expect(face).not.toContain(String.raw`\square`);
+        yield* checkFormula(face);
+      })
+  );
 });

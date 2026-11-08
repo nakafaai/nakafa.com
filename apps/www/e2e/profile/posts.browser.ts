@@ -7,7 +7,10 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { Array as Arr, Effect, Schema } from "effect";
 import { saved } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  readinessTimeoutMilliseconds,
+  servedTimeoutMilliseconds,
+} from "@/e2e/support/timeout";
 
 const OLDER = "Kemarin belajar aljabar.";
 const POST = "Hari ini belajar trigonometri.";
@@ -35,6 +38,22 @@ const unreadable = Schema.encodeSync(AuthFailure)(
 const composerOf = (page: Page) =>
   page.getByRole("textbox", { name: app.Posts.placeholder });
 
+/** The composer's Post button. */
+const postButtonOf = (page: Page) =>
+  page.getByRole("button", { name: app.Posts.post });
+
+/**
+ * Types `text` and waits until Post turns on, which it does once the live list
+ * holds its first page: the field takes typing from the first paint, and only
+ * Post waits for the list, which answers with the page's whole body.
+ */
+const typeOnceListed = async (page: Page, text: string) => {
+  await composerOf(page).fill(text);
+  await expect(postButtonOf(page)).toBeEnabled({
+    timeout: servedTimeoutMilliseconds,
+  });
+};
+
 /** The rows of the list, newest first. */
 const rowsOf = (page: Page) => page.locator('[data-slot="feed-row"]');
 
@@ -56,16 +75,13 @@ for (const viewport of VIEWPORTS) {
           yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
 
           yield* Effect.promise(async () => {
-            // The composer is enabled once the live list holds its first page.
-            await expect(composerOf(page)).toBeEnabled({
-              timeout: readinessTimeoutMilliseconds,
-            });
-
             // An older post is on the list first, so the new post is at the
             // top only when the list puts it there.
+            // A press on Post waits until it turns on, once the live list holds
+            // its first page.
             const older = changes.sent;
             await composerOf(page).fill(OLDER);
-            await page.getByRole("button", { name: app.Posts.post }).click();
+            await postButtonOf(page).click();
             await saved(changes, older);
             await expect(postOf(page, OLDER)).toBeVisible();
 
@@ -124,18 +140,14 @@ for (const viewport of VIEWPORTS) {
           yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
 
           yield* Effect.promise(async () => {
-            // The composer is enabled once the live list holds its first page.
-            await expect(composerOf(page)).toBeEnabled({
-              timeout: readinessTimeoutMilliseconds,
-            });
+            await typeOnceListed(page, REFUSED);
 
             // The next change never reaches the server, and the server answers
             // wait until the test releases them. While they wait the post shows,
             // the text clears and the composer stays writable: nothing waits.
             changes.failNext();
             changes.hold();
-            await composerOf(page).fill(REFUSED);
-            await page.getByRole("button", { name: app.Posts.post }).click();
+            await postButtonOf(page).click();
             await expect(postOf(page, REFUSED)).toBeVisible();
             await expect(composerOf(page)).toHaveValue("");
             await expect(composerOf(page)).toBeEditable();
@@ -174,12 +186,15 @@ for (const viewport of VIEWPORTS) {
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
-            await expect(composerOf(page)).toBeDisabled();
+            // The field still takes typing, and Post stays off while the list
+            // cannot show a post.
+            await composerOf(page).fill(NEXT);
+            await expect(postButtonOf(page)).toBeDisabled();
 
             // Retry asks the server for the list anew, and the list holds the post.
             changes.recoverQuery();
             await page.getByRole("button", { name: app.Common.retry }).click();
-            await expect(composerOf(page)).toBeEnabled({
+            await expect(postButtonOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(page.getByText(app.Common["load-error"])).toHaveCount(
@@ -261,11 +276,14 @@ for (const viewport of VIEWPORTS) {
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
-            await expect(composerOf(page)).toBeDisabled();
+            // The field still takes typing, and Post stays off while the list
+            // cannot show a post.
+            await composerOf(page).fill(NEXT);
+            await expect(postButtonOf(page)).toBeDisabled();
 
             changes.recoverQuery();
             await page.getByRole("button", { name: app.Common.retry }).click();
-            await expect(composerOf(page)).toBeEnabled({
+            await expect(postButtonOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(page.getByText(app.Common["load-error"])).toHaveCount(

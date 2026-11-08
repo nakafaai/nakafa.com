@@ -2,14 +2,17 @@
 
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
+import {
+  LineMark,
+  LineWords,
+  MarkedLine,
+} from "@repo/design-system/components/ui/line";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
-import type { buttonVariants } from "@repo/design-system/lib/button";
 import type { ReactNode } from "react";
-import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
 import {
-  getTryoutPreviewChoiceVariant,
-  getTryoutReviewedChoiceVariant,
+  getTryoutPreviewChoiceTone,
+  getTryoutReviewedChoiceTone,
 } from "@/lib/tryout/appearance";
 
 interface TryoutSelectableRadioOptionProps {
@@ -22,7 +25,7 @@ interface TryoutSelectableRadioOptionProps {
   value: string;
 }
 
-/** Renders one radio option through the established choice frame. */
+/** One radio option: its circle on the first line of its answer, in a marked line whose label holds the circle. */
 export function TryoutSelectableRadioOption({
   appearance = { kind: "selectable" },
   checked,
@@ -33,19 +36,19 @@ export function TryoutSelectableRadioOption({
   value,
 }: TryoutSelectableRadioOptionProps) {
   return (
-    <TryoutChoiceFrame
-      variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
-    >
-      <Radio
-        aria-labelledby={`${id}-label`}
-        disabled={disabled}
-        letter={letter}
-        value={value}
-      />
-      <ChoiceAnswer id={id} letter={letter}>
+    <ChoiceLine tone={getTryoutPreviewChoiceTone({ appearance, checked })}>
+      <LineMark>
+        <Radio
+          aria-labelledby={`${id}-label`}
+          disabled={disabled}
+          letter={letter}
+          value={value}
+        />
+      </LineMark>
+      <ChoiceWords id={id} letter={letter}>
         {children}
-      </ChoiceAnswer>
-    </TryoutChoiceFrame>
+      </ChoiceWords>
+    </ChoiceLine>
   );
 }
 
@@ -59,7 +62,7 @@ interface TryoutSelectableMultipleChoiceProps {
   onCheckedChange: (checked: boolean) => void;
 }
 
-/** Renders one independently selectable option for an exact-set response. */
+/** One independently selectable option for an exact-set response, its check box on its answer's first line. */
 export function TryoutSelectableMultipleChoice({
   appearance = { kind: "selectable" },
   checked,
@@ -70,20 +73,20 @@ export function TryoutSelectableMultipleChoice({
   onCheckedChange,
 }: TryoutSelectableMultipleChoiceProps) {
   return (
-    <TryoutChoiceFrame
-      variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
-    >
-      <Checkbox
-        aria-labelledby={`${id}-label`}
-        checked={checked}
-        disabled={disabled}
-        letter={letter}
-        onCheckedChange={onCheckedChange}
-      />
-      <ChoiceAnswer id={id} letter={letter}>
+    <ChoiceLine tone={getTryoutPreviewChoiceTone({ appearance, checked })}>
+      <LineMark>
+        <Checkbox
+          aria-labelledby={`${id}-label`}
+          checked={checked}
+          disabled={disabled}
+          letter={letter}
+          onCheckedChange={onCheckedChange}
+        />
+      </LineMark>
+      <ChoiceWords id={id} letter={letter}>
         {children}
-      </ChoiceAnswer>
-    </TryoutChoiceFrame>
+      </ChoiceWords>
+    </ChoiceLine>
   );
 }
 
@@ -95,7 +98,7 @@ interface TryoutReviewedChoiceProps {
   letter: string;
 }
 
-/** Renders one locked terminal choice without a mutation Interface. */
+/** One locked terminal choice without a mutation Interface. */
 export function TryoutReviewedChoice({
   checked,
   children,
@@ -104,43 +107,46 @@ export function TryoutReviewedChoice({
   letter,
 }: TryoutReviewedChoiceProps) {
   return (
-    <TryoutChoiceFrame
-      variant={getTryoutReviewedChoiceVariant({ checked, isCorrect })}
-    >
-      <Checkbox
-        aria-labelledby={`${id}-label`}
-        checked={checked}
-        disabled
-        letter={letter}
-      />
-      <ChoiceAnswer id={id} letter={letter}>
+    <ChoiceLine tone={getTryoutReviewedChoiceTone({ checked, isCorrect })}>
+      <LineMark>
+        <Checkbox
+          aria-labelledby={`${id}-label`}
+          checked={checked}
+          disabled
+          letter={letter}
+        />
+      </LineMark>
+      <ChoiceWords id={id} letter={letter}>
         {children}
-      </ChoiceAnswer>
-    </TryoutChoiceFrame>
-  );
-}
-
-type ButtonVariantOptions = NonNullable<Parameters<typeof buttonVariants>[0]>;
-
-/** Owns the shared visual composition for every explicit choice variant: its control, then its label. */
-function TryoutChoiceFrame({
-  children,
-  variant,
-}: {
-  children: ReactNode;
-  variant: NonNullable<ButtonVariantOptions["variant"]>;
-}) {
-  return (
-    // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.
-    <Label className={choiceFrame(variant)}>{children}</Label>
+      </ChoiceWords>
+    </ChoiceLine>
   );
 }
 
 /**
- * The answer of one option, which stands alone beside its circle. The circle's control takes its name from this
- * block, so a screen reader says the letter the circle shows, then the answer, and a key or a teacher can use it.
+ * The marked line of one option: a label that holds the option's circle, so a press anywhere on the line chooses it,
+ * in the tone of its state.
  */
-function ChoiceAnswer({
+function ChoiceLine({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone: ReturnType<typeof getTryoutPreviewChoiceTone>;
+}) {
+  return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.
+    <MarkedLine render={<Label />} tone={tone}>
+      {children}
+    </MarkedLine>
+  );
+}
+
+/**
+ * The answer of one option, which stands alone beside its circle. The circle's control takes its name from these
+ * words, so a screen reader says the letter the circle shows, then the answer, and a key or a teacher can use it.
+ */
+function ChoiceWords({
   children,
   id,
   letter,
@@ -150,9 +156,9 @@ function ChoiceAnswer({
   letter: string;
 }) {
   return (
-    <div className="min-w-0 flex-1" id={`${id}-label`}>
+    <LineWords id={`${id}-label`}>
       <span className="sr-only">{letter} </span>
       {children}
-    </div>
+    </LineWords>
   );
 }

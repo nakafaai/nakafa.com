@@ -197,10 +197,22 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "9cb01eeaac91 112fc8dec9b8 5e29faa7865f f9b85fa16a64",
   "tile.winking.left": "e344a9fd1229 95b2f6739612 700482d22ab3 70e37018e4ec",
   "tile.winking.right": "14a2a1a088e4 f314ad6a925c 661dccbcffd5 d4d1d10cc94d",
+  "whole.carrying.left":
+    "e1e2b6e5a9bd 091b0416b954 987f14ee6fbb 951c271e98d7 79f496e0a59a 8f8ad4fa5fbb 9421a144a90b a8a559e780d5",
+  "whole.carrying.right":
+    "72efba8b3c0f 46a71f32ed88 d9368a5f2e36 a157a1b5a177 30dbe84cd94b 6b4c67f0b739 0220883c323c e467c5e59966",
   "whole.cheering.left":
     "bfa5d890e563 b283d739096b c9ceb9eddead f7fbb93526d3 e5da97219d1b fe3e03b19d70 426f6f4e9a33 534ebecb77e6",
   "whole.cheering.right":
     "b55206597a9f a4de252cb852 edcbd658c7a0 56c676d51a0a 8be5bbc271ac a1375afeab37 f72b66075598 dbb48bb80a7c",
+  "whole.counting.left":
+    "f13383cbd4a8 1f0385d0c7ff 5322c9aad104 4da705880ebf 56723c82a496 af7dee3c07ef c2723871894c 83040b8db56a",
+  "whole.counting.right":
+    "c0776210aa9a 199b23968069 1407e8698c35 6597bd4f37bf faf2f710a88e 47c72a423b81 7f11ff5cfc79 c0d3538f1624",
+  "whole.graduating.left":
+    "1fc64e5b8919 969838c1fef8 69a8e50060f1 323ddbedf6c4 6646af52395f 65b3978c4adc c59003314b9d 3b1844231209",
+  "whole.graduating.right":
+    "57aa75b75dfd 2b79015e58b0 082f9e36c7ce 6e383a72a500 d07083252b71 a9ea9d31080e 21d9adcd2842 0533de675f76",
   "whole.guarding.left":
     "7a0c776b5c86 e8d440ef77db d054c63e5b6a 0bf4c9aea972 1361edaf25b1 fadadbc66dad 84667164cc01 66f4ea39013e",
   "whole.guarding.right":
@@ -225,6 +237,10 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "5a81f615d505 df4378f0d1e0 212528c79899 024e558ecb8c b40595784c30 4f589fcd6a97 6e2e7cf0fbdf 3e2a8fb3556f",
   "whole.relaxed.right":
     "2cbc40cef0e2 497729454a9d 44632de13412 c99361c22793 007b2bf2c923 8f9bd8fd6125 2a851442b1f8 64e48781a679",
+  "whole.ringing.left":
+    "64ef267e53c5 b6486ba82fd6 1dd3a01ef938 8d548495c6b8 eb052f3b19bb 2a7010b6bdc4 35adf71990f7 894a7a51ca59",
+  "whole.ringing.right":
+    "012a03c1b676 295e75737781 14f09f374755 3384d113a59e f2dec4f64b0c e59905a6c3d1 6449a1d8006a 347769c92cec",
   "whole.searching.left":
     "9c2d2458333f 1658293ff4a5 f69f71e84070 c1c47f188acb 4683c3eb2b10 f024aec103e7 ba1559178623 8979b23d30ea",
   "whole.searching.right":
@@ -233,6 +249,14 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "146e16699cf8 06575c4116ac 564ea79eca43 16da113a5435 5ab5589e56fd 908f25e1af77 0f03c054d74a 731853bc8702",
   "whole.sleeping.right":
     "9346c5dfa0a3 0d4874259b6a 67856b180564 098eaabe63ff 44277efbf057 3a1221cc2501 2d9355a00b7e b1066fed1af3",
+  "whole.stamping.left":
+    "4c1b2e0336cb 1a323417f265 bab470d6cd3e 2d32a4444f69 fab6d1241dc1 76c255271706 c263a4dff2e0 6bbad4509dc8",
+  "whole.stamping.right":
+    "943b87666e15 842ba786b96e cbc9b35da1fc 84d2a1ca2273 38f8fdce3bdd a3fd10c6a445 936b8f5b902d c5aceab81bd9",
+  "whole.teaching.left":
+    "f7eb4e401eea 3bd6114f1a85 e8aecfc634bd d9d6354ae364 dc1336570af0 9c5c7ef50175 3423245ca74d 7e65983cf725",
+  "whole.teaching.right":
+    "d05d61a188cc ac09c58b4bad 1a5a984dbbed 9a710756c55e d2256a10bdbc a7a43f98351b ea1d2655400c 7c499cdfa2a8",
   "whole.thinking.left":
     "6742757ddb5b 3912db56fa23 ab590ab10c59 36a87f2994c8 d130ca7b03db cdbcdfcb525f 962e1cecfdba 5d496a0a3b3b",
   "whole.thinking.right":

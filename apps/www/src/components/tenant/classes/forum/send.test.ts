@@ -2,21 +2,26 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { MascotCode } from "@repo/mascot/code";
 import { Effect, Exit, Option, Result, Schema } from "effect";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import {
   openDiscussion,
   sendMessage,
   sendReply,
+  viewerFace,
 } from "@/components/tenant/classes/forum/send";
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
 const classId = Schema.decodeUnknownSync(Id("classes"))("class-1");
 const channelId = Schema.decodeUnknownSync(Id("classroomChannels"))("general");
+const mascot = Schema.decodeSync(MascotCode)("cat.0.243e66.right.open");
 const author = {
   id: Schema.decodeUnknownSync(Id("tenantPeople"))("person-1"),
+  mascot,
   name: "Bu Rina",
   nina: false,
+  photo: null,
 };
 const args = {
   attachments: [],
@@ -191,6 +196,7 @@ describe("sendReply and openDiscussion", () => {
                 discussion: {
                   lastReplyAt: null,
                   number: 1,
+                  repliers: [],
                   replies: 0,
                   title: "Gaya gesek",
                   unread: false,
@@ -202,4 +208,23 @@ describe("sendReply and openDiscussion", () => {
         );
       })
   );
+});
+
+describe("viewerFace", () => {
+  it("draws the viewer as the school names them, with the animal and the photo their account shows", () => {
+    const person = { id: author.id, kind: "member" as const, name: "Bu Rina" };
+    expect(viewerFace({ account: { mascot, name: "Rina" }, person })).toEqual(
+      author
+    );
+    expect(
+      viewerFace({
+        account: {
+          image: "https://example.com/rina.png",
+          mascot,
+          name: "Rina",
+        },
+        person,
+      })
+    ).toEqual({ ...author, photo: "https://example.com/rina.png" });
+  });
 });

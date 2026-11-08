@@ -13,6 +13,16 @@ const TRY_PATH = /\/exams\/[^/]+\/try$/u;
 /** The end of an editor's address, which the try's address replaces. */
 const EDIT_SUFFIX = /\/edit$/u;
 
+/** The words of each part of the matching, by its editor's name: three countries and their capitals. */
+const PARTS = [
+  ["Question 1, statement 1", "Indonesia"],
+  ["Question 1, statement 2", "Jepang"],
+  ["Question 1, statement 3", "Jerman"],
+  ["Question 1, answer A", "Berlin"],
+  ["Question 1, answer B", "Jakarta"],
+  ["Question 1, answer C", "Tokyo"],
+] as const;
+
 /** How far a line's end may stand from the middle of its dot, in the board's pixels. */
 const DOT_TOLERANCE = 1.5;
 
@@ -104,6 +114,14 @@ test("a teacher pulls, presses, and keys lines between statements and answers, t
 
   const canvas = page.getByRole("region", { name: "Exam pages" });
   const panel = page.getByRole("complementary", { name: "For teachers" });
+
+  // Each part takes its words, since a student's paper leaves out every part that shows nothing.
+  for (const [name, words] of PARTS) {
+    const part = canvas.getByRole("textbox", { name });
+    await expect(part).toBeEditable({ timeout: readinessTimeoutMilliseconds });
+    await part.click();
+    await page.keyboard.type(words);
+  }
 
   // A pull from statement 1's dot to answer B draws the line, and the teacher's key shows it too.
   await pull(

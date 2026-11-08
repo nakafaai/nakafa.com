@@ -20,14 +20,14 @@ describe("linePath and removePoint", () => {
     );
   });
 
-  it("stands a line's remove control on its statement's row, a step toward its answer", () => {
+  it("stands a line's remove control in the middle of the gap, on its statement's row", () => {
     expect(removePoint({ x: 200, y: 40 }, { x: 300, y: 90 })).toEqual({
-      x: 228,
+      x: 250,
       y: 40,
     });
-    // A paper written right to left puts its answers on the left, so the step goes left.
+    // A paper written right to left puts its answers on the left, and the control still stands between the dots.
     expect(removePoint({ x: 200, y: 40 }, { x: 100, y: 90 })).toEqual({
-      x: 172,
+      x: 150,
       y: 40,
     });
   });
