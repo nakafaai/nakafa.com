@@ -10,6 +10,7 @@ import type { PlayerMode } from "@/components/player/mode";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
+import { PlayerViewSwitch } from "@/components/player/view";
 import { PaneHeader } from "@/components/shared/pane";
 import { PaneEdge } from "@/components/shared/panes/edge";
 import { paneSideVariants } from "@/components/shared/panes/side";
@@ -63,7 +64,7 @@ export function TryoutReviewFrame({
   const t = useTranslations("Tryouts");
   const bodies = use(TryoutContentContext)?.bodies ?? [];
   const joined = Result.getOrThrow(joinTryoutBodies(bodies, runtime.questions));
-  const whole = readsWhole(joined);
+  const whole = readsWhole(Arr.map(joined, ({ body }) => body));
   const [explained] = useState(createExplainedStore);
 
   return (
@@ -104,6 +105,14 @@ export function TryoutReviewFrame({
       </TryoutExplainedContext>
     </TryoutReviewContext>
   );
+}
+
+/**
+ * The view of a review's questions, for a page header that a review and the section page share: it shows in a
+ * review's frame, and nowhere else, since only a review has questions to lay out.
+ */
+export function TryoutReviewView() {
+  return use(TryoutReviewContext) === null ? null : <PlayerViewSwitch />;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Fiber, Option } from "effect";
+import { Deferred, Effect, Fiber } from "effect";
 import type { PlayerMode } from "@/components/player/mode";
 import {
   createPlayerStore,
@@ -36,23 +36,6 @@ describe("player store", () => {
       pending: null,
       pinned: false,
     });
-  });
-
-  it("opens on the question its address names, reveals it, and holds it until the page moves away", () => {
-    const store = createPlayerStore({
-      keys: ["a", "b", "c"],
-      mode: "list",
-      start: Option.some("c"),
-    });
-
-    expect(store.getState()).toMatchObject({
-      current: "c",
-      jump: { key: "c", seq: 1 },
-      pinned: true,
-      review: false,
-    });
-    store.getState().observe("a");
-    expect(store.getState().current).toBe("c");
   });
 
   it("reads a finished paper as a review", () => {

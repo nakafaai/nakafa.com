@@ -26,8 +26,8 @@ export function verdictOfQuestion(
  * Whether a reader may read a finished section whole: every question carries its key, which the backend
  * sends only to a reader who may read it. Any other reader sees the leading preview under the Pro offer.
  */
-export function readsWhole(joined: readonly { readonly body: TryoutBody }[]) {
-  return Arr.every(joined, ({ body }) => body.key !== undefined);
+export function readsWhole(bodies: readonly TryoutBody[]) {
+  return Arr.every(bodies, (body) => body.key !== undefined);
 }
 
 /**
