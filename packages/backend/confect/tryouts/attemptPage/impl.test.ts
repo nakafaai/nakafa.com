@@ -16,7 +16,7 @@ import {
 } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Schema } from "effect";
 
-const SET_PATH = "try-out/indonesia/snbt/2027/set-1-id";
+const SET_PATH = "try-out/indonesia/snbt/2027/utbk/set-1-id";
 
 /** The current-attempt request of the fixture set, or of one of its sections. */
 const current = (locale: "en" | "id" = "id") => ({
@@ -118,7 +118,7 @@ describe("tryouts/attemptPage", () => {
         ).toEqual({
           attemptId,
           kind: "redirect",
-          publicPath: "try-out/indonesia/snbt/2027/set-1-en",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-en",
         });
         expect(
           yield* world.learner.query(tryouts.queries.attemptPage.getSection, {
@@ -256,7 +256,7 @@ describe("tryouts/attemptPage", () => {
           {
             request: retained(
               attemptId,
-              "try-out/indonesia/snbt/2027/set-1-en/section-a",
+              "try-out/indonesia/snbt/2027/utbk/set-1-en/section-a",
               "en"
             ),
           }

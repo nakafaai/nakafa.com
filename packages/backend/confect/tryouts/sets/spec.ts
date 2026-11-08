@@ -2,7 +2,7 @@ import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/Pagi
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
+import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import {
   setFilterValidator,

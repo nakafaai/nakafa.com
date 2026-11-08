@@ -23,8 +23,9 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
 const address = {
   country: "id",
   exam: "snbt",
+  group: "2027",
   locale: "en",
-  track: "2027",
+  track: "utbk",
 } as const;
 
 const NOT_FOUND = { kind: "notFound" };
@@ -44,7 +45,7 @@ describe("try-out attempt server functions", () => {
     ).resolves.toEqual(NOT_FOUND);
     expect(mocks.readTryoutSetPage).toHaveBeenCalledExactlyOnceWith(
       "en",
-      "try-out/id/snbt/2027/set-1"
+      "try-out/id/snbt/2027/utbk/set-1"
     );
   });
 
@@ -58,7 +59,7 @@ describe("try-out attempt server functions", () => {
     ).resolves.toEqual(NOT_FOUND);
     expect(mocks.readTryoutSectionPage).toHaveBeenCalledExactlyOnceWith(
       "en",
-      "try-out/id/snbt/2027/set-1/section-1"
+      "try-out/id/snbt/2027/utbk/set-1/section-1"
     );
   });
 });

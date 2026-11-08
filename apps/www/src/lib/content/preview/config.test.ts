@@ -8,7 +8,7 @@ import {
   readPreviewConfig,
   readPreviewRendererConfig,
 } from "@/lib/content/preview/config";
-import { previewConfig } from "@/test/content-preview";
+import { previewConfig } from "@/test/manifest";
 
 afterEach(() => {
   vi.unstubAllEnvs();

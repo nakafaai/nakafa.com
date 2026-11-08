@@ -30,7 +30,7 @@ vi.mock("@/lib/routing/rendered", async () => {
     "/$locale/chat",
     "/$locale/chat/$id",
     "/$locale/search",
-    "/$locale/try-out/$country/$exam/$track",
+    "/$locale/try-out/$country/$exam/$group/$track",
     "/$locale/user/$username",
     "/api/weather",
     "/school/$slug/exams",
@@ -70,7 +70,7 @@ vi.mock("@/lib/routing/school/refusal", () => ({
   readSchoolRefusal: refusal.read,
 }));
 
-vi.mock("@repo/analytics/server-reporting", () => ({
+vi.mock("@repo/analytics/reporting", () => ({
   reportUncaughtRequestError: reporting.report,
 }));
 
@@ -167,7 +167,7 @@ describe("decisions before the router", () => {
         );
 
         const { handle, response } = yield* served(
-          "/en/try-out/indonesia/snbt/2027/set-1"
+          "/en/try-out/indonesia/snbt/2027/utbk/set-1"
         );
 
         expect(response.status).toBe(404);

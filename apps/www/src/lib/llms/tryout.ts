@@ -12,7 +12,7 @@ import {
 import type { Locale } from "use-intl";
 import {
   readTryoutCountryPage,
-  readTryoutExamPage,
+  readTryoutGroupPage,
   readTryoutHubPage,
   readTryoutSetList,
   readTryoutSetPage,
@@ -28,7 +28,7 @@ const TRYOUT_SEGMENT = "try-out";
 
 /** What the catalog says of any of its pages. */
 type CatalogPage = Pick<
-  NonNullable<Ref.Returns<typeof tryouts.queries.catalog.getExamPage>>["exam"],
+  NonNullable<Ref.Returns<typeof tryouts.queries.catalog.getGroupPage>>["exam"],
   "description" | "publicPath" | "title"
 >;
 
@@ -128,16 +128,19 @@ const readCountryText = Effect.fn("www.llms.tryout.country")(function* (
       publicPath: country.publicPath,
       title: country.title,
     },
-    Arr.map(exams, (exam) => catalogLine(locale, exam))
+    // An exam has no page of its own: its line opens its first group.
+    Arr.map(exams, (exam) =>
+      catalogLine(locale, { ...exam, publicPath: exam.entryPath })
+    )
   );
 });
 
-const readExamText = Effect.fn("www.llms.tryout.exam")(function* (
+const readGroupText = Effect.fn("www.llms.tryout.group")(function* (
   locale: Locale,
   publicPath: string
 ) {
   const [page, tTryouts] = yield* Effect.all(
-    [readTryoutExamPage(locale, publicPath), readWords(locale)],
+    [readTryoutGroupPage(locale, publicPath), readWords(locale)],
     { concurrency: "unbounded" }
   );
   if (!page) {
@@ -146,9 +149,9 @@ const readExamText = Effect.fn("www.llms.tryout.exam")(function* (
   return catalogText(
     locale,
     {
-      description: page.exam.description ?? tTryouts("metadata-description"),
-      publicPath: page.exam.publicPath,
-      title: page.exam.title,
+      description: page.group.description ?? tTryouts("metadata-description"),
+      publicPath: page.group.publicPath,
+      title: `${page.exam.title} ${page.group.title}`,
     },
     Arr.map(page.tracks, (track) => catalogLine(locale, track))
   );
@@ -176,7 +179,7 @@ const readTrackText = Effect.fn("www.llms.tryout.track")(function* (
     },
     trackKey: page.track.trackKey,
   });
-  const exam = `${page.exam.title} ${page.track.title}`;
+  const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
   return catalogText(
     locale,
     {
@@ -201,7 +204,7 @@ const readSetText = Effect.fn("www.llms.tryout.set")(function* (
   if (!page) {
     return null;
   }
-  const exam = `${page.exam.title} ${page.track.title}`;
+  const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
   return catalogText(
     locale,
     {
@@ -221,9 +224,10 @@ const readSetText = Effect.fn("www.llms.tryout.set")(function* (
 });
 
 /**
- * Renders a try-out catalog page as agent-readable Markdown: the hub, a country, an
- * exam, a track or a set. A section page has none, because its set stands for it, so
- * a null result means the route has no try-out source.
+ * Renders a try-out catalog page as agent-readable Markdown: the hub, a country, a
+ * group, a track or a set. An exam has no page of its own, and a section page has
+ * none because its set stands for it, so a null result means the route has no
+ * try-out source.
  */
 export const getTryoutLlmsText = Effect.fn("www.llms.tryout.text")(function* ({
   cleanSlug,
@@ -239,9 +243,9 @@ export const getTryoutLlmsText = Effect.fn("www.llms.tryout.text")(function* ({
   return yield* Match.value(Arr.length(segments)).pipe(
     Match.when(1, () => readHubText(locale)),
     Match.when(2, () => readCountryText(locale, cleanSlug)),
-    Match.when(3, () => readExamText(locale, cleanSlug)),
-    Match.when(4, () => readTrackText(locale, cleanSlug)),
-    Match.when(5, () => readSetText(locale, cleanSlug)),
+    Match.when(4, () => readGroupText(locale, cleanSlug)),
+    Match.when(5, () => readTrackText(locale, cleanSlug)),
+    Match.when(6, () => readSetText(locale, cleanSlug)),
     Match.orElse(() => Effect.succeed(null))
   );
 });

@@ -12,8 +12,9 @@ import {
 } from "@repo/backend/client/content/errors";
 import { readPublicContent } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/site/keys";
-import { JsonTextSchema } from "@repo/utilities/json";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import {
   decodePublishedDelivery,
@@ -21,13 +22,15 @@ import {
   readPublishedContent,
 } from "@/lib/content/published/exchange";
 import {
+  previewArtifactHash,
   previewProjection,
   previewSourcePath,
   previewWireArtifact,
-} from "@/test/content-preview";
+} from "@/test/manifest";
 
 const readPublicContentMock = vi.hoisted(() => vi.fn());
-const verifyPublicContentDeliveryMock = vi.hoisted(() => vi.fn());
+const verifyPublicContentFoundMock = vi.hoisted(() => vi.fn());
+const partsMocks = vi.hoisted(() => ({ artifact: vi.fn(), frame: vi.fn() }));
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
 /** The content store on a miss: it runs the load it was given. */
 const storeReadMock = vi.hoisted(() =>
@@ -69,10 +72,31 @@ const routeInput = {
   appLocale: input.appLocale,
   publicPath: input.publicPath,
 };
+/** The head that a lesson's query names for the preview body. */
+const head = {
+  artifactHash: previewArtifactHash,
+  projectionHash: `sha256:${"b".repeat(64)}`,
+  sourcePath: previewSourcePath,
+};
+/** The signed release frame that the preview body is verified against. */
+const frame = {
+  activeManifestHash: `sha256:${"c".repeat(64)}`,
+  activeReleaseId: found.activeReleaseId,
+  releaseJson: encodeJsonText(found.release),
+  rendererJson: encodeJsonText(liveRenderer),
+};
+const deliveryInput = { ...input, family: "material" } as const;
+const artifactJson = encodeJsonText(previewWireArtifact);
+const projectionJson = encodeJsonText(previewProjection);
+const decodeJson = Schema.decodeSync(JsonTextSchema);
 
 vi.mock("@repo/backend/client/content/public", () => ({
   readPublicContent: readPublicContentMock,
-  verifyPublicContentDelivery: verifyPublicContentDeliveryMock,
+  verifyPublicContentFound: verifyPublicContentFoundMock,
+}));
+vi.mock("@/lib/content/published/parts", () => ({
+  readPublicArtifact: partsMocks.artifact,
+  readReleaseFrame: partsMocks.frame,
 }));
 vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
@@ -89,7 +113,9 @@ vi.mock("@/lib/content/renderer/manifest", () => ({
 
 beforeEach(() => {
   readPublicContentMock.mockReset();
-  verifyPublicContentDeliveryMock.mockReset();
+  verifyPublicContentFoundMock.mockReset();
+  partsMocks.frame.mockReset().mockReturnValue(Effect.succeed(frame));
+  partsMocks.artifact.mockReset().mockReturnValue(Effect.succeed(artifactJson));
   runtimeKeysMock.mockReset();
   runtimeKeysMock.mockReturnValue({
     CONTENT_READ_TOKEN: "runtime-token",
@@ -98,13 +124,14 @@ beforeEach(() => {
 
 describe("published content exchange", () => {
   it.effect(
-    "verifies a coherent query delivery against the live renderer",
+    "composes a body from its release frame, its artifact by hash and its head, and verifies it against the live renderer",
     () =>
       Effect.gen(function* () {
-        const source = yield* Schema.encodeEffect(JsonTextSchema)(found);
-        verifyPublicContentDeliveryMock.mockReturnValue(Effect.succeed(found));
+        verifyPublicContentFoundMock.mockReturnValue(Effect.succeed(found));
 
-        expect(yield* decodePublishedDelivery(routeInput, source)).toEqual({
+        expect(
+          yield* decodePublishedDelivery(deliveryInput, head, projectionJson)
+        ).toEqual({
           activeReleaseId: found.activeReleaseId,
           artifact: found.artifact,
           projection: previewProjection,
@@ -112,9 +139,29 @@ describe("published content exchange", () => {
           sourcePath: previewSourcePath,
           sourceRevision,
         });
-        expect(verifyPublicContentDeliveryMock).toHaveBeenCalledExactlyOnceWith(
+        expect(partsMocks.frame).toHaveBeenCalledExactlyOnceWith(
+          found.activeReleaseId
+        );
+        expect(partsMocks.artifact).toHaveBeenCalledExactlyOnceWith({
+          appLocale,
+          artifactHash: previewArtifactHash,
+          family: "material",
+          publicPath: input.publicPath,
+        });
+        expect(verifyPublicContentFoundMock).toHaveBeenCalledExactlyOnceWith(
           routeInput,
-          source,
+          {
+            activeManifestHash: frame.activeManifestHash,
+            activeReleaseId: frame.activeReleaseId,
+            artifact: decodeJson(artifactJson),
+            delivery: "public",
+            kind: "found",
+            projection: decodeJson(projectionJson),
+            projectionHash: head.projectionHash,
+            release: decodeJson(frame.releaseJson),
+            rendererManifest: liveRenderer,
+            sourcePath: previewSourcePath,
+          },
           liveRenderer
         );
         expect(readPublicContentMock).not.toHaveBeenCalled();
@@ -123,20 +170,65 @@ describe("published content exchange", () => {
   );
 
   it.effect(
-    "preserves signed-query verification failures before decoding",
+    "fails as the route's projection when a part is missing or is not JSON",
     () =>
       Effect.gen(function* () {
-        verifyPublicContentDeliveryMock.mockReturnValue(
-          Effect.fail(
-            new ContentRuntimeVerificationError({ cause: "Invalid signature" })
-          )
-        );
-        expect(
-          yield* decodePublishedDelivery(routeInput, "invalid").pipe(
-            Effect.flip
-          )
-        ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+        partsMocks.frame.mockReturnValueOnce(Effect.succeed(null));
+        partsMocks.artifact
+          .mockReturnValueOnce(Effect.succeed(artifactJson))
+          .mockReturnValueOnce(Effect.succeed(null))
+          .mockReturnValueOnce(Effect.succeed("{"));
+
+        for (const _ of ["frame", "artifact", "artifact text"]) {
+          expect(
+            yield* decodePublishedDelivery(
+              deliveryInput,
+              head,
+              projectionJson
+            ).pipe(Effect.flip)
+          ).toEqual(new PublishedProjectionError(routeInput));
+        }
+        expect(verifyPublicContentFoundMock).not.toHaveBeenCalled();
       })
+  );
+
+  it.effect("refuses an artifact that is not the one its head names", () =>
+    Effect.gen(function* () {
+      verifyPublicContentFoundMock.mockReturnValue(
+        Effect.succeed({
+          ...found,
+          artifact: {
+            ...found.artifact,
+            artifactHash: `sha256:${"d".repeat(64)}`,
+          },
+        })
+      );
+
+      expect(
+        yield* decodePublishedDelivery(
+          deliveryInput,
+          head,
+          projectionJson
+        ).pipe(Effect.flip)
+      ).toEqual(new PublishedProjectionError(routeInput));
+    })
+  );
+
+  it.effect("preserves signed verification failures", () =>
+    Effect.gen(function* () {
+      verifyPublicContentFoundMock.mockReturnValue(
+        Effect.fail(
+          new ContentRuntimeVerificationError({ cause: "Invalid signature" })
+        )
+      );
+      expect(
+        yield* decodePublishedDelivery(
+          deliveryInput,
+          head,
+          projectionJson
+        ).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+    })
   );
 
   it.effect("binds trusted active state to the exact public projection", () =>

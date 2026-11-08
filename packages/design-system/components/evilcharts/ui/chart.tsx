@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
-import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import type { ChartSeriesCue } from "@repo/design-system/lib/charts/cue";
 import { cn } from "cn";
 import { Result } from "effect";
 import { domAnimation, LazyMotion } from "motion/react";

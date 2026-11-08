@@ -2,13 +2,15 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
+  publicTryoutCountryExamValidator,
   publicTryoutCountryValidator,
   publicTryoutCountryWithExamCountValidator,
   publicTryoutExamValidator,
+  publicTryoutGroupValidator,
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
-} from "@repo/backend/confect/tryouts/queries/catalogModel";
+} from "@repo/backend/confect/tryouts/queries/model";
 import {
   featuredTryoutValidator,
   tryoutHubArgsValidator,
@@ -19,8 +21,12 @@ import {
 } from "@repo/backend/content/tryout/spec";
 import { Schema } from "effect";
 
+const groupsValidator = Schema.mutable(
+  Schema.Array(publicTryoutGroupValidator)
+);
 const sectionPageFields = {
   exam: publicTryoutExamValidator,
+  group: publicTryoutGroupValidator,
   section: publicTryoutSectionValidator,
   set: publicTryoutSetValidator,
   track: publicTryoutTrackValidator,
@@ -81,7 +87,9 @@ export default GroupSpec.make()
           Schema.Null,
           Schema.Struct({
             country: publicTryoutCountryValidator,
-            exams: Schema.mutable(Schema.Array(publicTryoutExamValidator)),
+            exams: Schema.mutable(
+              Schema.Array(publicTryoutCountryExamValidator)
+            ),
             sourceRevision: Schema.Union([Schema.String, Schema.Null]),
           }),
         ]),
@@ -98,6 +106,24 @@ export default GroupSpec.make()
           Schema.Struct({
             country: publicTryoutCountryValidator,
             exam: publicTryoutExamValidator,
+            groups: groupsValidator,
+          }),
+        ]),
+      error: () => ReleaseError,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "getGroupPage",
+      args: () => tryoutPageArgsValidator.fields,
+      returns: () =>
+        Schema.Union([
+          Schema.Null,
+          Schema.Struct({
+            country: publicTryoutCountryValidator,
+            exam: publicTryoutExamValidator,
+            group: publicTryoutGroupValidator,
+            groups: groupsValidator,
             tracks: Schema.mutable(Schema.Array(publicTryoutTrackValidator)),
           }),
         ]),
@@ -114,6 +140,8 @@ export default GroupSpec.make()
           Schema.Struct({
             country: publicTryoutCountryValidator,
             exam: publicTryoutExamValidator,
+            group: publicTryoutGroupValidator,
+            groups: groupsValidator,
             track: publicTryoutTrackValidator,
           }),
         ]),
@@ -130,6 +158,7 @@ export default GroupSpec.make()
           Schema.Struct({
             exam: publicTryoutExamValidator,
             entrySection: publicTryoutSectionValidator,
+            group: publicTryoutGroupValidator,
             set: publicTryoutSetValidator,
             sections: Schema.mutable(
               Schema.Array(publicTryoutSectionValidator)

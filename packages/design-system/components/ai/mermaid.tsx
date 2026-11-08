@@ -1,7 +1,7 @@
 import { Alert02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { operationalErrorName } from "@repo/analytics/posthog/exception";
-import { CodeBlockText } from "@repo/design-system/components/code-block/text";
+import { CodeBlockText } from "@repo/design-system/components/code/text";
 import {
   Collapsible,
   CollapsibleContent,

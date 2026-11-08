@@ -26,6 +26,7 @@ function keysOf(row: CatalogRow, appLocale: AppLocaleCode): CatalogNodeKeys {
     countryKey: row.countryKey,
     kind: row.kind,
     ...("examKey" in row ? { examKey: row.examKey } : {}),
+    ...(row.kind === "group" ? { groupKey: row.groupKey } : {}),
     ...("trackKey" in row ? { trackKey: row.trackKey } : {}),
     ...("setKey" in row ? { setKey: row.setKey } : {}),
     ...("sectionKey" in row ? { sectionKey: row.sectionKey } : {}),
@@ -84,8 +85,9 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
           ? {}
           : { description: row.description }),
         publicPath: input.publicPath,
+        // An exam and its groups share the exam's artwork.
         socialImageIdentity:
-          row.kind === "exam"
+          row.kind === "exam" || row.kind === "group"
             ? { countryKey: row.countryKey, examKey: row.examKey }
             : null,
         title: row.title,

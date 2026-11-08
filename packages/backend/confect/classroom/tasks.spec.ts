@@ -20,7 +20,7 @@ import {
   TaskText,
   TaskTitle,
   TaskView,
-} from "@repo/backend/confect/classroom/tasks/task";
+} from "@repo/backend/confect/classroom/tasks/schema";
 import {
   QuestionsUnready,
   ScheduleInvalid,

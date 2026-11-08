@@ -39,7 +39,6 @@ import {
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Array as ReadonlyArray, Schema } from "effect";
 import type { HttpClientResponse } from "effect/http";
 
@@ -287,12 +286,18 @@ export const readPublicContent = Effect.fn("NakafaContent.readPublicContent")(
   }
 );
 
-/** Authenticates the signed public envelope returned by a coherent domain query. */
-export const verifyPublicContentDelivery = Effect.fn(
-  "NakafaContent.verifyPublicContentDelivery"
+/**
+ * Authenticates one public response that a reader composed from its parts: the
+ * signed release document and renderer manifest of the release, the signed
+ * artifact read by its hash, and the route's projection, projection hash and
+ * source path. Each part keeps its own signature, so the response proves what the
+ * envelope of one query did.
+ */
+export const verifyPublicContentFound = Effect.fn(
+  "NakafaContent.verifyPublicContentFound"
 )(function* (
   input: PublicContentRuntimeInput,
-  source: string,
+  value: unknown,
   rendererManifest: unknown
 ) {
   const request = yield* decodePublicContentRuntimeRequest({
@@ -303,22 +308,6 @@ export const verifyPublicContentDelivery = Effect.fn(
       () =>
         new ContentTransportError({
           reason: "request",
-        })
-    )
-  );
-  if (
-    new TextEncoder().encode(source).byteLength >
-    MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
-  ) {
-    return yield* new ContentTransportError({
-      reason: "response-size",
-    });
-  }
-  const value = yield* Schema.decodeEffect(JsonTextSchema)(source).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "json-syntax",
         })
     )
   );
