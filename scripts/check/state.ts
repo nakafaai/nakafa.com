@@ -7,7 +7,7 @@ import {
   isVariableStatement,
   type SourceFile,
   type VariableStatement,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 
 /** Whether an initializer makes one of Effect's mutable values, such as `MutableHashMap.empty()`. */

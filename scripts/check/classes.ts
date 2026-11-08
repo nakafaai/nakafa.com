@@ -1,9 +1,5 @@
 import { Array as Arr, Effect, Order, Result } from "effect";
-import {
-  type Identifier,
-  isIdentifier,
-  type Node,
-} from "typescript/unstable/ast";
+import { type Identifier, isIdentifier, type Node } from "tsrs/ast";
 import { isConfiguration, TEST_PATTERN } from "#scripts/check/kinds";
 import { classParts, classReferences } from "#scripts/check/positions";
 import {

@@ -16,7 +16,7 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";
 import { candidate } from "#scripts/check/rules";
 import { platformServerImports } from "#scripts/check/server";

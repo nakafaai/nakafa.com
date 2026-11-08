@@ -19,7 +19,7 @@
     "test:browser": "playwright test",
     "test:ui": "vitest --ui",
     "test:watch": "vitest watch",
-    "typecheck": "tsr generate && tsc --checkers 2 --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsr generate && tsrs --checkers 2 --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@confect/core": "catalog:",
@@ -55,7 +55,7 @@
     "ai": "catalog:",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
-    "better-auth": "1.6.33",
+    "better-auth": "1.6.34",
     "class-variance-authority": "catalog:",
     "cn": "catalog:",
     "convex": "catalog:",
@@ -100,7 +100,7 @@
     "alchemy": "catalog:",
     "jsdom": "^30.1.3",
     "seroval": "1.7.10",
-    "typescript": "catalog:",
+    "tsrs": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   }

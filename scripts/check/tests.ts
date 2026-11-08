@@ -92,7 +92,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         root,
         "Unable to start the native project compiler."
       ),
-      (api) => arrayFindings(api, root, projectConfigs, parsed.modules)
+      (base) => arrayFindings(base, root, projectConfigs, parsed.modules)
     )
   );
   return Arr.flatten([

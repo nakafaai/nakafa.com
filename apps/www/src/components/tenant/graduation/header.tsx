@@ -49,19 +49,27 @@ export function useCohortArgs() {
 }
 
 /**
- * The page's header: the path back to the graduation and the class group's name, the search
- * by student, the menu with the decision on graduation and the e-Ijazah export, and Issue
- * letters for the principal. The actions draw together once the class group is read, because
- * which of them the viewer holds decides where the search stands.
+ * The class group's graduation page, which the header and the body read from one subscription:
+ * the graduating class group's, or the one that does not graduate.
+ */
+export function useGraduationPage() {
+  const args = useCohortArgs();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  return useQuery(records.graduations.get, isSettled ? args : "skip");
+}
+
+/**
+ * The page's header: the path back to the graduation and the class group's name, then, for a
+ * graduating class group, the search by student, the menu with the decision on graduation and
+ * the e-Ijazah export, and Issue letters for the principal. The actions draw together once the
+ * class group is read, because which of them the viewer holds decides where the search stands.
+ * A class group that does not graduate has no list to search and nothing to issue.
  */
 export function CohortGraduationHeader() {
   const t = useTranslations("SchoolGraduation");
   const args = useCohortArgs();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const overview = useQuery(records.graduations.get, isSettled ? args : "skip");
-  const title = QueryResult.isSuccess(overview)
-    ? overview.value.cohort.name
-    : "";
+  const page = useGraduationPage();
+  const title = QueryResult.isSuccess(page) ? page.value.cohort.name : "";
 
   return (
     <SchoolHeader
@@ -78,8 +86,8 @@ export function CohortGraduationHeader() {
       ]}
       title={title}
     >
-      {QueryResult.isSuccess(overview) ? (
-        <GraduationActions overview={overview.value}>
+      {QueryResult.isSuccess(page) && page.value._tag === "Graduating" ? (
+        <GraduationActions overview={page.value}>
           <TableSearch placeholder={t("search-students")} />
         </GraduationActions>
       ) : null}

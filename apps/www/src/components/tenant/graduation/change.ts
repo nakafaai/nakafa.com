@@ -3,8 +3,9 @@ import records from "@repo/backend/confect/_generated/refs/records";
 import { Option, Struct } from "effect";
 
 /**
- * Shows a recorded decision on graduation at once, on every loaded page of a class group of its
- * period, with the letters it has issued so far, which stay none for a first decision.
+ * Shows a recorded decision on graduation at once, on every loaded page of a graduating class
+ * group of its period, with the letters it has issued so far, which stay none for a first
+ * decision. A class group that does not graduate has no decision to show.
  */
 export const decideChange: OptimisticUpdate<
   typeof records.graduations.decide
@@ -13,6 +14,7 @@ export const decideChange: OptimisticUpdate<
   for (const query of localStore.getAllQueries(records.graduations.get)) {
     if (
       Option.isSome(query.value) &&
+      query.value.value._tag === "Graduating" &&
       query.value.value.cohort.periodId === args.periodId
     ) {
       localStore.setQuery(

@@ -8,7 +8,7 @@ import {
   isVariableDeclaration,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { nodesBelow, tagText } from "#scripts/check/drilling";
 import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
 

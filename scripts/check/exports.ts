@@ -23,7 +23,7 @@ import {
   type SourceFile,
   type Statement,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { RepositoryReadError } from "#scripts/check/files";
 import {
   exportReader,

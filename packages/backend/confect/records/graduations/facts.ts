@@ -23,18 +23,29 @@ import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { listedPersonOf } from "@repo/backend/confect/tenancy/listed";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
-/**
- * The unit of a graduating class group: a class group graduates only in the last grade of its
- * unit, and a unit without a last grade (PAUD, SLB, other) has no graduation.
- */
-export const finalUnit = Effect.fn("records.graduations.finalUnit")(function* (
+/** The unit a class group belongs to. */
+export const unitOf = Effect.fn("records.graduations.unitOf")(function* (
   cohort: TenantCohortsDoc
 ) {
-  const unit = yield* (yield* DatabaseReader)
+  return yield* (yield* DatabaseReader)
     .table("tenantUnits")
     .get(cohort.unitId)
     .pipe(Effect.orDie);
-  if (!Option.contains(lastGradeOf(unit.level), cohort.grade)) {
+});
+
+/**
+ * Whether a class group graduates: only the last grade of its unit does, and a unit without a
+ * last grade (PAUD, SLB, other) has no graduation.
+ */
+export const graduates = (unit: TenantUnitsDoc, cohort: TenantCohortsDoc) =>
+  Option.contains(lastGradeOf(unit.level), cohort.grade);
+
+/** The unit of a graduating class group, which every page and write of its graduation needs. */
+export const finalUnit = Effect.fn("records.graduations.finalUnit")(function* (
+  cohort: TenantCohortsDoc
+) {
+  const unit = yield* unitOf(cohort);
+  if (!graduates(unit, cohort)) {
     return yield* new GraduationNotFinal();
   }
   return unit;

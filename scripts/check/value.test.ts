@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
-import { isInterfaceDeclaration } from "typescript/unstable/ast";
+import { isInterfaceDeclaration } from "tsrs/ast";
 import { effectFindings } from "#scripts/check/effect";
 import { parseSources } from "#scripts/check/source";
 import { valueMembers } from "#scripts/check/value";

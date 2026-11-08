@@ -24,7 +24,7 @@ import {
   type PropertyName,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { CLASS_ATTRIBUTES, CLASS_FUNCTIONS } from "#scripts/check/editor";
 import { descendants } from "#scripts/check/source";
 import { unwrapped } from "#scripts/check/wrapper";

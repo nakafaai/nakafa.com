@@ -40,6 +40,8 @@ export const EFFECT_COHORT_OVERRIDES = [
   "@effect/platform-node",
   "@effect/platform-node-shared",
 ] as const;
+/** The tsrs release that the pinned @effect/tsgo patches, which every manifest takes from the catalog. */
+export const TSRS_VERSION = "0.23.0-ts7.1.0-beta";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.1.0";
 /**
@@ -224,13 +226,13 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.63.0",
+    approved: "0.67.5",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
   {
-    allowed: ["7.0.2", "catalog:", "npm:typescript@7.0.2"],
-    dependency: "typescript",
+    allowed: [TSRS_VERSION, "catalog:"],
+    dependency: "tsrs",
     minimumDeclarations: 1,
   },
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
@@ -240,11 +242,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "1.6.33",
+    approved: "1.6.34",
     dependency: "better-auth",
     minimumDeclarations: 1,
   },
-  { approved: "1.6.33", dependency: "auth", minimumDeclarations: 1 },
+  { approved: "1.6.34", dependency: "auth", minimumDeclarations: 1 },
   {
     approved: "0.12.6",
     dependency: "@convex-dev/better-auth",
@@ -326,6 +328,8 @@ export const OBSOLETE_DEPENDENCIES = {
   "@effect/cluster": IN_EFFECT,
   "@effect/experimental": IN_EFFECT,
   "@effect/language-service": "@effect/tsgo, which patches the native compiler",
+  typescript:
+    "tsrs, patched by @effect/tsgo: its compiler, language server, and API (tsrs/sync, tsrs/ast) replace the TypeScript package",
   "@effect/platform": IN_EFFECT,
   "@effect/rpc": IN_EFFECT,
   "@effect/sql": IN_EFFECT,

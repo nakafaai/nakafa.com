@@ -74,7 +74,7 @@ describe("editor/steps submit", () => {
           .as("teacher")
           .mutation(submit, { batch: text, documentId, slug: nf });
         const rows = yield* fixture.run(stepRows);
-        expect(submitted).toBeNull();
+        expect(submitted).toEqual({ _tag: "Accepted" });
         expect((yield* fixture.run(documentRowOf(documentId))).head).toBe(3);
         expect(Arr.map(rows, (row) => row.version)).toEqual([1, 2, 3]);
         expect(Arr.map(rows, (row) => row.clientId)).toEqual([
@@ -107,7 +107,7 @@ describe("editor/steps submit", () => {
       })
   );
 
-  it.effect("answers a retried batch with nothing, and writes nothing", () =>
+  it.effect("answers a retried batch as accepted, and writes nothing", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const documentId = yield* newDocument(fixture);
@@ -119,7 +119,7 @@ describe("editor/steps submit", () => {
         documentId,
         slug: nf,
       });
-      expect(retried).toBeNull();
+      expect(retried).toEqual({ _tag: "Accepted" });
       expect(yield* fixture.run(stepRows)).toHaveLength(2);
       expect((yield* fixture.run(documentRowOf(documentId))).head).toBe(2);
     })
@@ -149,7 +149,7 @@ describe("editor/steps submit", () => {
   );
 
   it.effect(
-    "refuses a batch on a stale version with the head, and writes nothing",
+    "answers a batch on a stale version with the head it missed, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -159,19 +159,17 @@ describe("editor/steps submit", () => {
           documentId,
           slug: nf,
         });
-        const stale = yield* fixture
-          .as("teacher")
-          .mutation(submit, {
-            batch: yield* batchText(0, "hendra", 1),
-            documentId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(stale).toMatchObject({
+        const stale = yield* fixture.as("teacher").mutation(submit, {
+          batch: yield* batchText(0, "hendra", 1),
+          documentId,
+          slug: nf,
+        });
+        expect(stale).toEqual({
           _tag: "VersionStale",
           baseVersion: 0,
           head: 3,
         });
+        expect(yield* fixture.run(clientRows)).toHaveLength(1);
         expect(yield* fixture.run(stepRows)).toHaveLength(3);
       })
   );
@@ -183,21 +181,17 @@ describe("editor/steps submit", () => {
         const fixture = yield* tenancyFixture;
         const documentId = yield* newDocument(fixture);
         const teacher = fixture.as("teacher");
-        const first = yield* teacher
-          .mutation(submit, {
-            batch: yield* batchText(0, "rina", 2),
-            documentId,
-            slug: nf,
-          })
-          .pipe(Effect.exit);
-        const second = yield* teacher
-          .mutation(submit, {
-            batch: yield* batchText(0, "hendra", 2),
-            documentId,
-            slug: nf,
-          })
-          .pipe(Effect.exit);
-        expect([first._tag, second._tag]).toEqual(["Success", "Failure"]);
+        const first = yield* teacher.mutation(submit, {
+          batch: yield* batchText(0, "rina", 2),
+          documentId,
+          slug: nf,
+        });
+        const second = yield* teacher.mutation(submit, {
+          batch: yield* batchText(0, "hendra", 2),
+          documentId,
+          slug: nf,
+        });
+        expect([first._tag, second._tag]).toEqual(["Accepted", "VersionStale"]);
         expect(yield* fixture.run(stepRows)).toHaveLength(2);
       })
   );
@@ -247,7 +241,7 @@ describe("editor/steps submit", () => {
           documentId,
           slug: nf,
         });
-        expect(after).toBeNull();
+        expect(after).toEqual({ _tag: "Accepted" });
       })
   );
 

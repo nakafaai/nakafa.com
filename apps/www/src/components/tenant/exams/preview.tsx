@@ -99,7 +99,7 @@ export function usePageRead({
   /** Whether the server has saved the question. */
   saved: boolean;
 }) {
-  const { slug } = useExam();
+  const { gone, slug } = useExam();
   // Each text follows its own document alone: the selector keeps the document's reference, so
   // typing in one text redraws that text alone.
   const live = Option.fromNullishOr(
@@ -107,15 +107,17 @@ export function usePageRead({
       Option.getOrUndefined(HashMap.get(state.docs, documentId))
     )
   );
+  // A gone exam reads its documents no more, so the deletion of a document fails no read.
   const reply = useQuery(
     editors.documents.open,
-    !(saved && read) ||
+    gone ||
+      !(saved && read) ||
       isPlaceholderId(documentId) ||
       ((open || editing) && Option.isSome(live))
       ? "skip"
       : { clientId: PREVIEW_CLIENT, documentId, slug }
   );
-  // A document removed with its exam fails its read, and the drawing keeps the text the server last answered.
+  // A read that stops, such as a gone exam's, keeps the text the server last answered.
   const kept = useLastValue(reply);
   const stored = Option.getOrUndefined(kept);
   // A document this build cannot read leaves its drawing without a prompt; the editor reports the

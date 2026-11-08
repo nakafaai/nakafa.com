@@ -3,12 +3,23 @@ import { saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { NOW } from "@repo/backend/test/nina/planted";
 import { earlierTurnIn, withoutRowIds } from "@repo/backend/test/nina/seal";
 import { readThreadIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn } from "@repo/backend/test/nina/stored";
 import { Array as Arr } from "effect";
+
+/** The fetch that R2 answers, stubbed once for the file. */
+const fetcher = vi.fn<typeof fetch>();
+vi.stubGlobal("fetch", fetcher);
+const bucket = makeBucket();
+
+beforeEach(() => {
+  fetcher.mockImplementation((input, init) => bucket.answer(input, init));
+  stubBucket();
+});
 
 vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
@@ -24,7 +35,7 @@ const seal = Ref.getFunctionReference(refs.internal.nina.sealed.seal);
 async function refusedSeal(store: () => unknown) {
   const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
   const turn = await earlierTurnIn(f.t);
-  const before = await storedRowsIn(f.t, f.threadId, []);
+  const before = await storedRowsIn(f.t, f.threadId);
   await store();
 
   await expect(f.t.mutation(seal, { turnId: turn._id })).rejects.toThrow();
@@ -32,7 +43,7 @@ async function refusedSeal(store: () => unknown) {
   expect(await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))).toEqual(
     turn
   );
-  const after = await storedRowsIn(f.t, f.threadId, []);
+  const after = await storedRowsIn(f.t, f.threadId);
   expect(after.messages.page).toEqual(before.messages.page);
 }
 
@@ -73,7 +84,7 @@ describe("Reading and writing the rows of a settled Nina turn", () => {
   it("seals a turn that wrote no rows above its prompt", async () => {
     const f = await createNinaTest({ history: [{ steps: 0 }], now: NOW });
     const turn = await earlierTurnIn(f.t);
-    const stored = await storedRowsIn(f.t, f.threadId, []);
+    const stored = await storedRowsIn(f.t, f.threadId);
     const above = Arr.filter(
       stored.messages.page,
       (row) => row._id !== turn.promptMessageId

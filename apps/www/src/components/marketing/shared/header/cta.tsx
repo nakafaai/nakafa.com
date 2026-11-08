@@ -64,3 +64,21 @@ export function HeaderCta() {
     </>
   );
 }
+
+/**
+ * The header's call to action on a Nakafa School page: the school opens on the
+ * start questionnaire, which signs the founder in first when they need it, and
+ * every school begins with the free trial.
+ */
+export function SchoolCta() {
+  const t = useTranslations("Marketing");
+
+  return (
+    <Link
+      className={buttonVariants({ variant: "secondary" })}
+      to="/$locale/school/new"
+    >
+      {t("start-school")}
+    </Link>
+  );
+}

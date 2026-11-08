@@ -4,7 +4,7 @@ import {
   isParenthesizedExpression,
   isSatisfiesExpression,
   type Node,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 
 /**
  * Whether a node only wraps an expression: parentheses, a non-null assertion, a

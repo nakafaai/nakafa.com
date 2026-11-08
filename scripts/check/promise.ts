@@ -6,7 +6,7 @@ import {
   isFunctionLikeDeclaration,
   type Node,
   type SourceFile,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { insideHandler } from "#scripts/check/handler";
 import { candidate } from "#scripts/check/rules";
 import { workflowHandlers } from "#scripts/check/workflow";

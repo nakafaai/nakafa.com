@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { objectAddress, presign } from "@repo/backend/confect/bucket/sign";
-import { ConfigProvider, Effect, Redacted } from "effect";
+import {
+  objectAddress,
+  objectKeyOf,
+  presign,
+} from "@repo/backend/confect/bucket/sign";
+import { ConfigProvider, Effect, Option, Redacted } from "effect";
 
 /** A presigned DELETE address of the example object, up to its credential scope. */
 const SIGNED_DELETE_ADDRESS =
@@ -80,5 +84,35 @@ describe("bucket.objectAddress", () => {
       }).pipe(Effect.provide(configured));
       expect(address).toMatch(SIGNED_DELETE_ADDRESS);
     })
+  );
+});
+
+describe("bucket.objectKeyOf", () => {
+  it.effect(
+    "reads back the key of an address of the configured bucket, and none for any other address",
+    () =>
+      Effect.gen(function* () {
+        const address = yield* objectAddress("files/accounts/a b", {
+          expiresSeconds: 300,
+          method: "GET",
+        });
+        expect(yield* objectKeyOf(address)).toEqual(
+          Option.some("files/accounts/a b")
+        );
+        expect(
+          yield* objectKeyOf("https://elsewhere.test/nakafa-files/files/x")
+        ).toEqual(Option.none());
+        expect(
+          yield* objectKeyOf(
+            "https://account.r2.cloudflarestorage.com/other/files/x"
+          )
+        ).toEqual(Option.none());
+        expect(yield* objectKeyOf("not an address")).toEqual(Option.none());
+        expect(
+          yield* objectKeyOf(
+            "https://account.r2.cloudflarestorage.com/nakafa-files/%E0%A4%A"
+          )
+        ).toEqual(Option.none());
+      }).pipe(Effect.provide(configured))
   );
 });

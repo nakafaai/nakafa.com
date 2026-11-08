@@ -126,12 +126,17 @@ export const fileAddress = Effect.fn("bucket.file.address")(function* (
   if (Option.isNone(found) || found.value.state !== "stored") {
     return Option.none<string>();
   }
+  return Option.some(yield* readAddress(found.value.objectKey));
+});
+
+/** The read address of one object, signed from the start of the hour for two hours. */
+export const readAddress = Effect.fn("bucket.file.readAddress")(function* (
+  objectKey: string
+) {
   const now = yield* Clock.currentTimeMillis;
-  return Option.some(
-    yield* objectAddress(found.value.objectKey, {
-      expiresSeconds: READ_SECONDS,
-      method: "GET",
-      signedAt: now - (now % HOUR),
-    })
-  );
+  return yield* objectAddress(objectKey, {
+    expiresSeconds: READ_SECONDS,
+    method: "GET",
+    signedAt: now - (now % HOUR),
+  });
 });

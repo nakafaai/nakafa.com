@@ -12,7 +12,7 @@ import {
   type Node,
   type SourceFile,
   type ThrowStatement,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { enclosingFunction, handlerFunctions } from "#scripts/check/handler";
 import { candidate } from "#scripts/check/rules";
 import type { parseSources } from "#scripts/check/source";

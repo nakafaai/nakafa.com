@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
-  admitBatch,
   type Batch,
   BatchSchema,
   decodeBatch,
@@ -50,43 +49,7 @@ function batchWithText(text: string): Batch {
   };
 }
 
-describe("editor/batch version rule", () => {
-  it.effect(
-    "admits a batch on the version it names and counts up by its steps",
-    () =>
-      Effect.gen(function* () {
-        const rina = yield* admitBatch(
-          0,
-          yield* decodeBatch(yield* encodeBatch(batchOf("rina", 0, 2)))
-        );
-        expect(rina.version).toBe(2);
-        expect(rina.batch).toEqual(batchOf("rina", 0, 2));
-
-        const hendra = yield* admitBatch(
-          40,
-          yield* decodeBatch(yield* encodeBatch(batchOf("hendra", 40, 3)))
-        );
-        expect(hendra.version).toBe(43);
-      })
-  );
-
-  it.effect.each([
-    { baseVersion: 39, head: 40 },
-    { baseVersion: 41, head: 40 },
-  ])(
-    "refuses a batch made on version $baseVersion when the document is at $head",
-    ({ baseVersion, head }) =>
-      Effect.gen(function* () {
-        const batch = batchOf("rina", baseVersion, 1);
-        const failure = yield* admitBatch(head, batch).pipe(Effect.flip);
-        expect(failure).toMatchObject({
-          _tag: "VersionStale",
-          baseVersion,
-          head,
-        });
-      })
-  );
-
+describe("editor/batch call bound", () => {
   it.effect("refuses a call over the step bound on the version it names", () =>
     Effect.gen(function* () {
       // One step more than the bound of ADR 0028, on the version the document is at, so only the bound refuses it.
