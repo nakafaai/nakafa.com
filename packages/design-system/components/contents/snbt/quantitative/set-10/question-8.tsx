@@ -1,4 +1,4 @@
-import { NumberLineCard } from "@repo/design-system/components/contents/mathematics/number-line";
+import { NumberLineCard } from "@repo/design-system/components/contents/mathematics/line/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";

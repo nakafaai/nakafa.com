@@ -2,7 +2,7 @@ import {
   decodeLocale,
   type Locale,
 } from "@repo/internationalization/src/locale";
-import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { Array as Arr, Option, Schema } from "effect";
 
 /** One address that moved. A `:locale` in the destination stands for the locale of the request. */

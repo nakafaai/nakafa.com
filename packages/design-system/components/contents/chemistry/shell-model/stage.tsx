@@ -1,9 +1,9 @@
 import { useThree } from "@react-three/fiber";
 import { useShellModel } from "@repo/design-system/components/contents/chemistry/shell-model/context";
 import { ShellModelScene } from "@repo/design-system/components/contents/chemistry/shell-model/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene-frame";
+import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { Suspense } from "react";
 
 const CAMERA_POSITION = [0, 7, 3.5] satisfies readonly [number, number, number];

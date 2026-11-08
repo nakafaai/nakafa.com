@@ -1,4 +1,4 @@
-import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
+import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";

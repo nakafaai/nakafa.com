@@ -1,10 +1,10 @@
-import { CodeBlock } from "@repo/design-system/components/code-block";
+import { CodeBlock } from "@repo/design-system/components/code";
 import {
   CodeBlockBody,
   CodeBlockItem,
-} from "@repo/design-system/components/code-block/body";
-import { CodeBlockContent } from "@repo/design-system/components/code-block/content";
-import { CodeBlockCopyButton } from "@repo/design-system/components/code-block/copy-button";
+} from "@repo/design-system/components/code/body";
+import { CodeBlockContent } from "@repo/design-system/components/code/content";
+import { CodeBlockCopyButton } from "@repo/design-system/components/code/copy";
 import {
   CodeBlockFilename,
   CodeBlockFiles,
@@ -14,8 +14,8 @@ import {
   CodeBlockSelectItem,
   CodeBlockSelectTrigger,
   CodeBlockSelectValue,
-} from "@repo/design-system/components/code-block/header";
-import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
+} from "@repo/design-system/components/code/header";
+import type { CodeBlockData } from "@repo/design-system/lib/code/context";
 import { blockGapVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Schema, String as Str } from "effect";
 

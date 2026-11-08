@@ -10,13 +10,13 @@ import { Effect, Layer, Option } from "effect";
 import { getMaterialModel } from "@/lib/content/material/model";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { activateTestRelease, advanceTestRelease } from "@/test/active";
+import { previewProjection as projection } from "@/test/manifest";
 import {
   activeReleaseId,
   data,
   model,
   published,
-} from "@/test/content-material";
-import { previewProjection as projection } from "@/test/content-preview";
+} from "@/test/published/material";
 import { resetTestRuntimeCache } from "@/test/store";
 
 /** Reads one delivery that the test expects to exist. */

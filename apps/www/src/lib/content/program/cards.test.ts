@@ -8,17 +8,14 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Schema } from "effect";
 import { readPublishedMaterialCards } from "@/lib/content/program/cards";
-import {
-  previewNextProjection,
-  previewProjection,
-} from "@/test/content-preview";
+import { previewNextProjection, previewProjection } from "@/test/manifest";
 import {
   testProgramClass,
   testProgramContexts,
   testProgramGroups,
   testProgramRoot,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 describe("published program material cards", () => {
   it.effect(
