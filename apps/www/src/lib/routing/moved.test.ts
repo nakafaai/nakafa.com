@@ -39,7 +39,7 @@ describe("readMovedRedirect", () => {
       location: COMPANY_SOCIAL_PROFILES.discord,
       status: 307,
     });
-    expect(Option.getOrThrow(readAt("/de/discord"))).toEqual({
+    expect(Option.getOrThrow(readAt("/discord"))).toEqual({
       location: COMPANY_SOCIAL_PROFILES.discord,
       status: 307,
     });

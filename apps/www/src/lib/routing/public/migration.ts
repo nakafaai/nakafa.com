@@ -3,7 +3,6 @@ import { Array as Arr, Effect, HashSet, Match, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { readProfileRedirect } from "@/lib/routing/public/profile";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 import { SubjectLocaleSchema } from "@/lib/routing/public/subject";
 import { readSubjectSuccessor } from "@/lib/routing/public/subject.server";
@@ -153,23 +152,16 @@ function readArticleMigrationRedirect(migration: ArticleMigration) {
  * Resolves one retired public URL to its exact current successor, with the
  * status that answers it: a try-out rule answers 307 or 308, and every other
  * rule answers 308. A try-out URL that carries an attempt stays on the route
- * its attempt was frozen to. The request headers carry the session that the
- * retired address of a profile needs, and a request that gives none is a
- * visitor. `markdown` says that the request names the Markdown version of a
- * page, which a profile does not have, so its retired address is not redirected.
+ * its attempt was frozen to.
  */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
 )(function* ({
   hasAttemptCapability,
-  headers = new Headers(),
-  markdown = false,
   method,
   pathname,
 }: {
   hasAttemptCapability: boolean;
-  headers?: Headers;
-  markdown?: boolean;
   method: string;
   pathname: string;
 }) {
@@ -185,12 +177,6 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
     : yield* readTryoutRedirect(pathname);
   if (tryoutRedirect) {
     return tryoutRedirect;
-  }
-  const profileRedirect = markdown
-    ? null
-    : yield* readProfileRedirect(pathname, headers);
-  if (profileRedirect) {
-    return profileRedirect;
   }
   const identity = readPreviousMaterialIdentity(pathname);
   if (Option.isNone(identity)) {
