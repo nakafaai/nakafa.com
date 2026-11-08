@@ -900,12 +900,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -944,12 +957,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -999,12 +1025,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1059,12 +1098,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -1178,6 +1230,13 @@ export declare const api: {
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -1193,12 +1252,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1245,6 +1317,13 @@ export declare const api: {
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1275,6 +1354,13 @@ export declare const api: {
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -1290,12 +1376,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1357,12 +1456,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1412,12 +1524,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -14707,6 +14832,13 @@ export declare const api: {
                 exam: {
                   description?: string;
                   examKey: string;
+                  groupAxis: "grade" | "institution" | "year";
+                  publicPath: string;
+                  title: string;
+                };
+                group: {
+                  description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                 };
@@ -14734,10 +14866,10 @@ export declare const api: {
                 };
                 track: {
                   description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                   trackKey: string;
-                  trackKind: "institution" | "subject" | "year";
                 };
               };
             }
@@ -14882,6 +15014,13 @@ export declare const api: {
                 exam: {
                   description?: string;
                   examKey: string;
+                  groupAxis: "grade" | "institution" | "year";
+                  publicPath: string;
+                  title: string;
+                };
+                group: {
+                  description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                 };
@@ -14909,10 +15048,10 @@ export declare const api: {
                 };
                 track: {
                   description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                   trackKey: string;
-                  trackKind: "institution" | "subject" | "year";
                 };
               };
               restartTarget: {
@@ -15042,6 +15181,13 @@ export declare const api: {
                 exam: {
                   description?: string;
                   examKey: string;
+                  groupAxis: "grade" | "institution" | "year";
+                  publicPath: string;
+                  title: string;
+                };
+                group: {
+                  description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                 };
@@ -15069,10 +15215,10 @@ export declare const api: {
                 };
                 track: {
                   description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                   trackKey: string;
-                  trackKind: "institution" | "subject" | "year";
                 };
               };
               restartTarget: {
@@ -15105,7 +15251,9 @@ export declare const api: {
             };
             exams: Array<{
               description?: string;
+              entryPath: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
               publicPath: string;
               title: string;
             }>;
@@ -15127,15 +15275,15 @@ export declare const api: {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
               publicPath: string;
               title: string;
             };
-            tracks: Array<{
+            groups: Array<{
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
-              trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             }>;
           }
         >;
@@ -15144,6 +15292,46 @@ export declare const api: {
           "public",
           { appLocale: "en" | "id" | "de" },
           { body: string; versionHash: string }
+        >;
+        getGroupPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          null | {
+            country: {
+              countryCode: string;
+              countryKey: string;
+              description?: string;
+              publicPath: string;
+              title: string;
+            };
+            exam: {
+              description?: string;
+              examKey: string;
+              groupAxis: "grade" | "institution" | "year";
+              publicPath: string;
+              title: string;
+            };
+            group: {
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            };
+            groups: Array<{
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            }>;
+            tracks: Array<{
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+              trackKey: string;
+            }>;
+          }
         >;
         getHubPage: FunctionReference<
           "query",
@@ -15176,7 +15364,7 @@ export declare const api: {
           "public",
           {
             appLocale: "en" | "id" | "de";
-            kind: "country" | "exam" | "track" | "set" | "section";
+            kind: "country" | "exam" | "group" | "track" | "set" | "section";
             publicPath: string;
           },
           {
@@ -15203,6 +15391,13 @@ export declare const api: {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
+              publicPath: string;
+              title: string;
+            };
+            group: {
+              description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
             };
@@ -15230,10 +15425,10 @@ export declare const api: {
             };
             track: {
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
               trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
@@ -15254,6 +15449,13 @@ export declare const api: {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
+              publicPath: string;
+              title: string;
+            };
+            group: {
+              description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
             };
@@ -15281,10 +15483,10 @@ export declare const api: {
             };
             track: {
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
               trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
@@ -15303,15 +15505,28 @@ export declare const api: {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
               publicPath: string;
               title: string;
             };
+            group: {
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            };
+            groups: Array<{
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            }>;
             track: {
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
               trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
@@ -16689,7 +16904,13 @@ export declare const internal: {
         history: FunctionReference<
           "mutation",
           "internal",
-          { classSlug: string; count: number; read: number; slug: string },
+          {
+            author?: string;
+            classSlug: string;
+            count: number;
+            read: number;
+            slug: string;
+          },
           {
             channelId: Id<"classroomChannels">;
             classId: Id<"classes">;

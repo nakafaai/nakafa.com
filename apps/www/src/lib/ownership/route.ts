@@ -7,6 +7,9 @@ import { userSettingsSections } from "@/lib/settings/routes";
 
 type PublicLocale = Locale;
 
+/** The deepest try-out page below its namespace: its country, exam, group, track, set and section. */
+const TRYOUT_PAGE_SEGMENTS = 6;
+
 function readPublicSurface(locale: PublicLocale, root: string) {
   return Arr.findFirst(
     PUBLIC_ROUTE_SURFACES,
@@ -26,7 +29,7 @@ function isPublicSurfacePath(
     return segments.length >= 2;
   }
 
-  return segments.length <= 5;
+  return segments.length <= TRYOUT_PAGE_SEGMENTS;
 }
 
 function isOnboardingPath(segments: readonly string[]) {
