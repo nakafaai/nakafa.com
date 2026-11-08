@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Schema } from "effect";
 
@@ -43,13 +44,13 @@ export function getMassConservationSceneColors(
 
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    balance: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
-    cap: getColor("CYAN"),
-    escapedGas: getColor("SKY"),
-    glass: getColor("CYAN"),
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
-    product: getColor("EMERALD"),
-    sulfur: getColor("YELLOW"),
+    balance: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
+    cap: PLOT_COLORS.teal,
+    escapedGas: PLOT_COLORS.violet,
+    glass: PLOT_COLORS.teal,
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
+    product: PLOT_COLORS.amber,
+    sulfur: PLOT_COLORS.orange,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     zinc: getColor("ZINC"),
   };

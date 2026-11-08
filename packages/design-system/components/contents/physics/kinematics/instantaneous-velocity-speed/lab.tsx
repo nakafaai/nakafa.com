@@ -38,6 +38,7 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -128,7 +129,7 @@ export function InstantaneousVelocitySpeedLab({
             <ambientLight intensity={0.72} />
             <hemisphereLight
               color={getColor("SLATE", 50)}
-              groundColor={getColor("SLATE")}
+              groundColor={PLOT_COLORS.slate}
               intensity={0.64}
             />
             <directionalLight

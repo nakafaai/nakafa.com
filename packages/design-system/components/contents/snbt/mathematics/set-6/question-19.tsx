@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -84,10 +84,10 @@ export function Graph({ title, description, label }: GraphProps) {
   });
 
   // Colors
-  const COLOR_TRIANGLE = getColor("INDIGO");
-  const COLOR_SIGHT = getColor("ROSE");
-  const COLOR_LABEL = getColor("VIOLET");
-  const COLOR_AUX = getColor("AMBER");
+  const COLOR_TRIANGLE = PLOT_COLORS.fuchsia;
+  const COLOR_SIGHT = PLOT_COLORS.pink;
+  const COLOR_LABEL = PLOT_COLORS.violet;
+  const COLOR_AUX = PLOT_COLORS.amber;
 
   return (
     <LineEquationCard

@@ -24,6 +24,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 const EXPONENTIAL_BASE = 3;
@@ -67,17 +68,17 @@ export function VirusChart({ labels }: Props) {
     exponential: {
       cue: VIRUS_CUES.exponential,
       label: labels.exponential,
-      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+      colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
     },
     linear: {
       cue: VIRUS_CUES.linear,
       label: labels.linear,
-      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+      colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
     },
     logarithmic: {
       cue: VIRUS_CUES.logarithmic,
       label: labels.logarithmic,
-      colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
+      colors: { light: [PLOT_COLORS.violet], dark: [PLOT_COLORS.violet] },
     },
   } satisfies ChartConfig;
 

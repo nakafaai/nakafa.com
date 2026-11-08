@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Schema } from "effect";
 
@@ -58,20 +59,20 @@ export function getChemicalReactionTypeSceneColors(
 
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    bubble: getColor("SKY"),
+    bubble: PLOT_COLORS.teal,
     calcium: getColor("STONE"),
-    carbon: getColor("SLATE"),
-    flame: getColor("ORANGE"),
-    glass: getColor("CYAN"),
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
+    carbon: PLOT_COLORS.slate,
+    flame: PLOT_COLORS.orange,
+    glass: PLOT_COLORS.violet,
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     hydrogen: getColor("ZINC"),
-    iron: getColor("SLATE"),
-    liquid: isDarkTheme ? getColor("SLATE") : getColor("GRAY"),
-    oxygen: getColor("SKY"),
-    phosphorus: getColor("AMBER"),
+    iron: PLOT_COLORS.slate,
+    liquid: isDarkTheme ? PLOT_COLORS.slate : getColor("GRAY"),
+    oxygen: PLOT_COLORS.teal,
+    phosphorus: PLOT_COLORS.amber,
     precipitate: ORIGIN_COLOR.LIGHT,
-    rust: getColor("ORANGE"),
-    rustPatch: getColor("AMBER"),
+    rust: PLOT_COLORS.orange,
+    rustPatch: PLOT_COLORS.amber,
     skyLight: ORIGIN_COLOR.LIGHT,
     sphereText: ORIGIN_COLOR.LIGHT,
     sphereTextOutline: ORIGIN_COLOR.DARK,

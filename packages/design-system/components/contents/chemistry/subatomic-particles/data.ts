@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr } from "effect";
 
@@ -51,19 +52,19 @@ export function getSubatomicSceneColors(resolvedTheme: string | undefined) {
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    alpha: getColor("ORANGE"),
-    anode: getColor("TEAL"),
-    cathode: getColor("SLATE"),
-    electron: getColor("SKY"),
-    glass: getColor("CYAN"),
-    gold: getColor("AMBER"),
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
-    negative: getColor("ROSE"),
-    neutron: getColor("SLATE"),
-    nucleus: getColor("ROSE"),
-    positive: getColor("EMERALD"),
-    proton: getColor("ROSE"),
-    ray: getColor("CYAN"),
+    alpha: PLOT_COLORS.orange,
+    anode: PLOT_COLORS.teal,
+    cathode: PLOT_COLORS.slate,
+    electron: PLOT_COLORS.violet,
+    glass: PLOT_COLORS.teal,
+    gold: PLOT_COLORS.amber,
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
+    negative: PLOT_COLORS.pink,
+    neutron: PLOT_COLORS.slate,
+    nucleus: PLOT_COLORS.pink,
+    positive: PLOT_COLORS.fuchsia,
+    proton: PLOT_COLORS.pink,
+    ray: PLOT_COLORS.teal,
     sphereText: ORIGIN_COLOR.LIGHT,
     skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,

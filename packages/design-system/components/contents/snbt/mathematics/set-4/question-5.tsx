@@ -3,7 +3,7 @@ import { LineReadouts } from "@repo/design-system/components/contents/mathematic
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -11,8 +11,8 @@ interface GraphProps {
   title: ReactNode;
 }
 
-const common = { showPoints: false, color: getColor("INDIGO") };
-const highlightColor = getColor("CYAN");
+const common = { showPoints: false, color: PLOT_COLORS.violet };
+const highlightColor = PLOT_COLORS.teal;
 
 /** Renders the coordinate graph for SNBT set 4 question 5. */
 export function Graph({ title, description }: GraphProps) {

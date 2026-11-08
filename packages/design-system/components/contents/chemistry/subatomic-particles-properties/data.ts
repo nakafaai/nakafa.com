@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Schema } from "effect";
 
@@ -70,16 +71,16 @@ export function getSubatomicParticlePropertiesColors(
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    electron: getColor("SKY"),
-    electronPath: getColor("CYAN"),
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
-    neutral: getColor("SLATE"),
-    neutron: getColor("SLATE"),
-    negativePlate: getColor("ROSE"),
-    nucleus: getColor("AMBER"),
-    positivePlate: getColor("EMERALD"),
-    proton: getColor("ROSE"),
-    protonPath: getColor("ROSE"),
+    electron: PLOT_COLORS.teal,
+    electronPath: PLOT_COLORS.violet,
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
+    neutral: PLOT_COLORS.slate,
+    neutron: PLOT_COLORS.slate,
+    negativePlate: PLOT_COLORS.pink,
+    nucleus: PLOT_COLORS.amber,
+    positivePlate: PLOT_COLORS.fuchsia,
+    proton: PLOT_COLORS.pink,
+    protonPath: PLOT_COLORS.pink,
     sphereText: ORIGIN_COLOR.LIGHT,
     skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,

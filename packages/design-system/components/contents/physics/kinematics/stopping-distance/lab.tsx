@@ -38,6 +38,7 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -46,8 +47,8 @@ import type { Group } from "three";
 const PAUSE_SECONDS = 1;
 const BRAKE_DUST_PUFF_COUNT = 5;
 const ROAD_STRIPE_SPACING = 1.6;
-const REACTION_DISTANCE_COLOR = getColor("TEAL");
-const BRAKING_DISTANCE_COLOR = getColor("ORANGE", 500);
+const REACTION_DISTANCE_COLOR = PLOT_COLORS.teal;
+const BRAKING_DISTANCE_COLOR = PLOT_COLORS.orange;
 const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
 
 interface StoppingDistanceLabProps {
@@ -116,7 +117,7 @@ export function StoppingDistanceLab({
             <ambientLight intensity={0.7} />
             <hemisphereLight
               color={getColor("SLATE", 50)}
-              groundColor={getColor("SLATE")}
+              groundColor={PLOT_COLORS.slate}
               intensity={0.62}
             />
             <directionalLight
@@ -386,7 +387,7 @@ function StopCone({ x }: { x: number }) {
     <group position={[x, 0.08, DISTANCE_MARKER_Z]}>
       <mesh castShadow rotation={[0, 0, Math.PI]}>
         <coneGeometry args={[0.17, 0.38, 24]} />
-        <meshStandardMaterial color={getColor("ORANGE", 500)} roughness={0.5} />
+        <meshStandardMaterial color={PLOT_COLORS.orange} roughness={0.5} />
       </mesh>
       <mesh position={[0, -0.2, 0]} receiveShadow>
         <cylinderGeometry args={[0.2, 0.2, 0.04, 24]} />
