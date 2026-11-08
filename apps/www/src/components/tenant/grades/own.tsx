@@ -22,7 +22,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -30,6 +30,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { Link } from "@/lib/routing/link";
@@ -155,9 +157,9 @@ function OwnGradeTable() {
       columns={columns}
       data={rows}
       empty={
-        <TableEmpty
-          act="writing"
+        <EmptyState
           description={t("own-empty-description")}
+          scene={<EmptyNina act="writing" />}
           title={t("own-empty")}
         />
       }

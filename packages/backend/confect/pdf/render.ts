@@ -30,13 +30,13 @@ import { createElement } from "react";
 import { render } from "takumi-pdf";
 
 /** The PDF could not be drawn. */
-export class PdfRenderError extends Schema.TaggedError<PdfRenderError>()(
-  "PdfRenderError",
-  {
-    code: Schema.Literal("PDF_RENDER_FAILED"),
-    message: Schema.String,
-  }
-) {}
+export class PdfRenderError extends Schema.TaggedError<
+  PdfRenderError,
+  { readonly brand: unique symbol }
+>()("PdfRenderError", {
+  code: Schema.Literal("PDF_RENDER_FAILED"),
+  message: Schema.String,
+}) {}
 
 /**
  * The design system's colors a document paints with, as the classes the app

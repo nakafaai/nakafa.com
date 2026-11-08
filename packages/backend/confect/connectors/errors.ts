@@ -6,7 +6,10 @@ import { Schema } from "effect";
  * `GOOGLE_CONNECTORS`, or the connectors client has no secret. Production lists
  * no connector until Google's review of its scopes passes (ADR 0015).
  */
-export class ConnectorOff extends Schema.TaggedError<ConnectorOff>()(
+export class ConnectorOff extends Schema.TaggedError<
+  ConnectorOff,
+  { readonly brand: unique symbol }
+>()(
   "ConnectorOff",
   refusal("CONNECTOR_OFF", "This connector is not available yet.")
 ) {}
@@ -15,7 +18,10 @@ export class ConnectorOff extends Schema.TaggedError<ConnectorOff>()(
  * A connect that cannot finish: its state is unknown, expired, already used, or
  * started by another account. Nothing is connected.
  */
-export class ConnectStateInvalid extends Schema.TaggedError<ConnectStateInvalid>()(
+export class ConnectStateInvalid extends Schema.TaggedError<
+  ConnectStateInvalid,
+  { readonly brand: unique symbol }
+>()(
   "ConnectStateInvalid",
   refusal("CONNECT_STATE_INVALID", "This connect has expired. Start it again.")
 ) {}
@@ -26,19 +32,22 @@ export class ConnectStateInvalid extends Schema.TaggedError<ConnectStateInvalid>
  * token, `unreached` when no answer came within the deadline, and `invalid` for
  * an answer that does not decode. No token is in it.
  */
-export class GoogleFailed extends Schema.TaggedError<GoogleFailed>()(
-  "GoogleFailed",
-  {
-    reason: Schema.Literals(["refused", "revoked", "unreached", "invalid"]),
-    status: Schema.optionalKey(Schema.Int),
-  }
-) {}
+export class GoogleFailed extends Schema.TaggedError<
+  GoogleFailed,
+  { readonly brand: unique symbol }
+>()("GoogleFailed", {
+  reason: Schema.Literals(["refused", "revoked", "unreached", "invalid"]),
+  status: Schema.optionalKey(Schema.Int),
+}) {}
 
 /**
  * A consent that granted fewer scopes than the connector asks for, because the
  * user left one unchecked on Google's screen. Nothing is connected.
  */
-export class ScopesMissing extends Schema.TaggedError<ScopesMissing>()(
+export class ScopesMissing extends Schema.TaggedError<
+  ScopesMissing,
+  { readonly brand: unique symbol }
+>()(
   "ScopesMissing",
   refusal(
     "SCOPES_MISSING",

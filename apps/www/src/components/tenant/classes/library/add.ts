@@ -4,7 +4,6 @@ import type classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, Data, Effect, type Result, Schema } from "effect";
-import { forumCall } from "@/components/tenant/classes/forum/call";
 import {
   addLinkUpdate,
   type LibraryItem,
@@ -13,6 +12,7 @@ import type {
   LibraryUpload,
   LibraryUploads,
 } from "@/components/tenant/classes/library/uploads";
+import { schoolCall } from "@/components/tenant/write";
 
 /** The arguments of one link, as the dialog gives them. */
 type LinkArgs = Ref.Args<typeof classroom.library.addLink>;
@@ -36,7 +36,7 @@ export const addLibraryLink = Effect.fn("classroom.library.addLink")(function* <
   const id = yield* Schema.decodeUnknownEffect(Id("classroomLibrary"))(
     args.clientKey
   );
-  return yield* forumCall(() =>
+  return yield* schoolCall(() =>
     add(
       addLinkUpdate({
         address: args.address,
@@ -75,17 +75,17 @@ export const uploadLibraryFile = Effect.fn("classroom.library.upload")(
     ) => Promise<Result.Result<Registered, RegisterError>>,
     onProgress: (fraction: number) => void
   ) {
-    const reserved = yield* forumCall(reserve);
+    const reserved = yield* schoolCall(reserve);
     const { putLibraryFile } = yield* Effect.tryPromise(
       () => import("@/components/tenant/classes/library/send")
     );
     // A send that fails registers the reservation anyway: the server finds no bytes, frees them, and refuses it.
     yield* putLibraryFile(reserved.address, file, onProgress).pipe(
       Effect.tapError(() =>
-        Effect.ignore(forumCall(() => register(reserved.uploadId)))
+        Effect.ignore(schoolCall(() => register(reserved.uploadId)))
       )
     );
-    return yield* forumCall(() => register(reserved.uploadId));
+    return yield* schoolCall(() => register(reserved.uploadId));
   }
 );
 
@@ -130,7 +130,7 @@ export const pickFromDrive = Effect.fn("classroom.library.pickDrive")(
     hide: () => void,
     accept?: string
   ) {
-    const keys = yield* forumCall(requestKeys);
+    const keys = yield* schoolCall(requestKeys);
     if (keys === null) {
       return yield* new DriveMissing();
     }

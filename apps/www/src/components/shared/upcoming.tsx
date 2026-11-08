@@ -1,30 +1,31 @@
 import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
-import { Heading } from "@repo/design-system/components/markdown/heading";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "cn";
 import { useTranslations } from "use-intl";
+import { EmptyState } from "@/components/state/empty";
 import { getGithubUrl } from "@/lib/content/repository";
 
-/** Renders the shared page-body empty state with enough vertical rhythm for content layouts. */
-export function ComingSoon({ className }: { className?: string }) {
+/**
+ * The body of a public page whose content is not written yet, as an empty state (`EmptyState`): its heading, and the
+ * way to help write it. It shows no scene, since a public page keeps Nina's code out of its first JavaScript.
+ */
+export function ComingSoon() {
   const t = useTranslations("ComingSoon");
 
   return (
-    <div className={cn("py-20", className)}>
-      <Heading className="text-2xl" Tag="h2">
-        {t("title")}
-      </Heading>
-
-      <a
-        className={buttonVariants()}
-        href={getGithubUrl({ path: "" })}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <HugeIcons icon={LoveKoreanFingerIcon} />
-        {t("contribute")}
-      </a>
-    </div>
+    <EmptyState
+      action={
+        <a
+          className={buttonVariants()}
+          href={getGithubUrl({ path: "" })}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <HugeIcons icon={LoveKoreanFingerIcon} />
+          {t("contribute")}
+        </a>
+      }
+      title={<h2>{t("title")}</h2>}
+    />
   );
 }

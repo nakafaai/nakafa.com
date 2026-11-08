@@ -1,15 +1,10 @@
 import { CardContent } from "@repo/design-system/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { useEffect, useEffectEvent } from "react";
 import { useTranslations } from "use-intl";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import {
   isSearching,
   MEMORY_FILL,
@@ -107,19 +102,16 @@ function MemoryEmpty({ empty, whole }: { empty: boolean; whole: boolean }) {
   const t = useTranslations("Memory");
 
   return (
-    <Empty
-      className="data-waiting:invisible md:p-8"
+    <div
+      className="data-waiting:invisible"
       data-waiting={whole ? undefined : ""}
     >
-      <EmptyHeader>
-        <EmptyNina act={empty ? "relaxed" : "searching"} />
-        <EmptyTitle className="text-base">
-          {empty ? t("empty") : t("no-result")}
-        </EmptyTitle>
-        {empty ? (
-          <EmptyDescription>{t("empty-description")}</EmptyDescription>
-        ) : null}
-      </EmptyHeader>
-    </Empty>
+      <EmptyState
+        description={empty ? t("empty-description") : undefined}
+        frame="table"
+        scene={<EmptyNina act={empty ? "relaxed" : "searching"} />}
+        title={empty ? t("empty") : t("no-result")}
+      />
+    </div>
   );
 }

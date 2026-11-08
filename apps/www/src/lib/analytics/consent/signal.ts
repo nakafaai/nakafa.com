@@ -47,28 +47,28 @@ export const readBrowserPrivacySignal = Effect.fn(
 );
 
 /** Raised when the browser cannot persist an account analytics decision. */
-export class AccountConsentPersistenceError extends Schema.TaggedError<AccountConsentPersistenceError>()(
-  "AccountConsentPersistenceError",
-  {
-    cause: Schema.Unknown,
-    code: Schema.Literal(accountConsentPersistenceFailedCode),
-    message: Schema.Literal(
-      "Unable to persist the analytics decision for this account."
-    ),
-  }
-) {}
+export class AccountConsentPersistenceError extends Schema.TaggedError<
+  AccountConsentPersistenceError,
+  { readonly brand: unique symbol }
+>()("AccountConsentPersistenceError", {
+  cause: Schema.Unknown,
+  code: Schema.Literal(accountConsentPersistenceFailedCode),
+  message: Schema.Literal(
+    "Unable to persist the analytics decision for this account."
+  ),
+}) {}
 
 /** Raised when Convex authoritatively rejects an account analytics decision. */
-export class AccountConsentRejectedError extends Schema.TaggedError<AccountConsentRejectedError>()(
-  "AccountConsentRejectedError",
-  {
-    cause: Schema.Unknown,
-    code: Schema.Literal(accountConsentRejectedCode),
-    message: Schema.Literal(
-      "The analytics decision was rejected for this account."
-    ),
-  }
-) {}
+export class AccountConsentRejectedError extends Schema.TaggedError<
+  AccountConsentRejectedError,
+  { readonly brand: unique symbol }
+>()("AccountConsentRejectedError", {
+  cause: Schema.Unknown,
+  code: Schema.Literal(accountConsentRejectedCode),
+  message: Schema.Literal(
+    "The analytics decision was rejected for this account."
+  ),
+}) {}
 
 function toAccountConsentWriteError(cause: unknown) {
   return new AccountConsentPersistenceError({

@@ -8,7 +8,7 @@ import {
   linePath,
   nameOf,
   removePoint,
-} from "@/components/exams/lines/curve";
+} from "@/components/player/lines/curve";
 
 describe("linePath and removePoint", () => {
   it("leaves each dot level and bends once halfway, in either direction", () => {

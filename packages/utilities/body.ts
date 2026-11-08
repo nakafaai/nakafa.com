@@ -10,36 +10,36 @@ import {
 
 const DECIMAL_BYTES = /^\d+$/u;
 /** A request or response omitted the readable body required by its contract. */
-export class BodyMissingError extends Schema.TaggedError<BodyMissingError>()(
-  "BodyMissingError",
-  {}
-) {}
+export class BodyMissingError extends Schema.TaggedError<
+  BodyMissingError,
+  { readonly brand: unique symbol }
+>()("BodyMissingError", {}) {}
 /** A web body reader failed before the complete payload was available. */
-export class BodyReadError extends Schema.TaggedError<BodyReadError>()(
-  "BodyReadError",
-  {}
-) {}
+export class BodyReadError extends Schema.TaggedError<
+  BodyReadError,
+  { readonly brand: unique symbol }
+>()("BodyReadError", {}) {}
 /** A streamed web body crossed its caller-owned byte ceiling. */
-export class BodyLimitError extends Schema.TaggedError<BodyLimitError>()(
-  "BodyLimitError",
-  {
-    actualBytes: Schema.Finite.pipe(
-      Schema.check(Schema.isInt()),
-      Schema.check(Schema.isGreaterThan(0))
-    ),
-    maxBytes: Schema.Finite.pipe(
-      Schema.check(Schema.isInt()),
-      Schema.check(Schema.isGreaterThan(0))
-    ),
-  }
-) {}
+export class BodyLimitError extends Schema.TaggedError<
+  BodyLimitError,
+  { readonly brand: unique symbol }
+>()("BodyLimitError", {
+  actualBytes: Schema.Finite.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0))
+  ),
+  maxBytes: Schema.Finite.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0))
+  ),
+}) {}
 /** A Content-Length value is malformed or exceeds its caller-owned ceiling. */
-export class BodyLengthError extends Schema.TaggedError<BodyLengthError>()(
-  "BodyLengthError",
-  {
-    reason: Schema.Literals(["invalid", "limit"]),
-  }
-) {}
+export class BodyLengthError extends Schema.TaggedError<
+  BodyLengthError,
+  { readonly brand: unique symbol }
+>()("BodyLengthError", {
+  reason: Schema.Literals(["invalid", "limit"]),
+}) {}
 /** Copies ordered chunks into one exactly sized byte array. */
 function concatenateChunks(chunks: readonly Uint8Array[], totalBytes: number) {
   const result = new Uint8Array(totalBytes);

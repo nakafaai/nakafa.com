@@ -8,13 +8,13 @@ const RunOptionsSchema = Schema.Struct({
 type RunOptions = typeof RunOptionsSchema.Type;
 
 /** Expected failure while running bun for dependency maintenance. */
-export class DependencyCommandError extends Schema.TaggedError<DependencyCommandError>()(
-  "DependencyCommandError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class DependencyCommandError extends Schema.TaggedError<
+  DependencyCommandError,
+  { readonly brand: unique symbol }
+>()("DependencyCommandError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Runs bun without a shell and optionally captures its exact output. */
 export const runBun = Effect.fn("RepositoryPolicy.runBun")(function* (

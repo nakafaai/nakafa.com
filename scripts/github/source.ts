@@ -10,13 +10,13 @@ const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
 const COMPOSITE_ACTION_PATTERN = /^actions\/(?:.+\/)?action\.ya?ml$/u;
 
 /** Expected failure while reading or decoding repository workflow policy. */
-class GithubActionPolicyError extends Schema.TaggedError<GithubActionPolicyError>()(
-  "GithubActionPolicyError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class GithubActionPolicyError extends Schema.TaggedError<
+  GithubActionPolicyError,
+  { readonly brand: unique symbol }
+>()("GithubActionPolicyError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 function policyError(message: string, cause: unknown) {
   return new GithubActionPolicyError({ cause, message });

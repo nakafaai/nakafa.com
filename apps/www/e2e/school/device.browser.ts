@@ -6,6 +6,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The device authorization the school answers the Nakafa CLI. */
 const DeviceAnswer = Schema.Struct({
   device_code: Schema.String,
+  interval: Schema.Finite,
   user_code: Schema.String,
 });
 
@@ -69,8 +70,9 @@ test("the Nakafa CLI asks for a device code, the Owner connects it to a client, 
   await connect.getByRole("button", { name: "Connect" }).click();
   await expect(page.getByText("The device is connected.")).toBeVisible();
 
-  // The device's next poll, after the interval, is its client's token, which reads the roster.
-  await page.waitForTimeout(5000);
+  // The device polls again once the interval the school named has passed since its last poll (RFC 8628,
+  // section 3.5), and that poll is its client's token, which reads the roster.
+  await page.waitForTimeout(device.interval * 1000);
   const issued = await request.post(address("/api/v1/token"), { form: grant });
   expect(issued.status()).toBe(200);
   const token = Schema.decodeUnknownSync(TokenAnswer)(await issued.json());
