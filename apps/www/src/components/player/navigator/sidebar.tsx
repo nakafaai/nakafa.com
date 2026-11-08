@@ -1,10 +1,9 @@
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { type ReactNode, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { keepVisible } from "@/components/player/navigator/scroll";
 import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
 import { usePlayer } from "@/components/player/provider";
-import { PaneFooter, PaneHeader } from "@/components/shared/pane";
+import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 
 /**
  * The navigator in its pane beside the questions from the large breakpoint: the
@@ -44,19 +43,19 @@ export function PlayerSidebar({
   }, [current]);
 
   return (
-    // The pane holds the column. It scrolls in the scroll area's viewport, under an overlay bar that takes no room;
-    // the viewport is what keeps the current number in view.
+    // The pane holds the column, with the header, body and footer every pane has. Its body scrolls under an
+    // overlay bar that takes no room, and its viewport is what keeps the current number in view.
     <div
       className="hidden h-full min-h-0 w-full min-w-0 flex-col lg:flex"
       data-player-sidebar=""
     >
       <PaneHeader title={title ?? t("navigator")} />
-      <ScrollArea viewportClassName="relative" viewportRef={column}>
-        <div className="flex flex-col gap-4 px-6 py-4">
+      <PaneBody viewportRef={column}>
+        <div className="flex flex-col gap-4">
           {children}
           <PlayerShortcuts />
         </div>
-      </ScrollArea>
+      </PaneBody>
       {footer === undefined ? null : <PaneFooter>{footer}</PaneFooter>}
     </div>
   );
