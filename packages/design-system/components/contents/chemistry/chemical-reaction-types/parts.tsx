@@ -8,9 +8,12 @@ import {
 } from "@repo/design-system/components/contents/chemistry/label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
+import {
+  GlassMaterial,
+  LiquidMaterial,
+} from "@repo/design-system/components/three/physical";
 import { Array as Arr } from "effect";
 import { createContext, type ReactNode, use } from "react";
-import { DoubleSide } from "three";
 
 const BEAKER_RADIUS = 0.36;
 const BEAKER_HEIGHT = 1;
@@ -39,14 +42,7 @@ export function Beaker({ children }: { children: ReactNode }) {
             true,
           ]}
         />
-        <meshStandardMaterial
-          color={colors.glass}
-          depthWrite={false}
-          opacity={BEAKER_OPACITY}
-          roughness={0.14}
-          side={DoubleSide}
-          transparent
-        />
+        <GlassMaterial color={colors.glass} opacity={BEAKER_OPACITY} />
       </mesh>
       <mesh position={[0, BEAKER_LIQUID_Y, 0]}>
         <cylinderGeometry
@@ -57,12 +53,7 @@ export function Beaker({ children }: { children: ReactNode }) {
             48,
           ]}
         />
-        <meshStandardMaterial
-          color={colors.liquid}
-          depthWrite={false}
-          opacity={0.48}
-          transparent
-        />
+        <LiquidMaterial color={colors.liquid} opacity={0.48} />
       </mesh>
       {children}
     </group>

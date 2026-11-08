@@ -18,8 +18,8 @@ import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -108,27 +108,12 @@ export function DisplacementDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
-            <ambientLight intensity={0.72} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={PLOT_COLORS.slate}
-              intensity={0.62}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.26}
-              position={[3.4, 5.4, 4.2]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <DisplacementDistanceCamera view={view} />
             <DisplacementDistanceScene motion={motion} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -336,12 +321,18 @@ function RouteLines({ motion }: { motion: DisplacementDistanceState }) {
 
   return (
     <>
-      <Line color={ROUTE_COLOR} lineWidth={4} points={routePoints} />
+      <Line
+        color={ROUTE_COLOR}
+        lineWidth={4}
+        points={routePoints}
+        toneMapped={false}
+      />
       {motion.displacement > 0 ? (
         <Line
           color={DISPLACEMENT_COLOR}
           lineWidth={4}
           points={displacementPoints}
+          toneMapped={false}
         />
       ) : null}
     </>

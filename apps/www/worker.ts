@@ -1,11 +1,6 @@
 import { deploymentKeys, postHogProxyKeys } from "@repo/analytics/keys";
 import { agentTrustKeys, convexSiteServerKeys } from "@repo/backend/keys";
-import {
-  contentRuntimeKeys,
-  previewKeys,
-  publicationKeys,
-  siteUrlKeys,
-} from "@repo/site/keys";
+import { previewKeys, publicationKeys, siteUrlKeys } from "@repo/site/keys";
 import { Array as Arr, Record, Redacted } from "effect";
 import { setValues } from "#www/deploy/environment";
 import { weatherKeys } from "#www/src/lib/weather/keys";
@@ -74,7 +69,6 @@ export const workerSettings = {
 export const workerEnvironment = () => ({
   ...publicationKeys(),
   ...siteUrlKeys(),
-  ...contentRuntimeKeys(),
   ...previewKeys(),
   ...agentTrustKeys(),
   ...convexSiteServerKeys(),

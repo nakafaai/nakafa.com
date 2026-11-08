@@ -114,6 +114,8 @@ import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import islandAwards from "./tables/islandAwards";
+import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
@@ -293,6 +295,8 @@ export default $defineSchema({
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
+  islandAwards: $Table.tableDefinition(islandAwards),
+  islands: $Table.tableDefinition(islands),
   journalCursors: $Table.tableDefinition(journalCursors),
   journalEntries: $Table.tableDefinition(journalEntries),
   learningEngagementQueue: $Table.tableDefinition(learningEngagementQueue),

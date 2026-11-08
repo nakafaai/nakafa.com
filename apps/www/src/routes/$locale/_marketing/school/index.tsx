@@ -7,9 +7,17 @@ import {
 } from "@repo/seo/jsonld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { useTranslations } from "use-intl";
+import type { ReactNode } from "react";
+import {
+  IntlProvider,
+  useLocale,
+  useMessages,
+  useTimeZone,
+  useTranslations,
+} from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
+import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
 import { SchoolHero } from "@/components/marketing/school/hero";
 import {
   openSchoolLanding,
@@ -36,12 +44,24 @@ import { readStaticData } from "@/lib/static/data";
  * of the paid plans.
  */
 export const Route = createFileRoute("/$locale/_marketing/school/")({
+  // A warm of a link to this page is a preload: it takes the page's code and data, never the sections a reader
+  // reaches by scrolling, which a navigation opens here before the page commits.
+  beforeLoad: async ({ preload }) => {
+    if (!preload) {
+      await openSchoolLanding();
+    }
+  },
   loader: async ({ params }) => {
-    const [, messages] = await Promise.all([
-      openSchoolLanding(),
+    const [messages, inApp] = await Promise.all([
       readStaticData(readRouteMessages, {
         locale: params.locale,
         namespaces: ["Common", "SchoolSite"],
+      }),
+      // The words of the School screens the sections draw as the app does: the forum, the editor's
+      // toolbar and the exam editor. Only this page reads them; the player's are the marketing pages'.
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: ["Classroom", "Editor", "Exams"],
       }),
     ]);
     const t = createTranslator({
@@ -64,6 +84,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
           question: t(`faq-${key}-question`),
         })
       ),
+      inApp,
       title: t("metadata-title"),
     };
   },
@@ -73,7 +94,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
     }
     const url = `${COMPANY_IDENTITY.url}/${params.locale}/school`;
     const image = getAppSocialArtwork({
-      key: "home",
+      key: "school",
       locale: params.locale,
       publicPath: "school",
     });
@@ -119,18 +140,20 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
 
 /**
  * The School landing: its hero, one screen for each thing a school runs on it,
- * each with the real School screen beside its words, its questions, and the
- * closing question. Every section after the hero loads its code as it nears.
+ * each with the real School screen beside or under its words, its questions,
+ * and the closing question. Every section after the hero loads its code as it
+ * nears, and the toys come on a wide screen once the page has its reader.
  */
 function SchoolLanding() {
   const { faqs } = Route.useLoaderData();
   const t = useTranslations("SchoolSite");
 
   return (
-    <>
+    <InAppMessages>
       <PageField />
       <div className="relative grid grid-cols-1">
         <SchoolHero />
+        <DeferredSchoolToys page="landing" />
         <LaterSection code={schoolSections.forum}>
           {(SchoolForum) => <SchoolForum />}
         </LaterSection>
@@ -142,6 +165,9 @@ function SchoolLanding() {
         </LaterSection>
         <LaterSection code={schoolSections.exams}>
           {(SchoolExams) => <SchoolExams />}
+        </LaterSection>
+        <LaterSection code={schoolSections.player}>
+          {(SchoolPlayer) => <SchoolPlayer />}
         </LaterSection>
         <LaterSection code={schoolSections.reports}>
           {(SchoolReports) => <SchoolReports />}
@@ -175,6 +201,28 @@ function SchoolLanding() {
           )}
         </LaterSection>
       </div>
-    </>
+    </InAppMessages>
+  );
+}
+
+/**
+ * The page's messages with the words of the School screens its sections draw, so a forum, an editor
+ * or a player on the page reads its own dictionary as it does in the app. Its value is the loader's,
+ * so it never changes after hydration.
+ */
+function InAppMessages({ children }: { children: ReactNode }) {
+  const { inApp } = Route.useLoaderData();
+  const locale = useLocale();
+  const messages = useMessages();
+  const timeZone = useTimeZone();
+
+  return (
+    <IntlProvider
+      locale={locale}
+      messages={{ ...messages, ...inApp }}
+      {...(timeZone === undefined ? {} : { timeZone })}
+    >
+      {children}
+    </IntlProvider>
   );
 }

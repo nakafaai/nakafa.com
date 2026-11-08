@@ -157,11 +157,9 @@ export function getPeriodicPropertiesSceneColors(
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     markerText: ORIGIN_COLOR.LIGHT,
     markerTextOutline: ORIGIN_COLOR.DARK,
     rail: isDarkTheme ? PLOT_COLORS.slate : getColor("GRAY"),
-    skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

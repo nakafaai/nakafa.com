@@ -238,3 +238,46 @@ export const readContentStore = Effect.fn("www.content.store.read")(function* <
     expectedReleaseId: moved.releaseId,
   });
 });
+
+/** How long an immutable entry stays in an isolate: its answer never changes, so only memory bounds it. */
+const IMMUTABLE_ENTRY_LIFETIME = Duration.days(30);
+
+/**
+ * Reads a value addressed by its own content, such as a signed artifact by its
+ * hash, which no release or snapshot changes. The key holds only the kind and
+ * the parts, so every later release answers it from the store, and a deploy that
+ * restores the store reads it from Convex once in its life. The caller verifies
+ * the value against its address (the artifact's signature names its hash). A
+ * load that answers nothing, such as a body the active release no longer routes,
+ * is returned and not kept.
+ */
+export const readImmutableContentStore = Effect.fn(
+  "www.content.store.readImmutable"
+)(function* <A, I, E, R>(input: {
+  readonly kind: string;
+  readonly load: Effect.Effect<A | null, E, R>;
+  readonly parts: readonly string[];
+  readonly schema: Schema.Codec<A, I, never, never>;
+}) {
+  const parts = ["immutable", input.kind, ...input.parts];
+  const stored = yield* readStoreEntry({
+    lasting: true,
+    parts,
+    schema: input.schema,
+  });
+  if (Option.isSome(stored)) {
+    return stored.value;
+  }
+  const loaded = yield* input.load;
+  if (loaded !== null) {
+    yield* writeStoreEntry({
+      lasting: true,
+      parts,
+      schema: input.schema,
+      tags: ["content-immutable"],
+      ttl: IMMUTABLE_ENTRY_LIFETIME,
+      value: loaded,
+    });
+  }
+  return loaded;
+});

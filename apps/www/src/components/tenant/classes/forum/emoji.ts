@@ -75,8 +75,8 @@ const wordsOf = (phrases: string) =>
   );
 
 /**
- * An emoji for a reader of `language`: named in that language, and found by its words in that language and in
- * English, which many learners search in too.
+ * An emoji for a reader of `language`: named in that language, and found by its words in Indonesian, English and
+ * German alike, so a class that mixes its languages finds an emoji by whichever word comes to mind (ADR 0025).
  */
 export const emojiOf = (
   [emoji, category, id, en, de]: typeof EmojiEntry.Type,
@@ -93,7 +93,7 @@ export const emojiOf = (
     category,
     emoji,
     name: Str.trim(Arr.headNonEmpty(Str.split(own, ","))),
-    words: Arr.dedupe(Arr.appendAll(wordsOf(own), wordsOf(en))),
+    words: Arr.dedupe(Arr.flatMap([own, id, en, de], wordsOf)),
   };
 };
 

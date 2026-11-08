@@ -32,8 +32,8 @@ that the model must change:
   `MathVisual` appears in 109 files, `LineEquation` in 127, `NumberLine` in 15,
   `Mermaid` in 12, and `UnitCircle` in 3. This change checked those counts with
   `git grep -l -F` on the tags. The per-set components, `Set<N>Question<M>` and
-  their kinds, appear in 87 files with 93 uses, counted with `git grep`. Their
-  definitions are in `apps/www/src/lib/content/renderer/client/snbt/general`.
+  their kinds, appeared in 87 files with 93 uses, counted with `git grep`. By
+  8 November 2026 no document used them, and their renderer names were deleted.
   `packages/contracts/src` of the Aksara repository holds no image or media type
   schema.
 - A reading passage is not an entity. Each item copies it into its body, and

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { UserSettingsAgents } from "@/components/user/settings/agents";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile";
+import { UserSettingsPage } from "@/components/user/settings/section";
 import { privateHead } from "@/lib/account/head";
 import { settingsScreenFn } from "@/lib/account/settings.functions";
 import { readAuthClient } from "@/lib/auth/client";
@@ -35,8 +36,10 @@ export const Route = createFileRoute(
 function SettingsPage() {
   const { account, agents } = Route.useLoaderData();
   return (
-    <UserSettingsProfilePage initialAccount={account}>
-      <UserSettingsAgents agents={agents} />
-    </UserSettingsProfilePage>
+    <UserSettingsPage>
+      <UserSettingsProfilePage initialAccount={account}>
+        <UserSettingsAgents agents={agents} />
+      </UserSettingsProfilePage>
+    </UserSettingsPage>
   );
 }

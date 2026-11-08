@@ -15,12 +15,6 @@ export const publicationKeys = () =>
     { AKSARA_PUBLICATION_TOKEN: Schema.NonEmptyString },
     { AKSARA_PUBLICATION_TOKEN: process.env.AKSARA_PUBLICATION_TOKEN }
   );
-/** Defines the private token used only by executable-content runtime reads. */
-export const contentRuntimeKeys = () =>
-  readEnvironment(
-    { CONTENT_READ_TOKEN: Schema.NonEmptyString },
-    { CONTENT_READ_TOKEN: process.env.CONTENT_READ_TOKEN }
-  );
 /** Defines the canonical site URL used by server-side absolute URL builders. */
 export const siteUrlKeys = () =>
   readEnvironment(
