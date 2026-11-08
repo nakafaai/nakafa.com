@@ -9,39 +9,17 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { DateTime, Effect } from "effect";
 import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
+import { postComment, replyToComment } from "@/e2e/support/comments";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 const INBOX = "/en/notifications";
 const REPLIED = app.Notifications["comment-replied"];
 const REPLY_MAIL = `${app.Notifications["kind-commentReply"]}, ${app.Notifications["channel-email"]}`;
 /** The address of a lesson that opens one of its comments. */
 const OPENS_COMMENT = /comment=/u;
-
-/** The row of one comment, found by its text. The row's container carries the comment's id. */
-function rowOf(page: Page, text: string) {
-  return page
-    .locator("div[id]")
-    .filter({ has: page.getByText(text, { exact: true }) });
-}
-
-/** Writes one comment into a composer of the list, the last one that is open. */
-async function post(page: Page, text: string) {
-  const composer = page
-    .locator("form")
-    .filter({ has: page.getByRole("textbox", { name: PLACEHOLDER }) })
-    .last();
-  await composer.getByRole("textbox", { name: PLACEHOLDER }).fill(text);
-  await composer
-    .getByRole("button", { name: app.Posts.post, exact: true })
-    .click();
-  await expect(rowOf(page, text)).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
-}
 
 /** Opens the Nakafa inbox's preferences, and answers the switch of a reply's mail. */
 async function openReplyMail(page: Page) {
@@ -97,14 +75,11 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
           const author = yield* Effect.promise(() => authorContext.newPage());
           const replier = yield* Effect.promise(() => replierContext.newPage());
           yield* openComments(author, origin);
-          yield* Effect.promise(() => post(author, question));
+          yield* Effect.promise(() => postComment(author, question));
           yield* openComments(replier, origin);
-          yield* Effect.promise(async () => {
-            await rowOf(replier, question)
-              .getByRole("button", { name: app.Common.reply, exact: true })
-              .click();
-            await post(replier, answer);
-          });
+          yield* Effect.promise(() =>
+            replyToComment(replier, question, answer)
+          );
 
           yield* Effect.promise(async () => {
             await author.goto(INBOX);

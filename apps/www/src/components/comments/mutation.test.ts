@@ -6,6 +6,7 @@ import comments from "@repo/backend/confect/_generated/refs/comments";
 import { MASCOT } from "@repo/backend/test/mascot";
 import { Array as Arr, Equal, MutableRef, Option, Schema } from "effect";
 import {
+  editInLists,
   insertDraftComment,
   insertDraftReply,
   likeInLists,
@@ -100,6 +101,17 @@ function profileList(page: CommentRow[]): Cached {
         ({ user: _user, replyToUser: _replyToUser, ...rest }) => rest
       ),
     }),
+  ];
+}
+
+/** The count of a slug's comments, or none while it loads. */
+function countOf(slug: string, count: number | undefined): Cached {
+  return [
+    Ref.getConvexFunctionName(comments.queries.getCommentCount),
+    Ref.encodeArgsSync(comments.queries.getCommentCount, { slug }),
+    count === undefined
+      ? undefined
+      : Ref.encodeReturnsSync(comments.queries.getCommentCount, count),
   ];
 }
 
@@ -447,5 +459,81 @@ describe("the optimistic changes of the comment lists", () => {
 
     expect(slugPages(fake)).toEqual([[ROOT]]);
     expect(fake.writes()).toBe(0);
+  });
+
+  it("moves a slug's count with a new comment, a reply and a deletion, and leaves other counts alone", () => {
+    const fake = fakeStore([
+      countOf(SLUG, 3),
+      countOf("other-lesson", 9),
+      countOf("later", undefined),
+      slugList(null, [row("root", { replyCount: 1 })]),
+      replyList(ROOT, [row("first", { parentId: ROOT, threadId: ROOT })], true),
+    ]);
+    const counts = () =>
+      Arr.map(
+        fake.store.getAllQueries(comments.queries.getCommentCount),
+        ({ value }) => Option.getOrUndefined(value)
+      );
+
+    insertDraftComment(row("draft"))(fake.store, {
+      slug: SLUG,
+      text: "draft",
+      uploads: [],
+    });
+    expect(counts()).toEqual([4, 9, undefined]);
+    insertDraftReply(row("reply", { threadId: ROOT }), ROOT)(fake.store, {
+      parentId: ROOT,
+      slug: SLUG,
+      text: "reply",
+      uploads: [],
+    });
+    expect(counts()).toEqual([5, 9, undefined]);
+    removeFromLists(fake.store, { commentId: commentId("first") });
+    expect(counts()).toEqual([4, 9, undefined]);
+    removeFromLists(fake.store, { commentId: ROOT });
+    expect(counts()).toEqual([2, 9, undefined]);
+  });
+
+  it("never counts a slug below zero", () => {
+    const fake = fakeStore([
+      countOf(SLUG, 0),
+      slugList(null, [row("root", { replyCount: 2 })]),
+    ]);
+
+    removeFromLists(fake.store, { commentId: ROOT });
+
+    expect(
+      Arr.map(
+        fake.store.getAllQueries(comments.queries.getCommentCount),
+        ({ value }) => Option.getOrUndefined(value)
+      )
+    ).toEqual([0]);
+  });
+
+  it("shows a comment's new text, marked edited, in every loaded list", () => {
+    const fake = fakeStore([
+      slugList(null, [row("root"), row("other")]),
+      profileList([row("root")]),
+    ]);
+
+    editInLists(42)(fake.store, { commentId: ROOT, text: "Baru" });
+
+    const shown = [
+      ...Arr.flatMap(
+        fake.store.getAllQueries(comments.queries.getCommentsBySlug),
+        ({ value }) => (Option.isSome(value) ? value.value.page : [])
+      ),
+      ...Arr.flatMap(
+        fake.store.getAllQueries(comments.queries.getCommentsByUserId),
+        ({ value }) => (Option.isSome(value) ? value.value.page : [])
+      ),
+    ];
+    expect(
+      Arr.map(shown, ({ _id, editedAt, text }) => ({ _id, editedAt, text }))
+    ).toEqual([
+      { _id: ROOT, editedAt: 42, text: "Baru" },
+      { _id: OTHER, editedAt: undefined, text: "other" },
+      { _id: ROOT, editedAt: 42, text: "Baru" },
+    ]);
   });
 });

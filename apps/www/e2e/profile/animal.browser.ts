@@ -14,6 +14,7 @@ import {
   sidebarAvatar,
 } from "@/e2e/support/avatar";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { postComment } from "@/e2e/support/comments";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -150,7 +151,6 @@ test("a comment by a learner without a photo shows the animal of the learner", a
   baseURL,
   page,
 }) => {
-  const placeholder = app.Comments["add-comment-placeholder"];
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
@@ -165,14 +165,7 @@ test("a comment by a learner without a photo shows the animal of the learner", a
         await page.goto(LESSON_PATH);
         // The comments feed mounts once its anchor, at the foot of the lesson,
         // comes near the viewport.
-        await page.locator("#comments").scrollIntoViewIfNeeded();
-        const composer = page
-          .locator("form")
-          .filter({ has: page.getByRole("textbox", { name: placeholder }) });
-        await composer.getByRole("textbox", { name: placeholder }).fill(text);
-        await composer
-          .getByRole("button", { name: app.Posts.post, exact: true })
-          .click();
+        await postComment(page, text);
 
         const comment = page
           .locator("div[id]")

@@ -9,36 +9,20 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { DateTime, Effect } from "effect";
 import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
+import {
+  commentRow,
+  commentThread,
+  openComposer,
+  openReplies,
+  postComment,
+  replyToComment,
+} from "@/e2e/support/comments";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 /** The line above a reply to a reply, in English. */
 const REPLYING_TO = /Replying to/u;
-
-/** The row of one comment, found by its text. The row's container carries the comment's id. */
-function rowOf(page: Page, text: string) {
-  return page
-    .locator("div[id]")
-    .filter({ has: page.getByText(text, { exact: true }) });
-}
-
-/** The composer of a new top-level comment, which is the first composer of the list. */
-function topComposer(page: Page) {
-  return page
-    .locator("form")
-    .filter({ has: page.getByRole("textbox", { name: PLACEHOLDER }) })
-    .first();
-}
-
-/** The composer of the reply that is open, which comes after the list's composer. */
-function replyComposer(page: Page) {
-  return page
-    .locator("form")
-    .filter({ has: page.getByRole("textbox", { name: PLACEHOLDER }) })
-    .last();
-}
 
 /** Opens the lesson's comments in one learner's page, with the feed mounted. */
 const openComments = Effect.fn("NakafaE2E.openComments")(function* (
@@ -52,7 +36,7 @@ const openComments = Effect.fn("NakafaE2E.openComments")(function* (
   });
 });
 
-test("a comment, a reply and a reply to that reply make one thread, a closed reply keeps its words, and a like and a delete show at once", async ({
+test("a comment, a reply and a reply to that reply make one thread behind its toggle, a closed reply keeps its words, and a like and a delete show at once", async ({
   baseURL,
   browser,
 }) => {
@@ -80,93 +64,69 @@ test("a comment, a reply and a reply to that reply make one thread, a closed rep
             const nester = yield* Effect.promise(() => nesterContext.newPage());
 
             yield* openComments(author, origin);
-            yield* Effect.promise(async () => {
-              await topComposer(author)
-                .getByRole("textbox", { name: PLACEHOLDER })
-                .fill(top);
-              await topComposer(author)
-                .getByRole("button", { name: app.Posts.post, exact: true })
-                .click();
-              await expect(rowOf(author, top)).toBeVisible({
-                timeout: readinessTimeoutMilliseconds,
-              });
-            });
+            yield* Effect.promise(() => postComment(author, top));
 
             yield* openComments(replier, origin);
             yield* Effect.promise(async () => {
-              await expect(rowOf(replier, top)).toBeVisible({
+              await expect(commentRow(replier, top)).toBeVisible({
                 timeout: readinessTimeoutMilliseconds,
               });
-              await rowOf(replier, top)
+              await commentRow(replier, top)
                 .getByRole("button", { name: app.Common.reply, exact: true })
                 .click();
-              await expect(
-                replyComposer(replier).getByRole("textbox", {
-                  name: PLACEHOLDER,
-                })
-              ).toBeFocused();
-              await replyComposer(replier)
-                .getByRole("textbox", { name: PLACEHOLDER })
-                .fill(reply);
+              await expect(openComposer(replier)).toBeFocused();
+              await openComposer(replier).fill(reply);
               // Escape closes the reply composer, and its words wait for it.
-              await replyComposer(replier)
-                .getByRole("textbox", { name: PLACEHOLDER })
-                .press("Escape");
+              await openComposer(replier).press("Escape");
               await expect(
-                replier.locator("form").filter({
-                  has: replier.getByRole("textbox", { name: PLACEHOLDER }),
+                replier.getByRole("textbox", {
+                  name: app.Comments["add-comment-placeholder"],
                 })
-              ).toHaveCount(1);
-              await rowOf(replier, top)
+              ).toHaveCount(0);
+              await commentRow(replier, top)
                 .getByRole("button", { name: app.Common.reply, exact: true })
                 .click();
-              await expect(
-                replyComposer(replier).getByRole("textbox", {
-                  name: PLACEHOLDER,
-                })
-              ).toHaveValue(reply);
-              await replyComposer(replier)
-                .getByRole("button", { name: app.Posts.post, exact: true })
+              await expect(openComposer(replier)).toHaveText(reply);
+              await replier
+                .getByRole("button", { name: app.Comments.send, exact: true })
+                .last()
                 .click();
-              await expect(rowOf(replier, reply)).toBeVisible({
+              await expect(commentRow(replier, reply)).toBeVisible({
                 timeout: readinessTimeoutMilliseconds,
               });
             });
 
             yield* openComments(nester, origin);
             yield* Effect.promise(async () => {
-              await expect(rowOf(nester, reply)).toBeVisible({
+              // A thread opens closed, behind the toggle that counts its replies.
+              await expect(commentRow(nester, top)).toBeVisible({
                 timeout: readinessTimeoutMilliseconds,
               });
-              await rowOf(nester, reply)
-                .getByRole("button", { name: app.Common.reply, exact: true })
-                .click();
-              await replyComposer(nester)
-                .getByRole("textbox", { name: PLACEHOLDER })
-                .fill(nested);
-              await replyComposer(nester)
-                .getByRole("button", { name: app.Posts.post, exact: true })
-                .click();
+              await expect(commentRow(nester, reply)).toHaveCount(0);
+              await openReplies(nester, top);
+              await replyToComment(nester, reply, nested);
               // The reply to a reply sits in the thread of the top-level comment,
-              // and it names the comment it answers.
-              await expect(rowOf(nester, nested)).toBeVisible({
-                timeout: readinessTimeoutMilliseconds,
-              });
+              // and it names the learner it answers.
               await expect(
-                rowOf(nester, nested).getByRole("link", { name: REPLYING_TO })
+                commentThread(nester, top).getByText(nested, { exact: true })
+              ).toBeVisible();
+              await expect(
+                commentRow(nester, nested).getByRole("link", {
+                  name: REPLYING_TO,
+                })
               ).toBeVisible();
             });
 
             yield* Effect.promise(async () => {
-              await expect(rowOf(author, nested)).toBeVisible({
+              await openReplies(author, top);
+              await expect(commentRow(author, nested)).toBeVisible({
                 timeout: readinessTimeoutMilliseconds,
               });
               // The heart turns red with its count at once: pressed, and enabled
               // while the server answers.
-              const like = rowOf(author, top).getByRole("button", {
-                name: app.Common.like,
-                exact: true,
-              });
+              const like = commentRow(author, top)
+                .getByRole("button", { name: app.Common.like, exact: true })
+                .first();
               await like.click();
               await expect(like).toHaveAttribute("aria-pressed", "true");
               await expect(like).toBeEnabled();
@@ -174,8 +134,9 @@ test("a comment, a reply and a reply to that reply make one thread, a closed rep
             });
 
             yield* Effect.promise(async () => {
-              await rowOf(author, top)
+              await commentRow(author, top)
                 .getByRole("button", { name: app.Common.more, exact: true })
+                .first()
                 .click();
               await author
                 .getByRole("menuitem", { name: app.Common.delete, exact: true })
@@ -186,14 +147,14 @@ test("a comment, a reply and a reply to that reply make one thread, a closed rep
                 .getByRole("button", { name: app.Common.delete, exact: true })
                 .click();
               // The thread leaves the author's page and the replier's page.
-              await expect(rowOf(author, top)).toHaveCount(0, {
+              await expect(commentRow(author, top)).toHaveCount(0, {
                 timeout: readinessTimeoutMilliseconds,
               });
-              await expect(rowOf(author, nested)).toHaveCount(0);
-              await expect(rowOf(replier, top)).toHaveCount(0, {
+              await expect(commentRow(author, nested)).toHaveCount(0);
+              await expect(commentRow(replier, top)).toHaveCount(0, {
                 timeout: readinessTimeoutMilliseconds,
               });
-              await expect(rowOf(replier, reply)).toHaveCount(0);
+              await expect(commentRow(replier, reply)).toHaveCount(0);
             });
           })
         )

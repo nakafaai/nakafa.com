@@ -2252,7 +2252,9 @@
     "output": "Ausgabe",
     "bacteria": "Bakterien",
     "time": "Zeit",
-    "school": "Schule"
+    "school": "Schule",
+    "menu-sort": "Sortieren",
+    "save": "Speichern"
   },
   "LearningPrograms": {
     "metadata-title": "Mit Nakafa lernen",
@@ -2378,11 +2380,32 @@
   },
   "Comments": {
     "add-comment-placeholder": "Kommentar hinzufügen...",
-    "no-comments": "Noch keine Kommentare.",
+    "no-comments": "Noch keine Kommentare. Schreib den ersten.",
     "delete-title": "Kommentar löschen?",
     "delete-description": "Der Kommentar und seine Antworten werden endgültig gelöscht.",
     "delete-reply-description": "Die Antwort und die Antworten darauf werden endgültig gelöscht.",
-    "replying-to": "Antwort an {name}"
+    "replying-to": "Antwort an {name}",
+    "count": "{count, plural, =0 {Kommentare} one {# Kommentar} other {# Kommentare}}",
+    "sort-top": "Top",
+    "sort-newest": "Neueste",
+    "replies": "{count, plural, one {# Antwort} other {# Antworten}}",
+    "replies-hide": "Antworten ausblenden",
+    "edited": "(bearbeitet)",
+    "edit-label": "Kommentar bearbeiten",
+    "report-title": "Kommentar melden?",
+    "report-description": "Wähle den Grund. Die Person erfährt nicht, wer gemeldet hat.",
+    "reason-spam": "Spam oder Werbung",
+    "reason-harassment": "Belästigung oder Hass",
+    "reason-misleading": "Falsch oder irreführend",
+    "reason-other": "Etwas anderes",
+    "send": "Senden",
+    "emoji": "Emoji",
+    "photo": "Foto {number}",
+    "photo-open": "{name} öffnen",
+    "photo-description": "Das Foto in voller Größe.",
+    "photo-add": "Foto hinzufügen",
+    "photo-remove": "{name} entfernen",
+    "sign-in-to-comment": "Zum Kommentieren anmelden"
   },
   "Subject": {
     "elementary-school": "Grundschule",
@@ -3651,6 +3674,21 @@
     "classroom-refusal-file-size": {
       "title": "Die Datei ist zu groß.",
       "description": "Wähle eine kleinere Datei."
+    },
+    "comment-reported": {
+      "title": "Danke, die Meldung wurde gesendet."
+    },
+    "comment-paste-refused": {
+      "title": "Der Text ist zu lang für einen Kommentar."
+    },
+    "comment-photo-refused": {
+      "title": "Das Foto wurde nicht hinzugefügt."
+    },
+    "comment-photo-limit": {
+      "title": "Ein Kommentar enthält höchstens vier Fotos."
+    },
+    "comment-photo-fixed": {
+      "title": "Die Fotos eines gesendeten Kommentars bleiben, wie sie sind."
     }
   },
   "Ai": {

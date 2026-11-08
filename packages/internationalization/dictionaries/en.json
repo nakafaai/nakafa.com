@@ -2252,7 +2252,9 @@
     "output": "Output",
     "bacteria": "Bacteria",
     "time": "Time",
-    "school": "School"
+    "school": "School",
+    "menu-sort": "Sort",
+    "save": "Save"
   },
   "LearningPrograms": {
     "metadata-title": "Start learning with Nakafa",
@@ -2378,11 +2380,32 @@
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
-    "no-comments": "No comments yet.",
+    "no-comments": "No comments yet. Be the first to write one.",
     "delete-title": "Delete comment?",
     "delete-description": "The comment and its replies are deleted for good.",
     "delete-reply-description": "The reply and the replies to it are deleted for good.",
-    "replying-to": "Replying to {name}"
+    "replying-to": "Replying to {name}",
+    "count": "{count, plural, =0 {Comments} one {# comment} other {# comments}}",
+    "sort-top": "Top",
+    "sort-newest": "Newest",
+    "replies": "{count, plural, one {# reply} other {# replies}}",
+    "replies-hide": "Hide replies",
+    "edited": "(edited)",
+    "edit-label": "Edit comment",
+    "report-title": "Report comment?",
+    "report-description": "Choose why. The author is not told who reported it.",
+    "reason-spam": "Spam or advertising",
+    "reason-harassment": "Harassment or hate",
+    "reason-misleading": "Wrong or misleading",
+    "reason-other": "Something else",
+    "send": "Send",
+    "emoji": "Emoji",
+    "photo": "Photo {number}",
+    "photo-open": "Open {name}",
+    "photo-description": "The photo at full size.",
+    "photo-add": "Add photo",
+    "photo-remove": "Remove {name}",
+    "sign-in-to-comment": "Sign in to comment"
   },
   "Subject": {
     "elementary-school": "Elementary School",
@@ -3651,6 +3674,21 @@
     "classroom-refusal-file-size": {
       "title": "The file is too large.",
       "description": "Choose a smaller file."
+    },
+    "comment-reported": {
+      "title": "Thanks, the report was sent."
+    },
+    "comment-paste-refused": {
+      "title": "The text is too long for one comment."
+    },
+    "comment-photo-refused": {
+      "title": "The photo was not added."
+    },
+    "comment-photo-limit": {
+      "title": "A comment holds four photos at most."
+    },
+    "comment-photo-fixed": {
+      "title": "The photos of a posted comment stay as they are."
     }
   },
   "Ai": {
