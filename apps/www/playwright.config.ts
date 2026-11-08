@@ -39,6 +39,7 @@ const TIMING_TESTS = [
   "**/tryout/start.browser.ts",
   "**/chat/settle.browser.ts",
   "**/chat/shift.browser.ts",
+  "**/nina/early.browser.ts",
   "**/marketing/home.browser.ts",
   "**/marketing/settle.browser.ts",
   "**/school/empty.browser.ts",
