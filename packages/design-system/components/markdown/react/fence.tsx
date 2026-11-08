@@ -3,7 +3,7 @@ import {
   codeFrameVariants,
   codeHeaderVariants,
   codeLabelVariants,
-} from "@repo/design-system/components/code-block/variants";
+} from "@repo/design-system/components/code/variants";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { blockGapVariants } from "@repo/design-system/lib/prose";
 import type { ReactNode } from "react";

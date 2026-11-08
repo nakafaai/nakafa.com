@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
+import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day";
 import {
   captionChoices,
   chosenMonth,

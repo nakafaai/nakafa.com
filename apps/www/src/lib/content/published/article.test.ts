@@ -21,11 +21,11 @@ import {
   renderArticleArtifact,
 } from "@/lib/content/published/article";
 import { ContentExecutionError } from "@/lib/content/published/errors";
+import { previewProjection } from "@/test/manifest";
 import {
   testArticleProjection as projection,
   testArticleSourcePath as sourcePath,
-} from "@/test/content-article";
-import { previewProjection } from "@/test/content-preview";
+} from "@/test/published/article";
 import { makePublishedParts } from "@/test/parts";
 
 /** The verifier, which answers each test's found response. */

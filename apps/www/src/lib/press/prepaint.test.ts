@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   PRESS_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
-} from "@repo/design-system/hooks/use-press";
+} from "@repo/design-system/hooks/press";
 import {
   EARLY_PRESS_SCRIPT,
   POINTER_DOWN_ATTRIBUTE,

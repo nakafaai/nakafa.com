@@ -25,7 +25,7 @@ import {
   previewProjection,
   previewSourcePath,
   previewWireArtifact,
-} from "@/test/content-preview";
+} from "@/test/manifest";
 
 const verifyPublicContentFoundMock = vi.hoisted(() => vi.fn());
 const partsMocks = vi.hoisted(() => ({ artifact: vi.fn(), frame: vi.fn() }));

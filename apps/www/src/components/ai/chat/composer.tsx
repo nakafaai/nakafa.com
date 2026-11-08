@@ -1,4 +1,4 @@
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import type { ComponentProps } from "react";

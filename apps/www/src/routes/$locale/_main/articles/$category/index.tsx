@@ -4,7 +4,7 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
   makeBreadcrumbNodes,
   makeCollectionPageNode,
-} from "@repo/seo/json-ld/node";
+} from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
