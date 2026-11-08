@@ -7,13 +7,13 @@ import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
-import { type LinePair, useLines } from "@/components/exams/lines/context";
+import { type LinePair, useLines } from "@/components/player/lines/context";
 import {
   linePath,
   nameOf,
   REMOVE_CLEARANCE,
   removePoint,
-} from "@/components/exams/lines/curve";
+} from "@/components/player/lines/curve";
 
 /** A line's stroke, bolder while it is pointed at or its statement is in hand. */
 const lineStroke = cva("stroke-primary fill-none transition-[stroke-width]", {

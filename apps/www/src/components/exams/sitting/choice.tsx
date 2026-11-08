@@ -4,11 +4,8 @@ import { Array as Arr, Option } from "effect";
 import { useId } from "react";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
-import { type Choice, toggleOption } from "@/components/exams/sitting/response";
-import {
-  TryoutSelectableMultipleChoice,
-  TryoutSelectableRadioOption,
-} from "@/components/tryout/runtime/choice/surface";
+import { ChoiceCheck, ChoiceRadio } from "@/components/player/choice";
+import { type Choice, toggleOption } from "@/components/player/response";
 
 /**
  * The options of one choice, read from the paper. A single choice is a radio group, and a
@@ -41,7 +38,7 @@ export function SittingChoice({
         value={Option.getOrElse(Arr.head(response), () => "")}
       >
         {Arr.map(choice.options, (option, index) => (
-          <TryoutSelectableRadioOption
+          <ChoiceRadio
             checked={Arr.contains(response, option.id)}
             disabled={disabled}
             id={`${id}-${option.id}`}
@@ -50,7 +47,7 @@ export function SittingChoice({
             value={option.id}
           >
             <SittingDocument document={option.label} size="line" />
-          </TryoutSelectableRadioOption>
+          </ChoiceRadio>
         ))}
       </RadioGroup>
     );
@@ -63,7 +60,7 @@ export function SittingChoice({
       dir={direction}
     >
       {Arr.map(choice.options, (option, index) => (
-        <TryoutSelectableMultipleChoice
+        <ChoiceCheck
           checked={Arr.contains(response, option.id)}
           disabled={disabled}
           id={`${id}-${option.id}`}
@@ -76,7 +73,7 @@ export function SittingChoice({
           }
         >
           <SittingDocument document={option.label} size="line" />
-        </TryoutSelectableMultipleChoice>
+        </ChoiceCheck>
       ))}
     </fieldset>
   );
