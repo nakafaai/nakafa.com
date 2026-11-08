@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
@@ -28,9 +28,9 @@ export function Graph({ title, description }: GraphProps) {
   const C1_X = -OFFSET; // -5
 
   // Colors
-  const COLOR_CONE_1 = getColor("INDIGO");
-  const COLOR_CONE_2 = getColor("TEAL");
-  const COLOR_HELPER = getColor("ORANGE");
+  const COLOR_CONE_1 = PLOT_COLORS.violet;
+  const COLOR_CONE_2 = PLOT_COLORS.teal;
+  const COLOR_HELPER = PLOT_COLORS.orange;
 
   /** Samples one horizontal cone base in the XZ plane. */
   const createCircle = (cx: number, cz: number, r: number) =>

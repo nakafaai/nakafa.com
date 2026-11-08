@@ -17,6 +17,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
 const MAX_TIME = getAxisMaximum(
@@ -34,9 +35,9 @@ const MAX_VELOCITY = getAxisMaximum(MAX_OBSERVED_VELOCITY, VELOCITY_TICK_STEP);
 const TIME_TICKS = getTicks(MAX_TIME, 1);
 const VELOCITY_TICKS = getTicks(MAX_VELOCITY, VELOCITY_TICK_STEP);
 const SCENARIO_CHART_COLORS = {
-  "from-rest": "var(--chart-1)",
-  "speed-up": "var(--chart-2)",
-  brake: "var(--chart-3)",
+  "from-rest": PLOT_COLORS.orange,
+  "speed-up": PLOT_COLORS.teal,
+  brake: PLOT_COLORS.violet,
 } satisfies Record<GlbbScenario["id"], string>;
 
 export function VelocityTimeGraph({ scenario }: { scenario: GlbbScenario }) {

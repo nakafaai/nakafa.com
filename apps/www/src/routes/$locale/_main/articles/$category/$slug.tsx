@@ -37,8 +37,8 @@ import { getArticlePublication } from "@/lib/content/article/publication";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
+import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import {
   ARTICLES_TARGET,
   articleCategoryTarget,

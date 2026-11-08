@@ -13,7 +13,6 @@ import {
   EndpointRing,
 } from "@repo/design-system/components/three/endpoint";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { COLORS } from "@repo/design-system/lib/color";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
 import {
   type LineEndpoints,
@@ -23,6 +22,7 @@ import {
   type LineMarkerIndices,
   resolveLineMarkers,
 } from "@repo/design-system/lib/geometry/markers";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import {
   Array as Arr,
   Effect,
@@ -221,7 +221,7 @@ export function LineEquation({
   points,
   pointIndices,
   endpoints,
-  color = COLORS.AMBER,
+  color = PLOT_COLORS.amber,
   lineWidth = 2,
   showPoints = true,
   smooth = false,

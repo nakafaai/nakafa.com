@@ -1,22 +1,18 @@
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { toast } from "@repo/design-system/lib/toast/notify";
-import { useNavigate } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Option } from "effect";
-import { useOptimistic, useTransition } from "react";
-import {
-  getTryoutPageTarget,
-  type TryoutPageAddress,
-} from "@/components/tryout/route/path";
+import { useState } from "react";
+import { completeSection } from "@/components/tryout/player/complete";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import { requireConvexOnline } from "@/lib/convex/online";
 
-/** What a running section needs to finish itself. */
+/** What a running section needs to finish itself, and where its back leads. */
 export interface TryoutFinish {
   /** A finish is on its way to the server or to the page that follows it. */
   readonly pending: boolean;
-  /** The page a finish leads to, which back leads to as well. */
+  /** The page a finish leaves for, which back leads to as well. */
   readonly returnAddress: TryoutPageAddress;
   /** Finishes one section, once; a second call while it runs does nothing. */
   readonly run: (target: {
@@ -26,66 +22,38 @@ export interface TryoutFinish {
 }
 
 /**
- * Finishes the running section in a transition. The state the page shows stays
- * the running one until the page the learner returns to has rendered, so the
- * finished section never flashes between the two: the transition holds the
- * running state, and the router's own transition keeps it held until the
- * navigation commits. `shown` is that state.
+ * Finishes the running section with its pending state as plain state, not a transition, so a learner who leaves
+ * by another way while the server answers is never held (ADR 0017, Pending Actions Are Not Transitions). The page
+ * shows the running state it had at the press until the finish settles, so the finished section never flashes
+ * before the page that follows: `shown` is that state. The caller names where a finish leaves for (`leave`), so
+ * the finish knows no route.
  */
 export function useTryoutFinish<State>(input: {
-  returnAddress: TryoutPageAddress;
+  leave: Effect.Effect<void>;
   state: State;
-}): TryoutFinish & { readonly shown: State } {
-  const [shown, hold] = useOptimistic(input.state);
-  const [pending, startTransition] = useTransition();
-  const navigate = useNavigate();
-  /** Leaves for one try-out page. A page that names no route leaves the page on screen. */
-  function navigateTo(address: TryoutPageAddress) {
-    Option.map(getTryoutPageTarget(address), (target) => navigate(target));
-  }
+}) {
+  const [held, hold] = useState(() => Option.none<State>());
   const convex = useConvex();
-  const completeSection = useMutation(tryouts.mutations.sections.complete);
+  const complete = useMutation(tryouts.mutations.sections.complete);
+  const pending = Option.isSome(held);
 
   return {
     pending,
-    returnAddress: input.returnAddress,
-    run: (target) => {
+    run: (target: Parameters<TryoutFinish["run"]>[0]) => {
       if (pending) {
         return;
       }
-      startTransition(async () => {
-        hold(input.state);
-        await Effect.runPromise(
+      hold(Option.some(input.state));
+      Effect.runFork(
+        completeSection(
           requireConvexOnline(convex).pipe(
-            Effect.andThen(
-              Effect.tryPromise(() => completeSection(target)).pipe(
-                Effect.flatMap(Effect.fromResult),
-                // The page the learner returns to shows the finished section,
-                // so no toast repeats it over the page.
-                Effect.tap(() =>
-                  Effect.sync(() => {
-                    startTransition(() => {
-                      navigateTo(input.returnAddress);
-                    });
-                  })
-                )
-              )
-            ),
-            Effect.catch(() =>
-              Effect.sync(() => {
-                toast.error(
-                  {
-                    description: "tryout-complete-part-error.description",
-                    title: "tryout-complete-part-error.title",
-                  },
-                  { position: "bottom-center" }
-                );
-              })
-            )
-          )
-        );
-      });
+            Effect.andThen(Effect.tryPromise(() => complete(target))),
+            Effect.flatMap(Effect.fromResult)
+          ),
+          input.leave
+        ).pipe(Effect.ensuring(Effect.sync(() => hold(Option.none()))))
+      );
     },
-    shown,
+    shown: Option.getOrElse(held, () => input.state),
   };
 }

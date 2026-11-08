@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 // The outer base angles are 80 degrees; the inner base angles are 40 degrees.
@@ -25,7 +25,7 @@ export function Graph({ title, description }: GraphProps) {
         // Outer Triangle ABC
         {
           points: [A, B, C, A],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: true,
           smooth: false,
           labels: [
@@ -59,7 +59,7 @@ export function Graph({ title, description }: GraphProps) {
         // Inner Triangle Lines BD and CD
         {
           points: [B, D, C],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           showPoints: true,
           smooth: false,
           labels: [

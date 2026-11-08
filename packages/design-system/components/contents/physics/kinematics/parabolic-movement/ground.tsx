@@ -7,12 +7,13 @@ import {
   type VectorTuple,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Vector3 } from "three";
 
 const GROUND_COLORS = {
   ground: getColor("SLATE", 50),
-  groundEdge: getColor("AMBER", 500),
-  landingMat: getColor("EMERALD", 100),
+  groundEdge: PLOT_COLORS.amber,
+  landingMat: getColor("SLATE", 200),
   launcherBase: getColor("SLATE", 600),
   launcherRail: getColor("SLATE", 700),
 };

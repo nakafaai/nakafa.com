@@ -11,7 +11,7 @@ import {
   VisualCard,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { COLORS } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
@@ -31,10 +31,10 @@ const ROOM = [
 // the same schematic square, without assigning x a value from the solution.
 const CORNER_SIDE = 0.75;
 const CORNERS = [
-  { id: "top-left", x: -3, y: 2, dx: 1, dy: -1, color: COLORS.FUCHSIA },
-  { id: "top-right", x: 3, y: 2, dx: -1, dy: -1, color: COLORS.PURPLE },
-  { id: "bottom-left", x: -3, y: -2, dx: 1, dy: 1, color: COLORS.AMBER },
-  { id: "bottom-right", x: 3, y: -2, dx: -1, dy: 1, color: COLORS.TEAL },
+  { id: "top-left", x: -3, y: 2, dx: 1, dy: -1, color: PLOT_COLORS.fuchsia },
+  { id: "top-right", x: 3, y: 2, dx: -1, dy: -1, color: PLOT_COLORS.violet },
+  { id: "bottom-left", x: -3, y: -2, dx: 1, dy: 1, color: PLOT_COLORS.amber },
+  { id: "bottom-right", x: 3, y: -2, dx: -1, dy: 1, color: PLOT_COLORS.teal },
 ];
 
 /** Composes the room and its four equal square corners on the shared plane. */
@@ -54,7 +54,7 @@ export function ReadingRoomProblem({
         />
         <CoordinateSystem cameraPosition={[0, 0, 15]}>
           <LineEquation
-            color={COLORS.SLATE}
+            color={PLOT_COLORS.slate}
             points={[...ROOM, ROOM[0]]}
             showPoints={false}
             smooth={false}
@@ -62,7 +62,7 @@ export function ReadingRoomProblem({
           <ThreeLabel
             anchorX="left"
             anchorY="top"
-            color={COLORS.SLATE}
+            color={PLOT_COLORS.slate}
             fontSize="diagram"
             gap={0.2}
             position={[0, -2, 0]}
@@ -72,7 +72,7 @@ export function ReadingRoomProblem({
           <ThreeLabel
             anchorX="left"
             anchorY="bottom"
-            color={COLORS.SLATE}
+            color={PLOT_COLORS.slate}
             fontSize="diagram"
             gap={0.2}
             position={[3, 0, 0]}

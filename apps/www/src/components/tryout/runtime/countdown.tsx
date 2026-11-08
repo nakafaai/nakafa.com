@@ -5,7 +5,7 @@ import {
 import { Array as Arr } from "effect";
 import { Fragment } from "react";
 import { useTranslations } from "use-intl";
-import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import { useNow } from "@/components/player/now";
 import { readDeadlineParts } from "@/components/tryout/runtime/deadline";
 
 /** The short label of each unit a deadline reads in. */
@@ -19,7 +19,7 @@ const UNIT_LABELS = {
 /** Displays an attempt deadline as the first overview card, in days while a day or more is left. */
 export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
   const tTryouts = useTranslations("Tryouts");
-  const now = useTryoutClock(true);
+  const now = useNow(true);
   const segments = Arr.map(
     readDeadlineParts(Math.ceil((expiresAt - now) / 1000)),
     ({ unit, value }) => ({ label: tTryouts(UNIT_LABELS[unit]), value })

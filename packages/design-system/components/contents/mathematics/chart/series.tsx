@@ -18,16 +18,17 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Record as Rec } from "effect";
 import { type ReactNode, useMemo } from "react";
 
 /** The palette a chart's series take in order, one color each. */
 const SERIES_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+  PLOT_COLORS.orange,
+  PLOT_COLORS.teal,
+  PLOT_COLORS.violet,
+  PLOT_COLORS.amber,
+  PLOT_COLORS.fuchsia,
 ] as const;
 
 /** The key of one series in the rows the chart draws. */

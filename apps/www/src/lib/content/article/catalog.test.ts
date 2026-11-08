@@ -17,6 +17,7 @@ import {
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
+import { activateTestRelease } from "@/test/active";
 import {
   activeReleaseId,
   articlePage,
@@ -29,6 +30,7 @@ import {
   makeTestArticleProjection,
   testArticleProjection,
 } from "@/test/content-article";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const initialCursor = {
@@ -58,6 +60,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 describe("published article catalog", () => {
   it.effect("reads localized signed articles and categories", () =>
     Effect.gen(function* () {
@@ -100,6 +110,8 @@ describe("published article catalog", () => {
     })
   );
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease(activeReleaseId);
     runtimeQueryMock.mockReset();
   });
   it.effect(
@@ -308,6 +320,8 @@ describe("published article catalog", () => {
           },
         ],
       ] as const) {
+        // Each case is a new answer, so the store starts empty.
+        resetTestRuntimeCache();
         runtimeQueryMock.mockReturnValueOnce(
           Effect.succeed(
             articlePage({
@@ -349,6 +363,8 @@ describe("published article catalog", () => {
           },
         ],
       ] as const) {
+        // Each case is a new answer, so the store starts empty.
+        resetTestRuntimeCache();
         runtimeQueryMock.mockReturnValueOnce(Effect.succeed(response));
         expect(
           yield* readPublishedCategories({

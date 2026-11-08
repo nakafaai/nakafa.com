@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -25,7 +25,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: -6.5, y: 0.5, z: 0 },
             { x: -5, y: 3, z: 0 },
           ],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           labels: [
             {
               text: <InlineMath math="22" />,
@@ -47,7 +47,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: -3.5, y: 0.5, z: 0 },
             { x: -2, y: -2, z: 0 },
           ],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           labels: [
             {
               text: <InlineMath math="20" />,
@@ -64,7 +64,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: -5, y: -2, z: 0 },
             { x: -8, y: -2, z: 0 },
           ],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           labels: [
             {
               text: <InlineMath math="2" />,
@@ -87,7 +87,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: 3.5, y: 0.5, z: 0 },
             { x: 5, y: 3, z: 0 },
           ],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           labels: [
             {
               text: <InlineMath math="13" />,
@@ -109,7 +109,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: 6.5, y: 0.5, z: 0 },
             { x: 8, y: -2, z: 0 },
           ],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           labels: [
             {
               text: <InlineMath math="12" />,
@@ -126,7 +126,7 @@ export function Graph({ title, description }: GraphProps) {
             { x: 5, y: -2, z: 0 },
             { x: 2, y: -2, z: 0 },
           ],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           labels: [
             {
               text: <InlineMath math="3" />,

@@ -10,11 +10,13 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const STATIC_ANSWER = "/_data/";
 
 /**
- * A lesson loads no neighbouring lesson before the reader shows intent: its
- * pagination loads the next lesson's content on hover, focus or touch, never
- * when the page is drawn.
+ * A reader who asked the browser to save data loads no neighbouring lesson
+ * before they show intent: the page warms no link for them (`warmLinks` in
+ * `lib/routing/warm.ts`, which warms the links on screen once a page settled for
+ * every other reader), and the pagination loads the next lesson's content on
+ * hover, focus or touch, never when the page is drawn.
  */
-test("a lesson loads its next lesson only when the reader reaches for it", async ({
+test("a lesson loads its next lesson for a reader who saves data only when they reach for it", async ({
   page,
 }) => {
   await page.setViewportSize({ height: 900, width: 1440 });
@@ -23,6 +25,21 @@ test("a lesson loads its next lesson only when the reader reaches for it", async
       page,
       Effect.gen(function* () {
         yield* seedAnalyticsConsent(page, "denied");
+        yield* Effect.promise(() =>
+          page.addInitScript(() => {
+            // A connection that asks to save data, which still tells of its changes.
+            const connection = Object.assign(new EventTarget(), {
+              downlink: 10,
+              effectiveType: "4g",
+              rtt: 50,
+              saveData: true,
+            });
+            Object.defineProperty(navigator, "connection", {
+              configurable: true,
+              get: () => connection,
+            });
+          })
+        );
         const answers = MutableList.make<string>();
         page.on("request", (request: Request) => {
           if (request.url().includes(STATIC_ANSWER)) {

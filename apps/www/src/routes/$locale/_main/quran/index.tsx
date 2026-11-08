@@ -19,8 +19,8 @@ import {
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { toQuranIndexSurahs } from "@/lib/content/quran/navigation";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
+import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";

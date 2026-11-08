@@ -9,7 +9,7 @@ import {
   readPublishedArticleBuckets,
   readPublishedArticleSitemap,
 } from "@/lib/content/article/sitemap";
-import { activateTestRelease } from "@/test/active";
+import { activateTestRelease, advanceTestRelease } from "@/test/active";
 import { makeArticleRuntimeSource } from "@/test/content/article";
 import { resetTestRuntimeCache } from "@/test/store";
 
@@ -195,18 +195,21 @@ describe("published article sitemap", () => {
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(
         Effect.succeed({
-          activeReleaseId: "release-next",
+          activeReleaseId,
           articleCount: 1,
           buckets: ["abc"],
           managed: true,
         })
       );
+      advanceTestRelease("release-next");
       const error = yield* readPublishedArticleBuckets(
         "de",
         activeReleaseId
       ).pipe(Effect.flip);
       expect(error).toMatchObject({
         _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: "release-next",
+        expectedReleaseId: activeReleaseId,
       });
     })
   );
