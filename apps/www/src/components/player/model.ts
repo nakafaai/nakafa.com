@@ -1,4 +1,6 @@
-import { Schema } from "effect";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import { Array as Arr, Option, Schema } from "effect";
 
 /**
  * What the navigator shows of one question: its key, whether it is answered, and whether the learner
@@ -25,4 +27,51 @@ export interface PlayerQuestionModel extends PlayerCellModel {
    * took the pick, and `false` when the question has no option at that index or takes no single choice.
    */
   readonly pick: (index: number) => boolean;
+}
+
+/**
+ * The option that a digit key picks: the option at `index` of a question whose one interaction is a choice
+ * that takes one option. A question of another shape, a multiple choice, or an index past the options has
+ * no option that a digit key picks.
+ */
+function pickedOption(
+  interactions: readonly Interaction[],
+  index: number
+): Option.Option<string> {
+  const [only, ...rest] = interactions;
+  if (
+    only?.kind !== "choice" ||
+    only.maxChoices !== 1 ||
+    Arr.isReadonlyArrayNonEmpty(rest)
+  ) {
+    return Option.none();
+  }
+  return Option.map(Arr.get(only.options, index), (option) => option.id);
+}
+
+/**
+ * A binding's questions as the player marks, flags, and picks them, in the binding's order. The binding reads
+ * how the navigator marks each question (`cell`) and the interactions a digit key picks from (`interactions`),
+ * and names the save of an answer (`answer`) and of a flag (`flag`). A digit key answers with the one option it
+ * picks, through the same save a press on that option uses.
+ */
+export function projectQuestions<Question>(input: {
+  readonly answer: (question: Question, response: ExamResponse) => void;
+  readonly cell: (question: Question) => PlayerCellModel;
+  readonly flag: (question: Question) => void;
+  readonly interactions: (question: Question) => readonly Interaction[];
+  readonly questions: readonly Question[];
+}): readonly PlayerQuestionModel[] {
+  return Arr.map(input.questions, (question) => ({
+    ...input.cell(question),
+    flag: () => input.flag(question),
+    pick: (index) =>
+      Option.match(pickedOption(input.interactions(question), index), {
+        onNone: () => false,
+        onSome: (optionId) => {
+          input.answer(question, [optionId]);
+          return true;
+        },
+      }),
+  }));
 }

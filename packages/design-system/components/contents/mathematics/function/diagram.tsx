@@ -15,7 +15,7 @@ import {
   VisualCardBody,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { COLORS } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Effect } from "effect";
 import type { ReactNode } from "react";
 
@@ -77,7 +77,7 @@ export function RelationVisualizer({
       elements: domain,
       points: relation.domain,
       x: -3,
-      color: COLORS.ORANGE,
+      color: PLOT_COLORS.orange,
     },
     {
       id: "codomain",
@@ -85,7 +85,7 @@ export function RelationVisualizer({
       elements: codomain,
       points: relation.codomain,
       x: 3,
-      color: COLORS.PURPLE,
+      color: PLOT_COLORS.fuchsia,
     },
   ];
   return (
@@ -132,7 +132,7 @@ export function RelationVisualizer({
           ))}
           {Arr.map(relation.mappings, (mapping) => (
             <LineEquation
-              color={COLORS.ORANGE}
+              color={PLOT_COLORS.orange}
               cone={{ position: "end", size: 0.25 }}
               key={mapping.id}
               points={mapping.points}

@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Result, Schema } from "effect";
 
@@ -356,19 +357,19 @@ export function getModernPeriodicTableSceneColors(
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
-    innerTransition: getColor("ROSE"),
-    metal: getColor("TEAL"),
-    metalloid: getColor("VIOLET"),
-    nobleGas: getColor("SKY"),
-    nonmetal: getColor("EMERALD"),
-    seriesMarker: getColor("ROSE"),
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
+    innerTransition: PLOT_COLORS.pink,
+    metal: PLOT_COLORS.teal,
+    metalloid: PLOT_COLORS.violet,
+    nobleGas: PLOT_COLORS.orange,
+    nonmetal: PLOT_COLORS.fuchsia,
+    seriesMarker: PLOT_COLORS.pink,
     skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     textOutline: isDarkTheme ? ORIGIN_COLOR.DARK : ORIGIN_COLOR.LIGHT,
     tileText: ORIGIN_COLOR.LIGHT,
     tileTextOutline: ORIGIN_COLOR.DARK,
-    transitionMetal: getColor("AMBER"),
+    transitionMetal: PLOT_COLORS.amber,
   };
 }
 

@@ -22,6 +22,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 
@@ -60,12 +61,12 @@ export function ProfitChart({
         capital: {
           cue: PROFIT_CUES.capital,
           label: capitalLabel,
-          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+          colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
         },
         revenue: {
           cue: PROFIT_CUES.revenue,
           label: revenueLabel,
-          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+          colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
         },
       }) satisfies ChartConfig,
     [capitalLabel, revenueLabel]

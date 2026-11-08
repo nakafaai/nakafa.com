@@ -6,6 +6,7 @@ import {
   signInClassTeacher,
   signInOwner,
 } from "@/e2e/support/school";
+import { settingsLink } from "@/e2e/support/settings";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The cohort and the classroom that the class teacher's seed opens in the school's active period. */
@@ -28,7 +29,9 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   const page = await context.newPage();
 
   await page.goto(address("/settings/profile"));
-  await page.getByRole("link", { exact: true, name: "Classrooms" }).click();
+  await (
+    await settingsLink(page.locator('[data-slot="sidebar-content"]'), "classes")
+  ).click();
   await expect(page).toHaveURL(address("/settings/classes"));
   const header = page.locator("header");
   await expect(

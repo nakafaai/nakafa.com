@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ComponentProps, ReactNode } from "react";
 
 interface GraphProps {
@@ -45,7 +45,7 @@ const arcCLabelIndex = Math.floor(arcCPoints.length / 2);
 const graphData = [
   {
     points: [pointB, pointA],
-    color: getColor("INDIGO"),
+    color: PLOT_COLORS.fuchsia,
     showPoints: false,
     labels: [
       { text: <InlineMath math="B" />, at: 0, offset: [-0.3, -0.3, 0] },
@@ -54,13 +54,13 @@ const graphData = [
   },
   {
     points: [pointB, midBD, pointD],
-    color: getColor("EMERALD"),
+    color: PLOT_COLORS.amber,
     showPoints: false,
     labels: [{ text: <InlineMath math="?" />, at: 1, offset: [0, -0.5, 0] }],
   },
   {
     points: [pointD, midDC, pointC],
-    color: getColor("TEAL"),
+    color: PLOT_COLORS.teal,
     showPoints: false,
     labels: [
       { text: <InlineMath math="D" />, at: 0, offset: [-0.1, -0.4, 0] },
@@ -70,7 +70,7 @@ const graphData = [
   },
   {
     points: [pointA, midAC, pointC],
-    color: getColor("VIOLET"),
+    color: PLOT_COLORS.violet,
     showPoints: false,
     labels: [
       {
@@ -82,12 +82,12 @@ const graphData = [
   },
   {
     points: [pointA, pointD],
-    color: getColor("ORANGE"),
+    color: PLOT_COLORS.orange,
     showPoints: false,
   },
   {
     points: arcCPoints,
-    color: getColor("VIOLET"),
+    color: PLOT_COLORS.violet,
     showPoints: false,
     labels: [
       {

@@ -24,6 +24,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
@@ -175,16 +176,13 @@ function NumberLineBody() {
               <div key={`bg-${segment.start}-${segment.end}-${segment.index}`}>
                 {!!segment.shaded && (
                   <div
-                    className={cn(
-                      numberLineSegmentVariants({ edge: segment.edge }),
-                      !segment.bgColor && "bg-chart-1"
-                    )}
+                    className={numberLineSegmentVariants({
+                      edge: segment.edge,
+                    })}
                     style={{
+                      backgroundColor: segment.bgColor || PLOT_COLORS.orange,
                       left: `${segment.startPos}%`,
                       width: `${segment.width}%`,
-                      ...(!!segment.bgColor && {
-                        backgroundColor: segment.bgColor,
-                      }),
                     }}
                   />
                 )}

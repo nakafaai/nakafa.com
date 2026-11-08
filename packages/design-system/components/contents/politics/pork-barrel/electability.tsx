@@ -30,6 +30,7 @@ import {
   formatShortMonthYear,
 } from "@repo/design-system/lib/charts/month";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
@@ -151,17 +152,17 @@ export function ElectabilityChart({
     anies_muhaimin: {
       cue: ELECTABILITY_CUES.aniesMuhaimin,
       label: labels.aniesMuhaimin,
-      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+      colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
     },
     prabowo_gibran: {
       cue: ELECTABILITY_CUES.prabowoGibran,
       label: labels.prabowoGibran,
-      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+      colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
     },
     ganjar_mahfud: {
       cue: ELECTABILITY_CUES.ganjarMahfud,
       label: labels.ganjarMahfud,
-      colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
+      colors: { light: [PLOT_COLORS.violet], dark: [PLOT_COLORS.violet] },
     },
   } satisfies ChartConfig;
 

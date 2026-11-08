@@ -11,6 +11,7 @@ import {
 import { Ocean } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/ocean";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Record as Rec } from "effect";
 import { useMemo, useRef } from "react";
 import {
@@ -23,8 +24,8 @@ import {
 } from "three";
 
 const PIRATE_COLORS = {
-  flashCore: getColor("YELLOW"),
-  flashOuter: getColor("ORANGE", 500),
+  flashCore: PLOT_COLORS.amber,
+  flashOuter: PLOT_COLORS.amber,
   ghostHalo: getColor("WHITE"),
   smoke: getColor("SLATE", 200),
 } as const;

@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -52,7 +52,7 @@ export function Graph({ title, description }: GraphProps) {
       data={[
         {
           points: [pointA, midpointAB, pointB],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           labels: [
             { text: <InlineMath math="A" />, at: 0, offset: [0.25, -0.35, 0] },
@@ -61,7 +61,7 @@ export function Graph({ title, description }: GraphProps) {
         },
         {
           points: [pointA, midpointAC, pointC],
-          color: getColor("EMERALD"),
+          color: PLOT_COLORS.teal,
           showPoints: false,
           labels: [
             { text: <InlineMath math="C" />, at: 2, offset: [-0.2, -0.35, 0] },
@@ -69,7 +69,7 @@ export function Graph({ title, description }: GraphProps) {
         },
         {
           points: [pointB, midpointBC, pointC],
-          color: getColor("CYAN"),
+          color: PLOT_COLORS.slate,
           showPoints: false,
           labels: [
             {
@@ -81,7 +81,7 @@ export function Graph({ title, description }: GraphProps) {
         },
         {
           points: arcPoints,
-          color: getColor("ORANGE"),
+          color: PLOT_COLORS.orange,
           showPoints: false,
           labels: [
             {

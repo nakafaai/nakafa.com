@@ -1,24 +1,18 @@
-import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { TenantSection } from "@/components/tenant/section";
 import { opensSettingsPath } from "@/lib/settings/school";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 
 /**
  * The school settings. A viewer sees the sections their actions open, and any other section answers
  * not found. The settings root belongs to the viewer's first section.
  */
 export const Route = createFileRoute("/school/$slug/settings")({
-  beforeLoad: ({ context, location }) => {
-    const { school, slug } = context;
-    if (
-      school._tag === "Member" &&
-      !opensSettingsPath(slug, school.viewer.reach, location.pathname)
-    ) {
-      throw notFound();
-    }
-  },
+  ...guardSchoolPage({
+    opens: (viewer, { pathname, slug }) =>
+      opensSettingsPath(slug, viewer.reach, pathname),
+  }),
   component: SchoolSettingsLayout,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolSettingsLayout() {

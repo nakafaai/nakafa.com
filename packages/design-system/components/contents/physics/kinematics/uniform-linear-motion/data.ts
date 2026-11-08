@@ -1,5 +1,6 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
 export const UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH =
@@ -29,11 +30,11 @@ export const UNIFORM_LINEAR_MOTION_CAMERA = {
 } satisfies Record<string, readonly [number, number, number]>;
 
 export const UNIFORM_LINEAR_MOTION_COLORS = {
-  car: getColor("ORANGE"),
-  positionMark: getColor("TEAL"),
+  car: PLOT_COLORS.orange,
+  positionMark: PLOT_COLORS.teal,
   road: getColor("GRAY", 800),
   stripe: getColor("SLATE", 50),
-  track: getColor("TEAL"),
+  track: PLOT_COLORS.teal,
 } as const;
 
 export type UniformLinearMotionState = ReturnType<

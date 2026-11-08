@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
@@ -15,11 +14,8 @@ import {
   isArticleCounterpart,
   makeArticleProjectionError,
 } from "@/lib/content/article/decode";
-import {
-  type ContentReleasePin,
-  decodeContentReleasePin,
-} from "@/lib/content/published/release";
-import { httpLayer } from "@/lib/convex/http";
+import { decodeContentRelease } from "@/lib/content/published/release";
+import { queryContentStore } from "@/lib/content/store/query";
 
 const PublishedArticleRouteSchema = Schema.Union([
   Schema.Struct({
@@ -37,32 +33,19 @@ const PublishedArticleRouteSchema = Schema.Union([
 /** Complete active article route or a signed missing-route tombstone. */
 type PublishedArticleRoute = typeof PublishedArticleRouteSchema.Type;
 
-/** Reads and validates one complete signed article route model. */
+/**
+ * Reads and validates one complete signed article route model. The content
+ * store keeps it for the release, so a language switch reads Convex once for
+ * each article and release in an isolate.
+ */
 export const readPublishedArticleRoute = Effect.fn(
   "NakafaArticle.readPublishedRoute"
-)(function* (
-  locale: Locale,
-  publicPath: string,
-  expectedActiveReleaseId?: ContentReleasePin
-) {
-  const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.article.route, {
-      ...(expectedActiveReleaseId === undefined
-        ? {}
-        : {
-            expectedActiveReleaseId,
-          }),
-      appLocale,
-      publicPath,
-    })
-  ).pipe(Effect.provide(httpLayer()));
-  return yield* decodePublishedArticleRoute(
-    result,
-    locale,
+)(function* (locale: Locale, publicPath: string) {
+  const result = yield* queryContentStore(contentRelease.article.route, {
+    appLocale: AppLocaleSchema.make(locale),
     publicPath,
-    expectedActiveReleaseId
-  );
+  });
+  return yield* decodePublishedArticleRoute(result, locale, publicPath);
 });
 
 /** Validates the route model delivered alone or with its signed public body. */
@@ -71,8 +54,7 @@ export const decodePublishedArticleRoute = Effect.fn(
 )(function* (
   result: Ref.Returns<typeof contentRelease.article.route>,
   locale: Locale,
-  publicPath: string,
-  expectedActiveReleaseId?: ContentReleasePin
+  publicPath: string
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const [activeAppLocales, activeReleaseId] = yield* Effect.all([
@@ -86,7 +68,7 @@ export const decodePublishedArticleRoute = Effect.fn(
         })
       )
     ),
-    decodeContentReleasePin(result.activeReleaseId, expectedActiveReleaseId, {
+    decodeContentRelease(result.activeReleaseId, {
       appLocale,
       publicPath,
     }),

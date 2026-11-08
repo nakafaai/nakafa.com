@@ -3,30 +3,28 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "use-intl";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { decodeContentRelease } from "@/lib/content/published/release";
 import {
-  type ContentReleasePin,
-  decodeContentReleasePin,
-} from "@/lib/content/published/release";
-import { queryContentStore } from "@/lib/content/store/query";
+  queryContentStore,
+  queryPinnedContentStore,
+} from "@/lib/content/store/query";
 
 /** Reads non-empty article sitemap partitions for one localized catalog. */
 export const readPublishedArticleBuckets = Effect.fn(
   "www.articles.readSitemapBuckets"
-)(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
+)(function* (locale: Locale, release?: ActiveContentReleaseId) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* queryContentStore(
+  const result = yield* queryPinnedContentStore(
+    release,
     contentRelease.article.sitemapBuckets,
     { appLocale }
   );
-  const activeReleaseId = yield* decodeContentReleasePin(
-    result.activeReleaseId,
-    expectedActiveReleaseId,
-    {
-      appLocale,
-      publicPath: "articles",
-    }
-  );
+  const activeReleaseId = yield* decodeContentRelease(result.activeReleaseId, {
+    appLocale,
+    publicPath: "articles",
+  });
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
       appLocale,

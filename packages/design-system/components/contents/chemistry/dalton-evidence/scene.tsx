@@ -3,13 +3,14 @@ import type {
   Molecule,
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 const ATOM_COLORS = {
-  C: "var(--muted-foreground)",
-  H: "var(--chart-1)",
-  O: "var(--primary)",
+  C: PLOT_COLORS.slate,
+  H: PLOT_COLORS.orange,
+  O: PLOT_COLORS.teal,
 } satisfies Record<AtomSymbol, string>;
 
 /**

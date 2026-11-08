@@ -6,6 +6,7 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
+import { useNow } from "@/components/player/now";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
@@ -13,6 +14,7 @@ import {
   type TryoutFinish,
   useTryoutFinish,
 } from "@/components/tryout/player/finish";
+import { useTryoutLeave } from "@/components/tryout/route/leave";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptLock,
@@ -20,7 +22,6 @@ import {
   getTryoutPublicPathHref,
   type TryoutPageAddress,
 } from "@/components/tryout/route/path";
-import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
   TryoutStartProvider,
   useTryoutStartPhase,
@@ -153,13 +154,17 @@ function LiveTryoutSetPage({
     state = terminalState;
   }
   // The finish holds the running state, so it reads the state before any early exit.
-  const finish = useTryoutFinish({
-    returnAddress: {
-      attemptId: binding.attemptId,
-      publicPath: page.set.publicPath,
-    },
-    state,
-  });
+  const returnAddress = {
+    attemptId: binding.attemptId,
+    publicPath: page.set.publicPath,
+  };
+  const leave = useTryoutLeave(returnAddress);
+  const finishing = useTryoutFinish({ leave, state });
+  const finish: TryoutFinish = {
+    pending: finishing.pending,
+    returnAddress,
+    run: finishing.run,
+  };
 
   if (QueryResult.isFailure(liveState)) {
     throw liveState.error;
@@ -169,7 +174,7 @@ function LiveTryoutSetPage({
     <ResolvedTryoutSetPage
       binding={binding}
       finish={finish}
-      state={finish.shown}
+      state={finishing.shown}
     >
       {children}
     </ResolvedTryoutSetPage>
@@ -196,7 +201,7 @@ function ResolvedTryoutSetPage({
   const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
   const isInternalEntry = entrySection?.visibility === "internal-entry";
-  const now = useTryoutClock(currentAttempt?.status === "in-progress");
+  const now = useNow(currentAttempt?.status === "in-progress");
   const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
 
   const actionAttempt = selectActionAttempt({

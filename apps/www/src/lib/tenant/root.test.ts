@@ -2,7 +2,7 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import { LOCALES, VISITOR_LOCALE } from "@repo/internationalization/src/locale";
 import { getRouteMessages } from "@repo/internationalization/src/messages";
 import {
   Array as Arr,
@@ -175,9 +175,9 @@ describe("readSchoolLocale", () => {
     expect(readSchoolLocale()).toBe("id");
   });
 
-  it("falls back to the default locale when no language is served", () => {
+  it("falls back to Indonesian when no language is served", () => {
     stubBrowser(["fr-FR"], "");
-    expect(readSchoolLocale()).toBe(DEFAULT_LOCALE);
+    expect(readSchoolLocale()).toBe(VISITOR_LOCALE);
   });
 });
 

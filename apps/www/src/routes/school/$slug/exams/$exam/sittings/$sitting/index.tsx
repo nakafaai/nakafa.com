@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import {
@@ -6,7 +6,7 @@ import {
   SittingDashboard,
 } from "@/components/exams/sitting/dashboard";
 import { dashboardSearch } from "@/components/exams/sitting/search";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readExamId, readSittingId } from "@/lib/tenant/params";
 
 /**
@@ -17,16 +17,14 @@ export const Route = createFileRoute(
   "/school/$slug/exams/$exam/sittings/$sitting/"
 )({
   validateSearch: dashboardSearch,
-  beforeLoad: ({ params }) => {
-    const examId = readExamId(params.exam);
-    const sittingId = readSittingId(params.sitting);
-    if (Option.isNone(examId) || Option.isNone(sittingId)) {
-      throw notFound();
-    }
-    return { examId: examId.value, sittingId: sittingId.value };
-  },
+  ...guardSchoolPage({
+    reads: (params: { readonly exam: string; readonly sitting: string }) =>
+      Option.all({
+        examId: readExamId(params.exam),
+        sittingId: readSittingId(params.sitting),
+      }),
+  }),
   component: SittingDashboardPage,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 function SittingDashboardPage(): ReactElement | null {

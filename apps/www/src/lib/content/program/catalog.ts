@@ -98,21 +98,6 @@ const PublishedProgramCatalogSchema = Schema.Struct({
 /** Complete bounded program catalog used by root curriculum navigation. */
 type PublishedProgramCatalog = typeof PublishedProgramCatalogSchema.Type;
 
-/** Selects one renderable root from the authenticated bounded program catalog. */
-export const readPublishedProgramPrerenderRoute = Effect.fn(
-  "NakafaProgram.readPrerenderRoute"
-)(function* (locale: Locale) {
-  const catalog = yield* readPublishedProgramCatalog(locale);
-  const entry = Arr.findFirst(catalog.entries, ({ route }) => route.sitemap);
-  if (Option.isNone(entry)) {
-    return yield* new PublishedProjectionError({
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath: "curricula",
-    });
-  }
-  return entry.value.route;
-});
-
 /**
  * Reads the authenticated featured subjects, one route per subject, for the
  * About feature list. The content store holds the query result once for each

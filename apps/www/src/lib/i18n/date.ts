@@ -1,5 +1,8 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { decodeLocale } from "@repo/internationalization/src/locale";
+import {
+  DEFAULT_LOCALE,
+  decodeLocale,
+} from "@repo/internationalization/src/locale";
 import { DateTime, Option } from "effect";
 
 // Dates of content and of the viewer. School times are not written here: they
@@ -45,9 +48,9 @@ const LANGUAGES = {
   id: language("id", ", "),
 } satisfies Record<ActiveAppLocaleCode, ReturnType<typeof language>>;
 
-/** The locale that dates are written in: an active app locale, else English. */
+/** The locale that dates are written in: an active app locale, else the canonical one. */
 function dateLocale(locale?: string | null): ActiveAppLocaleCode {
-  return Option.getOrElse(decodeLocale(locale), () => "en");
+  return Option.getOrElse(decodeLocale(locale), () => DEFAULT_LOCALE);
 }
 
 /**
