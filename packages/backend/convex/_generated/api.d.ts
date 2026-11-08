@@ -4418,7 +4418,11 @@ export declare const api: {
         "mutation",
         "public",
         { batch: string; documentId: Id<"editorDocuments">; slug: string },
-        null
+        | { _tag: "Accepted" }
+        | { _tag: "VersionStale"; baseVersion: number; head: number }
+        | { _tag: "DocumentInvalid" }
+        | { _tag: "DocumentTooLarge"; bytes: number; limit: number }
+        | { _tag: "FoldPending" }
       >;
     };
   };

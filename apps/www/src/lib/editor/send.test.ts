@@ -5,8 +5,6 @@ import {
   MAX_ID_LENGTH,
   MAX_STEP_BYTES,
 } from "@repo/backend/confect/editor/batch";
-import { DocumentInvalid } from "@repo/backend/confect/editor/document";
-import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
 import { stepSizePlugin } from "@repo/design-system/components/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -17,6 +15,8 @@ import { assessmentSchema } from "@/lib/editor/assessment";
 import { push } from "@/lib/editor/send";
 import { startSync, tick } from "@/lib/editor/sync";
 import {
+  DOCUMENT_INVALID,
+  FOLD_PENDING,
   makePort,
   makeServer,
   type Refusal,
@@ -115,8 +115,8 @@ describe("editor/send steps the server refuses", () => {
         // The document refuses any step whose text holds "bad", as a step that breaks it would.
         const refuseBad: Refusal = (batch) =>
           Arr.some(batch.steps, (step) => encodeJsonText(step).includes("bad"))
-            ? Effect.fail(new DocumentInvalid())
-            : Effect.void;
+            ? Effect.succeedSome(DOCUMENT_INVALID)
+            : Effect.succeedNone;
         const server = yield* makeServer(undefined, refuseBad);
         const { port, state } = yield* makePort(
           assessmentSchema,
@@ -155,8 +155,8 @@ describe("editor/send steps the server refuses", () => {
         const refuseOnce: Refusal = (batch) =>
           Ref.update(ids, (seen) => [...seen, batch.batch]).pipe(
             Effect.andThen(Ref.getAndSet(waiting, false)),
-            Effect.flatMap((first) =>
-              first ? Effect.fail(new FoldPending()) : Effect.void
+            Effect.map((first) =>
+              first ? Option.some(FOLD_PENDING) : Option.none()
             )
           );
         const server = yield* makeServer(undefined, refuseOnce);

@@ -30,7 +30,7 @@ const sidebarRowOf = (page: Page, chatId: string) =>
     .locator(`a[data-sidebar="menu-button"][href$="/chat/${chatId}"]`)
     .filter({ visible: true });
 
-/** Deletes a chat from the menu of its row on the chats page, and confirms in the dialog. */
+/** Deletes a chat from the menu of its row on the chats page, and confirms with Delete beside Cancel in the dialog. */
 const deleteFromRow = async (page: Page, chatId: string) => {
   await rowOf(page, chatId)
     .getByRole("button", { name: "More actions" })
@@ -38,7 +38,7 @@ const deleteFromRow = async (page: Page, chatId: string) => {
   await page.getByRole("menuitem", { name: "Delete" }).click();
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Confirm" })
+    .getByRole("button", { name: "Delete" })
     .click();
 };
 
@@ -168,7 +168,7 @@ const inAnOpenChat = Effect.fn("NakafaE2E.inAnOpenChat")(function* (
       await page.getByRole("menuitem", { name: "Delete chat" }).click();
       await page
         .getByRole("dialog")
-        .getByRole("button", { name: "Confirm" })
+        .getByRole("button", { name: "Delete" })
         .click();
     });
   return { changes, confirmDelete, learner, oldest };

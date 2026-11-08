@@ -11,7 +11,7 @@ import type {
   SchoolNotification,
 } from "@/components/notifications/state";
 import { SchoolMark } from "@/components/tenant/mark";
-import { formatShortAge } from "@/components/user/age";
+import { formatAge } from "@/components/user/age";
 import {
   FeedAge,
   FeedAvatar,
@@ -87,9 +87,7 @@ function NotificationBody({
     <FeedBody>
       <FeedHeader>
         <FeedName>{name}</FeedName>
-        <FeedAge at={createdAt}>
-          {formatShortAge(createdAt, now, locale)}
-        </FeedAge>
+        <FeedAge at={createdAt}>{formatAge(createdAt, now, locale)}</FeedAge>
       </FeedHeader>
       <NotificationAction {...action}>{sentence}</NotificationAction>
     </FeedBody>

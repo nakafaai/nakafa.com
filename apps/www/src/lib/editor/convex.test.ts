@@ -2,8 +2,7 @@ import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { VersionStale } from "@repo/backend/confect/editor/batch";
+import { ClientTaken } from "@repo/backend/confect/editor/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { ConvexError } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -102,14 +101,14 @@ describe("convexTransport", () => {
     })
   );
 
-  it.effect("sends a batch to the submit function and returns nothing", () =>
+  it.effect("sends a batch to the submit function and decodes its reply", () =>
     Effect.gen(function* () {
       const client = makeClient();
-      client.mutation.mockResolvedValue(null);
+      client.mutation.mockResolvedValue({ _tag: "Accepted" });
 
       const reply = yield* convexTransport(client, target).submit("batch-text");
 
-      expect(reply).toBeNull();
+      expect(reply).toEqual({ _tag: "Accepted" });
       expect(client.mutation).toHaveBeenCalledWith(
         Ref.getFunctionReference(editors.steps.submit),
         { batch: "batch-text", documentId, slug }
@@ -117,11 +116,33 @@ describe("convexTransport", () => {
     })
   );
 
-  it.effect("keeps a refused batch as the refusal the loop decides", () => {
+  it.effect(
+    "keeps an outcome the loop decides as the reply, with the head the batch missed",
+    () =>
+      Effect.gen(function* () {
+        const client = makeClient();
+        client.mutation.mockResolvedValue({
+          _tag: "VersionStale",
+          baseVersion: 1,
+          head: 2,
+        });
+
+        const reply = yield* convexTransport(client, target).submit(
+          "batch-text"
+        );
+
+        expect(reply).toEqual({
+          _tag: "VersionStale",
+          baseVersion: 1,
+          head: 2,
+        });
+      })
+  );
+
+  it.effect("reports a refused batch as a sync failure", () => {
     const client = makeClient();
-    const stale = new VersionStale({ baseVersion: 1, head: 2 });
     client.mutation.mockRejectedValue(
-      new ConvexError(Schema.encodeSync(VersionStale)(stale))
+      new ConvexError(Schema.encodeSync(ClientTaken)(new ClientTaken()))
     );
 
     return Effect.gen(function* () {
@@ -129,57 +150,18 @@ describe("convexTransport", () => {
         .submit("batch-text")
         .pipe(Effect.flip);
 
-      expect(error).toEqual(stale);
+      expect(error).toEqual(
+        new SyncFailed({ reason: "The changes could not be sent." })
+      );
     });
   });
 
   it.effect(
-    "reports a refusal the loop does not decide as a sync failure",
-    () => {
-      const client = makeClient();
-      const denied = new AccessDenied({
-        action: "document.edit",
-        reason: "resource",
-      });
-      client.mutation.mockRejectedValue(
-        new ConvexError(Schema.encodeSync(AccessDenied)(denied))
-      );
-
-      return Effect.gen(function* () {
-        const error = yield* convexTransport(client, target)
-          .submit("batch-text")
-          .pipe(Effect.flip);
-
-        expect(error).toEqual(
-          new SyncFailed({ reason: "The changes could not be sent." })
-        );
-      });
-    }
-  );
-
-  it.effect("reports a refusal that does not decode as a sync failure", () =>
-    Effect.gen(function* () {
-      const client = makeClient();
-      client.mutation.mockRejectedValue(
-        new ConvexError({ _tag: "VersionStale" })
-      );
-
-      const error = yield* convexTransport(client, target)
-        .submit("batch-text")
-        .pipe(Effect.flip);
-
-      expect(error).toEqual(
-        new SyncFailed({ reason: "The changes could not be sent." })
-      );
-    })
-  );
-
-  it.effect(
-    "reports a rejection that is not a Convex error as a sync failure",
+    "reports a submit reply that does not decode as a sync failure",
     () =>
       Effect.gen(function* () {
         const client = makeClient();
-        client.mutation.mockRejectedValue(new Error("offline"));
+        client.mutation.mockResolvedValue(null);
 
         const error = yield* convexTransport(client, target)
           .submit("batch-text")

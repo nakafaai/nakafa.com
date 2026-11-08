@@ -26,6 +26,7 @@ import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import {
   TryExamIdContext,
+  TryGoneContext,
   TrySlugContext,
   TryStoreContext,
 } from "@/components/tenant/exams/try/context";
@@ -98,63 +99,65 @@ export function ExamTryPaper({
   return (
     <TrySlugContext value={slug}>
       <TryExamIdContext value={examId}>
-        <TryStoreContext value={store}>
-          <PlayerProvider
-            keys={Arr.map(exam.questions, (question) => question.id)}
-            mode="list"
-          >
-            <PlayerKeys locked={false} questions={models} />
-            <PaperBar
-              back={<PaperBack examId={examId} />}
-              title={exam.title || t("untitled")}
+        <TryGoneContext value={gone}>
+          <TryStoreContext value={store}>
+            <PlayerProvider
+              keys={Arr.map(exam.questions, (question) => question.id)}
+              mode="list"
             >
-              {gone ? null : (
-                <PlayerFinish
-                  description={t("try-note")}
-                  label={t("try-finish")}
-                  locked={false}
-                  onFinish={() => {
-                    navigate(schoolExamEditTarget(slug, examId));
-                  }}
-                  pending={false}
-                  questions={models}
-                  title={t("try-finish")}
-                />
-              )}
-            </PaperBar>
-            <PlayerMain
-              navigator={
-                <PlayerSidebar>
-                  <PlayerGrid questions={models} />
-                  <PlayerLegend />
-                </PlayerSidebar>
-              }
-            >
-              <TryReveal questions={exam.questions}>
-                <PlayerQuestions>
-                  {Arr.map(exam.questions, (question, index) => (
-                    <ExamTryQuestion
-                      key={question.id}
-                      number={index + 1}
-                      question={question}
-                    />
-                  ))}
-                </PlayerQuestions>
-              </TryReveal>
-            </PlayerMain>
-            <PlayerFooter>
-              <PlayerFlag beforeNote locked={false} questions={models} />
-              <PlayerOpener />
-              <PlayerNote defaultOpen={gone} key={String(gone)}>
-                {gone ? <ExamGone /> : t("try-note")}
-              </PlayerNote>
-            </PlayerFooter>
-            <PlayerSheet>
-              <PlayerGrid questions={models} />
-              <PlayerLegend />
-            </PlayerSheet>
-          </PlayerProvider>
-        </TryStoreContext>
+              <PlayerKeys locked={false} questions={models} />
+              <PaperBar
+                back={<PaperBack examId={examId} />}
+                title={exam.title || t("untitled")}
+              >
+                {gone ? null : (
+                  <PlayerFinish
+                    description={t("try-note")}
+                    label={t("try-finish")}
+                    locked={false}
+                    onFinish={() => {
+                      navigate(schoolExamEditTarget(slug, examId));
+                    }}
+                    pending={false}
+                    questions={models}
+                    title={t("try-finish")}
+                  />
+                )}
+              </PaperBar>
+              <PlayerMain
+                navigator={
+                  <PlayerSidebar>
+                    <PlayerGrid questions={models} />
+                    <PlayerLegend />
+                  </PlayerSidebar>
+                }
+              >
+                <TryReveal questions={exam.questions}>
+                  <PlayerQuestions>
+                    {Arr.map(exam.questions, (question, index) => (
+                      <ExamTryQuestion
+                        key={question.id}
+                        number={index + 1}
+                        question={question}
+                      />
+                    ))}
+                  </PlayerQuestions>
+                </TryReveal>
+              </PlayerMain>
+              <PlayerFooter>
+                <PlayerFlag beforeNote locked={false} questions={models} />
+                <PlayerOpener />
+                <PlayerNote defaultOpen={gone} key={String(gone)}>
+                  {gone ? <ExamGone /> : t("try-note")}
+                </PlayerNote>
+              </PlayerFooter>
+              <PlayerSheet>
+                <PlayerGrid questions={models} />
+                <PlayerLegend />
+              </PlayerSheet>
+            </PlayerProvider>
+          </TryStoreContext>
+        </TryGoneContext>
       </TryExamIdContext>
     </TrySlugContext>
   );
