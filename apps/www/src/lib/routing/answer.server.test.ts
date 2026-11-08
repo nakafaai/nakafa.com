@@ -195,14 +195,14 @@ describe("decisions before the router", () => {
   it.effect("moves a migrated address before the router", () =>
     Effect.gen(function* () {
       migration.read.mockReturnValue(
-        Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
+        Effect.succeed({ destination: "/de/articles/politik", status: 308 })
       );
 
-      const response = yield* answer("/en/user/abc123/chat");
+      const response = yield* answer("/de/articles/politics");
 
       expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en/@nabil/chat");
-      expect(response.headers.get("vary")).toBe("Cookie");
+      expect(response.headers.get("location")).toBe("/de/articles/politik");
+      expect(response.headers.get("vary")).toBeNull();
     })
   );
 
@@ -484,7 +484,11 @@ describe("failures", () => {
     Effect.gen(function* () {
       const cases = [
         { address: "/en/tryout/old", options: {}, reader: retired.read },
-        { address: "/en/user/abc123", options: {}, reader: migration.read },
+        {
+          address: "/de/articles/politics",
+          options: {},
+          reader: migration.read,
+        },
         { address: "/en/search", options: {}, reader: source.read },
         { address: "/en/search", options: {}, reader: projected.read },
       ];
