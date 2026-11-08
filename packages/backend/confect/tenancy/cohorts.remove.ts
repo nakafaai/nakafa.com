@@ -1,10 +1,6 @@
 import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { cohortAuthority } from "@repo/backend/confect/tenancy/authority";
@@ -26,23 +22,8 @@ export const remove = FunctionImpl.make(
   spec,
   "remove",
   Effect.fn("tenancy.cohorts.remove")(function* ({ cohortId }) {
-    const { person, tenant } = yield* Member;
-    const cohort = yield* (yield* DatabaseReader)
-      .table("tenantCohorts")
-      .get(cohortId)
-      .pipe(
-        Effect.catchTags({
-          DocumentDecodeError: Effect.die,
-          GetByIdFailure: () =>
-            new AccessDenied({ action: "cohort.manage", reason: "resource" }),
-        })
-      );
-    if (cohort.tenantId !== tenant._id) {
-      return yield* new AccessDenied({
-        action: "cohort.manage",
-        reason: "resource",
-      });
-    }
+    const { person } = yield* Member;
+    const cohort = yield* cohortAuthority.lifecycle("cohort.manage", cohortId);
     const hold = yield* cohortHold(cohort);
     if (Option.isSome(hold)) {
       return yield* new CohortInUse({ holds: hold.value });

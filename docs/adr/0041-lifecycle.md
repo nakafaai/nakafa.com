@@ -28,6 +28,8 @@ A record that nothing points at is deleted. A record that is in use is refused w
 
 A promotion holds the cohorts its plan names and the cohorts it created, in any state, as it holds its two periods. While its undo runs the cohorts step, the cohorts it created are its own work and do not count, so undo reads the same rule before it deletes them. An archived period keeps its students' Insight for 30 days, so a restored period is whole; it may be deleted once the retention job has removed that Insight, and a retention run that finds its period deleted has nothing left to remove. Each deletion is journalled (`cohort.removed`, `period.removed`), so the audit trail keeps it.
 
+An archived cohort, period, or class refuses every write on its own row (ADR 0012), so its delete and its restore are decided at the school level (`tenant.manage`), and the kind's authority loads the row through `lifecycle`, which checks the tenant alone and accepts a locked row. A restore also asks the authority whether the row, made active again, is still locked by its period, cohort, or school (`restorable`), and is refused as `condition` while it is.
+
 The menu of every row puts Delete last, behind `ConfirmRowMenu`. A row that may not be deleted in its state, such as the active period, keeps the item in view, disabled. A deleted row leaves its list at once, and a refusal puts it back with a toast that says what holds it.
 
 ## Consequences
