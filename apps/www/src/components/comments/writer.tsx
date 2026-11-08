@@ -1,9 +1,5 @@
 import { useAction, useMutation } from "@confect/react";
-import {
-  ArrowUp02Icon,
-  Image01Icon,
-  SmileIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowUp02Icon, Image01Icon } from "@hugeicons/core-free-icons";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { COMMENT_PHOTO_LIMIT } from "@repo/backend/confect/comments/photo";
 import { readCommentText } from "@repo/backend/confect/comments/text";
@@ -15,16 +11,11 @@ import {
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ImageType } from "@repo/editor/upload";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Number as Num, Option, Result } from "effect";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import {
   type ComposerKey,
@@ -35,7 +26,10 @@ import {
 import { useCommentDraft } from "@/components/comments/provider";
 import { PhotoTray } from "@/components/comments/tray";
 import { uploadPhoto } from "@/components/comments/upload";
-import { EmojiGrid } from "@/components/tenant/classes/forum/tallies";
+import {
+  EmojiPopover,
+  EmojiTrigger,
+} from "@/components/tenant/classes/forum/chooser";
 import { useDocumentLabels } from "@/lib/editor/labels";
 
 /**
@@ -105,15 +99,14 @@ export function CommentWriter({
   );
 }
 
-/** The emoji of a comment: a press opens the grid, and a pick goes in at the caret. */
+/** The emoji of a comment: the forum's searchable chooser, whose pick goes in at the caret. */
 function EmojiButton() {
   const t = useTranslations("Comments");
   const insert = useInsertText();
-  const [open, setOpen] = useState(false);
 
   return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
+    <EmojiPopover onPick={insert} side="top">
+      <EmojiTrigger
         render={
           <Button
             aria-label={t("emoji")}
@@ -122,18 +115,8 @@ function EmojiButton() {
             variant="ghost"
           />
         }
-      >
-        <HugeIcons icon={SmileIcon} />
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 p-2">
-        <EmojiGrid
-          onPick={(emoji) => {
-            setOpen(false);
-            insert(emoji);
-          }}
-        />
-      </PopoverContent>
-    </Popover>
+      />
+    </EmojiPopover>
   );
 }
 

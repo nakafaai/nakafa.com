@@ -112,6 +112,7 @@ interface LearnerLabels {
   readonly formulaEdit: ComponentProps<typeof FormulaLabelsProvider>["labels"];
   readonly italic: string;
   readonly link: string;
+  readonly linkInvalid: string;
   readonly linkPlaceholder: string;
   readonly numbers: string;
 }
@@ -197,6 +198,7 @@ function LearnerTools() {
       />
       <RichEditorLink
         active={state?.link ?? false}
+        invalid={labels.linkInvalid}
         label={labels.link}
         placeholder={labels.linkPlaceholder}
       />
