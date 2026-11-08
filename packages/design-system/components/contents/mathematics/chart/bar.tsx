@@ -21,7 +21,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 
 interface Props {
   chartConfig: ChartConfig;
@@ -29,8 +29,9 @@ interface Props {
     name: string;
     value: number;
   })[];
-  description: string;
-  title: string;
+  description: ReactNode;
+  title: ReactNode;
+  /** Drawn as SVG text on the axis, so it stays a plain string. */
   yAxisLabel: string;
 }
 

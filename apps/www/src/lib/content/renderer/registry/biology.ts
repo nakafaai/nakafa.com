@@ -14,7 +14,8 @@ import {
 } from "@/lib/content/renderer/client/biology/virus";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainRenderers = [
+/** Every biology visual, which any lesson in any domain may use. */
+export const biologyRenderers = [
   {
     name: biologyComponentNames.bacteriaStructureLab,
     component: BacteriaStructureLab,
