@@ -36,7 +36,6 @@ export function RosterEntryDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const entry = useQuery(
@@ -68,25 +67,16 @@ export function RosterEntryDialog({
 
   return (
     <ResponsiveDialog
-      description={t("roster-entry-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(loaded) || Option.isNone(nisn)}
-            onClick={submit}
-            type="button"
-          >
-            {t("roster-entry-save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(loaded) || Option.isNone(nisn)}
+          onClick={submit}
+          type="button"
+        >
+          {t("roster-entry-save")}
+        </Button>
       }
+      description={t("roster-entry-description")}
       open={open}
       setOpen={setOpen}
       title={person.name}

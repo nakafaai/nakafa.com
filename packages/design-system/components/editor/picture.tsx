@@ -151,17 +151,12 @@ export function PictureAltDialog({
 
   return (
     <ResponsiveDialog
-      description={description}
-      footer={
-        <>
-          <Button onClick={onCancel} type="button" variant="outline">
-            {labels.cancel}
-          </Button>
-          <Button disabled={Option.isNone(next)} form={form} type="submit">
-            {submit}
-          </Button>
-        </>
+      action={
+        <Button disabled={Option.isNone(next)} form={form} type="submit">
+          {submit}
+        </Button>
       }
+      description={description}
       open={preview !== null}
       setOpen={(open) => {
         if (!open) {

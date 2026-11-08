@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import "@tanstack/react-start/server-only";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Effect } from "effect";
-import { queryContentStore } from "@/lib/content/store/query";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 type TryoutLocalizedPathArgs = Ref.Args<
   typeof tryouts.queries.catalog.getLocalizedPath
@@ -12,7 +12,8 @@ type TryoutLocalizedPathArgs = Ref.Args<
 export const readPublishedTryoutLocalizedPath = Effect.fn(
   "www.tryouts.readLocalizedPath"
 )(function* (args: TryoutLocalizedPathArgs) {
-  return yield* queryContentStore(
+  return yield* querySnapshotContentStore(
+    "assessment",
     tryouts.queries.catalog.getLocalizedPath,
     args
   );

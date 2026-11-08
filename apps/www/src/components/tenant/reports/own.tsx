@@ -11,7 +11,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -108,25 +107,35 @@ function OwnReportTable() {
     cardColumns.menu((info) => (
       <RowItems>
         <DropdownMenuItem
-          render={
+          icon={CheckmarkBadge01Icon}
+          render={({ children, ...props }) => (
             <a
+              {...props}
               href={checkAddress(locale, info.row.original.hash)}
               rel="noopener"
               target="_blank"
             >
-              <HugeIcons icon={CheckmarkBadge01Icon} />
-              {t("open-check")}
+              {children}
             </a>
-          }
-        />
+          )}
+        >
+          {t("open-check")}
+        </DropdownMenuItem>
         <DropdownMenuItem
-          render={
-            <a href={info.row.original.file} rel="noopener" target="_blank">
-              <HugeIcons icon={Download04Icon} />
-              {t("open-pdf")}
+          icon={Download04Icon}
+          render={({ children, ...props }) => (
+            <a
+              {...props}
+              href={info.row.original.file}
+              rel="noopener"
+              target="_blank"
+            >
+              {children}
             </a>
-          }
-        />
+          )}
+        >
+          {t("open-pdf")}
+        </DropdownMenuItem>
       </RowItems>
     )),
   ];

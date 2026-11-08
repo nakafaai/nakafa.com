@@ -6,6 +6,7 @@ import type {
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /** One item of a class library, as the library shows it. */
 export type LibraryItem = Ref.Returns<
@@ -27,23 +28,18 @@ const changePages = (
     folderId: LibraryItem["folderId"]
   ) => Option.Option<LibraryItem[]>
 ) => {
-  for (const query of localStore.getAllQueries(list)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      const value = query.value.value;
-      const changed = change(
-        value.page,
-        query.args.paginationOpts.cursor === null,
-        query.args.folderId
-      );
-      if (Option.isSome(changed)) {
-        localStore.setQuery(
-          list,
-          query.args,
-          Option.some({ ...value, page: changed.value })
-        );
-      }
-    }
-  }
+  changeLoaded(localStore, list, (value, args) =>
+    args.classId === classId
+      ? Option.map(
+          change(
+            value.page,
+            args.paginationOpts.cursor === null,
+            args.folderId
+          ),
+          (page) => withPage(value, () => page)
+        )
+      : Option.none()
+  );
 };
 
 /** Shows a link the teacher adds first in its folder, before the server holds it. */
@@ -136,19 +132,15 @@ const leaveTrash = (
   classId: Id<"classes">,
   itemId: LibraryItem["id"]
 ) => {
-  for (const query of localStore.getAllQueries(trashed)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      const value = query.value.value;
-      localStore.setQuery(
-        trashed,
-        query.args,
-        Option.some({
-          ...value,
-          page: Arr.filter(value.page, (item) => item.id !== itemId),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, trashed, (value, args) =>
+    args.classId === classId
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.filter(page, (item) => item.id !== itemId)
+          )
+        )
+      : Option.none()
+  );
 };
 
 /** Takes an item restored from the trash out of it at once; its folder shows it once the server answers. */

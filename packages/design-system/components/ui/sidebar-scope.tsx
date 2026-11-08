@@ -57,7 +57,7 @@ export function SidebarScopeStart({
     <div className={cn("flex shrink-0 items-center", className)}>
       <SidebarContext value={scope.controls}>
         <SidebarStoreContext value={scope.store}>
-          <SidebarTrigger className="size-9" label={label} variant="outline" />
+          <SidebarTrigger label={label} size="icon" variant="outline" />
         </SidebarStoreContext>
       </SidebarContext>
     </div>

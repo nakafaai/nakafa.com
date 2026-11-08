@@ -100,7 +100,8 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await expect(answers.getByText("Question 1")).toBeVisible();
   await answers.getByRole("button", { name: "Close" }).click();
   await expect(answers).toHaveCount(0);
-  await header.getByRole("button", { name: "Questions" }).click();
+  await header.getByRole("button", { name: "Analysis" }).click();
+  await proctor.getByRole("menuitem", { name: "Questions" }).click();
   await expect(
     proctor.getByRole("dialog", { name: "Questions" }).getByRole("combobox")
   ).toHaveText("Question 1");

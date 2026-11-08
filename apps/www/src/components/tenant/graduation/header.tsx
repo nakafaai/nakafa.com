@@ -11,9 +11,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -173,11 +171,7 @@ function GraduationActions({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button
-                aria-label={common("more-actions")}
-                size="icon"
-                variant="outline"
-              >
+              <Button size="icon" tooltip={common("more-actions")}>
                 {isExporting ? (
                   <Spinner isLoading />
                 ) : (
@@ -186,23 +180,26 @@ function GraduationActions({
               </Button>
             }
           />
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-              {canDecide ? (
-                <DropdownMenuItem onClick={() => setIsDeciding(true)}>
-                  <HugeIcons icon={CheckmarkBadge01Icon} />
-                  {t("decide")}
-                </DropdownMenuItem>
-              ) : null}
+          <DropdownMenuContent
+            align="end"
+            className="w-56"
+            label={common("menu-actions")}
+          >
+            {canDecide ? (
               <DropdownMenuItem
-                disabled={isExporting}
-                onClick={exportReadiness}
+                icon={CheckmarkBadge01Icon}
+                onClick={() => setIsDeciding(true)}
               >
-                <HugeIcons icon={FileExportIcon} />
-                {t("export-readiness")}
+                {t("decide")}
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            ) : null}
+            <DropdownMenuItem
+              disabled={isExporting}
+              icon={FileExportIcon}
+              onClick={exportReadiness}
+            >
+              {t("export-readiness")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>

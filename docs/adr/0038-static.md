@@ -89,12 +89,26 @@ the cache key was the release, the backend's dependency hash and the hash of its
 code, and a deploy saved only when it missed. Three of the four misses of 7 November kept
 the release and changed only a hash, and each read the whole release again, about 0.55 GB
 (`docs/convex/cost.md`, "Deploy reads"). The key is now the stage and the release, with
-the run as its last part: the restore takes the newest save of the release, and every run
-that added a read saves, a failed or cancelled one included. A release is read once per
-stage, and a later deploy of it reads only what no earlier deploy read. A change to what a
+the run as its last part: the restore takes the newest save of the release, or else of any
+earlier release of the stage, and every run that added a read saves, a failed or cancelled
+one included. A build that finished drops the entries it did not use (the read store marks
+what it answers), so the cache holds one build's reads. A release is read once per stage,
+and a later deploy of it reads only what no earlier deploy read; an entry keyed by a family
+snapshot or an artifact's hash also carries over to the next release. A change to what a
 query answers for the same release bumps `CONTENT_STORE_VERSION`
 (`apps/www/src/lib/content/store/entry.ts`); a changed shape needs no bump, because an
 entry that does not decode is a miss.
+
+Amended a third time on 8 November 2026, so that a new release reads only what it changed:
+a release that does not change a structured family keeps that family's snapshot
+(`signed.manifest.snapshots`), and the active identity names the snapshot of each family
+(`contentRelease/runtime/active:read`). The curriculum, the try-out catalog and paths, the
+Quran publication and a lesson's curriculum places are keyed by their family's snapshot
+(`querySnapshotContentStore`), so their entries answer every later release that keeps the
+snapshot. An entry is kept only while the active release still names the snapshot that it
+was read under, and a read that finds another snapshot after its load starts over once
+under it, as a release read does. The curriculum route stays keyed by the release, because
+it also reads lesson rows that no snapshot covers.
 
 ## Phase A as implemented
 
