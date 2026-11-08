@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import {
@@ -117,7 +120,9 @@ test("an invited learner who claimed the invitation sees the school in the accou
   await page.goto(new URL("/en/notifications", origin).href);
   await page.getByRole("button", { name: LEARNER_NAME }).click();
 
-  await expect(page.getByText("Your schools", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("group", { exact: true, name: en.Common["menu-schools"] })
+  ).toBeVisible();
   await expect(
     page.getByRole("menuitem", { name: school.name })
   ).toHaveAttribute("href", `https://${school.slug}.nakafa.com/`);

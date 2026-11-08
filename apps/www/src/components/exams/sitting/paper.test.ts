@@ -8,6 +8,7 @@ import {
   changeSaved,
   mergePaper,
   nextVersionOf,
+  paperCell,
   type SavedValue,
   setSavedFlag,
   setSavedResponse,
@@ -37,6 +38,47 @@ const saved: SavedValue = {
   ],
   flagged: [],
 };
+
+describe("paperCell", () => {
+  it("marks a question answered once it holds an option or text that is not blank, and flagged as saved", () => {
+    const cells = Arr.map(
+      mergePaper(
+        {
+          questions: Arr.map(
+            ["empty", "chosen", "cleared", "typed", "blank"],
+            (id, index) => question(id, index + 1)
+          ),
+        },
+        {
+          answers: [
+            { question: questionId("chosen"), response: ["b"], version: 1 },
+            { question: questionId("cleared"), response: [], version: 1 },
+            {
+              question: questionId("typed"),
+              response: { text: "Jakarta" },
+              version: 1,
+            },
+            {
+              question: questionId("blank"),
+              response: { text: " " },
+              version: 1,
+            },
+          ],
+          flagged: [questionId("chosen")],
+        }
+      ).questions,
+      paperCell
+    );
+
+    expect(cells).toEqual([
+      { answered: false, flagged: false, key: "empty" },
+      { answered: true, flagged: true, key: "chosen" },
+      { answered: false, flagged: false, key: "cleared" },
+      { answered: true, flagged: false, key: "typed" },
+      { answered: false, flagged: false, key: "blank" },
+    ]);
+  });
+});
 
 describe("mergePaper", () => {
   it("keeps a question's object until its version or its flag moves, so an answer redraws one question", () => {

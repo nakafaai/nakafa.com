@@ -24,6 +24,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** A call that did not complete at all: the network failed, or the call was rejected before the server answered. */
@@ -124,15 +125,16 @@ export function AddChannel({
 
   return (
     <>
-      <Button
-        aria-label={t("add-channel")}
-        onClick={() => setOpen(true)}
-        size="icon"
-        title={t("add-channel")}
-        variant="outline"
-      >
-        <HugeIcons icon={Add01Icon} />
-      </Button>
+      <IconTip label={t("add-channel")}>
+        <Button
+          aria-label={t("add-channel")}
+          onClick={() => setOpen(true)}
+          size="icon"
+          variant="outline"
+        >
+          <HugeIcons icon={Add01Icon} />
+        </Button>
+      </IconTip>
       <ResponsiveDialog
         description={t("add-channel-description")}
         footer={

@@ -13,6 +13,7 @@ import { useConvex } from "convex/react";
 import { Effect, Option, Schema } from "effect";
 import { type ReactNode, useEffect, useEffectEvent, useState } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
+import { useNow } from "@/components/player/now";
 import { keptStorage } from "@/components/player/storage";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
@@ -24,7 +25,6 @@ import {
   type TryoutPageAddress,
   TryoutPageAddressSchema,
 } from "@/components/tryout/route/path";
-import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
   useAnswerPress,
   useSetTryoutPressed,
@@ -201,7 +201,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
   const startSection = useMutation(tryouts.mutations.sections.start);
   const convex = useConvex();
-  const now = useTryoutClock(false);
+  const now = useNow(false);
   const [dialogOpen, dialog] = useDisclosure(false);
   const [keptName] = useState(readPageName);
   const activeAttempt = attempt?.status === "in-progress";

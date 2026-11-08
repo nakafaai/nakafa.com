@@ -1,4 +1,6 @@
+import { Mortarboard01Icon } from "@hugeicons/core-free-icons";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
@@ -11,6 +13,7 @@ import {
 import { Array as Arr } from "effect";
 import { use } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { gradeItemsOf } from "@/components/tenant/settings/choices";
 import { CohortLevelContext } from "@/components/tenant/settings/cohort/level";
 
@@ -68,8 +71,10 @@ export function CohortGradeField({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
+            <ChoiceLabel name="grade" />
             {Arr.map(gradeItems, (item) => (
               <SelectItem key={item.value} value={item.value}>
+                <HugeIcons icon={Mortarboard01Icon} />
                 {item.label}
               </SelectItem>
             ))}

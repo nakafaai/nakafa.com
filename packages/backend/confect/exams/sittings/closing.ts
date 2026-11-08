@@ -8,6 +8,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { isDue } from "@repo/backend/confect/assessment/gate/deadline";
 import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { recordResults } from "@repo/backend/confect/exams/results/record";
 import { scheduleSubmit } from "@repo/backend/confect/exams/sittings/timers";
@@ -134,8 +135,7 @@ export const closeOneAttempt = Effect.fn("exams.sittings.timers.closeAttempt")(
       .get(args.attemptId)
       .pipe(Effect.orDie);
     const now = yield* Clock.currentTimeMillis;
-    const open = attempt.state === "inProgress" || attempt.state === "locked";
-    if (open && now >= attempt.deadline) {
+    if (isDue(attempt, now)) {
       yield* closeAttempt(attempt, "closesAt", now);
     }
     return null;

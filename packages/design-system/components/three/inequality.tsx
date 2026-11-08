@@ -11,9 +11,9 @@ import {
   getAdaptiveInequalityResolution,
 } from "@repo/design-system/components/three/inequality-data";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { COLORS } from "@repo/design-system/lib/color";
 import { sampleInequalityBoundary } from "@repo/design-system/lib/geometry/inequality/boundary";
 import { createInequalityGeometry } from "@repo/design-system/lib/geometry/inequality/region";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { type ReactNode, useMemo } from "react";
 import { Color, DoubleSide, MeshBasicMaterial } from "three";
 
@@ -53,7 +53,7 @@ export function Inequality({
   yRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
   zRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
   resolution = 200,
-  color = COLORS.PURPLE,
+  color = PLOT_COLORS.fuchsia,
   boundaryColor,
   opacity = 0.1,
   boundaryLineWidth = 2,

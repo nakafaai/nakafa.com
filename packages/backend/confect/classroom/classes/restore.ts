@@ -4,11 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
-import {
-  classAuthority,
-  placeClass,
-} from "@repo/backend/confect/classroom/authority";
+import { classAuthority } from "@repo/backend/confect/classroom/authority";
 import {
   type ClassStatus,
   classSlugOf,
@@ -40,35 +36,17 @@ export const restore = FunctionImpl.make(
   spec,
   "restore",
   Effect.fn("classroom.classes.restore")(function* ({ classId }) {
-    const { person, tenant } = yield* Member;
+    const { person } = yield* Member;
     const reader = yield* DatabaseReader;
-    const row = yield* reader
-      .table("classes")
-      .get(classId)
-      .pipe(
-        Effect.catchTags({
-          DocumentDecodeError: Effect.die,
-          GetByIdFailure: () =>
-            new AccessDenied({ action: "class.manage", reason: "resource" }),
-        })
-      );
-    if (row.tenantId !== tenant._id) {
-      return yield* new AccessDenied({
-        action: "class.manage",
-        reason: "resource",
-      });
-    }
+    const row = yield* classAuthority.lifecycle("class.manage", classId);
     if (row.status === "active") {
       return classView(row);
     }
     const status: typeof ClassStatus.Type = "active";
-    const { locked } = yield* placeClass(Struct.assign(row, { status }));
-    if (locked) {
-      return yield* new AccessDenied({
-        action: "class.manage",
-        reason: "condition",
-      });
-    }
+    yield* classAuthority.restorable(
+      "class.manage",
+      Struct.assign(row, { status })
+    );
     const sameName = yield* reader
       .table("classes")
       .index("by_cohortId_and_status_and_nameKey", (query) =>

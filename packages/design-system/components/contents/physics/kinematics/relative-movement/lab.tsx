@@ -33,13 +33,14 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
-const OBSERVER_COLOR = getColor("TEAL");
-const TARGET_COLOR = getColor("ORANGE", 500);
+const OBSERVER_COLOR = PLOT_COLORS.teal;
+const TARGET_COLOR = PLOT_COLORS.orange;
 const CAR_SCALE = 0.58;
 const MIN_LOOP_SECONDS = 6.5;
 const MAX_LOOP_SECONDS = 10.5;
@@ -112,7 +113,7 @@ export function RelativeMovementLab({
             <ambientLight intensity={0.7} />
             <hemisphereLight
               color={getColor("SLATE", 50)}
-              groundColor={getColor("SLATE")}
+              groundColor={PLOT_COLORS.slate}
               intensity={0.6}
             />
             <directionalLight

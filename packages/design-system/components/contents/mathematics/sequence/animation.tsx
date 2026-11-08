@@ -25,6 +25,7 @@ import {
   VisualCardMenu,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Effect, Fiber, Schedule } from "effect";
 import {
   AnimatePresence,
@@ -243,12 +244,13 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                         {Arr.map(arrangement.tables, (table) => (
                           <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
-                            className="absolute rounded-md bg-teal-300 shadow-sm dark:bg-teal-500"
+                            className="absolute rounded-md shadow-sm"
                             exit={{ opacity: 0, scale: 0.95 }}
                             initial={{ opacity: 0, scale: 0.95 }}
                             key={`table-${table.id}`}
                             layout
                             style={{
+                              backgroundColor: PLOT_COLORS.teal,
                               left: table.x,
                               top: table.y,
                               width: table.width,
@@ -270,12 +272,13 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                         {Arr.map(arrangement.chairs, (chair) => (
                           <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
-                            className="absolute rounded-full bg-cyan-300 shadow-sm dark:bg-cyan-500"
+                            className="absolute rounded-full shadow-sm"
                             exit={{ opacity: 0, scale: 0.95 }}
                             initial={{ opacity: 0, scale: 0.95 }}
                             key={`chair-${chair.id}`}
                             layout
                             style={{
+                              backgroundColor: PLOT_COLORS.violet,
                               left: chair.x,
                               top: chair.y,
                               width: arrangement.chairSize,

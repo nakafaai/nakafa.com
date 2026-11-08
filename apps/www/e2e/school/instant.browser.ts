@@ -9,6 +9,7 @@ import {
   seedSitting,
   signInOwner,
 } from "@/e2e/support/school";
+import { openEverySettingsGroup } from "@/e2e/support/settings";
 
 /** The sidebar of the school, whose links every click below starts from. */
 const SIDEBAR = '[data-slot="sidebar-content"]';
@@ -162,6 +163,7 @@ test("every School sidebar item and every settings tab commits at once, and noth
 
   // The settings page replaces the sidebar's groups with the settings sections, and keeps the groups mounted but
   // hidden, so the way back draws at once: only a link that shows is a section.
+  await openEverySettingsGroup(sidebar);
   await expect(
     sidebar.locator('a[href="/settings/units"]:visible')
   ).toBeVisible();
@@ -194,6 +196,7 @@ test("a click between School pages asks the Worker nothing: each page reads its 
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
   const sidebar = page.locator(SIDEBAR);
+  await openEverySettingsGroup(sidebar);
   await expect(sidebar.locator('a[href="/settings/units"]')).toBeVisible();
   await page.waitForLoadState("networkidle");
   const calls = recordServerFunctionCalls(page);

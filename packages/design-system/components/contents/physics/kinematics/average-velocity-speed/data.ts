@@ -1,5 +1,6 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
@@ -83,16 +84,16 @@ export const AVERAGE_VELOCITY_SPEED_CAMERA = {
 } as const;
 
 export const AVERAGE_VELOCITY_SPEED_COLORS = {
-  ball: getColor("BLUE", 300),
+  ball: PLOT_COLORS.pink,
   ballBand: getColor("SLATE", 800),
-  distance: getColor("TEAL", 500),
-  displacement: getColor("VIOLET", 500),
+  distance: PLOT_COLORS.teal,
+  displacement: PLOT_COLORS.violet,
   ghost: getColor("WHITE"),
   platform: getColor("SLATE", 50),
-  platformEdge: getColor("AMBER", 500),
+  platformEdge: PLOT_COLORS.amber,
   rail: getColor("SLATE", 600),
-  route: getColor("TEAL", 500),
-  start: getColor("YELLOW"),
+  route: PLOT_COLORS.teal,
+  start: PLOT_COLORS.amber,
 } as const;
 
 const ROUTE_CONFIGS = {

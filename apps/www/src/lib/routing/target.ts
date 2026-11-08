@@ -286,6 +286,24 @@ export const SCHOOL_TARGET = {
   to: "/$locale/school",
 } satisfies LinkTarget;
 
+/** The Nakafa School pricing of the locale, which the header and the footer link to. */
+export const SCHOOL_PRICING_TARGET = {
+  from: LOCALE_ROUTE,
+  to: "/$locale/school/pricing",
+} satisfies LinkTarget;
+
+/** The page where an account opens its own school, which every School action opens. */
+export const SCHOOL_START_TARGET = {
+  from: LOCALE_ROUTE,
+  to: "/$locale/school/new",
+} satisfies LinkTarget;
+
+/** The account's School entry, which opens the school the account belongs to. */
+export const SCHOOL_ENTER_TARGET = {
+  from: LOCALE_ROUTE,
+  to: "/$locale/school/enter",
+} satisfies LinkTarget;
+
 /** The contributor page of the locale, which the footer links to. */
 export const CONTRIBUTOR_TARGET = {
   from: LOCALE_ROUTE,

@@ -20,8 +20,8 @@ import { TenantMissing } from "@/components/tenant/missing";
 import { SchoolPending } from "@/components/tenant/pending";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { reportClientException } from "@/lib/analytics/client";
-import { hasSignedInHint } from "@/lib/auth/hint";
 import type { AuthLegalLinks } from "@/lib/auth/legal";
+import { readBrowserPresence } from "@/lib/auth/presence";
 import { outsiderOf, type SchoolFrame } from "@/lib/tenant/frame";
 import { schoolHead } from "@/lib/tenant/head";
 import { isSameFrame } from "@/lib/tenant/kept";
@@ -117,9 +117,11 @@ export const Route = createFileRoute("/school/$slug")({
     // The entry's form, which only a visitor's or an outsider's page shows, starts beside
     // them too, since its address already names it.
     const code = Route.options.component?.preload?.();
-    const shell = hasSignedInHint(document.cookie)
-      ? SchoolMember.preload?.()
-      : undefined;
+    const presence = readBrowserPresence(
+      document.cookie,
+      window.location.origin
+    );
+    const shell = presence.signedIn ? SchoolMember.preload?.() : undefined;
     const entry = loadEntryForm({
       guardian: Arr.some(
         matches,
@@ -133,10 +135,12 @@ export const Route = createFileRoute("/school/$slug")({
       (match) => match.routeId === routeId && match.invalid
     );
     const { frameOfNavigation } = await import("@/lib/tenant/visit");
-    const frame = await frameOfNavigation(visit, params.slug, {
-      cause,
-      invalid,
-    });
+    const frame = await frameOfNavigation(
+      visit,
+      params.slug,
+      { cause, invalid },
+      presence
+    );
     visit.frame = frame;
     if (frame.school._tag === "Refused") {
       throw notFound();

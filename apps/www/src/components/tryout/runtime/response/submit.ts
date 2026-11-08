@@ -1,35 +1,29 @@
-import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
-import { toast } from "@repo/design-system/lib/toast/notify";
-import { Cause, Clock, Effect, Option } from "effect";
-import { settleSent } from "@/components/player/keep";
+import { Clock, Effect } from "effect";
 import { keptStorage } from "@/components/player/storage";
 import { updateRuntimeQueries } from "@/components/tryout/runtime/cache";
 import {
-  isFinalPickRefusal,
   keptPicks,
+  pickCopy,
+  pickRefusal,
 } from "@/components/tryout/runtime/response/keep";
 import {
   applyOptimisticTryoutResponse,
   nextTryoutResponseVersion,
-  tryoutSubmitFailureOf,
 } from "@/components/tryout/runtime/response/state";
 import type {
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
-import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * Sends one pick and settles the copy the browser keeps of it: the server's
- * answer drops it, and so does a refusal that it will never take back. The
- * optimistic cache shows the pick at once. When the server refuses it because a
- * newer write took its place, Convex drops the optimistic value with the failed
- * mutation and the screen shows the server's value again.
+ * The ledger of the try-out's kept picks, bound to the save of one pick. The optimistic cache shows the pick
+ * at once. When the server refuses it because a newer write took its place, Convex drops the optimistic value
+ * with the failed mutation and the screen shows the server's value again.
  */
-export function useSendPick() {
+export function usePickLedger() {
   const saveResponse = useMutation(
     tryouts.mutations.responses.save
   ).withOptimisticUpdate((localStore, args) => {
@@ -47,108 +41,34 @@ export function useSendPick() {
       change
     );
   });
-  /** Reports a failed answer: an ended attempt tells the learner to start again, a stale write is not reported, and any other failure is reported. */
-  function handleSubmitError(
-    error: unknown,
-    errorCode?: Ref.Error<typeof tryouts.mutations.responses.save>["code"]
-  ) {
-    const failure = tryoutSubmitFailureOf(errorCode);
-    if (failure === "stale") {
-      return Effect.void;
-    }
-    if (failure === "ended") {
-      return Effect.sync(() => {
-        toast.info(
-          {
-            description: "tryout-attempt-not-in-progress.description",
-            title: "tryout-attempt-not-in-progress.title",
-          },
-          { position: "bottom-center" }
-        );
-      });
-    }
-    return reportClientException(error, {
-      ...(errorCode
-        ? {
-            convex_error_code: errorCode,
-          }
-        : {}),
-      source: "tryout-submit-answer",
-    }).pipe(
-      Effect.andThen(
-        Effect.sync(() => {
-          toast.error(
-            {
-              description: "tryout-submit-answer-error.description",
-              title: "tryout-submit-answer-error.title",
-            },
-            { position: "bottom-center" }
-          );
-        })
-      )
-    );
-  }
-  return (
-    pick: Ref.Args<typeof tryouts.mutations.responses.save>,
-    answeredAt: number
-  ) =>
-    settleSent(
-      Effect.tryPromise(() => saveResponse(pick)).pipe(
+
+  return keptPicks.bind({
+    copyOf: pickCopy,
+    refusal: pickRefusal,
+    send: (placementId: TryoutRuntimeQuestion["placementId"], pick) =>
+      Effect.tryPromise(() => saveResponse({ placementId, ...pick })).pipe(
         Effect.flatMap(Effect.fromResult)
       ),
-      keptPicks
-        .confirm(pick.placementId, answeredAt)
-        .pipe(
-          Effect.provide(keptStorage),
-          Effect.catchTag("KeyValueStoreError", reportStorageFailure)
-        ),
-      isFinalPickRefusal
-    ).pipe(
-      Effect.flatMap(
-        Option.match({
-          onNone: () => Effect.void,
-          onSome: (failure) =>
-            Cause.isUnknownError(failure)
-              ? handleSubmitError(failure.cause)
-              : handleSubmitError(failure, failure.code),
-        })
-      )
-    );
-}
-
-/** Reports a browser that refuses to keep a pick; the pick is still sent. */
-function reportStorageFailure(error: unknown) {
-  return reportClientException(error, {
-    source: "components/tryout/runtime/response/submit",
+    source: "tryout-submit-answer",
   });
 }
 
 /**
- * Picks one response for a question: the browser keeps it before it is sent,
- * numbered one above the version the question shows, so a reload, a closed tab,
- * or a connection that is down or still signing in never loses it. The player
- * sends every kept pick again once its questions show.
+ * Picks one response for a question: the browser keeps it before it is sent, numbered one above the version
+ * the question shows, so a reload, a closed tab, or a connection that is down or still signing in never loses
+ * it. The player sends every kept pick again once its questions show.
  */
 export function useTryoutResponseSubmit() {
-  const send = useSendPick();
+  const ledger = usePickLedger();
 
   return (question: TryoutRuntimeQuestion, response: ExamResponse | null) => {
-    const answeredAt = Effect.runSync(Clock.currentTimeMillis);
-    const version = nextTryoutResponseVersion(question);
-    Effect.runSync(
-      keptPicks
-        .keep(question.placementId, {
-          answeredAt,
-          response,
-          version,
-        })
-        .pipe(
-          Effect.provide(keptStorage),
-          Effect.catchTag("KeyValueStoreError", reportStorageFailure)
-        )
-    );
     Effect.runFork(
-      send({ placementId: question.placementId, response, version }, answeredAt)
+      ledger
+        .choose(question.placementId, {
+          response,
+          version: nextTryoutResponseVersion(question),
+        })
+        .pipe(Effect.provide(keptStorage))
     );
   };
 }

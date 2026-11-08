@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphSolutionProps {
@@ -86,7 +86,7 @@ export function GraphSolution({
         // Vertical Line AC (A -> D -> C)
         {
           points: [pointA, midAD, D],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.fuchsia,
           showPoints: false,
           labels: [
             {
@@ -113,7 +113,7 @@ export function GraphSolution({
         },
         {
           points: [D, C],
-          color: getColor("ORANGE"),
+          color: PLOT_COLORS.orange,
           showPoints: false,
           labels: [
             {
@@ -131,7 +131,7 @@ export function GraphSolution({
         // Horizontal Line AE (A -> B -> E)
         {
           points: [pointA, midAB, B],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           showPoints: false,
           labels: [
             {
@@ -148,7 +148,7 @@ export function GraphSolution({
         },
         {
           points: [B, midBE, E],
-          color: getColor("CYAN"),
+          color: PLOT_COLORS.slate,
           showPoints: false,
           labels: [
             {
@@ -166,7 +166,7 @@ export function GraphSolution({
         // Observer
         {
           points: [E, { x: E.x, y: observerHeight, z: 0 }],
-          color: getColor("CYAN"),
+          color: PLOT_COLORS.slate,
           showPoints: false,
           labels: [
             {
@@ -179,13 +179,13 @@ export function GraphSolution({
         // Hypotenuse DB
         {
           points: [D, B],
-          color: getColor("VIOLET"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
         },
         // Hypotenuse CB
         {
           points: [C, B],
-          color: getColor("EMERALD"),
+          color: PLOT_COLORS.amber,
           showPoints: false,
         },
         // Bottom Dimension 32m
@@ -195,7 +195,7 @@ export function GraphSolution({
             { x: totalGround / 2, y: dimensionY, z: 0 },
             { x: totalGround, y: dimensionY, z: 0 },
           ],
-          color: getColor("ROSE"),
+          color: PLOT_COLORS.pink,
           showPoints: false,
           cone: { position: "both" },
           labels: [
@@ -209,7 +209,7 @@ export function GraphSolution({
         // Angles
         {
           points: arc30Points,
-          color: getColor("VIOLET"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           labels: [
             {
@@ -221,7 +221,7 @@ export function GraphSolution({
         },
         {
           points: arc45Points,
-          color: getColor("EMERALD"),
+          color: PLOT_COLORS.amber,
           showPoints: false,
           labels: [
             {

@@ -108,9 +108,11 @@ function PaginationLabel({
 }
 
 /**
- * Links the previous and next page. Neither loads its page before the reader
- * shows intent: a lesson's answer is small on the wire but about half a megabyte
- * for a phone to read, so no page loads one the reader may never open.
+ * Links the previous and next page. The links themselves load their page on
+ * intent: a lesson's answer is small on the wire but about half a megabyte for a
+ * phone to read. Once the page has settled, `warmLinks` may warm them with the
+ * other links on screen, within its budget, and never for a reader who saves data
+ * or reads on a thin connection.
  *
  * It follows the page's article, and shows only once the article has its body:
  * after a client navigation the body of a server component arrives a moment

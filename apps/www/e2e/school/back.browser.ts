@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { settingsLink } from "@/e2e/support/settings";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /**
@@ -37,7 +38,7 @@ test("the school settings sidebar leads back to the school page the viewer came 
   await expect(sidebar.getByRole("link").first()).toHaveText(
     `Back to ${school.name}`
   );
-  await sidebar.getByRole("link", { exact: true, name: "Members" }).click();
+  await (await settingsLink(sidebar, "members")).click();
   await expect(page).toHaveURL(address("/settings/members"));
   await back.click();
   await expect(page).toHaveURL(address("/exams"));
@@ -71,7 +72,10 @@ test("a press on another page while offline keeps the page and says why", async 
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
-  const link = page.getByRole("link", { name: "Webhooks" });
+  const link = await settingsLink(
+    page.locator('[data-slot="sidebar-content"]'),
+    "webhooks"
+  );
   await waitUntilTakenOver(link);
 
   await context.setOffline(true);

@@ -18,6 +18,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
@@ -68,7 +69,7 @@ export function BudgetChart({
   const chartConfig = {
     budget: {
       label: labels.budget,
-      colors: { light: ["var(--chart-4)"], dark: ["var(--chart-4)"] },
+      colors: { light: [PLOT_COLORS.amber], dark: [PLOT_COLORS.amber] },
     },
   } satisfies ChartConfig;
 
