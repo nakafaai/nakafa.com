@@ -128,7 +128,7 @@ for (const viewport of WIDTHS) {
   });
 }
 
-test("the player's navigator column sticks right under its header, its scroll area inside it", async ({
+test("the player's navigator stands in the pane at the screen's right, from the window's top to its bottom, its scroll area inside it", async ({
   baseURL,
   browser,
 }) => {
@@ -156,16 +156,30 @@ test("the player's navigator column sticks right under its header, its scroll ar
   await page.goto(page.url().replace(EDIT_SUFFIX, "/try"));
   const column = page.locator("[data-player-sidebar]");
   await expect(column).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  const placed = await column.evaluate((aside) => {
-    // The player's one header row is the page header; no toolbar row sits under it.
-    const header = document.querySelector('[data-slot="page-header"]');
+  // Every pane of Nakafa stands at the screen's right from the window's top to its
+  // bottom (`PaneSide`), and the column scrolls inside it, under the pane's own header.
+  const placed = await column.evaluate((element) => {
+    const pane = element.closest('[data-pane-side="lg"]');
+    const box = pane?.getBoundingClientRect();
+    const viewport = element.querySelector(
+      '[data-slot="scroll-area-viewport"]'
+    );
     return {
-      position: getComputedStyle(aside).position,
-      top: Math.round(aside.getBoundingClientRect().top),
-      under: Math.round(header?.getBoundingClientRect().bottom ?? -1),
+      bottom: Math.round(box?.bottom ?? -1),
+      inPane: pane !== null,
+      position: pane === null ? "" : getComputedStyle(pane).position,
+      right: Math.round(box?.right ?? -1),
+      scrollsInside: viewport !== null,
+      top: Math.round(box?.top ?? -1),
     };
   });
-  expect(placed.position).toBe("sticky");
-  expect(placed.top).toBe(placed.under);
+  expect(placed).toEqual({
+    bottom: 900,
+    inPane: true,
+    position: "fixed",
+    right: 1440,
+    scrollsInside: true,
+    top: 0,
+  });
   await context.close();
 });

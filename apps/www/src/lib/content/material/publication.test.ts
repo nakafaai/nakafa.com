@@ -65,6 +65,16 @@ vi.mock("@/lib/content/published/material", async (importOriginal) => ({
   >()),
   renderMaterialArtifact: renderMock,
 }));
+/** The head of the signed body that the lesson's query names. */
+const signedHead = {
+  artifactHash: `sha256:${"a".repeat(64)}`,
+  projectionHash: `sha256:${"b".repeat(64)}`,
+  sourcePath: "content/source.mdx",
+};
+/** The heads that one body's query names under the old and the next release. */
+const oldHead = { ...signedHead, projectionHash: `sha256:${"c".repeat(64)}` };
+const newHead = { ...signedHead, projectionHash: `sha256:${"d".repeat(64)}` };
+
 beforeEach(() => {
   resetTestRuntimeCache();
   activateTestRelease(activeReleaseId);
@@ -80,7 +90,7 @@ beforeEach(() => {
         : {
             materialKey: projection.materialKey,
             model,
-            runtimeJson: "signed-envelope",
+            delivery: signedHead,
           }
     )
   );
@@ -102,7 +112,7 @@ describe("coherent material publication", () => {
             Effect.succeed({
               materialKey: projection.materialKey,
               model,
-              runtimeJson: "old-envelope",
+              delivery: oldHead,
             })
           )
           // Native HTTP failures remain tagged across the content-read boundary.
@@ -121,7 +131,7 @@ describe("coherent material publication", () => {
             Effect.succeed({
               materialKey: projection.materialKey,
               model: nextModel,
-              runtimeJson: "new-envelope",
+              delivery: newHead,
             })
           )
           .mockReturnValueOnce(
@@ -154,10 +164,13 @@ describe("coherent material publication", () => {
         );
         expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
           {
+            activeReleaseId: nextRelease,
             appLocale: "en",
+            family: "material",
             publicPath: projection.publicPath,
           },
-          "new-envelope"
+          newHead,
+          model.projectionJson
         );
       })
   );
@@ -172,7 +185,7 @@ describe("coherent material publication", () => {
         const lesson = {
           materialKey: projection.materialKey,
           model,
-          runtimeJson: "signed-envelope",
+          delivery: signedHead,
         };
         queryMock
           .mockReturnValueOnce(Effect.succeed(lesson))
@@ -221,7 +234,7 @@ describe("coherent material publication", () => {
             Effect.succeed({
               materialKey: projection.materialKey,
               model,
-              runtimeJson: "signed-envelope",
+              delivery: signedHead,
             })
           )
           .mockReturnValueOnce(Effect.fail(cause));
@@ -280,10 +293,13 @@ describe("coherent material publication", () => {
         );
         expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
           {
+            activeReleaseId: model.activeReleaseId,
             appLocale: "en",
+            family: "material",
             publicPath: projection.publicPath,
           },
-          "signed-envelope"
+          signedHead,
+          model.projectionJson
         );
         expect(renderMock).toHaveBeenCalledOnce();
       })
@@ -298,7 +314,7 @@ describe("coherent material publication", () => {
             alternateJson: [],
             projectionJson: null,
           },
-          runtimeJson: null,
+          delivery: null,
         })
       );
       expect(
@@ -325,7 +341,7 @@ describe("coherent material publication", () => {
                     projectionJson: null,
                   }
                 : model,
-            runtimeJson: kind === "missing-body" ? null : "signed-envelope",
+            delivery: kind === "missing-body" ? null : signedHead,
           })
         );
         expect(
@@ -352,7 +368,7 @@ describe("coherent material publication", () => {
           Effect.succeed({
             materialKey: projection.materialKey,
             model,
-            runtimeJson: "signed-envelope",
+            delivery: signedHead,
           })
         )
         .mockReturnValueOnce(
@@ -401,7 +417,7 @@ describe("coherent material publication", () => {
       queryMock.mockReturnValueOnce(
         Effect.succeed({
           ...source,
-          runtimeJson: "signed-envelope",
+          delivery: signedHead,
         })
       );
       expect(
