@@ -187,6 +187,31 @@ describe("the local backend over HTTP", () => {
   );
 
   it.effect(
+    "fails with the status alone when an error's text cannot be read",
+    () =>
+      withFetch(
+        Effect.gen(function* () {
+          serve(
+            () =>
+              new Response(
+                new ReadableStream({
+                  start: (controller) => controller.error(new Error("cut")),
+                }),
+                { status: 502 }
+              )
+          );
+          const convex = yield* backend;
+
+          const error = yield* convex
+            .run("school opening", { args: {}, path: "tenancy/provision:open" })
+            .pipe(Effect.asVoid, Effect.flip);
+
+          expect(error.message).toBe("school opening failed: 502");
+        })
+      )
+  );
+
+  it.effect(
     "fails when the backend cannot be reached, or answers no JSON",
     () =>
       withFetch(
@@ -283,6 +308,38 @@ describe("the local backend over HTTP", () => {
           ).toBe(true);
         })
       )
+  );
+
+  it.effect("confirms nothing for an import that completes on its own", () =>
+    withFetch(
+      Effect.gen(function* () {
+        const received = serve((path) => {
+          if (path === "/api/import/start_upload") {
+            return json({ uploadToken: "upload-1" });
+          }
+          if (path === "/api/import/finish_upload") {
+            return json({ importId: "import-1" });
+          }
+          if (path === "/api/function") {
+            return json({
+              status: "success",
+              value: { state: { state: "completed" } },
+            });
+          }
+          return json("part-1");
+        });
+        const convex = yield* backend;
+
+        yield* convex.importRows("chats", [{ type: "study" }]);
+
+        expect(
+          Arr.some(
+            received(),
+            (request) => request.path === "/api/perform_import"
+          )
+        ).toBe(false);
+      })
+    )
   );
 
   it.effect(

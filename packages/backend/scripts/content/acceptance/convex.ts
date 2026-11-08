@@ -243,7 +243,7 @@ export function makeLocalConvex(
     return answer.value;
   });
 
-  /** Reads the import until it reaches a phase in `until`, and fails when it failed. */
+  /** Reads the import until it reaches a phase in `until`, answers that phase, and fails when it failed. */
   const settle = Effect.fn("contentAcceptance.localConvex.settle")(function* (
     operation: string,
     importId: string,
@@ -263,6 +263,7 @@ export function makeLocalConvex(
     if (state.state === "failed") {
       return yield* failure(operation, state.error_message);
     }
+    return state.state;
   });
 
   const importRows = Effect.fn("contentAcceptance.localConvex.import")(
@@ -298,10 +299,14 @@ export function makeLocalConvex(
       ).pipe(
         Effect.flatMap((value) => decode(operation, UploadFinished, value))
       );
-      yield* settle(operation, importId, [
+      const uploaded = yield* settle(operation, importId, [
         "waiting_for_confirmation",
         "completed",
       ]);
+      // An import that needs no confirmation is complete already, as the CLI finds it.
+      if (uploaded === "completed") {
+        return;
+      }
       yield* send(
         operation,
         postJson("/api/perform_import", admin, { importId })
