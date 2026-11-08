@@ -57,9 +57,12 @@ describe("contentRelease/material/model", () => {
     "delivers coherent lesson metadata and the head of its signed public body",
     () =>
       Effect.gen(function* () {
+        const services = yield* Effect.context<never>();
         const target = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
-          target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)))
+          target.mutation((ctx) =>
+            Effect.runPromiseWith(services)(activateCatalog(ctx))
+          )
         );
         const projection = makeMaterialProjection("en", 1);
         const result = yield* Effect.promise(() =>

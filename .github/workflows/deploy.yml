@@ -74,13 +74,13 @@ jobs:
           cache-dependency-glob: apps/cas/uv.lock
 
       # A build reads every public page of the active release, about 0.55 GB of Convex
-      # Database I/O on 8 Nov 2026. A release never changes, so the release alone keys the
-      # reads: every deploy of a release starts from every read an earlier deploy of it kept,
-      # and asks Convex only for what is new (ADR 0038, "Reads across deploys"). A code or
-      # dependency change keeps them; a change to what a query answers for the same release
-      # bumps the store's version (`CONTENT_STORE_VERSION`). The store is local to this job;
-      # the Worker never binds it. Each run saves under its own key, so a deploy whose cache
-      # was found keeps what it read new, and the newest save of the release is restored.
+      # Database I/O on 8 Nov 2026. The store keys every entry by what its answer depends on
+      # (the release, a family snapshot, or an artifact's hash), never by the code, so a deploy
+      # starts from the newest save of this release, or else of any earlier release, and asks
+      # Convex only for what no earlier deploy read (ADR 0038, "Reads across deploys"). A
+      # change to what a query answers for the same release bumps the store's version
+      # (`CONTENT_STORE_VERSION`). The store is local to this job; the Worker never binds it.
+      # Each run saves under its own key, so a deploy whose cache was found keeps what it read.
       - name: Read the active content release
         id: release
         working-directory: packages/backend
@@ -94,10 +94,12 @@ jobs:
         with:
           path: .cache/reads
           key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-
+          restore-keys: |
+            reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-
+            reads-${{ env.NAKAFA_DEPLOY_STAGE }}-
 
-      # Every read this run adds is newer than this mark, which tells the last step whether
-      # there is anything to keep.
+      # Every entry this run reads or adds is newer than this mark (the store touches what it
+      # answers), which tells the last steps what this build used.
       - name: Mark the restored reads
         run: mkdir -p .cache/reads && touch .cache/reads/.restored
 
@@ -140,18 +142,26 @@ jobs:
           VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
         run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
 
-      # A failed or cancelled deploy keeps what it read too: each entry is one answer of
-      # Convex under its release, so the next deploy of the release does not read it again.
-      - name: Find the reads this run added
-        id: added
+      # A build that finished drops the entries it did not use, such as the answers of an
+      # earlier release, so the store holds one build's reads. A failed or cancelled deploy
+      # drops nothing and keeps what it added: each entry is one answer of Convex, so the
+      # next deploy does not read it again.
+      - name: Keep only the reads this build used
+        id: kept
         if: always() && steps.release.outputs.id != ''
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
-          if [ -f .cache/reads/.restored ] && [ -n "$(find .cache/reads -type f -newer .cache/reads/.restored -print -quit)" ]; then
-            echo "any=true" >> "$GITHUB_OUTPUT"
+          [ -f .cache/reads/.restored ] || exit 0
+          if [ "$JOB_STATUS" = "success" ] && [ -n "$(find .cache/reads -type f ! -name .restored ! -newer .cache/reads/.restored -print -delete)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -n "$(find .cache/reads -type f -newer .cache/reads/.restored -print -quit)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Keep the reads for the next deploy of this release
-        if: always() && steps.added.outputs.any == 'true'
+      - name: Keep the reads for the next deploy
+        if: always() && steps.kept.outputs.changed == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/reads
