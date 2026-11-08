@@ -60,21 +60,22 @@ interface AttemptDialogProps {
 /** The confirm button of every dialog, beside the Cancel the dialog draws in its footer. */
 export function ConfirmAction({
   confirm,
-  destructive = false,
   disabled = false,
   onConfirm,
+  variant = "default",
 }: {
   readonly confirm: string;
-  readonly destructive?: boolean;
   readonly disabled?: boolean;
   readonly onConfirm: () => void;
+  /** The confirm's look: the page's primary, or destructive for an action that takes something away. */
+  readonly variant?: "default" | "destructive";
 }) {
   return (
     <Button
       disabled={disabled}
       onClick={onConfirm}
       type="button"
-      variant={destructive ? "destructive" : "default"}
+      variant={variant}
     >
       {confirm}
     </Button>
@@ -192,11 +193,11 @@ export function CloseSittingDialog({
       action={
         <ConfirmAction
           confirm={t("confirm-close-action")}
-          destructive
           onConfirm={() => {
             onOpenChange(false);
             runSittingCall(() => closeSitting({ sittingId, slug }));
           }}
+          variant="destructive"
         />
       }
       description={t("confirm-close-description")}
@@ -238,7 +239,6 @@ export function LockDialog({
       action={
         <ConfirmAction
           confirm={t("confirm-lock-action")}
-          destructive
           disabled={reason === null}
           onConfirm={() => {
             if (reason === null) {
@@ -247,6 +247,7 @@ export function LockDialog({
             onOpenChange(false);
             runSittingCall(() => lock({ attemptId, reason, sittingId, slug }));
           }}
+          variant="destructive"
         />
       }
       description={t("confirm-lock-description")}
