@@ -4,7 +4,6 @@ import { inspectMenuSource } from "#scripts/check/menus";
 import { parseSources } from "#scripts/check/source";
 
 const VIEW = "apps/www/src/components/example.tsx";
-const UNLABELLED = `${VIEW}: a dropdown holds no DropdownMenuLabel. Every dropdown names what it holds in one word: add the label inside its DropdownMenuGroup.`;
 
 /** Inspects one module with the menu policy alone. */
 function inspect(sourceText: string, file = VIEW) {
@@ -37,45 +36,65 @@ export function Plain() {
       })
   );
 
-  it.effect("rejects a dropdown or a submenu of items alone", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* inspect(`
+  it.effect(
+    "rejects a dropdown, a submenu or a select whose label is text of its own",
+    () =>
+      Effect.gen(function* () {
+        const own = (tag: string) =>
+          `${VIEW}: a ${tag} writes its own label. A dropdown names what is chosen in one word: read it from a menu- key, such as label={t("menu-actions")}.`;
+        assert.deepStrictEqual(
+          yield* inspect(`
 export function Menu() {
   return (
-    <DropdownMenuContent>
-      <DropdownMenuSubContent>
-        <DropdownMenuItem />
+    <>
+      <DropdownMenuContent label="Actions" />
+      <DropdownMenuSubContent label={\`Open\`}>
+        <DropdownMenuItem icon={Icon} />
       </DropdownMenuSubContent>
-      <DropdownMenuGroup><DropdownMenuLabel>Sort</DropdownMenuLabel></DropdownMenuGroup>
-    </DropdownMenuContent>
+      <SelectContent label={t("class-choice")} />
+      <SelectContent label={t(key)} />
+      <SelectContent label={t()} />
+      <DropdownMenuContent label={\`\${name} menu\`} />
+      <PickerContent label={t("history")} />
+    </>
   );
-}
-export function Empty() {
-  return <DropdownMenuContent />;
 }`),
-        [UNLABELLED, UNLABELLED]
-      );
-    })
+          [
+            own("DropdownMenuContent"),
+            own("DropdownMenuSubContent"),
+            own("SelectContent"),
+            own("SelectContent"),
+            own("SelectContent"),
+            own("DropdownMenuContent"),
+            own("PickerContent"),
+          ]
+        );
+      })
   );
 
-  it.effect("accepts a dropdown that holds its label", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* inspect(`
-export function Menu() {
+  it.effect(
+    "accepts a label read from a menu- key, and one the component receives",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+export function Menu({ menu }: { menu: string }) {
   return (
-    <DropdownMenuContent>
-      <DropdownMenuGroup>
-        <DropdownMenuLabel>Sort</DropdownMenuLabel>
-        <DropdownMenuItem />
-      </DropdownMenuGroup>
-    </DropdownMenuContent>
+    <>
+      <DropdownMenuContent label={t("menu-actions")} />
+      <SelectContent label={t("Common.menu-class")} />
+      <DropdownMenuSubContent label={menu} />
+      <SelectContent label={labels.menu} />
+      <DropdownMenuContent label={} />
+      <DropdownMenuContent label />
+      <DropdownMenuContent {...props} />
+      <Other label="Free" />
+    </>
   );
 }`),
-        []
-      );
-    })
+          []
+        );
+      })
   );
 
   it.effect("rejects a table with no menu column", () =>

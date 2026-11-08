@@ -70,9 +70,9 @@ export function ImportFileField({
             {file.name}
           </span>
           <Button
-            aria-label={t("import-remove")}
             onClick={() => onFile(null)}
             size="icon-sm"
+            tooltip={t("import-remove")}
             variant="ghost"
           >
             <HugeIcons aria-hidden="true" icon={Cancel01Icon} />

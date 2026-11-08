@@ -1,3 +1,4 @@
+import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
@@ -92,32 +93,56 @@ const inputGroupButtonVariants = cva(
   {
     variants: {
       size: {
-        xs: "h-6 gap-1 rounded-[calc(var(--radius)-5px)] px-2 has-[>svg]:px-2 [&>svg:not([class*='size-'])]:size-3.5",
         sm: "h-8 gap-1.5 rounded-md px-2.5 has-[>svg]:px-2.5",
-        "icon-xs":
-          "size-6 rounded-[calc(var(--radius)-5px)] p-0 has-[>svg]:p-0",
         "icon-sm": "size-8 p-0 has-[>svg]:p-0",
         icon: "size-9 p-0 has-[>svg]:p-0",
       },
     },
     defaultVariants: {
-      size: "xs",
+      size: "sm",
     },
   }
 );
 
+/**
+ * A button inside an input group. An icon size draws an icon alone, so it requires the `tooltip` that names its
+ * action, as every icon button does.
+ */
 function InputGroupButton({
   className,
   type = "button",
   variant = "ghost",
-  size = "xs",
   ...props
-}: Omit<React.ComponentProps<typeof Button>, "size"> &
-  VariantProps<typeof inputGroupButtonVariants>) {
+}: ButtonPrimitive.Props &
+  Pick<React.ComponentProps<typeof Button>, "variant"> &
+  (
+    | {
+        size: Extract<
+          NonNullable<VariantProps<typeof inputGroupButtonVariants>["size"]>,
+          `icon${string}`
+        >;
+        /** The action of the icon in words, shown on hover and focus and read as the button's name. */
+        tooltip: string;
+      }
+    | { size?: "sm"; tooltip?: string }
+  )) {
+  const classes = cn(inputGroupButtonVariants({ size: props.size }), className);
+  if (props.size === "icon" || props.size === "icon-sm") {
+    return (
+      <Button
+        className={classes}
+        data-size={props.size}
+        type={type}
+        variant={variant}
+        {...props}
+      />
+    );
+  }
+
   return (
     <Button
-      className={cn(inputGroupButtonVariants({ size }), className)}
-      data-size={size}
+      className={classes}
+      data-size={props.size ?? "sm"}
       type={type}
       variant={variant}
       {...props}

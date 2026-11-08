@@ -1,15 +1,16 @@
 import { QueryResult, useQuery } from "@confect/react";
-import { FileExportIcon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
+import {
+  Calendar03Icon,
+  FileExportIcon,
+  UserMultiple02Icon,
+} from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr, Option } from "effect";
 import { use } from "react";
@@ -34,15 +35,11 @@ export function RosterGradesExport() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <HugeIcons icon={FileExportIcon} />
+      <DropdownMenuSubTrigger icon={FileExportIcon}>
         {t("export-grades")}
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-56">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-export")}</DropdownMenuLabel>
-          <RosterGradeCohorts />
-        </DropdownMenuGroup>
+      <DropdownMenuSubContent className="w-56" label={common("menu-export")}>
+        <RosterGradeCohorts />
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );
@@ -74,15 +71,14 @@ function RosterGradeCohorts() {
 
   if (QueryResult.isSuccess(period) && period.value === null) {
     return (
-      <DropdownMenuItem disabled>
+      <DropdownMenuItem disabled icon={Calendar03Icon}>
         {t("export-grades-no-period")}
       </DropdownMenuItem>
     );
   }
   if (!QueryResult.isSuccess(cohorts)) {
     return (
-      <DropdownMenuItem disabled>
-        <Spinner isLoading />
+      <DropdownMenuItem disabled icon={<Spinner isLoading />}>
         {t("export-grades-loading")}
       </DropdownMenuItem>
     );
@@ -93,7 +89,9 @@ function RosterGradeCohorts() {
   );
   if (Arr.isReadonlyArrayEmpty(active)) {
     return (
-      <DropdownMenuItem disabled>{t("export-grades-empty")}</DropdownMenuItem>
+      <DropdownMenuItem disabled icon={UserMultiple02Icon}>
+        {t("export-grades-empty")}
+      </DropdownMenuItem>
     );
   }
   return Arr.map(active, (cohort) => (
@@ -106,8 +104,10 @@ function RosterGradeItem({ cohort }: { cohort: GradeCohort }) {
   const download = use(GradeDownloadContext);
 
   return (
-    <DropdownMenuItem onClick={() => download(cohort)}>
-      <HugeIcons icon={UserMultiple02Icon} />
+    <DropdownMenuItem
+      icon={UserMultiple02Icon}
+      onClick={() => download(cohort)}
+    >
       {cohort.name}
     </DropdownMenuItem>
   );

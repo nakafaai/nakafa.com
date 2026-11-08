@@ -17,13 +17,13 @@ export function AnalyticsConsentFooterItem({
   return (
     <li>
       <Button
-        className="text-foreground hover:text-primary -my-0.5 h-6 justify-start p-0 no-underline"
         onClick={() => consent.setPreferencesOpen(true)}
         onFocus={consent.warmPreferences}
         onPointerDown={consent.warmPreferences}
         onPointerEnter={consent.warmPreferences}
+        size="sm"
         type="button"
-        variant="link"
+        variant="outline"
       >
         {t("manage")}
       </Button>
