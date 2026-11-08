@@ -191,6 +191,7 @@ const selectPublicRouteHead = Effect.fn("contentRelease.selectPublicRouteHead")(
     }
     return {
       artifactHash: head.artifactHash,
+      delivery: head.delivery,
       head,
       projectionHash,
       projectionJson: head.projectionJson,
@@ -212,7 +213,7 @@ const resolvePublicRouteForActive = Effect.fn(
     activeManifestHash: active.manifestHash,
     activeReleaseId: active.releaseId,
     artifactJson,
-    delivery: selected.head.delivery,
+    delivery: selected.delivery,
     projectionHash: selected.projectionHash,
     projectionJson: selected.projectionJson,
     releaseJson: active.release.releaseJson,

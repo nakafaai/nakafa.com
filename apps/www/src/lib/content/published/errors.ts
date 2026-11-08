@@ -20,6 +20,14 @@ export class PublishedProjectionError extends Schema.TaggedError<PublishedProjec
     publicPath: Schema.String,
   }
 ) {}
+/** One public route has no active signed body. */
+export class PublishedMissingError extends Schema.TaggedError<PublishedMissingError>()(
+  "PublishedMissingError",
+  {
+    appLocale: AppLocaleSchema,
+    publicPath: Schema.String,
+  }
+) {}
 /** Public route identity attached to a malformed signed projection. */
 export type PublishedProjectionIdentity = Pick<
   PublishedProjectionError,

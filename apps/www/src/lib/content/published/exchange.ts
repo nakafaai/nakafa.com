@@ -13,12 +13,12 @@ import {
   PublicContentRuntimeFoundSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 
-import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
 import { verifyPublicContentFound } from "@repo/backend/client/content/public";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import {
+  PublishedMissingError,
   PublishedProjectionError,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
@@ -144,7 +144,7 @@ export const decodePublishedDelivery = Effect.fn(
 /**
  * Reads and verifies one route's signed body under the active release: the route's
  * head, then its parts as `decodePublishedDelivery` composes them. A route with no
- * public body fails as `ContentRuntimeMissingError`.
+ * public body fails as `PublishedMissingError`.
  */
 export const readCurrentPublishedContent = Effect.fn(
   "NakafaContent.readCurrentPublishedContent"
@@ -155,9 +155,7 @@ export const readCurrentPublishedContent = Effect.fn(
     route
   );
   if (head === null) {
-    return yield* new ContentRuntimeMissingError({
-      request: { ...route, delivery: "public" },
-    });
+    return yield* new PublishedMissingError(route);
   }
   const activeReleaseId = yield* Schema.decodeEffect(ReleaseIdSchema)(
     head.activeReleaseId

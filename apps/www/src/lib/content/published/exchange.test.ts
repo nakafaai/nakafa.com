@@ -6,14 +6,14 @@ import {
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
-import {
-  ContentRuntimeMissingError,
-  ContentRuntimeVerificationError,
-} from "@repo/backend/client/content/errors";
+import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  PublishedMissingError,
+  PublishedProjectionError,
+} from "@/lib/content/published/errors";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import {
   decodePublishedDelivery,
@@ -104,7 +104,9 @@ vi.mock("@/lib/content/renderer/manifest", () => ({
 
 beforeEach(() => {
   headQueryMock.mockReset().mockReturnValue(Effect.succeed(routeHead));
-  verifyPublicContentFoundMock.mockReset().mockReturnValue(Effect.succeed(found));
+  verifyPublicContentFoundMock
+    .mockReset()
+    .mockReturnValue(Effect.succeed(found));
   partsMocks.frame.mockReset().mockReturnValue(Effect.succeed(frame));
   partsMocks.artifact.mockReset().mockReturnValue(Effect.succeed(artifactJson));
 });
@@ -255,11 +257,7 @@ describe("published content exchange", () => {
 
         expect(
           yield* readCurrentPublishedContent(routeInput).pipe(Effect.flip)
-        ).toEqual(
-          new ContentRuntimeMissingError({
-            request: { ...routeInput, delivery: "public" },
-          })
-        );
+        ).toEqual(new PublishedMissingError(routeInput));
         expect(
           yield* readCurrentPublishedContent(routeInput).pipe(Effect.flip)
         ).toEqual(new PublishedProjectionError(routeInput));

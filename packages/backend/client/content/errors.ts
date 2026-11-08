@@ -1,43 +1,10 @@
-import { ContentRuntimeFailureCodeSchema } from "@nakafa/aksara-contracts/runtime/result";
-import { PublicContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/spec";
-import { NetworkRetryCodeSchema } from "@repo/backend/client/network";
 import { Schema } from "effect";
 
-/** The private Convex runtime exchange failed before verification. */
+/** A composed public response failed its contract before verification. */
 export class ContentTransportError extends Schema.TaggedError<ContentTransportError>()(
   "ContentTransportError",
   {
-    networkCodes: Schema.optional(Schema.Array(NetworkRetryCodeSchema)),
-    reason: Schema.Literals([
-      "body",
-      "content-length",
-      "content-type",
-      "fetch",
-      "json-syntax",
-      "request",
-      "request-size",
-      "response-contract",
-      "response-size",
-      "response-unmarked",
-      "response-url",
-      "status",
-      "url",
-    ]),
-  }
-) {}
-/** One exact runtime request has no active or retained signed artifact. */
-export class ContentRuntimeMissingError extends Schema.TaggedError<ContentRuntimeMissingError>()(
-  "ContentRuntimeMissingError",
-  {
-    request: PublicContentRuntimeRequestSchema,
-  }
-) {}
-/** Convex rejected a signed runtime request with a sanitized code. */
-export class ContentRuntimeFailureError extends Schema.TaggedError<ContentRuntimeFailureError>()(
-  "ContentRuntimeFailureError",
-  {
-    code: ContentRuntimeFailureCodeSchema,
-    status: Schema.Finite,
+    reason: Schema.Literals(["request", "response-contract"]),
   }
 ) {}
 /** A signed envelope failed cryptographic or identity verification. */
