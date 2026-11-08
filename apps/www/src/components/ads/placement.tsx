@@ -97,7 +97,7 @@ export function AdMount({ unit }: { unit: AdUnit }) {
             Effect.andThen(Effect.sync(() => setStage("standing")))
           )
         : loadAdScript.pipe(
-            Effect.andThen(requestAd(element)),
+            Effect.andThen(requestAd(element, window.location.hostname)),
             Effect.andThen(untilUnfilled(element)),
             // A script an ad blocker or the network stopped leaves the unit
             // empty for good, as AdSense's own no-ad answer does.

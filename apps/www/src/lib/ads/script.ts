@@ -101,16 +101,17 @@ export const loadAdScript = Effect.callback<void, AdScriptFailed>((resume) => {
 /**
  * Asks AdSense for one unit's ad. AdSense fills the next unit in the document that
  * it has not filled, so each unit asks once: a unit marks itself as it asks, and
- * a render that runs twice finds the mark. A unit on any host but production asks
- * for a test ad.
+ * a render that runs twice finds the mark. A unit on any host but production
+ * asks for a test ad, so a local build, a preview and staging never count an
+ * impression or a click.
  */
-export const requestAd = (unit: HTMLElement) =>
+export const requestAd = (unit: HTMLElement, hostname: string) =>
   Effect.sync(() => {
     if (unit.hasAttribute(ASKED_ATTRIBUTE)) {
       return;
     }
     unit.setAttribute(ASKED_ATTRIBUTE, "");
-    if (isAdTest(window.location.hostname)) {
+    if (hostname !== MAIN_DOMAIN) {
       unit.setAttribute(TEST_ATTRIBUTE, "on");
     }
     adQueue().push({});
@@ -130,11 +131,3 @@ export const untilUnfilled = (unit: HTMLElement) =>
     check();
     return Effect.sync(() => watcher.disconnect());
   });
-
-/**
- * Whether a unit asks for test ads: everywhere but the production host, so a
- * local build, a preview and staging never count an impression or a click.
- */
-export function isAdTest(hostname: string) {
-  return hostname !== MAIN_DOMAIN;
-}

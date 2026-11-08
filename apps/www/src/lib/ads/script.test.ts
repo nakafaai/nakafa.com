@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Fiber } from "effect";
 import {
   AD_SCRIPT_SOURCE,
-  isAdTest,
   loadAdScript,
   requestAd,
   untilUnfilled,
@@ -99,13 +98,25 @@ describe("asking for a unit's ad", () => {
     Effect.gen(function* () {
       const unit = document.createElement("ins");
 
-      yield* requestAd(unit);
-      yield* requestAd(unit);
+      yield* requestAd(unit, "nakafa.com");
+      yield* requestAd(unit, "nakafa.com");
 
       expect(window.adsbygoogle).toEqual([{}]);
       expect(unit.hasAttribute("data-ad-asked")).toBe(true);
-      // The test document is not on the production host, so it asks for a test ad.
-      expect(unit.getAttribute("data-adtest")).toBe("on");
+      expect(unit.hasAttribute("data-adtest")).toBe(false);
+    })
+  );
+
+  it.effect("asks for a test ad on every host but production", () =>
+    Effect.gen(function* () {
+      const staging = document.createElement("ins");
+      const local = document.createElement("ins");
+
+      yield* requestAd(staging, "staging.nakafa.com");
+      yield* requestAd(local, "localhost");
+
+      expect(staging.getAttribute("data-adtest")).toBe("on");
+      expect(local.getAttribute("data-adtest")).toBe("on");
     })
   );
 
@@ -114,7 +125,7 @@ describe("asking for a unit's ad", () => {
       const queue = [{}];
       window.adsbygoogle = queue;
 
-      yield* requestAd(document.createElement("ins"));
+      yield* requestAd(document.createElement("ins"), "nakafa.com");
 
       expect(window.adsbygoogle).toBe(queue);
       expect(queue).toHaveLength(2);
@@ -155,13 +166,5 @@ describe("waiting for AdSense to answer that it has no ad", () => {
     const unit = document.createElement("ins");
     unit.setAttribute("data-ad-status", "unfilled");
     return untilUnfilled(unit);
-  });
-});
-
-describe("test ads", () => {
-  it("asks for test ads everywhere but the production host", () => {
-    expect(isAdTest("nakafa.com")).toBe(false);
-    expect(isAdTest("staging.nakafa.com")).toBe(true);
-    expect(isAdTest("localhost")).toBe(true);
   });
 });
