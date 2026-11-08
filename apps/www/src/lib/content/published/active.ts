@@ -14,18 +14,31 @@ import {
 } from "@/lib/content/store/entry";
 import { httpLayer } from "@/lib/convex/http";
 
+/**
+ * Integrity-checked active publication identity returned by Convex, with the
+ * snapshot each structured family resolves to under the release. A family's
+ * snapshot stays until a release changes that family.
+ */
 const ActiveContentIdentitySchema = Schema.NullOr(
   Schema.Struct({
     manifestHash: Sha256HashSchema,
     releaseId: ReleaseIdSchema,
     sequence: Schema.Finite,
+    snapshots: Schema.Struct({
+      assessment: Schema.NullOr(Sha256HashSchema),
+      program: Schema.NullOr(Sha256HashSchema),
+      quran: Schema.NullOr(Sha256HashSchema),
+    }),
   })
 );
 /** Integrity-checked active publication identity returned by Convex. */
-type ActiveContentIdentity = typeof ActiveContentIdentitySchema.Type;
+export type ActiveContentIdentity = typeof ActiveContentIdentitySchema.Type;
 /** Release identity used to bind ownership and body cache entries. */
 export type ActiveContentReleaseId =
   NonNullable<ActiveContentIdentity>["releaseId"];
+/** A structured family whose answers depend on its own snapshot, not on the release. */
+export type ContentSnapshotFamily =
+  keyof NonNullable<ActiveContentIdentity>["snapshots"];
 
 /** Store tag of the active release pointer, expired in the isolate that activates a release. */
 export const ACTIVE_POINTER_TAG = "content-active";

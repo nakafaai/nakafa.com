@@ -96,6 +96,17 @@ query answers for the same release bumps `CONTENT_STORE_VERSION`
 (`apps/www/src/lib/content/store/entry.ts`); a changed shape needs no bump, because an
 entry that does not decode is a miss.
 
+Amended a third time on 8 November 2026, so that a new release reads only what it changed:
+a release that does not change a structured family keeps that family's snapshot
+(`signed.manifest.snapshots`), and the active identity names the snapshot of each family
+(`contentRelease/runtime/active:read`). The curriculum, the try-out catalog and paths, the
+Quran publication and a lesson's curriculum places are keyed by their family's snapshot
+(`querySnapshotContentStore`), so their entries answer every later release that keeps the
+snapshot. An entry is kept only while the active release still names the snapshot that it
+was read under, and a read that finds another snapshot after its load starts over once
+under it, as a release read does. The curriculum route stays keyed by the release, because
+it also reads lesson rows that no snapshot covers.
+
 ## Phase A as implemented
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the

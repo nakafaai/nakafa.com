@@ -14,7 +14,7 @@ import {
   Tuple,
 } from "effect";
 import { HttpBody } from "effect/http";
-import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
+import { readRequestHostRole } from "@/lib/routing/school/host";
 
 /**
  * The paths a school host serves for integrations (ADR 0026, ADR 0029), each with the Convex
@@ -63,13 +63,10 @@ export function schoolApiTarget(
   convexSiteUrl: string
 ): Option.Option<URL> {
   const url = new URL(request.url);
-  const school = Option.flatMap(
-    readRequestHostname(request.headers),
-    readSchoolSlug
-  );
+  const isSchoolHost = readRequestHostRole(request.headers)._tag === "School";
   return Option.map(
     Arr.findFirst(
-      Option.isSome(school) ? FORWARDS : MAIN_FORWARDS,
+      isSchoolHost ? FORWARDS : MAIN_FORWARDS,
       (forward) =>
         url.pathname === forward.host ||
         Str.startsWith(`${forward.host}/`)(url.pathname)
