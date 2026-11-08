@@ -11,7 +11,6 @@ import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -31,7 +30,6 @@ import { PageFrame } from "@/components/shared/content/frame";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { markOf } from "@/components/tenant/classes/marks";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
@@ -110,6 +108,7 @@ function useLeadsSchool() {
  * instead of offering an empty list.
  */
 function TeacherInsight() {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -159,25 +158,26 @@ function TeacherInsight() {
               <SelectTrigger aria-label={t("class")} className="w-32 sm:w-56">
                 <SelectValue placeholder={t("class")} />
               </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <ChoiceLabel name="class" />
-
-                  {Arr.map(items, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
+              <SelectContent label={common("menu-class")}>
+                {Arr.map(items, (item) => (
+                  <SelectItem
+                    icon={
                       <PersonAvatar
                         className="size-5"
                         mascot={markOf(item.value)}
                       />
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                  {PaginatedQueryResult.isCanLoadMore(school) ? (
-                    <Intersection
-                      onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)}
-                    />
-                  ) : null}
-                </SelectGroup>
+                    }
+                    key={item.value}
+                    value={item.value}
+                  >
+                    {item.label}
+                  </SelectItem>
+                ))}
+                {PaginatedQueryResult.isCanLoadMore(school) ? (
+                  <Intersection
+                    onIntersect={() => school.loadMore(CLASS_PAGE_SIZE)}
+                  />
+                ) : null}
               </SelectContent>
             </Select>
             <QuestionTags />

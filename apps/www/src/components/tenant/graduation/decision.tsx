@@ -42,7 +42,6 @@ export function GraduationDecisionDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolGraduation");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const decide = useMutation(records.graduations.decide).withOptimisticUpdate(
@@ -74,27 +73,18 @@ export function GraduationDecisionDialog({
 
   return (
     <ResponsiveDialog
-      description={t("decide-description", { period: overview.cohort.period })}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!isDecision(next) || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={CheckmarkBadge01Icon} />
-            {t("save-decision")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={!isDecision(next) || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={CheckmarkBadge01Icon} />
+          {t("save-decision")}
+        </Button>
       }
+      description={t("decide-description", { period: overview.cohort.period })}
       open={open}
       setOpen={setOpen}
       title={t("decide")}

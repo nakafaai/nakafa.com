@@ -5,7 +5,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -38,6 +37,7 @@ const formSchema = Schema.toStandardSchemaV1(
  */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
+  const common = useTranslations("Common");
   const roleItems = Arr.map(roles, (role) => ({
     label: (
       <>
@@ -132,15 +132,16 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                   >
                     <SelectValue placeholder={t("role-placeholder")} />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {Arr.map(roles, (role) => (
-                        <SelectItem key={role.value} value={role.value}>
-                          <HugeIcons icon={role.icon} />
-                          {t(role.value)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
+                  <SelectContent label={common("menu-role")}>
+                    {Arr.map(roles, (role) => (
+                      <SelectItem
+                        icon={role.icon}
+                        key={role.value}
+                        value={role.value}
+                      >
+                        {t(role.value)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </Field>

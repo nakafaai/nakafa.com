@@ -8,13 +8,10 @@ import { setFilterValidator } from "@repo/backend/confect/tryouts/sets/query";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TableRow } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
@@ -147,49 +144,48 @@ function TryoutStatusHeading() {
         <DropdownMenuContent
           align="center"
           className="w-max max-w-[calc(100vw-1rem)]"
+          label={common("menu-filter")}
         >
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              onValueChange={(value) => {
-                if (Schema.is(setFilterValidator)(value)) {
-                  onFilter(value);
+          <DropdownMenuRadioGroup
+            onValueChange={(value) => {
+              if (Schema.is(setFilterValidator)(value)) {
+                onFilter(value);
+              }
+            }}
+            value={filter}
+          >
+            {Arr.map(setFilterValidator.literals, (value) => (
+              <DropdownMenuRadioItem
+                className="whitespace-normal"
+                icon={
+                  value === "all" ? (
+                    Menu01Icon
+                  ) : (
+                    <TryoutStatusIcon
+                      status={value === "not-started" ? null : value}
+                    />
+                  )
                 }
-              }}
-              value={filter}
-            >
-              {Arr.map(setFilterValidator.literals, (value) => (
-                <DropdownMenuRadioItem
-                  className="whitespace-normal"
-                  key={value}
-                  value={value}
-                >
-                  <TryoutFilterOption filter={value} />
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuGroup>
+                key={value}
+                value={value}
+              >
+                <TryoutFilterLabel filter={value} />
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </ColumnHead>
   );
 }
 
-function TryoutFilterOption({ filter }: { filter: TryoutSetStatusFilter }) {
+/** The words of one status filter; its icon stands in the option's icon. */
+function TryoutFilterLabel({ filter }: { filter: TryoutSetStatusFilter }) {
   const t = useTranslations("Tryouts");
   if (filter === "all") {
-    return (
-      <>
-        <HugeIcons icon={Menu01Icon} />
-        {t("set-filter-all")}
-      </>
-    );
+    return t("set-filter-all");
   }
-  const status = filter === "not-started" ? null : filter;
   return (
-    <>
-      <TryoutStatusIcon status={status} />
-      <TryoutStatusLabel status={status} />
-    </>
+    <TryoutStatusLabel status={filter === "not-started" ? null : filter} />
   );
 }

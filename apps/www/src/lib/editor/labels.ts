@@ -95,7 +95,7 @@ export function useDocumentLabels() {
         rowBefore: t("row-before"),
         rowDelete: t("row-delete"),
         style: t("style"),
-        styleMenu: t("style-menu"),
+        styleMenu: t("menu-style"),
         subscript: t("subscript"),
         superscript: t("superscript"),
         table,

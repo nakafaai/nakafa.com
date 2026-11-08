@@ -136,7 +136,6 @@ export function HeadSort({
         className="flex-1"
         onClick={() => onSort(false)}
         type="button"
-        variant={sorted === "asc" ? "secondary" : "outline"}
       >
         <HugeIcons icon={ArrowUp02Icon} />
         {t(sortWords[kind].asc)}
@@ -146,7 +145,6 @@ export function HeadSort({
         className="flex-1"
         onClick={() => onSort(true)}
         type="button"
-        variant={sorted === "desc" ? "secondary" : "outline"}
       >
         <HugeIcons icon={ArrowDown02Icon} />
         {t(sortWords[kind].desc)}

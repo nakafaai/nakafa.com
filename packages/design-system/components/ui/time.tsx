@@ -10,7 +10,7 @@ import {
 import { isTimeOfDay, timeSlots } from "@repo/design-system/lib/calendar/time";
 import { Array as Arr, DateTime } from "effect";
 import type { ComponentProps } from "react";
-import { useFormatter } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 
 /** The minutes between two times that a time select offers unless told otherwise. */
 const QUARTER_HOUR = 15;
@@ -43,6 +43,7 @@ function TimeSelect({
   readonly value: string;
 }) {
   const format = useFormatter();
+  const t = useTranslations("Common");
   const items = Arr.map(timeSlots(step, value), (time) => ({
     label: format.dateTime(
       DateTime.toDateUtc(DateTime.makeUnsafe(`1970-01-01T${time}:00.000Z`)),
@@ -66,9 +67,9 @@ function TimeSelect({
         <HugeIcons className="text-muted-foreground" icon={Clock01Icon} />
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent label={t("menu-time")}>
         {Arr.map(items, (item) => (
-          <SelectItem key={item.value} value={item.value}>
+          <SelectItem icon={Clock01Icon} key={item.value} value={item.value}>
             {item.label}
           </SelectItem>
         ))}
