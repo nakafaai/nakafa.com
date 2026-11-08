@@ -9,6 +9,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
+import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
 import {
   openSchoolPricing,
   schoolSections,
@@ -34,14 +35,18 @@ import { readStaticData } from "@/lib/static/data";
  * the offers of the paid plans in every currency.
  */
 export const Route = createFileRoute("/$locale/_marketing/school/pricing")({
+  // A warm of a link to this page is a preload: it takes the page's code and data, never the sections a reader
+  // reaches by scrolling, which a navigation opens here before the page commits.
+  beforeLoad: async ({ preload }) => {
+    if (!preload) {
+      await openSchoolPricing();
+    }
+  },
   loader: async ({ params }) => {
-    const [, messages] = await Promise.all([
-      openSchoolPricing(),
-      readStaticData(readRouteMessages, {
-        locale: params.locale,
-        namespaces: ["Common", "SchoolSite"],
-      }),
-    ]);
+    const messages = await readStaticData(readRouteMessages, {
+      locale: params.locale,
+      namespaces: ["Common", "SchoolSite"],
+    });
     const t = createTranslator({
       locale: params.locale,
       messages,
@@ -75,7 +80,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/pricing")({
     }
     const url = `${COMPANY_IDENTITY.url}/${params.locale}/school/pricing`;
     const image = getAppSocialArtwork({
-      key: "home",
+      key: "school",
       locale: params.locale,
       publicPath: "school/pricing",
     });
@@ -157,7 +162,8 @@ function SchoolPricingPlans() {
 /**
  * The School pricing page: the plans, the full comparison straight under them,
  * the account calculator and the add-ons, the questions, and the closing
- * question. Everything after the plans loads its code as it nears.
+ * question. Everything after the plans loads its code as it nears, and the toys
+ * come on a wide screen once the page has its reader.
  */
 function SchoolPricing() {
   const { faqs } = Route.useLoaderData();
@@ -167,6 +173,7 @@ function SchoolPricing() {
       <PageField />
       <div className="relative grid grid-cols-1">
         <SchoolPricingPlans />
+        <DeferredSchoolToys page="pricing" />
         <LaterSection code={schoolSections.compare}>
           {(SchoolCompare) => <SchoolCompare />}
         </LaterSection>

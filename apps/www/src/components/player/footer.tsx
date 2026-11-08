@@ -100,7 +100,7 @@ export function PlayerNote({
 }
 
 /** Goes to the question before the current one; disabled on the first. */
-function PlayerPrevious() {
+export function PlayerPrevious() {
   const t = useTranslations("Player");
   const tCommon = useTranslations("Common");
   const available = usePlayer((state) =>
@@ -127,7 +127,7 @@ function PlayerPrevious() {
  * Goes to the question after the current one. On the last question it becomes review, which opens the
  * finish's review of the flagged and the unanswered questions, so the end of the questions leads on.
  */
-function PlayerNext() {
+export function PlayerNext() {
   const t = useTranslations("Player");
   const tCommon = useTranslations("Common");
   const last = usePlayer(
