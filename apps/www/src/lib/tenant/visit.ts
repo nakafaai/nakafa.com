@@ -2,10 +2,9 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Duration, Effect, Option, Schedule } from "effect";
 import { readTokenClaims } from "@/lib/auth/claims";
-import { hasSignedInHint } from "@/lib/auth/hint";
 import { loadKnownSession } from "@/lib/auth/known";
 import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
-import { readBrowserSessionToken } from "@/lib/auth/token";
+import type { BrowserPresence } from "@/lib/auth/presence";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
 import type { SchoolRead } from "@/lib/tenant/frame";
@@ -39,23 +38,24 @@ function reusesVisitFrame(navigation: {
 
 /**
  * Decides a school page in the browser, where every school page renders (ADR 0038
- * D2): the session's Convex token from the token route of the school's own host,
- * then the same decision as `readSchoolFrame`. A failed token read fails the
- * decision, so an outage never looks like a signed-out visitor. A visitor's entry
- * page names the privacy and terms pages, so a read with no session takes `legal`
- * beside the school's own reads, and only a visitor keeps its answer. When the
- * sign-in hint says the browser is signed out, a visitor's reads start beside the
- * token's, and a token that answers anyway decides as a signed-in read. The answer
- * names the session the token belongs to, which a kept frame is kept for.
+ * D2): the session's Convex token from the presence (the token route of the
+ * school's own host), then the same decision as `readSchoolFrame`. A failed token
+ * read fails the decision, so an outage never looks like a signed-out visitor. A
+ * visitor's entry page names the privacy and terms pages, so a read with no
+ * session takes `legal` beside the school's own reads, and only a visitor keeps
+ * its answer. When the presence says the browser is signed out, a visitor's reads
+ * start beside the token's, and a token that answers anyway decides as a
+ * signed-in read. The answer names the session the token belongs to, which a kept
+ * frame is kept for.
  */
 export const readBrowserVisit = Effect.fn("www.tenant.readBrowserVisit")(
   function* (input: {
     readonly legal: Effect.Effect<AuthLegalLinks | null, SchoolReadFailed>;
     readonly locale: Locale;
-    readonly signedIn: boolean;
+    readonly presence: BrowserPresence;
     readonly slug: TenantSlug;
   }) {
-    const { legal, locale, signedIn, slug } = input;
+    const { legal, locale, presence, slug } = input;
     const visitor = Effect.suspend(() =>
       Effect.all(
         [readSchoolFrame({ locale, slug, token: Option.none() }), legal],
@@ -68,15 +68,16 @@ export const readBrowserVisit = Effect.fn("www.tenant.readBrowserVisit")(
         sessionId: null,
       }))
     );
-    const origin = yield* Effect.sync(() => window.location.origin);
-    const token = readBrowserSessionToken(origin).pipe(
+    const token = presence.token.pipe(
       Effect.mapError((cause) => new SchoolReadFailed({ cause }))
     );
     // The early visitor's answer is kept as a value, so it fails the decision only when the decision uses it.
     const [held, early] = yield* Effect.all(
       [
         token,
-        signedIn ? Effect.succeedNone : Effect.asSome(Effect.result(visitor)),
+        presence.signedIn
+          ? Effect.succeedNone
+          : Effect.asSome(Effect.result(visitor)),
       ],
       { concurrency: "unbounded" }
     );
@@ -144,7 +145,7 @@ export type SchoolVisit = Partial<
 function readVisitFrame(
   slug: TenantSlug,
   locale: Locale,
-  signedIn: boolean
+  presence: BrowserPresence
 ): Promise<VisitFrame> {
   const legal = Effect.tryPromise({
     catch: (cause) => new SchoolReadFailed({ cause }),
@@ -155,7 +156,7 @@ function readVisitFrame(
     )
   );
   return Effect.runPromise(
-    readBrowserVisit({ legal, locale, signedIn, slug }).pipe(
+    readBrowserVisit({ legal, locale, presence, slug }).pipe(
       retryVisitRead,
       Effect.tap(({ legal: links, school, sessionId }) =>
         school._tag === "Refused"
@@ -172,20 +173,24 @@ function readVisitFrame(
  * Reads the school for a visit. A refresh asks for the membership again, so it waits for the live read: a
  * kept frame would land a person who just lost a role on a page that role opened. A visit that enters the
  * school draws the frame the host kept for the browser's session, in the page's locale, at once, and
- * the live read checks it (`useLiveVisit`); a visit with no such frame waits for the live read. The sign-in hint
+ * the live read checks it (`useLiveVisit`); a visit with no such frame waits for the live read. The presence
  * says, before any read, whether the browser holds a session.
  */
-function readVisit(slug: TenantSlug, visit: SchoolVisit, refresh: boolean) {
+function readVisit(
+  slug: TenantSlug,
+  visit: SchoolVisit,
+  refresh: boolean,
+  presence: BrowserPresence
+) {
   const locale = readSchoolLocale();
-  const signedIn = hasSignedInHint(document.cookie);
-  const live = readVisitFrame(slug, locale, signedIn);
+  const live = readVisitFrame(slug, locale, presence);
   if (refresh) {
     return live;
   }
   const kept = Effect.runSync(
     Effect.all([loadKeptFrameText(), loadKnownSession()]).pipe(
       Effect.map(([text, known]) =>
-        keptFrameFor(text, { known, locale, signedIn })
+        keptFrameFor(text, { known, locale, signedIn: presence.signedIn })
       )
     )
   );
@@ -211,11 +216,15 @@ export function confirmFrame(visit: SchoolVisit, next: VisitFrame) {
   visit.confirmed = next;
 }
 
-/** The frame a navigation into the school commits: the live one that replaced a kept frame, the visit's, or a new visit's. */
+/**
+ * The frame a navigation into the school commits: the live one that replaced a kept frame, the visit's, or a new
+ * visit's, read with the presence that the navigation's boundary read.
+ */
 export function frameOfNavigation(
   visit: SchoolVisit,
   slug: TenantSlug,
-  navigation: Parameters<typeof reusesVisitFrame>[0]
+  navigation: Parameters<typeof reusesVisitFrame>[0],
+  presence: BrowserPresence
 ): Promise<VisitFrame> {
   if (visit.confirmed !== undefined) {
     const confirmed = visit.confirmed;
@@ -225,5 +234,5 @@ export function frameOfNavigation(
   if (reusesVisitFrame(navigation) && visit.frame !== undefined) {
     return Promise.resolve(visit.frame);
   }
-  return readVisit(slug, visit, navigation.invalid);
+  return readVisit(slug, visit, navigation.invalid, presence);
 }

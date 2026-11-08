@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ComponentProps, ReactNode } from "react";
 
 interface GraphProps {
@@ -23,7 +23,7 @@ const pointG = { x: 4, y: 0, z: 0 };
 const questionData = [
   {
     points: [pointA, pointB, pointC, pointD, pointA],
-    color: getColor("VIOLET"),
+    color: PLOT_COLORS.violet,
     lineWidth: 2,
     smooth: false,
     showPoints: true,
@@ -40,7 +40,7 @@ const questionData = [
       y: 5 * Math.sin((i / 64) * Math.PI * 2),
       z: 0,
     })),
-    color: getColor("EMERALD"),
+    color: PLOT_COLORS.teal,
     lineWidth: 2,
     smooth: false,
     showPoints: false,
@@ -50,21 +50,21 @@ const questionData = [
 const answerSegments = [
   {
     points: [pointA, pointF, pointD],
-    color: getColor("ORANGE"),
+    color: PLOT_COLORS.orange,
     smooth: false,
     showPoints: true,
     labels: [{ text: <InlineMath math="F" />, at: 1, offset: [0, -1, 0] }],
   },
   {
     points: [pointF, pointG],
-    color: getColor("ORANGE"),
+    color: PLOT_COLORS.orange,
     smooth: false,
     showPoints: true,
     labels: [{ text: <InlineMath math="G" />, at: 1, offset: [1, 0.5, 0] }],
   },
   {
     points: [pointE, pointF],
-    color: getColor("ORANGE"),
+    color: PLOT_COLORS.orange,
     smooth: false,
     showPoints: true,
     labels: [{ text: <InlineMath math="E" />, at: 0, offset: [-1, 0.5, 0] }],

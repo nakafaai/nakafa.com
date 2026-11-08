@@ -12,7 +12,9 @@ import {
   readPublishedLatestMaterials,
   readPublishedMaterialBucket,
 } from "@/lib/content/material/discovery";
+import { activateTestRelease, advanceTestRelease } from "@/test/active";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const publicPath =
@@ -44,6 +46,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 const summary = {
   authors: [
     {
@@ -85,6 +95,8 @@ describe("published material discovery", () => {
       })
   );
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease(activeReleaseId);
     runtimeQueryMock.mockReset();
   });
   it.effect("rejects unmanaged buckets and reads complete signed buckets", () =>
@@ -227,6 +239,7 @@ describe("published material discovery", () => {
         const unmanaged = yield* readPublishedLatestMaterials("en", 10).pipe(
           Effect.flip
         );
+        resetTestRuntimeCache();
         const unavailable = yield* readPublishedLatestMaterials("en", 10).pipe(
           Effect.flip
         );
@@ -247,11 +260,12 @@ describe("published material discovery", () => {
       Effect.gen(function* () {
         runtimeQueryMock.mockReturnValueOnce(
           Effect.succeed({
-            activeReleaseId: ReleaseIdSchema.make("release-next"),
+            activeReleaseId,
             managed: true,
             materials: [summary],
           })
         );
+        advanceTestRelease("release-next");
         const mismatch = yield* readPublishedMaterialBucket(
           appLocale,
           "abc",
@@ -259,6 +273,7 @@ describe("published material discovery", () => {
         ).pipe(Effect.flip);
         expect(mismatch).toMatchObject({
           _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-next",
           expectedReleaseId: activeReleaseId,
         });
       })

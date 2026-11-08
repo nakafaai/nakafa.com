@@ -19,6 +19,7 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option } from "effect";
@@ -403,10 +404,10 @@ function getCombustionColors(theme?: string) {
   const isDarkTheme = getThemeAppearance(theme) === "dark";
 
   return {
-    bond: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
-    carbon: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
+    bond: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
+    carbon: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
     hydrogen: isDarkTheme ? getColor("NEUTRAL") : ORIGIN_COLOR.LIGHT,
-    oxygen: getColor("RED"),
+    oxygen: PLOT_COLORS.pink,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

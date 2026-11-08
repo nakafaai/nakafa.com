@@ -13,7 +13,9 @@ import {
   readPublishedCategoryArticles,
   readPublishedLatestArticles,
 } from "@/lib/content/article/discovery";
+import { activateTestRelease, advanceTestRelease } from "@/test/active";
 import { makeArticleRuntimeSource } from "@/test/content/article";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
@@ -56,6 +58,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 
 /** Builds one source-owned locale summary returned by Convex discovery. */
 function articleSummary(selected: (typeof localeCases)[number]) {
@@ -123,6 +133,8 @@ describe("published article discovery", () => {
       })
   );
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease(activeReleaseId);
     runtimeQueryMock.mockReset();
   });
   it.effect.each(localeCases)(
@@ -232,11 +244,12 @@ describe("published article discovery", () => {
       Effect.gen(function* () {
         runtimeQueryMock.mockReturnValueOnce(
           Effect.succeed({
-            activeReleaseId: ReleaseIdSchema.make("release-next"),
+            activeReleaseId,
             articles: [articleSummary(selected)],
             managed: true,
           })
         );
+        advanceTestRelease("release-next");
         const error = yield* readPublishedLatestArticles(
           selected.appLocale,
           10,
@@ -244,6 +257,7 @@ describe("published article discovery", () => {
         ).pipe(Effect.flip);
         expect(error).toMatchObject({
           _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-next",
           expectedReleaseId: activeReleaseId,
         });
       })
@@ -282,9 +296,11 @@ describe("published article discovery", () => {
         const unmanaged = yield* readPublishedLatestArticles("en", 10).pipe(
           Effect.flip
         );
+        resetTestRuntimeCache();
         const malformed = yield* readPublishedLatestArticles("en", 10).pipe(
           Effect.flip
         );
+        resetTestRuntimeCache();
         const unavailable = yield* readPublishedLatestArticles("en", 10).pipe(
           Effect.flip
         );
@@ -350,10 +366,12 @@ describe("published article discovery", () => {
           "en",
           "abc"
         ).pipe(Effect.flip);
+        resetTestRuntimeCache();
         const inactiveBucket = yield* readPublishedArticleBucket(
           "en",
           "abc"
         ).pipe(Effect.flip);
+        resetTestRuntimeCache();
         const absentBucket = yield* readPublishedArticleBucket("en", "abc");
         const inactiveLatest = yield* readPublishedLatestArticles(
           "en",
@@ -364,6 +382,7 @@ describe("published article discovery", () => {
           "politics",
           10
         ).pipe(Effect.flip);
+        resetTestRuntimeCache();
         const inactiveCategory = yield* readPublishedCategoryArticles(
           "en",
           "politics",

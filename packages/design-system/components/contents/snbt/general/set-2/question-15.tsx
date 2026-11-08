@@ -23,6 +23,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 
@@ -65,12 +66,12 @@ export function SalesChart({
         grainPrice: {
           cue: SALES_CUES.grainPrice,
           label: seriesLabels.grainPrice,
-          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+          colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
         },
         governmentPrice: {
           cue: SALES_CUES.governmentPrice,
           label: seriesLabels.governmentPrice,
-          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+          colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
         },
       }) satisfies ChartConfig,
     [seriesLabels.governmentPrice, seriesLabels.grainPrice]

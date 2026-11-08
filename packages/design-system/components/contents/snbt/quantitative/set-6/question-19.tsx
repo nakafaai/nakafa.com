@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Order } from "effect";
 import type { ReactNode } from "react";
 
@@ -43,7 +43,7 @@ export function Graph({ title, description }: GraphProps) {
         // Linear Line: y = 2x + 6
         {
           points: linearPoints,
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           smooth: false,
           cone: { position: "both", size: 0.5 },
@@ -58,7 +58,7 @@ export function Graph({ title, description }: GraphProps) {
         // Exponential Curve: y = (1/2)^x - 3
         {
           points: exponentialPoints,
-          color: getColor("ORANGE"),
+          color: PLOT_COLORS.orange,
           showPoints: false,
           smooth: false,
           cone: { position: "both", size: 0.5 },
@@ -79,28 +79,28 @@ export function Graph({ title, description }: GraphProps) {
         // Point A (0, -2) - y-intercept of curve
         {
           points: [{ x: 0, y: -2, z: 0 }],
-          color: getColor("ORANGE"),
+          color: PLOT_COLORS.orange,
           showPoints: true,
           labels: [{ text: <InlineMath math="A" />, offset: [0.5, 0, 0] }],
         },
         // Point B (0, 6) - y-intercept of line
         {
           points: [{ x: 0, y: 6, z: 0 }],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: true,
           labels: [{ text: <InlineMath math="B" />, offset: [-0.75, -0.1, 0] }],
         },
         // Point C (-3, 0) - x-intercept of line
         {
           points: [{ x: -3, y: 0, z: 0 }],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.violet,
           showPoints: true,
           labels: [{ text: <InlineMath math="C" />, offset: [-0.65, 0.4, 0] }],
         },
         // Point D is the shared point of the line and the exponential curve.
         {
           points: [{ x: intersectionX, y: 2 * intersectionX + 6, z: 0 }],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           showPoints: true,
           labels: [{ text: <InlineMath math="D" />, offset: [0.4, 0.4, 0] }],
         },

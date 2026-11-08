@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -58,11 +58,11 @@ export function Graph({ title, description, labels }: GraphProps) {
   };
 
   // Colors
-  const COLOR_GROUND = getColor("CYAN");
-  const COLOR_SIGHT = getColor("ORANGE");
-  const COLOR_PATH = getColor("TEAL");
-  const COLOR_HEIGHT = getColor("INDIGO");
-  const COLOR_LABEL = getColor("VIOLET");
+  const COLOR_GROUND = PLOT_COLORS.slate;
+  const COLOR_SIGHT = PLOT_COLORS.orange;
+  const COLOR_PATH = PLOT_COLORS.teal;
+  const COLOR_HEIGHT = PLOT_COLORS.fuchsia;
+  const COLOR_LABEL = PLOT_COLORS.violet;
 
   // Arcs for angles
   // Arc 1: 30 degrees (larger radius to avoid clutter)

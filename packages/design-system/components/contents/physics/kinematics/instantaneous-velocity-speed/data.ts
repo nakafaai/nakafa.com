@@ -1,5 +1,6 @@
 import { getColor } from "@repo/design-system/lib/color";
 import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 
 export const INSTANTANEOUS_SPEED_CAR_MODEL_PATH =
@@ -48,9 +49,9 @@ export const INSTANTANEOUS_SPEED_CAMERA = {
 } satisfies CameraPose;
 
 export const INSTANTANEOUS_SPEED_COLORS = {
-  car: getColor("BLUE"),
-  detector: getColor("TEAL"),
-  detectorBase: getColor("TEAL", 700),
+  car: PLOT_COLORS.violet,
+  detector: PLOT_COLORS.teal,
+  detectorBase: PLOT_COLORS.teal,
   road: getColor("GRAY", 800),
   stripe: getColor("SLATE", 50),
 } as const;
