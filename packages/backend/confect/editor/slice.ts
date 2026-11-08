@@ -12,11 +12,28 @@ import { Array as Arr, Effect, Schema } from "effect";
 const SliceNodeSchema = Schema.Union([BlockSchema, InlineNodeSchema]);
 
 /**
- * A node as the contract reads it. A list item belongs to its list, so the contract
- * reads it inside a list of one item. Any other node is read as it is.
+ * The container of each node that never stands alone in a document: a list item belongs
+ * to its list, a cell of either kind to its row, and a row to its table. A step that adds
+ * a row or a column of a table inserts that row or those cells on their own.
  */
-const readableNode = (node: DocumentNode): unknown =>
-  node.type === "listItem" ? { content: [node], type: "bulletList" } : node;
+const CONTAINER: Partial<Record<DocumentNode["type"], DocumentNode["type"]>> = {
+  listItem: "bulletList",
+  tableCell: "tableRow",
+  tableHeader: "tableRow",
+  tableRow: "table",
+};
+
+/**
+ * A node as the contract reads it. A node that belongs to a container is read inside the
+ * smallest container that holds it, so a list item is read in a list of one item and a
+ * cell in a table of one row of one cell. Any other node is read as it is.
+ */
+const readableNode = (node: DocumentNode): DocumentNode => {
+  const container = CONTAINER[node.type];
+  return container === undefined
+    ? node
+    : readableNode({ content: [node], type: container });
+};
 
 /** Checks each node of a slice, with the contract's schema for its kind. */
 const checkNodes = (nodes: readonly DocumentNode[]) =>
@@ -37,10 +54,21 @@ const PARAGRAPH: DocumentNode = { type: "paragraph" };
 /** A list item that holds a paragraph: the one item that a list may hold. */
 const LIST_ITEM: DocumentNode = { content: [PARAGRAPH], type: "listItem" };
 
+/** A body cell of one column and one row that holds a paragraph: the one cell that a row may hold. */
+const TABLE_CELL: DocumentNode = {
+  attrs: { colspan: 1, rowspan: 1 },
+  content: [PARAGRAPH],
+  type: "tableCell",
+};
+
+/** A row of one cell: the one row that a table may hold. */
+const TABLE_ROW: DocumentNode = { content: [TABLE_CELL], type: "tableRow" };
+
 /**
  * The content that the contract requires of an empty container: a list holds an item,
- * an item opens with a paragraph, and a quote holds a block. A container of any other
- * type is read as it is, because the contract allows it to be empty.
+ * an item opens with a paragraph, a quote holds a block, a table holds a row, a row holds
+ * a cell, and a cell holds a block. A container of any other type is read as it is,
+ * because the contract allows it to be empty.
  */
 const REQUIRED_CONTENT: Partial<
   Record<DocumentNode["type"], readonly DocumentNode[]>
@@ -49,6 +77,10 @@ const REQUIRED_CONTENT: Partial<
   bulletList: [LIST_ITEM],
   listItem: [PARAGRAPH],
   orderedList: [LIST_ITEM],
+  table: [TABLE_ROW],
+  tableCell: [PARAGRAPH],
+  tableHeader: [PARAGRAPH],
+  tableRow: [TABLE_CELL],
 };
 
 /**
