@@ -24,7 +24,7 @@ import {
   type ObjectBindingPattern,
   SyntaxKind,
   type VariableDeclaration,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import {
   convexTestBoundary,
   type Symbols,

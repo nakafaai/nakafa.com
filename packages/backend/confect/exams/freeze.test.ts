@@ -298,7 +298,7 @@ describe("exams/freeze", () => {
   );
 
   it.effect(
-    "answers a batch the session sent before the freeze with nothing, as a retried batch is answered",
+    "answers a batch the session sent before the freeze as accepted, as a retried batch is answered",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -320,7 +320,7 @@ describe("exams/freeze", () => {
             documentId: first.prompt,
             slug: nf,
           })
-        ).toBeNull();
+        ).toEqual({ _tag: "Accepted" });
         const steps = yield* fixture.run(stepRows);
         expect(
           Arr.filter(steps, (step) => step.documentId === first.prompt)

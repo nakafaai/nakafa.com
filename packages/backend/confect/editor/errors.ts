@@ -14,15 +14,17 @@ export class ClientTaken extends Schema.TaggedError<ClientTaken>()(
 ) {}
 
 /**
- * The steps that the snapshot lacks are more than one read holds, so the document cannot
- * be checked with this batch yet. A fold of those steps is already due, so the client sends
- * the batch again when the fold has run (ADR 0028). The server writes nothing.
+ * The steps after a document's snapshot do not reach its head, so the document as it stands
+ * now cannot be read (ADR 0028). A reader of the current text, such as a student's paper or a
+ * copy of a question, refuses it rather than show text older than the last edit. A submit
+ * answers its own backlog with the `FoldPending` reply instead (`SubmitReply`), because the
+ * editor's sync decides that outcome for itself. The server writes nothing.
  */
 export class FoldPending extends Schema.TaggedError<FoldPending>()(
   "FoldPending",
   refusal(
     "FOLD_PENDING",
-    "The steps of this document are being folded. Send the batch again shortly."
+    "The steps of this document are being folded. Read it again shortly."
   )
 ) {}
 

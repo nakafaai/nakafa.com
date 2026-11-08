@@ -327,12 +327,15 @@ export const tryoutGate = {
    */
   flag: Effect.fn("tryouts.gate.flag")(
     function* (owner: Id<"users">, args: TryoutFlagArgs) {
-      const { live } = yield* gate.admit(
-        rules.flag,
-        owner,
-        Option.none(),
-        loadPlacement(args.placementId, loadFlagging)
-      );
+      const load = loadPlacement(args.placementId, loadFlagging);
+      // TypeScript 7.1 cannot infer the stage's types from this load: the flag step
+      // never fails, so the section check's error is named here beside the load's.
+      const { live } = yield* gate.admit<
+        Effect.Success<ReturnType<typeof loadFlagging>>,
+        | Effect.Error<typeof load>
+        | Effect.Error<ReturnType<typeof verifySection>>,
+        Effect.Services<typeof load>
+      >(rules.flag, owner, Option.none(), load);
       yield* setAssessmentFlag({
         attempt: live.attempt._id,
         flagged: args.flagged,

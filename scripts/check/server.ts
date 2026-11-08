@@ -1,9 +1,5 @@
 import { Array as Arr, HashSet, Option } from "effect";
-import {
-  isCallExpression,
-  type Node,
-  type SourceFile,
-} from "typescript/unstable/ast";
+import { isCallExpression, type Node, type SourceFile } from "tsrs/ast";
 import {
   importedNames,
   namedImports,

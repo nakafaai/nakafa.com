@@ -1,8 +1,5 @@
 import { Array as Arr, HashSet } from "effect";
-import {
-  isStringLiteralLikeNode,
-  type SourceFile,
-} from "typescript/unstable/ast";
+import { isStringLiteralLikeNode, type SourceFile } from "tsrs/ast";
 import { TEST_PATTERN } from "#scripts/check/kinds";
 import { descendants, namesModule } from "#scripts/check/source";
 

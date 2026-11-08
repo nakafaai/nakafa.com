@@ -24,7 +24,7 @@ import {
   type Node,
   type SourceFile,
   type Statement,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { isFunctionValue } from "#scripts/check/scope";
 import { children } from "#scripts/check/source";
 

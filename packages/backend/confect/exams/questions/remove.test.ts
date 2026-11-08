@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DOCUMENT_GRACE } from "@repo/backend/confect/editor/deletion";
 import { PRUNE_PAGE_STEPS } from "@repo/backend/confect/editor/prune";
 import {
   batchText,
@@ -11,10 +12,11 @@ import {
 } from "@repo/backend/test/editor";
 import { questionRows, teacherExam } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
 const { add, remove } = refs.public.exams.questions;
 const { submit } = refs.public.editor.steps;
+const { open } = refs.public.editor.documents;
 
 describe("exams/questions remove", () => {
   beforeEach(() => {
@@ -108,6 +110,43 @@ describe("exams/questions remove", () => {
         expect(Arr.map(documents, (document) => document._id)).toEqual(
           secondDocuments
         );
+      })
+  );
+
+  it.effect(
+    "keeps a removed question's documents through the grace, so an editor still open on its prompt reads it until it lets go",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Tenggang");
+        const [first] = exam.questions;
+        yield* teacher.mutation(add, {
+          after: first.id,
+          examId: exam.id,
+          slug: nf,
+        });
+        yield* teacher.mutation(remove, {
+          examId: exam.id,
+          questionId: first.id,
+          slug: nf,
+        });
+        // A moment before the grace ends, the read that an open editor holds still answers.
+        yield* fixture.advanceScheduled(
+          Duration.toMillis(DOCUMENT_GRACE) - 1000
+        );
+        const read = yield* teacher.query(open, {
+          clientId: "rina",
+          documentId: first.prompt,
+          slug: nf,
+        });
+        expect(read.snapshot.version).toBe(0);
+        yield* fixture.advanceScheduled(1000);
+        yield* fixture.finishScheduled();
+        const documents = yield* fixture.run(documentRows);
+        expect(
+          Arr.filter(documents, (document) => document._id === first.prompt)
+        ).toEqual([]);
       })
   );
 });

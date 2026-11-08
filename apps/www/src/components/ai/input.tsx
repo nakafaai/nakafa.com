@@ -222,7 +222,7 @@ export function NinaInput({
               onClick={stopping ? onStop : undefined}
               size="icon"
               type={stopping ? "button" : "submit"}
-              variant="default"
+              variant="secondary"
             >
               <HugeIcons icon={stopping ? StopIcon : ArrowUp02Icon} />
             </InputGroupButton>

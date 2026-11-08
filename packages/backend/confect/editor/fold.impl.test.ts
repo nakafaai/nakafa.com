@@ -91,14 +91,16 @@ describe("editor/fold", () => {
           slug: nf,
         });
         yield* fixture.internal.mutation(fold, { documentId });
-        const stale = yield* teacher
-          .mutation(steps.submit, {
-            batch: yield* batchOf("stale", 0, [insertAt(1, "?")]),
-            documentId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(stale).toMatchObject({ _tag: "VersionStale" });
+        const stale = yield* teacher.mutation(steps.submit, {
+          batch: yield* batchOf("stale", 0, [insertAt(1, "?")]),
+          documentId,
+          slug: nf,
+        });
+        expect(stale).toEqual({
+          _tag: "VersionStale",
+          baseVersion: 0,
+          head: 1,
+        });
         yield* fixture.internal.mutation(fold, { documentId });
         const [snapshot] = yield* fixture.run(snapshotRows);
         expect(snapshot.version).toBe(1);

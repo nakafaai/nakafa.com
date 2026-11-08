@@ -1,6 +1,6 @@
 import { Array as Arr, Effect } from "effect";
-import type { Node } from "typescript/unstable/ast";
-import type { Checker, Type } from "typescript/unstable/sync";
+import type { Node } from "tsrs/ast";
+import type { Checker, Type } from "tsrs/sync";
 import { TestCompilerError } from "#scripts/check/source";
 
 /** The intrinsic names of `undefined` and `null`, which a receiver may hold beside its array. */
@@ -36,9 +36,9 @@ function isAnyType(type: Type) {
  */
 const isArrayReceiver = Effect.fnUntraced(function* (
   checker: Checker,
-  type: Type | undefined
+  type: Type
 ): Effect.fn.Return<boolean, TestCompilerError> {
-  if (type === undefined || isAnyType(type)) {
+  if (isAnyType(type)) {
     return true;
   }
   if (intrinsicNamed(type, ["never"])) {

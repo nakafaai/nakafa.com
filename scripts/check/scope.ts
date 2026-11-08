@@ -27,7 +27,7 @@ import {
   isVariableStatement,
   type Node,
   type VariableDeclaration,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import { unwrapped } from "#scripts/check/wrapper";
 
 /**

@@ -2,13 +2,14 @@ import { Array as Arr, HashSet } from "effect";
 import {
   isCallExpression,
   isClassDeclaration,
+  isExpressionWithTypeArguments,
   isIdentifier,
   isObjectLiteralExpression,
   isPropertyAssignment,
   type Node,
   type SourceFile,
   SyntaxKind,
-} from "typescript/unstable/ast";
+} from "tsrs/ast";
 import {
   importedNames,
   namedImports,
@@ -36,7 +37,9 @@ function serviceClasses(sourceFile: SourceFile) {
       return [];
     }
     const extended = Arr.flatMap(statement.heritageClauses ?? [], (clause) =>
-      clause.token === SyntaxKind.ExtendsKeyword ? clause.types : []
+      clause.token === SyntaxKind.ExtendsKeyword
+        ? Arr.filter(clause.types, isExpressionWithTypeArguments)
+        : []
     );
     return Arr.some(
       extended,

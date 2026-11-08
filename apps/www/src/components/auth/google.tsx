@@ -68,10 +68,7 @@ export function AuthGoogle({ returnPath, variant }: Props) {
           Effect.tapError((error) =>
             reportClientException(error, { source: "google-sign-in" })
           ),
-          Effect.match({
-            onFailure: () => false,
-            onSuccess: () => true,
-          })
+          Effect.isSuccess
         )
       );
       if (!started) {

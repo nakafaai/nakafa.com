@@ -7,11 +7,8 @@ import {
   Schema,
   Tuple,
 } from "effect";
-import {
-  isIdentifier,
-  isShorthandPropertyAssignment,
-} from "typescript/unstable/ast";
-import type { API } from "typescript/unstable/sync";
+import { isIdentifier, isShorthandPropertyAssignment } from "tsrs/ast";
+import type { Snapshot } from "tsrs/sync";
 import { assertionCandidates } from "#scripts/check/assertion";
 import { symbolTable } from "#scripts/check/convex";
 import { dispatchCandidates } from "#scripts/check/dispatch";
@@ -51,7 +48,7 @@ const FINDING_ORDER = Order.Struct({
 
 /** Keeps each test in its own native project so lexical bindings stay local. */
 const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
-  api: API,
+  base: Snapshot,
   index: number,
   file: string
 ) {
@@ -60,19 +57,14 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
     new TestCompilerError({ cause, message: `Unable to inspect ${file}.` });
   const snapshot = yield* Effect.acquireRelease(
     Effect.try({
-      try: () =>
-        api.updateSnapshot({
-          openProjects: [configFile],
-          closeProjects:
-            index === 0 ? [] : [`/test-policy/${index - 1}/tsconfig.json`],
-        }),
+      try: () => base.update({ openProjects: [configFile] }),
       catch: compilerFailure,
     }),
     (resource) => Effect.sync(() => resource.dispose())
   );
   const { project, sourceFile } = yield* Effect.try({
     try: () => {
-      const project = snapshot.getProject(configFile);
+      const project = snapshot.getConfiguredProject(configFile);
       return {
         project,
         sourceFile: project?.program.getSourceFile(
@@ -126,7 +118,7 @@ export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
       return [];
     }
     const config = yield* projectConfig(["case.test.ts"]);
-    const api = yield* openCompiler(
+    const base = yield* openCompiler(
       Rec.fromEntries(
         Arr.flatMap(tests, ({ sourceText }, index) => [
           [`/test-policy/${index}/case.test.ts`, sourceText],
@@ -138,7 +130,7 @@ export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
     return Arr.flatten(
       yield* Effect.forEach(
         tests,
-        ({ file }, index) => inspectTest(api, index, file),
+        ({ file }, index) => inspectTest(base, index, file),
         { concurrency: 1 }
       )
     );

@@ -7,7 +7,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsrs --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

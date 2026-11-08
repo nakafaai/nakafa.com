@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsrs --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@repo/utilities": "workspace:*",

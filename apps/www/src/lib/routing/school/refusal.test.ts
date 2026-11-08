@@ -69,7 +69,7 @@ describe("school page refusal", () => {
   );
 
   it.effect(
-    "reads nothing for a request with a session, so the page's own gate decides it in the browser",
+    "refuses a school that does not exist to a signed-in visitor too, so an unknown host never answers a shell",
     () =>
       Effect.gen(function* () {
         serve({ refusal: answered(true) });
@@ -78,9 +78,11 @@ describe("school page refusal", () => {
           cookie: SESSION_COOKIE,
         });
 
-        expect(answer).toEqual(Option.none());
+        expect(answer).toEqual(Option.some("en"));
         expect(count).toBe(0);
-        expect(fetcher).not.toHaveBeenCalled();
+        expect(queriesOf()).toEqual([
+          { auth: null, path: REFUSAL, slug: "harapan" },
+        ]);
       })
   );
 

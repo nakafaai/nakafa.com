@@ -1,15 +1,9 @@
 import { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
-import { VersionStale } from "@repo/backend/confect/editor/batch";
-import {
-  DocumentInvalid,
-  DocumentTooLarge,
-} from "@repo/backend/confect/editor/document";
-import { ClientTaken, FoldPending } from "@repo/backend/confect/editor/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { ConvexReactClient } from "convex/react";
-import { Data, Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { SyncFailed, type SyncTransport } from "@/lib/editor/session";
 
 /** The Convex calls the sync loop makes, which the editor's React client provides. */
@@ -23,32 +17,15 @@ const Target = Schema.Struct({
 
 type Target = typeof Target.Type;
 
-/** The refusals of a submit that the sync loop decides for itself, which pass through as they are. */
-const SubmitRefusal = Schema.Union([
-  VersionStale,
-  ClientTaken,
-  DocumentInvalid,
-  DocumentTooLarge,
-  FoldPending,
-]);
-
-/** One refusal of a submit that the loop decides. */
-type SubmitRefusal = typeof SubmitRefusal.Type;
-
-/** A submit that Convex rejected before the function answered, such as a lost connection. */
-class SubmitRejected extends Data.TaggedError("SubmitRejected")<{
-  readonly cause: unknown;
-}> {}
-
 /** The message of a call that failed for a reason the loop does not decide. */
 const failed = (reason: string) => new SyncFailed({ reason });
 
 /**
  * The sync transport of one document over the Convex client of the page. Each call sends
  * the arguments as Confect names them and decodes the reply with the Confect function it
- * came from, so the editor reads the same shapes the server writes. A refused submit keeps
- * the refusal the loop decides (`VersionStale`, `ClientTaken`, `DocumentInvalid`,
- * `DocumentTooLarge`, `FoldPending`), and every other failure becomes `SyncFailed`.
+ * came from, so the editor reads the same shapes the server writes. A submit's reply carries
+ * every outcome the loop decides (`SubmitReply`), so every failure of a call, a refused
+ * submit included, becomes `SyncFailed`.
  */
 export const convexTransport = (
   client: Client,
@@ -87,40 +64,17 @@ export const convexTransport = (
     ),
   submit: (batch) =>
     Effect.tryPromise({
-      catch: (cause) => new SubmitRejected({ cause }),
       try: () =>
         client.mutation(Ref.getFunctionReference(editors.steps.submit), {
           batch,
           documentId: target.documentId,
           slug: target.slug,
         }),
+      catch: () => failed("The changes could not be sent."),
     }).pipe(
-      Effect.matchEffect({
-        onFailure: (rejected) => refusalOf(rejected.cause),
-        onSuccess: () => Effect.succeed(null),
-      })
+      Effect.flatMap((encoded) =>
+        Ref.decodeReturns(editors.steps.submit, encoded)
+      ),
+      Effect.mapError(() => failed("The changes could not be sent."))
     ),
 });
-
-/**
- * The typed refusal of a submit that Convex rejected, or `SyncFailed` when the rejection
- * is not one of the refusals the loop decides, or when it did not come from the function.
- */
-const refusalOf = (
-  cause: unknown
-): Effect.Effect<never, SyncFailed | SubmitRefusal> => {
-  if (!Ref.isConvexError(cause)) {
-    return Effect.fail(failed("The changes could not be sent."));
-  }
-  return Effect.gen(function* () {
-    const decoded = yield* Ref.decodeError(
-      editors.steps.submit,
-      cause.data
-    ).pipe(Effect.mapError(() => failed("The changes could not be sent.")));
-    const refusal = Option.filter(decoded, Schema.is(SubmitRefusal));
-    if (Option.isNone(refusal)) {
-      return yield* failed("The changes could not be sent.");
-    }
-    return yield* refusal.value;
-  });
-};
