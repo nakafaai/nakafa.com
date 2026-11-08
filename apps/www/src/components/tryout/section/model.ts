@@ -26,6 +26,7 @@ export type TryoutSectionPage = PublicSectionPage | RetainedSectionPage;
 const TryoutSectionRouteSchema = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
+  group: Schema.String,
   locale: AppLocaleCodeSchema,
   section: Schema.String,
   set: Schema.String,

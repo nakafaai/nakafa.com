@@ -4,21 +4,31 @@ import { Option } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
-import { TryoutExamPageClient } from "@/components/tryout/catalog/exam";
-import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
-import { readTryoutExamFn } from "@/components/tryout/route/catalog.functions";
+import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
+import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
+import {
+  TryoutExamSelector,
+  TryoutGroupSelector,
+} from "@/components/tryout/catalog/selector";
+import { readTryoutGroupFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { readStaticData } from "@/lib/static/data";
 
-/** One exam of the try-out catalog: its tracks, each a year or a series. */
-export const Route = createFileRoute("/$locale/_main/try-out/$country/$exam/")({
+/**
+ * One group of an exam: a year of SNBT, a grade of TKA, or a Studienkolleg. Its
+ * header picks the exam and the group, and its body holds the group's tracks.
+ */
+export const Route = createFileRoute(
+  "/$locale/_main/try-out/$country/$exam/$group/"
+)({
   loader: async ({ params }) => {
-    const route = await readStaticData(readTryoutExamFn, {
+    const route = await readStaticData(readTryoutGroupFn, {
       country: params.country,
       exam: params.exam,
+      group: params.group,
       locale: params.locale,
     });
     if (route.kind === "notFound") {
@@ -40,10 +50,10 @@ export const Route = createFileRoute("/$locale/_main/try-out/$country/$exam/")({
           title: loaderData.head.title,
         }),
   headers: readTryoutCatalogHeaders,
-  component: TryoutExamPage,
+  component: TryoutGroupPage,
 });
 
-function TryoutExamPage() {
+function TryoutGroupPage() {
   const { locale } = Route.useParams();
   const route = Route.useLoaderData();
   return (
@@ -52,11 +62,17 @@ function TryoutExamPage() {
         <BreadcrumbHeader
           value={{
             action: (
-              <TryoutExamSelector
-                currentValue={route.examPath}
-                label={route.selectorLabel}
-                options={route.examOptions}
-              />
+              <TryoutCatalogChoices>
+                <TryoutExamSelector
+                  currentValue={route.page.exam.publicPath}
+                  options={route.examOptions}
+                />
+                <TryoutGroupSelector
+                  axis={route.page.exam.groupAxis}
+                  currentValue={route.page.group.publicPath}
+                  options={route.groupOptions}
+                />
+              </TryoutCatalogChoices>
             ),
             home: HOME_TARGET,
             homeLabel: route.labels.home,
@@ -68,12 +84,12 @@ function TryoutExamPage() {
                   getTryoutCrumbTarget(route.countryPath)
                 ),
               },
-              { label: route.exam.exam.title },
+              { label: route.name },
             ],
-            title: route.exam.exam.title,
+            title: route.name,
           }}
         />
-        <TryoutExamPageClient locale={locale} page={route.exam} />
+        <TryoutGroupPageClient locale={locale} page={route.page} />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

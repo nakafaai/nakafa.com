@@ -84,8 +84,8 @@ describe("published try-out sitemap", () => {
         expect(yield* readPublishedTryoutSitemap(locale, 0)).toEqual({
           paths: [
             `try-out/indonesia-${locale}`,
-            `try-out/indonesia/snbt-${locale}`,
             `try-out/indonesia/snbt/2027-${locale}`,
+            `try-out/indonesia/snbt/2027/utbk-${locale}`,
             set,
             `${set}/section-a`,
             `${set}/section-b`,

@@ -13,10 +13,11 @@ const CountryInput = Schema.Struct({
   locale: LocaleSchema,
 });
 
-/** The address segments of an exam page. */
-const ExamInput = Schema.Struct({
+/** The address segments of a group page. */
+const GroupInput = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
+  group: Schema.String,
   locale: LocaleSchema,
 });
 
@@ -24,6 +25,7 @@ const ExamInput = Schema.Struct({
 const TrackInput = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
+  group: Schema.String,
   locale: LocaleSchema,
   search: CatalogQuery,
   track: Schema.String,
@@ -49,14 +51,14 @@ export const readTryoutCountryFn = createServerFn({ method: "GET" })
     return readTryoutCountryHandler(options);
   });
 
-/** One exam page, read on the server for a loader. */
-export const readTryoutExamFn = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(ExamInput))
+/** One group page, read on the server for a loader. */
+export const readTryoutGroupFn = createServerFn({ method: "GET" })
+  .validator(Schema.toStandardSchemaV1(GroupInput))
   .handler(async (options) => {
-    const { readTryoutExamHandler } = await import(
+    const { readTryoutGroupHandler } = await import(
       "@/components/tryout/route/catalog.server"
     );
-    return readTryoutExamHandler(options);
+    return readTryoutGroupHandler(options);
   });
 
 /** One track page with the first page of its set list, read on the server for a loader. */

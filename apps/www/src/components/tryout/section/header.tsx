@@ -5,9 +5,10 @@ import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 
 /**
- * Renders the section heading with its exam, track, and set path. The exam
- * and track link only while the page sits at the section's current catalog
- * path; an attempt kept from an earlier catalog version leaves them unlinked.
+ * Renders the section heading with its exam and group, its track, and its set.
+ * The group and track link only while the page sits at the section's current
+ * catalog path; an attempt kept from an earlier catalog version leaves them
+ * unlinked.
  */
 export function TryoutSectionPageHeader({
   children,
@@ -25,11 +26,11 @@ export function TryoutSectionPageHeader({
     <TryoutPageHeader
       items={[
         {
-          label: page.exam.title,
+          label: `${page.exam.title} ${page.group.title}`,
           target:
             parents === "linked"
               ? Option.getOrUndefined(
-                  getTryoutCrumbTarget(page.exam.publicPath)
+                  getTryoutCrumbTarget(page.group.publicPath)
                 )
               : undefined,
         },

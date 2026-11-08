@@ -9,11 +9,16 @@ import {
 } from "@repo/backend/content/tryout/catalog";
 import { Array as Arr, Effect } from "effect";
 
-/** Lists the public paths of one locale's catalog in sitemap order. */
-function listTryoutSitemapPaths(catalog: PublishedCatalog) {
+/**
+ * Lists the public paths of one locale's catalog in sitemap order. An exam has no page of its own,
+ * because a link to it lands on its first group, so its path is not listed.
+ */
+export function listTryoutSitemapPaths(catalog: PublishedCatalog) {
   return Arr.sort(
-    Arr.flatMap(catalog.rows, ({ publicPath }) =>
-      publicPath === undefined ? [] : [publicPath]
+    Arr.flatMap(catalog.rows, (row) =>
+      row.publicPath === undefined || row.kind === "exam"
+        ? []
+        : [row.publicPath]
     ),
     compareSitemapPaths
   );

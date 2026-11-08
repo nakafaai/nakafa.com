@@ -26,10 +26,10 @@ describe("contentRelease/tryout", () => {
           ).toEqual({
             paths: [
               `try-out/indonesia-${appLocale}`,
-              `try-out/indonesia/snbt-${appLocale}`,
               `try-out/indonesia/snbt/2027-${appLocale}`,
-              `try-out/indonesia/snbt/2027/set-1-${appLocale}`,
-              `try-out/indonesia/snbt/2027/set-2-${appLocale}`,
+              `try-out/indonesia/snbt/2027/utbk-${appLocale}`,
+              `try-out/indonesia/snbt/2027/utbk/set-1-${appLocale}`,
+              `try-out/indonesia/snbt/2027/utbk/set-2-${appLocale}`,
             ],
           });
           expect(

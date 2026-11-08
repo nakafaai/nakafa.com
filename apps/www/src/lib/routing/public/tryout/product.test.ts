@@ -1,40 +1,28 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
+import {
+  type ExamFixture,
+  type GroupFixture,
+  type RouteIdentity,
+  type SectionFixture,
+  serveTryoutCatalog,
+} from "@/test/catalog";
 
-const TrackFixtureSchema = Schema.Struct({
-  publicPath: Schema.String,
-  trackKey: Schema.String,
-  trackKind: Schema.String,
-});
-const ExamFixtureSchema = Schema.Struct({
-  appLocale: AppLocaleCodeSchema,
-  publicPath: Schema.String,
-  tracks: Schema.Array(TrackFixtureSchema),
-});
-const SectionFixtureSchema = Schema.Struct({
-  appLocale: AppLocaleCodeSchema,
-  publicPath: Schema.String,
-});
-type ExamFixture = typeof ExamFixtureSchema.Type;
-type SectionFixture = typeof SectionFixtureSchema.Type;
-/** One signed route identity, with the public path that each locale serves for it. */
-type RouteIdentity = Partial<Record<AppLocaleCode, string>>;
-
-const readLocalizedPathMock = vi.hoisted(() => vi.fn());
-const readExamPageMock = vi.hoisted(() => vi.fn());
-const readSectionPageMock = vi.hoisted(() => vi.fn());
+const mocks = vi.hoisted(() => ({
+  exam: vi.fn(),
+  group: vi.fn(),
+  path: vi.fn(),
+  section: vi.fn(),
+}));
 vi.mock("@/lib/content/tryout/path", () => ({
-  readPublishedTryoutLocalizedPath: readLocalizedPathMock,
+  readPublishedTryoutLocalizedPath: mocks.path,
 }));
 vi.mock("@/lib/content/tryout/catalog", () => ({
-  readPublishedTryoutExamPage: readExamPageMock,
-  readPublishedTryoutSectionPage: readSectionPageMock,
+  readPublishedTryoutExamPage: mocks.exam,
+  readPublishedTryoutGroupPage: mocks.group,
+  readPublishedTryoutSectionPage: mocks.section,
 }));
 
 const SNBT_EXAM: RouteIdentity = {
@@ -42,119 +30,50 @@ const SNBT_EXAM: RouteIdentity = {
   en: "try-out/indonesia/snbt",
   id: "try-out/indonesia/snbt",
 };
-const SNBT_2027_TRACK: RouteIdentity = {
+const SNBT_2027_GROUP: RouteIdentity = {
   de: "try-out/indonesien/snbt/2027",
   en: "try-out/indonesia/snbt/2027",
   id: "try-out/indonesia/snbt/2027",
 };
 const SNBT_2027_SET_1: RouteIdentity = {
-  de: "try-out/indonesien/snbt/2027/aufgabensatz-1",
-  en: "try-out/indonesia/snbt/2027/set-1",
-  id: "try-out/indonesia/snbt/2027/set-1",
+  de: "try-out/indonesien/snbt/2027/utbk/aufgabensatz-1",
+  en: "try-out/indonesia/snbt/2027/utbk/set-1",
+  id: "try-out/indonesia/snbt/2027/utbk/set-1",
 };
+
+/** The English group of one SNBT year, holding its one UTBK track. */
+function yearGroup(year: string): GroupFixture {
+  return {
+    appLocale: "en",
+    publicPath: `try-out/indonesia/snbt/${year}`,
+    tracks: [
+      { publicPath: `try-out/indonesia/snbt/${year}/utbk`, trackKey: year },
+    ],
+  };
+}
+
 const SNBT_EXAM_PAGES: readonly ExamFixture[] = [
   {
     appLocale: "en",
+    groupAxis: "year",
+    groups: [{ groupKey: "2027", publicPath: "try-out/indonesia/snbt/2027" }],
     publicPath: "try-out/indonesia/snbt",
-    tracks: [
-      {
-        publicPath: "try-out/indonesia/snbt/2027",
-        trackKey: "2027",
-        trackKind: "year",
-      },
-    ],
-  },
-  {
-    appLocale: "de",
-    publicPath: "try-out/indonesien/snbt",
-    tracks: [
-      {
-        publicPath: "try-out/indonesien/snbt/2027",
-        trackKey: "2027",
-        trackKind: "year",
-      },
-    ],
   },
 ];
 
-/** Serves exactly the signed routes, exam pages, and visible sections of one catalog. */
-function serveCatalog({
-  exams = [],
-  routes = [],
-  sections = [],
-}: {
+/** Serves one catalog, with SNBT 2027 and its UTBK unless it names its own groups. */
+function serveCatalog(fixture: {
   readonly exams?: readonly ExamFixture[];
+  readonly groups?: readonly GroupFixture[];
   readonly routes?: readonly RouteIdentity[];
   readonly sections?: readonly SectionFixture[];
 }) {
-  readLocalizedPathMock.mockImplementation(
-    ({
-      currentAppLocale,
-      publicPath,
-      targetAppLocale,
-    }: {
-      readonly currentAppLocale: AppLocaleCode;
-      readonly publicPath: string;
-      readonly targetAppLocale: AppLocaleCode;
-    }) =>
-      Effect.succeed(
-        Option.getOrNull(
-          Option.flatMap(
-            Arr.findFirst(
-              routes,
-              (route) => route[currentAppLocale] === publicPath
-            ),
-            (route) => Option.fromNullishOr(route[targetAppLocale])
-          )
-        )
-      )
-  );
-  readExamPageMock.mockImplementation(
-    ({
-      appLocale,
-      publicPath,
-    }: {
-      readonly appLocale: AppLocaleCode;
-      readonly publicPath: string;
-    }) =>
-      Effect.succeed(
-        Option.getOrNull(
-          Arr.findFirst(
-            exams,
-            (exam) =>
-              exam.appLocale === appLocale && exam.publicPath === publicPath
-          )
-        )
-      )
-  );
-  readSectionPageMock.mockImplementation(
-    ({
-      appLocale,
-      publicPath,
-    }: {
-      readonly appLocale: AppLocaleCode;
-      readonly publicPath: string;
-    }) =>
-      Effect.succeed(
-        Option.isSome(
-          Arr.findFirst(
-            sections,
-            (section) =>
-              section.appLocale === appLocale &&
-              section.publicPath === publicPath
-          )
-        )
-          ? { publicPath }
-          : null
-      )
-  );
+  serveTryoutCatalog(mocks, { groups: [yearGroup("2027")], ...fixture });
 }
 
 describe("retired try-out redirects", () => {
   beforeEach(() => {
-    readLocalizedPathMock.mockReset();
-    readExamPageMock.mockReset();
-    readSectionPageMock.mockReset();
+    vi.clearAllMocks();
   });
 
   describe("retired SNBT exam URL", () => {
@@ -198,7 +117,7 @@ describe("retired try-out redirects", () => {
         Effect.gen(function* () {
           serveCatalog({
             exams: SNBT_EXAM_PAGES,
-            routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+            routes: [SNBT_EXAM, SNBT_2027_GROUP, SNBT_2027_SET_1],
           });
 
           expect(
@@ -208,16 +127,19 @@ describe("retired try-out redirects", () => {
     );
 
     it.effect.each([
-      ["/en/try-out/snbt/2027-set-1", "/en/try-out/indonesia/snbt/2027/set-1"],
+      [
+        "/en/try-out/snbt/2027-set-1",
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1",
+      ],
       [
         "/de/try-out/snbt/2027-set-1",
-        "/de/try-out/indonesien/snbt/2027/aufgabensatz-1",
+        "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1",
       ],
     ])("redirects %s to its localized set", ([pathname, expected]) =>
       Effect.gen(function* () {
         serveCatalog({
           exams: SNBT_EXAM_PAGES,
-          routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+          routes: [SNBT_EXAM, SNBT_2027_GROUP, SNBT_2027_SET_1],
         });
 
         expect(yield* readTryoutRedirect(pathname)).toEqual({
@@ -242,13 +164,14 @@ describe("retired try-out redirects", () => {
       () =>
         Effect.gen(function* () {
           serveCatalog({
-            routes: [{ en: "try-out/indonesia/snbt/2028/set-1" }],
+            groups: [yearGroup("2028")],
+            routes: [{ en: "try-out/indonesia/snbt/2028/utbk/set-1" }],
           });
 
           expect(
             yield* readTryoutRedirect("/en/try-out/snbt/2028-set-1")
           ).toEqual({
-            destination: "/en/try-out/indonesia/snbt/2028/set-1",
+            destination: "/en/try-out/indonesia/snbt/2028/utbk/set-1",
             status: 308,
           });
         })
@@ -262,7 +185,7 @@ describe("retired try-out redirects", () => {
             exams: SNBT_EXAM_PAGES,
             routes: [
               SNBT_EXAM,
-              SNBT_2027_TRACK,
+              SNBT_2027_GROUP,
               SNBT_2027_SET_1,
               { en: "try-out/snbt/2027-set-1" },
             ],
@@ -280,7 +203,7 @@ describe("retired try-out redirects", () => {
         Effect.gen(function* () {
           serveCatalog({
             exams: SNBT_EXAM_PAGES,
-            routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+            routes: [SNBT_EXAM, SNBT_2027_GROUP, SNBT_2027_SET_1],
           });
 
           expect(
@@ -294,19 +217,20 @@ describe("retired try-out redirects", () => {
     it.effect.each([
       [
         "/en/try-out/snbt/2027-set-1/part/english-language",
-        "/en/try-out/indonesia/snbt/2027/set-1/literacy-in-english",
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1/literacy-in-english",
         {
           appLocale: "en",
-          publicPath: "try-out/indonesia/snbt/2027/set-1/literacy-in-english",
+          publicPath:
+            "try-out/indonesia/snbt/2027/utbk/set-1/literacy-in-english",
         },
       ],
       [
         "/de/try-out/snbt/2027-set-1/part/englische-sprache",
-        "/de/try-out/indonesien/snbt/2027/aufgabensatz-1/lesekompetenz-in-englischer-sprache",
+        "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1/lesekompetenz-in-englischer-sprache",
         {
           appLocale: "de",
           publicPath:
-            "try-out/indonesien/snbt/2027/aufgabensatz-1/lesekompetenz-in-englischer-sprache",
+            "try-out/indonesien/snbt/2027/utbk/aufgabensatz-1/lesekompetenz-in-englischer-sprache",
         },
       ],
     ] as const)(
@@ -315,7 +239,7 @@ describe("retired try-out redirects", () => {
         Effect.gen(function* () {
           serveCatalog({
             exams: SNBT_EXAM_PAGES,
-            routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+            routes: [SNBT_EXAM, SNBT_2027_GROUP, SNBT_2027_SET_1],
             sections: [section],
           });
 
@@ -330,7 +254,7 @@ describe("retired try-out redirects", () => {
       Effect.gen(function* () {
         serveCatalog({
           exams: SNBT_EXAM_PAGES,
-          routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+          routes: [SNBT_EXAM, SNBT_2027_GROUP, SNBT_2027_SET_1],
         });
 
         expect(
@@ -352,7 +276,7 @@ describe("retired try-out redirects", () => {
               {
                 appLocale: "en",
                 publicPath:
-                  "try-out/indonesia/snbt/2027/set-1/literacy-in-english",
+                  "try-out/indonesia/snbt/2027/utbk/set-1/literacy-in-english",
               },
             ],
           });
@@ -371,7 +295,7 @@ describe("retired try-out redirects", () => {
           exams: SNBT_EXAM_PAGES,
           routes: [
             SNBT_EXAM,
-            SNBT_2027_TRACK,
+            SNBT_2027_GROUP,
             SNBT_2027_SET_1,
             { en: "try-out/snbt/2027-set-1/part/english-language" },
           ],
@@ -379,7 +303,7 @@ describe("retired try-out redirects", () => {
             {
               appLocale: "en",
               publicPath:
-                "try-out/indonesia/snbt/2027/set-1/literacy-in-english",
+                "try-out/indonesia/snbt/2027/utbk/set-1/literacy-in-english",
             },
           ],
         });
@@ -396,11 +320,12 @@ describe("retired try-out redirects", () => {
       Effect.gen(function* () {
         serveCatalog({
           exams: SNBT_EXAM_PAGES,
-          routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+          routes: [SNBT_EXAM, SNBT_2027_GROUP, SNBT_2027_SET_1],
           sections: [
             {
               appLocale: "en",
-              publicPath: "try-out/indonesia/snbt/2027/set-1/matematika-wajib",
+              publicPath:
+                "try-out/indonesia/snbt/2027/utbk/set-1/matematika-wajib",
             },
           ],
         });
@@ -410,7 +335,8 @@ describe("retired try-out redirects", () => {
             "/en/try-out/snbt/2027-set-1/part/matematika-wajib"
           )
         ).toEqual({
-          destination: "/en/try-out/indonesia/snbt/2027/set-1/matematika-wajib",
+          destination:
+            "/en/try-out/indonesia/snbt/2027/utbk/set-1/matematika-wajib",
           status: 308,
         });
       })

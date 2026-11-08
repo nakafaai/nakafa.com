@@ -13,19 +13,19 @@ import {
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { ComingSoon } from "@/components/shared/upcoming";
-import { getTryoutTrackIcons } from "@/components/tryout/catalog/icons";
+import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import { getTryoutTrackCatalogArtwork } from "@/lib/tryout/artwork";
 
-type ExamPageQuery = typeof tryouts.queries.catalog.getExamPage;
+type GroupPageQuery = typeof tryouts.queries.catalog.getGroupPage;
 
-/** Renders one realtime try-out exam page from Convex. */
-export function TryoutExamPageClient({
+/** Renders the tracks of one try-out group, each a card with its artwork or its subject's icon. */
+export function TryoutGroupPageClient({
   locale,
   page,
 }: {
   locale: Locale;
-  page: NonNullable<Ref.Returns<ExamPageQuery>>;
+  page: NonNullable<Ref.Returns<GroupPageQuery>>;
 }) {
   const tTryouts = useTranslations("Tryouts");
 
@@ -41,12 +41,7 @@ export function TryoutExamPageClient({
           countryKey: page.country.countryKey,
           examKey: page.exam.examKey,
           trackKey: track.trackKey,
-          trackKind: track.trackKind,
-        }) ??
-        Tuple.make(
-          getTryoutTrackIcons(track.trackKind, track.trackKey),
-          track.trackKey
-        )
+        }) ?? Tuple.make(getTryoutSubjectIcons(track.trackKey), track.trackKey)
     )
   );
 

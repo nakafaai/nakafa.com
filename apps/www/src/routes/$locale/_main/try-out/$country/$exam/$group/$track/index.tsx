@@ -9,7 +9,11 @@ import { Option, Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
-import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
+import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
+import {
+  TryoutExamSelector,
+  TryoutGroupSelector,
+} from "@/components/tryout/catalog/selector";
 import {
   CATALOG_QUERY_DEFAULTS,
   CatalogQuery,
@@ -37,13 +41,13 @@ const readLoaderQuery = createIsomorphicFn()
   );
 
 /**
- * One track of the try-out catalog: its heading, its exam selector and its set
- * list, read in one answer, so the page shows whole. The build prerenders that
+ * One track of the try-out catalog: its heading, its exam and group selectors and
+ * its set list, read in one answer, so the page shows whole. The build prerenders that
  * answer and every reader gets it; a signed-in learner's table replaces its rows
  * with their own, read from Convex in the browser.
  */
 export const Route = createFileRoute(
-  "/$locale/_main/try-out/$country/$exam/$track/"
+  "/$locale/_main/try-out/$country/$exam/$group/$track/"
 )({
   validateSearch: Schema.toStandardSchemaV1(CatalogQuery),
   search: { middlewares: [stripSearchParams(CATALOG_QUERY_DEFAULTS)] },
@@ -52,6 +56,7 @@ export const Route = createFileRoute(
     const route = await readStaticData(readTryoutTrackFn, {
       country: params.country,
       exam: params.exam,
+      group: params.group,
       locale: params.locale,
       search: readLoaderQuery(deps),
       track: params.track,
@@ -86,11 +91,17 @@ function TryoutTrackPage() {
         <BreadcrumbHeader
           value={{
             action: (
-              <TryoutExamSelector
-                currentValue={route.examPath}
-                label={route.selectorLabel}
-                options={route.examOptions}
-              />
+              <TryoutCatalogChoices>
+                <TryoutExamSelector
+                  currentValue={route.page.exam.publicPath}
+                  options={route.examOptions}
+                />
+                <TryoutGroupSelector
+                  axis={route.page.exam.groupAxis}
+                  currentValue={route.page.group.publicPath}
+                  options={route.groupOptions}
+                />
+              </TryoutCatalogChoices>
             ),
             home: HOME_TARGET,
             homeLabel: route.labels.home,
@@ -103,14 +114,14 @@ function TryoutTrackPage() {
                 ),
               },
               {
-                label: route.page.exam.title,
+                label: `${route.page.exam.title} ${route.page.group.title}`,
                 target: Option.getOrUndefined(
-                  getTryoutCrumbTarget(route.examPath)
+                  getTryoutCrumbTarget(route.page.group.publicPath)
                 ),
               },
               { label: route.page.track.title },
             ],
-            title: `${route.page.exam.title} ${route.page.track.title}`,
+            title: route.page.track.title,
           }}
         />
         <TryoutSetTable

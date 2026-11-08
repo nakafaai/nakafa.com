@@ -297,7 +297,7 @@ describe("Nina signed learning context", () => {
         Effect.gen(function* () {
           const user = yield* seedUser();
           return yield* resolveNinaContext(
-            { locale: "id", slug: "try-out/indonesia/snbt/2027/set-1-id" },
+            { locale: "id", slug: "try-out/indonesia/snbt/2027/utbk/set-1-id" },
             user
           );
         }).pipe(
