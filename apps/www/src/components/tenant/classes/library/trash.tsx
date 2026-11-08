@@ -27,11 +27,6 @@ import { TablePages } from "@/components/shared/table/pages";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   folderPath,
   type LibraryFolder,
   purgeFolderUpdate,
@@ -46,6 +41,7 @@ import { useFolderList } from "@/components/tenant/classes/library/tree";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many trashed items the trash reads each time its end comes into view. */
 const TRASH_PAGE_SIZE = 20;
@@ -217,8 +213,8 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
   const purgeFolder = useMutation(classroom.folders.purge);
 
   const restore = () =>
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         row._tag === "item"
           ? restoreItem.withOptimisticUpdate(restoreItemUpdate)({
               classId,
@@ -230,12 +226,11 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
               folderId: row.folder.id,
               slug,
             })
-      ),
-      toastForumFailure
+      )
     );
   const purge = () =>
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         row._tag === "item"
           ? purgeItem.withOptimisticUpdate(purgeItemUpdate)({
               classId,
@@ -247,8 +242,7 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
               folderId: row.folder.id,
               slug,
             })
-      ),
-      toastForumFailure
+      )
     );
 
   return (

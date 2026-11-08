@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 
 /** The head metadata, links, and structured data of one server document. */
 const ServerDocumentSchema = Schema.Struct({
@@ -80,3 +80,19 @@ export function expectSingleLink(
     )
   ).toEqual([{ href, hreflang, rel }]);
 }
+
+/** The robots meta tag of a head, its name and content in either order, and its directive. */
+const ROBOTS =
+  /<meta(?=[^>]*\bname="robots")[^>]*\bcontent="(?<directive>[^"]*)"/u;
+
+/**
+ * The robots directive in the HTML the server returned, as a crawler reads it
+ * without running a script, or an empty string when the head names none.
+ */
+export const readRobots = (html: string) =>
+  Option.getOrElse(
+    Option.flatMap(Str.match(ROBOTS)(html), (found) =>
+      Option.fromNullishOr(found.groups?.directive)
+    ),
+    () => ""
+  );

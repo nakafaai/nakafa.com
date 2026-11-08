@@ -40,12 +40,10 @@ import {
   RosterUnitProvider,
   useRosterUnit,
 } from "@/components/tenant/roster/unit";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { UnitId } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
-
-const SOURCE = "components/tenant/roster/import";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The Dapodik import of the school (ADR 0015, K13): the Admin chooses the unit, reads a
@@ -148,27 +146,28 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
 
   const submit = (rows: readonly (typeof ReadRow.Type)[]) =>
     startApplying(() =>
-      saveSchool(
-        () => applyBatches(rows),
-        SOURCE,
-        () => {
-          toast.success(
-            {
-              description: "school-roster-imported.description",
-              title: "school-roster-imported.title",
-            },
-            {
-              action: {
-                label: "open",
-                onClick: () =>
-                  navigate({
-                    params: { slug },
-                    to: "/school/$slug/settings/members",
-                  }),
+      runSchoolWrite(
+        schoolCall(() => applyBatches(rows)),
+        {
+          onSaved: () => {
+            toast.success(
+              {
+                description: "school-roster-imported.description",
+                title: "school-roster-imported.title",
               },
-            }
-          );
-          setPreview(undefined);
+              {
+                action: {
+                  label: "open",
+                  onClick: () =>
+                    navigate({
+                      params: { slug },
+                      to: "/school/$slug/settings/members",
+                    }),
+                },
+              }
+            );
+            setPreview(undefined);
+          },
         }
       )
     );

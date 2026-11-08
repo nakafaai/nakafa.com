@@ -69,11 +69,9 @@ import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
-
-const SOURCE = "components/tenant/settings/members";
 
 /**
  * How each member status shows, in the list and in its column's filter: an icon that fits it and that no
@@ -281,15 +279,15 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           invite({
             email: email.value,
             locale: sendLocale,
             personId: member.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
@@ -297,7 +295,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const removeMember = () => {
     dialogs.close();
     startTransition(() =>
-      saveSchool(() => remove({ personId: member.id, slug }), SOURCE)
+      runSchoolWrite(schoolCall(() => remove({ personId: member.id, slug })))
     );
   };
 

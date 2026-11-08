@@ -1,18 +1,18 @@
 import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import {
-  acceptanceRuntimeError,
-  retryFunctionTimeout,
-} from "@repo/backend/scripts/content/acceptance/error";
+  LocalConvex,
+  localConvexLayer,
+} from "@repo/backend/scripts/content/acceptance/convex";
+import { retryFunctionTimeout } from "@repo/backend/scripts/content/acceptance/error";
+import {
+  SessionCookie,
+  writeFixture,
+} from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   SESSION_LIFETIME,
-  writeSessionCookie,
+  sessionCookieOf,
 } from "@repo/backend/scripts/content/acceptance/learner";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import {
-  appUserOf,
-  encodeArguments,
-} from "@repo/backend/scripts/content/acceptance/member";
+import { appUserOf } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
@@ -20,43 +20,32 @@ import {
 import { Effect, Schema } from "effect";
 
 /**
- * Signs one synthetic operator into the running local acceptance backend: a new
- * learner, granted operator access as Nakafa staff grant it, with the deployment's
- * key. Its session cookie goes to `output`, mode 600, for a browser test to send.
+ * Signs one synthetic operator into the running local acceptance backend and
+ * answers its session cookie: a new learner, granted operator access as Nakafa
+ * staff grant it, with the deployment's key.
  */
-export const createAcceptanceOperator = Effect.fn(
-  "contentAcceptance.createOperator"
-)(function* (root: string, output: string) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
-    return yield* acceptanceRuntimeError(
-      "Run bun run acceptance:prepare and start acceptance before creating an operator."
+export const seedOperator = Effect.fn("contentAcceptance.seedOperator")(
+  function* () {
+    const { run } = yield* LocalConvex;
+    const { token, userId } = yield* retryFunctionTimeout(
+      createLearnerAccount(run, SESSION_LIFETIME)
     );
+    const appUser = yield* appUserOf(run, userId);
+    yield* run("operator grant", {
+      args: { userId: appUser },
+      path: "operators/staff:grant",
+    });
+    return yield* sessionCookieOf(token);
   }
-  const run = (
-    operation: string,
-    args: readonly string[],
-    sensitiveValues?: readonly string[]
-  ) => runLocalConvex(runtime, operation, args, sensitiveValues);
-  const { token, userId } = yield* retryFunctionTimeout(
-    createLearnerAccount(run, SESSION_LIFETIME)
-  );
-  const appUser = yield* appUserOf(run, userId);
-  yield* encodeArguments({ userId: appUser }).pipe(
-    Effect.flatMap((args) =>
-      run("operator grant", ["run", "operators/staff:grant", args])
-    )
-  );
-  yield* writeSessionCookie(output, token);
-});
+);
 
 /** The usage of the operator mode, which names the file that the session cookie goes to. */
 const USAGE = "operator <cookie-file>";
 const OperatorArguments = Schema.Tuple([Schema.String]);
 
 /**
- * The operator mode of the acceptance command line: signs one synthetic operator in
- * and writes its session cookie to the file that the command names.
+ * The operator mode of the acceptance command line: signs one synthetic operator
+ * in and writes its session cookie to the file that the command names.
  */
 export const operatorMode = {
   mode: "operator",
@@ -66,6 +55,9 @@ export const operatorMode = {
     args: readonly string[]
   ) {
     const [output] = yield* decodeModeArguments(USAGE, OperatorArguments, args);
-    return yield* createAcceptanceOperator(root, output);
+    const cookie = yield* seedOperator().pipe(
+      Effect.provide(localConvexLayer(root))
+    );
+    yield* writeFixture(output, SessionCookie, cookie);
   }),
 } satisfies AcceptanceMode;

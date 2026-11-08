@@ -3,6 +3,7 @@ import { Effect, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -71,8 +72,8 @@ test("the next lesson moves nothing while its body arrives", async ({
             timeout: readinessTimeoutMilliseconds,
           })
         );
-        // The parts below the body settle within a moment of it.
-        yield* Effect.promise(() => page.waitForTimeout(2000));
+        // The parts below the body render before the page goes quiet.
+        yield* Effect.promise(() => waitForQuiet(page));
         const shifts = yield* Effect.promise(() =>
           page.evaluate(() => Reflect.get(window, "nakafaShifts"))
         ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Shifts)));
