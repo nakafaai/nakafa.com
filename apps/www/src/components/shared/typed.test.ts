@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { MutableRef, Option } from "effect";
-import { act, createElement, useRef, useState } from "react";
+import { act, type ChangeEvent, createElement, useState } from "react";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { useEarlyTyping } from "@/components/shared/typed";
@@ -11,12 +11,11 @@ const draft = MutableRef.make("");
 /** A field drawn on the server and held by a draft, as a composer holds its words. */
 function Field({ saved }: { saved: string }) {
   const [text, setText] = useState(saved);
-  const field = useRef<HTMLTextAreaElement>(null);
-  useEarlyTyping(field, text, setText);
+  const field = useEarlyTyping(text, setText);
   MutableRef.set(draft, text);
   return createElement("textarea", {
     name: "text",
-    onChange: (event: { target: { value: string } }) =>
+    onChange: (event: ChangeEvent<HTMLTextAreaElement>) =>
       setText(event.target.value),
     ref: field,
     value: text,

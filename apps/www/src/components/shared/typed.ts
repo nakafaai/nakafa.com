@@ -1,5 +1,5 @@
 import { Function as Fn, Option, String as Str } from "effect";
-import { type RefObject, useEffectEvent, useLayoutEffect } from "react";
+import { useEffectEvent, useLayoutEffect, useRef } from "react";
 
 /**
  * Keeps the words a reader typed into a field before React took the page over.
@@ -8,12 +8,10 @@ import { type RefObject, useEffectEvent, useLayoutEffect } from "react";
  * field but not in the draft that holds it: what reads the draft, such as a send
  * button, sees nothing, and the next render writes the empty draft back. When the
  * field mounts, the draft takes the words, unless it already holds words of its own.
+ * Answers the ref the field takes.
  */
-export function useEarlyTyping(
-  field: RefObject<HTMLTextAreaElement | null>,
-  text: string,
-  setText: (typed: string) => void
-) {
+export function useEarlyTyping(text: string, setText: (typed: string) => void) {
+  const field = useRef<HTMLTextAreaElement>(null);
   const keepTyped = useEffectEvent(() => {
     Option.fromNullishOr(field.current).pipe(
       Option.map((element) => element.value),
@@ -25,4 +23,5 @@ export function useEarlyTyping(
   useLayoutEffect(() => {
     keepTyped();
   }, []);
+  return field;
 }

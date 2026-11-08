@@ -34,7 +34,7 @@ import {
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
-import { type ReactNode, Suspense, useRef, useState } from "react";
+import { type ReactNode, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { NinaAttach } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
@@ -95,8 +95,7 @@ export function NinaInput({
   const attachPress = useEarlyPress<HTMLButtonElement>(() =>
     onAttachRequest?.()
   );
-  const field = useRef<HTMLTextAreaElement>(null);
-  useEarlyTyping(field, text, setText);
+  const field = useEarlyTyping(text, setText);
   const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
   // While Nina answers, the button stops the reply and a press sends no text.
   const answering = status === "streaming";

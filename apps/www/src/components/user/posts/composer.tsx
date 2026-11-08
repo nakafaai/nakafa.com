@@ -12,7 +12,6 @@ import {
   type SubmitEventHandler,
   use,
   useLayoutEffect,
-  useRef,
 } from "react";
 import { useTranslations } from "use-intl";
 import { SignedInIsland } from "@/components/providers/island";
@@ -141,8 +140,7 @@ function PostComposerFields() {
   const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);
   const setText = usePostDraft((draft) => draft.setText);
-  const field = useRef<HTMLTextAreaElement>(null);
-  useEarlyTyping(field, text, setText);
+  const field = useEarlyTyping(text, setText);
   const body = readLearnerText(text);
   const remaining = remainingToShow(text);
   return (
