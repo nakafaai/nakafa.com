@@ -26,18 +26,24 @@ const ADD_ON_ICONS = {
   driveLarge: HardDriveIcon,
 } as const satisfies Record<SchoolAddOnKey, typeof SparklesIcon>;
 
-/** One add-on: its icon and name, its price once or a month, and what it gives. */
+/**
+ * One add-on: its icon and name, its price once or a month, and what it gives, on the three rows its
+ * siblings share from `md`, so every name, price and sentence starts on one line across the cards.
+ */
 function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
   const t = useTranslations("SchoolSite");
   const locale = useLocale();
   const item = schoolAddOns[addOn];
 
   return (
-    <Card data-school-addon={addOn}>
-      <CardHeader>
+    <Card
+      className="md:row-span-3 md:grid md:grid-rows-subgrid md:gap-y-2"
+      data-school-addon={addOn}
+    >
+      <CardHeader className="md:mb-4">
         <h3 className="flex items-center gap-2 text-lg font-medium tracking-tight">
           <HugeIcons
-            className="text-muted-foreground"
+            className="text-muted-foreground size-4"
             icon={ADD_ON_ICONS[addOn]}
           />
           {item.recurring
@@ -47,8 +53,8 @@ function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
             : t("addon-credits-title", { count: item.credits })}
         </h3>
       </CardHeader>
-      <CardContent className="grid gap-2">
-        <p className="flex flex-wrap items-baseline gap-x-2 whitespace-nowrap">
+      <CardContent className="md:contents">
+        <p className="flex flex-wrap items-baseline gap-x-2 whitespace-nowrap md:px-(--card-spacing)">
           <span className="text-2xl font-semibold tracking-tight tabular-nums">
             <SchoolAmount amounts={item.price} />
           </span>
@@ -56,7 +62,7 @@ function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
             {item.recurring ? t("plan-month") : t("addon-once")}
           </span>
         </p>
-        <p className="text-muted-foreground text-pretty">
+        <p className="text-muted-foreground mt-2 text-pretty md:mt-0 md:px-(--card-spacing)">
           {item.recurring
             ? t("addon-drive-text")
             : t("addon-credits-text", { months: SCHOOL_CREDIT_PACK_MONTHS })}
@@ -84,7 +90,7 @@ export function SchoolAddOns() {
             {t("addons-lead")}
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3 md:grid-rows-[repeat(3,auto)]">
           <SchoolAddOn addOn="credits" />
           <SchoolAddOn addOn="drive" />
           <SchoolAddOn addOn="driveLarge" />

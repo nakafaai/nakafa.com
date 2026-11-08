@@ -62,6 +62,11 @@ export const schoolSections = {
       (module) => module.SchoolParents
     )
   ),
+  player: laterCode(() =>
+    import("@/components/marketing/school/features/player").then(
+      (module) => module.SchoolPlayer
+    )
+  ),
   reports: laterCode(() =>
     import("@/components/marketing/school/features/reports").then(
       (module) => module.SchoolReports
@@ -90,6 +95,7 @@ export function openSchoolLanding() {
     openLaterCode(schoolSections.insight),
     openLaterCode(schoolSections.library),
     openLaterCode(schoolSections.parents),
+    openLaterCode(schoolSections.player),
     openLaterCode(schoolSections.reports),
     openLaterCode(schoolSections.tasks),
   ]);
