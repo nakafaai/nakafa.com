@@ -49,7 +49,8 @@ vi.mock("@/lib/seo/social", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/seo/social")>()),
   getOgUrl: catalog.getOgUrl,
 }));
-vi.mock("@/lib/tryout/artwork", () => ({
+vi.mock("@/lib/tryout/artwork", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/tryout/artwork")>()),
   resolveTryoutExamArtwork: catalog.resolveTryoutExamArtwork,
 }));
 vi.mock("@repo/internationalization/src/translator", () => ({
@@ -78,7 +79,7 @@ const trackPage = {
   country: { countryKey: "id" },
   exam: { examKey: "snbt", title: "SNBT" },
   publicPath: TRACK,
-  track: { title: "Year 2027", trackKey: "2027" },
+  track: { title: "Year 2027", trackKey: "2027", trackKind: "year" },
 };
 const hub = {
   countries: [{ publicPath: COUNTRY, title: "Indonesia" }],
@@ -285,6 +286,35 @@ describe("readTryoutTrackRoute", () => {
         head: { description: "Written for it." },
       });
     })
+  );
+
+  it.effect(
+    "shares a track's reviewed artwork as its social image, and the generated image otherwise",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* readTrack()).toMatchObject({
+          head: { image: "og-url" },
+        });
+
+        catalog.readTryoutTrackPage.mockReturnValueOnce(
+          Effect.succeed({
+            ...trackPage,
+            country: { countryKey: "indonesia" },
+            exam: { examKey: "tka", title: "TKA" },
+            track: {
+              title: "Compulsory Mathematics",
+              trackKey: "compulsory-mathematics",
+              trackKind: "subject",
+            },
+          })
+        );
+        expect(yield* readTrack()).toMatchObject({
+          head: {
+            image:
+              "/open-graph/tryout/indonesia/tka/en-compulsory-mathematics.png",
+          },
+        });
+      })
   );
 
   it.effect(

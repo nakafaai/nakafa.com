@@ -1,11 +1,11 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Button } from "@repo/design-system/components/ui/button";
-import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { reactionChip } from "@/components/tenant/classes/forum/chips";
 import {
   EmojiPopover,
   EmojiTrigger,
@@ -79,16 +79,6 @@ function useReact(messageId: ForumMessage["id"]) {
       )
     );
 }
-
-/** One emoji of a message and its count, on the secondary surface when the viewer gave it. */
-const reactionChip = cva("gap-1.5 rounded-full px-3 tabular-nums", {
-  variants: {
-    mine: {
-      false: "bg-muted/60 border-transparent",
-      true: "border-border bg-accent text-accent-foreground",
-    },
-  },
-});
 
 /**
  * The emoji a message carries, under its bubble, as WhatsApp and Discord show them: each with its

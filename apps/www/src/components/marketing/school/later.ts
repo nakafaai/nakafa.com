@@ -62,6 +62,11 @@ export const schoolSections = {
       (module) => module.SchoolParents
     )
   ),
+  player: laterCode(() =>
+    import("@/components/marketing/school/features/player").then(
+      (module) => module.SchoolPlayer
+    )
+  ),
   reports: laterCode(() =>
     import("@/components/marketing/school/features/reports").then(
       (module) => module.SchoolReports
@@ -75,9 +80,10 @@ export const schoolSections = {
 };
 
 /**
- * Loads the code of the School landing's sections. A route's loader runs only
- * where the page renders whole, on the server and on a client navigation, so the
- * page commits with its sections; the first document never runs it.
+ * Loads the code of the School landing's sections. The route opens them before a
+ * load that renders the page whole, on the server and on a client navigation, so
+ * the page commits with its sections; the first document never runs it, nor does a
+ * warm of a link to the page.
  */
 export function openSchoolLanding() {
   return Promise.all([
@@ -89,6 +95,7 @@ export function openSchoolLanding() {
     openLaterCode(schoolSections.insight),
     openLaterCode(schoolSections.library),
     openLaterCode(schoolSections.parents),
+    openLaterCode(schoolSections.player),
     openLaterCode(schoolSections.reports),
     openLaterCode(schoolSections.tasks),
   ]);

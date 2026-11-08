@@ -108,7 +108,8 @@ export function useSectionMatched(target: LinkTarget) {
 /**
  * The full path of the leaf route the address names, as the router spells it
  * without a trailing slash. A press changes the address at once, so a tab bar that
- * reads this moves with the press, before the next page's loaders resolve.
+ * reads this moves with the press, before the next page's loaders resolve. A frame
+ * or a label reads `useShownRoutePath` instead.
  */
 export function useLeafRoutePath() {
   const router = useRouter();
@@ -119,6 +120,22 @@ export function useLeafRoutePath() {
         ? "/"
         : withoutTrailingSlash(foundRoute.fullPath);
     },
+  });
+}
+
+/**
+ * The full path of the leaf route of the page on screen, as the router committed
+ * it, without a trailing slash. The address changes at a press, but the router's
+ * matches change only when the next page renders, so a header that names its page
+ * from this keeps naming the page it stands on until that page leaves.
+ */
+export function useShownRoutePath() {
+  return useMatches({
+    select: (matches) =>
+      Arr.last(matches).pipe(
+        Option.map((match) => withoutTrailingSlash(match.fullPath)),
+        Option.getOrElse(() => "/")
+      ),
   });
 }
 

@@ -28,7 +28,10 @@ test("a new account opens its own school in five questions and lands in it as it
   // decided first, so it does not cover the band.
   await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto("/en");
-  const open = page.getByRole("link", { name: "Open a school" });
+  // The footer links the questionnaire too, so the press is on the School band's own link.
+  const open = page
+    .locator("#school")
+    .getByRole("link", { name: "Open a school" });
   await Effect.runPromise(stepTo(page, open));
   await open.click();
   await page.waitForURL("**/en/school/new");

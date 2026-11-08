@@ -324,7 +324,11 @@ for (const viewport of SCREENS) {
     await expect(pane.getByText("Balasan pertama di thread.")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
-    await expect(messageRow(page, "Pesan 6")).toBeVisible();
+    // The chat draws behind the thread too. A phone's sheet takes the page behind it out of the accessibility tree, so
+    // the chat's message is looked for in the page, not in the region its role names.
+    await expect(
+      page.locator("[data-slot=message]").filter({ hasText: "Pesan 6" })
+    ).toBeAttached();
     await page.waitForLoadState("networkidle");
     expect(await counted(page, RELOAD_KEY)).toBe(0);
     expect(await counted(page, BLANK_KEY)).toBe(0);

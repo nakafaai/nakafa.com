@@ -2,6 +2,7 @@ import {
   Array as Arr,
   Effect,
   FileSystem,
+  Option,
   Path,
   Schema,
   String as Str,
@@ -40,6 +41,33 @@ const ONE_WORD_PATTERN = /^\S+$/u;
  */
 const EMPTY_KEY_PATTERN = /(?:^|-)empty$/u;
 const SECOND_SENTENCE_PATTERN = /[.!?]\s+\S/u;
+/** Any key: a rule of this family reads every value of a dictionary. */
+const ANY_KEY_PATTERN = /^/u;
+/** The language of a dictionary, the name of its file, such as `de` in `standalone/de.json`. */
+const LANGUAGE_PATTERN = /(?<language>[^/]+)\.json$/u;
+
+/**
+ * The formal words of each language, with the casual words that replace them. Nakafa talks to one learner the way a
+ * teacher does, in every language and on every screen, so no value addresses the reader formally. German refuses every
+ * capitalized `Sie` and `Ihr`, the ones that refer back to a noun included: a value is read alone, under a title the
+ * reader may not connect it to, so it names the noun instead. English has no formal pronoun.
+ */
+const FormalLanguage = Schema.Literals(["de", "id", "ms"]);
+const FORMAL_WORDS = {
+  de: {
+    fix: "write du, dich, dir or dein, and name the noun where a sentence opens with Sie or Ihr",
+    pattern: /\b(?:Sie|Ihnen|Ihre?[mnrs]?)\b/u,
+  },
+  id: {
+    fix: "write kamu or -mu for the reader and aku or -ku for the speaker, ask with the plain imperative, and say itu for tersebut",
+    pattern:
+      /\b(?:anda|saya|kalian|silakan|silahkan|mohon|dimohon|tersebut)\b/iu,
+  },
+  ms: {
+    fix: "write kamu or -mu for the reader",
+    pattern: /\banda\b/iu,
+  },
+};
 
 /** A key that an object names again after its first copy, with the key path to that object. */
 const RepeatedKey = Schema.Struct({
@@ -172,13 +200,35 @@ function strayValues(
   );
 }
 
+/** Reports each value of one dictionary that speaks formally in the dictionary's language. */
+function formalFindings(file: string, sourceFile: SourceFile) {
+  const language = Option.filter(
+    Option.fromNullishOr(LANGUAGE_PATTERN.exec(file)?.groups?.language),
+    Schema.is(FormalLanguage)
+  );
+  return Option.match(language, {
+    onNone: () => [],
+    onSome: (code) => {
+      const { fix, pattern } = FORMAL_WORDS[code];
+      return Arr.map(
+        strayValues(sourceFile, sourceFile, [], {
+          key: ANY_KEY_PATTERN,
+          strays: (value) => pattern.test(value),
+        }),
+        ({ keyPath, line }) =>
+          `${file}:${line}: ${keyPath} speaks formally, and Nakafa talks to one learner like a teacher in every language: ${fix}.`
+      );
+    },
+  });
+}
+
 /**
  * Reports each key that a dictionary object names more than once, at the line
  * of every copy after the first. A JSON reader keeps only the last copy, so a
  * merge that adds the same object twice would drop one of them with no error.
  * It also reports a dropdown's label that holds more than one word, since a label
- * names what is chosen in one word in every language, and an empty list's words
- * that run past one sentence.
+ * names what is chosen in one word in every language, an empty list's words
+ * that run past one sentence, and a value that speaks formally.
  */
 export const dictionaryFindings = Effect.fn(
   "RepositoryPolicy.dictionaryFindings"
@@ -191,6 +241,7 @@ export const dictionaryFindings = Effect.fn(
   );
   return Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
     Arr.flatten([
+      formalFindings(file, sourceFile),
       Arr.map(
         repeatedKeys(sourceFile, sourceFile, []),
         ({ keyPath, line }) =>

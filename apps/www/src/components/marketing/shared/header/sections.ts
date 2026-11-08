@@ -4,6 +4,7 @@ import {
   BookOpen02Icon,
   Books02Icon,
   Diamond02Icon,
+  Home01Icon,
   Login03Icon,
   PlusSignIcon,
   School01Icon,
@@ -15,6 +16,7 @@ import type { LinkTarget } from "@/lib/routing/link";
 import {
   ARTICLES_TARGET,
   CURRICULA_TARGET,
+  LANDING_TARGET,
   PRICING_TARGET,
   QURAN_TARGET,
   SCHOOL_ENTER_TARGET,
@@ -27,8 +29,10 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
  * The two sections of the marketing header, one per product: the learner's
- * Nakafa and Nakafa School. Each holds groups of links, every link with the icon
- * that the app draws for its page and a label from the dictionary. The School
+ * Nakafa and Nakafa School. Each holds the same two groups: what the product
+ * holds, then Start, whose first link opens the product's own landing, so a
+ * visitor reaches either landing from any page. Every link has the icon that
+ * the app draws for its page and a label from the dictionary. The School
  * features open their section of the School landing.
  */
 export const HEADER_SECTIONS = [
@@ -61,10 +65,29 @@ export const HEADER_SECTIONS = [
             target: ARTICLES_TARGET,
           },
           { icon: AllahIcon, label: "Holy.quran", target: QURAN_TARGET },
+        ],
+        wide: false,
+      },
+      {
+        label: "Marketing.start",
+        links: [
+          {
+            icon: Home01Icon,
+            label: "Marketing.learn-home",
+            target: LANDING_TARGET,
+          },
           {
             icon: Diamond02Icon,
             label: "Marketing.pricing",
             target: PRICING_TARGET,
+          },
+          {
+            icon: Login03Icon,
+            label: "Marketing.try-nakafa",
+            target: {
+              from: LOCALE_ROUTE,
+              to: "/$locale/auth",
+            } satisfies LinkTarget,
           },
         ],
         wide: false,

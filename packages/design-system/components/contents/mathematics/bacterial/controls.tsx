@@ -1,12 +1,4 @@
-import {
-  Clock04Icon,
-  DashboardSpeed01Icon,
-  PauseIcon,
-  PlayIcon,
-  Time04Icon,
-} from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { DashboardSpeed01Icon, Time04Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
@@ -15,50 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import {
-  VisualCardActions,
-  VisualCardMenu,
-} from "@repo/design-system/components/visual/card";
 import { Array as Arr, Schema } from "effect";
 import { type ComponentProps, createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 
 const SPEED_STEP = 0.25;
 const SPEED_VALUES = Arr.makeBy(5, (index) => SPEED_STEP * (index + 1));
-
-/**
- * Renders the card's actions band: play or pause, its one main action, then full
- * screen joined with the menu that starts the growth over.
- */
-export function BacterialPlayback({
-  isPlaying,
-  onReset,
-  onTogglePlaying,
-}: {
-  isPlaying: boolean;
-  onReset: () => void;
-  onTogglePlaying: () => void;
-}) {
-  const t = useTranslations("Common");
-
-  return (
-    <VisualCardActions>
-      <Button
-        onClick={onTogglePlaying}
-        size="icon"
-        tooltip={t(isPlaying ? "pause" : "play")}
-        variant={isPlaying ? "outline" : "default"}
-      >
-        <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-      </Button>
-      <VisualCardMenu>
-        <DropdownMenuItem icon={Clock04Icon} onClick={onReset}>
-          {t("reset")}
-        </DropdownMenuItem>
-      </VisualCardMenu>
-    </VisualCardActions>
-  );
-}
 
 /**
  * Renders the playback speed as one select, which names the speed it plays at. It keeps the width of its widest

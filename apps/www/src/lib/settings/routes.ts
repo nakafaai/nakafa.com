@@ -13,16 +13,12 @@ const UserSettingsLabelKeySchema = Schema.Literals([
 /** The message key of one settings section. The `Auth` dictionary owns it. */
 export type UserSettingsLabelKey = typeof UserSettingsLabelKeySchema.Type;
 
-/**
- * One addressable section of the private settings surface, with its typed link target. A library
- * draws its own header and fills the settings frame with its panes.
- */
+/** One addressable section of the private settings surface, with its typed link target. */
 function userSettingsSection(
   labelKey: UserSettingsLabelKey,
-  target: LinkTarget,
-  isLibrary = false
+  target: LinkTarget
 ) {
-  return { isLibrary, labelKey, target };
+  return { labelKey, target };
 }
 
 /** One labelled group of addressable sections. The `Auth` dictionary owns its label. */
@@ -61,14 +57,10 @@ export const userSettingsGroups = [
       from: LOCALE_ROUTE,
       to: "/$locale/user/settings/memory",
     } satisfies LinkTarget),
-    userSettingsSection(
-      "connectors",
-      {
-        from: LOCALE_ROUTE,
-        to: "/$locale/user/settings/connectors",
-      } satisfies LinkTarget,
-      true
-    ),
+    userSettingsSection("connectors", {
+      from: LOCALE_ROUTE,
+      to: "/$locale/user/settings/connectors",
+    } satisfies LinkTarget),
   ]),
 ] as const;
 
