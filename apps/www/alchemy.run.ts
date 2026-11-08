@@ -94,7 +94,7 @@ export default Stack(
         limits: RELAY_LIMITS,
         observability: WORKER_OBSERVABILITY,
         placement: WORKER_PLACEMENT,
-        ...productionHostExposure("api.nakafa.com"),
+        ...productionHostExposure("api"),
       }).pipe(RemovalPolicy.retain());
       yield* Worker("Mcp", {
         name: workerName("mcp", stage),
@@ -105,7 +105,7 @@ export default Stack(
         limits: RELAY_LIMITS,
         observability: WORKER_OBSERVABILITY,
         placement: WORKER_PLACEMENT,
-        ...productionHostExposure("mcp.nakafa.com"),
+        ...productionHostExposure("mcp"),
       }).pipe(RemovalPolicy.retain());
     }
 
