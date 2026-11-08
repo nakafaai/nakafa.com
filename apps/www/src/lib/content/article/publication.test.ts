@@ -15,7 +15,7 @@ import {
   testArticleIdProjection as idProjection,
   testArticleProjection as projection,
   testArticleSourcePath as sourcePath,
-} from "@/test/content-article";
+} from "@/test/published/article";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const layerMock = vi.hoisted(() => vi.fn());

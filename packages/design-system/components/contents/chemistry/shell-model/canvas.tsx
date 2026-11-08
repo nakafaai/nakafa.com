@@ -5,7 +5,7 @@ import {
   type ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { useTheme } from "@repo/design-system/providers/theme";

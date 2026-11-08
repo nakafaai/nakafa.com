@@ -77,12 +77,21 @@ test("a verified parent asks the school office, Staff approves, and the parent r
   await expect(asked).toContainText("Waiting");
 
   await settings.reload();
+  // A waiting request has a view of its own beside the links, in the guardians' one card.
+  const requests = settings.getByRole("button", { name: "Requests" });
+  await waitUntilTakenOver(requests);
+  await requests.click();
   const waiting = settings
     .getByRole("row")
     .filter({ hasText: "Salinan rapor semester lalu." });
   await waiting.getByRole("button", { name: "More actions" }).click();
   await settings.getByRole("menuitem", { name: "Approve" }).click();
   await expect(waiting).toHaveCount(0);
+  // The last answer takes the views away, and the links fill the card again.
+  await expect(requests).toHaveCount(0);
+  await expect(
+    settings.getByRole("row").filter({ hasText: "Siswa Uji" })
+  ).toContainText(email);
 
   await expect(asked).toContainText("Approved");
   await admin.close();

@@ -29,7 +29,7 @@ import {
 import {
   makeTestArticleProjection,
   testArticleProjection,
-} from "@/test/content-article";
+} from "@/test/published/article";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());

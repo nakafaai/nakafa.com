@@ -6,7 +6,7 @@ import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 export const AccelerationGraphCard = withHydrationBoundary(
   lazy(() =>
     import(
-      "@repo/design-system/components/contents/physics/kinematics/acceleration/chart-card"
+      "@repo/design-system/components/contents/physics/kinematics/acceleration/card"
     ).then((module) => ({ default: module.AccelerationGraphCard }))
   )
 );

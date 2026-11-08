@@ -11,7 +11,7 @@ import {
   isMaterialSibling,
   verifyMaterialPublication,
 } from "@/lib/content/material/decode";
-import { previewIdProjection, previewProjection } from "@/test/content-preview";
+import { previewIdProjection, previewProjection } from "@/test/manifest";
 
 const identity = {
   appLocale: previewProjection.appLocale,

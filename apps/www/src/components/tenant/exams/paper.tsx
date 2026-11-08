@@ -11,8 +11,8 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LinesProvider } from "@/components/exams/lines/board";
 import { usePaperText } from "@/components/player/held";
+import { LinesProvider } from "@/components/player/lines/board";
 import { PanePortal } from "@/components/shared/panes";
 import { isChoice } from "@/components/tenant/exams/answer";
 import { ChoiceSheet } from "@/components/tenant/exams/choice";
