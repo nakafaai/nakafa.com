@@ -1,4 +1,6 @@
+import { Mortarboard01Icon } from "@hugeicons/core-free-icons";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
@@ -10,6 +12,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { gradeItems } from "@/components/tenant/settings/choices";
 
 /** The name of a cohort, as the dialogs that add and edit one ask for it. */
@@ -58,8 +61,10 @@ export function CohortGradeField({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
+            <ChoiceLabel name="grade" />
             {Arr.map(gradeItems, (item) => (
               <SelectItem key={item.value} value={item.value}>
+                <HugeIcons icon={Mortarboard01Icon} />
                 {item.label}
               </SelectItem>
             ))}

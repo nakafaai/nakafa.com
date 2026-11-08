@@ -1,5 +1,10 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
+import {
+  Building03Icon,
+  Clock01Icon,
+  SchoolIcon,
+  UserMultiple02Icon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   questionGap,
@@ -29,6 +34,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -46,6 +52,7 @@ import {
 } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 import { useExam } from "@/components/tenant/exams/provider";
@@ -291,11 +298,16 @@ export function ScheduleSitting({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(unitItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="unit" />
+
+                {Arr.map(unitItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={SchoolIcon} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>
@@ -311,18 +323,22 @@ export function ScheduleSitting({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(audienceItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  <HugeIcons
-                    icon={
-                      item.value === UNIT_AUDIENCE
-                        ? Building03Icon
-                        : UserMultiple02Icon
-                    }
-                  />
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="audience" />
+
+                {Arr.map(audienceItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons
+                      icon={
+                        item.value === UNIT_AUDIENCE
+                          ? Building03Icon
+                          : UserMultiple02Icon
+                      }
+                    />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
           {Arr.isReadonlyArrayNonEmpty(cohorts) ? null : (
@@ -377,11 +393,16 @@ export function ScheduleSitting({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(lengthItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="length" />
+
+                {Arr.map(lengthItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={Clock01Icon} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>

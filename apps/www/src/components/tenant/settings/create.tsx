@@ -1,4 +1,5 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
@@ -9,10 +10,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -29,6 +32,7 @@ import {
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import {
   languageItems,
   timeZoneItems,
@@ -195,11 +199,16 @@ function SchoolUnitCreateForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(timeZoneItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="zone" />
+
+                {Arr.map(timeZoneItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={Globe02Icon} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>
@@ -222,12 +231,16 @@ function SchoolUnitCreateForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(languageItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  <CountryFlagIcon countryCode={item.countryCode} />
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="language" />
+
+                {Arr.map(languageItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <CountryFlagIcon countryCode={item.countryCode} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>

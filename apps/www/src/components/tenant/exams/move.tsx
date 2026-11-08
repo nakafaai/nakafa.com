@@ -4,6 +4,7 @@ import {
   Calendar03Icon,
   Cancel01Icon,
   ChartBarLineIcon,
+  Clock01Icon,
   DashboardSquare01Icon,
   Door01Icon,
 } from "@hugeicons/core-free-icons";
@@ -26,6 +27,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -34,6 +36,7 @@ import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import {
   cancelRoomChange,
   rescheduleRoomChange,
@@ -255,11 +258,16 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(lengthItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="length" />
+
+                {Arr.map(lengthItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={Clock01Icon} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>

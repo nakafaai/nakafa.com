@@ -1,6 +1,8 @@
 import type { Ref } from "@confect/core";
+import { SchoolIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
@@ -59,6 +61,7 @@ export function SchoolUnitChoice({
           <SelectLabel>{t("unit-choice")}</SelectLabel>
           {Arr.map(items, (item) => (
             <SelectItem key={item.value} value={item.value}>
+              <HugeIcons icon={SchoolIcon} />
               {item.label}
             </SelectItem>
           ))}

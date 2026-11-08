@@ -38,6 +38,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation";
@@ -229,6 +230,7 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
+            <ChoiceLabel name="credits" />
             {Arr.map(items, (item) => (
               <SelectItem key={item.value} value={item.value}>
                 <HugeIcons icon={Coins01Icon} />

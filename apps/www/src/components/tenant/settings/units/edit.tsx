@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
@@ -26,6 +27,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import {
   languageItems,
@@ -192,7 +194,11 @@ export function UnitEditDialog({
         />
         <UnitLevelField id={`${id}-level`} onChange={setLevel} value={level} />
         <SelectField
-          items={timeZoneItems}
+          choice="zone"
+          items={Arr.map(timeZoneItems, (item) => ({
+            ...item,
+            icon: Globe02Icon,
+          }))}
           label={t("unit-time-zone")}
           onChoose={setTimeZone}
           value={timeZone}
@@ -217,6 +223,7 @@ export function UnitEditDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
+                <ChoiceLabel name="language" />
                 {Arr.map(languageItems, (item) => (
                   <SelectItem key={item.value} value={item.value}>
                     <CountryFlagIcon countryCode={item.countryCode} />

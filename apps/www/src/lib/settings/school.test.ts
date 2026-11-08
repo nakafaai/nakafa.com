@@ -124,7 +124,11 @@ describe("school settings routes", () => {
         ADMIN
       ).labelKey
     ).toBe("cohorts");
-    const cohorts = { target: { to: "/school/$slug/settings/cohorts" } };
+    const cohorts = getSchoolSettingsSection(
+      slug,
+      "/school/$slug/settings/cohorts",
+      ADMIN
+    );
     expect(ownsLeafPath(cohorts, "/school/$slug/settings/cohorts")).toBe(true);
     expect(ownsLeafPath(cohorts, "/school/$slug/settings/cohortsx")).toBe(
       false

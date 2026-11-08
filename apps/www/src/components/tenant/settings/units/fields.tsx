@@ -1,17 +1,21 @@
 import { QueryResult } from "@confect/react";
+import { SchoolIcon } from "@hugeicons/core-free-icons";
 import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useViewerQuery } from "@/components/tenant/context";
 import { levelsOf } from "@/components/tenant/start/state";
 
@@ -104,11 +108,16 @@ export function UnitLevelField({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
+          <SelectGroup>
+            <ChoiceLabel name="level" />
+
+            {Arr.map(items, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                <HugeIcons icon={SchoolIcon} />
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
     </Field>

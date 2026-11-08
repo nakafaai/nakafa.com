@@ -1,5 +1,9 @@
 import { useMutation } from "@confect/react";
-import { IdCardIcon, Move01Icon } from "@hugeicons/core-free-icons";
+import {
+  IdCardIcon,
+  Move01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -164,6 +168,7 @@ export function SchoolPlacementMove({
   const dialogs = useDialogs<"entry" | "move">();
   const [target, setTarget] = useState<CohortId | null>(null);
   const items = Arr.map(targets, (cohort) => ({
+    icon: UserGroupIcon,
     label: cohort.name,
     value: cohort.id,
   }));
@@ -220,6 +225,7 @@ export function SchoolPlacementMove({
       >
         <FieldGroup>
           <SelectField
+            choice="cohort"
             items={items}
             label={t("placement-move-to")}
             onChoose={(value) =>
@@ -230,6 +236,7 @@ export function SchoolPlacementMove({
                 )
               )
             }
+            placeholder={t("placement-move-placeholder")}
             value={target}
           />
         </FieldGroup>

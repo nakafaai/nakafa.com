@@ -350,7 +350,7 @@ export function schoolSettingsSections(
  * cohorts, so the sidebar keeps the section's group open and the section marked on its child pages.
  */
 export const ownsLeafPath = (
-  section: { readonly target: { readonly to: string } },
+  section: { readonly target: Pick<LinkTarget, "to"> },
   leafPath: string
 ) =>
   leafPath === section.target.to ||
