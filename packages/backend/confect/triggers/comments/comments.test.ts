@@ -141,7 +141,7 @@ describe("triggers/comments/comments", () => {
     expect(state.root).toMatchObject({ replyCount: 0 });
   });
 
-  it("deletes a whole thread and the likes on its comments, a batch at a time", async () => {
+  it("deletes a whole thread and the likes and reports on its comments, a batch at a time", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
@@ -158,7 +158,7 @@ describe("triggers/comments/comments", () => {
       slug,
       text: "Root with a long thread",
     });
-    // More replies and likes than one batch holds, so each takes several passes.
+    // More replies, likes and reports than one batch holds, so each takes several passes.
     const members = COMMENT_REPLY_CLEANUP_BATCH_SIZE + 1;
     await t.mutation(async (ctx) => {
       for (let index = 0; index < members; index += 1) {
@@ -175,6 +175,12 @@ describe("triggers/comments/comments", () => {
           commentId: rootId,
           userId: author.userId,
         });
+        await ctx.db.insert("commentReports", {
+          commentId: rootId,
+          createdAt: NOW,
+          reason: "spam",
+          userId: author.userId,
+        });
       }
     });
     await client.mutation(api.comments.mutations.deleteComment, {
@@ -184,8 +190,9 @@ describe("triggers/comments/comments", () => {
     const state = await t.query(async (ctx) => ({
       comments: await ctx.db.query("comments").collect(),
       likes: await ctx.db.query("commentLikes").collect(),
+      reports: await ctx.db.query("commentReports").collect(),
     }));
-    expect(state).toEqual({ comments: [], likes: [] });
+    expect(state).toEqual({ comments: [], likes: [], reports: [] });
   });
 
   it("tolerates deleting a reply after its parent was removed", async () => {

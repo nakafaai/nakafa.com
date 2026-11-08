@@ -16,7 +16,7 @@ import {
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createMemoryTest, insertMemory } from "@repo/backend/test/nina/memory";
 import { createPortraitTest } from "@repo/backend/test/nina/portrait";
-import { Array as Arr } from "effect";
+import { Array as Arr, Result } from "effect";
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
@@ -173,6 +173,44 @@ it("retires the learner's upload grants a batch at a time and keeps another lear
     expect.objectContaining({ userId: retained }),
   ]);
   await t.finishAllScheduledFunctions(vi.runAllTimers);
+});
+
+it("deletes the file of the learner's ready upload with the grant, and leaves its object to the bucket's removal", async () => {
+  const { t, owner } = await createDeletedOwner("ready-upload");
+  await t.mutation(async (ctx) => {
+    const fileId = await ctx.db.insert("bucketFiles", {
+      byteSize: 1,
+      contentType: "image/png",
+      createdAt: Date.UTC(2026, 8, 27),
+      objectKey: "files/accounts/ready",
+      state: "stored",
+    });
+    await ctx.db.insert("ninaUploads", {
+      expiresAt: Date.UTC(2026, 8, 28),
+      name: "nakafa.sealed.v1:ready",
+      state: { fileId, status: "ready" },
+      userId: owner,
+    });
+  });
+  await expect(
+    t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner })
+  ).resolves.toBe(true);
+  const left = await t.query(async (ctx) => ({
+    files: await ctx.db.query("bucketFiles").collect(),
+    removals: Arr.filterMap(
+      await ctx.db.system.query("_scheduled_functions").collect(),
+      (job) =>
+        job.name.startsWith("bucket")
+          ? Result.succeed(job.args)
+          : Result.failVoid
+    ),
+    uploads: await ctx.db.query("ninaUploads").collect(),
+  }));
+  expect(left).toEqual({
+    files: [],
+    removals: [[{ keys: ["files/accounts/ready"] }]],
+    uploads: [],
+  });
 });
 
 it("deletes the learner's portrait with their memories, also one that a capture landing during the deletion asked for, and keeps another learner's", async () => {
