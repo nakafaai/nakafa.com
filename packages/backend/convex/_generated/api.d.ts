@@ -11859,6 +11859,7 @@ export declare const api: {
               focus?: "learning" | "tryout";
               region?:
                 | "indonesia"
+                | "malaysia"
                 | "singapore"
                 | "united-kingdom"
                 | "germany"
@@ -11877,6 +11878,7 @@ export declare const api: {
             focus: "learning" | "tryout";
             region:
               | "indonesia"
+              | "malaysia"
               | "singapore"
               | "united-kingdom"
               | "germany"
@@ -11902,6 +11904,7 @@ export declare const api: {
                 kind: "region";
                 value:
                   | "indonesia"
+                  | "malaysia"
                   | "singapore"
                   | "united-kingdom"
                   | "germany"
@@ -11915,6 +11918,7 @@ export declare const api: {
           focus?: "learning" | "tryout";
           region?:
             | "indonesia"
+            | "malaysia"
             | "singapore"
             | "united-kingdom"
             | "germany"
@@ -11939,6 +11943,7 @@ export declare const api: {
               focus?: "learning" | "tryout";
               region?:
                 | "indonesia"
+                | "malaysia"
                 | "singapore"
                 | "united-kingdom"
                 | "germany"
@@ -19850,6 +19855,7 @@ export declare const internal: {
               focus?: "learning" | "tryout";
               region?:
                 | "indonesia"
+                | "malaysia"
                 | "singapore"
                 | "united-kingdom"
                 | "germany"
@@ -20467,6 +20473,7 @@ export declare const internal: {
             focus?: "learning" | "tryout";
             region?:
               | "indonesia"
+              | "malaysia"
               | "singapore"
               | "united-kingdom"
               | "germany"
