@@ -21,7 +21,6 @@ import { Array as Arr, Effect, Option } from "effect";
 import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
-import { CountryFlagIcon } from "@/components/shared/flag";
 import {
   CommunityMenuItem,
   LearnMoreSubmenu,
@@ -161,7 +160,7 @@ function TenantLanguageSubmenu() {
       >
         {Arr.map(languages, (language) => (
           <DropdownMenuItem
-            icon={<CountryFlagIcon countryCode={language.countryCode} />}
+            icon={TranslateIcon}
             key={language.value}
             onClick={() => changeLanguage(language.value, router)}
           >

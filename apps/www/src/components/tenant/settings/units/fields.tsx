@@ -1,5 +1,5 @@
 import { QueryResult } from "@confect/react";
-import { SchoolIcon } from "@hugeicons/core-free-icons";
+import { SchoolIcon, TranslateIcon } from "@hugeicons/core-free-icons";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { StartCountry } from "@repo/backend/confect/tenancy/start";
@@ -14,7 +14,6 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
-import { CountryFlagIcon } from "@/components/shared/flag";
 import { useViewerQuery } from "@/components/tenant/context";
 import { languageItems } from "@/components/tenant/settings/choices";
 import { levelsOf } from "@/components/tenant/start/state";
@@ -152,7 +151,7 @@ export function UnitLanguageField({
         <SelectContent label={common("menu-language")}>
           {Arr.map(languageItems, (item) => (
             <SelectItem
-              icon={<CountryFlagIcon countryCode={item.countryCode} />}
+              icon={TranslateIcon}
               key={item.value}
               value={item.value}
             >

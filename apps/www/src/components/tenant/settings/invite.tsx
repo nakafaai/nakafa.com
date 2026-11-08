@@ -1,4 +1,5 @@
 import { QueryResult, useMutation } from "@confect/react";
+import { TranslateIcon } from "@hugeicons/core-free-icons";
 import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
@@ -29,7 +30,6 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { CountryFlagIcon } from "@/components/shared/flag";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { roleIcon } from "@/components/tenant/roles";
@@ -45,7 +45,6 @@ const localeItems = Arr.map(
     Arr.contains(ACTIVE_APP_LOCALE_CODES, language.value)
   ),
   (language) => ({
-    countryCode: language.countryCode,
     label: language.label,
     value: language.value,
   })
@@ -249,7 +248,7 @@ function SchoolInviteDialog({
             <SelectContent label={common("menu-language")}>
               {Arr.map(localeItems, (item) => (
                 <SelectItem
-                  icon={<CountryFlagIcon countryCode={item.countryCode} />}
+                  icon={TranslateIcon}
                   key={item.value}
                   value={item.value}
                 >
