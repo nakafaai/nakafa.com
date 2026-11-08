@@ -53,8 +53,8 @@ type Room = typeof RoomRow.Type;
 
 /**
  * The row menu of a room: Open, its proctor's dashboard, Results, Move, which opens the room's times and name in a
- * dialog, and Cancel, which cancels it behind a confirmation. A room that has opened, or closed, or that another
- * Person scheduled, keeps Move and Cancel disabled.
+ * dialog, and Cancel, which cancels it behind a confirmation. The server refuses to move or cancel a room that has
+ * opened or closed, or that another Person scheduled, so such a room's menu leaves both out.
  */
 export function RoomMenu({
   examId,
@@ -112,13 +112,12 @@ export function RoomMenu({
             </Link>
           }
         />
-        <DropdownMenuItem
-          disabled={!room.canChange}
-          onClick={() => setMoves((count) => count + 1)}
-        >
-          <HugeIcons icon={Calendar03Icon} />
-          {t("room-move")}
-        </DropdownMenuItem>
+        {room.canChange ? (
+          <DropdownMenuItem onClick={() => setMoves((count) => count + 1)}>
+            <HugeIcons icon={Calendar03Icon} />
+            {t("room-move")}
+          </DropdownMenuItem>
+        ) : null}
       </ConfirmRowMenu>
       {moves === 0 ? null : (
         <RoomMoveDialog key={moves} room={room} slug={slug} />

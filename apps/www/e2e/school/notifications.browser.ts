@@ -61,11 +61,14 @@ for (const viewport of [
     // The header's school choice opens with its one-word label and keeps the choice in the address.
     const filter = page
       .locator("header")
-      .getByRole("combobox", { name: "Schools" });
+      .getByRole("button", { name: "Schools" });
     await waitUntilTakenOver(filter);
     await expect(filter).toContainText("This school");
     await filter.click();
-    await page.getByRole("option", { name: "All schools" }).click();
+    await expect(
+      page.getByRole("menu").getByText("Schools", { exact: true })
+    ).toBeVisible();
+    await page.getByRole("menuitemradio", { name: "All schools" }).click();
     await expect(page).toHaveURL(ALL_SCHOOLS);
     await expect(page.getByText(INVITED)).toBeVisible();
     await expect(filter).toContainText("All schools");
