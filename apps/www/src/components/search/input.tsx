@@ -60,9 +60,9 @@ export function InputSearch() {
             className={cn("opacity-0", q && "opacity-100")}
           >
             <InputGroupButton
-              aria-label={t("clear-search")}
               onClick={() => setValue("")}
-              size="icon-xs"
+              size="icon-sm"
+              tooltip={t("clear-search")}
             >
               <HugeIcons className="size-4" icon={Cancel01Icon} />
             </InputGroupButton>

@@ -24,7 +24,6 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** A call that did not complete at all: the network failed, or the call was rejected before the server answered. */
@@ -49,7 +48,6 @@ export function AddChannel({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const add = useMutation(classroom.forum.channels.add);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -125,28 +123,21 @@ export function AddChannel({
 
   return (
     <>
-      <IconTip label={t("add-channel")}>
-        <Button
-          aria-label={t("add-channel")}
-          onClick={() => setOpen(true)}
-          size="icon"
-          variant="outline"
-        >
-          <HugeIcons icon={Add01Icon} />
-        </Button>
-      </IconTip>
+      <Button
+        onClick={() => setOpen(true)}
+        size="icon"
+        tooltip={t("add-channel")}
+        variant="outline"
+      >
+        <HugeIcons icon={Add01Icon} />
+      </Button>
       <ResponsiveDialog
-        description={t("add-channel-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} inert={isPending} onClick={submit}>
-              {t("add-submit")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} inert={isPending} onClick={submit}>
+            {t("add-submit")}
+          </Button>
         }
+        description={t("add-channel-description")}
         open={open}
         setOpen={setOpen}
         title={t("add-channel-title")}

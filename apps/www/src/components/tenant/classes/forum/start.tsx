@@ -42,7 +42,6 @@ export function StartDiscussion({
   channelId: Id<"classroomChannels">;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const open = useMutation(classroom.forum.threads.open);
   const viewer = useViewerQuery();
@@ -110,17 +109,12 @@ export function StartDiscussion({
         onClick={() => setShown(true)}
       />
       <ResponsiveDialog
-        description={t("discussion-new-description")}
-        footer={
-          <>
-            <Button onClick={() => setShown(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} onClick={submit}>
-              {t("discussion-start")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} onClick={submit}>
+            {t("discussion-start")}
+          </Button>
         }
+        description={t("discussion-new-description")}
         // A sent discussion's dialog empties once it has closed, so it keeps what was sent while it closes; a
         // refusal that comes back after that puts the text back.
         onOpenChangeComplete={(next) => {

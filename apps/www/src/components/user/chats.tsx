@@ -12,9 +12,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -277,26 +275,23 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button
-              aria-label={t("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
+            <Button size="icon-sm" tooltip={t("more-actions")} variant="ghost">
               <HugeIcons icon={MoreHorizontalIcon} />
             </Button>
           }
         />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => setConfirmDelete(true)}
-              variant="destructive"
-            >
-              <HugeIcons icon={Delete02Icon} />
-              {t("delete")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+        <DropdownMenuContent
+          align="end"
+          className="w-40"
+          label={t("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={Delete02Icon}
+            onClick={() => setConfirmDelete(true)}
+            variant="destructive"
+          >
+            {t("delete")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ChatDeletionDialog
@@ -313,12 +308,7 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
 function ChatActionsFrame() {
   const t = useTranslations("Common");
   return (
-    <Button
-      aria-label={t("more-actions")}
-      disabled
-      size="icon-sm"
-      variant="ghost"
-    >
+    <Button disabled size="icon-sm" tooltip={t("more-actions")} variant="ghost">
       <HugeIcons icon={MoreHorizontalIcon} />
     </Button>
   );

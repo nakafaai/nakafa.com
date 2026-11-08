@@ -1,10 +1,5 @@
 import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import type { ComponentProps } from "react";
 
 /**
@@ -20,19 +15,12 @@ export function PanelSheetTrigger({
   label: string;
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <SidebarTrigger
-            className="size-9 xl:hidden"
-            icon={icon}
-            label={label}
-            size="icon"
-            variant="outline"
-          />
-        }
-      />
-      <TooltipContent side="bottom">{label}</TooltipContent>
-    </Tooltip>
+    <SidebarTrigger
+      className="xl:hidden"
+      icon={icon}
+      label={label}
+      size="icon"
+      variant="outline"
+    />
   );
 }

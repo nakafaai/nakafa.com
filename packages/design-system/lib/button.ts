@@ -1,6 +1,10 @@
 import { cva } from "class-variance-authority";
 
-/** Shared interaction, semantic, and size variants for every Nakafa button. */
+/**
+ * Shared interaction, semantic, and size variants for every Nakafa button. A button looks like a button: no variant
+ * draws an action as link text, and no size falls below the small one, so every row keeps one height and a touch
+ * target a finger can press.
+ */
 export const buttonVariants = cva(
   "pressable focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm whitespace-nowrap transition-[scale,color,background-color,border-color,box-shadow,opacity] outline-none select-none focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
@@ -17,7 +21,7 @@ export const buttonVariants = cva(
         "success-outline":
           "border-success text-foreground border bg-[color-mix(in_oklch,var(--success)_5%,var(--background))] shadow-xs hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))] hover:shadow-md",
         outline:
-          "border-border bg-background hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted border shadow-xs",
+          "border-border bg-background hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted aria-pressed:bg-muted border shadow-xs",
         secondary:
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":
@@ -31,7 +35,6 @@ export const buttonVariants = cva(
           "border-nina-face text-nina-face hover:bg-nina-face hover:text-nina-ink border shadow-xs",
         ghost:
           "hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted hover:[&_svg]:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -39,7 +42,6 @@ export const buttonVariants = cva(
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
         "icon-sm": "size-8",
-        "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3.5",
       },
     },
     defaultVariants: {
