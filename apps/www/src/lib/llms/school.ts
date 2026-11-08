@@ -12,6 +12,7 @@ import {
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
 import { createTranslator, type Locale } from "use-intl/core";
+import { SCHOOL_FEATURES } from "@/components/marketing/school/features";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import {
@@ -68,7 +69,6 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
       return Arr.join(
         [
           `### ${t(`plan-${tier}`)}`,
-          t(`plan-${tier}-description`),
           `- ${price}`,
           `- ${t("plan-accounts", { count: plan.accounts })}`,
           `- ${t(plan.creditsRenew ? "plan-credits-month" : "plan-credits-once", { count: plan.credits })}`,
@@ -86,21 +86,11 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
       (tier) =>
         `${t(`plan-${tier}`)} ${everyCurrency(locale, (currency) => schoolPeriodTotal(schoolTiers[tier].monthly[currency], period))}`
     );
-    return `- ${t("period-option", { months: period })}${discount > 0 ? ` (${t("period-save", { percent: discount })})` : ""}: ${Arr.join(totals, "; ")}`;
+    return `- ${t("period-option", { months: period })}${discount > 0 ? ` (${t("value-discount", { months: period, percent: discount })})` : ""}: ${Arr.join(totals, "; ")}`;
   });
   const features = Arr.map(
-    [
-      "forum",
-      "library",
-      "tasks",
-      "exams",
-      "reports",
-      "insight",
-      "graduation",
-      "parents",
-      "nina",
-    ] as const,
-    (key) => `- ${t(`feature-${key}-title`)}: ${t(`feature-${key}-text`)}`
+    SCHOOL_FEATURES,
+    ({ key }) => `## ${t(`${key}-title`)}\n\n${t(`${key}-lead`)}`
   );
   const credits = schoolAddOns.credits;
   const pricingLines = [
@@ -133,7 +123,6 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
         ? pricingLines
         : [
             t("hero-lead"),
-            `## ${t("features-title")}`,
             ...features,
             ...pricingLines,
             `[${t("hero-start")}](${BASE_URL}/${locale}/school/new)`,

@@ -9,17 +9,11 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
-import { SchoolAddOns } from "@/components/marketing/school/addons";
-import { SchoolCalculator } from "@/components/marketing/school/calculator";
 import {
   openSchoolPricing,
   schoolSections,
 } from "@/components/marketing/school/later";
 import { SchoolPlans } from "@/components/marketing/school/plans";
-import {
-  SchoolPeriodProvider,
-  SchoolPeriodSwitch,
-} from "@/components/marketing/school/switch";
 import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
@@ -129,7 +123,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/pricing")({
   component: SchoolPricing,
 });
 
-/** The title of the page, its period switch, the three plans, and the terms under them. */
+/** The title of the page, the three plans, and the tax line under them. */
 function SchoolPricingPlans() {
   const t = useTranslations("SchoolSite");
 
@@ -151,60 +145,48 @@ function SchoolPricingPlans() {
             {t("pricing-lead")}
           </p>
         </div>
-        <SchoolPeriodSwitch />
         <SchoolPlans />
-        <div className="grid justify-items-center gap-1 text-center">
-          <p className="text-muted-foreground text-sm text-pretty">
-            {t("plan-upgrade-note")}
-          </p>
-          <p className="text-muted-foreground text-sm text-pretty">
-            {t("tax-note")}
-          </p>
-        </div>
+        <p className="text-muted-foreground text-center text-sm text-pretty">
+          {t("tax-note")}
+        </p>
       </div>
     </section>
   );
 }
 
-/** The calculator and the add-ons, one under the other, under the plans. */
-function SchoolPricingExtras() {
-  return (
-    <section
-      aria-labelledby="school-calculator-title"
-      className="scroll-mt-28 px-6 py-12 lg:px-10"
-      id="accounts"
-    >
-      <div className="mx-auto grid w-full max-w-7xl gap-16">
-        <SchoolCalculator />
-        <SchoolAddOns />
-      </div>
-    </section>
-  );
-}
-
-/** The School pricing page: plans by period, custom accounts, add-ons, the full comparison and questions. */
+/**
+ * The School pricing page: the plans, the full comparison straight under them,
+ * the account calculator and the add-ons, the questions, and the closing
+ * question. Everything after the plans loads its code as it nears.
+ */
 function SchoolPricing() {
   const { faqs } = Route.useLoaderData();
 
   return (
     <>
       <PageField />
-      <SchoolPeriodProvider>
-        <div className="relative grid grid-cols-1">
-          <SchoolPricingPlans />
-          <SchoolPricingExtras />
-          <LaterSection code={schoolSections.compare}>
-            {(SchoolCompare) => <SchoolCompare />}
-          </LaterSection>
-          <LaterSection code={schoolSections.faq}>
-            {(SchoolFaq) => (
-              <SchoolFaq>
-                <FaqAccordion faqs={faqs} openFirst />
-              </SchoolFaq>
-            )}
-          </LaterSection>
-        </div>
-      </SchoolPeriodProvider>
+      <div className="relative grid grid-cols-1">
+        <SchoolPricingPlans />
+        <LaterSection code={schoolSections.compare}>
+          {(SchoolCompare) => <SchoolCompare />}
+        </LaterSection>
+        <LaterSection code={schoolSections.calculator}>
+          {(SchoolCalculator) => <SchoolCalculator />}
+        </LaterSection>
+        <LaterSection code={schoolSections.addons}>
+          {(SchoolAddOns) => <SchoolAddOns />}
+        </LaterSection>
+        <LaterSection code={schoolSections.faq}>
+          {(SchoolFaq) => (
+            <SchoolFaq>
+              <FaqAccordion faqs={faqs} openFirst />
+            </SchoolFaq>
+          )}
+        </LaterSection>
+        <LaterSection code={schoolSections.closing}>
+          {(SchoolClosing) => <SchoolClosing />}
+        </LaterSection>
+      </div>
     </>
   );
 }

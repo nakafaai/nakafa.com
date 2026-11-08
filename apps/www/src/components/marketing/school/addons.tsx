@@ -16,6 +16,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useLocale, useTranslations } from "use-intl";
 import { SchoolAmount } from "@/components/marketing/school/price";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import { formatStorage } from "@/lib/pricing/school";
 
 /** The icon of each add-on, none shared. */
@@ -34,11 +35,11 @@ function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
   return (
     <Card data-school-addon={addOn}>
       <CardHeader>
-        <HugeIcons
-          className="text-primary mb-2 size-6"
-          icon={ADD_ON_ICONS[addOn]}
-        />
-        <h3 className="text-lg font-medium tracking-tight">
+        <h3 className="flex items-center gap-2 text-lg font-medium tracking-tight">
+          <HugeIcons
+            className="text-muted-foreground"
+            icon={ADD_ON_ICONS[addOn]}
+          />
           {item.recurring
             ? t("addon-drive-title", {
                 size: formatStorage(item.storageMegabytes, locale),
@@ -65,23 +66,30 @@ function SchoolAddOn({ addOn }: { addOn: SchoolAddOnKey }) {
   );
 }
 
-/** The add-ons beside a plan: AI credits once, and Drive storage a month. */
+/** The add-ons beside a plan, on a screen of their own: AI credits once, and Drive storage a month. */
 export function SchoolAddOns() {
   const t = useTranslations("SchoolSite");
 
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-2">
-        <h2 className="text-2xl tracking-tight text-balance">
-          {t("addons-title")}
-        </h2>
-        <p className="text-muted-foreground text-pretty">{t("addons-lead")}</p>
+    <MarketingSection id="addons" labelledBy="school-addons-title">
+      <div className="mx-auto grid w-full max-w-7xl gap-12">
+        <div className="mx-auto grid max-w-2xl gap-3 text-center">
+          <h2
+            className="text-3xl tracking-tight text-balance sm:text-4xl"
+            id="school-addons-title"
+          >
+            {t("addons-title")}
+          </h2>
+          <p className="text-muted-foreground text-lg text-pretty">
+            {t("addons-lead")}
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <SchoolAddOn addOn="credits" />
+          <SchoolAddOn addOn="drive" />
+          <SchoolAddOn addOn="driveLarge" />
+        </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        <SchoolAddOn addOn="credits" />
-        <SchoolAddOn addOn="drive" />
-        <SchoolAddOn addOn="driveLarge" />
-      </div>
-    </div>
+    </MarketingSection>
   );
 }
