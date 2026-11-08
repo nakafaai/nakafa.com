@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { required } from "@repo/backend/confect/acceptance/lookup";
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { assignRole } from "@repo/backend/confect/access/grant";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
@@ -15,6 +16,7 @@ import {
   writeInvite,
 } from "@repo/backend/confect/tenancy/invite";
 import spec from "@repo/backend/confect/tenancy/seed.spec";
+import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /**
@@ -168,9 +170,51 @@ const expired = FunctionImpl.make(
   })
 );
 
+/**
+ * The app user of a Better Auth account, read by its index, which the claim of an acceptance
+ * sign-in takes. An account without one ends the seed with a defect that names it.
+ */
+const user = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "user",
+  Effect.fn("tenancy.seed.user")(function* ({ authId }) {
+    yield* requireAcceptanceSeed();
+    const found = yield* getAppUserByAuthId(authId);
+    const appUser = yield* required(
+      Option.fromNullishOr(found),
+      "The account has no app user."
+    );
+    return appUser._id;
+  })
+);
+
+/**
+ * Whether the inbox holds the row of one invitation for its Person, read by the row's own
+ * index, so an acceptance invite waits for exactly the row its invite writes.
+ */
+const invitation = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "invitation",
+  Effect.fn("tenancy.seed.invitation")(function* ({ invite, person }) {
+    yield* requireAcceptanceSeed();
+    const row = yield* (yield* DatabaseReader)
+      .table("notifications")
+      .index("by_recipientPersonId_and_inviteId", (query) =>
+        query.eq("recipientPersonId", person).eq("inviteId", invite)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    return Option.isSome(row);
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(teacher),
   Layer.provide(student),
   Layer.provide(expired),
+  Layer.provide(user),
+  Layer.provide(invitation),
   GroupImpl.finalize
 );

@@ -406,6 +406,10 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     hold() {
       changes.held = true;
     },
+    /** How many answers of the server `hold` keeps from the page now. */
+    heldAnswers() {
+      return delayed.length;
+    },
     /**
      * Whether the server took a change that carried `text`. The words of a
      * test are letters, digits and spaces, which a frame holds as they are.

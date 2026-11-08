@@ -159,7 +159,8 @@ const sidebarSearching = Effect.fn("NakafaE2E.sidebarKeepsRowsWhileSearching")(
       // The answers are held back, so the new search has no first page yet.
       changes.hold();
       await search.fill("limits");
-      await page.waitForTimeout(1500);
+      // The server has answered the new search, and the page has not been given the answer.
+      await expect.poll(() => changes.heldAnswers()).toBeGreaterThan(0);
       expect(await rows.count()).toBe(PAGE);
       expect(await markedRows(rows)).toBe(PAGE);
 

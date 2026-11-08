@@ -56,9 +56,7 @@ import {
 } from "@/components/tenant/grades/change";
 import { LineDialog } from "@/components/tenant/line";
 import { GRADE_ICONS } from "@/components/tenant/settings/choices";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/grades/sheet";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many students one page of the gradebook loads, and each page after it. */
 const GRADEBOOK_PAGE_SIZE = 50;
@@ -255,15 +253,15 @@ function GradeValueField({ line }: { line: SheetLine }) {
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           enter({
             classId,
             personId: line.student.id,
             slug,
             value: value.value,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
@@ -367,7 +365,7 @@ function GradeReleaseButton({
     <Button
       onClick={() =>
         startTransition(() =>
-          saveSchool(() => release({ gradeId, slug }), SOURCE)
+          runSchoolWrite(schoolCall(() => release({ gradeId, slug })))
         )
       }
       type="button"
@@ -403,7 +401,9 @@ function GradeCorrectButton({
       return;
     }
     startTransition(() =>
-      saveSchool(() => correct({ gradeId, slug, value: next.value }), SOURCE)
+      runSchoolWrite(
+        schoolCall(() => correct({ gradeId, slug, value: next.value }))
+      )
     );
   };
 
@@ -459,7 +459,9 @@ function GradeLineMenu({ line }: { line: SheetLine }) {
         icon={SentIcon}
         onClick={() =>
           startTransition(() =>
-            saveSchool(() => release({ gradeId: grade.id, slug }), SOURCE)
+            runSchoolWrite(
+              schoolCall(() => release({ gradeId: grade.id, slug }))
+            )
           )
         }
       >
