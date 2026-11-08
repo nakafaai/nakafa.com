@@ -7,7 +7,10 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { Array as Arr, Effect, Schema } from "effect";
 import { saved } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  readinessTimeoutMilliseconds,
+  servedTimeoutMilliseconds,
+} from "@/e2e/support/timeout";
 
 const OLDER = "Kemarin belajar aljabar.";
 const POST = "Hari ini belajar trigonometri.";
@@ -42,12 +45,12 @@ const postButtonOf = (page: Page) =>
 /**
  * Types `text` and waits until Post turns on, which it does once the live list
  * holds its first page: the field takes typing from the first paint, and only
- * Post waits for the list.
+ * Post waits for the list, which answers with the page's whole body.
  */
 const typeOnceListed = async (page: Page, text: string) => {
   await composerOf(page).fill(text);
   await expect(postButtonOf(page)).toBeEnabled({
-    timeout: readinessTimeoutMilliseconds,
+    timeout: servedTimeoutMilliseconds,
   });
 };
 
@@ -74,8 +77,10 @@ for (const viewport of VIEWPORTS) {
           yield* Effect.promise(async () => {
             // An older post is on the list first, so the new post is at the
             // top only when the list puts it there.
+            // A press on Post waits until it turns on, once the live list holds
+            // its first page.
             const older = changes.sent;
-            await typeOnceListed(page, OLDER);
+            await composerOf(page).fill(OLDER);
             await postButtonOf(page).click();
             await saved(changes, older);
             await expect(postOf(page, OLDER)).toBeVisible();
