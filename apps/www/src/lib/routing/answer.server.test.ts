@@ -431,12 +431,12 @@ describe("locale redirects", () => {
   );
 
   it.effect(
-    "opens a bare page and a School page without its locale in the visitor's locale or English",
+    "opens a bare page and a School page without its locale in the visitor's locale or Indonesian",
     () =>
       Effect.gen(function* () {
         for (const [address, language, location] of [
           ["/quran/2?ref=app", "id-ID,id;q=0.9", "/id/quran/2?ref=app"],
-          ["/quran/2", "fr-FR,fr;q=0.9", "/en/quran/2"],
+          ["/quran/2", "fr-FR,fr;q=0.9", "/id/quran/2"],
           ["/about", "id", "/"],
           ["/school/pricing?plan=pro", "de", "/de/school/pricing?plan=pro"],
         ] as const) {

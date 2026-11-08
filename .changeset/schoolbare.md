@@ -1,5 +1,6 @@
 ---
 "www": patch
+"@repo/internationalization": patch
 ---
 
-Open a School page written without its locale, such as nakafa.com/school or /school/pricing, in the visitor's locale instead of answering not found.
+Open every address typed without a locale, nakafa.com/school and /school/pricing included, in the visitor's locale: the language cookie, then the browser's languages among Indonesian, English and German, else Indonesian. The rules of an address's locale live in one module, `lib/routing/locale`.
