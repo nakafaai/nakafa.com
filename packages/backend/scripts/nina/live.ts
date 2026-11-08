@@ -1,3 +1,4 @@
+import type { ConvexCall } from "@repo/backend/scripts/content/acceptance/convex";
 import {
   ConvexCli,
   type DevelopmentCliError,
@@ -9,9 +10,27 @@ import {
   makeDeployment,
 } from "@repo/backend/scripts/nina/deployment";
 import { gateError } from "@repo/backend/scripts/nina/error";
-import { Effect, Layer } from "effect";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
+import { Effect, Layer, Schema, String as Str } from "effect";
 import { SecureRandom } from "effect/crypto";
 import { ChildProcessSpawner } from "effect/process";
+
+/** The arguments of the Convex CLI's `run` for one call. */
+const cliArgumentsOf = (call: typeof ConvexCall.Type) => [
+  "run",
+  ...(call.component === undefined ? [] : ["--component", call.component]),
+  ...(call.identity === undefined
+    ? []
+    : ["--identity", encodeJsonText(call.identity)]),
+  call.path,
+  encodeJsonText(call.args),
+];
+
+/** What the Convex CLI printed for a call, as its value. The CLI prints nothing for a null result. */
+const answerOf = (printed: string) =>
+  Str.isEmpty(Str.trim(printed))
+    ? Effect.succeed(null)
+    : Schema.decodeEffect(JsonTextSchema)(printed);
 
 /** Gives a failure of the Convex CLI the gate's own type, with the message it already has. */
 const asGateFailure = (error: DevelopmentCliError) => gateError(error.message);
@@ -34,9 +53,16 @@ export const DeploymentLive = Layer.effect(
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const random = yield* SecureRandom.SecureRandom;
     return makeDeployment(
-      (operation, args, sensitiveValues) =>
-        runConvex(operation, args, sensitiveValues).pipe(
+      (operation, call, sensitiveValues) =>
+        runConvex(operation, cliArgumentsOf(call), sensitiveValues).pipe(
           Effect.mapError(asGateFailure),
+          Effect.flatMap((printed) =>
+            answerOf(printed).pipe(
+              Effect.mapError(() =>
+                gateError(`${operation} printed no JSON value.`)
+              )
+            )
+          ),
           Effect.provideService(ConvexCli, {
             ...cli,
             env: { ...cli.env, ...settings },

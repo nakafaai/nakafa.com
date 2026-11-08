@@ -1,136 +1,79 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import {
-  importAcceptanceRows,
+  appendRows,
   importMode,
 } from "@repo/backend/scripts/content/acceptance/import";
-import { Effect, FileSystem, MutableList } from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Effect, FileSystem } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
-
-describe("acceptance row import", () => {
+describe("acceptance import", () => {
   afterEach(() => {
     vi.resetAllMocks();
   });
 
-  it.effect(
-    "appends a rows file to one table of the local backend and nothing else",
-    () =>
-      Effect.gen(function* () {
-        const specs = MutableList.make<CommandSpec>();
-        mocks.read.mockReturnValue(
-          Effect.succeed({ backend: "/runtime/backend" })
-        );
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            const fs = yield* FileSystem.FileSystem;
-            yield* fs.writeFileString(spec.stdoutPath, "Added 2 documents.");
-          })
-        );
-
-        yield* importAcceptanceRows("/root", "chats", "/rows/chats.jsonl");
-
-        expect(mocks.read).toHaveBeenCalledWith("/root");
-        const calls = MutableList.toArray(specs);
-        expect(calls).toHaveLength(1);
-        expect(calls[0]?.args).toEqual([
-          "node_modules/convex/bin/main.js",
-          "import",
-          "--table",
-          "chats",
-          "--append",
-          "--yes",
-          "/rows/chats.jsonl",
-        ]);
-        expect(calls[0]?.cwd).toBe("/runtime/backend");
-        expect(calls[0]?.env?.TMPDIR).toEqual(expect.any(String));
-        expect(calls[0]?.env?.CONVEX_AGENT_MODE).toBe("anonymous");
-        expect(calls[0]?.env?.CONVEX_DEPLOY_KEY).toBeUndefined();
-      }).pipe(Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect("requires a prepared and running local runtime", () =>
+  it.effect("appends the rows to the table it names", () =>
     Effect.gen(function* () {
-      mocks.read.mockReturnValue(Effect.void);
+      const backend = localConvexDouble();
 
-      const error = yield* importAcceptanceRows(
-        "/missing",
-        "chats",
-        "/rows/chats.jsonl"
-      ).pipe(Effect.flip);
+      yield* appendRows("chats", [{ type: "study" }]).pipe(
+        Effect.provide(backend.layer)
+      );
 
-      expect(error).toMatchObject({
-        _tag: "AcceptanceRuntimeError",
-        message: expect.stringContaining("acceptance:prepare"),
-      });
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.provide(nodeServicesLayer))
+      expect(backend.imports()).toEqual([
+        { rows: [{ type: "study" }], table: "chats" },
+      ]);
+    })
   );
 
   it.effect(
-    "appends the rows that the import mode names to the table it names, ignoring an extra argument",
+    "appends every line of the JSON Lines file the mode names, skipping blank lines",
     () =>
       Effect.gen(function* () {
-        const specs = MutableList.make<CommandSpec>();
-        mocks.read.mockReturnValue(
-          Effect.succeed({ backend: "/runtime/backend" })
-        );
-        mocks.command.mockImplementation((spec: CommandSpec) =>
-          Effect.gen(function* () {
-            MutableList.append(specs, spec);
-            const fs = yield* FileSystem.FileSystem;
-            yield* fs.writeFileString(spec.stdoutPath, "Added 2 documents.");
-          })
-        );
-
-        yield* importMode.run("/root", [
-          "chats",
-          "/rows/chats.jsonl",
-          "ignored",
-        ]);
-
-        const calls = MutableList.toArray(specs);
-        expect(calls).toHaveLength(1);
-        expect(calls[0]?.args).toEqual([
-          "node_modules/convex/bin/main.js",
-          "import",
-          "--table",
-          "chats",
-          "--append",
-          "--yes",
-          "/rows/chats.jsonl",
-        ]);
-      }).pipe(Effect.provide(nodeServicesLayer))
-  );
-
-  it.effect(
-    "refuses the import mode without its rows file before any operation",
-    () =>
-      Effect.gen(function* () {
-        expect(
-          yield* importMode.run("/root", ["chats"]).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message: "Usage: acceptance import <table> <rows-file>",
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "acceptance-import-test-",
         });
-        expect(mocks.read).not.toHaveBeenCalled();
-        expect(mocks.command).not.toHaveBeenCalled();
-      }).pipe(Effect.provide(nodeServicesLayer))
+        yield* fs.writeFileString(
+          `${root}/chats.jsonl`,
+          '{"type":"study","updatedAt":1}\n\n{"type":"study","updatedAt":2}\n'
+        );
+        const backend = localConvexDouble();
+        mocks.layer.mockReturnValue(backend.layer);
+
+        yield* importMode.run(root, ["chats", `${root}/chats.jsonl`]);
+
+        expect(backend.imports()).toEqual([
+          {
+            rows: [
+              { type: "study", updatedAt: 1 },
+              { type: "study", updatedAt: 2 },
+            ],
+            table: "chats",
+          },
+        ]);
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+  );
+
+  it.effect("refuses the import mode without its rows file", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* importMode.run("/root", ["chats"]).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "AcceptanceRuntimeError",
+        message: "Usage: acceptance import <table> <rows-file>",
+      });
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

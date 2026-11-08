@@ -1,64 +1,35 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { ForumFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
-  createAcceptanceForum,
   forumMode,
+  seedForum,
 } from "@repo/backend/scripts/content/acceptance/forum";
-import {
-  Array as Arr,
-  Effect,
-  Exit,
-  FileSystem,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Effect, FileSystem, Schema } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
+/** A temporary folder for the files a mode writes. */
+const folder = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.makeTempDirectoryScoped({ prefix: "acceptance-mode-test-" });
+});
 
-/** The arguments of the seed function, as the Convex CLI receives them. */
-const SeedArgs = Schema.fromJsonString(
-  Schema.Struct({
-    author: Schema.optionalKey(Schema.String),
-    classSlug: Schema.String,
-    count: Schema.Finite,
-    read: Schema.Finite,
-    slug: Schema.String,
-  })
-);
-
-/** What the seed function prints, as the Convex CLI prints its return. */
-const PRINTED =
-  '{"channelId":"channel-1","classId":"class-1","messages":["message-1","message-2"]}';
-
-/** A runtime whose backend folder sits under the test's own temporary root, and a seed that prints its history. */
-const seedIn = (root: string, specs: MutableList.MutableList<CommandSpec>) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
-    mocks.command.mockImplementation((spec: CommandSpec) =>
-      Effect.gen(function* () {
-        MutableList.append(specs, spec);
-        yield* fs.writeFileString(spec.stdoutPath, PRINTED);
-      })
-    );
-  });
+const ANSWER = {
+  channelId: "channel-1",
+  classId: "class-1",
+  messages: ["Halo", "Apa kabar"],
+};
 
 describe("acceptance forum", () => {
   afterEach(() => {
@@ -66,85 +37,74 @@ describe("acceptance forum", () => {
   });
 
   it.effect(
-    "seeds the seeded class's history through the seed function, and writes it for the browser test",
+    "seeds through classroom/forum/seed:history and answers what it returned",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-forum-test-",
+        const backend = localConvexDouble({
+          "classroom/forum/seed:history": ANSWER,
         });
-        const specs = MutableList.make<CommandSpec>();
-        yield* seedIn(root, specs);
 
-        yield* forumMode.run(root, [
-          "acc-1234abcd",
-          "60",
-          "20",
-          `${root}/forum.json`,
-        ]);
+        const seeded = yield* seedForum("acc-1", 2, 1).pipe(
+          Effect.provide(backend.layer)
+        );
 
-        const [spec] = MutableList.toArray(specs);
-        expect(Arr.take(Arr.drop(spec?.args ?? [], 1), 2)).toEqual([
-          "run",
-          "classroom/forum/seed:history",
-        ]);
-        expect(
-          yield* Schema.decodeEffect(SeedArgs)(
-            Option.getOrThrow(Arr.last(spec?.args ?? []))
-          )
-        ).toEqual({
+        expect(seeded).toEqual(ANSWER);
+        expect(backend.argsOf("classroom/forum/seed:history")).toEqual({
           classSlug: "fisika-x-1",
-          count: 60,
-          read: 20,
-          slug: "acc-1234abcd",
+          count: 2,
+          read: 1,
+          slug: "acc-1",
         });
-        const written = yield* fs
-          .readFileString(`${root}/forum.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(ForumFixture)));
-        expect(written.messages).toEqual(["message-1", "message-2"]);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      })
   );
 
-  it.effect("names the classmate when the run gives a name", () =>
+  it.effect("writes what the mode seeded to the file it names, mode 600", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-forum-test-",
+      const root = yield* folder;
+      const output = `${root}/mode.json`;
+      const backend = localConvexDouble({
+        "classroom/forum/seed:history": ANSWER,
       });
-      const specs = MutableList.make<CommandSpec>();
-      yield* seedIn(root, specs);
+      mocks.layer.mockReturnValue(backend.layer);
 
       yield* forumMode.run(root, [
-        "acc-1234abcd",
+        "acc-1",
+        "2",
         "1",
-        "0",
-        `${root}/forum.json`,
+        output,
         "Siti Nurhaliza Kusumawardhani",
       ]);
 
-      const [spec] = MutableList.toArray(specs);
+      expect(backend.argsOf("classroom/forum/seed:history")).toMatchObject({
+        author: "Siti Nurhaliza Kusumawardhani",
+        count: 2,
+      });
+
+      const fs = yield* FileSystem.FileSystem;
       expect(
-        yield* Schema.decodeEffect(SeedArgs)(
-          Option.getOrThrow(Arr.last(spec?.args ?? []))
-        )
-      ).toMatchObject({ author: "Siti Nurhaliza Kusumawardhani", count: 1 });
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+        yield* fs
+          .readFileString(output)
+          .pipe(
+            Effect.flatMap(
+              Schema.decodeEffect(Schema.fromJsonString(ForumFixture))
+            )
+          )
+      ).toEqual(ANSWER);
+      expect((yield* fs.stat(output)).mode % 0o1000).toBe(0o600);
+      expect(mocks.layer).toHaveBeenCalledWith(root);
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
-  it.effect("seeds nothing when no local runtime is running", () =>
+  it.effect("refuses the mode without its arguments", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-forum-test-",
-      });
-      mocks.read.mockReturnValue(Effect.void);
-
-      const exit = yield* Effect.exit(
-        createAcceptanceForum(root, "acc-1234abcd", 1, 0, `${root}/forum.json`)
+      expect(yield* forumMode.run("/root", []).pipe(Effect.flip)).toMatchObject(
+        {
+          _tag: "AcceptanceRuntimeError",
+          message:
+            "Usage: acceptance forum <school-slug> <count> <read> <forum-file>",
+        }
       );
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });
