@@ -8,8 +8,8 @@ import type { DecimalSeparator } from "@repo/design-system/components/contents/p
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -100,22 +100,8 @@ export function VerticalMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage floor={0} frameloop="always">
           <Suspense>
-            <ambientLight intensity={0.72} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={PLOT_COLORS.slate}
-              intensity={0.62}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.25}
-              position={[4, 5.4, 3.4]}
-              shadow-bias={-0.0005}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-            />
             <CameraControls
               cameraPosition={CAMERA_POSITION}
               cameraTarget={CAMERA_TARGET}
@@ -129,7 +115,7 @@ export function VerticalMovementLab({
               <AnimatedBall motion={motion} />
             </VerticalMotionScene>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -206,6 +192,7 @@ function VerticalTrail({ motion }: { motion: MotionState }) {
             <meshBasicMaterial
               color={PLOT_COLORS.violet}
               opacity={0.42}
+              toneMapped={false}
               transparent
             />
           </mesh>

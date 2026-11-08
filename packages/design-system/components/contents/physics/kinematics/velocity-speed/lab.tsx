@@ -19,8 +19,8 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -35,13 +35,14 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;
 const LANE_Y = -0.03;
+/** Thickness of the lane slab, whose top the car drives on. */
+const LANE_HEIGHT = 0.08;
 const CAR_Y = 0.02;
 const GUIDE_Y = 0.065;
 const DISTANCE_GUIDE_Z = -0.46;
@@ -49,7 +50,8 @@ const DISTANCE_GUIDE_STEP = 0.18;
 const DISPLACEMENT_GUIDE_Z = 0.46;
 const GUIDE_THICKNESS = 0.045;
 const ROUTE_CONE_Z = DISTANCE_GUIDE_Z - DISTANCE_GUIDE_STEP * 1.35;
-const SHADOW_CAMERA_RADIUS =
+/** How far the lab reaches from its middle, which its shadows cover. */
+const SCENE_REACH =
   VELOCITY_SPEED_SCENE.laneLength / 2 + VELOCITY_SPEED_SCENE.laneWidth;
 
 interface VelocitySpeedLabProps {
@@ -134,28 +136,12 @@ export function VelocitySpeedLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage
+          floor={LANE_Y + LANE_HEIGHT / 2}
+          frameloop="always"
+          reach={SCENE_REACH}
+        >
           <Suspense>
-            <ambientLight intensity={0.9} />
-            <hemisphereLight
-              color={getColor("WHITE")}
-              groundColor={getColor("SLATE", 400)}
-              intensity={0.9}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.58}
-              position={[3.2, 6.2, 4.8]}
-              shadow-bias={-0.0006}
-              shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
-              shadow-camera-left={-SHADOW_CAMERA_RADIUS}
-              shadow-camera-right={SHADOW_CAMERA_RADIUS}
-              shadow-camera-top={SHADOW_CAMERA_RADIUS}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
-            <directionalLight intensity={0.48} position={[-4.2, 3.5, -3]} />
             <CameraControls
               cameraPosition={VELOCITY_SPEED_CAMERA.cameraPosition}
               cameraTarget={VELOCITY_SPEED_CAMERA.cameraTarget}
@@ -176,7 +162,7 @@ export function VelocitySpeedLab({
               <AnimatedCar motion={motion} />
             </group>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -216,7 +202,7 @@ function Road() {
         <boxGeometry
           args={[
             VELOCITY_SPEED_SCENE.laneLength,
-            0.08,
+            LANE_HEIGHT,
             VELOCITY_SPEED_SCENE.laneWidth,
           ]}
         />
@@ -353,7 +339,7 @@ function GuideSegment({
   return (
     <mesh position={[(startX + endX) / 2, GUIDE_Y, z]} renderOrder={1}>
       <boxGeometry args={[length, 0.035, GUIDE_THICKNESS]} />
-      <meshBasicMaterial color={color} />
+      <meshBasicMaterial color={color} toneMapped={false} />
     </mesh>
   );
 }

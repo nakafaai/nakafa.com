@@ -8,8 +8,8 @@ import {
 } from "@repo/design-system/components/contents/biology/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
@@ -136,25 +136,18 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
             <CameraControls
               cameraPosition={[3, 1.7, 4.05]}
               cameraTarget={[0.1, 0.08, 0]}
               fov={42}
             />
-            <ambientLight intensity={0.58} />
-            <hemisphereLight
-              color={colors.skyLight}
-              groundColor={colors.soil}
-              intensity={0.72}
-            />
-            <directionalLight intensity={1.5} position={[-4, 3, 3]} />
             <GreenhouseProvider colors={colors} store={store}>
               <GreenhouseScene />
             </GreenhouseProvider>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

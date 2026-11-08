@@ -5,8 +5,8 @@ import {
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import { PeriodicPropertiesScene } from "@repo/design-system/components/contents/chemistry/periodic-properties/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense, useEffect } from "react";
@@ -32,7 +32,7 @@ export function PeriodicPropertiesCanvas({
       className={threeSceneFrameVariants()}
       render={<section />}
     >
-      <ThreeCanvas frameloop="demand">
+      <ScienceStage frameloop="demand">
         <Suspense>
           <PeriodicPropertiesRenderSync key={modeId} />
           <CameraControls
@@ -41,24 +41,9 @@ export function PeriodicPropertiesCanvas({
             fov={44}
             framing="content"
           />
-          <ambientLight intensity={0.76} />
-          <hemisphereLight
-            color={colors.skyLight}
-            groundColor={colors.groundLight}
-            intensity={0.64}
-          />
-          <directionalLight
-            castShadow
-            intensity={1.25}
-            position={[4, 7, 5]}
-            shadow-bias={-0.0006}
-            shadow-mapSize-height={1024}
-            shadow-mapSize-width={1024}
-            shadow-normalBias={0.02}
-          />
           <PeriodicPropertiesScene colors={colors} modeId={modeId} />
         </Suspense>
-      </ThreeCanvas>
+      </ScienceStage>
     </VisualCardBody>
   );
 }

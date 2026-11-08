@@ -99,6 +99,7 @@ function MoleculeStage({ molecule }: { molecule: MatterParticleMolecule }) {
             key={`${startId}-${endId}`}
             lineWidth={BOND_LINE_WIDTH}
             points={[start.position, end.position]}
+            toneMapped={false}
           />
         );
       })}

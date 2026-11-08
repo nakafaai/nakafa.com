@@ -28,12 +28,10 @@ export function getShellModelSceneColors(resolvedTheme: string | undefined) {
 
   return {
     electron: PLOT_COLORS.violet,
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     nucleus: PLOT_COLORS.pink,
     outerElectron: PLOT_COLORS.orange,
     outerShell: PLOT_COLORS.orange,
     shell: isDarkTheme ? PLOT_COLORS.slate : getColor("GRAY"),
-    skyLight: ORIGIN_COLOR.LIGHT,
     sphereText: ORIGIN_COLOR.LIGHT,
     sphereTextOutline: ORIGIN_COLOR.DARK,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,

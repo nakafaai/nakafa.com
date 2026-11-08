@@ -109,6 +109,7 @@ export function AccelerationGraph({ selectedCase }: AccelerationGraphProps) {
           strokeOpacity: 0.5,
           strokeWidth: 1.5,
         }}
+        toneMapped={false}
       />
       <Line
         dataKey="selected"
@@ -120,6 +121,7 @@ export function AccelerationGraph({ selectedCase }: AccelerationGraphProps) {
           strokeLinecap: "round",
           strokeWidth: 3,
         }}
+        toneMapped={false}
       />
     </EvilLineChart>
   );

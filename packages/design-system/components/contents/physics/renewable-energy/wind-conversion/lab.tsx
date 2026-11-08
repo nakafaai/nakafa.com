@@ -2,8 +2,8 @@ import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
@@ -96,31 +96,16 @@ export function WindEnergyConversionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
             <CameraControls
               cameraPosition={[2.65, 2, 4.7]}
               cameraTarget={[0.03, 0.94, 0.14]}
               fov={34}
             />
-            <ambientLight intensity={0.68} />
-            <hemisphereLight
-              color={colors.skyLight}
-              groundColor={colors.groundLight}
-              intensity={0.62}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.35}
-              position={[4, 6, 4]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <WindConversionScene colors={colors} windSpeed={windSpeed} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -329,10 +314,8 @@ function getWindSceneColors(theme: string | undefined) {
   return {
     blade: dark ? getColor("GRAY", 200) : getColor("SLATE", 50),
     foundation: dark ? getColor("SLATE", 600) : getColor("SLATE", 300),
-    groundLight: dark ? getColor("GRAY", 800) : getColor("SLATE", 200),
     hub: dark ? getColor("SLATE", 300) : PLOT_COLORS.slate,
     nacelle: dark ? getColor("SLATE", 300) : getColor("SLATE", 200),
-    skyLight: dark ? getColor("SLATE", 300) : getColor("SLATE", 50),
     tower: dark ? getColor("SLATE", 300) : getColor("GRAY", 300),
     wind: PLOT_COLORS.teal,
   };

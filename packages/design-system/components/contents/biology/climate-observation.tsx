@@ -80,6 +80,7 @@ function SensorSwath({ color }: { color: string }) {
           [0.82, 1.02, 0.48],
           [0.26, 0.3, 0.9],
         ]}
+        toneMapped={false}
       />
       <Line
         color={color}
@@ -88,6 +89,7 @@ function SensorSwath({ color }: { color: string }) {
           [0.82, 1.02, 0.48],
           [-0.18, 0.58, 0.78],
         ]}
+        toneMapped={false}
       />
     </group>
   );

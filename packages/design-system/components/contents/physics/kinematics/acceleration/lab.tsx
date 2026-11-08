@@ -14,8 +14,8 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -30,7 +30,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
@@ -117,23 +116,8 @@ export function AccelerationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
-            <ambientLight intensity={0.42} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={getColor("ZINC", 950)}
-              intensity={0.55}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.35}
-              position={[-2.6, 4.6, 3.8]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <CameraControls
               cameraPosition={ACCELERATION_LAB_SCENE.cameraPosition}
               cameraTarget={ACCELERATION_LAB_SCENE.cameraTarget}
@@ -145,7 +129,7 @@ export function AccelerationLab({
             />
             <SpaceFlightScene motion={motion} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

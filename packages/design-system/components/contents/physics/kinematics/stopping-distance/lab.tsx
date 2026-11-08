@@ -21,8 +21,8 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -112,31 +112,12 @@ export function StoppingDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
-            <ambientLight intensity={0.7} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={PLOT_COLORS.slate}
-              intensity={0.62}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.35}
-              position={[3.5, 5.8, 4.5]}
-              shadow-bias={-0.0006}
-              shadow-camera-bottom={-STOPPING_DISTANCE_SCENE.shadowCameraRadius}
-              shadow-camera-left={-STOPPING_DISTANCE_SCENE.shadowCameraRadius}
-              shadow-camera-right={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
-              shadow-camera-top={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <StoppingDistanceCamera />
             <StoppingDistanceScene motion={motion} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

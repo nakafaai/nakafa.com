@@ -12,11 +12,11 @@ import {
   MultipleProportionsSceneColorsProvider,
 } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -114,29 +114,14 @@ export function MultipleProportionsLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always">
           <Suspense>
             <MultipleProportionsCameraControls />
-            <ambientLight intensity={0.68} />
-            <hemisphereLight
-              color={sceneColors.text}
-              groundColor={sceneColors.bond}
-              intensity={0.58}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.25}
-              position={[4, 5, 5]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <MultipleProportionsSceneColorsProvider colors={sceneColors}>
               <MultipleProportionsScene modeId={selectedModeId} />
             </MultipleProportionsSceneColorsProvider>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

@@ -20,8 +20,8 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -37,13 +37,13 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DoubleSide, type Group } from "three";
 
-const SHADOW_CAMERA_RADIUS =
+/** How far the lab reaches from its middle, which its shadows cover. */
+const SCENE_REACH =
   UNIFORM_CIRCULAR_MOTION_SCENE.outerRadius +
   UNIFORM_CIRCULAR_MOTION_SCENE.carScale;
 
@@ -110,34 +110,15 @@ export function UniformCircularMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always" reach={SCENE_REACH}>
           <Suspense>
-            <ambientLight intensity={0.75} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={PLOT_COLORS.slate}
-              intensity={0.6}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.25}
-              position={[3.5, 6, 4.5]}
-              shadow-bias={-0.0006}
-              shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
-              shadow-camera-left={-SHADOW_CAMERA_RADIUS}
-              shadow-camera-right={SHADOW_CAMERA_RADIUS}
-              shadow-camera-top={SHADOW_CAMERA_RADIUS}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <CircularMotionCamera />
             <group>
               <CircularTrack />
               <CircularCar motion={motion} />
             </group>
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

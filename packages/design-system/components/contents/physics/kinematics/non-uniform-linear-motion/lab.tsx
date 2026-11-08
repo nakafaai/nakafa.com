@@ -21,8 +21,8 @@ import { PhysicsTrainModel } from "@repo/design-system/components/contents/physi
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -38,7 +38,6 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -72,7 +71,7 @@ export function NonUniformLinearMotionLab({
     DEFAULT_GLBB_SCENARIO_ID
   );
   const motion = useMemo(() => getGlbbMotionState(scenarioId), [scenarioId]);
-  const shadowCameraRadius = motion.trackLength / 2 + GLBB_SCENE.trackWidth;
+  const reach = motion.trackLength / 2 + GLBB_SCENE.trackWidth;
 
   function handleScenarioChange(value: string) {
     if (!isGlbbScenarioId(value)) {
@@ -108,27 +107,8 @@ export function NonUniformLinearMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage frameloop="always" reach={reach}>
           <Suspense>
-            <ambientLight intensity={0.72} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={PLOT_COLORS.slate}
-              intensity={0.65}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.25}
-              position={[4, 6, 4]}
-              shadow-bias={-0.0006}
-              shadow-camera-bottom={-shadowCameraRadius}
-              shadow-camera-left={-shadowCameraRadius}
-              shadow-camera-right={shadowCameraRadius}
-              shadow-camera-top={shadowCameraRadius}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <CameraControls
               cameraPosition={GLBB_SCENE.cameraPosition}
               cameraTarget={GLBB_SCENE.cameraTarget}
@@ -139,7 +119,7 @@ export function NonUniformLinearMotionLab({
             />
             <GlbbScene motion={motion} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

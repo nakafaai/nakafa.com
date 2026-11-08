@@ -19,6 +19,7 @@ import type { SubatomicParticlesLabProps } from "@repo/design-system/components/
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { Array as Arr } from "effect";
 import { createContext, type ReactNode, use } from "react";
 import { Vector3 } from "three";
@@ -164,13 +165,7 @@ function CathodeRayScene() {
     <group scale={1.05}>
       <mesh rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.82, 0.82, 5, 64, 1, true]} />
-        <meshStandardMaterial
-          color={colors.glass}
-          depthWrite={false}
-          opacity={0.12}
-          roughness={0.2}
-          transparent
-        />
+        <GlassMaterial color={colors.glass} opacity={0.12} />
       </mesh>
 
       <Electrode
@@ -196,7 +191,12 @@ function CathodeRayScene() {
       <Plate color={colors.positive} label={labels.positivePlate} y={0.9} />
       <Plate color={colors.negative} label={labels.negativePlate} y={-0.95} />
 
-      <Line color={colors.ray} lineWidth={5} points={CATHODE_RAY_POINTS} />
+      <Line
+        color={colors.ray}
+        lineWidth={5}
+        points={CATHODE_RAY_POINTS}
+        toneMapped={false}
+      />
       {Arr.map(CATHODE_ELECTRON_POINTS, (point) => (
         <Particle
           color={colors.electron}
@@ -230,17 +230,29 @@ function GoldFoilScene() {
         <meshStandardMaterial color={colors.gold} roughness={0.45} />
       </RoundedBox>
 
-      <Line color={colors.alpha} lineWidth={4} points={ALPHA_STRAIGHT_POINTS} />
-      <Line color={colors.alpha} lineWidth={4} points={ALPHA_LOWER_POINTS} />
+      <Line
+        color={colors.alpha}
+        lineWidth={4}
+        points={ALPHA_STRAIGHT_POINTS}
+        toneMapped={false}
+      />
+      <Line
+        color={colors.alpha}
+        lineWidth={4}
+        points={ALPHA_LOWER_POINTS}
+        toneMapped={false}
+      />
       <Line
         color={colors.alpha}
         lineWidth={5}
         points={ALPHA_DEFLECTED_POINTS}
+        toneMapped={false}
       />
       <Line
         color={colors.alpha}
         lineWidth={5}
         points={ALPHA_BACKSCATTER_POINTS}
+        toneMapped={false}
       />
 
       {Arr.map(ALPHA_MARKER_POINTS, (point) => (
@@ -261,6 +273,7 @@ function GoldFoilScene() {
         color={colors.gold}
         lineWidth={1}
         points={GOLD_NUCLEUS_POINTER_POINTS}
+        toneMapped={false}
       />
 
       <ThreeLabel

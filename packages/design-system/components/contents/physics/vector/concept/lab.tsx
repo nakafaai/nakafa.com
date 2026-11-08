@@ -15,11 +15,11 @@ import {
 } from "@repo/design-system/components/contents/physics/vector/concept/tension";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
@@ -107,31 +107,16 @@ export function VectorConceptLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="demand">
+        <ScienceStage frameloop="demand">
           <Suspense>
             <ResponsiveVectorConceptCamera />
-            <ambientLight intensity={0.72} />
-            <hemisphereLight
-              color={colors.skyLight}
-              groundColor={colors.groundLight}
-              intensity={0.64}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.35}
-              position={[4.5, 6, 4.5]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <VectorConceptScene
               colors={colors}
               labels={labels}
               vectorState={vectorState}
             />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />

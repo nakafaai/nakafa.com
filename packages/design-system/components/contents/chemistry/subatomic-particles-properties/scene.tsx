@@ -151,9 +151,24 @@ function ChargeScene() {
       <Plate color={colors.positivePlate} label={labels.positivePlate} y={1} />
       <Plate color={colors.negativePlate} label={labels.negativePlate} y={-1} />
 
-      <Line color={colors.electronPath} lineWidth={5} points={ELECTRON_PATH} />
-      <Line color={colors.neutron} lineWidth={3} points={NEUTRON_PATH} />
-      <Line color={colors.protonPath} lineWidth={5} points={PROTON_PATH} />
+      <Line
+        color={colors.electronPath}
+        lineWidth={5}
+        points={ELECTRON_PATH}
+        toneMapped={false}
+      />
+      <Line
+        color={colors.neutron}
+        lineWidth={3}
+        points={NEUTRON_PATH}
+        toneMapped={false}
+      />
+      <Line
+        color={colors.protonPath}
+        lineWidth={5}
+        points={PROTON_PATH}
+        toneMapped={false}
+      />
 
       {Arr.map(CHARGE_PARTICLES, (particle) => (
         <Particle
