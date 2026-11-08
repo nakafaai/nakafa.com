@@ -435,3 +435,57 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   await expect(page.getByRole("option", { name: "Ayu Lestari" })).toBeVisible();
   await context.close();
 });
+
+test("a cohort held by an archived class counts it and offers no delete, and a cohort holding nothing asks with what it removes", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  // The class teacher's seed opens the period with the cohort X-1 and its class Fisika X-1.
+  const seed = await browser.newContext();
+  await Effect.runPromise(signInClassTeacher(seed, school.slug, address("/")));
+  await seed.close();
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/settings/classes"));
+  const classRow = page.getByRole("row").filter({ hasText: "Fisika X-1" });
+  const classMenu = classRow.getByRole("button", { name: "More actions" });
+  await expect(classMenu).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await waitUntilTakenOver(classMenu);
+  await classMenu.click();
+  await page.getByRole("menuitem", { name: "Archive" }).click();
+  await expect(classRow.getByText("Archived")).toBeVisible();
+
+  await page.goto(address("/settings/cohorts"));
+  const held = page.getByRole("row").filter({ hasText: SEEDED_COHORT });
+  await expect(held.getByRole("cell", { exact: true, name: "1" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const heldMenu = held.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(heldMenu);
+  await heldMenu.click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitem", { name: "Archive" })).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Delete" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await addCohort(page, "7Z");
+  const free = page.getByRole("row").filter({ hasText: "7Z" });
+  await free.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  const dialog = page.getByRole("dialog");
+  // The confirm's body shows the cohort it removes, and the header holds its close.
+  await expect(dialog.getByText("7Z", { exact: true })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Close" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Delete cohort" }).click();
+  await expect(free).toHaveCount(0);
+  await context.close();
+});
