@@ -9,13 +9,16 @@ type CatalogSet = Extract<CatalogRow, { kind: "set" }>;
 
 /**
  * The keys that name one catalog node in one app locale: its kind and the keys of its node and of
- * every node above it. A country has only its country key, and each lower kind adds its own.
+ * every node above it. A country has only its country key, and each lower kind adds its own. A group
+ * names its group key; a track is unique within its exam, so a track and the rows under it name no
+ * group.
  */
 export const CatalogNodeKeys = Schema.Struct({
   appLocale: Schema.String,
   countryKey: Schema.String,
   examKey: Schema.optionalKey(Schema.String),
-  kind: Schema.Literals(["country", "exam", "track", "set", "section"]),
+  groupKey: Schema.optionalKey(Schema.String),
+  kind: Schema.Literals(["country", "exam", "group", "track", "set", "section"]),
   sectionKey: Schema.optionalKey(Schema.String),
   setKey: Schema.optionalKey(Schema.String),
   trackKey: Schema.optionalKey(Schema.String),
@@ -34,6 +37,7 @@ export function catalogNodeIdentity(keys: CatalogNodeKeys) {
       keys.kind,
       keys.countryKey,
       keys.examKey ?? "",
+      keys.groupKey ?? "",
       keys.trackKey ?? "",
       keys.setKey ?? "",
       keys.sectionKey ?? "",

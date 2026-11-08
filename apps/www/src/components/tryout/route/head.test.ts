@@ -43,7 +43,7 @@ describe("createTryoutHead", () => {
       ...page,
       indexable: true,
       jsonLd: [],
-      title: ["General Knowledge and Understanding", "Set 1", "SNBT Year 2027"],
+      title: ["General Knowledge and Understanding", "Set 1", "SNBT 2027 UTBK"],
     });
 
     expect(head.meta).toContainEqual({

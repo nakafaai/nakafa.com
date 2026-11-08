@@ -60,9 +60,9 @@ describe("contents/search/tryout", () => {
               )
             ).toEqual([
               "try-out/indonesia-en",
-              "try-out/indonesia/snbt-en",
               "try-out/indonesia/snbt/2027-en",
-              "try-out/indonesia/snbt/2027/set-1-en",
+              "try-out/indonesia/snbt/2027/utbk-en",
+              "try-out/indonesia/snbt/2027/utbk/set-1-en",
             ]);
             expect(yield* search([], 0)).toEqual([]);
           })

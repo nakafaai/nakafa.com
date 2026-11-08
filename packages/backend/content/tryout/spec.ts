@@ -13,7 +13,7 @@ export const featuredTryoutValidator = Schema.Struct({
 });
 export const tryoutMetadataArgsValidator = {
   appLocale: appLocaleValidator,
-  kind: Schema.Literals(["country", "exam", "track", "set", "section"]),
+  kind: Schema.Literals(["country", "exam", "group", "track", "set", "section"]),
   publicPath: Schema.String,
 };
 export const tryoutLocalizedPathArgsValidator = {

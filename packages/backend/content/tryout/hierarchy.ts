@@ -1,6 +1,7 @@
 import {
   CatalogCountrySchema,
   CatalogExamSchema,
+  CatalogGroupSchema,
   type CatalogRow,
   CatalogSectionSchema,
   CatalogSetSchema,
@@ -22,6 +23,7 @@ import {
 
 type CatalogCountry = typeof CatalogCountrySchema.Type;
 type CatalogExam = typeof CatalogExamSchema.Type;
+type CatalogGroup = typeof CatalogGroupSchema.Type;
 type CatalogSection = typeof CatalogSectionSchema.Type;
 type CatalogSet = typeof CatalogSetSchema.Type;
 type CatalogTrack = typeof CatalogTrackSchema.Type;
@@ -30,6 +32,7 @@ type CatalogTrack = typeof CatalogTrackSchema.Type;
 const PublishedCatalogIndexSchema = Schema.Struct({
   countries: Schema.Array(CatalogCountrySchema),
   exams: Schema.Array(CatalogExamSchema),
+  groups: Schema.Array(CatalogGroupSchema),
   sections: Schema.Array(CatalogSectionSchema),
   sets: Schema.Array(CatalogSetSchema),
   snapshotId: Schema.String,
@@ -43,6 +46,7 @@ export const indexPublishedCatalog = Effect.fn(
 )(function* (catalog: PublishedCatalog) {
   const countries = MutableList.make<CatalogCountry>();
   const exams = MutableList.make<CatalogExam>();
+  const groups = MutableList.make<CatalogGroup>();
   const sections = MutableList.make<CatalogSection>();
   const sets = MutableList.make<CatalogSet>();
   const tracks = MutableList.make<CatalogTrack>();
@@ -51,6 +55,7 @@ export const indexPublishedCatalog = Effect.fn(
     Match.discriminatorsExhaustive("kind")({
       country: (row) => MutableList.append(countries, row),
       exam: (row) => MutableList.append(exams, row),
+      group: (row) => MutableList.append(groups, row),
       section: (row) => MutableList.append(sections, row),
       set: (row) => MutableList.append(sets, row),
       track: (row) => MutableList.append(tracks, row),
@@ -70,6 +75,7 @@ export const indexPublishedCatalog = Effect.fn(
   return {
     countries: MutableList.toArray(countries),
     exams: MutableList.toArray(exams),
+    groups: MutableList.toArray(groups),
     sections: MutableList.toArray(sections),
     sets: MutableList.toArray(sets),
     snapshotId: catalog.snapshotId,
@@ -77,23 +83,59 @@ export const indexPublishedCatalog = Effect.fn(
   } satisfies PublishedCatalogIndex;
 });
 
-/** Resolves the country and exam a track belongs to. */
-export const readPublishedTrackParents = Effect.fn(
-  "tryouts.catalog.readPublishedTrackParents"
-)(function* (index: PublishedCatalogIndex, track: CatalogTrack) {
+/** Returns the groups of one exam in their authored order. */
+export function readPublishedExamGroups(
+  index: PublishedCatalogIndex,
+  exam: Pick<CatalogExam, "countryKey" | "examKey">
+) {
+  return sortCatalogRows(
+    Arr.filter(
+      index.groups,
+      (row) =>
+        row.countryKey === exam.countryKey && row.examKey === exam.examKey
+    )
+  );
+}
+
+/** Resolves the country and exam a group belongs to, and its exam's groups in order. */
+export const readPublishedGroupParents = Effect.fn(
+  "tryouts.catalog.readPublishedGroupParents"
+)(function* (
+  index: PublishedCatalogIndex,
+  group: Pick<CatalogGroup, "countryKey" | "examKey">
+) {
   const country = Arr.findFirst(
     index.countries,
-    (row) => row.countryKey === track.countryKey
+    (row) => row.countryKey === group.countryKey
   );
   const exam = Arr.findFirst(
     index.exams,
     (row) =>
-      row.countryKey === track.countryKey && row.examKey === track.examKey
+      row.countryKey === group.countryKey && row.examKey === group.examKey
   );
   if (!(Option.isSome(country) && Option.isSome(exam))) {
-    return yield* catalogIntegrity("A try-out track lost its parents.");
+    return yield* catalogIntegrity("A try-out group lost its parents.");
   }
-  return { country: country.value, exam: exam.value };
+  return {
+    country: country.value,
+    exam: exam.value,
+    groups: readPublishedExamGroups(index, exam.value),
+  };
+});
+
+/** Resolves the group, exam, and country a track belongs to, and its exam's groups in order. */
+export const readPublishedTrackParents = Effect.fn(
+  "tryouts.catalog.readPublishedTrackParents"
+)(function* (index: PublishedCatalogIndex, track: CatalogTrack) {
+  const parents = yield* readPublishedGroupParents(index, track);
+  const group = Arr.findFirst(
+    parents.groups,
+    (row) => row.groupKey === track.groupKey
+  );
+  if (Option.isNone(group)) {
+    return yield* catalogIntegrity("A try-out track lost its group.");
+  }
+  return { ...parents, group: group.value };
 });
 
 /** Returns the sections of one set in their authored order. */

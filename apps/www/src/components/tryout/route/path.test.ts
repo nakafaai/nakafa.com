@@ -21,11 +21,14 @@ describe("tryout route paths", () => {
       getTryoutHref({
         country: "indonesia",
         exam: "tka",
+        group: "sma-ma-smk",
         section: "matematika-wajib",
         set: "set-1",
         track: "matematika-wajib",
       })
-    ).toBe("/try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib");
+    ).toBe(
+      "/try-out/indonesia/tka/sma-ma-smk/matematika-wajib/set-1/matematika-wajib"
+    );
     expect(getTryoutPublicPathHref("try-out/indonesia/tka")).toBe(
       "/try-out/indonesia/tka"
     );
@@ -107,24 +110,27 @@ describe("tryout route paths", () => {
       Option.map(getTryoutPublicPathTarget(publicPath), (target) => target.to);
 
     expect(routeOf("try-out")).toEqual(Option.some("/$locale/try-out"));
-    expect(routeOf("try-out/indonesia/snbt")).toEqual(
-      Option.some("/$locale/try-out/$country/$exam")
-    );
+    expect(routeOf("try-out/indonesia/snbt")).toEqual(Option.none());
     expect(routeOf("try-out/indonesia/snbt/2027")).toEqual(
-      Option.some("/$locale/try-out/$country/$exam/$track")
+      Option.some("/$locale/try-out/$country/$exam/$group")
     );
-    expect(routeOf("try-out/indonesia/snbt/2027/set-1")).toEqual(
-      Option.some("/$locale/try-out/$country/$exam/$track/$set")
+    expect(routeOf("try-out/indonesia/snbt/2027/utbk")).toEqual(
+      Option.some("/$locale/try-out/$country/$exam/$group/$track")
     );
-    expect(routeOf("try-out/indonesia/snbt/2027/set-1/section-1")).toEqual(
-      Option.some("/$locale/try-out/$country/$exam/$track/$set/$section")
+    expect(routeOf("try-out/indonesia/snbt/2027/utbk/set-1")).toEqual(
+      Option.some("/$locale/try-out/$country/$exam/$group/$track/$set")
+    );
+    expect(routeOf("try-out/indonesia/snbt/2027/utbk/set-1/section-1")).toEqual(
+      Option.some(
+        "/$locale/try-out/$country/$exam/$group/$track/$set/$section"
+      )
     );
     expect(Option.isNone(getTryoutPublicPathTarget("try-out//snbt"))).toBe(
       true
     );
     expect(
       Option.isNone(
-        getTryoutPublicPathTarget("try-out/indonesia/snbt/2027/set-1/a/b")
+        getTryoutPublicPathTarget("try-out/indonesia/snbt/2027/utbk/set-1/a/b")
       )
     ).toBe(true);
   });
@@ -134,13 +140,13 @@ describe("tryout route paths", () => {
       Option.map(
         getTryoutPageTarget({
           attemptId: "attempt-1",
-          publicPath: "try-out/indonesia/snbt/2027/set-1",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1",
         }),
         (target) => [target.to, target.search]
       )
     ).toEqual(
       Option.some([
-        "/$locale/try-out/$country/$exam/$track/$set",
+        "/$locale/try-out/$country/$exam/$group/$track/$set",
         { attemptId: "attempt-1" },
       ])
     );
@@ -148,18 +154,20 @@ describe("tryout route paths", () => {
       Option.map(
         getTryoutPageTarget({
           attemptId: "attempt-1",
-          publicPath: "try-out/indonesia/snbt/2027/set-1/section-1",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1/section-1",
         }),
         (target) => target.to
       )
     ).toEqual(
-      Option.some("/$locale/try-out/$country/$exam/$track/$set/$section")
+      Option.some(
+        "/$locale/try-out/$country/$exam/$group/$track/$set/$section"
+      )
     );
     expect(
       Option.isNone(
         getTryoutPageTarget({
           attemptId: "attempt-1",
-          publicPath: "try-out/indonesia/snbt",
+          publicPath: "try-out/indonesia/snbt/2027/utbk",
         })
       )
     ).toBe(true);
@@ -175,9 +183,9 @@ describe("tryout route paths", () => {
   });
 
   it("gives a breadcrumb the target of its try-out page and builds the page href with its attempt", () => {
-    expect(Option.isSome(getTryoutCrumbTarget("try-out/indonesia/snbt"))).toBe(
-      true
-    );
+    expect(
+      Option.isSome(getTryoutCrumbTarget("try-out/indonesia/snbt/2027"))
+    ).toBe(true);
     expect(getTryoutPageHref({ publicPath: "try-out/indonesia" })).toBe(
       "/try-out/indonesia"
     );

@@ -9,6 +9,7 @@ import {
 import {
   readTryoutCountryPage,
   readTryoutExamPage,
+  readTryoutGroupPage,
   readTryoutHubPage,
   readTryoutSectionPage,
   readTryoutSetPage,
@@ -64,6 +65,14 @@ const getExamPage = FunctionImpl.make(
     return yield* readTryoutExamPage(args);
   })
 );
+const getGroupPage = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "getGroupPage",
+  Effect.fn("tryouts.queries.catalog.getGroupPage")(function* (args) {
+    return yield* readTryoutGroupPage(args);
+  })
+);
 const getTrackPage = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -95,6 +104,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getHubPage),
   Layer.provide(getCountryPage),
   Layer.provide(getExamPage),
+  Layer.provide(getGroupPage),
   Layer.provide(getTrackPage),
   Layer.provide(getSetPage),
   Layer.provide(getSectionPage),

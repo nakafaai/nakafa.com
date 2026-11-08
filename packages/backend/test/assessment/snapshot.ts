@@ -335,10 +335,13 @@ export function fixtureSetPath(
   appLocale: AppLocaleCode,
   renamed = false
 ) {
-  return `try-out/indonesia/snbt/2027/${setKey}${renamed ? "-renamed" : ""}-${appLocale}`;
+  return `try-out/indonesia/snbt/2027/utbk/${setKey}${renamed ? "-renamed" : ""}-${appLocale}`;
 }
 
-/** The catalog of one app locale: the country, the exam, the track, and each set with its sections. */
+/** The fixture exam's one group, the year its track belongs to. */
+export const FIXTURE_GROUP_KEY = "2027";
+
+/** The catalog of one app locale: the country, the exam, its group, the track, and each set with its sections. */
 function makeCatalog(
   appLocale: AppLocaleCode,
   track: {
@@ -371,18 +374,29 @@ function makeCatalog(
         countryKey: FIXTURE_TRACK.countryKey,
         examKey: FIXTURE_TRACK.examKey,
         graph: graph(appLocale, "exam"),
+        groupAxis: "year",
         kind: "exam",
         order: 1,
         publicPath: `try-out/indonesia/snbt-${appLocale}`,
       },
       {
         ...base,
-        ...FIXTURE_TRACK,
-        graph: graph(appLocale, "track"),
-        kind: "track",
+        countryKey: FIXTURE_TRACK.countryKey,
+        examKey: FIXTURE_TRACK.examKey,
+        graph: graph(appLocale, "group"),
+        groupKey: FIXTURE_GROUP_KEY,
+        kind: "group",
         order: 1,
         publicPath: `try-out/indonesia/snbt/2027-${appLocale}`,
-        trackKind: "year",
+      },
+      {
+        ...base,
+        ...FIXTURE_TRACK,
+        graph: graph(appLocale, "track"),
+        groupKey: FIXTURE_GROUP_KEY,
+        kind: "track",
+        order: 1,
+        publicPath: `try-out/indonesia/snbt/2027/utbk-${appLocale}`,
       },
       ...Arr.flatMap(track.sets, (set, setIndex) => {
         const setPath = fixtureSetPath(set.setKey, appLocale, track.renamed);

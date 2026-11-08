@@ -6,6 +6,7 @@ import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
 import {
   readPublishedTryoutExamPage,
+  readPublishedTryoutGroupPage,
   readPublishedTryoutSectionPage,
 } from "@/lib/content/tryout/catalog";
 import { resetTestRuntimeCache } from "@/test/store";
@@ -43,7 +44,7 @@ describe("published try-out pages for routing", () => {
     runtimeQueryMock.mockReset();
   });
 
-  it.effect("reads a live exam with its tracks", () =>
+  it.effect("reads a live exam with its groups, and a group with its tracks", () =>
     Effect.gen(function* () {
       const world = yield* tryoutWorld();
       runtimeQueryMock.mockImplementation(world.visitor.query);
@@ -55,6 +56,15 @@ describe("published try-out pages for routing", () => {
         })
       ).toMatchObject({
         exam: { examKey: "snbt" },
+        groups: [{ groupKey: "2027" }],
+      });
+      expect(
+        yield* readPublishedTryoutGroupPage({
+          appLocale: "en",
+          publicPath: "try-out/indonesia/snbt/2027-en",
+        })
+      ).toMatchObject({
+        group: { groupKey: "2027" },
         tracks: [{ trackKey: "2027" }],
       });
     })

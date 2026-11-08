@@ -7,7 +7,7 @@ import { withoutRawKeys } from "@/e2e/support/keys";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-const TRACK_PATH = "/en/try-out/indonesia/snbt/2027";
+const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
 const HEADS = {
   duration: en.Tryouts["set-column-duration"],
   name: en.Tryouts["set-column-name"],

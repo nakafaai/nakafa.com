@@ -9,7 +9,7 @@ import { type TryoutWorld, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Schema, Struct } from "effect";
 
 const catalog = tryouts.queries.catalog;
-const SET_PATH = "try-out/indonesia/snbt/2027/set-1-id";
+const SET_PATH = "try-out/indonesia/snbt/2027/utbk/set-1-id";
 const KEYS = { countryKey: "indonesia", examKey: "snbt", trackKey: "2027" };
 
 /** Changes the stored catalog row of one node of the active snapshot: deletes it, or stores it twice. */
@@ -57,7 +57,7 @@ describe("tryouts/queries/catalog", () => {
   );
 
   it.effect(
-    "navigates the hub, a country, an exam, and a track with the revision of their catalog",
+    "navigates the hub, a country, an exam, a group, and a track with the revision of their catalog",
     () =>
       Effect.gen(function* () {
         const world = yield* tryoutWorld();
@@ -82,32 +82,51 @@ describe("tryouts/queries/catalog", () => {
           yield* page(catalog.getCountryPage, "try-out/indonesia-id")
         ).toMatchObject({
           country: { countryKey: "indonesia" },
-          exams: [{ examKey: "snbt", publicPath: "try-out/indonesia/snbt-id" }],
+          exams: [
+            {
+              entryPath: "try-out/indonesia/snbt/2027-id",
+              examKey: "snbt",
+              groupAxis: "year",
+              publicPath: "try-out/indonesia/snbt-id",
+            },
+          ],
           sourceRevision: FIXTURE_REVISION,
         });
+        const group = {
+          groupKey: "2027",
+          publicPath: "try-out/indonesia/snbt/2027-id",
+        };
         expect(
-          yield* world.visitor.query(catalog.getExamPage, {
-            appLocale: "id",
-            publicPath: "try-out/indonesia/snbt-id",
-          })
+          yield* page(catalog.getExamPage, "try-out/indonesia/snbt-id")
         ).toMatchObject({
           country: { countryKey: "indonesia" },
-          exam: { examKey: "snbt" },
-          tracks: [{ trackKey: "2027", trackKind: "year" }],
+          exam: { examKey: "snbt", groupAxis: "year" },
+          groups: [group],
         });
         expect(
-          yield* world.visitor.query(catalog.getTrackPage, {
-            appLocale: "id",
-            publicPath: "try-out/indonesia/snbt/2027-id",
-          })
+          yield* page(catalog.getGroupPage, "try-out/indonesia/snbt/2027-id")
+        ).toMatchObject({
+          exam: { examKey: "snbt" },
+          group,
+          groups: [group],
+          tracks: [{ groupKey: "2027", trackKey: "2027" }],
+        });
+        expect(
+          yield* page(
+            catalog.getTrackPage,
+            "try-out/indonesia/snbt/2027/utbk-id"
+          )
         ).toMatchObject({
           country: { countryKey: "indonesia" },
           exam: { examKey: "snbt" },
-          track: { trackKey: "2027" },
+          group,
+          groups: [group],
+          track: { groupKey: "2027", trackKey: "2027" },
         });
         for (const ref of [
           catalog.getCountryPage,
           catalog.getExamPage,
+          catalog.getGroupPage,
           catalog.getTrackPage,
           catalog.getSetPage,
           catalog.getSectionPage,
@@ -221,12 +240,12 @@ describe("tryouts/queries/catalog", () => {
             alternates: [
               {
                 appLocale: "en",
-                publicPath: "try-out/indonesia/snbt/2027/set-1-en",
+                publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-en",
               },
               { appLocale: "id", publicPath: SET_PATH },
               {
                 appLocale: "de",
-                publicPath: "try-out/indonesia/snbt/2027/set-1-de",
+                publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-de",
               },
             ],
             publicPath: SET_PATH,
@@ -242,6 +261,22 @@ describe("tryouts/queries/catalog", () => {
           })
         ).toMatchObject({
           route: {
+            socialImageIdentity: { countryKey: "indonesia", examKey: "snbt" },
+          },
+        });
+        expect(
+          yield* world.visitor.query(catalog.getMetadata, {
+            appLocale: "de",
+            kind: "group",
+            publicPath: "try-out/indonesia/snbt/2027-de",
+          })
+        ).toMatchObject({
+          route: {
+            alternates: [
+              { appLocale: "en", publicPath: "try-out/indonesia/snbt/2027-en" },
+              { appLocale: "id", publicPath: "try-out/indonesia/snbt/2027-id" },
+              { appLocale: "de", publicPath: "try-out/indonesia/snbt/2027-de" },
+            ],
             socialImageIdentity: { countryKey: "indonesia", examKey: "snbt" },
           },
         });
@@ -280,7 +315,7 @@ describe("tryouts/queries/catalog", () => {
             publicPath: `${SET_PATH}/section-a`,
             targetAppLocale: "de",
           })
-        ).toBe("try-out/indonesia/snbt/2027/set-1-de/section-a");
+        ).toBe("try-out/indonesia/snbt/2027/utbk/set-1-de/section-a");
         expect(
           yield* world.visitor.query(catalog.getLocalizedPath, {
             currentAppLocale: "id",
@@ -369,7 +404,8 @@ describe("tryouts/queries/catalog", () => {
         );
         for (const [ref, publicPath] of [
           [catalog.getExamPage, "try-out/indonesia/snbt-id"],
-          [catalog.getTrackPage, "try-out/indonesia/snbt/2027-id"],
+          [catalog.getGroupPage, "try-out/indonesia/snbt/2027-id"],
+          [catalog.getTrackPage, "try-out/indonesia/snbt/2027/utbk-id"],
           [catalog.getSetPage, SET_PATH],
         ] as const) {
           expect(
@@ -391,6 +427,17 @@ describe("tryouts/queries/catalog", () => {
           ],
           [{ ...KEYS, appLocale: "id", kind: "track" }, SET_PATH, "track"],
           [
+            {
+              appLocale: "id",
+              countryKey: "indonesia",
+              examKey: "snbt",
+              groupKey: "2027",
+              kind: "group",
+            },
+            SET_PATH,
+            "group",
+          ],
+          [
             { ...KEYS, appLocale: "id", kind: "set", setKey: "set-1" },
             `${SET_PATH}/section-a`,
             "set",
@@ -410,6 +457,32 @@ describe("tryouts/queries/catalog", () => {
           ).toMatchObject({
             message: expect.stringContaining(`lost its ${lost}`),
           });
+        }
+        const ungrouped = yield* tryoutWorld();
+        yield* tamperCatalog(
+          ungrouped,
+          {
+            appLocale: "id",
+            countryKey: "indonesia",
+            examKey: "snbt",
+            groupKey: "2027",
+            kind: "group",
+          },
+          "delete"
+        );
+        for (const [ref, publicPath, message] of [
+          [catalog.getCountryPage, "try-out/indonesia-id", "has no group"],
+          [
+            catalog.getTrackPage,
+            "try-out/indonesia/snbt/2027/utbk-id",
+            "lost its group",
+          ],
+        ] as const) {
+          expect(
+            yield* ungrouped.visitor
+              .query(ref, { appLocale: "id", publicPath })
+              .pipe(Effect.flip)
+          ).toMatchObject({ message: expect.stringContaining(message) });
         }
         const foreign = yield* tryoutWorld();
         yield* foreign.rewrite(

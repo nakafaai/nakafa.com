@@ -5,6 +5,7 @@ import {
   readRetiredSnbtProduct,
   readRetiredSnbtProductRedirect,
 } from "@/lib/routing/public/tryout/product";
+import { readGroupRedirect } from "@/lib/routing/public/tryout/group";
 import { readRetiredSectionRedirect } from "@/lib/routing/public/tryout/section";
 import {
   readTracklessRouteRedirect,
@@ -15,8 +16,9 @@ import {
  * Resolves one retired try-out URL to its live successor, with the status that
  * answers it. Each rule keeps the retired path absent and the successor live,
  * so a redirect never lands on a page that the signed catalog does not serve.
- * The track-less rules answer 307, because their newest live track can change;
- * every other try-out rule answers 308.
+ * The track-less rules and an exam's own address answer 307, because their
+ * newest live year or first group can change; every other try-out rule answers
+ * 308.
  */
 export const readTryoutRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutRedirect"
@@ -37,5 +39,5 @@ export const readTryoutRedirect = Effect.fn(
   if (Option.isSome(trackless)) {
     return yield* readTracklessRouteRedirect(trackless.value);
   }
-  return null;
+  return yield* readGroupRedirect(pathname);
 });

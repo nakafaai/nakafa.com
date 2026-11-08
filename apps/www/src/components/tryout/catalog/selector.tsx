@@ -1,4 +1,3 @@
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
@@ -12,10 +11,16 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";
+import type { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
+import {
+  getTryoutExamIcons,
+  getTryoutGroupIcons,
+} from "@/components/tryout/catalog/icons";
+import { TryoutCatalogChoice } from "@/components/tryout/catalog/choice";
 import type {
   TryoutCountrySelectorOption,
   TryoutExamSelectorOption,
+  TryoutGroupSelectorOption,
 } from "@/components/tryout/catalog/options";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";
 import { TryoutPageLink } from "@/components/tryout/route/link";
@@ -180,75 +185,80 @@ function TryoutCountrySelect({
   );
 }
 
-/** Renders the try-out exam selector used by exam-level pages. */
+/**
+ * Renders the try-out exam selector of a group or a track page. Each exam links to
+ * its entry, the first of its groups, because an exam has no page of its own.
+ */
 export function TryoutExamSelector({
   currentValue,
-  label,
   options,
 }: {
   currentValue: string;
-  label: string;
   options: readonly TryoutExamSelectorOption[];
 }) {
   const common = useTranslations("Common");
-  const items = Arr.map(options, (option) => ({
-    label: option.title,
-    value: option.value,
-  }));
+  const tTryouts = useTranslations("Tryouts");
   const looks = getTileLooks(
     Arr.map(options, (option) =>
       Tuple.make(getTryoutExamIcons(option.examKey), option.examKey)
     )
   );
-  const entries = Arr.zipWith(options, looks, (option, look) => ({
-    icon: look.icon,
-    option,
-  }));
-  const currentEntry = Arr.findFirst(
-    entries,
-    ({ option }) => option.value === currentValue
+
+  return (
+    <TryoutCatalogChoice
+      entries={Arr.zipWith(options, looks, (option, look) => ({
+        icon: look.icon,
+        publicPath: option.entryPath,
+        title: option.title,
+        value: option.value,
+      }))}
+      label={tTryouts("exam-selector-label")}
+      menuLabel={common("menu-exam")}
+      value={currentValue}
+    />
+  );
+}
+
+/** The menu label of each group axis: a year, a grade, or an institution. */
+const GROUP_MENU_LABELS = {
+  grade: "menu-grade",
+  institution: "menu-institution",
+  year: "menu-year",
+} as const;
+
+/**
+ * Renders the group selector beside the exam selector: the years of SNBT, the
+ * grades of TKA, or the Studienkollegs of a German exam. Each group links to its
+ * page and takes its own icon of its exam's axis.
+ */
+export function TryoutGroupSelector({
+  axis,
+  currentValue,
+  options,
+}: {
+  axis: typeof GroupAxisSchema.Type;
+  currentValue: string;
+  options: readonly TryoutGroupSelectorOption[];
+}) {
+  const common = useTranslations("Common");
+  const label = common(GROUP_MENU_LABELS[axis]);
+  const looks = getTileLooks(
+    Arr.map(options, (option) =>
+      Tuple.make(getTryoutGroupIcons(axis), option.groupKey)
+    )
   );
 
   return (
-    <Select items={items} value={currentValue}>
-      <SelectTrigger
-        aria-label={label}
-        className="w-auto min-w-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
-      >
-        <span
-          className="flex min-w-0 items-center gap-2"
-          data-slot="select-value"
-        >
-          {Option.match(currentEntry, {
-            onNone: () => <span className="truncate">{label}</span>,
-            onSome: ({ icon, option }) => (
-              <>
-                <HugeIcons className="size-4 shrink-0" icon={icon} />
-                <span className="truncate max-sm:sr-only">{option.title}</span>
-              </>
-            ),
-          })}
-        </span>
-      </SelectTrigger>
-      <SelectContent
-        align="end"
-        alignItemWithTrigger={false}
-        className="max-w-(--available-width) sm:w-max sm:min-w-(--anchor-width)"
-        label={common("menu-exam")}
-      >
-        {Arr.map(entries, ({ icon, option }) => (
-          <SelectItem
-            icon={icon}
-            key={option.value}
-            render={<TryoutPageLink publicPath={option.value} />}
-            value={option.value}
-          >
-            <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
-              {option.title}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <TryoutCatalogChoice
+      entries={Arr.zipWith(options, looks, (option, look) => ({
+        icon: look.icon,
+        publicPath: option.value,
+        title: option.title,
+        value: option.value,
+      }))}
+      label={label}
+      menuLabel={label}
+      value={currentValue}
+    />
   );
 }

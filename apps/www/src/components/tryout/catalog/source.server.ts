@@ -7,10 +7,7 @@ import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { querySnapshotContentStore } from "@/lib/content/store/query";
-import {
-  readPublishedTryoutExamPage,
-  readPublishedTryoutSectionPage,
-} from "@/lib/content/tryout/catalog";
+import { readPublishedTryoutSectionPage } from "@/lib/content/tryout/catalog";
 import { httpLayer } from "@/lib/convex/http";
 
 const TryoutMetadataArgsSchema = Schema.Struct({
@@ -99,15 +96,19 @@ export const readTryoutCountryPage = Effect.fn(
   return Option.fromNullishOr(page);
 });
 
-/** Reads one public exam page. The content store answers for the release. */
-export const readTryoutExamPage = Effect.fn("www.tryout.catalog.readExamPage")(
-  function* (locale: Locale, publicPath: string) {
-    return yield* readPublishedTryoutExamPage({
+/** Reads one public group page with its tracks. The content store answers for the release. */
+export const readTryoutGroupPage = Effect.fn(
+  "www.tryout.catalog.readGroupPage"
+)(function* (locale: Locale, publicPath: string) {
+  return yield* querySnapshotContentStore(
+    "assessment",
+    tryouts.queries.catalog.getGroupPage,
+    {
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
-    });
-  }
-);
+    }
+  );
+});
 
 /**
  * Reads one public track shell. The content store answers for the release.

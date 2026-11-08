@@ -27,8 +27,9 @@ vi.mock("@repo/internationalization/src/translator", () => ({
 
 const COUNTRY = "try-out/id";
 const EXAM = "try-out/id/snbt";
-const TRACK = "try-out/id/snbt/2027";
-const TRACK_SET = "try-out/id/snbt/2027/set-1";
+const GROUP = "try-out/id/snbt/2027";
+const TRACK = "try-out/id/snbt/2027/utbk";
+const TRACK_SET = "try-out/id/snbt/2027/utbk/set-1";
 
 /** The country's address in each locale, as the catalog resolves its node: its slug differs in German. */
 const ALTERNATES = [
@@ -41,7 +42,7 @@ const publishedRoute = {
   canonicalPath: COUNTRY,
   description: "Country",
   publicPath: COUNTRY,
-  socialImageIdentity: undefined,
+  socialImageIdentity: null,
   title: "Indonesia",
 };
 
@@ -127,37 +128,40 @@ describe("readTryoutRouteHead", () => {
   );
 
   it.effect(
-    "walks the breadcrumb down each ancestor the catalog publishes, skipping one it does not",
+    "walks the breadcrumb down each ancestor the catalog publishes, its exam leading its group and one it does not publish skipped",
     () =>
       Effect.gen(function* () {
         catalog.readTryoutMetadata.mockImplementation(
           ({ publicPath }: { readonly publicPath: string }) => {
             const titles: Readonly<Record<string, string>> = {
               [COUNTRY]: "Indonesia",
-              [TRACK]: "Year 2027",
+              [EXAM]: "SNBT",
+              [GROUP]: "2027",
+              [TRACK_SET]: "Set 1",
             };
             const title = titles[publicPath];
             return Effect.succeed({
               route:
-                title === undefined && publicPath !== TRACK_SET
+                title === undefined
                   ? undefined
-                  : {
-                      ...publishedRoute,
-                      publicPath,
-                      title: title ?? "Set 1",
-                    },
+                  : { ...publishedRoute, publicPath, title },
             });
           }
         );
 
-        const head = yield* readTryoutRouteHead({
+        const set = yield* readTryoutRouteHead({
           kind: "set",
           locale: "en",
           publicPath: TRACK_SET,
         });
+        const group = yield* readTryoutRouteHead({
+          kind: "group",
+          locale: "en",
+          publicPath: GROUP,
+        });
 
         expect(
-          Arr.map(Option.getOrThrow(head).breadcrumbs, ({ item, name }) => [
+          Arr.map(Option.getOrThrow(set).breadcrumbs, ({ item, name }) => [
             name,
             item,
           ])
@@ -165,9 +169,12 @@ describe("readTryoutRouteHead", () => {
           ["home", "https://nakafa.com/en"],
           ["try-out", "https://nakafa.com/en/try-out"],
           ["Indonesia", `https://nakafa.com/en/${COUNTRY}`],
-          ["Year 2027", `https://nakafa.com/en/${TRACK}`],
+          ["SNBT 2027", `https://nakafa.com/en/${GROUP}`],
           ["Set 1", `https://nakafa.com/en/${TRACK_SET}`],
         ]);
+        expect(
+          Arr.map(Option.getOrThrow(group).breadcrumbs, ({ name }) => name)
+        ).toStrictEqual(["home", "try-out", "Indonesia", "SNBT 2027"]);
       })
   );
 
@@ -189,22 +196,7 @@ describe("readTryoutRouteHead", () => {
       })
   );
 
-  it.effect(
-    "reads no head for an exam without the social image identity it needs",
-    () =>
-      Effect.gen(function* () {
-        const head = yield* readTryoutRouteHead({
-          kind: "exam",
-          locale: "en",
-          publicPath: EXAM,
-        });
-
-        expect(Option.isNone(head)).toBe(true);
-        expect(catalog.resolveTryoutExamArtwork).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect("uses the artwork of the exam's social image identity", () =>
+  it.effect("gives a group the artwork of its exam's social image identity", () =>
     Effect.gen(function* () {
       publishRoute({
         ...publishedRoute,
@@ -213,9 +205,9 @@ describe("readTryoutRouteHead", () => {
       });
 
       const head = yield* readTryoutRouteHead({
-        kind: "exam",
+        kind: "group",
         locale: "en",
-        publicPath: EXAM,
+        publicPath: GROUP,
       });
 
       expect(Option.getOrThrow(head).image).toBe("social-snbt.png");

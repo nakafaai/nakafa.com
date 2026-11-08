@@ -37,7 +37,7 @@ export interface TryoutSetTableProps {
 
 /** The track route, whose validated search is the catalog's filter, sort and direction. */
 const catalogRoute = getRouteApi(
-  "/$locale/_main/try-out/$country/$exam/$track/"
+  "/$locale/_main/try-out/$country/$exam/$group/$track/"
 );
 
 /**

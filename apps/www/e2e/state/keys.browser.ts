@@ -31,7 +31,7 @@ for (const locale of ["de", "en", "id"] as const) {
       ...PAGES[locale],
       pinnedRoutes.article[locale],
       pinnedRoutes.material[locale],
-      `/${locale}/try-out/indonesia/snbt/2027`,
+      `/${locale}/try-out/indonesia/snbt/2027/utbk`,
     ]) {
       await Effect.runPromise(withoutRawKeys(page, path, openPage(page, path)));
     }
