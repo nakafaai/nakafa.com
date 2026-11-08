@@ -11,7 +11,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useLongAction } from "@/components/shared/pending";
@@ -25,10 +24,11 @@ import {
 import { RosterGradesExport } from "@/components/tenant/roster/grades";
 import { activePeriodOf } from "@/components/tenant/roster/period";
 import { useRosterUnit } from "@/components/tenant/roster/unit";
-import { saveSchool } from "@/components/tenant/settings/save";
-import { reportClientException } from "@/lib/analytics/client";
-
-const SOURCE = "components/tenant/roster/export";
+import {
+  failSchoolAction,
+  runSchoolWrite,
+  schoolCall,
+} from "@/components/tenant/write";
 
 /**
  * Writes the period's students into an XLSX file with the columns the import reads. The writer
@@ -47,13 +47,7 @@ const saveStudents = (lines: readonly (typeof RosterLine.Type)[]) =>
     ]).toFile("nakafa-dapodik.xlsx");
   }).pipe(
     Effect.catch((error) =>
-      reportClientException(error, { source: SOURCE }).pipe(
-        Effect.andThen(
-          Effect.sync(() => {
-            toast.error({ title: "school-roster-export-failed.title" });
-          })
-        )
-      )
+      failSchoolAction(error, { title: "school-roster-export-failed.title" })
     )
   );
 
@@ -78,8 +72,8 @@ export function RosterExport() {
 
   const saveStudentsOfUnit = () =>
     startExporting(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           Effect.runPromise(
             Effect.result(
               Effect.fromOption(unit).pipe(
@@ -90,10 +84,12 @@ export function RosterExport() {
                 Effect.flatMap(Effect.fromResult)
               )
             )
-          ),
-        SOURCE,
-        (lines) => {
-          Effect.runFork(saveStudents(lines));
+          )
+        ),
+        {
+          onSaved: (lines) => {
+            Effect.runFork(saveStudents(lines));
+          },
         }
       )
     );

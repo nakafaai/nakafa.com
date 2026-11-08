@@ -67,15 +67,13 @@ import {
   LoginRenameDialog,
 } from "@/components/tenant/settings/login";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import {
   SchoolDateTime,
   useSchoolTimeZone,
 } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
-
-const SOURCE = "components/tenant/settings/students";
 
 /** How many login names one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -231,10 +229,12 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
           icon={Refresh01Icon}
           onClick={() =>
             startTransition(() =>
-              saveSchool(
-                () => reissue({ personId: login.person.id, slug }),
-                SOURCE,
-                (card) => issueCard({ ...card, name: login.person.name })
+              runSchoolWrite(
+                schoolCall(() => reissue({ personId: login.person.id, slug })),
+                {
+                  onSaved: (card) =>
+                    issueCard({ ...card, name: login.person.name }),
+                }
               )
             )
           }
@@ -331,19 +331,21 @@ function SchoolStudentDialog({
               const unitId = unit.value.id;
               setOpen(false);
               startTransition(() =>
-                saveSchool(
-                  () =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     enroll({
                       loginName: parsedLogin.value,
                       name: studentName,
                       slug,
                       unitId,
-                    }),
-                  SOURCE,
-                  (card) => {
-                    setName("");
-                    setLoginName("");
-                    onAdded({ ...card, name: studentName });
+                    })
+                  ),
+                  {
+                    onSaved: (card) => {
+                      setName("");
+                      setLoginName("");
+                      onAdded({ ...card, name: studentName });
+                    },
                   }
                 )
               );

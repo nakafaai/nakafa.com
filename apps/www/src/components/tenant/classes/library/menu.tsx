@@ -17,11 +17,6 @@ import { Effect } from "effect";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { RowItems } from "@/components/shared/table/menu";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { LibraryEditDialog } from "@/components/tenant/classes/library/edit";
 import { MoveDialog } from "@/components/tenant/classes/library/move";
 import {
@@ -31,6 +26,7 @@ import {
   trashItemUpdate,
 } from "@/components/tenant/classes/library/optimistic";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * Opens one item: a link at its address, a file at an address the server signs for this opening alone. A tab opens
@@ -46,8 +42,8 @@ export function useOpenItem() {
       return;
     }
     const tab = download ? null : window.open("", "_blank");
-    runForumCall(
-      forumCall(() => open({ classId, download, itemId: item.id, slug })).pipe(
+    runSchoolWrite(
+      schoolCall(() => open({ classId, download, itemId: item.id, slug })).pipe(
         Effect.tap((address) =>
           Effect.sync(() => {
             if (tab === null) {
@@ -59,9 +55,10 @@ export function useOpenItem() {
           })
         )
       ),
-      () => {
-        tab?.close();
-        toastForumFailure();
+      {
+        onFailed: () => {
+          tab?.close();
+        },
       }
     );
   };
@@ -77,11 +74,10 @@ export function useStar() {
     starred: boolean,
     update: OptimisticUpdate<typeof classroom.library.star>
   ) =>
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         star.withOptimisticUpdate(update)({ classId, slug, starred, target })
-      ),
-      toastForumFailure
+      )
     );
 }
 
@@ -206,15 +202,14 @@ export function ManagerItemMenu({ item }: { item: LibraryItem }) {
         <MoveAndTrash
           onMove={() => dialogs.show("move")}
           onTrash={() =>
-            runForumCall(
-              forumCall(() =>
+            runSchoolWrite(
+              schoolCall(() =>
                 trash.withOptimisticUpdate(trashItemUpdate)({
                   classId,
                   itemId: item.id,
                   slug,
                 })
-              ),
-              toastForumFailure
+              )
             )
           }
         />
@@ -234,16 +229,15 @@ export function ManagerItemMenu({ item }: { item: LibraryItem }) {
           moving={null}
           onMove={(folderId) => {
             dialogs.close();
-            runForumCall(
-              forumCall(() =>
+            runSchoolWrite(
+              schoolCall(() =>
                 move.withOptimisticUpdate(moveItemUpdate)({
                   classId,
                   folderId,
                   itemId: item.id,
                   slug,
                 })
-              ),
-              toastForumFailure
+              )
             );
           }}
           open={dialogs.isOpen("move")}
