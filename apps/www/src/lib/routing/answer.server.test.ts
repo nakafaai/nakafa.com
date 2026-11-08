@@ -107,16 +107,12 @@ function router() {
 /** Answers one request through the entry's decisions, with the given router. */
 function answer(
   address: string,
-  options: {
-    readonly headers?: Record<string, string>;
-    readonly method?: string;
-  } = {},
+  options: { readonly headers?: Record<string, string> } = {},
   handle = router()
 ) {
   return answerRequest(
     new Request(`${ORIGIN}${address}`, {
       headers: new Headers(options.headers),
-      method: options.method ?? "GET",
     }),
     handle
   );
@@ -483,19 +479,15 @@ describe("failures", () => {
   it.effect("fails with the entry's error when a reader fails", () =>
     Effect.gen(function* () {
       const cases = [
-        { address: "/en/tryout/old", options: {}, reader: retired.read },
-        {
-          address: "/de/articles/politics",
-          options: {},
-          reader: migration.read,
-        },
-        { address: "/en/search", options: {}, reader: source.read },
-        { address: "/en/search", options: {}, reader: projected.read },
+        { address: "/en/tryout/old", reader: retired.read },
+        { address: "/de/articles/politics", reader: migration.read },
+        { address: "/en/search", reader: source.read },
+        { address: "/en/search", reader: projected.read },
       ];
-      for (const { address, options, reader } of cases) {
+      for (const { address, reader } of cases) {
         reader.mockReturnValueOnce(Effect.fail(new ReaderFailure()));
 
-        const error = yield* Effect.flip(answer(address, options));
+        const error = yield* Effect.flip(answer(address));
 
         expect(error._tag).toBe("UncaughtRequestError");
       }
