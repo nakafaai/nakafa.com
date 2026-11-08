@@ -1,13 +1,13 @@
-import { divisionCells } from "@repo/design-system/components/contents/mathematics/bacteria/layout";
+import { divisionCells } from "@repo/design-system/components/contents/mathematics/bacterial/layout";
 import {
   NO_DIVISION,
   stepDivision,
-} from "@repo/design-system/components/contents/mathematics/bacteria/sketch";
+} from "@repo/design-system/components/contents/mathematics/bacterial/sketch";
 import {
   type BacteriaStore,
   createBacteriaStore,
   shownGeneration,
-} from "@repo/design-system/components/contents/mathematics/bacteria/store";
+} from "@repo/design-system/components/contents/mathematics/bacterial/store";
 import {
   BacterialGenerations,
   BacterialSpeeds,

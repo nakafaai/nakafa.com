@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   NO_DIVISION,
   stepDivision,
-} from "@repo/design-system/components/contents/mathematics/bacteria/sketch";
+} from "@repo/design-system/components/contents/mathematics/bacterial/sketch";
 
 const clock = {
   elapsed: 250,

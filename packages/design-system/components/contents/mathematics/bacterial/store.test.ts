@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createBacteriaStore,
   shownGeneration,
-} from "@repo/design-system/components/contents/mathematics/bacteria/store";
+} from "@repo/design-system/components/contents/mathematics/bacterial/store";
 
 describe("bacteria store", () => {
   it("shows a chosen generation until the card's view is reset", () => {

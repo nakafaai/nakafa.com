@@ -3,7 +3,7 @@ import {
   cellGrid,
   divisionCells,
   GROWTH_SHARE,
-} from "@repo/design-system/components/contents/mathematics/bacteria/layout";
+} from "@repo/design-system/components/contents/mathematics/bacterial/layout";
 import { Array as Arr } from "effect";
 
 describe("bacteria layout", () => {
