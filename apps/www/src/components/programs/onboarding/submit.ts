@@ -14,10 +14,10 @@ type FinishMutation = (
 ) => InvokeReturn<typeof onboarding.mutations.finish>;
 
 /** Expected browser mutation failure while saving onboarding state. */
-export class OnboardingMutationError extends Schema.TaggedError<OnboardingMutationError>()(
-  "OnboardingMutationError",
-  { cause: Schema.Unknown }
-) {}
+export class OnboardingMutationError extends Schema.TaggedError<
+  OnboardingMutationError,
+  { readonly brand: unique symbol }
+>()("OnboardingMutationError", { cause: Schema.Unknown }) {}
 
 /** Saves one draft answer through the browser's typed failure channel. */
 export const saveOnboardingDraft = Effect.fn("www.onboarding.saveDraft")(

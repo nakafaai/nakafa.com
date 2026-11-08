@@ -3,14 +3,14 @@ import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 
 /** Expected failure when a localized SEO dictionary cannot be loaded. */
-export class SEOTranslationLoadError extends Schema.TaggedError<SEOTranslationLoadError>()(
-  "SEOTranslationLoadError",
-  {
-    locale: Schema.String,
-    message: Schema.String,
-    namespace: Schema.String,
-  }
-) {}
+export class SEOTranslationLoadError extends Schema.TaggedError<
+  SEOTranslationLoadError,
+  { readonly brand: unique symbol }
+>()("SEOTranslationLoadError", {
+  locale: Schema.String,
+  message: Schema.String,
+  namespace: Schema.String,
+}) {}
 
 /** Converts unknown thrown values into readable fallback error messages. */
 function getErrorMessage(error: unknown) {

@@ -3,13 +3,13 @@ import { Config, Effect, Schema } from "effect";
 const GoogleCredential = Schema.NonEmptyString.check(Schema.isTrimmed());
 
 /** Google sign-in requires both configured credentials. */
-export class GoogleAuthConfigError extends Schema.TaggedError<GoogleAuthConfigError>()(
-  "GoogleAuthConfigError",
-  {
-    code: Schema.Literal("AUTH_GOOGLE_CONFIG_INVALID"),
-    message: Schema.String,
-  }
-) {}
+export class GoogleAuthConfigError extends Schema.TaggedError<
+  GoogleAuthConfigError,
+  { readonly brand: unique symbol }
+>()("GoogleAuthConfigError", {
+  code: Schema.Literal("AUTH_GOOGLE_CONFIG_INVALID"),
+  message: Schema.String,
+}) {}
 
 /** Keeps the Google secret redacted until Better Auth consumes it. */
 export const readGoogleAuthConfig = Effect.fn("auth.readGoogleConfig")(

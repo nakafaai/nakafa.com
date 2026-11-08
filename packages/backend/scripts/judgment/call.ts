@@ -33,10 +33,10 @@ const Answer = Schema.fromJsonString(measureResultValidator);
  * something the command cannot use. A Convex CLI that cannot run, does not
  * answer in time or fails is a `DevelopmentCliError` instead.
  */
-export class JudgmentCallError extends Schema.TaggedError<JudgmentCallError>()(
-  "JudgmentCallError",
-  { message: Schema.String }
-) {}
+export class JudgmentCallError extends Schema.TaggedError<
+  JudgmentCallError,
+  { readonly brand: unique symbol }
+>()("JudgmentCallError", { message: Schema.String }) {}
 
 /**
  * Runs the measuring action of the dev deployment on some texts with the Convex

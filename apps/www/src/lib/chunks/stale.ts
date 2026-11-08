@@ -25,10 +25,10 @@ const STALE_CHUNK_MESSAGES = [
 ] as const;
 
 /** The tab's storage could not be read or written, so the page does not reload. */
-class ReloadMarkUnavailable extends Schema.TaggedError<ReloadMarkUnavailable>()(
-  "ReloadMarkUnavailable",
-  { cause: Schema.Unknown }
-) {}
+class ReloadMarkUnavailable extends Schema.TaggedError<
+  ReloadMarkUnavailable,
+  { readonly brand: unique symbol }
+>()("ReloadMarkUnavailable", { cause: Schema.Unknown }) {}
 
 /** Whether an error is a dynamic import of a chunk, or a server function, that is gone. */
 export function isStaleChunkError(error: unknown): error is Error {
@@ -195,10 +195,10 @@ export function readTab() {
 }
 
 /** A server function call failed. It carries the failure, which is the caller's to read. */
-class ServerFunctionFailed extends Schema.TaggedError<ServerFunctionFailed>()(
-  "ServerFunctionFailed",
-  { cause: Schema.Unknown }
-) {}
+class ServerFunctionFailed extends Schema.TaggedError<
+  ServerFunctionFailed,
+  { readonly brand: unique symbol }
+>()("ServerFunctionFailed", { cause: Schema.Unknown }) {}
 
 /**
  * Runs a server function call and answers one that a deploy replaced as a missing

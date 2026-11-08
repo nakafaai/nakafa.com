@@ -59,12 +59,12 @@ export function isAtomShellSampleId(value: string): value is AtomShellSampleId {
 }
 
 /** Expected failure: the atom-shell examples cover atomic numbers 1 to 20. */
-export class EarlyElementShellRangeError extends Schema.TaggedError<EarlyElementShellRangeError>()(
-  "EarlyElementShellRangeError",
-  {
-    message: Schema.String,
-  }
-) {}
+export class EarlyElementShellRangeError extends Schema.TaggedError<
+  EarlyElementShellRangeError,
+  { readonly brand: unique symbol }
+>()("EarlyElementShellRangeError", {
+  message: Schema.String,
+}) {}
 
 /**
  * Returns the last shell that holds an electron. A neutral atom always fills

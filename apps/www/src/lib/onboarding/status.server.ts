@@ -5,16 +5,16 @@ import { Effect, Schema } from "effect";
 import { httpLayer } from "@/lib/convex/http";
 
 /** Expected server write failure for one authoritative onboarding admission. */
-export class OnboardingAdmissionError extends Schema.TaggedError<OnboardingAdmissionError>()(
-  "OnboardingAdmissionError",
-  { cause: Schema.Unknown }
-) {}
+export class OnboardingAdmissionError extends Schema.TaggedError<
+  OnboardingAdmissionError,
+  { readonly brand: unique symbol }
+>()("OnboardingAdmissionError", { cause: Schema.Unknown }) {}
 
 /** Expected server read failure for the authenticated onboarding status. */
-export class OnboardingStatusReadError extends Schema.TaggedError<OnboardingStatusReadError>()(
-  "OnboardingStatusReadError",
-  { cause: Schema.Unknown }
-) {}
+export class OnboardingStatusReadError extends Schema.TaggedError<
+  OnboardingStatusReadError,
+  { readonly brand: unique symbol }
+>()("OnboardingStatusReadError", { cause: Schema.Unknown }) {}
 
 /** Reads whether onboarding is required and any resumable draft state. */
 export const readOnboardingStatus = Effect.fn("www.onboarding.readStatus")(

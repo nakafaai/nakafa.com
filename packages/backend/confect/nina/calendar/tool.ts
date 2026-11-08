@@ -20,10 +20,10 @@ export const CALENDAR_OFF = denied(
 );
 
 /** The calendar could not be read. It keeps nothing of the failure. */
-export class CalendarReadError extends Schema.TaggedError<CalendarReadError>()(
-  "CalendarReadError",
-  {}
-) {}
+export class CalendarReadError extends Schema.TaggedError<
+  CalendarReadError,
+  { readonly brand: unique symbol }
+>()("CalendarReadError", {}) {}
 
 /** Ends a read that failed in any way, without its message. */
 function unreadable() {

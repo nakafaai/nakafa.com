@@ -66,12 +66,12 @@ const StaticNumericExpressionSchema = Schema.Struct({
 });
 
 /** Expected failure while parsing authored MDX for agent markdown projection. */
-export class MdxAgentProjectionError extends Schema.TaggedError<MdxAgentProjectionError>()(
-  "MdxAgentProjectionError",
-  {
-    message: Schema.String,
-  }
-) {}
+export class MdxAgentProjectionError extends Schema.TaggedError<
+  MdxAgentProjectionError,
+  { readonly brand: unique symbol }
+>()("MdxAgentProjectionError", {
+  message: Schema.String,
+}) {}
 
 /** Preserves the authored lesson body while omitting non-rendered module declarations. */
 export const readMdxBody = Effect.fn("contents.llms.mdx.body")(function* (
