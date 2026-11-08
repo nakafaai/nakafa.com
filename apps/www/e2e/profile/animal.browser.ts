@@ -1,11 +1,10 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Page, test } from "@playwright/test";
+import { seedProfile } from "@repo/backend/scripts/content/acceptance/profile";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, FileSystem } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { Effect } from "effect";
+import { runFixture } from "@/e2e/support/acceptance";
 import {
   animalMarkup,
   animalOf,
@@ -45,27 +44,17 @@ function sidebarName(page: Page, name: string) {
 
 /**
  * Writes the name and the photo address of a learner through the acceptance
- * command, which updates the account in Better Auth and runs the app's update
+ * seed, which updates the account in Better Auth and runs the app's update
  * trigger, which copies both to the profile that the sidebar and the comments
  * read. Provider accounts can hold a name of any length, so the test writes the
  * names the settings form refuses.
  */
-const setProfile = Effect.fn("NakafaE2E.setProfile")(
-  function* (
-    authId: string,
-    profile: { readonly image?: string; readonly name?: string }
-  ) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-profile-",
-    });
-    const file = `${directory}/profile.json`;
-    yield* fs.writeFileString(file, encodeJsonText(profile));
-    yield* runAcceptanceCommand("profile", authId, file);
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+const setProfile = Effect.fn("NakafaE2E.setProfile")(function* (
+  authId: string,
+  profile: { readonly image?: string; readonly name?: string }
+) {
+  yield* runFixture(seedProfile(authId, profile));
+});
 
 test("a learner without a photo is drawn as an animal on the account button and on the profile", async ({
   baseURL,

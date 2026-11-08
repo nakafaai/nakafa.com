@@ -23,13 +23,9 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import {
   folderPath,
   type LibraryFolder,
@@ -45,6 +41,7 @@ import { useFolderList } from "@/components/tenant/classes/library/tree";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many trashed items the trash reads each time its end comes into view. */
 const TRASH_PAGE_SIZE = 20;
@@ -193,9 +190,9 @@ export function LibraryTrash() {
         columns={columns}
         data={rows}
         empty={
-          <TableEmpty
-            act="reading"
+          <EmptyState
             description={t("library-trash-empty-description")}
+            scene={<EmptyNina act="reading" />}
             title={t("library-trash-empty")}
           />
         }
@@ -216,8 +213,8 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
   const purgeFolder = useMutation(classroom.folders.purge);
 
   const restore = () =>
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         row._tag === "item"
           ? restoreItem.withOptimisticUpdate(restoreItemUpdate)({
               classId,
@@ -229,12 +226,11 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
               folderId: row.folder.id,
               slug,
             })
-      ),
-      toastForumFailure
+      )
     );
   const purge = () =>
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         row._tag === "item"
           ? purgeItem.withOptimisticUpdate(purgeItemUpdate)({
               classId,
@@ -246,8 +242,7 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
               folderId: row.folder.id,
               slug,
             })
-      ),
-      toastForumFailure
+      )
     );
 
   return (

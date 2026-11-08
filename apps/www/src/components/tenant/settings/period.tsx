@@ -29,7 +29,6 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Period } from "@/components/tenant/settings/state";
 import {
   archivePeriodChange,
@@ -38,8 +37,7 @@ import {
   removePeriodChange,
   restorePeriodChange,
 } from "@/components/tenant/settings/terms";
-
-const SOURCE = "components/tenant/settings/period";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The menu of an archived period in the archived list: Restore, which shows the period as active at once and takes it
@@ -64,7 +62,9 @@ export function SchoolPeriodRestore({
         icon={ArchiveRestoreIcon}
         onClick={() =>
           startTransition(() =>
-            saveSchool(() => restore({ periodId: period.id, slug }), SOURCE)
+            runSchoolWrite(
+              schoolCall(() => restore({ periodId: period.id, slug }))
+            )
           )
         }
       >
@@ -95,10 +95,12 @@ function usePeriodDelete(period: Period, slug: TenantSlug) {
     offered: period.hold === null,
     onConfirm: () =>
       startTransition(() =>
-        saveSchool(
-          () => remove({ periodId: period.id, slug }),
-          SOURCE,
-          () => toast.success({ title: "school-period-deleted.title" })
+        runSchoolWrite(
+          schoolCall(() => remove({ periodId: period.id, slug })),
+          {
+            onSaved: () =>
+              toast.success({ title: "school-period-deleted.title" }),
+          }
         )
       ),
     body: (
@@ -152,25 +154,27 @@ export function SchoolPeriodMenu({
               icon={Archive02Icon}
               onClick={() =>
                 startTransition(() =>
-                  saveSchool(
-                    () => archive({ periodId: period.id, slug }),
-                    SOURCE,
-                    () =>
-                      toast.success(
-                        { title: "school-period-archived.title" },
-                        {
-                          action: {
-                            label: "undo",
-                            onClick: () =>
-                              startTransition(() =>
-                                saveSchool(
-                                  () => restore({ periodId: period.id, slug }),
-                                  SOURCE
-                                )
-                              ),
-                          },
-                        }
-                      )
+                  runSchoolWrite(
+                    schoolCall(() => archive({ periodId: period.id, slug })),
+                    {
+                      onSaved: () =>
+                        toast.success(
+                          { title: "school-period-archived.title" },
+                          {
+                            action: {
+                              label: "undo",
+                              onClick: () =>
+                                startTransition(() =>
+                                  runSchoolWrite(
+                                    schoolCall(() =>
+                                      restore({ periodId: period.id, slug })
+                                    )
+                                  )
+                                ),
+                            },
+                          }
+                        ),
+                    }
                   )
                 )
               }
@@ -191,7 +195,9 @@ export function SchoolPeriodMenu({
             icon={CheckmarkCircle02Icon}
             onClick={() =>
               startTransition(() =>
-                saveSchool(() => open({ periodId: period.id, slug }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => open({ periodId: period.id, slug }))
+                )
               )
             }
           >
@@ -206,9 +212,8 @@ export function SchoolPeriodMenu({
           key={dialogs.key}
           onSave={(fields) =>
             startTransition(() =>
-              saveSchool(
-                () => edit({ ...fields, periodId: period.id, slug }),
-                SOURCE
+              runSchoolWrite(
+                schoolCall(() => edit({ ...fields, periodId: period.id, slug }))
               )
             )
           }

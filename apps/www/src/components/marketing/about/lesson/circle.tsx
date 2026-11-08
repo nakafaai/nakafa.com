@@ -1,4 +1,4 @@
-import { UnitCircleCard } from "@repo/design-system/components/contents/mathematics/unit-circle";
+import { UnitCircleCard } from "@repo/design-system/components/contents/mathematics/circle/unit";
 import { useTranslations } from "use-intl";
 import { useLessonSelection } from "@/components/marketing/about/lesson/selection";
 

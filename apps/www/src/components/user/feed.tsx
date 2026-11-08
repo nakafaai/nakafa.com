@@ -1,14 +1,10 @@
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-} from "@repo/design-system/components/ui/empty";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { DateTime } from "effect";
 import type { ComponentProps, ReactNode } from "react";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 
 /**
  * The frame every row of a profile shares, the composer's included. A row of a page's comments takes no
@@ -148,12 +144,5 @@ export function FeedNotice({ children }: { children: ReactNode }) {
  * screen reader hears the sentence alone.
  */
 export function FeedEmpty({ children }: { children: ReactNode }) {
-  return (
-    <Empty className="py-12">
-      <EmptyHeader>
-        <EmptyNina act="sleeping" />
-        <EmptyDescription>{children}</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
-  );
+  return <EmptyState scene={<EmptyNina act="sleeping" />} title={children} />;
 }

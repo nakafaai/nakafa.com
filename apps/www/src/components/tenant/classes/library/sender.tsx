@@ -4,10 +4,6 @@ import { LibraryFileType } from "@repo/backend/confect/classroom/library/item";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option, Schema } from "effect";
 import {
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   sendLibraryFile,
   uploadLibraryFile,
 } from "@/components/tenant/classes/library/add";
@@ -16,6 +12,7 @@ import {
   useLibraryUploads,
 } from "@/components/tenant/classes/library/scope";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { runSchoolWrite } from "@/components/tenant/write";
 
 /** Tells the teacher that a file larger than the library keeps was not added. */
 const refuseLargeFile = Effect.sync(() =>
@@ -66,7 +63,7 @@ export function useFileSender() {
       return;
     }
     const kind = contentType.value === "application/pdf" ? "pdf" : "image";
-    runForumCall(
+    runSchoolWrite(
       sendLibraryFile(
         uploads.getState(),
         { author, kind, title },
@@ -92,8 +89,7 @@ export function useFileSender() {
           FileTypeRefused: () => refuseOtherFile,
           StorageFull: () => refuseFullStorage,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 }

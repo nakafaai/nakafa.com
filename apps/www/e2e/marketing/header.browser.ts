@@ -3,6 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForScrollRest } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
 import {
   desktopViewport,
@@ -98,11 +99,11 @@ for (const viewport of targetViewports) {
                   for (const delta of Arr.makeBy(12, () => 1600)) {
                     await page.mouse.wheel(0, delta);
                   }
-                  await page.waitForTimeout(400);
+                  await waitForScrollRest(page);
                   for (const delta of Arr.makeBy(12, () => -1600)) {
                     await page.mouse.wheel(0, delta);
                   }
-                  await page.waitForTimeout(400);
+                  await waitForScrollRest(page);
                 });
                 yield* expectHeaderDrawn(page);
 

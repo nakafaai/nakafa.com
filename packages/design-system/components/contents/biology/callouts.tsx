@@ -3,8 +3,8 @@ import {
   type BiologyScenePoint,
   BiologyScenePointSchema,
 } from "@repo/design-system/components/contents/biology/data";
-import type { BiologyLabCalloutProps } from "@repo/design-system/components/contents/biology/lab-frame";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
+import type { BiologyLabCalloutProps } from "@repo/design-system/components/contents/biology/lab";
+import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import {
   THREE_FONT_SIZE,
   type ThreeFontSize,

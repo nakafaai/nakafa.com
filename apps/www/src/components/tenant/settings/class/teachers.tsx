@@ -37,9 +37,7 @@ import {
   type PersonId,
   SchoolTeacherPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/class/teachers";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many teachers one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -87,10 +85,9 @@ export function ClassTeachersDialog({
       return;
     }
     startSaving(() =>
-      saveSchool(
-        () => assign({ classId, personId, slug }),
-        SOURCE,
-        () => setPersonId(undefined)
+      runSchoolWrite(
+        schoolCall(() => assign({ classId, personId, slug })),
+        { onSaved: () => setPersonId(undefined) }
       )
     );
   };
@@ -180,9 +177,10 @@ function ClassTeacherList({
               })}
               onClick={() =>
                 startTransition(() =>
-                  saveSchool(
-                    () => remove({ classId, personId: teacher.id, slug }),
-                    SOURCE
+                  runSchoolWrite(
+                    schoolCall(() =>
+                      remove({ classId, personId: teacher.id, slug })
+                    )
                   )
                 )
               }

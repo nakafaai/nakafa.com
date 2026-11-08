@@ -11,10 +11,10 @@ import type { ModelMessage } from "ai";
 import { Effect, Schema, Struct } from "effect";
 
 /** The component could not store a learner's message. Nothing of the message is kept. */
-class SealedWriteError extends Schema.TaggedError<SealedWriteError>()(
-  "SealedWriteError",
-  {}
-) {}
+class SealedWriteError extends Schema.TaggedError<
+  SealedWriteError,
+  { readonly brand: unique symbol }
+>()("SealedWriteError", {}) {}
 
 /**
  * The order that a message saved now opens in its thread: the one after the newest

@@ -9,7 +9,7 @@ import {
   PinOffIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { PostText } from "@repo/backend/confect/classroom/posts/post";
+import { PostText } from "@repo/backend/confect/classroom/posts/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -41,11 +41,6 @@ import {
 } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   archivePostUpdate,
@@ -57,6 +52,7 @@ import {
 } from "@/components/tenant/classes/home/optimistic";
 import { PostPoll } from "@/components/tenant/classes/home/poll";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * One announcement of the class home: who posted it and when, and its text, which may break
@@ -146,15 +142,14 @@ function PostActions({
 
   const confirm = () => {
     setRemoving(false);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         remove.withOptimisticUpdate(removePostUpdate)({
           classId,
           postId: post.id,
           slug,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 
@@ -170,16 +165,15 @@ function PostActions({
           <DropdownMenuItem
             icon={post.pinned ? PinOffIcon : PinIcon}
             onClick={() =>
-              runForumCall(
-                forumCall(() =>
+              runSchoolWrite(
+                schoolCall(() =>
                   pin.withOptimisticUpdate(pinPostUpdate(post))({
                     classId,
                     pinned: !post.pinned,
                     postId: post.id,
                     slug,
                   })
-                ),
-                toastForumFailure
+                )
               )
             }
           >
@@ -197,15 +191,14 @@ function PostActions({
                 <DropdownMenuItem
                   icon={ArrowTurnBackwardIcon}
                   onClick={() =>
-                    runForumCall(
-                      forumCall(() =>
+                    runSchoolWrite(
+                      schoolCall(() =>
                         restore.withOptimisticUpdate(restorePostUpdate)({
                           classId,
                           postId: post.id,
                           slug,
                         })
-                      ),
-                      toastForumFailure
+                      )
                     )
                   }
                 >
@@ -215,15 +208,14 @@ function PostActions({
                 <DropdownMenuItem
                   icon={Archive02Icon}
                   onClick={() =>
-                    runForumCall(
-                      forumCall(() =>
+                    runSchoolWrite(
+                      schoolCall(() =>
                         archive.withOptimisticUpdate(archivePostUpdate)({
                           classId,
                           postId: post.id,
                           slug,
                         })
-                      ),
-                      toastForumFailure
+                      )
                     )
                   }
                 >
@@ -277,9 +269,9 @@ function PostEditor({ onDone, post }: { onDone: () => void; post: ClassPost }) {
     if (!Schema.is(PostText)(text) || text === post.text) {
       return;
     }
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(Clock.currentTimeMillis, (at) =>
-        forumCall(() =>
+        schoolCall(() =>
           edit.withOptimisticUpdate(editPostUpdate(at))({
             classId,
             postId: post.id,
@@ -287,8 +279,7 @@ function PostEditor({ onDone, post }: { onDone: () => void; post: ClassPost }) {
             text,
           })
         )
-      ),
-      toastForumFailure
+      )
     );
   };
 

@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Array as Arr, Effect, Schema } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { runFixture } from "@/e2e/support/acceptance";
 import type { Changes } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import {
@@ -242,7 +243,7 @@ test.describe("The review of a finished try-out", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes, learner } = yield* openChatPage(page, origin);
-        yield* runAcceptanceCommand("xendit", learner.userId, "plan");
+        yield* runFixture(seedXendit(learner.userId, "plan"));
         yield* Effect.promise(() =>
           page.goto(entrySetHref, { waitUntil: "commit" })
         );

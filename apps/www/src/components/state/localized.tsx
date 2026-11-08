@@ -6,8 +6,9 @@ import { Effect } from "effect";
 import { useEffect, useState } from "react";
 import { createStore, useStore } from "zustand";
 import { ActionLink } from "@/components/state/action";
-import { Broken, BrokenRetry } from "@/components/state/broken";
-import { Missing } from "@/components/state/missing";
+import { BrokenRetry } from "@/components/state/broken";
+import { EmptyState } from "@/components/state/empty";
+import { DeferredFigure } from "@/components/state/mascot";
 import { Stage } from "@/components/state/stage";
 import {
   isStaleChunkError,
@@ -33,23 +34,30 @@ export function LocalizedNotFound({
   const messages = readStandaloneMessages(locale);
   return (
     <Stage>
-      <Missing
+      <EmptyState
+        action={
+          <>
+            <ActionLink
+              href={
+                school ? new URL(`/${locale}`, SITE_ORIGIN).href : `/${locale}`
+              }
+              label={messages.State["home-button"]}
+              variant="default"
+            />
+            {school ? null : (
+              <ActionLink
+                href={`/${locale}/search`}
+                label={messages.NotFound["search-button"]}
+                variant="ghost"
+              />
+            )}
+          </>
+        }
         description={messages.NotFound.description}
-        title={messages.NotFound.title}
-      >
-        <ActionLink
-          href={school ? new URL(`/${locale}`, SITE_ORIGIN).href : `/${locale}`}
-          label={messages.State["home-button"]}
-          variant="default"
-        />
-        {school ? null : (
-          <ActionLink
-            href={`/${locale}/search`}
-            label={messages.NotFound["search-button"]}
-            variant="ghost"
-          />
-        )}
-      </Missing>
+        frame="page"
+        scene={<DeferredFigure scene="missing" />}
+        title={<h1>{messages.NotFound.title}</h1>}
+      />
     </Stage>
   );
 }
@@ -98,25 +106,28 @@ export function useRouteFailure(error: unknown, source: string) {
 }
 
 /**
- * The error state of one locale, with a retry and a way home. It reads the
- * standalone dictionary; the error component that renders it reports the error
- * with `useRouteFailure`.
+ * The error state of one locale, with a retry and a way home, which the page around it frames: the stage of a route's
+ * error, or the entry pages' panel. It reads the standalone dictionary; the error component that renders it reports
+ * the error with `useRouteFailure`.
  */
 export function LocalizedError({ locale }: { readonly locale: Locale }) {
   const messages = readStandaloneMessages(locale);
   return (
-    <Stage>
-      <Broken
-        description={messages.Error.description}
-        title={messages.Error.title}
-      >
-        <BrokenRetry>{messages.Error.retry}</BrokenRetry>
-        <ActionLink
-          href={`/${locale}`}
-          label={messages.State["home-button"]}
-          variant="ghost"
-        />
-      </Broken>
-    </Stage>
+    <EmptyState
+      action={
+        <>
+          <BrokenRetry>{messages.Error.retry}</BrokenRetry>
+          <ActionLink
+            href={`/${locale}`}
+            label={messages.State["home-button"]}
+            variant="ghost"
+          />
+        </>
+      }
+      description={messages.Error.description}
+      frame="page"
+      scene={<DeferredFigure scene="broken" />}
+      title={<h1>{messages.Error.title}</h1>}
+    />
   );
 }

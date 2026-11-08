@@ -1,11 +1,19 @@
 import { NodeSocketServer } from "@effect/platform-node";
+import {
+  ConvexCall,
+  LocalConvex,
+} from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
   Array as Arr,
   Effect,
   Fiber,
   FileSystem,
+  Layer,
   MutableList,
+  Option,
+  Record as Rec,
+  Schema,
   Sink,
   Stream,
 } from "effect";
@@ -161,3 +169,60 @@ export const brewPrefixAnswer = (prefix: string) =>
     stdout: Stream.succeed(new TextEncoder().encode(`${prefix}\n`)),
     unref: Effect.succeed(Effect.void),
   });
+
+/** One call that the local backend double received. */
+const RecordedCall = Schema.Struct({
+  call: ConvexCall,
+  operation: Schema.String,
+  sensitiveValues: Schema.Array(Schema.String),
+});
+
+/** One import that the local backend double received. */
+const RecordedImport = Schema.Struct({
+  rows: Schema.Array(Schema.Unknown),
+  table: Schema.String,
+});
+
+/**
+ * A local backend that answers each function by its path from `answers`, null
+ * for a path it does not name, and fails the paths in `failing` as the backend
+ * fails a function. It keeps every call and every import in the order they came.
+ */
+export const localConvexDouble = (
+  answers: Readonly<Record<string, unknown>> = {},
+  failing: readonly string[] = []
+) => {
+  const calls = MutableList.make<typeof RecordedCall.Type>();
+  const imports = MutableList.make<typeof RecordedImport.Type>();
+  const convex = LocalConvex.of({
+    importRows: (table, rows) =>
+      Effect.sync(() => {
+        MutableList.append(imports, { rows, table });
+      }),
+    run: (operation, call, sensitiveValues = []) =>
+      Effect.suspend(() => {
+        MutableList.append(calls, { call, operation, sensitiveValues });
+        return Arr.contains(failing, call.path)
+          ? Effect.fail(acceptanceRuntimeError(`${operation} failed`))
+          : Effect.succeed(Option.getOrNull(Rec.get(answers, call.path)));
+      }),
+  });
+  return {
+    /** Every call in the order it came. */
+    calls: () => MutableList.toArray(calls),
+    /** The arguments of the first call of `path`. */
+    argsOf: (path: string) =>
+      Option.getOrThrow(
+        Arr.findFirst(
+          MutableList.toArray(calls),
+          (one) => one.call.path === path
+        )
+      ).call.args,
+    /** Every import in the order it came. */
+    imports: () => MutableList.toArray(imports),
+    layer: Layer.succeed(LocalConvex, convex),
+    /** The paths of the calls in the order they came. */
+    paths: () => Arr.map(MutableList.toArray(calls), (one) => one.call.path),
+    run: convex.run,
+  };
+};

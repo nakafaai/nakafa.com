@@ -3,7 +3,7 @@ import { LocalizedNotFound } from "@/components/state/localized";
 import {
   notFoundRouteHead,
   readNotFoundRouteLocale,
-} from "@/lib/routing/not-found";
+} from "@/lib/routing/missing";
 
 /**
  * The not-found page of one locale as a page of its own, which the build prerenders into that locale's `404.html`.

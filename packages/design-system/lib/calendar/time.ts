@@ -1,4 +1,4 @@
-import { parseCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
+import { parseCalendarDayKey } from "@repo/design-system/lib/calendar/day";
 import { Array as Arr, Option, Order, Schema, String as Str } from "effect";
 
 /** A time of day on the 24-hour clock to the minute: two digits of the hour, a colon, two of the minute. */

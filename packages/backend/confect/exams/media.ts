@@ -84,18 +84,20 @@ export const PlayableMedia = Schema.Union([
 ]);
 
 /** A file over `AUDIO_BYTE_LIMIT`. The file is deleted. */
-export class AudioSizeRefused extends Schema.TaggedError<AudioSizeRefused>()(
-  "AudioSizeRefused",
-  { ...refusal("AUDIO_SIZE", "An audio clip may be at most 3 MB.") }
-) {}
+export class AudioSizeRefused extends Schema.TaggedError<
+  AudioSizeRefused,
+  { readonly brand: unique symbol }
+>()("AudioSizeRefused", {
+  ...refusal("AUDIO_SIZE", "An audio clip may be at most 3 MB."),
+}) {}
 
 /** A file whose leading bytes are no audio a paper plays. The file is deleted. */
-export class AudioTypeRefused extends Schema.TaggedError<AudioTypeRefused>()(
-  "AudioTypeRefused",
-  {
-    ...refusal("AUDIO_TYPE", "Only MP3, M4A, OGG, and WAV clips can be added."),
-  }
-) {}
+export class AudioTypeRefused extends Schema.TaggedError<
+  AudioTypeRefused,
+  { readonly brand: unique symbol }
+>()("AudioTypeRefused", {
+  ...refusal("AUDIO_TYPE", "Only MP3, M4A, OGG, and WAV clips can be added."),
+}) {}
 
 /** The bytes of an ASCII text, one number per character. */
 const ascii = (text: string) =>

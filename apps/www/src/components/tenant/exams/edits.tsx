@@ -11,7 +11,6 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Match } from "effect";
 import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   acceptedKey,
   markedKey,
@@ -44,6 +43,7 @@ import {
   type QuestionWrite,
   type Unstored,
 } from "@/components/tenant/exams/writer";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The answers and the key of one question as its page shows them, with the saves that change them.
@@ -64,7 +64,7 @@ export function useQuestionEditing(question: Question) {
   // save starts from the newer of the draft its last answer returned and the question the render holds. A
   // save that changes the template sends the template's call, which converts the answers on the server.
   const send = useCallbackRef((draft: QuestionDraft, base: QuestionDraft) =>
-    sentAction(() =>
+    schoolCall(() =>
       draft.template === base.template
         ? answer({
             answers: draft.answers,
@@ -138,12 +138,12 @@ export function useQuestionEditing(question: Question) {
         setShown(null);
       }
     };
-    runExamAction(writer.save(edit), {
-      onFailure: (error) => {
+    runSchoolWrite(writer.save(edit), {
+      onFailed: (error) => {
         settle();
         unstored?.(isUnrefused(error) ? "unanswered" : "refused");
       },
-      onSuccess: settle,
+      onSaved: settle,
     });
   };
 

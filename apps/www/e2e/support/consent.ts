@@ -60,10 +60,10 @@ export const seedAnalyticsConsent = Effect.fn("NakafaE2E.seedAnalyticsConsent")(
 );
 
 /** The prompt for usage data did not show for a signed-in learner. */
-class UsageDataPromptMissing extends Schema.TaggedError<UsageDataPromptMissing>()(
-  "UsageDataPromptMissing",
-  { shown: Schema.String }
-) {
+class UsageDataPromptMissing extends Schema.TaggedError<
+  UsageDataPromptMissing,
+  { readonly brand: unique symbol }
+>()("UsageDataPromptMissing", { shown: Schema.String }) {
   get message() {
     return `The usage data prompt did not show. ${this.shown}`;
   }

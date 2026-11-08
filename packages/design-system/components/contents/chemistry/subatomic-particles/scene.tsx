@@ -3,7 +3,7 @@ import {
   CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO,
   ChemistryParticleLabel,
   getChemistryParticleLabelPosition,
-} from "@repo/design-system/components/contents/chemistry/particle-label";
+} from "@repo/design-system/components/contents/chemistry/label";
 import {
   createPath,
   createQuadraticPath,
