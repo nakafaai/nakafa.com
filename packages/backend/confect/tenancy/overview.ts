@@ -52,7 +52,7 @@ export const overview = FunctionImpl.make(
             )
             .take(CLASS_LIMIT)
             .pipe(Effect.orDie);
-          const hold = yield* cohortHold(cohort._id);
+          const hold = yield* cohortHold(cohort);
           const assignment = yield* activeHomeroomOf(cohort._id);
           const homeroom = Option.isSome(assignment)
             ? yield* reader

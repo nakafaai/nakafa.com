@@ -12740,6 +12740,7 @@ export declare const api: {
             | "homeroom"
             | "letters"
             | "members"
+            | "promotions"
             | "reports"
             | "sittings"
             | null;
@@ -13200,6 +13201,7 @@ export declare const api: {
               | "cohorts"
               | "grades"
               | "graduations"
+              | "insight"
               | "promotions"
               | null;
             id: Id<"tenantPeriods">;
