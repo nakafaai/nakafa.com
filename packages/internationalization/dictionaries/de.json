@@ -4616,6 +4616,7 @@
     "item-lamp": "Laterne",
     "water": "Garten gießen",
     "harvest": "Ernten",
+    "sound": "Ton",
     "materials": "Garten",
     "materials-value": "{wood} Holz, {petals} Blütenblätter",
     "price-wood": "{stars} Sterne, {wood} Holz"
