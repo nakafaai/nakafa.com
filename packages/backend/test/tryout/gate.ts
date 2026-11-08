@@ -119,8 +119,8 @@ const essay = Effect.all({
   key: Schema.decodeEffect(InteractionKeySchema)({
     criteria: [
       {
-        criterion: "Argument",
-        levels: [{ descriptor: "States a clear claim.", level: "1" }],
+        criterion: "argument",
+        levels: [{ descriptor: "States a clear claim.", level: "clear" }],
       },
     ],
     interaction: "essay",
