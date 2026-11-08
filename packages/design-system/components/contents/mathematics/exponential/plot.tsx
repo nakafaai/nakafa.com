@@ -14,13 +14,14 @@ import {
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { Effect } from "effect";
 import { useFormatter } from "use-intl";
 
 const CHART_CONFIG = {
   y: {
     label: <InlineMath math="f(x)" />,
-    colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+    colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
   },
 } satisfies ChartConfig;
 

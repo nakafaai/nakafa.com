@@ -1,11 +1,11 @@
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
 export const STOPPING_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/suv.glb";
 
 export const STOPPING_DISTANCE_COLORS = {
-  carBody: getColor("SKY"),
+  carBody: PLOT_COLORS.teal,
 } as const;
 
 export const STOPPING_DISTANCE_SPEEDS = [10, 20, 30] as const;

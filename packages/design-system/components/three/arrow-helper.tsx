@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/three/data/constants";
 import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { COLORS } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Predicate } from "effect";
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { type Color, Quaternion, Vector3 } from "three";
@@ -123,7 +123,7 @@ interface Props {
 export function ArrowHelper({
   from = [0, 0, 0],
   to,
-  color = COLORS.YELLOW,
+  color = PLOT_COLORS.amber,
   lineWidth = 2,
   showArrow = true,
   arrowSize = 0.25,

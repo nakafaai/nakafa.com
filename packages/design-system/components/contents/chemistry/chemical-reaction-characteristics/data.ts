@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
@@ -65,15 +66,15 @@ export function getReactionSceneColors(resolvedTheme: string | undefined) {
 
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-    bubble: getColor("SKY"),
-    glass: getColor("CYAN"),
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
-    heat: getColor("ORANGE"),
-    liquidAfterColor: getColor("AMBER"),
-    liquidBase: isDarkTheme ? getColor("SLATE") : getColor("GRAY"),
-    liquidGas: getColor("CYAN"),
-    liquidWarm: getColor("ORANGE"),
-    precipitate: getColor("EMERALD"),
+    bubble: PLOT_COLORS.teal,
+    glass: getColor("SLATE", 300),
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
+    heat: PLOT_COLORS.orange,
+    liquidAfterColor: PLOT_COLORS.amber,
+    liquidBase: isDarkTheme ? PLOT_COLORS.slate : getColor("GRAY"),
+    liquidGas: PLOT_COLORS.violet,
+    liquidWarm: PLOT_COLORS.orange,
+    precipitate: PLOT_COLORS.fuchsia,
     skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
