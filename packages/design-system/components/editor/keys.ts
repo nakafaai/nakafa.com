@@ -156,9 +156,9 @@ const LIMIT = /\\lim(?=_)/gu;
  * letters stand as they are, and a quantity keeps its unit beside its number.
  */
 const SAMPLE_FACES: Readonly<Record<string, string>> = {
-  [String.raw`\ce{#?}`]: String.raw`\ce{A2B}`,
-  [String.raw`\mathrm{#@}`]: String.raw`\mathrm{Ab}`,
-  [String.raw`\pu{#?}`]: String.raw`\pu{1 m}`,
+  "\\ce{#?}": String.raw`\ce{A2B}`,
+  "\\mathrm{#@}": String.raw`\mathrm{Ab}`,
+  "\\pu{#?}": String.raw`\pu{1 m}`,
 };
 
 /**
