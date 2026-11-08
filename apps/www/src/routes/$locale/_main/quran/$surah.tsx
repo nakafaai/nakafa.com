@@ -23,7 +23,6 @@ import { QuranInterpretationControls } from "@/components/shared/quran/interpret
 import { QuranSurahsContext } from "@/components/shared/quran/surahs";
 import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
-import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
@@ -112,26 +111,24 @@ function QuranSurahPage() {
     <LayoutMaterial>
       <SidebarRightProvider>
         <LayoutMaterialContent>
-          <TableFiltersProvider key={page.surahNumber}>
-            <QuranSurahsContext value={page.surahs}>
-              <QuranSurahHeader
-                actions={
-                  <OpenContent
-                    copySourceUrl={page.copySourceUrl}
-                    slug={`/${page.locale}/quran/${page.surah}`}
-                  >
-                    <AiMenuItem contextTitle={page.title} />
-                  </OpenContent>
-                }
-                arabic={page.arabic}
-                meaning={page.meaning.text}
-                meaningLanguage={page.meaning.appLocale}
-                quranLabel={labels.quran}
-                search={<QuranSurahFind />}
-                title={page.title}
-              />
-            </QuranSurahsContext>
-          </TableFiltersProvider>
+          <QuranSurahsContext value={page.surahs}>
+            <QuranSurahHeader
+              actions={
+                <OpenContent
+                  copySourceUrl={page.copySourceUrl}
+                  slug={`/${page.locale}/quran/${page.surah}`}
+                >
+                  <AiMenuItem contextTitle={page.title} />
+                </OpenContent>
+              }
+              arabic={page.arabic}
+              meaning={page.meaning.text}
+              meaningLanguage={page.meaning.appLocale}
+              quranLabel={labels.quran}
+              search={<QuranSurahFind key={page.surahNumber} />}
+              title={page.title}
+            />
+          </QuranSurahsContext>
           <LayoutContent className="pt-6">
             <QuranVersesProvider
               interpretationLabel={page.interpretationLabel}

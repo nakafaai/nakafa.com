@@ -20,9 +20,13 @@ const BAQARAH_OPTION = /Al-Baqara\b/u;
 /** The header of the surah page. */
 const header = (page: Page) => page.locator('[data-slot="page-header"]');
 
-/** The search box once its list has loaded, which a combobox names. */
-const searchBox = (page: Page) =>
-  page.getByRole("combobox", { name: app.Holy["search-surah"] });
+/** The header's search button, a field on a wide screen and an icon on a phone. */
+const searchButton = (page: Page) =>
+  header(page).getByRole("button", { name: app.Holy["search-surah"] });
+
+/** The search field of the open picker. */
+const searchField = (page: Page) =>
+  page.getByPlaceholder(app.Holy["search-surah"]);
 
 /** Opens a surah from its own address with its router hydrated. */
 const openSurah = Effect.fn("NakafaE2E.openSurahForSearch")(function* (
@@ -40,10 +44,10 @@ const openSurah = Effect.fn("NakafaE2E.openSurahForSearch")(function* (
 });
 
 /**
- * A surah page's header searches every surah: the box loads its list when the
- * reader turns to it, the list keeps the surahs whose number, names or meaning
+ * A surah page's header searches every surah: the press on its search loads the
+ * picker and opens it, its list keeps the surahs whose number, names or meaning
  * hold the words, the first one highlighted, and Enter opens it. A word nothing
- * holds says so, and the next surah's header starts empty.
+ * holds says so, and the picker opens again with an empty search.
  */
 test("a surah page's header finds another surah by its meaning, its names and its number", async ({
   page,
@@ -55,40 +59,37 @@ test("a surah page's header finds another surah by its meaning, its names and it
       Effect.gen(function* () {
         yield* openSurah(page, FATIHAH);
         yield* Effect.promise(async () => {
-          await header(page)
-            .getByRole("textbox", { name: app.Holy["search-surah"] })
-            .click();
-          const box = searchBox(page);
-          await expect(box).toBeFocused();
+          await searchButton(page).click();
+          const field = searchField(page);
+          await expect(field).toBeFocused();
 
           for (const words of ["al baqarah", "البقرة", "2"]) {
-            await box.fill(words);
+            await field.fill(words);
             await expect(page.getByRole("option").first()).toHaveAccessibleName(
               BAQARAH_OPTION
             );
           }
 
-          await box.fill("zzz");
+          await field.fill("zzz");
           await expect(
-            page.getByText(app.Holy["search-surah-none"], { exact: true })
+            page.getByText(app.Holy["surah-empty"], { exact: true })
           ).toBeVisible();
 
-          await box.fill("cow");
+          await field.fill("cow");
           await expect(page.getByRole("option")).toHaveCount(1);
-          await box.press("Enter");
+          await field.press("Enter");
           await expect(page).toHaveURL(BAQARAH);
-          await expect(
-            header(page).getByRole("textbox", {
-              name: app.Holy["search-surah"],
-            })
-          ).toHaveValue("");
+          await expect(field).toBeHidden();
+
+          await searchButton(page).click();
+          await expect(searchField(page)).toHaveValue("");
         });
       })
     )
   );
 });
 
-/** A phone opens the search from its header button, and a press on a surah opens it. */
+/** A phone opens the search from its header button in a drawer, and a press on a surah opens it. */
 test("a phone finds another surah from the search button of a surah page's header", async ({
   page,
 }) => {
@@ -99,12 +100,10 @@ test("a phone finds another surah from the search button of a surah page's heade
       Effect.gen(function* () {
         yield* openSurah(page, FATIHAH);
         yield* Effect.promise(async () => {
-          await header(page)
-            .getByRole("button", { name: app.Holy["search-surah"] })
-            .click();
-          const box = searchBox(page);
-          await expect(box).toBeFocused();
-          await box.fill("cow");
+          await searchButton(page).click();
+          const field = searchField(page);
+          await expect(field).toBeVisible();
+          await field.fill("cow");
           await page.getByRole("option", { name: BAQARAH_OPTION }).click();
           await expect(page).toHaveURL(BAQARAH);
         });

@@ -2482,6 +2482,8 @@
     "search-surah": "Suren suchen",
     "search-surah-none": "Keine Sure gefunden",
     "search-surah-none-description": "Suche nach Nummer, Name oder Bedeutung.",
+    "menu-surah": "Sure",
+    "surah-empty": "Keine Sure gefunden.",
     "quran-description": "Lies alle 114 Suren des Korans auf Arabisch mit einer Übersetzung Vers für Vers, kostenlos auf Nakafa.",
     "verse": "Vers",
     "verse-count": "Vers {count}",
