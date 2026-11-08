@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { expectDrawnIsland } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -12,9 +13,6 @@ const VISIT = /\/en\/island\/[^/]+$/u;
 
 /** The stored snapshot a visit names as its link's picture once the owner shared. */
 const SNAPSHOT = /\/islands\//u;
-
-/** The island's canvas once its first frame has drawn. */
-const DRAWN = "canvas[data-drawn]";
 
 test("a learner shares their island, and a signed-out visitor opens it read only with its snapshot as the link's picture", async ({
   baseURL,
@@ -40,7 +38,7 @@ test("a learner shares their island, and a signed-out visitor opens it read only
       page,
       Effect.promise(async () => {
         await page.goto("/en/island");
-        await expect(page.locator(DRAWN)).toBeVisible();
+        await expectDrawnIsland(page);
         await page.getByRole("button", { name: "More actions" }).click();
         await page.getByRole("menuitem", { name: "Share" }).click();
         await expect(page.locator("html")).toHaveAttribute(
@@ -73,7 +71,7 @@ test("a learner shares their island, and a signed-out visitor opens it read only
         await expect(
           visit.getByText(`${LEARNER_NAME}'s Island`).first()
         ).toBeVisible();
-        await expect(visit.locator(DRAWN)).toBeVisible();
+        await expectDrawnIsland(visit);
         await visit.getByRole("button", { name: "More actions" }).click();
         await expect(
           visit.getByRole("menuitem", { name: "Turn right" })
