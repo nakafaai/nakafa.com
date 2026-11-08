@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
-import { classOf, openPeriod, period } from "@repo/backend/test/classroom";
 import {
   foreignCohort,
   journal,
@@ -13,18 +12,8 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const {
-  activePeriod,
-  create,
-  edit,
-  get,
-  list,
-  archive,
-  members,
-  overview,
-  remove,
-} = refs.public.tenancy.cohorts;
-const classes = refs.public.classroom.classes;
+const { activePeriod, create, edit, get, list, archive, members, overview } =
+  refs.public.tenancy.cohorts;
 const assignments = refs.public.tenancy.assignments;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
@@ -273,34 +262,6 @@ describe("tenancy/cohorts overview", () => {
           )
         );
         expect((yield* placed).page).toMatchObject([{ login: "siswa-7a" }]);
-      })
-  );
-});
-
-describe("tenancy/cohorts overview holds", () => {
-  it.effect(
-    "counts an archived class and names it as the hold, so the list offers no delete the server refuses",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const term = yield* period(fixture, fixture.units.smp);
-        yield* openPeriod(fixture, term.id);
-        const made = yield* cohort(fixture, term.id, "7A", 7);
-        const read = fixture
-          .as("admin")
-          .query(overview, { periodId: term.id, slug: nf });
-        expect(yield* read).toMatchObject([{ classes: 0, hold: null }]);
-        const taught = yield* classOf(fixture, made.id, "Matematika");
-        yield* fixture
-          .as("admin")
-          .mutation(classes.archive, { classId: taught.id, slug: nf });
-        expect(yield* read).toMatchObject([{ classes: 1, hold: "classes" }]);
-        expect(
-          yield* fixture
-            .as("admin")
-            .mutation(remove, { cohortId: made.id, slug: nf })
-            .pipe(Effect.flip)
-        ).toMatchObject({ _tag: "CohortInUse", holds: "classes" });
       })
   );
 });

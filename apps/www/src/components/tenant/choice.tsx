@@ -33,7 +33,14 @@ const ChoiceName = Schema.Literals([
  * codes such as "1A". It stands first in the list's `SelectGroup`, above options that each show the icon of their kind.
  */
 export function ChoiceLabel({ name }: { name: typeof ChoiceName.Type }) {
+  const word = useChoiceWord();
+
+  return <SelectLabel>{word(name)}</SelectLabel>;
+}
+
+/** The one word that names what a select chooses, for a list that draws its own label. */
+export function useChoiceWord() {
   const common = useTranslations("Common");
 
-  return <SelectLabel>{common(`menu-${name}`)}</SelectLabel>;
+  return (name: typeof ChoiceName.Type) => common(`menu-${name}`);
 }

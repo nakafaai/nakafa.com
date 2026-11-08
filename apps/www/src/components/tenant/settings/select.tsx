@@ -5,12 +5,13 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr } from "effect";
 import { type ComponentProps, useId } from "react";
-import { ChoiceLabel } from "@/components/tenant/choice";
+import { useChoiceWord } from "@/components/tenant/choice";
 
 /**
  * A labelled choice of a settings form: the items it offers, each with the icon of its kind, and the value chosen. Its
@@ -25,7 +26,7 @@ export function SelectField({
   placeholder,
   value,
 }: {
-  choice: ComponentProps<typeof ChoiceLabel>["name"];
+  choice: Parameters<ReturnType<typeof useChoiceWord>>[0];
   items: readonly {
     readonly icon: ComponentProps<typeof HugeIcons>["icon"];
     readonly label: string;
@@ -37,6 +38,7 @@ export function SelectField({
   value: string | null;
 }) {
   const id = useId();
+  const word = useChoiceWord();
 
   return (
     <Field>
@@ -55,7 +57,7 @@ export function SelectField({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <ChoiceLabel name={choice} />
+            <SelectLabel>{word(choice)}</SelectLabel>
             {Arr.map(items, (item) => (
               <SelectItem key={item.value} value={item.value}>
                 <HugeIcons icon={item.icon} />

@@ -1,7 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   Building03Icon,
-  Clock01Icon,
   SchoolIcon,
   UserMultiple02Icon,
 } from "@hugeicons/core-free-icons";
@@ -55,6 +54,7 @@ import { useTranslations } from "use-intl";
 import { ChoiceLabel } from "@/components/tenant/choice";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
+import { RoomLengthField } from "@/components/tenant/exams/length";
 import { useExam } from "@/components/tenant/exams/provider";
 import { SITTING_LENGTHS, sittingTimes } from "@/components/tenant/exams/time";
 
@@ -136,10 +136,6 @@ export function ScheduleSitting({
   const unitItems = Arr.map(units, (unit) => ({
     label: unit.name,
     value: unit.id,
-  }));
-  const lengthItems = Arr.map(SITTING_LENGTHS, (length) => ({
-    label: t("length-minutes", { count: length }),
-    value: `${length}`,
   }));
   const choice = Option.orElse(
     Arr.findFirst(units, (unit) => unit.id === picked),
@@ -374,38 +370,12 @@ export function ScheduleSitting({
           </FieldDescription>
           <FieldError>{pastStart ? t("schedule-past") : null}</FieldError>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
-          <Select
-            items={lengthItems}
-            onValueChange={(value) => {
-              const next = Arr.findFirst(
-                SITTING_LENGTHS,
-                (length) => `${length}` === value
-              );
-              if (Option.isSome(next)) {
-                setMinutes(next.value);
-              }
-            }}
-            value={`${minutes}`}
-          >
-            <SelectTrigger className="w-full" id={`${id}-length`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="length" />
-
-                {Arr.map(lengthItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={Clock01Icon} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
+        <RoomLengthField
+          id={`${id}-length`}
+          lengths={SITTING_LENGTHS}
+          minutes={minutes}
+          onChange={setMinutes}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

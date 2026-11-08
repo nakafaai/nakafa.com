@@ -4,7 +4,6 @@ import {
   Calendar03Icon,
   Cancel01Icon,
   ChartBarLineIcon,
-  Clock01Icon,
   DashboardSquare01Icon,
   Door01Icon,
 } from "@hugeicons/core-free-icons";
@@ -24,23 +23,15 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
+import { DateTime, Option, Schema, String as Str } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import {
   cancelRoomChange,
   rescheduleRoomChange,
 } from "@/components/tenant/exams/filter";
+import { RoomLengthField } from "@/components/tenant/exams/length";
 import {
   lengthsWith,
   movedTimes,
@@ -160,10 +151,6 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
       onSome: (named) => wallClockOf(room.opensAt, named),
     });
   const minutes = editedMinutes ?? minutesNow;
-  const lengthItems = Arr.map(lengthsWith(minutesNow), (length) => ({
-    label: t("length-minutes", { count: length }),
-    value: `${length}`,
-  }));
   const roomName = Str.trim(name);
   const times = Option.flatMap(zone, (named) =>
     movedTimes(room, starts, minutes, named)
@@ -239,38 +226,12 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
           />
           <FieldDescription>{room.timeZone}</FieldDescription>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
-          <Select
-            items={lengthItems}
-            onValueChange={(value) => {
-              const next = Arr.findFirst(
-                lengthsWith(minutesNow),
-                (length) => `${length}` === value
-              );
-              if (Option.isSome(next)) {
-                setMinutes(next.value);
-              }
-            }}
-            value={`${minutes}`}
-          >
-            <SelectTrigger className="w-full" id={`${id}-length`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="length" />
-
-                {Arr.map(lengthItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={Clock01Icon} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
+        <RoomLengthField
+          id={`${id}-length`}
+          lengths={lengthsWith(minutesNow)}
+          minutes={minutes}
+          onChange={setMinutes}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );
