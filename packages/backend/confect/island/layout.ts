@@ -1,5 +1,9 @@
-import { ItemFromCode } from "@repo/backend/confect/island/item";
+import { ItemFromCode, materialsOf } from "@repo/backend/confect/island/item";
 import { MAX_SIZE } from "@repo/backend/confect/island/level";
+import {
+  addMaterials,
+  NO_MATERIALS,
+} from "@repo/backend/confect/island/material";
 import {
   Array as Arr,
   Effect,
@@ -112,4 +116,20 @@ export const Layout = Schema.instanceOf(ArrayBuffer).pipe(
 /** The Stars the placements of a layout paid, which removing them would return. */
 export function paidFor(layout: readonly Placement[]) {
   return Arr.reduce(layout, 0, (total, placement) => total + placement.paid);
+}
+
+/** The materials the stages of a layout cost, which removing them would return. */
+export function materialsFor(layout: readonly Placement[]) {
+  return Arr.reduce(layout, NO_MATERIALS, (total, placement) =>
+    addMaterials(total, materialsOf(placement.item, placement.stage))
+  );
+}
+
+/** The layout with the placement at one index changed. */
+export function replaceAt(
+  layout: readonly Placement[],
+  index: number,
+  placement: Placement
+) {
+  return Arr.map(layout, (current, at) => (at === index ? placement : current));
 }

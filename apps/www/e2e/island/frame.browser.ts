@@ -40,6 +40,13 @@ for (const viewport of [desktopViewport, touchViewport]) {
             ).toBeVisible();
             await page.keyboard.press("Escape");
             await expect(drawnIsland(page)).toBeVisible();
+            await page.getByRole("button", { name: "More actions" }).click();
+            await page
+              .getByRole("menuitem", { name: "Water the garden" })
+              .click();
+            await expect(
+              page.getByText("Learn something today, then water your garden.")
+            ).toBeVisible();
           })
         )
       );
