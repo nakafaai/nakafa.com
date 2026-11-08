@@ -48,7 +48,7 @@ import {
   resolveRuntimeCurriculumRoute,
 } from "@/lib/curriculum/model";
 import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";

@@ -2,13 +2,14 @@ import { useFrame } from "@react-three/fiber";
 import type { RocketExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Mesh, PointLight } from "three";
 
 const SPACE_COLORS = {
-  flameCore: getColor("YELLOW"),
-  flameOuter: getColor("ORANGE", 500),
+  flameCore: PLOT_COLORS.amber,
+  flameOuter: PLOT_COLORS.amber,
   smoke: getColor("SLATE", 200),
 };
 const SMOKE_PARTICLE_COUNT = 18;

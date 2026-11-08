@@ -22,6 +22,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Record as Rec } from "effect";
 import { type ReactNode, useMemo } from "react";
 
@@ -59,17 +60,17 @@ export function SalesChart({
         A: {
           cue: getBarSeriesCue(0),
           label: seriesLabels.A,
-          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+          colors: { light: [PLOT_COLORS.orange], dark: [PLOT_COLORS.orange] },
         },
         B: {
           cue: getBarSeriesCue(1),
           label: seriesLabels.B,
-          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
+          colors: { light: [PLOT_COLORS.teal], dark: [PLOT_COLORS.teal] },
         },
         C: {
           cue: getBarSeriesCue(2),
           label: seriesLabels.C,
-          colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
+          colors: { light: [PLOT_COLORS.violet], dark: [PLOT_COLORS.violet] },
         },
       }) satisfies ChartConfig,
     [seriesLabels.A, seriesLabels.B, seriesLabels.C]

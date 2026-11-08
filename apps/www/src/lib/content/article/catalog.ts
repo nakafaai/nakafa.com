@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import {
   ReleaseIdSchema,
@@ -21,7 +20,7 @@ import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
 type ArticlePageArgs = Ref.Args<typeof contentRelease.article.publications>;
@@ -179,9 +178,10 @@ export const readPublishedArticlePage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ArticlePageArgs;
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.article.publications, args)
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(
+    contentRelease.article.publications,
+    args
+  );
   const {
     activeManifestHash: rawManifestHash,
     activeReleaseId: rawReleaseId,
@@ -234,9 +234,10 @@ export const readPublishedCategories = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies CategoryPageArgs;
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.article.categories, args)
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(
+    contentRelease.article.categories,
+    args
+  );
   const {
     activeManifestHash: rawManifestHash,
     activeReleaseId: rawReleaseId,

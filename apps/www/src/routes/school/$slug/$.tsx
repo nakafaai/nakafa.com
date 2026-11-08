@@ -1,5 +1,5 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { createFileRoute } from "@tanstack/react-router";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 
 /**
  * An address below a school that no page of the school answers. Only a member
@@ -7,10 +7,5 @@ import { SchoolPageNotFound } from "@/components/tenant/notfound";
  * entry surface, so the page answers not found inside the shell.
  */
 export const Route = createFileRoute("/school/$slug/$")({
-  beforeLoad: ({ context }) => {
-    if (context.school._tag === "Member") {
-      throw notFound();
-    }
-  },
-  notFoundComponent: SchoolPageNotFound,
+  ...guardSchoolPage({ opens: () => false }),
 });

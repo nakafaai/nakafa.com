@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
@@ -11,12 +10,10 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import {
-  type ContentReleasePin,
-  decodeContentReleasePin,
-} from "@/lib/content/published/release";
-import { httpLayer } from "@/lib/convex/http";
+import { decodeContentRelease } from "@/lib/content/published/release";
+import { queryPinnedContentStore } from "@/lib/content/store/query";
 
 type MaterialSummary = Ref.Returns<
   typeof contentRelease.material.latest
@@ -73,26 +70,20 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
 /** Reads one complete published material partition for agent discovery. */
 export const readPublishedMaterialBucket = Effect.fn(
   "www.materials.readBucket"
-)(function* (
-  locale: Locale,
-  bucket: string,
-  expectedActiveReleaseId?: ContentReleasePin
-) {
+)(function* (locale: Locale, bucket: string, release?: ActiveContentReleaseId) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.material.bucket, {
-      appLocale,
-      bucket,
-    })
-  ).pipe(Effect.provide(httpLayer()));
-  const activeReleaseId = yield* decodeContentReleasePin(
-    result.activeReleaseId,
-    expectedActiveReleaseId,
+  const result = yield* queryPinnedContentStore(
+    release,
+    contentRelease.material.bucket,
     {
       appLocale,
-      publicPath: "materials",
+      bucket,
     }
   );
+  const activeReleaseId = yield* decodeContentRelease(result.activeReleaseId, {
+    appLocale,
+    publicPath: "materials",
+  });
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
       appLocale,
@@ -116,26 +107,20 @@ export const readPublishedMaterialBucket = Effect.fn(
 /** Reads a bounded newest-first material set for feed discovery. */
 export const readPublishedLatestMaterials = Effect.fn(
   "www.materials.readLatest"
-)(function* (
-  locale: Locale,
-  limit: number,
-  expectedActiveReleaseId?: ContentReleasePin
-) {
+)(function* (locale: Locale, limit: number, release?: ActiveContentReleaseId) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.material.latest, {
-      appLocale,
-      limit,
-    })
-  ).pipe(Effect.provide(httpLayer()));
-  const activeReleaseId = yield* decodeContentReleasePin(
-    result.activeReleaseId,
-    expectedActiveReleaseId,
+  const result = yield* queryPinnedContentStore(
+    release,
+    contentRelease.material.latest,
     {
       appLocale,
-      publicPath: "materials",
+      limit,
     }
   );
+  const activeReleaseId = yield* decodeContentRelease(result.activeReleaseId, {
+    appLocale,
+    publicPath: "materials",
+  });
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
       appLocale,

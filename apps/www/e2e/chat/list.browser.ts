@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, type Changes, live } from "@/e2e/support/changes";
 import {
   CHAT_PATH,
   LESSON_PATH,
@@ -57,6 +57,7 @@ const seedLongList = Effect.fn("NakafaE2E.seedLongList")(function* (
  */
 const loadsNextPageAtItsEnd = (
   page: Page,
+  changes: Changes,
   rows: Locator,
   scroller: Locator | undefined
 ) =>
@@ -64,6 +65,8 @@ const loadsNextPageAtItsEnd = (
     await expect(rows).toHaveCount(PAGE, {
       timeout: readinessTimeoutMilliseconds,
     });
+    // The server's rows give way to the live list once the session is followed.
+    await live(changes);
     await noButton(page);
     await settled(rows);
     await markRows(rows);
@@ -82,10 +85,10 @@ const chatsPage = Effect.fn("NakafaE2E.chatsPageLoadsMore")(function* (
   page: Page,
   baseURL: string
 ) {
-  const { learner } = yield* seedLongList(page, baseURL);
+  const { changes, learner } = yield* seedLongList(page, baseURL);
 
   yield* Effect.promise(() => page.goto(`/en/@${learner.username}/chat`));
-  yield* loadsNextPageAtItsEnd(page, pageRows(page), undefined);
+  yield* loadsNextPageAtItsEnd(page, changes, pageRows(page), undefined);
 });
 
 /** The history of Nina's sheet on a lesson. */
@@ -93,7 +96,7 @@ const sheetHistory = Effect.fn("NakafaE2E.sheetHistoryLoadsMore")(function* (
   page: Page,
   baseURL: string
 ) {
-  yield* seedLongList(page, baseURL);
+  const { changes } = yield* seedLongList(page, baseURL);
 
   yield* Effect.promise(async () => {
     await page.goto(LESSON_PATH);
@@ -102,6 +105,7 @@ const sheetHistory = Effect.fn("NakafaE2E.sheetHistoryLoadsMore")(function* (
   });
   yield* loadsNextPageAtItsEnd(
     page,
+    changes,
     historyRows(page),
     page.locator('[role="menu"]')
   );
@@ -122,10 +126,15 @@ const sidebar = Effect.fn("NakafaE2E.sidebarLoadsMore")(function* (
   baseURL: string,
   narrow: boolean
 ) {
-  yield* seedLongList(page, baseURL);
+  const { changes } = yield* seedLongList(page, baseURL);
 
   yield* openSidebar(page, narrow);
-  yield* loadsNextPageAtItsEnd(page, sidebarRows(page), sidebarScroller(page));
+  yield* loadsNextPageAtItsEnd(
+    page,
+    changes,
+    sidebarRows(page),
+    sidebarScroller(page)
+  );
 });
 
 /**
@@ -144,6 +153,7 @@ const sidebarSearching = Effect.fn("NakafaE2E.sidebarKeepsRowsWhileSearching")(
       await expect(rows).toHaveCount(PAGE, {
         timeout: readinessTimeoutMilliseconds,
       });
+      await live(changes);
       await markRows(rows);
 
       // The answers are held back, so the new search has no first page yet.

@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -77,7 +77,7 @@ export function Graph({ title, description, labels }: GraphProps) {
       data={[
         {
           points: [origin, buildingTop],
-          color: getColor("INDIGO"),
+          color: PLOT_COLORS.fuchsia,
           showPoints: false,
           labels: [
             {
@@ -94,7 +94,7 @@ export function Graph({ title, description, labels }: GraphProps) {
         },
         {
           points: [buildingTop, helicopter],
-          color: getColor("ORANGE"),
+          color: PLOT_COLORS.orange,
           showPoints: false,
           labels: [
             {
@@ -112,7 +112,7 @@ export function Graph({ title, description, labels }: GraphProps) {
         },
         {
           points: [groundStart, groundEnd],
-          color: getColor("TEAL"),
+          color: PLOT_COLORS.teal,
           showPoints: false,
         },
         {
@@ -121,7 +121,7 @@ export function Graph({ title, description, labels }: GraphProps) {
             { x: totalGround / 2, y: dimensionY, z: 0 },
             { x: totalGround, y: dimensionY, z: 0 },
           ],
-          color: getColor("ROSE"),
+          color: PLOT_COLORS.pink,
           showPoints: false,
           cone: { position: "both" },
           labels: [
@@ -134,12 +134,12 @@ export function Graph({ title, description, labels }: GraphProps) {
         },
         {
           points: [observationPoint, buildingTop],
-          color: getColor("VIOLET"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
         },
         {
           points: [observationPoint, helicopter],
-          color: getColor("EMERALD"),
+          color: PLOT_COLORS.amber,
           showPoints: false,
         },
         {
@@ -147,7 +147,7 @@ export function Graph({ title, description, labels }: GraphProps) {
             observerPosition,
             { x: observerPosition.x, y: observerHeight, z: 0 },
           ],
-          color: getColor("CYAN"),
+          color: PLOT_COLORS.slate,
           showPoints: false,
           labels: [
             {
@@ -167,7 +167,7 @@ export function Graph({ title, description, labels }: GraphProps) {
             },
             { x: observerPosition.x, y: dimensionY_X, z: 0 },
           ],
-          color: getColor("CYAN"),
+          color: PLOT_COLORS.slate,
           showPoints: false,
           cone: { position: "both" },
           labels: [
@@ -180,7 +180,7 @@ export function Graph({ title, description, labels }: GraphProps) {
         },
         {
           points: arc30Points,
-          color: getColor("VIOLET"),
+          color: PLOT_COLORS.violet,
           showPoints: false,
           labels: [
             {
@@ -192,7 +192,7 @@ export function Graph({ title, description, labels }: GraphProps) {
         },
         {
           points: arc45Points,
-          color: getColor("EMERALD"),
+          color: PLOT_COLORS.amber,
           showPoints: false,
           labels: [
             {
