@@ -58,10 +58,10 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
         namespaces: ["Common", "SchoolSite"],
       }),
       // The words of the School screens the sections draw as the app does: the forum, the editor's
-      // toolbar, the exam editor and the player. Only this page reads them.
+      // toolbar and the exam editor. Only this page reads them; the player's are the marketing pages'.
       readStaticData(readRouteMessages, {
         locale: params.locale,
-        namespaces: ["Classroom", "Editor", "Exams", "Player"],
+        namespaces: ["Classroom", "Editor", "Exams"],
       }),
     ]);
     const t = createTranslator({
