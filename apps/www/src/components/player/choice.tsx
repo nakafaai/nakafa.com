@@ -151,7 +151,7 @@ function ChoiceLine({
  * picked or not, and a cross on a pick that misses it. The words beside it already say whether the answer is
  * correct, so the mark is hidden from assistive technology.
  */
-export function ToneMark({ tone }: { tone: ReturnType<typeof choiceTone> }) {
+function ToneMark({ tone }: { tone: ReturnType<typeof choiceTone> }) {
   return Option.match(toneMark(tone), {
     onNone: () => null,
     onSome: (icon) => (
