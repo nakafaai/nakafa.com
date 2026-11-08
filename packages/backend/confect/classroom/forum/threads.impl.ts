@@ -13,6 +13,7 @@ import {
   DiscussionsClosed,
   MessageEmpty,
 } from "@repo/backend/confect/classroom/forum/errors";
+import { nextRepliers } from "@repo/backend/confect/classroom/forum/face";
 import {
   channelOpen,
   classChannel,
@@ -36,7 +37,7 @@ import { start } from "@repo/backend/confect/classroom/forum/start";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
 import {
-  discussionView,
+  discussionViews,
   messageView,
   messageViews,
   schoolKeys,
@@ -61,9 +62,10 @@ const threadView = Effect.fn("classroom.forum.threads.view")(function* (
     )
     .first()
     .pipe(Effect.orDie, Effect.flatMap(Effect.fromOption), Effect.orDie);
+  const [discussion] = yield* discussionViews([thread]);
   return {
     channelId: thread.channelId,
-    discussion: yield* discussionView(thread),
+    discussion,
     id: thread._id,
     opening: yield* messageView(opening),
   };
@@ -92,14 +94,13 @@ const list = FunctionImpl.make(
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
     const shelf = onShelf(found.page, archived);
+    const discussions = yield* discussionViews(shelf);
     return Struct.assign(found, {
-      page: yield* Effect.forEach(shelf, (thread) =>
-        Effect.map(discussionView(thread), (discussion) => ({
-          archived: isArchived(thread),
-          channelId: thread.channelId,
-          discussion,
-        }))
-      ),
+      page: Arr.zipWith(shelf, discussions, (thread, discussion) => ({
+        archived: isArchived(thread),
+        channelId: thread.channelId,
+        discussion,
+      })),
     });
   })
 );
@@ -338,6 +339,10 @@ const reply = FunctionImpl.make(
         thread._id,
         Struct.assign(Struct.omit(thread, ["_creationTime", "_id"]), {
           lastReplyAt: createdAt,
+          repliers: nextRepliers(thread.repliers, {
+            _tag: "person",
+            id: person._id,
+          }),
           replies: thread.replies + 1,
         })
       )

@@ -56,6 +56,7 @@ function DuplicateExam() {
       disabled={isPending}
       onClick={press}
       type="button"
+      variant="outline"
     >
       {t("duplicate-action")}
     </Button>

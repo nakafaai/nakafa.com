@@ -1,13 +1,13 @@
 import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { objectBar } from "@repo/design-system/components/editor/bar";
 import { altText } from "@repo/design-system/components/editor/image";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
+import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -81,22 +81,20 @@ export function usePictures(): PictureContextValue {
 }
 
 /**
- * The address that previews a file the teacher chose. The address lives while the file does, and
- * it is revoked when the file changes or the editor closes.
+ * The address that previews a file the teacher chose. The address is made and revoked by one effect,
+ * so it lives while the file does and goes when the file changes or the editor closes.
  */
 export function useObjectUrl(file: File | null): string | null {
-  const url = useMemo(
-    () => (file === null ? null : URL.createObjectURL(file)),
-    [file]
-  );
-  useEffect(
-    () => () => {
-      if (url !== null) {
-        URL.revokeObjectURL(url);
-      }
-    },
-    [url]
-  );
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (file === null) {
+      setUrl(null);
+      return;
+    }
+    const address = URL.createObjectURL(file);
+    setUrl(address);
+    return () => URL.revokeObjectURL(address);
+  }, [file]);
   return url;
 }
 
@@ -210,12 +208,14 @@ export function PictureAltDialog({
 /**
  * One image of the document, drawn at its stored aspect ratio, so the box is reserved before the
  * image loads. A picture whose address is not resolved yet keeps its box as a placeholder. In an
- * editable document a small toolbar edits its alt text or deletes it; a reader has no toolbar.
+ * editable document the selected picture carries a bar above it, as a table does, which edits its
+ * alt text or deletes it, so the bar never covers the picture, however small; a reader has no bar.
  */
 function PictureNode({
   deleteNode,
   editor,
   node,
+  selected,
   updateAttributes,
 }: ReactNodeViewProps) {
   const { labels, urls } = usePictures();
@@ -245,30 +245,25 @@ function PictureNode({
           width={width}
         />
       )}
-      {editor.isEditable ? (
-        <div className="bg-background/90 absolute end-2 top-2 flex gap-1 rounded-md p-0.5 shadow-sm">
-          <ToolHint label={labels.edit}>
-            <Button
-              aria-label={labels.edit}
-              onClick={() => setEditing(true)}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <HugeIcons icon={PencilEdit02Icon} />
-            </Button>
-          </ToolHint>
-          <ToolHint label={labels.delete}>
-            <Button
-              aria-label={labels.delete}
-              onClick={() => deleteNode()}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <HugeIcons icon={Delete02Icon} />
-            </Button>
-          </ToolHint>
+      {editor.isEditable && selected ? (
+        <div
+          aria-label={alt}
+          className={cn(objectBar(), "absolute start-0 bottom-full mb-2")}
+          role="toolbar"
+        >
+          <RichEditorControl
+            icon={PencilEdit02Icon}
+            label={labels.edit}
+            onClick={() => setEditing(true)}
+          />
+          <RichEditorControl
+            icon={Delete02Icon}
+            label={labels.delete}
+            onClick={() => {
+              deleteNode();
+              editor.commands.focus();
+            }}
+          />
         </div>
       ) : null}
       <PictureAltDialog

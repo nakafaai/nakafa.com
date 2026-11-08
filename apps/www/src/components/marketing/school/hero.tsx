@@ -4,9 +4,9 @@ import { useTranslations } from "use-intl";
 import { Link } from "@/lib/routing/link";
 
 /**
- * The first screen of the School landing: one sentence, the line under it, the
- * free trial as the one primary action and the pricing beside it, the trial's
- * terms in one line, and Nina writing below, as the learner's home opens.
+ * The first screen of the School landing, as the learner's home opens: one
+ * sentence, the line under it, the free trial as the page's one primary action,
+ * and Nina teaching at her board below.
  */
 export function SchoolHero() {
   const t = useTranslations("SchoolSite");
@@ -22,26 +22,17 @@ export function SchoolHero() {
             mark: (chunks) => <mark>{chunks}</mark>,
           })}
         </h1>
-        <p className="text-muted-foreground max-w-xl text-lg text-pretty md:text-xl">
+        <p className="text-muted-foreground max-w-md text-lg text-pretty md:text-xl">
           {t("hero-lead")}
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            className={buttonVariants({ size: "lg" })}
-            to="/$locale/school/new"
-          >
-            {t("hero-start")}
-          </Link>
-          <Link
-            className={buttonVariants({ size: "lg", variant: "outline" })}
-            to="/$locale/school/pricing"
-          >
-            {t("hero-pricing")}
-          </Link>
-        </div>
-        <p className="text-muted-foreground text-sm">{t("hero-note")}</p>
+        <Link
+          className={buttonVariants({ size: "lg" })}
+          to="/$locale/school/new"
+        >
+          {t("hero-start")}
+        </Link>
         <div className="mt-6">
-          <Nina act="writing" label="" size={240} whole />
+          <Nina act="teaching" label="" size={240} whole />
         </div>
       </div>
     </section>

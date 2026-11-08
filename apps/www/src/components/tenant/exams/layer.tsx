@@ -1,9 +1,6 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import {
-  letterScript,
-  optionLetter,
-} from "@repo/backend/confect/exams/letters";
+import { partLetter } from "@repo/backend/confect/exams/letters";
 import {
   needsKey,
   QUESTION_POINTS_MAX,
@@ -45,7 +42,6 @@ import {
   markedOptions,
 } from "@/components/tenant/exams/answer";
 import { TableKey } from "@/components/tenant/exams/cells";
-import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
 import { MediaField } from "@/components/tenant/exams/media";
@@ -55,9 +51,10 @@ import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
+import { useQuestionPage } from "@/components/tenant/exams/page";
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
-import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
+import { useExam } from "@/components/tenant/exams/provider";
 import { ReadingField } from "@/components/tenant/exams/reading";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { ScoringField } from "@/components/tenant/exams/scoring";
@@ -144,15 +141,11 @@ const KeyOption = Schema.Struct({
 type KeyOption = typeof KeyOption.Type;
 
 /** The options of a choice as its key names them, in the script of their labels, as the paper names them. */
-const keyOptions = (choice: Choice): readonly KeyOption[] => {
-  const script = letterScript(
-    Arr.map(choice.options, (option) => option.label)
-  );
-  return Arr.map(choice.options, (option, index) => ({
+const keyOptions = (choice: Choice): readonly KeyOption[] =>
+  Arr.map(choice.options, (option, index) => ({
     id: option.id,
-    letter: optionLetter(index, script),
+    letter: partLetter(choice.options, index),
   }));
-};
 
 /** The props of the answer key of one question. */
 interface AnswerKeyProps {
@@ -235,13 +228,8 @@ function AnswerKey({
   );
 }
 
-/** The props of the teacher's layer of one question. */
+/** The props of the teacher's layer of one question, which reads the question of its page (`useQuestionPage`). */
 interface TeacherLayerProps {
-  /**
-   * The edits of the question: the answers, the key and the template the page shows, so the key shows a change
-   * at once, and the saves of the key, each of which saves at once.
-   */
-  readonly editing: QuestionEditing;
   /** Whether the question's editors are mounted, so its fields take changes. */
   readonly live: boolean;
   /** The explanation and the rubric as they are drawn while their editors are not mounted. */
@@ -249,10 +237,6 @@ interface TeacherLayerProps {
     readonly explanation: Option.Option<Node>;
     readonly rubric: Option.Option<Node>;
   };
-  /** The place of the question in the exam, which names its rich texts for assistive technology. */
-  readonly number: number;
-  /** The question the layer belongs to, as the server holds it. */
-  readonly question: Question;
 }
 
 /**
@@ -264,20 +248,14 @@ interface TeacherLayerProps {
  * states: while its editor is not mounted it is drawn from its document, as the editor draws it. A
  * frozen exam shows its values without changes.
  */
-export function TeacherLayer({
-  editing,
-  live,
-  notes,
-  number,
-  question,
-}: TeacherLayerProps) {
+export function TeacherLayer({ live, notes }: TeacherLayerProps) {
   const t = useTranslations("Exams");
+  const { editing, locked, number, question } = useQuestionPage();
   const { displayed: shown } = editing;
   const { exam } = useExam();
-  // A text opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone, so the
-  // words on screen stay.
-  const frozen = isLocked(exam);
-  const locked = useExamLocked();
+  // The remount key of the layer's texts, which is not a lock: a text opens anew when its exam locks or unlocks, and
+  // takes the lock in place when the exam is gone (`locked`), so the words on screen stay.
+  const opened = isLocked(exam);
   const editable = live && !locked;
   const keyed = needsKey(shown.template);
 
@@ -370,7 +348,7 @@ export function TeacherLayer({
             >
               <ExamText
                 documentId={question.rubric}
-                key={`${question.rubric}-${frozen}`}
+                key={`${question.rubric}-${opened}`}
               >
                 <ExamDocument
                   label={t("rubric-of", { number })}
@@ -391,7 +369,7 @@ export function TeacherLayer({
           >
             <ExamText
               documentId={question.explanation}
-              key={`${question.explanation}-${frozen}`}
+              key={`${question.explanation}-${opened}`}
             >
               <ExamDocument
                 label={t("explanation-of", { number })}

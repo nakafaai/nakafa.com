@@ -2,7 +2,13 @@ import { takesRubric } from "@repo/backend/confect/exams/question";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Option } from "effect";
-import { type RefObject, Suspense, useEffect, useRef } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  Suspense,
+  useEffect,
+  useRef,
+} from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LinesProvider } from "@/components/exams/lines/board";
@@ -12,10 +18,7 @@ import { isChoice } from "@/components/tenant/exams/answer";
 import { ChoiceSheet } from "@/components/tenant/exams/choice";
 import { MatchColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
-import {
-  type QuestionEditing,
-  useQuestionEditing,
-} from "@/components/tenant/exams/edits";
+import { useQuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { QuestionGapMark } from "@/components/tenant/exams/gap";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
@@ -23,9 +26,12 @@ import { matchOf } from "@/components/tenant/exams/match";
 import { TableSheet } from "@/components/tenant/exams/matrix";
 import { ExamPaperMedia } from "@/components/tenant/exams/media";
 import type { Question } from "@/components/tenant/exams/optimistic";
+import {
+  QuestionPageContext,
+  useQuestionPage,
+} from "@/components/tenant/exams/page";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
-  PaperSketch,
   PreviewProse,
   ReadingSketch,
   usePageDocument,
@@ -42,9 +48,9 @@ import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperField,
   PaperPairs,
-  PaperPrompt,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
+import { PaperSketch } from "@/components/tenant/exams/sketch";
 import { tableOf } from "@/components/tenant/exams/table";
 import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
@@ -69,17 +75,6 @@ interface ExamPageProps {
   readonly question: Question;
 }
 
-/** The props of the row above a page's paper. */
-interface PageRowProps {
-  /** The edits of the question, whose type the row shows and changes at once. */
-  readonly editing: QuestionEditing;
-  /** The place of the question in the exam, from zero. */
-  readonly index: number;
-  readonly question: Question;
-  /** Whether the server has saved the question, so it takes a move, a type and its actions. */
-  readonly saved: boolean;
-}
-
 /**
  * The row above a page's paper: the grip that moves the page, its number, its type, a mark while it needs a
  * key, and its actions. It stays one line at every width: the type and the mark fold to their icons by the row's
@@ -87,12 +82,19 @@ interface PageRowProps {
  * mark at once, before the server answers. A page the server has not saved yet, or a page of a locked exam, shows its number and
  * its type alone, and the type takes a change only once Convex holds the session.
  */
-function PageRow({ editing, index, question, saved }: PageRowProps) {
+function PageRow({
+  children,
+  saved,
+}: {
+  /** The page's actions, which the page composes while the question takes them. */
+  readonly children: ReactNode;
+  /** Whether the server has saved the question, so it takes a move and a type. */
+  readonly saved: boolean;
+}) {
   const t = useTranslations("Exams");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const locked = useExamLocked();
+  const { editing, locked, number, question } = useQuestionPage();
   const editable = saved && !locked;
-  const number = index + 1;
 
   return (
     <div className="@container/row flex min-h-9 items-center justify-between gap-2">
@@ -112,7 +114,7 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
         />
         <QuestionGapMark question={editing.displayed} />
       </div>
-      {editable ? <PageActions index={index} question={question} /> : null}
+      {children}
     </div>
   );
 }
@@ -144,6 +146,7 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
   const focused = useExamSelection((state) => state.focus === question.id);
   const settleFocus = useExamSelection((state) => state.settleFocus);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const locked = useExamLocked();
   const saved = !(awaiting || isPlaceholderId(question.prompt));
   const number = index + 1;
   const page = useRef<HTMLElement>(null);
@@ -194,138 +197,134 @@ export function ExamPage({ canvas, index, question }: ExamPageProps) {
     saved,
   });
   return (
-    <section
-      aria-label={t("question", { number })}
-      className="flex min-w-0 flex-col gap-2"
-      data-page=""
-      data-question={question.id}
-      id={`question-${question.id}`}
-      ref={page}
+    <QuestionPageContext
+      value={{
+        chosen,
+        drawn: { prompt, read },
+        editing,
+        locked,
+        number,
+        question,
+      }}
     >
-      <PageRow
-        editing={editing}
-        index={index}
-        question={question}
-        saved={saved}
-      />
-      {live ? (
-        <Suspense
-          fallback={
-            <QuestionPaper selected={chosen}>
-              <PaperPrompt>
-                <ExamPaperMedia question={question} />
-                {question.reading === null ? null : (
-                  <ReadingSketch documentId={question.reading} read={read} />
-                )}
-                <PreviewProse doc={prompt} size="paper" />
-              </PaperPrompt>
-              <PaperSketch question={question} withControls />
-            </QuestionPaper>
-          }
-        >
-          <LivePaper editing={editing} number={number} question={question} />
-        </Suspense>
-      ) : (
-        <QuestionPaper selected={chosen}>
-          <PaperPrompt>
-            <ExamPaperMedia question={question} />
-            {question.reading === null ? null : (
-              <ReadingSketch documentId={question.reading} read={read} />
-            )}
-            <PreviewProse doc={prompt} size="paper" />
-          </PaperPrompt>
-          <PaperSketch question={question} withControls />
-        </QuestionPaper>
-      )}
-      {chosen ? (
-        <PanePortal>
-          <TeacherLayer
-            editing={editing}
-            live={live}
-            notes={{ explanation, rubric }}
-            number={number}
-            question={question}
-          />
-        </PanePortal>
-      ) : null}
-    </section>
+      <section
+        aria-label={t("question", { number })}
+        className="flex min-w-0 flex-col gap-2"
+        data-page=""
+        data-question={question.id}
+        id={`question-${question.id}`}
+        ref={page}
+      >
+        <PageRow saved={saved}>
+          {saved && !locked ? (
+            <PageActions index={index} question={question} />
+          ) : null}
+        </PageRow>
+        {live ? (
+          <Suspense fallback={<SketchPaper />}>
+            <LivePaper />
+          </Suspense>
+        ) : (
+          <SketchPaper />
+        )}
+        {chosen ? (
+          <PanePortal>
+            <TeacherLayer live={live} notes={{ explanation, rubric }} />
+          </PanePortal>
+        ) : null}
+      </section>
+    </QuestionPageContext>
   );
 }
 
 /**
- * The paper of a page with its editors: the prompt as an editor, then each option with its controls,
- * then the action that adds an option. The action shows on the chosen page alone, as a design tool
- * shows its handles on the page in hand, and its row keeps its room on every page, so choosing a
- * page moves nothing.
+ * The paper of a page drawn without its editors: the picture, the reading and the prompt the server holds, then the
+ * answers with the rooms of the controls the editors bring, so the page keeps its shape until they mount.
  */
-function LivePaper({
-  editing,
-  number,
-  question,
-}: {
-  editing: QuestionEditing;
-  number: number;
-  question: Question;
-}) {
+function SketchPaper() {
+  const { chosen, drawn, question } = useQuestionPage();
+
+  return (
+    <QuestionPaper
+      prompt={
+        <>
+          <ExamPaperMedia question={question} />
+          {question.reading === null ? null : (
+            <ReadingSketch documentId={question.reading} read={drawn.read} />
+          )}
+          <PreviewProse doc={drawn.prompt} size="paper" />
+        </>
+      }
+      selected={chosen}
+    >
+      <PaperSketch question={question} withControls />
+    </QuestionPaper>
+  );
+}
+
+/**
+ * The paper of a page with its editors: the prompt as an editor, then each answer on its marked line with its
+ * controls, then the actions that add a part. The actions show on the chosen page alone, as a design tool shows its
+ * handles on the page in hand, and keep their room on every page, so choosing a page moves nothing.
+ */
+function LivePaper() {
   const t = useTranslations("Exams");
   const { exam } = useExam();
-  const chosen = useExamSelection((state) =>
-    Option.exists(
-      activeQuestion(exam.questions, state.selected),
-      (active) => active.question.id === question.id
-    )
-  );
-  // The prompt's editor opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone,
-  // so the words the teacher typed stay on screen.
-  const frozen = isLocked(exam);
-  const locked = useExamLocked();
+  const { chosen, editing, locked, number, question } = useQuestionPage();
+  // The remount key of the page's texts, which is not a lock: a text opens anew when its exam locks or unlocks, and
+  // takes the lock in place when the exam is gone (`locked`), so the words the teacher typed stay on screen.
+  const opened = isLocked(exam);
   const selection = useExamSelectionStore();
   const { displayed } = editing;
   const match = Option.getOrNull(matchOf(displayed.answers));
   const table = Option.getOrNull(tableOf(displayed.answers));
 
   return (
-    <QuestionPaper selected={chosen}>
-      <PaperPrompt>
-        <ExamPaperMedia question={question} />
-        {question.reading === null ? null : (
+    <QuestionPaper
+      prompt={
+        <>
+          <ExamPaperMedia question={question} />
+          {question.reading === null ? null : (
+            <ExamText
+              documentId={question.reading}
+              key={`${question.reading}-${opened}`}
+            >
+              <ExamDocument
+                label={t("reading-text", { number })}
+                placeholder={t("reading-placeholder")}
+                size="paper"
+              />
+            </ExamText>
+          )}
           <ExamText
-            documentId={question.reading}
-            key={`${question.reading}-${frozen}`}
+            documentId={question.prompt}
+            key={`${question.prompt}-${opened}`}
+            onOpen={(editor: DocumentEditorInstance) => {
+              const { write, writing } = selection.getState();
+              if (writing !== question.id) {
+                return;
+              }
+              write(null);
+              // A teacher who went on to write somewhere else meanwhile keeps the caret there.
+              if (
+                document.activeElement?.closest(
+                  "[contenteditable='true'], input, textarea"
+                ) === null
+              ) {
+                editor.commands.focus("end");
+              }
+            }}
           >
             <ExamDocument
-              label={t("reading-text", { number })}
-              placeholder={t("reading-placeholder")}
+              label={t("question-text", { number })}
+              placeholder={t("prompt-placeholder")}
               size="paper"
             />
           </ExamText>
-        )}
-        <ExamText
-          documentId={question.prompt}
-          key={`${question.prompt}-${frozen}`}
-          onOpen={(editor: DocumentEditorInstance) => {
-            const { write, writing } = selection.getState();
-            if (writing !== question.id) {
-              return;
-            }
-            write(null);
-            // A teacher who went on to write somewhere else meanwhile keeps the caret there.
-            if (
-              document.activeElement?.closest(
-                "[contenteditable='true'], input, textarea"
-              ) === null
-            ) {
-              editor.commands.focus("end");
-            }
-          }}
-        >
-          <ExamDocument
-            label={t("question-text", { number })}
-            placeholder={t("prompt-placeholder")}
-            size="paper"
-          />
-        </ExamText>
-      </PaperPrompt>
+        </>
+      }
+      selected={chosen}
+    >
       {match === null ? null : (
         <PaperPairs>
           <LinesProvider
@@ -336,46 +335,14 @@ function LivePaper({
             size="paper"
             stretch={false}
           >
-            <MatchColumn
-              chosen={chosen}
-              editing={editing}
-              frozen={locked}
-              match={match}
-              number={number}
-              question={question}
-              side="sources"
-            />
-            <MatchColumn
-              chosen={chosen}
-              editing={editing}
-              frozen={locked}
-              match={match}
-              number={number}
-              question={question}
-              side="targets"
-            />
+            <MatchColumn match={match} side="sources" />
+            <MatchColumn match={match} side="targets" />
           </LinesProvider>
         </PaperPairs>
       )}
-      {table === null ? null : (
-        <TableSheet
-          chosen={chosen}
-          editing={editing}
-          frozen={locked}
-          number={number}
-          question={question}
-          table={table}
-        />
-      )}
+      {table === null ? null : <TableSheet table={table} />}
       {Arr.map(Arr.filter(displayed.answers, isChoice), (choice) => (
-        <ChoiceSheet
-          choice={choice}
-          chosen={chosen}
-          editing={editing}
-          key={choice.id}
-          number={number}
-          question={question}
-        />
+        <ChoiceSheet choice={choice} key={choice.id} />
       ))}
       <PaperField answers={displayed.answers} />
     </QuestionPaper>

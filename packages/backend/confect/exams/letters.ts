@@ -1,9 +1,12 @@
-import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
+import { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import { REASON_ID } from "@repo/backend/confect/exams/scoring";
 import { Array as Arr, Option, Schema } from "effect";
 
 /** The label of an option, a statement or an answer: a rich document of its own. */
 type PartLabel = typeof ContentDocumentSchema.Type;
+
+/** A part of a set that a letter names, an option, a statement, an answer or a column, by its rich label. */
+const LetteredPart = Schema.Struct({ label: ContentDocumentSchema });
 
 /** The scripts that name the options of a set: Arabic letters for an Arabic set, Latin ones for any other. */
 export const LetterScript = Schema.Literals(["arabic", "latin"]);
@@ -106,21 +109,22 @@ export const optionLetter = (
     : String.fromCharCode(LETTER_A + index);
 
 /**
- * The letters of one set of options, by place, in the one script their labels call for. Every place that
- * draws the options of a set takes its letters here, so a paper, a review and a key cannot name an option
- * apart.
+ * The letter that names the part at `index` of a set, an option, a statement, an answer or a column by its rich label, in the one script the set's labels call for. Every place that
+ * draws a set names its parts here, so a paper, a review, a key and a board cannot name a part apart.
  */
-export const optionLetters = (labels: readonly PartLabel[]) => {
-  const script = letterScript(labels);
-  return (index: number) => optionLetter(index, script);
-};
+export const partLetter = (
+  parts: readonly (typeof LetteredPart.Type)[],
+  index: number
+) => optionLetter(index, letterScript(Arr.map(parts, (part) => part.label)));
 
 /**
- * The way a set of options reads: an Arabic set runs from the right, so its first circle stands at the top
- * right, and any other set from the left.
+ * The way a set of parts reads: an Arabic set runs from the right, so its first circle stands at the top right, and
+ * any other set from the left.
  */
-export const optionDirection = (labels: readonly PartLabel[]) =>
-  letterScript(labels) === "arabic" ? "rtl" : "ltr";
+export const partDirection = (parts: readonly (typeof LetteredPart.Type)[]) =>
+  letterScript(Arr.map(parts, (part) => part.label)) === "arabic"
+    ? "rtl"
+    : "ltr";
 
 /** Whether an option is one of a two-tier question's reasons. */
 export const isReasonOption = (optionId: string) =>

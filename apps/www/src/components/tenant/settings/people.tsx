@@ -3,11 +3,14 @@ import {
   PaginatedQueryResult,
   usePaginatedQuery,
 } from "@confect/react";
-import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   Command,
+  CommandCollection,
+  CommandGroup,
+  CommandGroupLabel,
   CommandInput,
   CommandItem,
   CommandList,
@@ -301,6 +304,10 @@ function PersonSelect({
     people,
     (first, second) => first.id === second.id
   );
+  // The list opens with its one-word label above the people, and holds no group while it holds no one.
+  const groups = Arr.isReadonlyArrayEmpty(items)
+    ? []
+    : [{ items, value: common("menu-person") }];
   const named = Arr.findFirst(
     Option.match(chosen, {
       onNone: () => items,
@@ -337,7 +344,7 @@ function PersonSelect({
       <PopoverContent align="start" className="w-(--anchor-width) p-0">
         <Command
           filter={null}
-          items={items}
+          items={groups}
           itemToStringValue={(person: PersonItem) => person.name}
           onValueChange={setTyped}
           value={typed}
@@ -350,21 +357,29 @@ function PersonSelect({
           />
           <div className="max-h-64 overflow-y-auto border-t">
             <CommandList scrollArea={false}>
-              {(person: PersonItem) => (
-                <CommandItem
-                  key={person.id}
-                  onClick={() => {
-                    setChosen(Option.some(person));
-                    onChoose(person.id);
-                    setTyped("");
-                    setOpen(false);
-                  }}
-                  value={person}
-                >
-                  <span className="truncate" dir="auto">
-                    {person.name}
-                  </span>
-                </CommandItem>
+              {(group: (typeof groups)[number]) => (
+                <CommandGroup items={group.items} key={group.value}>
+                  <CommandGroupLabel>{group.value}</CommandGroupLabel>
+                  <CommandCollection>
+                    {(person: PersonItem) => (
+                      <CommandItem
+                        key={person.id}
+                        onClick={() => {
+                          setChosen(Option.some(person));
+                          onChoose(person.id);
+                          setTyped("");
+                          setOpen(false);
+                        }}
+                        value={person}
+                      >
+                        <HugeIcons icon={UserIcon} />
+                        <span className="truncate" dir="auto">
+                          {person.name}
+                        </span>
+                      </CommandItem>
+                    )}
+                  </CommandCollection>
+                </CommandGroup>
               )}
             </CommandList>
             {children}
