@@ -7,7 +7,7 @@ import {
   categoryPosition,
   decodeCategoryPosition,
   isCategoryPosition,
-} from "@repo/backend/content/article/category-cursor";
+} from "@repo/backend/content/article/category";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { Array as Arr, Effect, Layer, Option, Predicate } from "effect";

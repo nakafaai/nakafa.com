@@ -6,7 +6,7 @@ import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 export const NonUniformLinearMotionGraphCard = withHydrationBoundary(
   lazy(() =>
     import(
-      "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/chart-card"
+      "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/card"
     ).then((module) => ({ default: module.NonUniformLinearMotionGraphCard }))
   )
 );

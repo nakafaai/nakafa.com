@@ -8,7 +8,7 @@ import type contentRelease from "@repo/backend/confect/_generated/refs/contentRe
 
 import { Effect, Schema } from "effect";
 import { decodePublishedMaterialContext } from "@/lib/content/material/projection";
-import { previewProjection } from "@/test/content-preview";
+import { previewProjection } from "@/test/manifest";
 import {
   testCurriculumRowJson,
   testProgramClass,
@@ -16,7 +16,7 @@ import {
   testProgramGroups,
   testProgramRoot,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 const [group] = Schema.decodeUnknownSync(Schema.Tuple([CurriculumRouteSchema]))(
   testProgramGroups

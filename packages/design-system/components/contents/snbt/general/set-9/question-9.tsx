@@ -18,7 +18,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { getBarSeriesCue } from "@repo/design-system/lib/charts/cue";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
