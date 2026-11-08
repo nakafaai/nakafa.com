@@ -9,6 +9,13 @@ import { storedTextOf } from "@repo/backend/test/nina/stored";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Record } from "effect";
+// convex-test imports a function's module the first time a test calls it, inside that test's
+// time: about a second each for the learner's seed, the admission and the answer on a loaded
+// machine. A learner asked here calls these three, so they load while the test file is
+// collected, and a seal test's time holds its turn and not those imports.
+import "@repo/backend/components/betterAuth/adapter";
+import "@repo/backend/convex/nina/response";
+import "@repo/backend/convex/nina/turns";
 
 /** The moment the seal tests run at. */
 export const NOW = Date.UTC(2026, 8, 27, 12);

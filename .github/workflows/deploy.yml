@@ -73,28 +73,33 @@ jobs:
           # The default glob walks every folder, node_modules included, for 3.5 minutes.
           cache-dependency-glob: apps/cas/uv.lock
 
-      # A build reads every public page of the active release, about 0.45 GB of Convex
-      # Database I/O. A release never changes, so a deploy starts from the reads of the last
-      # deploy of the same release and the same code behind them, and asks Convex only for
-      # what is new (ADR 0038). The store is local to this job; the Worker never binds it.
-      # The store holds Convex's answers, so the key names the code that shapes them and the
-      # backend's own dependencies, which pin the contracts. A change to a script, or a
-      # dependency bump elsewhere, keeps it.
+      # A build reads every public page of the active release, about 0.55 GB of Convex
+      # Database I/O on 8 Nov 2026. A release never changes, so the release alone keys the
+      # reads: every deploy of a release starts from every read an earlier deploy of it kept,
+      # and asks Convex only for what is new (ADR 0038, "Reads across deploys"). A code or
+      # dependency change keeps them; a change to what a query answers for the same release
+      # bumps the store's version (`CONTENT_STORE_VERSION`). The store is local to this job;
+      # the Worker never binds it. Each run saves under its own key, so a deploy whose cache
+      # was found keeps what it read new, and the newest save of the release is restored.
       - name: Read the active content release
         id: release
         working-directory: packages/backend
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: |
-          echo "id=$(bunx --no-install convex run contentRelease/runtime/active:read | jq -r .releaseId)" >> "$GITHUB_OUTPUT"
-          echo "dependencies=$(jq -cS .dependencies package.json | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+        run: echo "id=$(bunx --no-install convex run contentRelease/runtime/active:read | jq -r .releaseId)" >> "$GITHUB_OUTPUT"
 
       - name: Restore the reads of this release
         id: reads
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/reads
-          key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ steps.release.outputs.dependencies }}-${{ hashFiles('packages/backend/content/**', 'packages/backend/confect/contentRelease/**', 'packages/backend/confect/tryouts/queries/**', '!**/*.test.ts') }}
+          key: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: reads-${{ env.NAKAFA_DEPLOY_STAGE }}-${{ steps.release.outputs.id }}-
+
+      # Every read this run adds is newer than this mark, which tells the last step whether
+      # there is anything to keep.
+      - name: Mark the restored reads
+        run: mkdir -p .cache/reads && touch .cache/reads/.restored
 
       - name: Serve the reads to the build
         working-directory: apps/www
@@ -136,8 +141,18 @@ jobs:
           VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
         run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
 
+      # A failed or cancelled deploy keeps what it read too: each entry is one answer of
+      # Convex under its release, so the next deploy of the release does not read it again.
+      - name: Find the reads this run added
+        id: added
+        if: always() && steps.release.outputs.id != ''
+        run: |
+          if [ -f .cache/reads/.restored ] && [ -n "$(find .cache/reads -type f -newer .cache/reads/.restored -print -quit)" ]; then
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Keep the reads for the next deploy of this release
-        if: steps.reads.outputs.cache-hit != 'true'
+        if: always() && steps.added.outputs.any == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/reads

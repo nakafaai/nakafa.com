@@ -1,8 +1,10 @@
 import { MinusSignIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import {
   SCHOOL_TRIAL_DAYS,
+  SchoolPeriod,
   SchoolTierKey,
   schoolAccount,
+  schoolPeriodDiscounts,
   schoolTiers,
 } from "@repo/backend/confect/billing/tiers";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -11,10 +13,10 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Match, Option } from "effect";
+import { Array as Arr, Match, Option, Result } from "effect";
 import { useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
-import { SchoolAmount } from "@/components/marketing/school/price";
+import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import { formatStorage } from "@/lib/pricing/school";
 
 /** The rows of every group, one line each; the capacity and billing rows differ by plan, the rest are in every plan. */
@@ -29,7 +31,7 @@ const COMPARE_GROUPS = [
     group: "school",
     rows: ["insight", "graduation", "parents", "nina", "languages"],
   },
-  { group: "billing", rows: ["periods", "payment"] },
+  { group: "billing", rows: ["periods", "discount", "payment"] },
 ] as const;
 
 type CompareRow = (typeof COMPARE_GROUPS)[number]["rows"][number];
@@ -87,6 +89,21 @@ function Unavailable() {
   );
 }
 
+/** The discount of every period that has one, such as 3% for 6 months and 5% for 12, from the billing source. */
+function PeriodDiscounts() {
+  const t = useTranslations("SchoolSite");
+  const format = useFormatter();
+
+  return format.list(
+    Arr.filterMap(SchoolPeriod.literals, (months) => {
+      const percent = schoolPeriodDiscounts[months];
+      return percent > 0
+        ? Result.succeed(t("value-discount", { months, percent }))
+        : Result.failVoid;
+    })
+  );
+}
+
 /** What one plan holds on one row. */
 function CompareValue({ row, tier }: { row: CompareRow; tier: SchoolTierKey }) {
   const t = useTranslations("SchoolSite");
@@ -117,6 +134,9 @@ function CompareValue({ row, tier }: { row: CompareRow; tier: SchoolTierKey }) {
     ),
     Match.when("periods", () =>
       free ? <Unavailable /> : t("value-periods-paid")
+    ),
+    Match.when("discount", () =>
+      free ? <Unavailable /> : <PeriodDiscounts />
     ),
     Match.when("payment", () =>
       t(free ? "value-payment-free" : "value-payment-paid")
@@ -173,18 +193,16 @@ function CompareGroup({ group }: { group: (typeof COMPARE_GROUPS)[number] }) {
   );
 }
 
-/** One plan's head in the pinned row: its name and how many accounts it holds. */
+/** One plan's head in the pinned row: its name. What it holds is in the rows under it. */
 function PlanHead({ tier }: { tier: SchoolTierKey }) {
   const t = useTranslations("SchoolSite");
 
   return (
-    <th className="px-3 py-3 text-center font-normal" scope="col">
-      <span className="block text-base font-medium tracking-tight">
-        {t(`plan-${tier}`)}
-      </span>
-      <span className="text-muted-foreground block text-sm tabular-nums">
-        {t("compare-accounts", { count: schoolTiers[tier].accounts })}
-      </span>
+    <th
+      className="px-3 py-3 text-center text-base font-medium tracking-tight"
+      scope="col"
+    >
+      {t(`plan-${tier}`)}
     </th>
   );
 }
@@ -198,8 +216,10 @@ function readTier(value: string) {
  * The comparison of every plan as one table: groups that say what they cover,
  * one hairline per row, a check for what a plan holds and a dash for what it
  * does not. While the reader scrolls, the plan names stay pinned under the site
- * header. A phone has no room for three columns, so a pinned switch picks the
- * plan that shows beside each feature, and every value keeps half the width.
+ * header, and the heads hold the names alone, since the rows say what each plan
+ * holds. A phone has no room for three columns, so a pinned switch of three
+ * equal segments picks the plan that shows beside each feature, and every value
+ * keeps half the width.
  */
 export function SchoolCompare() {
   const t = useTranslations("SchoolSite");
@@ -219,10 +239,11 @@ export function SchoolCompare() {
           {t("compare-title")}
         </h2>
         <div>
-          <div className="bg-background sticky top-16 z-10 border-b py-3 md:hidden">
+          <div className="bg-background sticky top-16 z-10 py-3 md:hidden">
             <ToggleGroup
               aria-label={t("compare-pick")}
-              className="w-full"
+              gridColumns="2"
+              layout="grid"
               onValueChange={(value) => Option.map(readTier(value), setPlan)}
               value={plan}
             >

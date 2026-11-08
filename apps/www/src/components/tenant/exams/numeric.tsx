@@ -1,3 +1,4 @@
+import { Target02Icon } from "@hugeicons/core-free-icons";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import {
@@ -6,10 +7,12 @@ import {
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -17,6 +20,7 @@ import {
 import { Array as Arr, Schema } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import {
   type NumberSetting,
   ToleranceKind,
@@ -186,11 +190,16 @@ export function NumberKey({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Arr.map(ToleranceKind.literals, (value) => (
-              <SelectItem key={value} value={value}>
-                {t(TOLERANCE_NAME[value])}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <ChoiceLabel name="tolerance" />
+
+              {Arr.map(ToleranceKind.literals, (value) => (
+                <SelectItem key={value} value={value}>
+                  <HugeIcons icon={Target02Icon} />
+                  {t(TOLERANCE_NAME[value])}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
         {kind === "exact" ? null : (

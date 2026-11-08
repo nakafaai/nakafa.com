@@ -9,7 +9,9 @@ import { DeferredParticles } from "@/components/shared/particles";
  * and it holds still while the page is hidden. Its height is the large viewport
  * height, which holds while a phone's address bar collapses and returns during a
  * scroll: a field that followed the bar would change size on every scroll, and
- * each size change draws every particle anew. The field is decoration: it waits
+ * each size change draws every particle anew. It stands at 40% so no dot
+ * competes with a line of text in front of it, while the field still drifts and
+ * parts for the pointer. The field is decoration: it waits
  * until the page has its reader, and when its code fails to load, the page stays
  * without it, and the failure never reaches the page's error page.
  */
@@ -19,7 +21,7 @@ export function PageField() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh"
+      className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh opacity-40"
       data-slot="page-field"
     >
       <AfterPageRead>

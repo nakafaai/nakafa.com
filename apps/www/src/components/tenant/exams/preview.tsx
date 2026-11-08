@@ -1,17 +1,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
-import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
-import exams from "@repo/backend/confect/_generated/refs/exams";
-import {
-  optionDirection,
-  optionLetters,
-} from "@repo/backend/confect/exams/letters";
-import {
-  CHOICE_OPTIONS_MAX,
-  fixedOptions,
-} from "@repo/backend/confect/exams/question";
 import {
   editorContent,
   editorDocument,
@@ -19,49 +9,21 @@ import {
 } from "@repo/design-system/components/editor/frame";
 import { Node } from "@tiptap/pm/model";
 import { cn } from "cn";
-import { Array as Arr, Effect, Function as Fn, HashMap, Option } from "effect";
+import { Effect, HashMap, Option } from "effect";
 import { useDeferredValue, useMemo } from "react";
-import { useTranslations } from "use-intl";
 import { DrawnDocument } from "@/components/assessment/drawn";
-import {
-  LinesColumn,
-  LinesItem,
-  LinesProvider,
-} from "@/components/exams/lines/board";
-import {
-  addressesOf,
-  SittingPictures,
-} from "@/components/exams/sitting/pictures";
-import { ChoiceGroup } from "@/components/exams/sitting/reason";
-import {
-  type Choice,
-  isChoice,
-  type OptionLabel,
-} from "@/components/tenant/exams/answer";
-import { keyPairs, matchOf } from "@/components/tenant/exams/match";
+import { SittingPictures } from "@/components/exams/sitting/pictures";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
+import { useExam, useExamLive } from "@/components/tenant/exams/provider";
+import { QuestionPaper } from "@/components/tenant/exams/sheet";
 import {
-  useExam,
-  useExamLive,
-  useExamLocked,
-} from "@/components/tenant/exams/provider";
-import { choiceTitle } from "@/components/tenant/exams/reason";
-import {
-  OptionAddRoom,
-  PaperField,
-  PaperOption,
-  PaperOptions,
-  PaperPairs,
-  PaperPartText,
-  QuestionPaper,
-} from "@/components/tenant/exams/sheet";
-import { tableOf } from "@/components/tenant/exams/table";
-import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
+  PaperSketch,
+  useDrawnPictures,
+} from "@/components/tenant/exams/sketch";
 import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
-import { assetIdsOf } from "@/lib/editor/pictures";
 
 /**
  * The session name the editor reads a prompt under to draw it without an editor. It never writes, so the
@@ -169,23 +131,6 @@ const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
   type: "doc",
 });
 
-/** The addresses of the images a drawn text holds, in one read, by image ID. */
-function useDrawnPictures(doc: Node) {
-  const { exam, slug } = useExam();
-  const assets = useMemo(() => assetIdsOf(doc), [doc]);
-  const reply = useQuery(
-    exams.assets.urls,
-    Arr.isReadonlyArrayEmpty(assets)
-      ? "skip"
-      : { assets, examId: exam.id, slug }
-  );
-
-  return useMemo(
-    () => (QueryResult.isSuccess(reply) ? addressesOf(reply.value) : {}),
-    [reply]
-  );
-}
-
 /**
  * A rich text drawn with the student's own nodes (`DrawnDocument`), in the wrapper the editor gives its text, so
  * the text takes the same box and spacing as it does once the editor mounts, and as the student reads it. A text
@@ -221,191 +166,6 @@ export function PreviewProse({
   );
 }
 
-/** The label of one option drawn without an editor, at the size an option's editor takes. */
-export function OptionSketch({ label }: { label: OptionLabel }) {
-  const doc = useMemo(() => Node.fromJSON(assessmentSchema, label), [label]);
-  const urls = useDrawnPictures(doc);
-
-  return (
-    <div className={editorContent({ size: "line" })}>
-      <SittingPictures value={urls}>
-        <DrawnDocument
-          className={cn(
-            editorPlaceholder(),
-            editorDocument({ size: "line", text: "article" })
-          )}
-          doc={doc}
-          paragraphs={false}
-        />
-      </SittingPictures>
-    </div>
-  );
-}
-
-/**
- * A true or false table drawn without editors, as its live table draws it: the statements' heading and each
- * column's header, then each numbered statement with an empty mark under every column.
- */
-function TableSketch({
-  table,
-}: {
-  table: Extract<Interaction, { kind: "matrix" }>;
-}) {
-  const t = useTranslations("Exams");
-
-  return (
-    <TryoutChoiceTable
-      columns={Arr.map(table.columns, (column) => ({
-        id: column.id,
-        label: <OptionSketch label={column.label} />,
-      }))}
-      disabled
-      label={table.label}
-      statementLabel={t("statement-placeholder")}
-      statements={Arr.map(table.statements, (statement) => ({
-        id: statement.id,
-        label: <OptionSketch label={statement.label} />,
-        marked: undefined,
-      }))}
-    />
-  );
-}
-
-/** The number that names a statement by its place: 1 for the first, 2 for the second, and so on. */
-
-/**
- * The answers of one question drawn without editors, as the student reads them, below the prompt that
- * the caller draws on the same paper (`PreviewProse`). The page draws them when its editors are not
- * mounted, and the thumbnails draw them small, so a page and its thumbnail look alike. A page passes
- * `withControls`, which keeps the room of the action that adds an option, so the paper is as tall as it
- * is when the editor mounts.
- */
-export function PaperSketch({
-  question,
-  withControls = false,
-}: {
-  question: Question;
-  withControls?: boolean;
-}) {
-  const locked = useExamLocked();
-  // A template that fixes its options takes no added option, so its page keeps no room for the action.
-  const addsOption =
-    withControls && !locked && Option.isNone(fixedOptions(question.template));
-  // A matching's columns keep the room of the action that adds a part while the page has its controls.
-  const addsPart = withControls && !locked;
-
-  return (
-    <>
-      {Arr.map(Arr.filter(question.answers, isChoice), (choice) => (
-        <ChoiceSketch
-          adds={addsOption && choice.options.length < CHOICE_OPTIONS_MAX}
-          choice={choice}
-          key={choice.id}
-          template={question.template}
-        />
-      ))}
-      {Option.match(matchOf(question.answers), {
-        onNone: () => null,
-        onSome: (match) => (
-          <PaperPairs>
-            <LinesProvider
-              disabled
-              match={match}
-              onPairs={Fn.constVoid}
-              pairs={keyPairs(question.key)}
-              size="paper"
-              stretch={false}
-            >
-              <LinesColumn
-                footer={
-                  addsPart && match.sources.length < CHOICE_OPTIONS_MAX ? (
-                    <OptionAddRoom />
-                  ) : null
-                }
-                side="sources"
-              >
-                {Arr.map(match.sources, (part, index) => (
-                  <LinesItem
-                    id={part.id}
-                    key={part.id}
-                    name={String(index + 1)}
-                    side="sources"
-                  >
-                    <OptionSketch label={part.label} />
-                  </LinesItem>
-                ))}
-              </LinesColumn>
-              <LinesColumn
-                footer={
-                  addsPart && match.targets.length < CHOICE_OPTIONS_MAX ? (
-                    <OptionAddRoom />
-                  ) : null
-                }
-                side="targets"
-              >
-                {Arr.map(match.targets, (part, index) => (
-                  <LinesItem
-                    id={part.id}
-                    key={part.id}
-                    name={optionLetters(
-                      Arr.map(match.targets, (target) => target.label)
-                    )(index)}
-                    side="targets"
-                  >
-                    <OptionSketch label={part.label} />
-                  </LinesItem>
-                ))}
-              </LinesColumn>
-            </LinesProvider>
-          </PaperPairs>
-        ),
-      })}
-      {Option.match(tableOf(question.answers), {
-        onNone: () => null,
-        onSome: (table) => <TableSketch table={table} />,
-      })}
-      <PaperField answers={question.answers} />
-    </>
-  );
-}
-
-/** One choice of a page drawn without its editors, a reason under its name, as the page draws it with them. */
-function ChoiceSketch({
-  adds,
-  choice,
-  template,
-}: {
-  /** Whether the page keeps the room of the action that adds an option. */
-  readonly adds: boolean;
-  readonly choice: Choice;
-  /** The question's template, which names its choices when it holds two. */
-  readonly template: Question["template"];
-}) {
-  const labels = Arr.map(choice.options, (option) => option.label);
-  const letterOf = optionLetters(labels);
-
-  return (
-    <>
-      <ChoiceGroup title={choiceTitle(template, choice.id)}>
-        <PaperOptions dir={optionDirection(labels)}>
-          {Arr.map(choice.options, (option, index) => (
-            <PaperOption
-              key={option.id}
-              letter={letterOf(index)}
-              multiple={choice.maxChoices !== 1}
-            >
-              <PaperPartText>
-                <OptionSketch label={option.label} />
-              </PaperPartText>
-            </PaperOption>
-          ))}
-        </PaperOptions>
-      </ChoiceGroup>
-      {adds ? <OptionAddRoom /> : null}
-    </>
-  );
-}
-
 /**
  * One question as a thumbnail: its paper drawn at a quarter of the size, inert, since the strip's
  * button names the question. The open question draws what its editor holds, so the thumbnail
@@ -437,8 +197,7 @@ export function QuestionPreview({
         className="pointer-events-none w-4/1 origin-top-left scale-25 p-4 text-start"
         inert
       >
-        <QuestionPaper>
-          <PreviewProse doc={doc} size="paper" />
+        <QuestionPaper prompt={<PreviewProse doc={doc} size="paper" />}>
           <PaperSketch question={question} />
         </QuestionPaper>
       </div>
