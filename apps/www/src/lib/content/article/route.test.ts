@@ -22,7 +22,7 @@ import {
 import { resetTestRuntimeCache } from "@/test/store";
 
 /** The served locale a fixture of a release names, which every fixture of this file is in. */
-const servedLocale = Schema.decodeSync(ActiveAppLocaleCodeSchema);
+const servedLocale = Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema);
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
