@@ -1,5 +1,5 @@
+import type { NumberLineSegment } from "@repo/design-system/components/contents/mathematics/line/number";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
-import type { NumberLineSegment } from "@repo/design-system/components/contents/mathematics/number-line";
 import { segmentBounds } from "@repo/design-system/components/contents/mathematics/segment";
 import { Array as Arr } from "effect";
 

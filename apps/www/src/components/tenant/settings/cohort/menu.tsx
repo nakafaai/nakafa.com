@@ -33,10 +33,8 @@ import {
   removeCohortChange,
   restoreCohortChange,
 } from "@/components/tenant/settings/groups";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Cohort } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/cohort/menu";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The menu of an archived cohort in the archived list: Restore, which shows the cohort as active at once, and Delete for
@@ -61,7 +59,9 @@ export function SchoolCohortRestore({
         icon={ArchiveRestoreIcon}
         onClick={() =>
           startTransition(() =>
-            saveSchool(() => restore({ cohortId: cohort.id, slug }), SOURCE)
+            runSchoolWrite(
+              schoolCall(() => restore({ cohortId: cohort.id, slug }))
+            )
           )
         }
       >
@@ -95,10 +95,12 @@ function useCohortDelete(cohort: Cohort, slug: TenantSlug) {
       Arr.some(overview, (row) => row.id === cohort.id && row.hold === null),
     onConfirm: () =>
       startTransition(() =>
-        saveSchool(
-          () => remove({ cohortId: cohort.id, slug }),
-          SOURCE,
-          () => toast.success({ title: "school-cohort-deleted.title" })
+        runSchoolWrite(
+          schoolCall(() => remove({ cohortId: cohort.id, slug })),
+          {
+            onSaved: () =>
+              toast.success({ title: "school-cohort-deleted.title" }),
+          }
         )
       ),
     body: (
@@ -161,25 +163,27 @@ export function SchoolCohortMenu({
             icon={Archive02Icon}
             onClick={() =>
               startTransition(() =>
-                saveSchool(
-                  () => archive({ cohortId: cohort.id, slug }),
-                  SOURCE,
-                  () =>
-                    toast.success(
-                      { title: "school-cohort-archived.title" },
-                      {
-                        action: {
-                          label: "undo",
-                          onClick: () =>
-                            startTransition(() =>
-                              saveSchool(
-                                () => restore({ cohortId: cohort.id, slug }),
-                                SOURCE
-                              )
-                            ),
-                        },
-                      }
-                    )
+                runSchoolWrite(
+                  schoolCall(() => archive({ cohortId: cohort.id, slug })),
+                  {
+                    onSaved: () =>
+                      toast.success(
+                        { title: "school-cohort-archived.title" },
+                        {
+                          action: {
+                            label: "undo",
+                            onClick: () =>
+                              startTransition(() =>
+                                runSchoolWrite(
+                                  schoolCall(() =>
+                                    restore({ cohortId: cohort.id, slug })
+                                  )
+                                )
+                              ),
+                          },
+                        }
+                      ),
+                  }
                 )
               )
             }
@@ -209,15 +213,15 @@ export function SchoolCohortMenu({
               }
               setIsEditing(false);
               startTransition(() =>
-                saveSchool(
-                  () =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     edit({
                       cohortId: cohort.id,
                       grade: grade.value,
                       name: next,
                       slug,
-                    }),
-                  SOURCE
+                    })
+                  )
                 )
               );
             }}

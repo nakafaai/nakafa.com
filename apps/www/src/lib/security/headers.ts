@@ -33,10 +33,10 @@ type WwwHeaderOrigins = typeof WwwHeaderOriginsSchema.Type;
 const MAX_HEADERS_LINE_LENGTH = 2000;
 
 /** A `_headers` line that the static assets would refuse, so the file is never written. */
-export class WwwHeaderLineTooLong extends Schema.TaggedError<WwwHeaderLineTooLong>()(
-  "WwwHeaderLineTooLong",
-  { prefix: Schema.String }
-) {}
+export class WwwHeaderLineTooLong extends Schema.TaggedError<
+  WwwHeaderLineTooLong,
+  { readonly brand: unique symbol }
+>()("WwwHeaderLineTooLong", { prefix: Schema.String }) {}
 
 /**
  * Builds the headers of every www answer: the security policy, the agent
@@ -45,6 +45,8 @@ export class WwwHeaderLineTooLong extends Schema.TaggedError<WwwHeaderLineTooLon
  * policy only while it runs on this machine, the PostHog proxy host is the
  * one analytics origin, and the ad script's Google origins join the policy that
  * every page shares, since a lesson's frames load after a client navigation too.
+ * A loopback analytics host is the local stand-in that also serves the bucket,
+ * so its origin may draw pictures too.
  */
 export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
   const convexOrigins = Arr.flatMap(
@@ -54,6 +56,11 @@ export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
         ? []
         : createLoopbackConnectSources(new URL(value))
   );
+  // On this machine the bucket's stand-in answers on the analytics host, so the pictures its presigned
+  // addresses draw need that loopback origin too. A deployed analytics host is never loopback.
+  const standIn = createLoopbackConnectSources(
+    new URL(origins.posthogProxyHost)
+  );
   return [
     ...createSecurityHeaders({
       additionalConnectSources: [
@@ -62,8 +69,9 @@ export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
         ...AD_POLICY_SOURCES.connect,
       ],
       additionalFrameSources: AD_POLICY_SOURCES.frame,
-      additionalImageSources: Arr.filter(convexOrigins, (source) =>
-        source.startsWith("http:")
+      additionalImageSources: Arr.filter(
+        [...convexOrigins, ...standIn],
+        (source) => source.startsWith("http:")
       ),
       additionalScriptSources: AD_POLICY_SOURCES.script,
     }),

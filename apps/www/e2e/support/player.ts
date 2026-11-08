@@ -4,6 +4,7 @@ import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
@@ -196,8 +197,8 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     yield* loadMathFonts(page);
     yield* activate(start, hasTouch);
     yield* waitForRunningSection(page);
-    // Late streamed content would still move the page, so let it settle.
-    yield* Effect.sleep("750 millis");
+    // Late streamed content would still move the page, so let it go quiet.
+    yield* Effect.promise(() => waitForQuiet(page));
   }
 );
 

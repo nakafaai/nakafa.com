@@ -3,12 +3,12 @@ import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect, Schema } from "effect";
 /** Expected bounded HTTP body rejection before domain decoding begins. */
-export class HttpBodyError extends Schema.TaggedError<HttpBodyError>()(
-  "HttpBodyError",
-  {
-    reason: Schema.Literals(["invalid", "size", "unsupported"]),
-  }
-) {}
+export class HttpBodyError extends Schema.TaggedError<
+  HttpBodyError,
+  { readonly brand: unique symbol }
+>()("HttpBodyError", {
+  reason: Schema.Literals(["invalid", "size", "unsupported"]),
+}) {}
 /** Complete UTF-8 JSON request body accepted by one HTTP adapter. */
 type HttpJsonBody = typeof dispatchInputValidator.Type;
 /** Creates one sanitized body failure without retaining request bytes. */

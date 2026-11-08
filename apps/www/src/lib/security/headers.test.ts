@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Option, Result } from "effect";
+import { Array as Arr, Option, Result, String as Str } from "effect";
 import {
   createWwwHeaders,
   renderHeadersFile,
@@ -60,6 +60,23 @@ describe("createWwwHeaders", () => {
     expect(policy).toContain("ws://127.0.0.1:3210");
     expect(policy).toContain("http://127.0.0.1:3211");
     expect(policy).toMatch(LOOPBACK_IMAGE_SOURCE);
+  });
+
+  it("lets the local stand-in that answers on a loopback analytics host draw the bucket's pictures", () => {
+    const headers = createWwwHeaders({
+      convexSiteUrl: "http://127.0.0.1:3211",
+      convexUrl: "http://127.0.0.1:3210",
+      posthogProxyHost: "http://127.0.0.1:58341",
+    });
+    const policy = headerValue(headers, "Content-Security-Policy") ?? "";
+    const images = Arr.findFirst(Str.split(policy, "; "), (directive) =>
+      directive.startsWith("img-src")
+    );
+
+    expect(Option.getOrElse(images, () => "")).toContain(
+      "http://127.0.0.1:58341"
+    );
+    expect(Option.getOrElse(images, () => "")).not.toContain("ws://");
   });
 
   it("omits an unset Convex deployment URL", () => {

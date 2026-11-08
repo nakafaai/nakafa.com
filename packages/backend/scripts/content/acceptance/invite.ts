@@ -1,77 +1,55 @@
 import {
-  openLearnerAccount,
+  LocalConvex,
+  localConvexLayer,
   type RunConvex,
-} from "@repo/backend/scripts/content/acceptance/account";
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
+} from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
-  SESSION_LIFETIME,
-  writeSessionCookie,
-} from "@repo/backend/scripts/content/acceptance/learner";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+  SessionCookie,
+  writeFixture,
+} from "@repo/backend/scripts/content/acceptance/fixture";
+import { seedInvitedMember } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
-import { JsonTextSchema } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  Duration,
-  Effect,
-  Option,
-  Schedule,
-  Schema,
-} from "effect";
+import { Duration, Effect, Option, Schedule, Schema } from "effect";
 
-/** The Person that the invite function wrote, as the Convex CLI prints it. */
-const InvitedPerson = Schema.fromJsonString(
-  Schema.Struct({ person: Schema.String })
-);
-/** The app users of the local runtime, as the Convex CLI prints them. */
-const UserRows = Schema.fromJsonString(
-  Schema.Array(Schema.Struct({ _id: Schema.String, authId: Schema.String }))
-);
-/** The inbox rows of the local runtime, as the Convex CLI prints them. A row for a learner's account names no Person. */
-const InboxRows = Schema.fromJsonString(
-  Schema.Array(
-    Schema.Struct({ recipientPersonId: Schema.optionalKey(Schema.String) })
-  )
-);
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+/** The invite and the Person that the invite function wrote. */
+const Invited = Schema.Struct({ invite: Schema.String, person: Schema.String });
 
 /** The name of the learner the command invites, as the other acceptance accounts name theirs. */
 const LEARNER_NAME = "Acceptance Learner";
 /** The content language of the schools that `school` opens, which the invitation email is written in. */
 const CONTENT_LOCALE = "id";
 /**
- * How long the inbox may take to hold the invited row. The inbox reads an entry
- * only after it has settled, five seconds after it is written (ADR 0027), so the
- * row comes after that and the consumer's run.
+ * How long the inbox may take to hold the invited row. The invite schedules the
+ * inbox consumer at once, and the consumer handles an entry that has not settled
+ * yet while it has room (ADR 0027), so the row usually stands before the first
+ * read; a loaded backend runs the consumer later.
  */
 const ROW_WAIT = Duration.seconds(30);
+/** How often the one row is read while the invite waits for it. */
+const ROW_READ_PAUSE = Duration.millis(250);
 
 /**
- * Reads the inbox rows of the local runtime once a second until one of them
- * belongs to `person`, and fails when none does within `wait`.
+ * Reads the inbox row of one invitation by the invite and the Person it names,
+ * until it stands, and fails when it does not within `wait`.
  */
 export const waitForInboxRow = Effect.fn("contentAcceptance.inboxRow")(
-  function* <E, R>(run: RunConvex<E, R>, person: string, wait: Duration.Input) {
-    const holdsRow = run("inbox rows", [
-      "data",
-      "notifications",
-      "--format",
-      "jsonArray",
-      "--limit",
-      "1000",
-    ]).pipe(
-      Effect.flatMap(Schema.decodeEffect(InboxRows)),
-      Effect.map(Arr.some((row) => row.recipientPersonId === person))
-    );
+  function* <E, R>(
+    run: RunConvex<E, R>,
+    invited: typeof Invited.Type,
+    wait: Duration.Input
+  ) {
+    const holdsRow = run("inbox row", {
+      args: invited,
+      path: "tenancy/seed:invitation",
+    }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Schema.Boolean)));
     const found = yield* holdsRow.pipe(
       Effect.repeat({
-        schedule: Schedule.spaced(Duration.seconds(1)),
-        until: (ok) => ok,
+        schedule: Schedule.spaced(ROW_READ_PAUSE),
+        until: (held) => held,
       }),
       Effect.timeoutOption(wait)
     );
@@ -84,82 +62,38 @@ export const waitForInboxRow = Effect.fn("contentAcceptance.inboxRow")(
 );
 
 /**
- * Invites one learner into a school that `school` opened, through the internal
- * invite path that the school's own invite mutation uses. The learner's account
- * holds the invited address, so it claims the invitation the way `owner` claims
- * the school for its Owner. The command waits until the inbox holds the row, and
- * then writes the learner's session cookie to `output`, mode 600, for a browser
- * test to send. An address that already holds an account signs that account in
- * again, so a learner invited to a second school keeps one inbox. An `expired`
- * invite ends before the account signs in, as its term ending does, so the claim
- * joins no school, and no inbox row is waited for.
+ * Invites one learner into a school that `seedSchool` opened, through the
+ * internal invite path that the school's own invite mutation uses, and answers
+ * the learner's session cookie once the inbox holds the invitation. The
+ * learner's account holds the invited address, so it claims the invitation the
+ * way `seedOwner` claims the school for its Owner. An address that already holds
+ * an account signs that account in again, so a learner invited to a second
+ * school keeps one inbox. An `expired` invite ends before the account signs in,
+ * as its term ending does, so the claim joins no school, and no inbox row is
+ * waited for.
  */
-export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
-  function* (
-    root: string,
-    slug: string,
-    address: string,
-    output: string,
-    expired = false
-  ) {
-    const runtime = yield* readLocalRuntime(root);
-    if (runtime === undefined) {
-      return yield* acceptanceRuntimeError(
-        "Run bun run acceptance:prepare and start acceptance before inviting a learner."
-      );
-    }
-    const run = (
-      operation: string,
-      args: readonly string[],
-      sensitiveValues?: readonly string[]
-    ) => runLocalConvex(runtime, operation, args, sensitiveValues);
-    const invited = yield* encodeArguments({
-      email: address,
-      locale: CONTENT_LOCALE,
-      name: LEARNER_NAME,
-      slug,
-    }).pipe(
-      Effect.flatMap((args) =>
-        run("school invite", ["run", "tenancy/provision:invite", args])
-      ),
-      Effect.flatMap(Schema.decodeEffect(InvitedPerson))
-    );
-    if (expired) {
-      yield* encodeArguments({ email: address, slug }).pipe(
-        Effect.flatMap((args) =>
-          run("invite expiry", ["run", "tenancy/seed:expired", args])
-        )
-      );
-    }
-    const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
-    const users = yield* run("app users", [
-      "data",
-      "users",
-      "--format",
-      "jsonArray",
-      "--limit",
-      "1000",
-    ]).pipe(Effect.flatMap(Schema.decodeEffect(UserRows)));
-    const learner = Arr.findFirst(
-      users,
-      (user) => user.authId === account.userId
-    );
-    if (Option.isNone(learner)) {
-      return yield* acceptanceRuntimeError(
-        "The new learner account has no app user to claim the invitation with."
-      );
-    }
-    yield* encodeArguments({ cursor: null, userId: learner.value._id }).pipe(
-      Effect.flatMap((args) =>
-        run("learner claim", ["run", "tenancy/claims:run", args])
-      )
-    );
-    if (!expired) {
-      yield* waitForInboxRow(run, invited.person, ROW_WAIT);
-    }
-    yield* writeSessionCookie(output, account.token);
+export const seedInvite = Effect.fn("contentAcceptance.seedInvite")(function* (
+  slug: string,
+  address: string,
+  expired = false
+) {
+  const { run } = yield* LocalConvex;
+  const invited = yield* run("school invite", {
+    args: { email: address, locale: CONTENT_LOCALE, name: LEARNER_NAME, slug },
+    path: "tenancy/provision:invite",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Invited)));
+  if (expired) {
+    yield* run("invite expiry", {
+      args: { email: address, slug },
+      path: "tenancy/seed:expired",
+    });
   }
-);
+  const cookie = yield* seedInvitedMember(address);
+  if (!expired) {
+    yield* waitForInboxRow(run, invited, ROW_WAIT);
+  }
+  return cookie;
+});
 
 /**
  * The usage of the invite mode: the school, the learner's address, the file for the session cookie, then
@@ -191,12 +125,9 @@ export const inviteMode = {
       InviteArguments,
       args
     );
-    return yield* createAcceptanceInvite(
-      root,
-      slug,
-      address,
-      output,
-      state === "expired"
+    const cookie = yield* seedInvite(slug, address, state === "expired").pipe(
+      Effect.provide(localConvexLayer(root))
     );
+    yield* writeFixture(output, SessionCookie, cookie);
   }),
 } satisfies AcceptanceMode;

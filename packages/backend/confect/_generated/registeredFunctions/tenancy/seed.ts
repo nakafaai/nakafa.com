@@ -10,4 +10,6 @@ export default {
 ["teacher"]: RegisteredConvexFunction.register({ ...definitions["teacher"], handler: forward(definitions["teacher"].handler) }),
 ["expired"]: RegisteredConvexFunction.register({ ...definitions["expired"], handler: forward(definitions["expired"].handler) }),
 ["student"]: RegisteredConvexFunction.register({ ...definitions["student"], handler: forward(definitions["student"].handler) }),
+["user"]: RegisteredConvexFunction.register({ ...definitions["user"], handler: forward(definitions["user"].handler) }),
+["invitation"]: RegisteredConvexFunction.register({ ...definitions["invitation"], handler: forward(definitions["invitation"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../tenancy/seed.spec")["default"]>;

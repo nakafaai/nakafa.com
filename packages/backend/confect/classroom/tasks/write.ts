@@ -17,7 +17,7 @@ import {
   type TaskCategory,
   type TaskTargets,
   taskField,
-} from "@repo/backend/confect/classroom/tasks/task";
+} from "@repo/backend/confect/classroom/tasks/schema";
 import { scheduleTaskNotices } from "@repo/backend/confect/notifications/tasks";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { sealText } from "@repo/backend/confect/vault/text";

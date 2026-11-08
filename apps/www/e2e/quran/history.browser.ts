@@ -1,8 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Duration, Effect } from "effect";
+import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForScrollRest } from "@/e2e/support/quiet";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -83,7 +84,7 @@ const verifyOutlineHistory = Effect.fn("NakafaE2E.verifyOutlineHistory")(
         .getByRole("link", { exact: true, name: `Verse ${number}` })
         .click()
     );
-    yield* Effect.sleep(Duration.seconds(1));
+    yield* Effect.promise(() => waitForScrollRest(page));
     const readingY = yield* Effect.promise(() =>
       page.evaluate(() => window.scrollY)
     );

@@ -1,100 +1,64 @@
+import { openLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import {
-  openLearnerAccount,
+  LocalConvex,
   type RunConvex,
-} from "@repo/backend/scripts/content/acceptance/account";
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+} from "@repo/backend/scripts/content/acceptance/convex";
 import {
   SESSION_LIFETIME,
-  writeSessionCookie,
+  sessionCookieOf,
 } from "@repo/backend/scripts/content/acceptance/learner";
-import {
-  type LocalRuntime,
-  readLocalRuntime,
-} from "@repo/backend/scripts/content/acceptance/local";
-import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
-/** The app users of the local runtime, as the Convex CLI prints them. */
-const UserRows = Schema.fromJsonString(
-  Schema.Array(Schema.Struct({ _id: Schema.String, authId: Schema.String }))
-);
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-export const encodeArguments = Schema.encodeEffect(JsonTextSchema);
-
-/** The app user of one Better Auth account, read from the local runtime. */
+/** The app user of one Better Auth account, read by its index from the local runtime. */
 export const appUserOf = Effect.fn("contentAcceptance.appUser")(function* <
   E,
   R,
 >(run: RunConvex<E, R>, authId: string) {
-  const users = yield* run("app users", [
-    "data",
-    "users",
-    "--format",
-    "jsonArray",
-    "--limit",
-    "1000",
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(UserRows)));
-  const user = Arr.findFirst(users, (row) => row.authId === authId);
-  if (Option.isNone(user)) {
-    return yield* acceptanceRuntimeError("The new account has no app user.");
-  }
-  return user.value._id;
+  return yield* run("app user", {
+    args: { authId },
+    path: "tenancy/seed:user",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Schema.String)));
 });
 
 /**
- * Signs in the account that holds an address which a school's invite waits for.
- * The first sign-in creates the account with the address, so the invite is
- * claimed for its app user, and the account is then a member of the school. A
- * later sign-in opens a new session of the same account, so a test may sign the
- * same Owner into several browser contexts. A claim is a scheduled function, so
- * this command runs the claim itself, and then writes the session cookie to
- * `output`. A browser test must not start before the claim is done.
+ * Signs in the account that holds an address which a school's invite waits for,
+ * and answers its session cookie. The first sign-in creates the account with the
+ * address, so the invite is claimed for its app user, and the account is then a
+ * member of the school. A later sign-in opens a new session of the same account,
+ * so a test may sign the same Owner into several browser contexts. A claim is a
+ * scheduled function, so this runs the claim itself: a browser test must not
+ * start before the claim is done.
  */
-export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
-  function* (runtime: LocalRuntime, address: string, output: string) {
-    const run = (
-      operation: string,
-      args: readonly string[],
-      sensitiveValues?: readonly string[]
-    ) => runLocalConvex(runtime, operation, args, sensitiveValues);
+export const seedInvitedMember = Effect.fn("contentAcceptance.invitedMember")(
+  function* (address: string) {
+    const { run } = yield* LocalConvex;
     const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
     const userId = yield* appUserOf(run, account.userId);
-    yield* encodeArguments({ cursor: null, userId }).pipe(
-      Effect.flatMap((args) =>
-        run("school claim", ["run", "tenancy/claims:run", args])
-      )
-    );
-    yield* writeSessionCookie(output, account.token);
+    yield* run("school claim", {
+      args: { cursor: null, userId },
+      path: "tenancy/claims:run",
+    });
+    return yield* sessionCookieOf(account.token);
   }
 );
 
 /**
- * Runs the seed function of one member of an opened school, then signs the account
- * of the member's address in, so its session cookie goes to `output`. The arguments
- * are the seed's own, encoded as the CLI takes them, and no seed runs without a
- * local runtime.
+ * Runs the seed function of one member of an opened school with the seed's own
+ * arguments, then signs the account of the member's address in, and answers its
+ * session cookie.
  */
-export const seedMember = Effect.fn("contentAcceptance.seedMember")(function* (
-  root: string,
-  member: {
+export const seedSchoolMember = Effect.fn("contentAcceptance.schoolMember")(
+  function* (member: {
     readonly address: string;
-    readonly args: string;
+    readonly args: unknown;
     readonly label: string;
     readonly seed: string;
-  },
-  output: string
-) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
-    return yield* acceptanceRuntimeError(
-      `Run bun run acceptance:prepare and start acceptance before creating a ${member.label}.`
-    );
+  }) {
+    const { run } = yield* LocalConvex;
+    yield* run(`${member.label} seed`, {
+      args: member.args,
+      path: member.seed,
+    });
+    return yield* seedInvitedMember(member.address);
   }
-  yield* runLocalConvex(runtime, `${member.label} seed`, [
-    "run",
-    member.seed,
-    member.args,
-  ]);
-  yield* signInInvitedMember(runtime, member.address, output);
-});
+);

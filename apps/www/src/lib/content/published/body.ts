@@ -32,10 +32,10 @@ const failBody = Effect.fn("NakafaContent.failBody")(function* (
 });
 
 /** A render that rejected, kept with its cause until the reader reports it. */
-class BodyRenderError extends Schema.TaggedError<BodyRenderError>()(
-  "BodyRenderError",
-  { cause: Schema.Unknown }
-) {}
+class BodyRenderError extends Schema.TaggedError<
+  BodyRenderError,
+  { readonly brand: unique symbol }
+>()("BodyRenderError", { cause: Schema.Unknown }) {}
 
 /**
  * Sets the ad frames of one unit between the blocks of a body, where

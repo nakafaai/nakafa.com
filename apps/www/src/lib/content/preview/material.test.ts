@@ -42,8 +42,8 @@ import {
   previewWireMdx,
   previewProjection as projection,
   previewRoute as route,
-} from "@/test/content-preview";
-import { articlePendingManifest } from "@/test/preview-article";
+} from "@/test/manifest";
+import { articlePendingManifest } from "@/test/preview";
 
 /** The request the readers of one document share; each test starts a new one. */
 const request = vi.hoisted(() => ({

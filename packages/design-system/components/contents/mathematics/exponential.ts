@@ -10,10 +10,10 @@ const ExponentialSchema = Schema.Struct({
 export type Exponential = typeof ExponentialSchema.Type;
 
 /** The model cannot produce finite values for its chart. */
-export class ExponentialError extends Schema.TaggedError<ExponentialError>()(
-  "ExponentialError",
-  { message: Schema.String }
-) {}
+export class ExponentialError extends Schema.TaggedError<
+  ExponentialError,
+  { readonly brand: unique symbol }
+>()("ExponentialError", { message: Schema.String }) {}
 
 const SAMPLES_PER_INTERVAL = 32;
 

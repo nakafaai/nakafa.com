@@ -4,13 +4,12 @@ import type {
   TryoutSetStatusFilter,
 } from "@/components/tryout/catalog/table/types";
 
-/** The filter and the sort the table shows, how to change them, and the table's title. */
+/** The filter and the sort the table shows, and how to change them. */
 export const TryoutSetTableContext = createContext<{
   filter: TryoutSetStatusFilter;
   onFilter: (filter: TryoutSetStatusFilter) => void;
   onSort: (sort: TryoutSetSort) => void;
   sort: TryoutSetSort;
-  title: string;
 } | null>(null);
 
 /** Reads the selection of the surrounding try-out set table. */

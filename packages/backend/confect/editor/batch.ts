@@ -68,13 +68,13 @@ export const BatchSchema = Schema.Struct({
 export type Batch = typeof BatchSchema.Type;
 
 /** A call whose batch is larger than one call may send. */
-export class BatchTooLarge extends Schema.TaggedError<BatchTooLarge>()(
-  "BatchTooLarge",
-  {
-    bytes: Schema.Int,
-    limit: Schema.Int,
-  }
-) {}
+export class BatchTooLarge extends Schema.TaggedError<
+  BatchTooLarge,
+  { readonly brand: unique symbol }
+>()("BatchTooLarge", {
+  bytes: Schema.Int,
+  limit: Schema.Int,
+}) {}
 
 /** The JSON text of a batch: the call's body, which a client writes and the server reads. */
 const BatchTextSchema = Schema.fromJsonString(BatchSchema);

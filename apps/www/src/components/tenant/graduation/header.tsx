@@ -29,10 +29,8 @@ import { GraduationDecisionDialog } from "@/components/tenant/graduation/decisio
 import { saveReadiness } from "@/components/tenant/graduation/save";
 import type { GraduationOverview } from "@/components/tenant/graduation/workbook";
 import { SchoolHeader } from "@/components/tenant/header";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
-
-const SOURCE = "components/tenant/graduation/header";
 
 /** The route of one class group's graduation, whose context holds the class group's ID. */
 const cohortRoute = getRouteApi("/school/$slug/graduation/$cohortId");
@@ -147,17 +145,19 @@ function GraduationActions({
 
   const issueLetters = () =>
     startIssuing(() =>
-      saveSchool(issueAll, SOURCE, (issued) => {
-        toast.success({
-          description:
-            issued > 0
-              ? "school-letters-issued.description"
-              : "school-letters-none.description",
-          title:
-            issued > 0
-              ? "school-letters-issued.title"
-              : "school-letters-none.title",
-        });
+      runSchoolWrite(schoolCall(issueAll), {
+        onSaved: (issued) => {
+          toast.success({
+            description:
+              issued > 0
+                ? "school-letters-issued.description"
+                : "school-letters-none.description",
+            title:
+              issued > 0
+                ? "school-letters-issued.title"
+                : "school-letters-none.title",
+          });
+        },
       })
     );
 

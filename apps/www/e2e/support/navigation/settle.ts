@@ -13,13 +13,13 @@ const QUIET_MILLISECONDS = 500;
 const POLL_MILLISECONDS = 100;
 
 /** The router still had a script or a data request in flight when the window ended. */
-class RouterSettleTimeout extends Schema.TaggedError<RouterSettleTimeout>()(
-  "RouterSettleTimeout",
-  {
-    pending: Schema.Array(Schema.String),
-    timeoutMilliseconds: Schema.Finite,
-  }
-) {
+class RouterSettleTimeout extends Schema.TaggedError<
+  RouterSettleTimeout,
+  { readonly brand: unique symbol }
+>()("RouterSettleTimeout", {
+  pending: Schema.Array(Schema.String),
+  timeoutMilliseconds: Schema.Finite,
+}) {
   get message() {
     return `The router kept loading for ${this.timeoutMilliseconds} ms: ${Arr.join(this.pending, ", ") || "none pending, new requests kept starting"}`;
   }

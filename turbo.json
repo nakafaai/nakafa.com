@@ -102,7 +102,6 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["AKSARA_PUBLICATION_TOKEN"],
       "outputs": [
         ".output/**",
         "**/generated/**",

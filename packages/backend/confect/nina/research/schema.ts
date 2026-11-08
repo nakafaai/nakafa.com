@@ -47,10 +47,13 @@ const queryInputSchema = Schema.String.check(
  */
 export const researchProviderConcurrency = 2;
 /** Reject excess sources before provider work instead of silently dropping any. */
-export class ResearchSourceLimitError extends Schema.TaggedError<ResearchSourceLimitError>()(
-  "ResearchSourceLimitError",
-  { maximum: Schema.Literal(researchMaxSources), received: Schema.Int }
-) {}
+export class ResearchSourceLimitError extends Schema.TaggedError<
+  ResearchSourceLimitError,
+  { readonly brand: unique symbol }
+>()("ResearchSourceLimitError", {
+  maximum: Schema.Literal(researchMaxSources),
+  received: Schema.Int,
+}) {}
 const ScrapeOutputSchema = Schema.Struct({
   data: Schema.Struct({
     content: Schema.String,
@@ -227,42 +230,42 @@ export const researchOutputSchema = createEffectSchema(ResearchOutputSchema);
  * HTTP status the provider answered with and never its message, which may
  * repeat the query.
  */
-export class ResearchSearchError extends Schema.TaggedError<ResearchSearchError>()(
-  "ResearchSearchError",
-  {
-    message: Schema.String,
-    status: Schema.optional(Schema.Finite),
-  }
-) {}
+export class ResearchSearchError extends Schema.TaggedError<
+  ResearchSearchError,
+  { readonly brand: unique symbol }
+>()("ResearchSearchError", {
+  message: Schema.String,
+  status: Schema.optional(Schema.Finite),
+}) {}
 /** Scrape provider failed before returning usable page content. */
-export class ResearchScrapeError extends Schema.TaggedError<ResearchScrapeError>()(
-  "ResearchScrapeError",
-  {
-    message: Schema.String,
-  }
-) {}
+export class ResearchScrapeError extends Schema.TaggedError<
+  ResearchScrapeError,
+  { readonly brand: unique symbol }
+>()("ResearchScrapeError", {
+  message: Schema.String,
+}) {}
 /** Scrape URL was rejected before any server-side fetch. */
-export class ResearchUnsafeUrlError extends Schema.TaggedError<ResearchUnsafeUrlError>()(
-  "ResearchUnsafeUrlError",
-  {
-    message: Schema.String,
-  }
-) {}
+export class ResearchUnsafeUrlError extends Schema.TaggedError<
+  ResearchUnsafeUrlError,
+  { readonly brand: unique symbol }
+>()("ResearchUnsafeUrlError", {
+  message: Schema.String,
+}) {}
 /**
  * Language model generation failed during one research phase. It carries
  * routing facts only: `rejected` says the model answered with something other
  * than the asked object, and `gateway` classifies a failed call. Neither holds
  * the task, the sources, or the answer.
  */
-export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerationError>()(
-  "ResearchGenerationError",
-  {
-    gateway: Schema.optional(GatewayFailure),
-    message: Schema.String,
-    phase: Schema.Literals(["search", "synthesis"]),
-    rejected: Schema.Boolean,
-  }
-) {}
+export class ResearchGenerationError extends Schema.TaggedError<
+  ResearchGenerationError,
+  { readonly brand: unique symbol }
+>()("ResearchGenerationError", {
+  gateway: Schema.optional(GatewayFailure),
+  message: Schema.String,
+  phase: Schema.Literals(["search", "synthesis"]),
+  rejected: Schema.Boolean,
+}) {}
 export type ScrapeOutput = typeof ScrapeOutputSchema.Type;
 export type ResearchOutput = typeof ResearchOutputSchema.Type;
 export type WebSearchOutput = typeof WebSearchOutputSchema.Type;

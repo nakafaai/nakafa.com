@@ -11,7 +11,7 @@ import {
   readRuntimeCurriculumToc,
   resolveRuntimeCurriculumRoute,
 } from "@/lib/curriculum/model";
-import { previewProjection } from "@/test/content-preview";
+import { previewProjection } from "@/test/manifest";
 import {
   testProgramClass,
   testProgramContexts,
@@ -19,7 +19,7 @@ import {
   testProgramRoot,
   testProgramSubject,
   testPublishedProgram,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 const catalogMock = vi.hoisted(() => vi.fn());
 const routeMock = vi.hoisted(() => vi.fn());
