@@ -1,15 +1,8 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { Page } from "@playwright/test";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
-import {
-  Array as Arr,
-  Clock,
-  Effect,
-  FileSystem,
-  Schedule,
-  Schema,
-} from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { appendRows } from "@repo/backend/scripts/content/acceptance/import";
+import { Array as Arr, Clock, Effect, Schedule, Schema } from "effect";
+import { runFixture } from "@/e2e/support/acceptance";
 import { trackChanges } from "@/e2e/support/changes";
 import {
   declineUsageData,
@@ -84,16 +77,14 @@ const Receipt = Schema.Struct({
 const NewestChats = Schema.Struct({
   page: Schema.Array(Schema.Struct({ _id: Schema.String })),
 });
-/** One chat of a learner, as `convex import` takes it. */
-const ChatRow = Schema.fromJsonString(
-  Schema.Struct({
-    threadId: Schema.String,
-    type: Schema.Literal("study"),
-    updatedAt: Schema.Finite,
-    userId: Schema.String,
-    visibility: Schema.Literal("private"),
-  })
-);
+/** One chat of a learner, as an import appends it. */
+const ChatRow = Schema.Struct({
+  threadId: Schema.String,
+  type: Schema.Literal("study"),
+  updatedAt: Schema.Finite,
+  userId: Schema.String,
+  visibility: Schema.Literal("private"),
+});
 const encodeRow = Schema.encodeSync(ChatRow);
 
 /**
@@ -167,29 +158,22 @@ export const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
      * thread of a chat that was started, so each can be opened and deleted,
      * and they have no title until the test gives them one.
      */
-    importChats: Effect.fn("NakafaE2E.importChats")(
-      function* (threadId: string, count: number) {
-        const fs = yield* FileSystem.FileSystem;
-        const directory = yield* fs.makeTempDirectoryScoped({
-          prefix: "nakafa-chats-",
-        });
-        const file = `${directory}/chats.jsonl`;
-        const now = yield* Clock.currentTimeMillis;
-        const rows = Arr.makeBy(count, (index) =>
-          encodeRow({
-            threadId,
-            type: "study",
-            updatedAt: now - count + index,
-            userId: appUser._id,
-            visibility: "private",
-          })
-        );
-        yield* fs.writeFileString(file, `${Arr.join(rows, "\n")}\n`);
-        yield* runAcceptanceCommand("import", "chats", file);
-      },
-      Effect.scoped,
-      Effect.provide(nodeServicesLayer)
-    ),
+    importChats: Effect.fn("NakafaE2E.importChats")(function* (
+      threadId: string,
+      count: number
+    ) {
+      const now = yield* Clock.currentTimeMillis;
+      const rows = Arr.makeBy(count, (index) =>
+        encodeRow({
+          threadId,
+          type: "study",
+          updatedAt: now - count + index,
+          userId: appUser._id,
+          visibility: "private",
+        })
+      );
+      yield* runFixture(appendRows("chats", rows));
+    }),
     /**
      * Shares a chat of the learner the way the share dialog does: the same
      * mutation turns sharing on, and the same query gives the owner the token

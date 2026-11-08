@@ -23,16 +23,12 @@ import {
 } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import {
   type TrayFile,
   uploadAttachment,
 } from "@/components/tenant/classes/forum/upload";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The longest name a message keeps. */
 const NAME_LIMIT = 160;
@@ -147,10 +143,7 @@ export function useUploadTray() {
   /** Adds the chosen files, up to what one message carries. */
   const add = (chosen: readonly File[]) => {
     for (const file of Arr.take(chosen, ATTACHMENT_LIMIT - files.length)) {
-      runForumCall(
-        Effect.flatMap(randomUuid, (key) => start(file, key)),
-        toastForumFailure
-      );
+      runSchoolWrite(Effect.flatMap(randomUuid, (key) => start(file, key)));
     }
   };
 
@@ -159,9 +152,9 @@ export function useUploadTray() {
     setFiles((held) => Arr.filter(held, (found) => found.key !== file.key));
     if (Option.isSome(file.upload)) {
       const uploadId = file.upload.value;
-      runForumCall(
-        forumCall(() => withdraw({ classId, slug, uploadId })),
-        Fn.constVoid
+      runSchoolWrite(
+        schoolCall(() => withdraw({ classId, slug, uploadId })),
+        { onRefused: Fn.constVoid }
       );
     }
   };

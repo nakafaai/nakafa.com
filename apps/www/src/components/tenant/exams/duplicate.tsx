@@ -8,8 +8,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { Effect, Function as Fn, Schema, String as Str } from "effect";
 import { use, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { CreatedExamsContext } from "@/components/tenant/exams/created";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The title of a duplicate, the original's alone when the suffix would not fit the field. */
 const duplicateTitle = (title: string, words: string) => {
@@ -37,8 +37,8 @@ export function useDuplicateExam(
   const press = () => {
     toast.info({ title: "exam-copying.title" });
     startTransition(() =>
-      runExamAction(
-        sentAction(() =>
+      runSchoolWrite(
+        schoolCall(() =>
           duplicate({
             examId: exam.id,
             slug,
@@ -55,7 +55,7 @@ export function useDuplicateExam(
             })
           )
         ),
-        { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+        { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
       )
     );
   };

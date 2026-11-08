@@ -1,62 +1,36 @@
+import { layerSecureRandom } from "@effect/platform-node/NodeCrypto";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { sanitizeAcceptanceCommandError } from "@repo/backend/scripts/content/acceptance/error";
-import { Effect, Path, Schema, Stream } from "effect";
-import { ChildProcess } from "effect/process";
+import { localConvexLayer } from "@repo/backend/scripts/content/acceptance/convex";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Effect, FileSystem, Layer, Path } from "effect";
 
-/** The acceptance command line, which owns the local runtime's learners and rows. */
-const acceptanceCli = new URL(
-  "../../../../packages/backend/scripts/content/acceptance/main.ts",
-  import.meta.url
+/** The repository root, whose prepared acceptance runtime the browser tests reach. */
+const repositoryRoot = new URL("../../../../", import.meta.url);
+
+/**
+ * The running acceptance runtime of this checkout, reached from the test's own
+ * process: its local backend over HTTP as its admin, with the random bytes,
+ * files and paths that a fixture uses. A fixture is one call in this process,
+ * where the acceptance command line started a process for itself and one for
+ * each Convex call it made.
+ */
+const acceptanceLayer = Layer.unwrap(
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const root = yield* (yield* FileSystem.FileSystem).realPath(
+      yield* path.fromFileUrl(repositoryRoot)
+    );
+    return localConvexLayer(root);
+  })
+).pipe(
+  Layer.merge(layerSecureRandom),
+  Layer.provideMerge(Layer.merge(nodeServicesLayer, FetchClient))
 );
 
 /**
- * Expected failure of an acceptance command. The message names the mode, the exit
- * code, and the start of what the command printed, where it says why it stopped.
- * `output` keeps everything the command printed to stdout and stderr, in the order
- * it arrived: the command line writes its failure to stdout, so stderr alone is
- * often empty.
+ * Runs one acceptance fixture, such as `seedLearner` or `seedSchool`, against
+ * the running local runtime, in this process. It reaches only the local backend
+ * that the runtime's manifest names, never a cloud deployment.
  */
-class AcceptanceCommandError extends Schema.TaggedError<
-  AcceptanceCommandError,
-  { readonly brand: unique symbol }
->()("AcceptanceCommandError", {
-  exitCode: Schema.Finite,
-  message: Schema.String,
-  mode: Schema.String,
-  output: Schema.String,
-}) {}
-
-/**
- * Runs one mode of the acceptance command line against the running local
- * runtime, such as `learner <cookie-file>` or `import <table> <rows-file>`.
- * The command line clears every cloud deployment value from its environment,
- * so a browser test never reaches a deployment through it. The command's output
- * is read while it runs, so a failed command reports why it stopped.
- */
-export const runAcceptanceCommand = Effect.fn("NakafaE2E.runAcceptanceCommand")(
-  function* (mode: string, ...args: readonly string[]) {
-    const cli = yield* Path.Path.pipe(
-      Effect.flatMap((path) => path.fromFileUrl(acceptanceCli))
-    );
-    const child = yield* ChildProcess.make(
-      process.execPath,
-      [cli, mode, ...args],
-      { stderr: "pipe", stdin: "ignore", stdout: "pipe" }
-    );
-    const [exitCode, output] = yield* Effect.all(
-      [child.exitCode, Stream.mkString(Stream.decodeText(child.all))],
-      { concurrency: "unbounded" }
-    );
-    if (exitCode !== 0) {
-      const detail = sanitizeAcceptanceCommandError(output, [], "start");
-      return yield* new AcceptanceCommandError({
-        exitCode,
-        message: `acceptance ${mode} exited with ${exitCode}: ${detail}`,
-        mode,
-        output,
-      });
-    }
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+export const runFixture = <A, E, R>(fixture: Effect.Effect<A, E, R>) =>
+  fixture.pipe(Effect.provide(acceptanceLayer));
