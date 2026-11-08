@@ -23,13 +23,13 @@ import {
   type CohortStatus,
   cohortView,
 } from "@repo/backend/confect/tenancy/cohort";
-import { restoreCohort } from "@repo/backend/confect/tenancy/cohort.restore";
 import { edit } from "@repo/backend/confect/tenancy/cohorts.edit";
 import { remove } from "@repo/backend/confect/tenancy/cohorts.remove";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
 import { emailOf } from "@repo/backend/confect/tenancy/email";
 import { cohortMembers } from "@repo/backend/confect/tenancy/members";
 import { overview } from "@repo/backend/confect/tenancy/overview";
+import { restoreCohort } from "@repo/backend/confect/tenancy/restore";
 import {
   checkCohorts,
   gradeTaught,

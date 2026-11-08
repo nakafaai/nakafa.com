@@ -16,7 +16,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { cn } from "cn";
 import { useId } from "react";
 import { useTranslations } from "use-intl";

@@ -1,6 +1,6 @@
 import { ResizeGrip } from "@repo/design-system/components/ui/resizable";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import type { useResizable } from "@repo/design-system/hooks/use-resizable";
+import type { useResizable } from "@repo/design-system/hooks/resizable";
 import { useTranslations } from "use-intl";
 
 /**
