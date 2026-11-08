@@ -101,8 +101,12 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
         return nextIdentity - 1;
       };
       const visibility = { checkOpacity: true, checkVisibilityCSS: true };
+      // What the frame draws of an element: its rendered text, without the
+      // text of the inline scripts a server page carries until it hydrates.
       const words = (element: Element) =>
-        (element.textContent ?? "").replace(/\s+/gu, " ").trim();
+        (element instanceof HTMLElement ? element.innerText : "")
+          .replace(/\s+/gu, " ")
+          .trim();
       // A page's own `<main>` can stand inside the shell's, so each element counts once.
       const shown = (mains: readonly Element[], selector: string) => [
         ...new Set(
@@ -189,9 +193,7 @@ function outgoingPages(frames: readonly (typeof ShellFrame.Type)[]) {
 /**
  * Expects the frames since one observation to show the app shell throughout: a
  * mounted, visible shell with a heading in every frame, no layout shift, and
- * exactly the expected lock states. The page a press leaves keeps its titles,
- * its header and its frame until the next page renders in their place, and no
- * frame shows a third page. A client render locks through the shell
+ * exactly the expected lock states. A client render locks through the shell
  * alone, so no page, hidden or not, may carry the server's lock marker. A move
  * within one shell keeps its `<main>`; a move to the other shell, from the app to
  * the marketing pages or back, swaps it once, in one frame, so it shows two.
@@ -208,8 +210,6 @@ export function expectStillShell(
   expect(observation.layoutShifts).toEqual([]);
   expect(observation.locks).toEqual(locks);
   expect(observation.markedFrames).toBe(0);
-  expect(Arr.drop(observation.outgoing, 1)).toEqual([]);
-  expect(Arr.drop(observation.titles, 2)).toEqual([]);
 }
 
 /** Summarizes the frames and layout shifts recorded since `since`. */
@@ -275,10 +275,11 @@ const waitFrames = (page: Page, count: number) =>
   );
 
 /**
- * Runs a press, waits through `arrive` for the page it opens, and expects every
- * frame from the press on to keep the page it leaves whole, its titles, header
- * and frame included, until the next page renders in its place, with the
- * contract of `expectStillShell`. The recorder of `observeShell` must run.
+ * Runs a press, waits through `arrive` for the page it opens, and expects the
+ * contract of `expectStillShell` from the press on. One press shows two pages
+ * at most: every frame keeps the page it leaves whole, its titles, header and
+ * frame included, until the next page renders in its place, and no frame shows
+ * a third page. The recorder of `observeShell` must run.
  */
 export const expectPressKeepsPage = Effect.fn("NakafaE2E.expectPressKeepsPage")(
   function* <PressError, PressRequirements, ArriveError, ArriveRequirements>(
@@ -292,6 +293,10 @@ export const expectPressKeepsPage = Effect.fn("NakafaE2E.expectPressKeepsPage")(
     // Frames after the next page renders, where a page left behind would show.
     yield* waitFrames(page, 10);
     const observation = yield* readShellObservation(page, since);
-    yield* Effect.sync(() => expectStillShell(observation, [false]));
+    yield* Effect.sync(() => {
+      expectStillShell(observation, [false]);
+      expect(Arr.drop(observation.outgoing, 1)).toEqual([]);
+      expect(Arr.drop(observation.titles, 2)).toEqual([]);
+    });
   }
 );

@@ -8,6 +8,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { holdPageData } from "@/e2e/support/hold";
 import { signInLearner } from "@/e2e/support/learner";
 import { openObservedRoute } from "@/e2e/support/navigation/prefetch";
+import { finishOnboarding } from "@/e2e/support/onboarding";
 import { expectPressKeepsPage } from "@/e2e/support/shell";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
@@ -46,7 +47,8 @@ interface Step {
 const WALK: readonly Step[] = [
   {
     control: async (page) => sidebarLink(page, app.Common.subject),
-    path: /\/en\/curricula$/u,
+    // The learner's own curriculum once onboarding chose one, else the list of them.
+    path: /\/en\/curriculum(?:\/[^/]+)?$/u,
   },
   {
     control: async (page) => sidebarLink(page, app.Common["try-out"]),
@@ -100,6 +102,7 @@ test("every family of the learner's pages keeps the page a press leaves whole un
     Effect.gen(function* () {
       yield* seedAnalyticsConsent(page, "denied");
       yield* signInLearner(page.context(), origin);
+      yield* Effect.promise(() => finishOnboarding(page));
       yield* openObservedRoute(page, "/en/home");
       yield* Effect.promise(() => expect(firstTitle(page)).toBeAttached());
       yield* holdPageData(page);

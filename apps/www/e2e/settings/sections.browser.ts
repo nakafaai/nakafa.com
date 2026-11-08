@@ -8,6 +8,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { holdPageData } from "@/e2e/support/hold";
 import { signInLearner } from "@/e2e/support/learner";
 import { openObservedRoute } from "@/e2e/support/navigation/prefetch";
+import { finishOnboarding } from "@/e2e/support/onboarding";
 import { appRoutes } from "@/e2e/support/route";
 import { expectPressKeepsPage } from "@/e2e/support/shell";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
@@ -52,6 +53,8 @@ test("a press between settings sections keeps the section it leaves whole until 
     Effect.gen(function* () {
       yield* seedAnalyticsConsent(page, "denied");
       yield* signInLearner(page.context(), origin);
+      // Home sends a learner who has not answered the onboarding there, and the way back leads home.
+      yield* Effect.promise(() => finishOnboarding(page));
       yield* openObservedRoute(page, appRoutes.settings);
       yield* Effect.promise(() =>
         expect(title(page, app.Auth.account)).toBeAttached()
