@@ -29,7 +29,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -39,7 +39,9 @@ import {
   useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import {
   RoomStateFilter,
@@ -373,8 +375,7 @@ function RoomsTable({
         data={rooms}
         empty={
           filter === "all" && search === "" ? (
-            <TableEmpty
-              act="pointing"
+            <EmptyState
               action={
                 tenant.canOpenExams ? (
                   <Link
@@ -388,12 +389,13 @@ function RoomsTable({
                 ) : undefined
               }
               description={t("rooms-empty-description")}
+              scene={<EmptyNina act="pointing" />}
               title={t("rooms-empty")}
             />
           ) : (
-            <TableEmpty
-              act="searching"
+            <EmptyState
               description={t("rooms-filter-empty-description")}
+              scene={<EmptyNina act="searching" />}
               title={t("rooms-filter-empty")}
             />
           )
