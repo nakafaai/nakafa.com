@@ -242,7 +242,9 @@ export function Panes({
       })}
       id={id}
     >
-      {children}
+      {/* A row nested in a page whose pane stands at the screen's right, as a forum's rail and chat under a thread's
+          pane, holds its own panes. */}
+      <PaneBesideContext value={false}>{children}</PaneBesideContext>
     </PanesGroupProvider>
   );
 }

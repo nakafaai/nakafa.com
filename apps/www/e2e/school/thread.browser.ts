@@ -41,23 +41,30 @@ const BESIDE_FROM = 1280;
 
 /**
  * Counts, from the moment it is called, every message of the chat that leaves the page, apart from the thread's own
- * pane and sheet. A flicker takes the chat's messages away and draws them again, so the count stays zero while
- * nothing flickers.
+ * pane and sheet, closed whole or changed inside. A flicker takes the chat's messages away and draws them again, so
+ * the count stays zero while nothing flickers.
  */
 function recordRemovedMessages(key: string) {
+  const thread = "[data-pane-side], [data-slot=drawer-content]";
+  /** Whether a removed node takes a message of the chat with it, not only the thread's own. */
+  const takesChat = (node: Node) => {
+    if (!(node instanceof Element)) {
+      return false;
+    }
+    const messages = node.matches("[data-slot=message]")
+      ? [node]
+      : Array.from(node.querySelectorAll("[data-slot=message]"));
+    return messages.some((message) => message.closest(thread) === null);
+  };
   Reflect.set(window, key, 0);
   new MutationObserver((records) => {
     for (const record of records) {
       const parent = record.target instanceof Element ? record.target : null;
-      if (parent?.closest("[data-pane-side], [data-slot=drawer-content]")) {
+      if (parent?.closest(thread)) {
         continue;
       }
       for (const node of Array.from(record.removedNodes)) {
-        if (
-          node instanceof Element &&
-          (node.matches("[data-slot=message]") ||
-            node.querySelector("[data-slot=message]") !== null)
-        ) {
+        if (takesChat(node)) {
           Reflect.set(window, key, Number(Reflect.get(window, key)) + 1);
         }
       }
@@ -134,6 +141,32 @@ for (const viewport of SCREENS) {
     await page.evaluate(recordRemovedMessages, REMOVED_KEY);
     const settled = await unansweredShift(page);
     await shot("chat");
+
+    // A message's toolbar, its menu, the hide dialog and the emoji chooser, each drawn as it opens.
+    const sixth = messageRow(page, "Pesan 6");
+    await sixth.hover();
+    await shot("toolbar");
+    await sixth.getByRole("button", { name: "More actions" }).click();
+    await expect(
+      page.getByRole("menuitem", { name: "Copy text" })
+    ).toBeVisible();
+    await shot("menu");
+    await page.getByRole("menuitem", { name: "Hide" }).click();
+    const hide = page.getByRole("dialog", { name: "Hide this message" });
+    await expect(hide.getByText("Pesan 6")).toBeVisible();
+    await shot("hide");
+    await hide.getByRole("button", { name: "Cancel" }).click();
+    await expect(hide).toBeHidden();
+    await sixth.hover();
+    await sixth.getByRole("button", { name: "React" }).click();
+    const chooser = page.locator("[data-slot=emoji-panel]");
+    await expect(
+      chooser.getByRole("searchbox", { name: "Search emoji" })
+    ).toBeVisible();
+    await shot("emoji");
+    await page.keyboard.press("Escape");
+    await expect(chooser).toBeHidden();
+    expect(await removedMessages(page)).toBe(0);
 
     // Reply in thread opens the pane at once, drawn from the message, and the chat stays as it was.
     const fifth = messageRow(page, "Pesan 5");

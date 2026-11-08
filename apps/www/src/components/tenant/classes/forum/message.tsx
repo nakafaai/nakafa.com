@@ -38,20 +38,18 @@ const messageRow = cva(
 );
 
 /**
- * One message of a channel or of a thread, laid out as shadcn's Message and Bubble lay one out (ADR 0025): the header
- * row with the author's name and the time above the bubble, the face beside the bubble at its foot, the reactions and
- * the thread's summary under it, and a footer that says it was edited. A run by one author keeps one header on its
- * first message (`opens`) and one face on its last (`closes`), so a burst reads as one block. The viewer's own messages
- * stand at the end of the row. The message's actions float in one toolbar over the row's top corner on hover, on
+ * One message of a channel or of a thread, laid out with shadcn's Message and Bubble (ADR 0025): the header row with
+ * the author's name and the time above the bubble, the face beside the header as Slack and Discord place it, the
+ * reactions and the thread's summary under the bubble, and a footer that says it was edited. A run by one author
+ * shows its face and header once, on its first message (`opens`), so a burst reads as one block. The viewer's own
+ * messages stand at the end of the row. The message's actions float in one toolbar over the row's top corner on hover, on
  * focus, and on a tap. In a channel, only a titled discussion shows its title, since a thread of a message would repeat
  * the message's own words, and the message whose thread stands open keeps its selected look.
  */
 export function ForumMessageRow({
-  closes,
   message,
   opens,
 }: {
-  closes: boolean;
   message: ForumMessage;
   opens: boolean;
 }) {
@@ -69,8 +67,8 @@ export function ForumMessageRow({
       data-selected={selected && discussion !== null ? "" : undefined}
       tabIndex={-1}
     >
-      {closes ? (
-        <MessageAvatar className="bg-transparent">
+      {opens ? (
+        <MessageAvatar className="translate-y-0 self-start bg-transparent">
           <ForumFace face={message.author} />
         </MessageAvatar>
       ) : (

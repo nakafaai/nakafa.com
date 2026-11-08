@@ -112,7 +112,7 @@ export function MessageStream({
 
   /**
    * Whether the message at `index` opens a run, under its own header: a new day, the unread divider above it, or what
-   * `opensRun` says. The message before it then closes its run, with the author's face.
+   * `opensRun` says.
    */
   const opensAt = (index: number) =>
     Option.isSome(dayAt(index)) ||
@@ -148,7 +148,7 @@ export function MessageStream({
                       {dayOf(opening.value.createdAt)}
                     </MarkerContent>
                   </Marker>
-                  <ForumMessageRow closes message={opening.value} opens />
+                  <ForumMessageRow message={opening.value} opens />
                 </MessageScrollerItem>
               ) : null}
               {Arr.map(messages, (message, index) => {
@@ -189,13 +189,7 @@ export function MessageStream({
                         <MarkerContent>{t("unread-divider")}</MarkerContent>
                       </Marker>
                     ) : null}
-                    <ForumMessageRow
-                      closes={
-                        index === messages.length - 1 || opensAt(index + 1)
-                      }
-                      message={message}
-                      opens={opensAt(index)}
-                    />
+                    <ForumMessageRow message={message} opens={opensAt(index)} />
                   </MessageScrollerItem>
                 );
               })}

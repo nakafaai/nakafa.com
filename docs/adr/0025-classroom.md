@@ -153,10 +153,11 @@ decisions hold it.
 
 - A message follows the anatomy of shadcn's Message and Bubble, drawn with Nakafa's
   own parts: a header row above the bubble with the author's name and the time, the
-  author's face beside the bubble at its foot, and the reactions, the thread's summary
-  and the edited note under it. The time stands in the header, never inside the
-  bubble. A run of one author keeps one header at its first message and one face at its
-  last, so a burst reads as one block, and a run ends at another author, a pause of
+  author's face beside that header as Slack and Discord place it, and the reactions,
+  the thread's summary and the edited note under the bubble. The time stands in the
+  header, never inside the bubble. A face at the bubble's foot would stand beside the
+  thread's summary instead. A run of one author shows its face and header once, at its
+  first message, so a burst reads as one block, and a run ends at another author, a pause of
   more than five minutes, a new day, or a message that opens a thread (`opensRun` in
   `forum/marks.ts`). The viewer's own messages stand at the end of the row.
 - A message's actions float in one toolbar over the row's top corner on hover, on
