@@ -8,6 +8,7 @@ import {
   releasePageValidator,
   rendererDomainValidator,
 } from "@repo/backend/confect/contentRelease/spec";
+import { publicHeadValidator } from "@repo/backend/content/publication/spec";
 import { Schema } from "effect";
 
 const projectionValidator = Schema.Struct({
@@ -99,8 +100,8 @@ export default GroupSpec.make()
       }),
       returns: () =>
         Schema.Struct({
+          delivery: Schema.NullOr(publicHeadValidator),
           model: articleModelValidator,
-          runtimeJson: Schema.Union([Schema.String, Schema.Null]),
         }),
       error: () => ReleaseError,
     })

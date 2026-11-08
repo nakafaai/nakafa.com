@@ -110,6 +110,19 @@ was read under, and a read that finds another snapshot after its load starts ove
 under it, as a release read does. The curriculum route stays keyed by the release, because
 it also reads lesson rows that no snapshot covers.
 
+Amended a fourth time on 8 November 2026, so that a new release reads only the bodies it
+changed: a public body's signed artifact never changes, so the store keeps it by its hash
+alone (`readImmutableContentStore`). A lesson's and an article's query return the body's
+head (the artifact hash, the projection hash and the source path) in place of the signed
+envelope. The reader takes the release's signed document and renderer manifest once per
+release (`contentRelease/runtime/active:frame`, pinned to the release that the lesson's
+query answered under) and the artifact by its hash (`contentRelease/runtime/active:artifact`,
+which Convex answers only while the route's active head names that hash). It composes the
+found response and verifies it exactly as before, and it also checks that the artifact is
+the one the head names, because neither an artifact's signature nor the response contract
+binds it to a route. A release that keeps a body reads its head again,
+never its artifact.
+
 ## Phase A as implemented
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the
