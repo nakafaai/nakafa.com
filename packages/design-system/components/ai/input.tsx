@@ -1,15 +1,15 @@
-import { usePromptInputFiles } from "@repo/design-system/components/ai/input-files";
+import { usePromptInputFiles } from "@repo/design-system/components/ai/files";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
-import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt/boundary";
 import {
   LocalAttachmentsContext,
   usePromptInputAttachments,
-} from "@repo/design-system/lib/prompt-input/context";
+} from "@repo/design-system/lib/prompt/context";
 import {
   type PromptInputMessage,
   submitPromptInput,
-} from "@repo/design-system/lib/prompt-input/submission";
+} from "@repo/design-system/lib/prompt/submission";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import {

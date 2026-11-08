@@ -6,7 +6,7 @@ import {
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
-} from "@repo/backend/confect/tryouts/queries/catalogModel";
+} from "@repo/backend/confect/tryouts/queries/model";
 import {
   tryoutRouteKeyValidator,
   tryoutSetIdentityValidator,

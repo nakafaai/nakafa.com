@@ -7,8 +7,7 @@ import { readMaterialGroup } from "@repo/backend/content/material/navigation";
 import { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
-import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
+import { readSelectedPublicHead } from "@repo/backend/content/publication/public";
 import { Array as Arr, Effect, Option } from "effect";
 
 type AuthenticatedMaterial = NonNullable<
@@ -138,7 +137,10 @@ const assembleMaterialModel = Effect.fn("contentRelease.assembleMaterialModel")(
   }
 );
 
-/** Reads a signed lesson without reopening its shared navigation graph. */
+/**
+ * Reads a signed lesson without reopening its shared navigation graph, or its
+ * artifact: the reader takes the artifact by the hash its head names, once.
+ */
 export const readMaterialLesson = Effect.fn(
   "contentRelease.readMaterialLesson"
 )(function* (
@@ -147,12 +149,13 @@ export const readMaterialLesson = Effect.fn(
 ) {
   const route = yield* resolveMaterialRoute(appLocale, publicPath);
   const model = yield* assembleMaterialMetadata(appLocale, route);
-  const runtime = yield* readSelectedPublicRuntime(route);
-  const runtimeJson = yield* encodePublicDelivery(runtime, model);
+  // The route pairs its catalog row with its projection, so the model names a
+  // projection exactly when the route has a public head.
+  const delivery = yield* readSelectedPublicHead(route);
   return {
+    delivery,
     materialKey: route.material?.row.materialKey ?? null,
     model,
-    runtimeJson,
   };
 });
 

@@ -1,4 +1,4 @@
-import { TaskTitle } from "@repo/backend/confect/classroom/tasks/task";
+import { TaskTitle } from "@repo/backend/confect/classroom/tasks/schema";
 import { pipe, Schema, String as Str } from "effect";
 
 /** Characters that a task title keeps on one line: line breaks and controls become a space. */

@@ -7,7 +7,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect } from "effect";
 import { buildSiteLlmsEntries } from "@/lib/llms/entries";
 import { readSiteLlmsEntries } from "@/lib/llms/site";
-import { testPageProjection } from "@/test/content-page";
+import { testPageProjection } from "@/test/published/page";
 
 const catalogMock = vi.hoisted(() => vi.fn());
 

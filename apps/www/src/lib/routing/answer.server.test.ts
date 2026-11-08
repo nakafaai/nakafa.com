@@ -70,7 +70,7 @@ vi.mock("@/lib/routing/school/refusal", () => ({
   readSchoolRefusal: refusal.read,
 }));
 
-vi.mock("@repo/analytics/server-reporting", () => ({
+vi.mock("@repo/analytics/reporting", () => ({
   reportUncaughtRequestError: reporting.report,
 }));
 

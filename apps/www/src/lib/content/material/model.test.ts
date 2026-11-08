@@ -6,13 +6,13 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Effect, Layer, Option } from "effect";
 import { getMaterialModel } from "@/lib/content/material/model";
 import { activateTestRelease } from "@/test/active";
+import { previewProjection as projection } from "@/test/manifest";
 import {
   activeReleaseId,
   data,
   model,
   published,
-} from "@/test/content-material";
-import { previewProjection as projection } from "@/test/content-preview";
+} from "@/test/published/material";
 import { resetTestRuntimeCache } from "@/test/store";
 
 /** Reads one model that the test expects to exist. */
@@ -61,6 +61,13 @@ vi.mock("@/lib/content/published/material", async (importOriginal) => ({
   >()),
   renderMaterialArtifact: renderMock,
 }));
+/** The head of the signed body that the lesson's query names. */
+const signedHead = {
+  artifactHash: `sha256:${"a".repeat(64)}`,
+  projectionHash: `sha256:${"b".repeat(64)}`,
+  sourcePath: "content/source.mdx",
+};
+
 beforeEach(() => {
   resetTestRuntimeCache();
   activateTestRelease(activeReleaseId);
@@ -76,7 +83,7 @@ beforeEach(() => {
         : {
             materialKey: projection.materialKey,
             model,
-            runtimeJson: "signed-envelope",
+            delivery: signedHead,
           }
     )
   );
@@ -106,7 +113,7 @@ describe("verified material metadata", () => {
             alternateJson: [],
             projectionJson: null,
           },
-          runtimeJson: null,
+          delivery: null,
         })
       );
       expect(

@@ -5,7 +5,7 @@ import {
   publicTryoutCountryValidator,
   publicTryoutExamValidator,
   publicTryoutGroupValidator,
-} from "@repo/backend/confect/tryouts/queries/catalogModel";
+} from "@repo/backend/confect/tryouts/queries/model";
 import { Array as Arr, Schema } from "effect";
 
 type TryoutHubPage = Ref.Returns<typeof tryouts.queries.catalog.getHubPage>;

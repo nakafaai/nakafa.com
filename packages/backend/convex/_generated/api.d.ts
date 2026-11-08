@@ -2809,13 +2809,17 @@ export declare const api: {
         "public",
         { appLocale: "en" | "id" | "de"; publicPath: string },
         {
+          delivery: {
+            artifactHash: string;
+            projectionHash: string;
+            sourcePath: string;
+          } | null;
           model: {
             activeAppLocales: Array<"en" | "id" | "de">;
             activeReleaseId: string;
             alternateJson: Array<string>;
             projectionJson: string | null;
           };
-          runtimeJson: string | null;
         }
       >;
       latest: FunctionReference<
@@ -2993,6 +2997,11 @@ export declare const api: {
         "public",
         { appLocale: "en" | "id" | "de"; publicPath: string },
         {
+          delivery: {
+            artifactHash: string;
+            projectionHash: string;
+            sourcePath: string;
+          } | null;
           materialKey: string | null;
           model: {
             activeAppLocales: Array<"en" | "id" | "de">;
@@ -3017,7 +3026,6 @@ export declare const api: {
             sourcePath: string | null;
             sourceRevision: string | null;
           };
-          runtimeJson: string | null;
         }
       >;
       navigation: FunctionReference<
@@ -4218,6 +4226,17 @@ export declare const api: {
     };
     runtime: {
       active: {
+        artifact: FunctionReference<
+          "query",
+          "public",
+          {
+            appLocale: "en" | "id" | "de";
+            artifactHash: string;
+            family: "article" | "material" | "page";
+            publicPath: string;
+          },
+          { artifactJson: string } | null
+        >;
         dates: FunctionReference<
           "query",
           "public",
@@ -4227,6 +4246,17 @@ export declare const api: {
             program: string | null;
             quran: string | null;
           }
+        >;
+        frame: FunctionReference<
+          "query",
+          "public",
+          {},
+          {
+            activeManifestHash: string;
+            activeReleaseId: string;
+            releaseJson: string;
+            rendererJson: string;
+          } | null
         >;
         read: FunctionReference<
           "query",
