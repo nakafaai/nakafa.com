@@ -45,7 +45,6 @@ import {
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceKey,
   defaultChoice,
@@ -61,6 +60,7 @@ import {
 } from "@/components/tenant/exams/import/file";
 import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The drafts of the list or the home that holds the create action: the exams the server is still saving,
@@ -151,12 +151,12 @@ export function CreateExam({
     const { scope } = choice.value;
     setOpen(false);
     startTransition(() =>
-      runExamAction(
+      runSchoolWrite(
         placeholderExamId.pipe(
           Effect.flatMap((draftId) =>
             Effect.flatMap(Clock.currentTimeMillis, (createdAt) => {
               drafts.getState().start(draftId);
-              return sentAction(() =>
+              return schoolCall(() =>
                 create.withOptimisticUpdate(
                   insertDraftExam({ createdAt, id: draftId, title: name })
                 )({ scope, slug, title: name })
@@ -182,7 +182,7 @@ export function CreateExam({
             file === null ? Effect.void : importFile(saved.id, file)
           )
         ),
-        { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+        { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
       )
     );
   };

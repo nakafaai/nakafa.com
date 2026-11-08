@@ -42,10 +42,8 @@ import {
   toggleChange,
 } from "@/components/tenant/settings/changes";
 import { changeWebhookChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/settings/webhook";
 
 /** How many clients the dialog offers: more than a school keeps. */
 const CLIENT_PAGE = 100;
@@ -192,19 +190,21 @@ export function SchoolWebhookCreateDialog({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           create({
             changes: carried.value,
             clientId: client.value.id,
             slug,
             url: address.value,
-          }),
-        SOURCE,
-        (issued) => {
-          setOpen(false);
-          setUrl("");
-          onIssued(issued.secret);
+          })
+        ),
+        {
+          onSaved: (issued) => {
+            setOpen(false);
+            setUrl("");
+            onIssued(issued.secret);
+          },
         }
       )
     );
@@ -323,16 +323,16 @@ export function SchoolWebhookEditDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           change({
             changes: carried.value,
             clientId: webhook.clientId,
             slug,
             url: address.value,
             webhookId: webhook.id,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };

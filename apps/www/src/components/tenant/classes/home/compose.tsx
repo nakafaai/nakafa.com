@@ -15,10 +15,6 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { publishPost } from "@/components/tenant/classes/home/publish";
 import { scheduleAnnouncement } from "@/components/tenant/classes/home/waiting";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -26,6 +22,7 @@ import { deadlineOf } from "@/components/tenant/classes/tasks/deadline";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { runSchoolWrite } from "@/components/tenant/write";
 
 /**
  * Posts an announcement to the class, or keeps it for a time the teacher chooses: its text, and whether it also goes
@@ -62,7 +59,7 @@ export function NewAnnouncement() {
     setEmail(false);
     setLater(false);
     setWhen("");
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
         later && Option.isSome(publishAt)
           ? scheduleAnnouncement(
@@ -82,13 +79,14 @@ export function NewAnnouncement() {
               { classId, clientKey, email, poll: null, slug, text: body }
             ).pipe(Effect.asVoid)
       ),
-      () => {
-        setText((current) => (current === "" ? body : current));
-        setEmail(email);
-        setLater(later);
-        setWhen(when);
-        setOpen(true);
-        toastForumFailure();
+      {
+        onFailed: () => {
+          setText((current) => (current === "" ? body : current));
+          setEmail(email);
+          setLater(later);
+          setWhen(when);
+          setOpen(true);
+        },
       }
     );
   };

@@ -62,9 +62,7 @@ import { ParentRequests } from "@/components/tenant/guardian/requests";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/home";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** One released grade of a child, as the parent home shows it. */
 type ChildGrade = Ref.Returns<typeof guardians.family.grades>[number];
@@ -252,10 +250,9 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
 
   const submit = () =>
     startTransition(() =>
-      saveSchool(
-        () => confirm({ linkId: child.linkId, nisn, slug }),
-        SOURCE,
-        (answer) => setRefused(answer === "refused")
+      runSchoolWrite(
+        schoolCall(() => confirm({ linkId: child.linkId, nisn, slug })),
+        { onSaved: (answer) => setRefused(answer === "refused") }
       )
     );
 
@@ -369,9 +366,8 @@ function GuardianWithdraw({ child }: { child: ChildItem }) {
             onClick={() => {
               setIsWithdrawing(false);
               startTransition(() =>
-                saveSchool(
-                  () => withdraw({ linkId: child.linkId, slug }),
-                  SOURCE
+                runSchoolWrite(
+                  schoolCall(() => withdraw({ linkId: child.linkId, slug }))
                 )
               );
             }}
