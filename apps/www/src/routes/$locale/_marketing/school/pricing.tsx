@@ -81,7 +81,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/pricing")({
     }
     const url = `${COMPANY_IDENTITY.url}/${params.locale}/school/pricing`;
     const image = getAppSocialArtwork({
-      key: "home",
+      key: "school",
       locale: params.locale,
       publicPath: "school/pricing",
     });

@@ -70,7 +70,7 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
     }
     const url = `${COMPANY_IDENTITY.url}/${params.locale}/school`;
     const image = getAppSocialArtwork({
-      key: "home",
+      key: "school",
       locale: params.locale,
       publicPath: "school",
     });

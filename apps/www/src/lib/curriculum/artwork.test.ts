@@ -189,9 +189,9 @@ describe("curriculum artwork", () => {
     ).toBeUndefined();
   });
 
-  it("uses the curriculum section image for the index and deeper routes", () => {
+  it("uses the reviewed index artwork and the curriculum section image for deeper routes", () => {
     expect(getCurriculumIndexSocialImage("de", "lehrplaene")).toBe(
-      "/de/og/curriculum/image.png"
+      "/open-graph/curriculum/de-index.png"
     );
     expect(
       getCurriculumRouteSocialImage(

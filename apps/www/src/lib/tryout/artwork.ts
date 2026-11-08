@@ -21,13 +21,14 @@ const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
   ["indonesia", "tryout/indonesia/index"],
 ]);
 
-const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
+/** The reviewed artwork of each TKA subject track, by its stable key, never its localized slug. */
+const TKA_TRACK_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
   (typeof CatalogTrackSchema.Type)["trackKey"],
   ArtworkIdentity
 >([
-  ["compulsory-mathematics", "subject/mathematics"],
-  ["english-language", "subject/english-language"],
-  ["indonesian-language", "subject/indonesian-language"],
+  ["compulsory-mathematics", "tryout/indonesia/tka/compulsory-mathematics"],
+  ["english-language", "tryout/indonesia/tka/english-language"],
+  ["indonesian-language", "tryout/indonesia/tka/indonesian-language"],
 ]);
 
 const TryoutExamArtworkIdentitySchema = Schema.Struct({
@@ -114,7 +115,7 @@ export function getTryoutCountryCatalogArtwork(
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }
 
-/** Resolves subject or year artwork for one signed try-out track. */
+/** Resolves the reviewed year or subject artwork of one signed try-out track, for its card and its social image. */
 export function getTryoutTrackCatalogArtwork(
   locale: Locale,
   source: Pick<
@@ -136,7 +137,7 @@ export function getTryoutTrackCatalogArtwork(
     source.trackKind === "subject"
   ) {
     identity = Option.getOrUndefined(
-      HashMap.get(TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY, source.trackKey)
+      HashMap.get(TKA_TRACK_ARTWORK_BY_TRACK_KEY, source.trackKey)
     );
   }
 

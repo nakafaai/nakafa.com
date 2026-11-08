@@ -122,7 +122,7 @@ describe("try-out artwork", () => {
             trackKey,
             trackKind: "subject",
           })
-        ).toBe(`/open-graph/subject/${locale}-${trackKey}.png`);
+        ).toBe(`/open-graph/tryout/indonesia/tka/${locale}-${trackKey}.png`);
         expect(
           getTryoutTrackCatalogArtwork(locale, {
             countryKey: "indonesia",
@@ -145,7 +145,9 @@ describe("try-out artwork", () => {
           trackKey: "compulsory-mathematics",
           trackKind: "subject",
         })
-      ).toBe(`/open-graph/subject/${locale}-mathematics.png`);
+      ).toBe(
+        `/open-graph/tryout/indonesia/tka/${locale}-compulsory-mathematics.png`
+      );
       for (const trackKey of [
         "mathematics",
         "matematika-wajib",

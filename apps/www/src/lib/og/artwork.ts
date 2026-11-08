@@ -9,11 +9,18 @@ import { getOgUrl } from "@/lib/seo/social";
 const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
 const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
 
-/** Reviewed public artwork grouped by stable, language-neutral identity. */
+/**
+ * Reviewed public artwork grouped by stable, language-neutral identity, each with
+ * the locales it has a file for. A design whose words read the same in every
+ * language, such as the School's or the Quran's, has one English file, which
+ * every locale falls back to.
+ */
 const artworkSources = {
-  "app/ask-nakafa": ALL_ARTWORK_LOCALES,
+  "app/ask-nina": ALL_ARTWORK_LOCALES,
   "app/pricing": ALL_ARTWORK_LOCALES,
+  "app/school": ENGLISH_ARTWORK,
   "curriculum/cambridge-international": ENGLISH_ARTWORK,
+  "curriculum/index": ALL_ARTWORK_LOCALES,
   "curriculum/merdeka": ALL_ARTWORK_LOCALES,
   "curriculum/singapore-moe": ENGLISH_ARTWORK,
   "curriculum/united-states": ENGLISH_ARTWORK,
@@ -25,7 +32,7 @@ const artworkSources = {
   "grade/high-school": ["en", "id"],
   "grade/secondary": ["en", "de"],
   "grade/upper-secondary": ["en", "de"],
-  "quran/index": ALL_ARTWORK_LOCALES,
+  "quran/index": ENGLISH_ARTWORK,
   "subject/ai-ds": ALL_ARTWORK_LOCALES,
   "subject/arabic-language": ENGLISH_ARTWORK,
   "subject/biology": ALL_ARTWORK_LOCALES,
@@ -52,6 +59,9 @@ const artworkSources = {
   "tryout/indonesia/index": ENGLISH_ARTWORK,
   "tryout/indonesia/snbt": ENGLISH_ARTWORK,
   "tryout/indonesia/tka": ENGLISH_ARTWORK,
+  "tryout/indonesia/tka/compulsory-mathematics": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/tka/english-language": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/tka/indonesian-language": ALL_ARTWORK_LOCALES,
 } as const satisfies Readonly<Record<string, readonly ["en", ...Locale[]]>>;
 
 export type ArtworkIdentity = keyof typeof artworkSources;
