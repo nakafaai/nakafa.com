@@ -49,11 +49,11 @@ import {
 } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 import { RoomLengthField } from "@/components/tenant/exams/length";
 import { useExam } from "@/components/tenant/exams/provider";
 import { SITTING_LENGTHS, sittingTimes } from "@/components/tenant/exams/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The length that a dialog opens with, in minutes. */
 const DEFAULT_MINUTES = 60;
@@ -218,8 +218,8 @@ export function ScheduleSitting({
     setRefused([]);
     setPastStart(false);
     startTransition(async () => {
-      await runExamAction(
-        sentAction(() =>
+      await runSchoolWrite(
+        schoolCall(() =>
           schedule({
             closesAt,
             examId: exam.id,
@@ -243,7 +243,7 @@ export function ScheduleSitting({
             ScheduleInvalid: refuseStart,
           })
         ),
-        { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+        { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
       );
     });
   };
