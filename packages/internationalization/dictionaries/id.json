@@ -3725,6 +3725,39 @@
     "classroom-refusal-file-size": {
       "title": "Berkasnya terlalu besar.",
       "description": "Pilih berkas yang lebih kecil."
+    },
+    "island-refused-outside": {
+      "title": "Itu tidak muat di pulaumu."
+    },
+    "island-refused-overlap": {
+      "title": "Sudah ada yang berdiri di sana."
+    },
+    "island-refused-unsupported": {
+      "title": "Ini perlu blok di bawahnya."
+    },
+    "island-refused-carrying": {
+      "title": "Ada yang berdiri di atasnya."
+    },
+    "island-refused-locked": {
+      "title": "Ini terbuka di level yang lebih tinggi."
+    },
+    "island-refused-unaffordable": {
+      "title": "Bintangmu belum cukup untuk ini."
+    },
+    "island-refused-starter": {
+      "title": "Ini bawaan pulaumu, jadi tetap di sini."
+    },
+    "island-refused-missing": {
+      "title": "Benda itu sudah tidak ada."
+    },
+    "island-refused-top": {
+      "title": "Ini sudah di tahap tertinggi."
+    },
+    "island-refused-bottom": {
+      "title": "Ini sudah di tahap pertama."
+    },
+    "island-stale": {
+      "title": "Pulaumu berubah di tempat lain, jadi kami memuatnya lagi."
     }
   },
   "Ai": {
@@ -4520,6 +4553,33 @@
     "next-value": "{stars} Bintang",
     "top": "Level tertinggi",
     "turn-left": "Putar ke kiri",
-    "turn-right": "Putar ke kanan"
+    "turn-right": "Putar ke kanan",
+    "build": "Bangun",
+    "done": "Selesai",
+    "undo": "Urungkan",
+    "redo": "Ulangi",
+    "rotate": "Putar",
+    "move": "Pindah",
+    "remove": "Hapus",
+    "upgrade": "Tingkatkan",
+    "items": "Barang",
+    "price": "{stars} Bintang",
+    "locked": "Level {level}",
+    "item-house": "Rumah",
+    "item-tree": "Pohon",
+    "item-pond": "Kolam",
+    "item-grass": "Rumput",
+    "item-soil": "Tanah",
+    "item-stone": "Batu",
+    "item-sand": "Pasir",
+    "item-planks": "Papan",
+    "item-brick": "Bata",
+    "item-glass": "Kaca",
+    "item-tile": "Genteng merah",
+    "item-slate": "Genteng biru",
+    "item-flowers": "Bunga",
+    "item-bush": "Semak",
+    "item-rock": "Batu besar",
+    "item-lamp": "Lampu"
   }
 }

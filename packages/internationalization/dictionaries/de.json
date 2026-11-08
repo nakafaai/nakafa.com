@@ -3725,6 +3725,39 @@
     "classroom-refusal-file-size": {
       "title": "Die Datei ist zu groß.",
       "description": "Wähle eine kleinere Datei."
+    },
+    "island-refused-outside": {
+      "title": "Das passt nicht auf deine Insel."
+    },
+    "island-refused-overlap": {
+      "title": "Dort steht schon etwas."
+    },
+    "island-refused-unsupported": {
+      "title": "Darunter braucht es Blöcke."
+    },
+    "island-refused-carrying": {
+      "title": "Darauf steht etwas."
+    },
+    "island-refused-locked": {
+      "title": "Das gibt es ab einem höheren Level."
+    },
+    "island-refused-unaffordable": {
+      "title": "Dafür brauchst du mehr Sterne."
+    },
+    "island-refused-starter": {
+      "title": "Das gehört zu deiner Insel und bleibt."
+    },
+    "island-refused-missing": {
+      "title": "Dieses Teil ist nicht mehr da."
+    },
+    "island-refused-top": {
+      "title": "Es hat schon seine höchste Stufe."
+    },
+    "island-refused-bottom": {
+      "title": "Es hat schon seine erste Stufe."
+    },
+    "island-stale": {
+      "title": "Deine Insel hat sich anderswo geändert, wir haben sie neu geladen."
     }
   },
   "Ai": {
@@ -4520,6 +4553,33 @@
     "next-value": "{stars} Sterne",
     "top": "Höchstes Level",
     "turn-left": "Nach links drehen",
-    "turn-right": "Nach rechts drehen"
+    "turn-right": "Nach rechts drehen",
+    "build": "Bauen",
+    "done": "Fertig",
+    "undo": "Rückgängig",
+    "redo": "Wiederholen",
+    "rotate": "Drehen",
+    "move": "Verschieben",
+    "remove": "Entfernen",
+    "upgrade": "Ausbauen",
+    "items": "Teile",
+    "price": "{stars} Sterne",
+    "locked": "Level {level}",
+    "item-house": "Haus",
+    "item-tree": "Baum",
+    "item-pond": "Teich",
+    "item-grass": "Gras",
+    "item-soil": "Erde",
+    "item-stone": "Stein",
+    "item-sand": "Sand",
+    "item-planks": "Bretter",
+    "item-brick": "Ziegel",
+    "item-glass": "Glas",
+    "item-tile": "Rote Dachziegel",
+    "item-slate": "Blaue Dachziegel",
+    "item-flowers": "Blumen",
+    "item-bush": "Busch",
+    "item-rock": "Felsen",
+    "item-lamp": "Laterne"
   }
 }

@@ -10392,6 +10392,48 @@ export declare const api: {
   };
   island: {
     mutations: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          operations: Array<
+            | {
+                _tag: "place";
+                at: { x: number; y: number; z: number };
+                item:
+                  | "house"
+                  | "tree"
+                  | "pond"
+                  | "grass"
+                  | "soil"
+                  | "stone"
+                  | "sand"
+                  | "planks"
+                  | "brick"
+                  | "glass"
+                  | "tile"
+                  | "slate"
+                  | "flowers"
+                  | "bush"
+                  | "rock"
+                  | "lamp";
+                rotation: number;
+                stage: number;
+              }
+            | {
+                _tag: "move";
+                from: { x: number; y: number; z: number };
+                rotation: number;
+                to: { x: number; y: number; z: number };
+              }
+            | { _tag: "remove"; at: { x: number; y: number; z: number } }
+            | { _tag: "upgrade"; at: { x: number; y: number; z: number } }
+            | { _tag: "downgrade"; at: { x: number; y: number; z: number } }
+          >;
+          version: number;
+        },
+        { version: number }
+      >;
       open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
       share: FunctionReference<
         "mutation",

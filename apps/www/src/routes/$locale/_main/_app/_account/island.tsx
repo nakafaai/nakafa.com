@@ -3,6 +3,7 @@ import island from "@repo/backend/confect/_generated/refs/island";
 import { growthOf } from "@repo/backend/confect/island/level";
 import { STARTER_LAYOUT } from "@repo/backend/confect/island/starter";
 import { createFileRoute } from "@tanstack/react-router";
+import { Option } from "effect";
 import { IslandFrame } from "@/components/island/frame";
 import { IslandHeader } from "@/components/island/header";
 import { OpenIsland } from "@/components/island/open";
@@ -22,7 +23,12 @@ export const Route = createFileRoute("/$locale/_main/_app/_account/island")({
 });
 
 /** The island a learner owns before their first visit opens it: the starter set, nothing earned. */
-const STARTER_ISLAND = { layout: STARTER_LAYOUT, lifetime: 0, stars: 0 };
+const STARTER_ISLAND = {
+  layout: STARTER_LAYOUT,
+  lifetime: 0,
+  stars: 0,
+  version: 0,
+};
 
 /**
  * The signed-in learner's island, in the app shell (ADR 0042). The page reads
@@ -38,7 +44,15 @@ function IslandPage() {
       : STARTER_ISLAND;
   return (
     <IslandContext
-      value={{ layout: shown.layout, size: growthOf(shown.lifetime).size }}
+      value={{
+        layout: shown.layout,
+        owner: Option.some({
+          level: growthOf(shown.lifetime).level,
+          stars: shown.stars,
+          version: shown.version,
+        }),
+        size: growthOf(shown.lifetime).size,
+      }}
     >
       <OpenIsland />
       <PageFrame width="page">

@@ -1,10 +1,12 @@
 import type { Placement } from "@repo/backend/confect/island/layout";
 import { Array as Arr, Record } from "effect";
 import { useMemo } from "react";
+import { IslandPicker } from "@/components/island/pick";
 import { Wildlife } from "@/components/island/sprites";
+import { useTools } from "@/components/island/tools";
 import { VoxelMesh } from "@/components/island/voxels";
 import { CLOUD_SHAPES, CLOUD_SIZE } from "@/lib/island/models/cloud";
-import { basinsOf, piecesOf, wildlifeOf } from "@/lib/island/pieces";
+import { basinsOf, floraOf, piecesOf, wildlifeOf } from "@/lib/island/pieces";
 import { BODY_DEPTH, drawTerrain, VOXELS_PER_CELL } from "@/lib/island/terrain";
 import { drawModel } from "@/lib/island/voxel";
 
@@ -67,6 +69,8 @@ export function IslandScene({
   );
   const cloud = useMemo(() => drawModel(CLOUD_SIZE, CLOUD_SHAPES, 5), []);
   const animals = useMemo(() => wildlifeOf(layout), [layout]);
+  const flora = useMemo(() => floraOf(layout), [layout]);
+  const building = useTools((state) => state.building);
   return (
     <>
       <group position={[size / 2, 0, size / 2]} rotation={[0, angle, 0]}>
@@ -88,7 +92,8 @@ export function IslandScene({
               placements={kind.pieces}
             />
           ))}
-          <Wildlife animals={animals} />
+          <Wildlife animals={animals} flora={flora} />
+          {building ? <IslandPicker /> : null}
         </group>
       </group>
       <VoxelMesh grid={cloud} placements={cloudPlacements(size)} />

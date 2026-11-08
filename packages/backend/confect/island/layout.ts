@@ -9,7 +9,7 @@ import {
 } from "effect";
 
 /** The highest layer a placement may stand on, counted from the ground. */
-const MAX_HEIGHT = 8;
+export const MAX_HEIGHT = 8;
 
 /** The bytes of one stored placement (ADR 0042, D4). */
 const RECORD_BYTES = 10;

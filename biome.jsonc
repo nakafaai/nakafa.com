@@ -249,6 +249,19 @@
       }
     },
     {
+      // Three Fiber's <mesh> is a scene object, not a DOM element: its press
+      // handlers come from the canvas's own pointer events, so the DOM-only
+      // rule that asks a static element for a role cannot apply.
+      "includes": ["apps/www/src/components/island/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off"
+          }
+        }
+      }
+    },
+    {
       // Confect module filenames preserve deployed function-path contracts.
       "includes": ["packages/backend/confect/**/*.ts"],
       "linter": {

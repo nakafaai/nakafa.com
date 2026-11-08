@@ -166,4 +166,57 @@ describe("island queries and mutations", () => {
       ).toBeNull();
     })
   );
+
+  it.effect(
+    "applies a batch of changes under the next version, and refuses a stale one or a broken one whole",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* islandWorld();
+        yield* world.owner.mutation(island.mutations.open, {
+          timeZone: JAKARTA,
+        });
+        yield* Effect.promise(() =>
+          world.t.run(async (ctx) => {
+            const own = await ctx.db.query("islands").first();
+            if (own) {
+              await ctx.db.patch("islands", own._id, { lifetime: 20 });
+            }
+          })
+        );
+        const placed = yield* world.owner.mutation(island.mutations.edit, {
+          operations: [
+            {
+              _tag: "place",
+              at: { x: 0, y: 5, z: 0 },
+              item: "grass",
+              rotation: 0,
+              stage: 0,
+            },
+          ],
+          version: 0,
+        });
+        expect(placed).toEqual({ version: 1 });
+        const own = yield* world.owner.query(island.queries.own, {});
+        expect(own).toMatchObject({ stars: 18, version: 1 });
+        expect(own?.layout).toHaveLength(3);
+        const stale = yield* world.owner
+          .mutation(island.mutations.edit, { operations: [], version: 0 })
+          .pipe(Effect.flip);
+        expect(stale).toMatchObject({ _tag: "IslandStale", version: 1 });
+        const refused = yield* world.owner
+          .mutation(island.mutations.edit, {
+            operations: [{ _tag: "remove", at: { x: 3, y: 2, z: 0 } }],
+            version: 1,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "BuildRefused",
+          index: 0,
+          reason: "starter",
+        });
+        expect(
+          (yield* world.owner.query(island.queries.own, {}))?.version
+        ).toBe(1);
+      })
+  );
 });
