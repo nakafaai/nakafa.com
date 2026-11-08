@@ -74,7 +74,8 @@ const searchesEveryPage = Effect.fn("NakafaE2E.searchesEveryPage")(function* (
     // The server's answers are held back, so no page after the first arrives.
     changes.hold();
     await search.fill(OLDEST_WORD);
-    await page.waitForTimeout(1500);
+    // The server has answered the new search, and the page has not been given the answer.
+    await expect.poll(() => changes.heldAnswers()).toBeGreaterThan(0);
     await expect(memoryRow(page, OLDEST)).toHaveCount(0);
     await expect(page.getByText(NO_RESULT)).toBeHidden();
 
@@ -190,10 +191,10 @@ const keepsEditorWhileSearching = Effect.fn(
 
     // The caret is where it was, and the history holds both steps.
     await editor.focus();
-    await page.waitForTimeout(600);
+    await page.clock.runFor(600);
     await page.keyboard.type("!");
     await expect(editor).toHaveText(`${OLDEST_REVISED}${EXTENDED}!`);
-    await page.waitForTimeout(600);
+    await page.clock.runFor(600);
     await page.keyboard.press("ControlOrMeta+z");
     await expect(editor).toHaveText(`${OLDEST_REVISED}${EXTENDED}`);
     await page.keyboard.press("ControlOrMeta+z");

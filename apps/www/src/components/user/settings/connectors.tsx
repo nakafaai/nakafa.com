@@ -38,11 +38,7 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { UserSettingsHeader } from "@/components/user/settings/header";
 import {
   type PreloadedPage,
@@ -117,8 +113,8 @@ export function AccountDirectory({
     <ConnectorActionsContext
       value={{
         connect: (connector) =>
-          runForumCall(
-            forumCall(() =>
+          runSchoolWrite(
+            schoolCall(() =>
               start({
                 connector,
                 redirectUri: connectCallback(window.location, null),
@@ -128,17 +124,15 @@ export function AccountDirectory({
               Effect.tap(({ url }) =>
                 Effect.sync(() => window.location.assign(url))
               )
-            ),
-            toastForumFailure
+            )
           ),
         disconnect: (connection) =>
-          runForumCall(
-            forumCall(() =>
+          runSchoolWrite(
+            schoolCall(() =>
               disconnect.withOptimisticUpdate(disconnectOwnUpdate)({
                 connectionId: connection.id,
               })
-            ),
-            toastForumFailure
+            )
           ),
       }}
     >
