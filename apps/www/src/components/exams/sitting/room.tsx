@@ -23,22 +23,16 @@ export function JoinRoomDialog({
   readonly open: boolean;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
 
   return (
     <ResponsiveDialog
-      description={t("join-description")}
-      footer={
-        <>
-          <Button onClick={onChangeToken} type="button" variant="outline">
-            <HugeIcons icon={Key01Icon} />
-            {t("change-token")}
-          </Button>
-          <Button onClick={() => onOpenChange(false)} type="button">
-            {common("close")}
-          </Button>
-        </>
+      action={
+        <Button onClick={onChangeToken} type="button" variant="outline">
+          <HugeIcons icon={Key01Icon} />
+          {t("change-token")}
+        </Button>
       }
+      description={t("join-description")}
       open={open}
       setOpen={onOpenChange}
       title={t("join-title")}

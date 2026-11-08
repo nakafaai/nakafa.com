@@ -187,10 +187,10 @@ function ConnectAction() {
       <TooltipTrigger
         render={
           <Button
-            aria-label={label}
             disabled={isConnecting}
             onClick={() => startConnecting(() => connect(service.connector))}
             size="icon-sm"
+            tooltip={label}
             type="button"
             variant="outline"
           >

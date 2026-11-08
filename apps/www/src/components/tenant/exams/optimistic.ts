@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/confect/exams/scoring";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Option } from "effect";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /** One exam with its questions in order, as the editor reads it. */
 export type ExamView = Ref.Returns<typeof exams.exams.open>;
@@ -321,22 +322,14 @@ export const insertDraftExam =
     draft: Pick<ListedExam, "createdAt" | "id" | "title">
   ): OptimisticUpdate<typeof exams.exams.create> =>
   (localStore, args) => {
-    for (const query of localStore.getAllQueries(exams.exams.list)) {
-      if (
-        Option.isSome(query.value) &&
-        query.args.paginationOpts.cursor === null
-      ) {
-        localStore.setQuery(
-          exams.exams.list,
-          query.args,
-          Option.some({
-            ...query.value.value,
-            page: [
+    changeLoaded(localStore, exams.exams.list, (value, loaded) =>
+      loaded.paginationOpts.cursor === null
+        ? Option.some(
+            withPage(value, (page) => [
               { ...draft, canEdit: true, questionCount: 1, scope: args.scope },
-              ...query.value.value.page,
-            ],
-          })
-        );
-      }
-    }
+              ...page,
+            ])
+          )
+        : Option.none()
+    );
   };

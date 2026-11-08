@@ -9,9 +9,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -60,8 +58,8 @@ export function TenantOutsiderActions({
                   render={
                     <Button
                       aria-busy={isChecking || undefined}
-                      aria-label={common("more-actions")}
                       size="icon"
+                      tooltip={common("more-actions")}
                     />
                   }
                 >
@@ -73,16 +71,17 @@ export function TenantOutsiderActions({
               {common("more-actions")}
             </TooltipContent>
           </Tooltip>
-          <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => startChecking(() => router.invalidate())}
-              >
-                <HugeIcons icon={Refresh01Icon} />
-                {t("outsider-check-again")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+          <DropdownMenuContent
+            align="end"
+            className="w-60"
+            label={common("menu-actions")}
+          >
+            <DropdownMenuItem
+              icon={Refresh01Icon}
+              onClick={() => startChecking(() => router.invalidate())}
+            >
+              {t("outsider-check-again")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>

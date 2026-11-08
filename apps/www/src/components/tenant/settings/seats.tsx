@@ -43,7 +43,6 @@ export function SchoolSeatsDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const locale = useLocale();
   const { slug } = useTenant();
   const [offer, setOffer] = useState<PolarSeatOffer>("school.seat.month");
@@ -69,29 +68,20 @@ export function SchoolSeatsDialog({
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={seats < 1 || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={Wallet01Icon} />
+          {t("billing-checkout")}
+        </Button>
+      }
       description={t("billing-seats-description", {
         seats: formatCount(seats, locale),
       })}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={seats < 1 || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={Wallet01Icon} />
-            {t("billing-checkout")}
-          </Button>
-        </>
-      }
       open={open}
       setOpen={setOpen}
       title={t("billing-seats-title")}

@@ -2,8 +2,9 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer } from "effect";
+import { Effect, FileSystem, Layer, Option } from "effect";
 import { HttpServerRequest, HttpServerResponse } from "effect/http";
+import { TestClock } from "effect/testing";
 import { answerShelfRequest } from "@/lib/content/store/shelf";
 
 const KEY = "b".repeat(64);
@@ -41,6 +42,29 @@ describe("answerShelfRequest", () => {
         '{"value":"lesson"}'
       );
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "marks an answered entry as used by this build, and leaves the others",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped();
+        const other = "c".repeat(64);
+        for (const key of [KEY, other]) {
+          yield* answer(directory, `/${key}`, { body: "{}", method: "PUT" });
+          yield* fs.utimes(`${directory}/${key}`, 0, 0);
+        }
+
+        const readAt = 1_794_000_000_000;
+        yield* TestClock.setTime(readAt);
+        yield* answer(directory, `/${KEY}`);
+
+        const used = yield* fs.stat(`${directory}/${KEY}`);
+        const left = yield* fs.stat(`${directory}/${other}`);
+        expect(Option.getOrThrow(used.mtime).getTime()).toBe(readAt);
+        expect(Option.getOrThrow(left.mtime).getTime()).toBe(0);
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
   );
 
   it.effect("answers 404 for an entry it does not keep", () =>

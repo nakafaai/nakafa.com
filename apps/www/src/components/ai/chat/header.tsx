@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -120,13 +119,12 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
             <DropdownMenuTrigger
               render={
                 <Button
-                  aria-label={tCommon("more-actions")}
                   ref={moreActions}
                   size="icon"
+                  tooltip={tCommon("more-actions")}
                   variant="outline"
                 >
                   <HugeIcons icon={MoreHorizontalIcon} />
-                  <span className="sr-only">{tCommon("more-actions")}</span>
                 </Button>
               }
             />
@@ -134,34 +132,31 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
               align="end"
               className="w-56"
               finalFocus={menuFinalFocus}
+              label={tCommon("menu-actions")}
             >
               <DropdownMenuGroup>
-                <DropdownMenuLabel>{tCommon("menu-actions")}</DropdownMenuLabel>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={handleEdit}>
-                    <HugeIcons icon={Edit01Icon} />
-                    {t("rename-chat")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setConfirmShare(true)}
-                    onFocus={warmShare}
-                    onPointerDown={warmShare}
-                    onPointerEnter={warmShare}
-                  >
-                    <HugeIcons icon={LinkForwardIcon} />
-                    {t("share-chat")}
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    onClick={() => setConfirmDelete(true)}
-                    variant="destructive"
-                  >
-                    <HugeIcons icon={Delete02Icon} />
-                    {t("delete-chat")}
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
+                <DropdownMenuItem icon={Edit01Icon} onClick={handleEdit}>
+                  {t("rename-chat")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  icon={LinkForwardIcon}
+                  onClick={() => setConfirmShare(true)}
+                  onFocus={warmShare}
+                  onPointerDown={warmShare}
+                  onPointerEnter={warmShare}
+                >
+                  {t("share-chat")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  icon={Delete02Icon}
+                  onClick={() => setConfirmDelete(true)}
+                  variant="destructive"
+                >
+                  {t("delete-chat")}
+                </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -187,16 +182,16 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
-                aria-label={tCommon("cancel")}
                 onClick={closeEditor}
-                size="icon-xs"
+                size="icon-sm"
+                tooltip={tCommon("cancel")}
               >
                 <HugeIcons icon={Cancel01Icon} />
               </InputGroupButton>
               <InputGroupButton
-                aria-label={t("confirm")}
                 onClick={handleSave}
-                size="icon-xs"
+                size="icon-sm"
+                tooltip={t("confirm")}
               >
                 <HugeIcons icon={Tick01Icon} />
               </InputGroupButton>

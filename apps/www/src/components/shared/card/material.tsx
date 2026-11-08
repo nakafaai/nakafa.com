@@ -64,15 +64,12 @@ export function CardMaterial({ material }: Props) {
             </CardDescription>
           </div>
           <Button
-            aria-label={isOpen ? "Close content" : "Open content"}
             className="group shrink-0"
             onClick={toggle}
             size="icon"
+            tooltip={isOpen ? "Close content" : "Open content"}
             variant="ghost"
           >
-            <span className="sr-only">
-              {isOpen ? "Close content" : "Open content"}
-            </span>
             <HugeIcons
               className={cn(
                 "text-muted-foreground size-4 transition-transform",

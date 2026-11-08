@@ -47,13 +47,10 @@ export const readSitemapPageDescriptors = Effect.fn(
     readPublishedPageCatalog(),
     readPublishedQuranCatalog(),
   ]);
+  // The Quran catalog is keyed by its snapshot, which the store proved active, so
+  // it may carry the release that last changed the Quran.
   yield* decodeContentReleasePin(
     pageCatalog.activeReleaseId,
-    activeReleaseId,
-    identity
-  );
-  yield* decodeContentReleasePin(
-    quranCatalog.activeReleaseId,
     activeReleaseId,
     identity
   );

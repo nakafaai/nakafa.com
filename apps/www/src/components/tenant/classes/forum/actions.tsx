@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -46,7 +45,6 @@ import { renameDiscussionUpdate } from "@/components/tenant/classes/forum/rename
 import { messageToolbarVariants } from "@/components/tenant/classes/forum/reveal";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import { ReactButton } from "@/components/tenant/classes/forum/tallies";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { LineDialog } from "@/components/tenant/line";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -164,18 +162,16 @@ function ThreadButton({ message }: { message: ForumMessage }) {
   };
 
   return (
-    <IconTip label={t("reply-thread")}>
-      <Button
-        aria-busy={starting || undefined}
-        aria-label={t("reply-thread")}
-        disabled={isPending(message) || starting}
-        onClick={press}
-        size="icon"
-        variant="ghost"
-      >
-        <Spinner icon={BubbleChatIcon} isLoading={starting} />
-      </Button>
-    </IconTip>
+    <Button
+      aria-busy={starting || undefined}
+      disabled={isPending(message) || starting}
+      onClick={press}
+      size="icon"
+      tooltip={t("reply-thread")}
+      variant="ghost"
+    >
+      <Spinner icon={BubbleChatIcon} isLoading={starting} />
+    </Button>
   );
 }
 
@@ -220,51 +216,51 @@ export function MessageMenu({
   return (
     <>
       <DropdownMenu>
-        <IconTip label={common("more-actions")}>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                aria-label={common("more-actions")}
-                disabled={isPending(message)}
-                size="icon"
-                variant="ghost"
-              />
-            }
-          >
-            <HugeIcons icon={MoreHorizontalIcon} />
-          </DropdownMenuTrigger>
-        </IconTip>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-            {words === "" ? null : (
-              <DropdownMenuItem onClick={copy}>
-                <HugeIcons icon={Copy01Icon} />
-                {t("message-copy")}
-              </DropdownMenuItem>
-            )}
-            {editable ? (
-              <DropdownMenuItem onClick={onEdit}>
-                <HugeIcons icon={PencilEdit02Icon} />
-                {t("message-edit")}
-              </DropdownMenuItem>
-            ) : null}
-            {discussion === null ? null : (
-              <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-                <HugeIcons icon={TextFontIcon} />
-                {t("discussion-rename")}
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuGroup>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              disabled={isPending(message)}
+              size="icon"
+              tooltip={common("more-actions")}
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons icon={MoreHorizontalIcon} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-48"
+          label={common("menu-actions")}
+        >
+          {words === "" ? null : (
+            <DropdownMenuItem icon={Copy01Icon} onClick={copy}>
+              {t("message-copy")}
+            </DropdownMenuItem>
+          )}
+          {editable ? (
+            <DropdownMenuItem icon={PencilEdit02Icon} onClick={onEdit}>
+              {t("message-edit")}
+            </DropdownMenuItem>
+          ) : null}
+          {discussion === null ? null : (
+            <DropdownMenuItem
+              icon={TextFontIcon}
+              onClick={() => dialogs.show("rename")}
+            >
+              {t("discussion-rename")}
+            </DropdownMenuItem>
+          )}
+
           {scope.canManage ? (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
+                  icon={ViewOffSlashIcon}
                   onClick={() => dialogs.show("hide")}
                   variant="destructive"
                 >
-                  <HugeIcons icon={ViewOffSlashIcon} />
                   {t("message-hide")}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -320,7 +316,6 @@ function HideMessage({
 }) {
   const t = useTranslations("Classroom");
   const scope = useChannelScope();
-  const common = useTranslations("Common");
   const hide = useMutation(classroom.forum.messages.hide);
 
   const confirm = () => {
@@ -339,17 +334,12 @@ function HideMessage({
 
   return (
     <ResponsiveDialog
-      description={t("hide-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button onClick={confirm} variant="destructive">
-            {t("message-hide")}
-          </Button>
-        </>
+      action={
+        <Button onClick={confirm} variant="destructive">
+          {t("message-hide")}
+        </Button>
       }
+      description={t("hide-description")}
       open={open}
       setOpen={setOpen}
       title={t("hide-title")}

@@ -102,11 +102,11 @@ export function CodeBlockDownloadButton({
 
   return (
     <Button
-      aria-label={t("download-file")}
       className={cn("shrink-0", className)}
       onClick={downloadCode}
       size="icon"
       title={t("download-file")}
+      tooltip={t("download-file")}
       variant="ghost"
       {...props}
     >
@@ -175,11 +175,11 @@ export function CodeBlockCopyButton({
 
   return (
     <Button
-      aria-label={t("copy-code")}
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
       title={t("copy-code")}
+      tooltip={t("copy-code")}
       variant="ghost"
       {...props}
     >
