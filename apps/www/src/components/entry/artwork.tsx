@@ -10,7 +10,7 @@ import { Suspense } from "react";
  * the entry routes' first JavaScript, and nothing stands in while it loads.
  */
 const DeferredPool = lazy(() =>
-  import("@repo/design-system/components/pool/pool").then((module) => ({
+  import("@repo/design-system/components/pool/scene").then((module) => ({
     default: module.Pool,
   }))
 );

@@ -1,4 +1,4 @@
-import { standingOf } from "@repo/backend/confect/classroom/tasks/task";
+import { standingOf } from "@repo/backend/confect/classroom/tasks/schema";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useClassScope } from "@/components/tenant/classes/scope";

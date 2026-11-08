@@ -1,7 +1,7 @@
-import { reportUncaughtRequestError } from "@repo/analytics/server-reporting";
+import { reportUncaughtRequestError } from "@repo/analytics/reporting";
 import { handleStartError } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
-import type { NotFoundPage } from "@/lib/routing/not-found";
+import type { NotFoundPage } from "@/lib/routing/missing";
 
 /**
  * The router's answer to one request, which may fail with the error Start throws.

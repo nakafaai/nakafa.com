@@ -11,8 +11,8 @@ import { Effect, Layer, Schema } from "effect";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { activateTestRelease } from "@/test/active";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { testArticleProjection } from "@/test/content-article";
-import { previewProjection } from "@/test/content-preview";
+import { previewProjection } from "@/test/manifest";
+import { testArticleProjection } from "@/test/published/article";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());

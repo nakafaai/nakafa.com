@@ -43,7 +43,7 @@ import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
   NotFoundPageData,
   readNotFoundPageLocale,
-} from "@/lib/routing/not-found";
+} from "@/lib/routing/missing";
 import { paintFirst } from "@/lib/routing/paint";
 import { SCROLL_AREA_PROPERTIES_SCRIPT } from "@/lib/scroll/prepaint";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";

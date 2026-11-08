@@ -9,7 +9,7 @@ import {
   PinOffIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { PostText } from "@repo/backend/confect/classroom/posts/post";
+import { PostText } from "@repo/backend/confect/classroom/posts/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,

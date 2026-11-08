@@ -6,8 +6,8 @@ import { useTranslations } from "use-intl";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { TableViews } from "@/components/shared/table/views";
 import { ClassHeader } from "@/components/tenant/classes/header";
+import { ClassHome } from "@/components/tenant/classes/home/board";
 import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
-import { ClassHome } from "@/components/tenant/classes/home/home";
 import { NewPostPoll } from "@/components/tenant/classes/home/poll";
 
 /**

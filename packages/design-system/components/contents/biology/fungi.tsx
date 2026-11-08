@@ -5,7 +5,7 @@ import {
   BiologyLabFrame,
   type BiologyLabProps,
   type BiologySceneProps,
-} from "@repo/design-system/components/contents/biology/lab-frame";
+} from "@repo/design-system/components/contents/biology/lab";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import { BiologyTube } from "@repo/design-system/components/contents/biology/parts";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";

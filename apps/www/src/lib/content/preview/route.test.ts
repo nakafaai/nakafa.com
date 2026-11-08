@@ -24,8 +24,8 @@ import {
   previewConfig,
   previewDocument,
   previewRoute,
-} from "@/test/content-preview";
-import { articlePendingManifest } from "@/test/preview-article";
+} from "@/test/manifest";
+import { articlePendingManifest } from "@/test/preview";
 
 vi.mock("@/lib/content/preview/manifest", () => ({
   readPreviewManifest: vi.fn(),
