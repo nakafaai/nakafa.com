@@ -39,11 +39,23 @@ class MathLiveUnavailable extends Schema.TaggedError<MathLiveUnavailable>()(
   { reason: Schema.String }
 ) {}
 
-/** Loads MathLive. A failed load leaves the LaTeX view working, so the caller takes no failure. */
+/**
+ * Loads MathLive. A failed load leaves the LaTeX view working, so the caller takes no failure. MathLive
+ * would fetch its fonts and its feedback sounds from folders beside its own script, which the bundle does
+ * not hold, so each fetch would fail in the console: the page already carries KaTeX's fonts
+ * (`styles/katex.css`), and the field plays no sound.
+ */
 const loadMathLive = Effect.tryPromise({
   catch: (cause) => new MathLiveUnavailable({ reason: String(cause) }),
   try: () => import("mathlive"),
-});
+}).pipe(
+  Effect.tap((mathlive) =>
+    Effect.sync(() => {
+      mathlive.MathfieldElement.fontsDirectory = null;
+      mathlive.MathfieldElement.soundsDirectory = null;
+    })
+  )
+);
 
 /**
  * The MathLive field, made once MathLive has loaded, in a box drawn like a text field. The field and

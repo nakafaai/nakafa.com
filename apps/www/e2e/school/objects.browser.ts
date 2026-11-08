@@ -166,6 +166,8 @@ test("two teachers edit one question at once, one through the table's bar and on
   await Promise.all([
     teacher.keyboard.type(" dan guru"),
     (async () => {
+      // The owner's caret goes back into the table, where its bar stands.
+      await ownerPrompt.locator("th").first().click();
       await ownerBar
         .getByRole("button", { exact: true, name: "Column right" })
         .click();
