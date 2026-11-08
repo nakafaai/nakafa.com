@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createLearnerAccount,
   openLearnerAccount,
-  type RunConvex,
 } from "@repo/backend/scripts/content/acceptance/account";
+import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
@@ -22,43 +22,44 @@ const LIFETIME = Duration.minutes(30);
 const LEARNER_EMAIL = /^learner-[0-9a-f]{16}@acceptance\.invalid$/u;
 
 /** What each command carries that the tests read back. */
-const CommandInput = Schema.fromJsonString(
-  Schema.Struct({
-    doc: Schema.optional(Schema.Struct({ _id: Schema.String })),
-    input: Schema.optional(
-      Schema.Struct({
-        data: Schema.optional(
+const CommandInput = Schema.Struct({
+  doc: Schema.optional(Schema.Struct({ _id: Schema.String })),
+  input: Schema.optional(
+    Schema.Struct({
+      data: Schema.optional(
+        Schema.Struct({
+          createdAt: Schema.Finite,
+          email: Schema.optional(Schema.String),
+          expiresAt: Schema.optional(Schema.Finite),
+          token: Schema.optional(Schema.String),
+          userId: Schema.optional(Schema.String),
+        })
+      ),
+      model: Schema.String,
+      where: Schema.optional(
+        Schema.Array(
           Schema.Struct({
-            createdAt: Schema.Finite,
-            email: Schema.optional(Schema.String),
-            expiresAt: Schema.optional(Schema.Finite),
-            token: Schema.optional(Schema.String),
-            userId: Schema.optional(Schema.String),
+            field: Schema.String,
+            operator: Schema.String,
+            value: Schema.String,
           })
-        ),
-        model: Schema.String,
-        where: Schema.optional(
-          Schema.Array(
-            Schema.Struct({
-              field: Schema.String,
-              operator: Schema.String,
-              value: Schema.String,
-            })
-          )
-        ),
-      })
-    ),
-  })
-);
+        )
+      ),
+    })
+  ),
+});
 
-/** The arguments of one call to a runner: operation, CLI arguments, secrets. */
+/** The arguments of one call to a runner: operation, the call, secrets. */
 type Call = Parameters<RunConvex<string, never>>;
 
 /**
  * A runner that answers the way the Better Auth adapter does and records each
  * call. The operations in `failing` fail with their own name.
  */
-function recordingRunner(failing: readonly string[] = [], lookup = "") {
+function recordingRunner(
+  failing: readonly string[] = [],
+  lookup: unknown = null
+) {
   const calls = MutableList.make<Call>();
   const run: RunConvex<string, never> = (...call) => {
     MutableList.append(calls, call);
@@ -67,21 +68,21 @@ function recordingRunner(failing: readonly string[] = [], lookup = "") {
       return Effect.fail(`${operation} failed`);
     }
     if (operation === "Learner account") {
-      return Effect.succeed('{"_creationTime":1,"_id":"user-1","extra":true}');
+      return Effect.succeed({ _creationTime: 1, _id: "user-1", extra: true });
     }
     if (operation === "Learner session") {
-      return Effect.succeed('{"_creationTime":2,"_id":"session-1"}');
+      return Effect.succeed({ _creationTime: 2, _id: "session-1" });
     }
     if (operation === "Learner account lookup") {
       return Effect.succeed(lookup);
     }
-    return Effect.succeed("null");
+    return Effect.succeed(null);
   };
   return { calls, run };
 }
 
-const readInput = ([, args]: Call) =>
-  Schema.decodeEffect(CommandInput)(Option.getOrThrow(Arr.last(args)));
+const readInput = ([, call]: Call) =>
+  Schema.decodeUnknownEffect(CommandInput)(call.args);
 
 /** The operations of the calls a runner recorded, in order. */
 const operations = (calls: MutableList.MutableList<Call>) =>
@@ -95,7 +96,7 @@ describe("opening a learner account", () => {
     () =>
       Effect.gen(function* () {
         yield* TestClock.setTime(NOW);
-        const { calls, run } = recordingRunner([], '{"_id":"user-7"}');
+        const { calls, run } = recordingRunner([], { _id: "user-7" });
 
         const account = yield* openLearnerAccount(run, LIFETIME, ADDRESS);
 
@@ -160,10 +161,12 @@ describe("synthetic learner account", () => {
           "Learner session",
           "Learner profile",
         ]);
-        expect(Arr.map(made, ([, args]) => Arr.dropRight(args, 1))).toEqual([
-          ["run", "--component", "betterAuth", "adapter:create"],
-          ["run", "--component", "betterAuth", "adapter:create"],
-          ["run", "auth/lifecycle:onCreate"],
+        expect(
+          Arr.map(made, ([, call]) => [call.component, call.path])
+        ).toEqual([
+          ["betterAuth", "adapter:create"],
+          ["betterAuth", "adapter:create"],
+          [undefined, "auth/lifecycle:onCreate"],
         ]);
         const [user, session, profile] = yield* Effect.forEach(made, readInput);
         expect(user?.input?.model).toBe("user");
@@ -235,7 +238,7 @@ describe("synthetic learner account", () => {
           return Effect.succeed(
             operation === "Learner session"
               ? "Uncaught ConvexError"
-              : '{"_creationTime":1,"_id":"user-1"}'
+              : { _creationTime: 1, _id: "user-1" }
           );
         };
 
@@ -267,12 +270,10 @@ describe("synthetic learner account", () => {
         "Learner account removal",
       ]);
       const removal = Option.getOrThrow(Arr.get(MutableList.toArray(calls), 2));
-      expect(Arr.dropRight(removal[1], 1)).toEqual([
-        "run",
-        "--component",
-        "betterAuth",
-        "adapter:deleteOne",
-      ]);
+      expect(removal[1]).toMatchObject({
+        component: "betterAuth",
+        path: "adapter:deleteOne",
+      });
       expect((yield* readInput(removal)).input).toEqual({
         model: "user",
         where: [{ field: "_id", operator: "eq", value: "user-1" }],

@@ -42,7 +42,6 @@ import {
 import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
 import {
   SchemeVersionAdd,
   SchemeVersionDialog,
@@ -53,8 +52,7 @@ import {
   type SchemeVersion,
   SchemeVersionsContext,
 } from "@/components/tenant/settings/versions";
-
-const SOURCE = "components/tenant/settings/grading";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many versions one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -284,7 +282,9 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
             onClick={() => {
               dialogs.close();
               startTransition(() =>
-                saveSchool(() => remove({ schemeId: version.id, slug }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => remove({ schemeId: version.id, slug }))
+                )
               );
             }}
             variant="destructive"
