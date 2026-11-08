@@ -20734,6 +20734,12 @@ export declare const internal: {
         { email: string; slug: string },
         null
       >;
+      invitation: FunctionReference<
+        "query",
+        "internal",
+        { invite: Id<"tenantInvites">; person: Id<"tenantPeople"> },
+        boolean
+      >;
       student: FunctionReference<
         "mutation",
         "internal",
@@ -20750,6 +20756,12 @@ export declare const internal: {
           slug: string;
         },
         { invite: Id<"tenantInvites">; person: Id<"tenantPeople"> }
+      >;
+      user: FunctionReference<
+        "query",
+        "internal",
+        { authId: string },
+        Id<"users">
       >;
     };
   };
