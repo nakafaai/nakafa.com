@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsMemory } from "@/components/user/settings/memory/view";
+import { UserSettingsPage } from "@/components/user/settings/section";
 import { privateHead } from "@/lib/account/head";
 import { memoryScreenFn } from "@/lib/account/settings.functions";
 
@@ -14,5 +15,9 @@ export const Route = createFileRoute(
 
 function MemoryPage() {
   const { first, now, paused } = Route.useLoaderData();
-  return <UserSettingsMemory first={first} now={now} paused={paused} />;
+  return (
+    <UserSettingsPage>
+      <UserSettingsMemory first={first} now={now} paused={paused} />
+    </UserSettingsPage>
+  );
 }

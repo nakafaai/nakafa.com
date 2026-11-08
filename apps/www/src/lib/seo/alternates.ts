@@ -1,5 +1,6 @@
 import {
-  APP_LOCALE_CODES,
+  ACTIVE_APP_LOCALE_CODES,
+  ActiveAppLocaleCodeSchema,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
@@ -7,7 +8,7 @@ import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 
 const AlternateLanguagePathSchema = Schema.Record(
-  Schema.Literals([...APP_LOCALE_CODES, "x-default"]),
+  Schema.Literals([...ACTIVE_APP_LOCALE_CODES, "x-default"]),
   Schema.optionalKey(Schema.String)
 );
 const LocalizedAlternatesOptionsSchema = Schema.Struct({
@@ -15,6 +16,7 @@ const LocalizedAlternatesOptionsSchema = Schema.Struct({
 });
 type LocalizedAlternatesOptions = typeof LocalizedAlternatesOptionsSchema.Type;
 
+/** A localized counterpart as a release names it, in any locale the contract declares. */
 const ResolvedAlternateRouteSchema = Schema.Struct({
   appLocale: AppLocaleCodeSchema,
   publicPath: Schema.String,
@@ -23,7 +25,7 @@ type ResolvedAlternateRoute = typeof ResolvedAlternateRouteSchema.Type;
 
 /** Removes an existing locale prefix before building language alternates. */
 function getPathWithoutLocale(canonical: string) {
-  for (const locale of APP_LOCALE_CODES) {
+  for (const locale of ACTIVE_APP_LOCALE_CODES) {
     const prefix = `/${locale}`;
 
     if (canonical === prefix) {
@@ -67,7 +69,11 @@ export function createLocalizedAlternates(
   };
 }
 
-/** Builds hreflang alternates from already-resolved localized counterparts. */
+/**
+ * Builds hreflang alternates from already-resolved localized counterparts. A
+ * counterpart in a declared locale that Nakafa does not serve yet is no
+ * alternate, because no page answers at its address.
+ */
 export function createResolvedRouteAlternates(
   route: ResolvedAlternateRoute,
   alternates: readonly ResolvedAlternateRoute[],
@@ -75,12 +81,10 @@ export function createResolvedRouteAlternates(
 ) {
   const routePath = `/${route.appLocale}/${route.publicPath}`;
   const languages = Rec.fromEntries(
-    Arr.map(
-      alternates,
-      (alternate): readonly [ResolvedAlternateRoute["appLocale"], string] => [
-        alternate.appLocale,
-        `/${alternate.appLocale}/${alternate.publicPath}`,
-      ]
+    Arr.flatMap(alternates, ({ appLocale, publicPath }) =>
+      Schema.is(ActiveAppLocaleCodeSchema)(appLocale)
+        ? [[appLocale, `/${appLocale}/${publicPath}`] as const]
+        : []
     )
   );
 

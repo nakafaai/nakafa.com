@@ -39,6 +39,7 @@ import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
+import { LessonFinish } from "@/components/tracking/finish";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { readPublishedMaterialPlacements } from "@/lib/content/material/context";
@@ -219,7 +220,7 @@ export const Route = createFileRoute(
       dates: metadata,
       description: headMetadata.description,
       headline: headMetadata.title,
-      image: getOgUrl(route.appLocale, route.publicPath),
+      image: getOgUrl(locale, route.publicPath),
       locale,
       path: route.href,
       trail: readPlacementTrail(locale, loaderData.labels.home, placements),
@@ -229,7 +230,7 @@ export const Route = createFileRoute(
         alternates,
         canonicalPath,
         description: headMetadata.description,
-        image: getOgUrl(route.appLocale, route.publicPath),
+        image: getOgUrl(locale, route.publicPath),
         indexable: true,
         jsonLd: [
           makeArticleJsonLd(article),
@@ -294,6 +295,11 @@ function MaterialPage() {
             <LayoutContent>
               {headings.length === 0 ? <ComingSoon /> : page.body}
             </LayoutContent>
+            <LessonFinish
+              contentId={page.contentId}
+              locale={page.locale}
+              publicPath={route.publicPath}
+            />
             <MaterialPagination />
             <FooterContent>
               <DeferredComments slug={route.contentKey} />

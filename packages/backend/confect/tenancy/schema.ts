@@ -1,5 +1,5 @@
 import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
@@ -215,7 +215,7 @@ export const tenantSettings = (tenant: typeof tenantValidator.Type) =>
  * rename would have to keep both names readable in the journal.
  */
 export const unitFields = {
-  contentLanguage: AppLocaleCodeSchema,
+  contentLanguage: ActiveAppLocaleCodeSchema,
   level: UnitLevel,
   name: UnitName,
   npsn: Schema.optionalKey(Npsn),

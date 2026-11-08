@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
@@ -43,7 +43,7 @@ describe("published try-out localized paths", () => {
     activateTestRelease("release-tryout");
     runtimeQueryMock.mockReset();
   });
-  it.effect.each(APP_LOCALE_CODES)(
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
     "resolves the set and section identity into %s",
     (targetAppLocale) =>
       Effect.gen(function* () {

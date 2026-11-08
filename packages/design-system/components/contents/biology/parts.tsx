@@ -71,14 +71,25 @@ export function DnaDoubleHelix({
 
   return (
     <group>
-      <Line color={backboneColor} lineWidth={lineWidth} points={firstStrand} />
-      <Line color={backboneColor} lineWidth={lineWidth} points={secondStrand} />
+      <Line
+        color={backboneColor}
+        lineWidth={lineWidth}
+        points={firstStrand}
+        toneMapped={false}
+      />
+      <Line
+        color={backboneColor}
+        lineWidth={lineWidth}
+        points={secondStrand}
+        toneMapped={false}
+      />
       {Arr.map(basePairs, (basePair) => (
         <Line
           color={pairColor}
           key={basePair.id}
           lineWidth={pairLineWidth}
           points={basePair.points}
+          toneMapped={false}
         />
       ))}
       <BackboneMarkers
@@ -132,13 +143,19 @@ export function RnaSingleStrand({
 
   return (
     <group>
-      <Line color={backboneColor} lineWidth={lineWidth} points={backbone} />
+      <Line
+        color={backboneColor}
+        lineWidth={lineWidth}
+        points={backbone}
+        toneMapped={false}
+      />
       {Arr.map(baseTicks, (baseTick) => (
         <Line
           color={baseColor}
           key={baseTick.id}
           lineWidth={Math.max(1, lineWidth - 1)}
           points={baseTick.points}
+          toneMapped={false}
         />
       ))}
       <BackboneMarkers

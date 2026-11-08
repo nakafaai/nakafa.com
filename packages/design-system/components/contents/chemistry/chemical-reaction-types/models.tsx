@@ -24,6 +24,7 @@ import {
   ParticleCluster,
   ParticleElementContext,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { Array as Arr } from "effect";
 import { createContext, use } from "react";
 
@@ -151,11 +152,11 @@ function RustModel() {
   return (
     <group rotation={[-0.12, 0.2, 0]}>
       <RoundedBox args={[1.05, 0.18, 0.62]} radius={0.04} smoothness={3}>
-        <meshStandardMaterial
-          color={phase === "before" ? colors.iron : colors.rust}
-          metalness={phase === "before" ? 0.36 : 0.05}
-          roughness={0.55}
-        />
+        {phase === "before" ? (
+          <MetalMaterial color={colors.iron} roughness={0.55} />
+        ) : (
+          <meshStandardMaterial color={colors.rust} roughness={0.55} />
+        )}
       </RoundedBox>
       {phase === "after" && <RustPatches color={colors.rustPatch} />}
       {phase === "before" && (

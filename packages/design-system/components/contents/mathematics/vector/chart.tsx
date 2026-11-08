@@ -113,9 +113,11 @@ export function VectorChart({ title, description, vectors }: Props) {
             const arrow = VECTOR_ARROWS[geometry.direction];
             const color = vectorColor(vector, index);
             const { tail, tip } = geometry;
+            // The name sits past the tip, on the side the vector points to, so
+            // it never lands on the vectors that meet near its tail.
             const horizontal = tip.x - tail.x;
             const horizontalAnchor = horizontal > 0 ? "left" : "right";
-            const verticalAnchor = tip.y >= 0 ? "bottom" : "top";
+            const verticalAnchor = tip.y >= tail.y ? "bottom" : "top";
             return (
               <group key={vector.id}>
                 <LineEquation

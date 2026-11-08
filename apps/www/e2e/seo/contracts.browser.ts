@@ -1,7 +1,7 @@
 import type { PublicationDates } from "@nakafa/aksara-contracts/date";
 import {
   type ActiveAppLocaleCode,
-  AppLocaleCodeSchema,
+  ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -61,7 +61,7 @@ const dateLabels = {
 
 const LocalizedContentRouteSchema = Schema.Struct({
   href: Schema.String,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
 });
 
 type LocalizedContentRoute = typeof LocalizedContentRouteSchema.Type;

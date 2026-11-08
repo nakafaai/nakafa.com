@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
 import { createTranslator, type IntlError } from "use-intl/core";
@@ -12,7 +12,7 @@ export const NO_BREAK = " ";
  */
 const dictionaryTranslator = Effect.fn("test.dictionaryTranslator")(function* (
   namespace: "Ai" | "Toast",
-  locale: AppLocaleCode,
+  locale: ActiveAppLocaleCode,
   onError?: (error: IntlError) => void
 ) {
   const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
@@ -26,7 +26,7 @@ const dictionaryTranslator = Effect.fn("test.dictionaryTranslator")(function* (
 
 /** The translator of Nina's sentences in one language. */
 export const aiTranslator = Effect.fn("test.aiTranslator")(function* (
-  locale: AppLocaleCode,
+  locale: ActiveAppLocaleCode,
   onError?: (error: IntlError) => void
 ) {
   return yield* dictionaryTranslator("Ai", locale, onError);
@@ -34,7 +34,7 @@ export const aiTranslator = Effect.fn("test.aiTranslator")(function* (
 
 /** The translator of the toast copy in one language, which the failure sentences share. */
 export const toastTranslator = Effect.fn("test.toastTranslator")(function* (
-  locale: AppLocaleCode,
+  locale: ActiveAppLocaleCode,
   onError?: (error: IntlError) => void
 ) {
   return yield* dictionaryTranslator("Toast", locale, onError);

@@ -324,7 +324,7 @@
     "locked-frozen": "Eine Sitzung dieser Prüfung ist beendet, deshalb bleiben ihre Fragen, wie die Lernenden sie beantwortet haben. Dupliziere sie, um sie wiederzuverwenden.",
     "duplicate-action": "Prüfung duplizieren",
     "duplicate-suffix": "(Kopie)",
-    "gone-note": "Diese Prüfung wurde gelöscht oder für Sie geschlossen, daher wird hier nichts mehr gespeichert.",
+    "gone-note": "Diese Prüfung wurde gelöscht oder für dich geschlossen, also wird hier nichts mehr gespeichert.",
     "room-cancel": "Raum absagen",
     "room-cancel-title": "Diesen Raum absagen?",
     "room-cancel-description": "Schüler können diesen Raum nicht mehr betreten.",
@@ -451,7 +451,7 @@
     "exam-full": "Eine Prüfung fasst höchstens {count} Fragen.",
     "delete-action": "Prüfung löschen",
     "delete-title": "Diese Prüfung löschen?",
-    "delete-description": "Ihre Fragen und Bilder werden endgültig gelöscht.",
+    "delete-description": "Alle Fragen und Bilder der Prüfung werden endgültig gelöscht.",
     "try-empty-description": "Füge eine Frage hinzu und probiere die Prüfung dann als Schüler aus.",
     "try-empty-title": "Noch keine Fragen",
     "try-finish": "Test beenden",
@@ -580,7 +580,7 @@
     "figure-graph": "Graph",
     "figure-chart": "Diagramm",
     "figure-diagram": "Schaubild",
-    "figure-description": "Sie steht im Text, wie die Lernenden ihn lesen.",
+    "figure-description": "Die Abbildung steht im Text, so wie die Lernenden ihn lesen.",
     "figure-name": "Name",
     "figure-save": "Speichern",
     "figure-labels-placeholder": "Klasse 10, Klasse 11, Klasse 12",
@@ -665,7 +665,7 @@
     "room-move": "Neu planen",
     "room-move-description": "Schüler und Token bleiben, und die Hinweise gehen erneut hinaus.",
     "room-move-save": "Speichern",
-    "student-closed-description": "Sie nimmt keine Antworten mehr an.",
+    "student-closed-description": "Die Prüfung nimmt keine Antworten mehr an.",
     "student-locked-description": "Er nimmt gerade keine Antworten an.",
     "results-analysis": "Analyse"
   },
@@ -1378,7 +1378,7 @@
     "grading-empty-description": "Noten nutzen das eingebaute Schema mit KKTP {kktp} und ohne Stufen.",
     "grading-search": "Stufe suchen",
     "grading-new": "Neue Version",
-    "grading-new-description": "Sie bewertet jede Note ab jetzt.",
+    "grading-new-description": "Die neue Version bewertet ab jetzt jede Note.",
     "grading-edit": "Bearbeiten",
     "grading-edit-description": "Diese Version hat noch keine Note bewertet, die Korrektur ändert also nichts Bestehendes.",
     "grading-remove": "Löschen",
@@ -1524,7 +1524,7 @@
     "message-save": "Speichern",
     "message-hide": "Ausblenden",
     "hide-title": "Diese Nachricht ausblenden",
-    "hide-description": "Ihr Text verschwindet für alle, endgültig.",
+    "hide-description": "Der Text der Nachricht verschwindet für alle, endgültig.",
     "read-only": "In diesem Chat schreiben die Klasse und ihre Lehrkräfte.",
     "messages-empty": "Noch keine Nachricht",
     "messages-empty-description": "Die erste Nachricht dieses Chats erscheint hier.",
@@ -1560,7 +1560,7 @@
     "post-new-poll": "Neue Umfrage",
     "post-remove": "Entfernen",
     "post-remove-title": "Diese Ankündigung entfernen",
-    "post-remove-description": "Sie verschwindet für alle von der Startseite der Klasse und kommt nicht zurück.",
+    "post-remove-description": "Die Ankündigung verschwindet für alle von der Startseite der Klasse und kommt nicht zurück.",
     "post-new": "Neue Ankündigung",
     "post-new-description": "Alle in der Klasse lesen sie.",
     "post-submit": "Posten",
@@ -1648,7 +1648,7 @@
     "task-new-description": "Alle in der Klasse erhalten sie in ihren Benachrichtigungen.",
     "task-publish": "Veröffentlichen",
     "task-edit": "Aufgabe bearbeiten",
-    "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
+    "task-edit-description": "Die Adresse der Aufgabe bleibt, also öffnet jeder Link sie weiter.",
     "task-edit-save": "Speichern",
     "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist.",
     "channel-rename": "Chat umbenennen",
@@ -2038,7 +2038,7 @@
     "entry-student": "Gib die Adresse deiner Schule ein oder scanne den QR-Code deiner Lehrkraft.",
     "entry-parent": "Gib die Adresse der Schule deines Kindes ein.",
     "entry-field": "Schuladresse",
-    "entry-hint": "Sie steht im Link der Schule, zum Beispiel harapan.nakafa.com.",
+    "entry-hint": "Die Adresse steht im Link der Schule, zum Beispiel harapan.nakafa.com.",
     "entry-invalid": "Zum Beispiel harapan.nakafa.com.",
     "entry-submit": "Weiter",
     "entry-open": "Schule eröffnen"
@@ -2047,7 +2047,7 @@
     "title": "Schulen",
     "search": "Schulen suchen",
     "open": "Schule eröffnen",
-    "open-description": "Eröffne eine Schule nach ihrem unterschriebenen Vertrag. Ihre Inhaberin oder ihr Inhaber erhält die Einladung.",
+    "open-description": "Eröffne eine Schule nach ihrem unterschriebenen Vertrag. Die Inhaberin oder der Inhaber der Schule erhält die Einladung.",
     "empty": "Noch keine Schule",
     "refused": "Für Nakafa-Mitarbeitende",
     "refused-description": "Diese Seite eröffnet Schulen nach Vertrag. Alle anderen eröffnen ihre Schule unter /school/new.",
@@ -2286,7 +2286,6 @@
     "lowest": "Niedrigster Wert",
     "range": "Spannweite",
     "mean": "Mittelwert",
-    "series-mean": "Mittelwert von {series}",
     "points": "Punkte",
     "input": "Eingabe",
     "output": "Ausgabe",
@@ -2486,6 +2485,11 @@
   "Holy": {
     "holy": "Heilige Schriften",
     "quran": "Koran",
+    "search-surah": "Suren suchen",
+    "search-surah-none": "Keine Sure gefunden",
+    "search-surah-none-description": "Suche nach Nummer, Name oder Bedeutung.",
+    "menu-surah": "Sure",
+    "surah-empty": "Keine Sure gefunden.",
     "quran-description": "Lies alle 114 Suren des Korans auf Arabisch mit einer Übersetzung Vers für Vers, kostenlos auf Nakafa.",
     "verse": "Vers",
     "verse-count": "Vers {count}",
@@ -3016,7 +3020,7 @@
     },
     "exam-in-use": {
       "title": "Diese Prüfung hat einen Termin.",
-      "description": "Ihre Termine behalten ihre Ergebnisse, also ändere eine Kopie."
+      "description": "Die Termine der Prüfung behalten ihre Ergebnisse, also ändere eine Kopie."
     },
     "copy-error": {
       "title": "Kopieren nicht möglich"
@@ -3262,7 +3266,7 @@
     },
     "sitting-answers-unsent": {
       "title": "Vielleicht fehlen Antworten.",
-      "description": "Sie kamen vielleicht nicht mehr an, also sag es deiner Aufsicht."
+      "description": "Manche kamen vielleicht nicht mehr in der Prüfung an, also sag es deiner Aufsicht."
     },
     "sitting-attempt-closed": {
       "title": "Dieser Versuch ist beendet.",
@@ -3637,7 +3641,7 @@
     },
     "school-refusal-scheme-used": {
       "title": "Diese Version bleibt, wie sie ist.",
-      "description": "Sie hat bereits Noten bewertet. Lege stattdessen eine neue Version an."
+      "description": "Mit dieser Version wurden schon Noten bewertet. Lege stattdessen eine neue an."
     },
     "school-roster-no-period": {
       "title": "Noch kein aktiver Zeitraum.",
@@ -3705,7 +3709,7 @@
     },
     "classroom-refusal-message-hidden": {
       "title": "Nachricht ausgeblendet.",
-      "description": "Sie lässt sich nicht mehr ändern."
+      "description": "Die Nachricht lässt sich nicht mehr ändern."
     },
     "classroom-refusal-attachment": {
       "title": "Datei nicht hinzugefügt.",
@@ -3730,6 +3734,72 @@
     "classroom-refusal-file-size": {
       "title": "Die Datei ist zu groß.",
       "description": "Wähle eine kleinere Datei."
+    },
+    "island-refused-outside": {
+      "title": "Das passt nicht auf deine Insel."
+    },
+    "island-refused-overlap": {
+      "title": "Dort steht schon etwas."
+    },
+    "island-refused-unsupported": {
+      "title": "Darunter braucht es Blöcke."
+    },
+    "island-refused-carrying": {
+      "title": "Darauf steht etwas."
+    },
+    "island-refused-locked": {
+      "title": "Das gibt es ab einem höheren Level."
+    },
+    "island-refused-unaffordable": {
+      "title": "Dafür brauchst du mehr Sterne."
+    },
+    "island-refused-starter": {
+      "title": "Das gehört zu deiner Insel und bleibt."
+    },
+    "island-refused-missing": {
+      "title": "Dieses Teil ist nicht mehr da."
+    },
+    "island-refused-top": {
+      "title": "Es hat schon seine höchste Stufe."
+    },
+    "island-refused-bottom": {
+      "title": "Es hat schon seine erste Stufe."
+    },
+    "island-stale": {
+      "title": "Deine Insel hat sich anderswo geändert, wir haben sie neu geladen."
+    },
+    "island-refused-grows": {
+      "title": "Es wächst, wenn du es gießt."
+    },
+    "island-refused-rooted": {
+      "title": "Es hat Wurzeln geschlagen, verschiebe es lieber."
+    },
+    "island-refused-materials": {
+      "title": "Dafür brauchst du mehr aus deinem Garten."
+    },
+    "island-farm-unlearned": {
+      "title": "Lerne heute etwas, dann gieß deinen Garten."
+    },
+    "island-farm-watered": {
+      "title": "Dein Garten ist heute schon gegossen."
+    },
+    "island-farm-barren": {
+      "title": "Pflanze zuerst einen Baum oder Blumen."
+    },
+    "island-farm-missing": {
+      "title": "Diese Pflanze ist nicht mehr da."
+    },
+    "island-farm-unripe": {
+      "title": "Es ist noch nicht reif zur Ernte."
+    },
+    "island-watered": {
+      "title": "Dein Garten ist gegossen."
+    },
+    "island-harvested-wood": {
+      "title": "Du hast Holz gesammelt."
+    },
+    "island-harvested-petals": {
+      "title": "Du hast Blütenblätter gesammelt."
     }
   },
   "Ai": {
@@ -4268,7 +4338,7 @@
     "locked-report": "Dieses Zeugnis ist erfasst.",
     "locked-report-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
     "locked-letter": "Diese Abschlussbescheinigung ist erfasst.",
-    "locked-letter-description": "Ihr Code gehört zu einer SKL, die die Schule ausgestellt hat.",
+    "locked-letter-description": "Der Code gehört zu einer SKL, die die Schule ausgestellt hat.",
     "unknown": "Kein Dokument hat diesen Code.",
     "unknown-description": "Prüfe die Adresse oder frag die Schule, die es ausgestellt hat.",
     "school": "Schule",
@@ -4355,6 +4425,8 @@
     "plan-pro": "Pro",
     "plan-max": "Max",
     "plan-trial": "{days} Tage kostenlos",
+    "plan-free-price": "Kostenlos",
+    "plan-trial-for": "für {days} Tage",
     "plan-month": "/Monat",
     "plan-billed-free": "Keine Zahlung, keine Karte",
     "plan-accounts": "{count, number} Konten aller Rollen",
@@ -4438,7 +4510,9 @@
     "tasks-title": "Aufgaben geben, einsammeln, bewerten",
     "tasks-lead": "Jede Abgabe und jede Note bleibt bei ihrer Klasse.",
     "exams-title": "Prüfungen, die sich selbst bewerten",
-    "exams-lead": "Jedes Quiz und jedes Try-out läuft in derselben Ansicht.",
+    "exams-lead": "Schreib jede Frage mit Formeln und Bildern und leg den Schlüssel gleich daneben fest.",
+    "player-title": "Ein Player für jede Prüfung",
+    "player-lead": "Mit Uhr, Navigator und Markierungen, und jeder Formel so, wie sie geschrieben ist.",
     "reports-title": "Zeugnisse aus den Noten, die du vergeben hast",
     "reports-lead": "Die Schule unterschreibt, ein QR-Code beweist die Echtheit.",
     "insight-title": "Früh sehen, wer Hilfe braucht",
@@ -4481,6 +4555,7 @@
     "demo-kind-link": "Link",
     "demo-exam-title": "Physik-Klausur",
     "demo-exam-question": "Ein <mass></mass> schwerer Ball rollt mit <speed></speed>. Wie groß ist sein Impuls?",
+    "demo-exam-explanation": "Impuls ist Masse mal Geschwindigkeit: <formula></formula>.",
     "demo-exam-answer": "Antwort",
     "demo-exam-progress": "Frage {current} von {total}",
     "demo-report-term": "Halbjahreszeugnis",
@@ -4516,7 +4591,7 @@
     "faq-devices-question": "Funktioniert es auf dem Handy?",
     "faq-devices-answer": "Ja. Jeder Bildschirm läuft im Browser auf Handy, Tablet und Computer, ohne Installation.",
     "faq-added-question": "Können wir Konten einzeln hinzufügen?",
-    "faq-added-answer": "Ja. Füge ab einem Konto beliebig viele hinzu, jedes mit 6 KI-Credits im Monat und 200 MB Drive. Sie stehen auf der Rechnung deines Tarifs.",
+    "faq-added-answer": "Ja. Füge ab einem Konto beliebig viele hinzu, jedes mit 6 KI-Credits im Monat und 200 MB Drive. Die Konten stehen auf der Rechnung deines Tarifs.",
     "faq-pay-question": "Wie bezahlen wir?",
     "faq-pay-answer": "Im Voraus für 1, 3, 6 oder 12 Monate, mit 3 % Rabatt für 6 Monate und 5 % für 12 Monate. Schulen in Indonesien zahlen in Rupiah, andere in Dollar oder Euro.",
     "faq-tax-question": "Sind Steuern enthalten?",
@@ -4525,5 +4600,49 @@
     "faq-credits-answer": "Nina, die KI von Nakafa, verbraucht für jede Antwort Credits. Die ganze Schule teilt einen Vorrat, und ein Paket mit 1.000 weiteren hält 12 Monate.",
     "faq-change-question": "Können wir den Tarif später wechseln?",
     "faq-change-answer": "Ja. Wechsle zwischen Pro und Max oder füge jederzeit Konten hinzu, und die Änderung gilt ab der nächsten bezahlten Rechnung."
+  },
+  "Island": {
+    "title": "Insel",
+    "description": "Deine Insel wächst mit jeder Lektion und jedem Try-out.",
+    "name": "Insel von {name}",
+    "level": "Level {level}",
+    "stars": "Sterne",
+    "next": "Nächstes Level",
+    "next-value": "{stars} Sterne",
+    "top": "Höchstes Level",
+    "turn-left": "Nach links drehen",
+    "turn-right": "Nach rechts drehen",
+    "build": "Bauen",
+    "done": "Fertig",
+    "undo": "Rückgängig",
+    "redo": "Wiederholen",
+    "rotate": "Drehen",
+    "move": "Verschieben",
+    "remove": "Entfernen",
+    "upgrade": "Ausbauen",
+    "items": "Teile",
+    "price": "{stars} Sterne",
+    "locked": "Level {level}",
+    "item-house": "Haus",
+    "item-tree": "Baum",
+    "item-pond": "Teich",
+    "item-grass": "Gras",
+    "item-soil": "Erde",
+    "item-stone": "Stein",
+    "item-sand": "Sand",
+    "item-planks": "Bretter",
+    "item-brick": "Ziegel",
+    "item-glass": "Glas",
+    "item-tile": "Rote Dachziegel",
+    "item-slate": "Blaue Dachziegel",
+    "item-flowers": "Blumen",
+    "item-bush": "Busch",
+    "item-rock": "Felsen",
+    "item-lamp": "Laterne",
+    "water": "Garten gießen",
+    "harvest": "Ernten",
+    "materials": "Garten",
+    "materials-value": "{wood} Holz, {petals} Blütenblätter",
+    "price-wood": "{stars} Sterne, {wood} Holz"
   }
 }

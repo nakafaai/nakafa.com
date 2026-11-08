@@ -3,8 +3,11 @@ import {
   PublicPathSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { Array as Arr, Effect, HashMap, Option } from "effect";
+import {
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
+} from "@nakafa/aksara-contracts/locale";
+import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 import { previewIdProjection, previewProjection } from "@/test/manifest";
 import {
@@ -16,6 +19,9 @@ import {
   readTestPublishedRoute,
   testProgramSubject,
 } from "@/test/published/program";
+
+/** The served locale a fixture of a release names, which every fixture of this file is in. */
+const servedLocale = Schema.decodeSync(ActiveAppLocaleCodeSchema);
 
 const publishedMocks = vi.hoisted(() => ({
   articleCategory: vi.fn(),
@@ -158,13 +164,13 @@ describe("resolveLocalizedNavigationHref", () => {
 
           const category = yield* resolveHref(
             `/${current.appLocale}/${current.parentPath}`,
-            target.appLocale
+            servedLocale(target.appLocale)
           );
           expect(category).toBe(`/${target.parentPath}`);
 
           const article = yield* resolveHref(
             `/${current.appLocale}/${current.publicPath}`,
-            target.appLocale
+            servedLocale(target.appLocale)
           );
           expect(article).toBe(`/${target.publicPath}`);
         }

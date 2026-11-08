@@ -68,7 +68,7 @@ export function LineEquation({ description, title, ...scene }: Props) {
  * readouts on the server, so their math never reaches the browser; the scene parts read the
  * scene from `LineEquationProvider`.
  */
-export function LineEquationCard({
+function LineEquationCard({
   cameraPosition,
   cameraTarget,
   data,

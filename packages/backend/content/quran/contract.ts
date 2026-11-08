@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { QuranSnapshotRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranAttributionRowSchema } from "@nakafa/aksara-contracts/quran/source";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
@@ -40,7 +40,7 @@ export type PublishedQuranRow = typeof PublishedQuranRowSchema.Type;
 /** Selects the reviewed meaning for one active application locale. */
 export function selectQuranMeaning(
   meaning: PublishedQuranMeaning,
-  appLocale: AppLocaleCode
+  appLocale: ActiveAppLocaleCode
 ) {
   return {
     appLocale,
@@ -51,7 +51,7 @@ export function selectQuranMeaning(
 /** Formats the reviewed meaning for one active application locale. */
 export function formatQuranMeaning(
   meaning: PublishedQuranMeaning,
-  appLocale: AppLocaleCode
+  appLocale: ActiveAppLocaleCode
 ) {
   return meaning[appLocale];
 }

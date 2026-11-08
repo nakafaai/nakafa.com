@@ -24,7 +24,10 @@ import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { serverHandler } from "@/lib/server/fn";
-import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
+import {
+  getTryoutTrackCatalogArtwork,
+  resolveTryoutExamArtwork,
+} from "@/lib/tryout/artwork";
 
 /**
  * The hub: the country-first catalog and its breadcrumbs. A try-out catalog's
@@ -227,6 +230,13 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
         description:
           page.track.description ??
           tTryouts("track-metadata-description", { exam }),
+        // A track with reviewed artwork shares it, as its card in the exam's list shows it.
+        image:
+          getTryoutTrackCatalogArtwork(input.locale, {
+            countryKey: page.country.countryKey,
+            examKey: page.exam.examKey,
+            trackKey: page.track.trackKey,
+          }) ?? head.value.image,
         title: tTryouts("search-title", { name: exam }),
       },
       kind: "found" as const,
