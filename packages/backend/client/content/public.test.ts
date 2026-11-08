@@ -19,7 +19,7 @@ import {
   readPublicContent,
   readPublicContentEvidence,
   readPublicContentEvidenceBatch,
-  verifyPublicContentDelivery,
+  verifyPublicContentFound,
 } from "@repo/backend/client/content/public";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -36,7 +36,7 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
-import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
@@ -122,7 +122,7 @@ afterEach(() => {
 
 describe("public content runtime client", () => {
   it.effect(
-    "verifies a coherent query envelope with the same live signature policy",
+    "verifies a composed public response with the same live signature policy",
     () =>
       Effect.gen(function* () {
         const response = foundResponse();
@@ -130,11 +130,7 @@ describe("public content runtime client", () => {
           testRendererJson()
         );
         expect(
-          yield* verifyPublicContentDelivery(
-            input,
-            yield* Schema.encodeEffect(JsonTextSchema)(response),
-            renderer
-          )
+          yield* verifyPublicContentFound(input, response, renderer)
         ).toEqual(response);
         expect(verifyContentRuntimeExchange).toHaveBeenCalledWith({
           request: { ...input, delivery: "public" },
@@ -145,33 +141,23 @@ describe("public content runtime client", () => {
       })
   );
 
-  it.effect.each([
-    ["{", "json-syntax"],
-    ["{}", "response-contract"],
-    ["x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES + 1), "response-size"],
-  ] as const)(
-    "rejects a malformed coherent query envelope",
-    ([source, reason]) =>
-      Effect.gen(function* () {
-        expect(
-          yield* verifyPublicContentDelivery(input, source, {}).pipe(
-            Effect.flip
-          )
-        ).toEqual(new ContentTransportError({ reason }));
-        expect(verifyMock).not.toHaveBeenCalled();
-        expect(fetchMock).not.toHaveBeenCalled();
-      })
+  it.effect("rejects a composed response outside the runtime contract", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* verifyPublicContentFound(input, {}, {}).pipe(Effect.flip)
+      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      expect(verifyMock).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
+    })
   );
 
-  it.effect("preserves signature failure from coherent query delivery", () =>
+  it.effect("preserves signature failure from a composed response", () =>
     Effect.gen(function* () {
       verifyMock.mockReturnValueOnce(Effect.fail("invalid-signature"));
       expect(
-        yield* verifyPublicContentDelivery(
-          input,
-          yield* Schema.encodeEffect(JsonTextSchema)(foundResponse()),
-          {}
-        ).pipe(Effect.flip)
+        yield* verifyPublicContentFound(input, foundResponse(), {}).pipe(
+          Effect.flip
+        )
       ).toMatchObject({
         _tag: "ContentRuntimeVerificationError",
       });
@@ -184,9 +170,7 @@ describe("public content runtime client", () => {
       Effect.gen(function* () {
         const invalid = { ...input, publicPath: "" };
         expect(
-          yield* verifyPublicContentDelivery(invalid, "{}", {}).pipe(
-            Effect.flip
-          )
+          yield* verifyPublicContentFound(invalid, {}, {}).pipe(Effect.flip)
         ).toEqual(new ContentTransportError({ reason: "request" }));
         expect(
           yield* readPublicContentEvidence(target, invalid).pipe(Effect.flip)

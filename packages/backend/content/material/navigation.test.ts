@@ -97,7 +97,8 @@ describe("material navigation reuse", () => {
           canonicalizeMaterialProjection
         )
       );
-      expect(current.metrics.databaseQueries.used).toBe(12);
+      // The lesson names its body's head; the artifact is read by its hash apart.
+      expect(current.metrics.databaseQueries.used).toBe(11);
       expect(group.metrics.databaseQueries.used).toBe(3 + 2 * siblingCount);
       const other = await target.query(api.contentRelease.material.lesson, {
         appLocale: "en",
@@ -123,8 +124,8 @@ describe("material navigation reuse", () => {
       publicPath: "subjects/test/missing",
     });
     expect(result).toMatchObject({
+      delivery: null,
       materialKey: null,
-      runtimeJson: null,
     });
     expect(result.model.projectionJson).toBeNull();
   });

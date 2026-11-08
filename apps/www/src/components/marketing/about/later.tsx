@@ -70,10 +70,11 @@ export const homeSections = {
 };
 
 /**
- * Loads every section's code. The home route's loader runs only where the page
- * renders whole, on the server and on a client navigation, so the page commits
+ * Loads every section's code. The home route opens them before a load that renders
+ * the page whole, on the server and on a client navigation, so the page commits
  * with its sections and no boundary waits on screen. The first document never runs
- * it, and each section loads as it nears the screen.
+ * it, nor does a warm of a link to the home, and each section loads as it nears the
+ * screen.
  */
 export function openHomeSections() {
   return Promise.all([

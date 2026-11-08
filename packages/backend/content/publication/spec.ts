@@ -59,3 +59,13 @@ export const routeResultValidator = Schema.Union([
     projectionJson: Schema.String,
   }),
 ]);
+
+/**
+ * The release-independent parts of one routed public body: its signed artifact
+ * is read by `artifactHash`, and the release's signed document once per release.
+ */
+export const publicHeadValidator = Schema.Struct({
+  artifactHash: Schema.String,
+  projectionHash: Schema.String,
+  sourcePath: Schema.String,
+});
