@@ -1,5 +1,9 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import { Link01Icon } from "@hugeicons/core-free-icons";
+import {
+  InboxIcon,
+  Link01Icon,
+  UserMultipleIcon,
+} from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -36,6 +40,7 @@ import {
   TableSearch,
   useServerSearch,
 } from "@/components/shared/table/toolbar";
+import { TableViews } from "@/components/shared/table/views";
 import { LoadFailure } from "@/components/state/failure";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
@@ -108,13 +113,17 @@ export function GuardianLinksSettings() {
 /**
  * The links of the school, read a page at a time, in the one card of a settings table: the
  * table, which loads more rows as its end comes into view, beside the open link; or the empty
- * state while the school has no link. The card stands from the first frame.
+ * state while the school has no link. While a parent's request waits, Links and Requests views
+ * stand above the card, and Requests fills it with the waiting requests. The card stands from
+ * the first frame.
  */
 function GuardianLinksBody() {
   const t = useTranslations("SchoolGuardians");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const search = useServerSearch();
+  // The school reads its links, or the parents' requests that wait for an answer.
+  const [view, setView] = useState<"links" | "requests">("links");
   const pagination = usePaginatedQuery(
     guardians.links.list,
     isSettled ? { slug, ...(search === "" ? {} : { search }) } : "skip",
@@ -137,42 +146,85 @@ function GuardianLinksBody() {
   const failed = PaginatedQueryResult.isFailure(pagination);
   // Both reads arrive before the list draws, so a waiting request never pushes the table down.
   if (Option.isNone(kept) || PaginatedQueryResult.isLoadingFirstPage(waiting)) {
-    return <LinksFrame links={[]}>{null}</LinksFrame>;
+    return (
+      <LinksFrame links={[]}>
+        <TablePageBody>{null}</TablePageBody>
+      </LinksFrame>
+    );
   }
   if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
     return (
       <LinksFrame links={kept.value}>
-        {failed ? (
-          <LoadFailure onRetry={reloadPage} />
-        ) : (
-          <TableEmpty
-            act="typing"
-            description={t("links-empty-description")}
-            title={t("links-empty")}
-          />
-        )}
+        <TablePageBody>
+          {failed ? (
+            <LoadFailure onRetry={reloadPage} />
+          ) : (
+            <TableEmpty
+              act="typing"
+              description={t("links-empty-description")}
+              title={t("links-empty")}
+            />
+          )}
+        </TablePageBody>
       </LinksFrame>
     );
   }
 
+  // The Requests view stands only while a request waits, so the last answer brings the links back.
+  const waits = !Arr.isReadonlyArrayEmpty(waiting.results);
+  const shown = waits ? view : "links";
+
   return (
     <LinksFrame links={kept.value}>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <WaitingRequests requests={waiting.results} />
-      {PaginatedQueryResult.isCanLoadMore(waiting) ? (
-        <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
-      ) : null}
-      <GuardianLinkTable />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
+      <TablePageBody
+        views={
+          waits ? (
+            <TableViews
+              label={t("links-views")}
+              onChoose={setView}
+              view={shown}
+              views={[
+                {
+                  icon: UserMultipleIcon,
+                  label: t("view-links"),
+                  value: "links",
+                },
+                {
+                  icon: InboxIcon,
+                  label: t("view-requests"),
+                  value: "requests",
+                },
+              ]}
+            />
+          ) : null
+        }
+      >
+        {shown === "requests" ? (
+          <>
+            <WaitingRequests requests={waiting.results} />
+            {PaginatedQueryResult.isCanLoadMore(waiting) ? (
+              <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
+            ) : null}
+          </>
+        ) : (
+          <>
+            {failed ? <DataFailure onRetry={reloadPage} /> : null}
+            <GuardianLinkTable />
+            {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+              <Intersection
+                onIntersect={() => pagination.loadMore(PAGE_SIZE)}
+              />
+            ) : null}
+          </>
+        )}
+      </TablePageBody>
     </LinksFrame>
   );
 }
 
 /**
- * The one card of a settings table, in the list's pane, beside the open link: the links it holds
- * are the ones the table lists and the open link is found in.
+ * The list's pane of the links page, beside the open link, around the one card of a settings table that the caller
+ * composes: the links it holds are the ones the table lists and the open link is found in.
  */
 function LinksFrame({
   children,
@@ -186,9 +238,7 @@ function LinksFrame({
   return (
     <LinksContext value={links}>
       <Panes id="links">
-        <PanesList>
-          <TablePageBody>{children}</TablePageBody>
-        </PanesList>
+        <PanesList>{children}</PanesList>
         <PanesDetail label={t("link-detail")}>
           <GuardianLinkDetail />
         </PanesDetail>

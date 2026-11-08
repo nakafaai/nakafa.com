@@ -269,7 +269,10 @@ function AskDialog({
   );
 }
 
-/** The waiting requests. An answer takes one off the list at once, and a refused one brings it back. */
+/**
+ * The waiting requests, a table that fills the guardians' card in its Requests view. An answer takes one off the list at
+ * once, and a refused one brings it back.
+ */
 export function WaitingRequests({
   requests,
 }: {
@@ -307,64 +310,57 @@ export function WaitingRequests({
     (request) => !Arr.contains(answered, request.id)
   );
 
-  // A school with no waiting request sees its links alone, with no empty table above them.
-  if (Arr.isReadonlyArrayEmpty(unanswered)) {
-    return null;
-  }
-
   return (
     <TableFiltersProvider>
-      <TableFrame>
-        <DataTable
-          columns={[
-            waitingColumns.text((request) => request.student, {
-              cell: (info) => <span dir="auto">{info.getValue()}</span>,
-              header: t("request-student"),
-              id: "student",
-            }),
-            waitingColumns.values((request) => request.kind, {
-              cell: (info) => t(`request-kind-${info.getValue()}`),
-              header: t("request-kind"),
-              id: "kind",
-              options: kindOptions,
-            }),
-            waitingColumns.text((request) => request.text, {
-              cell: (info) => (
-                <span
-                  className="block max-w-xs truncate"
-                  dir="auto"
-                  title={info.getValue()}
-                >
-                  {info.getValue()}
-                </span>
-              ),
-              header: t("request-text"),
-              id: "text",
-            }),
-            waitingColumns.menu((info) => (
-              <RowItems>
-                <DropdownMenuItem
-                  icon={CheckmarkCircle02Icon}
-                  onClick={() => decide(info.row.original, "approved")}
-                >
-                  {t("request-approve")}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  icon={CancelCircleIcon}
-                  onClick={() => decide(info.row.original, "declined")}
-                  variant="destructive"
-                >
-                  {t("request-decline")}
-                </DropdownMenuItem>
-              </RowItems>
-            )),
-          ]}
-          data={unanswered}
-          plain
-          rowId={(request) => request.id}
-        />
-      </TableFrame>
+      <DataTable
+        columns={[
+          waitingColumns.text((request) => request.student, {
+            cell: (info) => <span dir="auto">{info.getValue()}</span>,
+            header: t("request-student"),
+            id: "student",
+          }),
+          waitingColumns.values((request) => request.kind, {
+            cell: (info) => t(`request-kind-${info.getValue()}`),
+            header: t("request-kind"),
+            id: "kind",
+            options: kindOptions,
+          }),
+          waitingColumns.text((request) => request.text, {
+            cell: (info) => (
+              <span
+                className="block max-w-xs truncate"
+                dir="auto"
+                title={info.getValue()}
+              >
+                {info.getValue()}
+              </span>
+            ),
+            header: t("request-text"),
+            id: "text",
+          }),
+          waitingColumns.menu((info) => (
+            <RowItems>
+              <DropdownMenuItem
+                icon={CheckmarkCircle02Icon}
+                onClick={() => decide(info.row.original, "approved")}
+              >
+                {t("request-approve")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                icon={CancelCircleIcon}
+                onClick={() => decide(info.row.original, "declined")}
+                variant="destructive"
+              >
+                {t("request-decline")}
+              </DropdownMenuItem>
+            </RowItems>
+          )),
+        ]}
+        data={unanswered}
+        plain
+        rowId={(request) => request.id}
+      />
     </TableFiltersProvider>
   );
 }
