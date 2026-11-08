@@ -134,7 +134,11 @@ const STILL_EDGE: ComponentProps<typeof PaneEdge>["resizer"] = {
   "aria-valuemin": 320,
   "aria-valuenow": 420,
   onKeyDown: () => undefined,
-  onMouseDown: () => undefined,
+  onLostPointerCapture: () => undefined,
+  onPointerCancel: () => undefined,
+  onPointerDown: () => undefined,
+  onPointerMove: () => undefined,
+  onPointerUp: () => undefined,
 };
 
 /**

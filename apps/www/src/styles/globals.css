@@ -192,6 +192,26 @@
 }
 
 /*
+ * While a pane's edge is dragged (`useResizable`), the resize cursor holds wherever the pointer goes and no
+ * text is selected. Each question off the screen keeps the size it last had and skips its style and layout
+ * for the drag's length, so a frame lays out only the questions the reader sees, whatever their formulas
+ * cost. A question records that size as it renders, so the switch moves nothing.
+ */
+:root[data-resizing],
+:root[data-resizing] * {
+  cursor: col-resize;
+  user-select: none;
+}
+
+[data-player-key] {
+  contain-intrinsic-size: auto 40rem;
+}
+
+:root[data-resizing] [data-player-key] {
+  content-visibility: auto;
+}
+
+/*
  * A try-out action's name depends on the learner's attempt, which no first
  * paint knows. Under a signed-in hint it shows what this browser last read for
  * the page, which the cell's own script names in `data-kept-name`, or keeps its
