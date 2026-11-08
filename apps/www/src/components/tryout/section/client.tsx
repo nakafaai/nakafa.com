@@ -24,6 +24,7 @@ import {
   TryoutFinishedPanes,
   TryoutFinishedPlace,
 } from "@/components/tryout/review/panes";
+import { useTryoutLeave } from "@/components/tryout/route/leave";
 import {
   getTryoutAttemptLock,
   getTryoutPublicPath,
@@ -175,13 +176,17 @@ function LiveTryoutSectionPage({
     state = terminalState;
   }
   // The finish holds the running state, so it reads the state before any early exit.
-  const finish = useTryoutFinish({
-    returnAddress: {
-      attemptId: binding.attemptId,
-      publicPath: page.set.publicPath,
-    },
-    state,
-  });
+  const returnAddress = {
+    attemptId: binding.attemptId,
+    publicPath: page.set.publicPath,
+  };
+  const leave = useTryoutLeave(returnAddress);
+  const finishing = useTryoutFinish({ leave, state });
+  const finish: TryoutFinish = {
+    pending: finishing.pending,
+    returnAddress,
+    run: finishing.run,
+  };
 
   if (QueryResult.isFailure(liveState)) {
     throw liveState.error;
@@ -191,7 +196,7 @@ function LiveTryoutSectionPage({
     <ResolvedTryoutSectionPage
       binding={binding}
       finish={finish}
-      state={finish.shown}
+      state={finishing.shown}
     >
       {children}
     </ResolvedTryoutSectionPage>
