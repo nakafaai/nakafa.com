@@ -25,7 +25,8 @@ const SEED_TEACHER_LIMIT = 16;
 
 /**
  * Writes the history of the general channel of the school's class at `classSlug`:
- * a classmate Person, a student placed in the class's cohort, writes `count`
+ * a classmate Person, a student placed in the class's cohort and named `author`
+ * when the run asks for a name, writes `count`
  * sealed messages, numbered from 1, the newest now, and each subject teacher of
  * the class has read the first `read` of them.
  */
@@ -34,6 +35,7 @@ const history = FunctionImpl.make(
   spec,
   "history",
   Effect.fn("classroom.forum.seed.history")(function* ({
+    author,
     classSlug,
     count,
     read,
@@ -72,7 +74,7 @@ const history = FunctionImpl.make(
       .insert({
         account: { state: "unclaimed" },
         kind: "member",
-        name: "Raka Pratama",
+        name: author ?? "Raka Pratama",
         status: "active",
         tenantId: row.tenantId,
       })

@@ -73,8 +73,24 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+/** What a seal keeps of each row: its order, its role, its status, its step and its tool flag. */
+const shapeOf = (
+  page: Awaited<ReturnType<typeof storedRowsIn>>["messages"]["page"]
+) =>
+  Arr.map(page, ({ message, order, status, stepOrder, tool }) => ({
+    order,
+    role: message?.role ?? null,
+    status,
+    stepOrder,
+    tool: tool ?? false,
+  }));
+
 describe("Sealing a settled Nina turn", () => {
   it("leaves no planted text in any component table once the turn settles, and the learner reads the chat unchanged", async () => {
+    // Fake timers hold what the turn schedules, so admission's answer runs alone and the seal
+    // waits until the plain rows are read; on real timers a second run raced it for the claim.
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+    vi.setSystemTime(NOW);
     provider.languageModel.mockReturnValue(plantedModel());
     vi.mocked(runNakafaAgent).mockImplementation(() =>
       Effect.succeed({ text: PLANTED.output })
@@ -85,7 +101,9 @@ describe("Sealing a settled Nina turn", () => {
       ...attachment,
       filename: `${PLANTED.file}.png`,
     });
-    await f.t.action(run, { turnId: f.receipt.turnId });
+    // The answer that admission scheduled runs now, and only what is due now runs with it.
+    vi.advanceTimersByTime(0);
+    await f.t.finishInProgressScheduledFunctions();
 
     // During the turn the planted texts sit in the plain rows and the deltas. The message
     // is sealed at admission and the file name at upload, so neither is in a table.
@@ -102,16 +120,7 @@ describe("Sealing a settled Nina turn", () => {
     expect(plantedIn(during)).not.toContain(PLANTED.prompt);
     expect(plantedIn(during)).not.toContain(PLANTED.file);
     const streamIds = Arr.map(during.streams, (stream) => stream.streamId);
-    const shapeBefore = Arr.map(
-      during.messages.page,
-      ({ message, order, status, stepOrder, tool }) => ({
-        order,
-        role: message?.role ?? null,
-        status,
-        stepOrder,
-        tool: tool ?? false,
-      })
-    );
+    const shapeBefore = shapeOf(during.messages.page);
     const learnerBefore = await f.owner.query(readChat, {
       chatId: f.receipt.chatId,
       paginationOpts: { cursor: null, numItems: 50 },
@@ -123,7 +132,7 @@ describe("Sealing a settled Nina turn", () => {
       threadId: f.receipt.threadId,
     });
 
-    await f.t.finishAllScheduledFunctions(() => undefined);
+    await f.t.finishAllScheduledFunctions(vi.runAllTimers);
 
     const settled = await storedRowsIn(f.t, f.receipt.threadId);
     expect(plantedIn(settled)).toEqual([]);
@@ -137,18 +146,7 @@ describe("Sealing a settled Nina turn", () => {
     expect(settled.streams).toEqual([]);
 
     // The rows keep their order, their steps, their status and their tool flag.
-    expect(
-      Arr.map(
-        settled.messages.page,
-        ({ message, order, status, stepOrder, tool }) => ({
-          order,
-          role: message?.role ?? null,
-          status,
-          stepOrder,
-          tool: tool ?? false,
-        })
-      )
-    ).toEqual(shapeBefore);
+    expect(shapeOf(settled.messages.page)).toEqual(shapeBefore);
     const answers = Arr.filter(
       settled.messages.page,
       (row) => row.message?.role === "assistant"

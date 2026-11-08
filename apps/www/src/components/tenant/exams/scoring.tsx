@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { ScoringKind } from "@repo/backend/confect/exams/scoring";
 import {
@@ -6,9 +7,11 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -16,6 +19,7 @@ import {
 import { Array as Arr, Function as Fn, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   type Question,
@@ -88,11 +92,16 @@ export function ScoringField({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {Arr.map(ScoringKind.literals, (value) => (
-            <SelectItem key={value} value={value}>
-              {t(SCORING_NAME[value])}
-            </SelectItem>
-          ))}
+          <SelectGroup>
+            <ChoiceLabel name="scoring" />
+
+            {Arr.map(ScoringKind.literals, (value) => (
+              <SelectItem key={value} value={value}>
+                <HugeIcons icon={CheckmarkCircle02Icon} />
+                {t(SCORING_NAME[value])}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
       <FieldDescription>{t(SCORING_HINT[kind])}</FieldDescription>
