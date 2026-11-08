@@ -78,6 +78,19 @@ finds the right data.
   next bullets, and only to decide the page's status. The Convex site trusts
   `x-forwarded-host` for the school host gate, and credentials and the slug-scoped
   lookup, not the header, protect sign-in.
+- Every routing decision reads a host's role from one reader, `readHostRole` in
+  `apps/www/src/lib/routing/school/host.ts` (8 November 2026): a school (one label
+  under a school domain that `isSchoolLabel` accepts), the School product
+  (`school.nakafa.com`), refused (any other host under a production cell domain:
+  `www`, a reserved label, two labels), or the main site (the apex, a development
+  server, any other host). The gate, the shell, the not-found page, the API
+  forward, the agent sign-in and the rewrite ask it. A refused host and the product
+  host move to the main site unless the host is the deployment's own address
+  (`SITE_URL`, such as `staging.nakafa.com` or a Portless `nakafa.local.nakafa.com`),
+  which only the deployment knows. The hosts with a Worker of their own (staging,
+  API, MCP, CAS) are one list, `OWN_HOST_LABELS` in `apps/www/deploy/stage.ts`, that
+  the stack routes and the zone redirect leaves alone, and its test proves the role
+  refuses each, so no school can take one.
 - The proxy's redirects name the host and port that the visitor asked for, read
   from the Host header (`apps/www/src/lib/routing/school/host.ts`): the port of the header, or the
   default port of the protocol when the header names none. Only the protocol comes
