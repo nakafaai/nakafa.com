@@ -41,11 +41,9 @@ import {
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
 import { SchoolTrailAction } from "@/components/tenant/settings/trail";
-
-const SOURCE = "components/tenant/settings/policies";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The daily caps a school picks from: half an answer at the cap up to ten answers. */
 const NINA_DAILY_CREDIT_CHOICES = [25, 50, 100, 200, 500];
@@ -162,9 +160,8 @@ function SchoolSwitchPolicy({
         id={id}
         onCheckedChange={(value) => {
           startTransition(() =>
-            saveSchool(
-              () => setPolicy({ policy: buildPolicy(value), slug }),
-              SOURCE
+            runSchoolWrite(
+              schoolCall(() => setPolicy({ policy: buildPolicy(value), slug }))
             )
           );
         }}
@@ -212,13 +209,13 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
             return;
           }
           startTransition(() =>
-            saveSchool(
-              () =>
+            runSchoolWrite(
+              schoolCall(() =>
                 setPolicy({
                   policy: { key: "ninaDailyCredits", value: chosen.value },
                   slug,
-                }),
-              SOURCE
+                })
+              )
             )
           );
         }}
@@ -296,13 +293,13 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
               const value = parsedDomains(domains);
               if (Option.isSome(value)) {
                 startTransition(() =>
-                  saveSchool(
-                    () =>
+                  runSchoolWrite(
+                    schoolCall(() =>
                       setPolicy({
                         policy: { key: "emailDomains", value: value.value },
                         slug,
-                      }),
-                    SOURCE
+                      })
+                    )
                   )
                 );
               }

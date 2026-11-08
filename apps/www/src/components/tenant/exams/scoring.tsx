@@ -16,12 +16,12 @@ import {
 import { Array as Arr, Function as Fn, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   type Question,
   scoringUpdate,
 } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** Whether a value the select gives is one of the rules. */
 const isScoringKind = Schema.is(ScoringKind);
@@ -75,11 +75,11 @@ export function ScoringField({
           if (!isScoringKind(value) || value === kind) {
             return;
           }
-          runExamAction(
-            sentAction(() =>
+          runSchoolWrite(
+            schoolCall(() =>
               save({ examId: exam.id, questionId, scoring: value, slug })
             ),
-            { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+            { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
           );
         }}
         value={kind}

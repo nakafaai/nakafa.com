@@ -13,7 +13,7 @@ import {
   type Result,
   Schema,
 } from "effect";
-import { forumCall } from "@/components/tenant/classes/forum/call";
+import { schoolCall } from "@/components/tenant/write";
 
 /** One announcement that waits for its time, as its author reads it. */
 export type WaitingPost = Ref.Returns<typeof classroom.scheduled.list>[number];
@@ -93,7 +93,7 @@ export const scheduleAnnouncement = Effect.fn("classroom.scheduled.schedule")(
     const id = yield* Schema.decodeUnknownEffect(Id("classroomScheduled"))(
       args.clientKey
     );
-    return yield* forumCall(() =>
+    return yield* schoolCall(() =>
       schedule(
         scheduleUpdate({
           clientKey: args.clientKey,

@@ -7,9 +7,9 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { useNavigate } from "@tanstack/react-router";
 import { Function as Fn } from "effect";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { useExam } from "@/components/tenant/exams/provider";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * Asks once before the open draft is deleted, as Canva asks before a design goes to the trash. The
@@ -44,9 +44,9 @@ export function DeleteExam({
       replace: true,
       to: "/school/$slug/exams",
     });
-    runExamAction(
-      sentAction(() => remove({ examId, slug })),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+    runSchoolWrite(
+      schoolCall(() => remove({ examId, slug })),
+      { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
     );
   }
 

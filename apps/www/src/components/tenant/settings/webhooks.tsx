@@ -42,15 +42,13 @@ import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolDeliverySheet } from "@/components/tenant/settings/deliveries";
 import { revokeWebhookChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import {
   SchoolWebhookCreateDialog,
   SchoolWebhookEditDialog,
 } from "@/components/tenant/settings/webhook";
-
-const SOURCE = "components/tenant/settings/webhooks";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many webhooks one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -237,10 +235,9 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
               disabled={isPending}
               onClick={() =>
                 startTransition(() =>
-                  saveSchool(
-                    () => rotate(names),
-                    SOURCE,
-                    (issued) => issueSecret(issued.secret)
+                  runSchoolWrite(
+                    schoolCall(() => rotate(names)),
+                    { onSaved: (issued) => issueSecret(issued.secret) }
                   )
                 )
               }
@@ -269,7 +266,9 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
             <Button
               onClick={() => {
                 dialogs.close();
-                startTransition(() => saveSchool(() => revoke(names), SOURCE));
+                startTransition(() =>
+                  runSchoolWrite(schoolCall(() => revoke(names)))
+                );
               }}
               type="button"
               variant="destructive"

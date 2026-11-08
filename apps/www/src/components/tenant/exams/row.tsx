@@ -20,10 +20,10 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant } from "@/components/tenant/context";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
 import type { ListedExam } from "@/components/tenant/exams/optimistic";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -43,9 +43,9 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
 
   const deleteExam = () => {
     setIsDeleting(false);
-    runExamAction(
-      sentAction(() => remove({ examId: exam.id, slug })),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+    runSchoolWrite(
+      schoolCall(() => remove({ examId: exam.id, slug })),
+      { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
     );
   };
 

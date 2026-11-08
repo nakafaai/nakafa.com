@@ -14,10 +14,8 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { renamePersonChange } from "@/components/tenant/settings/accounts";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Member } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/rename";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that renames a person of the school, from a members or a logins row: the name field starts from the
@@ -52,9 +50,8 @@ export function PersonRenameDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () => rename({ name: next, personId: person.id, slug }),
-        SOURCE
+      runSchoolWrite(
+        schoolCall(() => rename({ name: next, personId: person.id, slug }))
       )
     );
   };

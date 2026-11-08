@@ -34,14 +34,12 @@ import {
   timeZoneItems,
 } from "@/components/tenant/settings/choices";
 import { addUnitChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
   UnitLevelField,
   UnitNameField,
 } from "@/components/tenant/settings/units/fields";
-
-const SOURCE = "components/tenant/settings/create";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** Whether the dialog is open, and how it opens and closes, which the dialog gives its form. */
 const CreateDialogContext = createContext<{
@@ -132,16 +130,16 @@ function SchoolUnitCreateForm({
     sent.current = true;
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           add({
             contentLanguage,
             level,
             name: trimmed,
             slug,
             timeZone,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };

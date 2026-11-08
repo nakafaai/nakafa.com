@@ -10,9 +10,7 @@ import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { CardView } from "@/components/tenant/settings/card";
 import { LoginNameField } from "@/components/tenant/settings/login";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/issue";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that gives a teacher or an Admin who has no account yet a login card of their
@@ -62,10 +60,11 @@ export function SchoolIssueCardDialog({
               const chosen = login.value;
               setOpen(false);
               startTransition(() =>
-                saveSchool(
-                  () => issue({ loginName: chosen, personId, slug }),
-                  SOURCE,
-                  (card) => onIssued({ ...card, name })
+                runSchoolWrite(
+                  schoolCall(() =>
+                    issue({ loginName: chosen, personId, slug })
+                  ),
+                  { onSaved: (card) => onIssued({ ...card, name }) }
                 )
               );
             }}

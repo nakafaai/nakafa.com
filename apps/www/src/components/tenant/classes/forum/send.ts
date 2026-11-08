@@ -2,13 +2,13 @@ import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Clock, Effect, type Result, Schema } from "effect";
-import { forumCall } from "@/components/tenant/classes/forum/call";
 import {
   type ForumMessage,
   openUpdate,
   replyUpdate,
   sendUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
+import { schoolCall } from "@/components/tenant/write";
 
 /** The arguments of one send, as the composer gives them. */
 type SendArgs = Ref.Args<typeof classroom.forum.messages.send>;
@@ -74,7 +74,7 @@ export const sendMessage = Effect.fn("classroom.forum.send")(function* <E>(
     shown,
     args.poll
   );
-  return yield* forumCall(() => send(sendUpdate(message), args));
+  return yield* schoolCall(() => send(sendUpdate(message), args));
 });
 
 /** The reply of the viewer in a discussion, shown at once at the bottom of the discussion. */
@@ -92,7 +92,7 @@ export const sendReply = Effect.fn("classroom.forum.reply")(function* <E>(
     shown,
     null
   );
-  return yield* forumCall(() => reply(replyUpdate(message), args));
+  return yield* schoolCall(() => reply(replyUpdate(message), args));
 });
 
 /**
@@ -121,5 +121,5 @@ export const openDiscussion = Effect.fn("classroom.forum.open")(function* <
     { attachments: [], mentions: [] },
     null
   );
-  return yield* forumCall(() => open(openUpdate(message), args));
+  return yield* schoolCall(() => open(openUpdate(message), args));
 });

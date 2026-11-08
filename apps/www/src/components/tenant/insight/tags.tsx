@@ -32,10 +32,8 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/insight/tags";
 
 /** How many exams the dialog offers. */
 const EXAM_PAGE = 50;
@@ -210,9 +208,10 @@ function QuestionTag({
             return;
           }
           startSaving(() =>
-            saveSchool(
-              () => set({ competency, examId, questionId: tag.id, slug }),
-              SOURCE
+            runSchoolWrite(
+              schoolCall(() =>
+                set({ competency, examId, questionId: tag.id, slug })
+              )
             )
           );
         }}

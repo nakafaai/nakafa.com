@@ -49,10 +49,10 @@ import {
 } from "@/components/tenant/settings/client";
 import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The look of each client status, in its table cell and in its column's filter: a plugged-in client,
@@ -62,8 +62,6 @@ const CLIENT_STATUS_LOOKS = {
   active: { icon: Plug01Icon, tone: "success" },
   revoked: { icon: Unlink01Icon, tone: "neutral" },
 } as const satisfies Record<typeof IntegrationStatus.Type, StatusLook>;
-
-const SOURCE = "components/tenant/settings/clients";
 
 /** How many clients one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -245,10 +243,9 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
           disabled={isPending}
           onClick={() =>
             startTransition(() =>
-              saveSchool(
-                () => rotate({ clientId: client.id, slug }),
-                SOURCE,
-                (answer) => issueSecret(answer)
+              runSchoolWrite(
+                schoolCall(() => rotate({ clientId: client.id, slug })),
+                { onSaved: (answer) => issueSecret(answer) }
               )
             )
           }
@@ -284,9 +281,8 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
               onClick={() => {
                 dialogs.close();
                 startTransition(() =>
-                  saveSchool(
-                    () => revoke({ clientId: client.id, slug }),
-                    SOURCE
+                  runSchoolWrite(
+                    schoolCall(() => revoke({ clientId: client.id, slug }))
                   )
                 );
               }}

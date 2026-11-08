@@ -17,9 +17,7 @@ import {
   type LinkItem,
   readdressLinkChange,
 } from "@/components/tenant/guardian/change";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/address";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that corrects the parent email of a pending link. It starts from the link's address and keeps only what
@@ -50,9 +48,10 @@ export function GuardianLinkAddressDialog({ link }: { link: LinkItem }) {
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () => readdress({ email: address.value, linkId: link.id, slug }),
-        SOURCE
+      runSchoolWrite(
+        schoolCall(() =>
+          readdress({ email: address.value, linkId: link.id, slug })
+        )
       )
     );
   };

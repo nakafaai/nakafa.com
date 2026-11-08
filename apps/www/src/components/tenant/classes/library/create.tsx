@@ -20,11 +20,6 @@ import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useId, useReducer, useRef, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   addLibraryLink,
   pickFromDrive,
   sendLibraryFile,
@@ -53,6 +48,7 @@ import {
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The library row's kind for a file's type. */
 const kindOf = (type: string) =>
@@ -99,7 +95,7 @@ export function AddToLibrary() {
    */
   const chooseDrive = () => {
     change({ _tag: "picking" });
-    runForumCall(
+    runSchoolWrite(
       pickFromDrive(
         () => pickerToken({}),
         locale,
@@ -115,16 +111,17 @@ export function AddToLibrary() {
           Effect.sync(() => change({ _tag: "missing" }))
         )
       ),
-      () => {
-        change({ _tag: "picked", picked: Option.none() });
-        toastForumFailure();
+      {
+        onFailed: () => {
+          change({ _tag: "picked", picked: Option.none() });
+        },
       }
     );
   };
 
   /** Shows the link at once, sends it under a new key, and restores the dialog when it fails. */
   const sendLink = (author: string) => {
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
         addLibraryLink(
           (update, args) => addLink.withOptimisticUpdate(update)(args),
@@ -132,22 +129,23 @@ export function AddToLibrary() {
           { address: link, classId, clientKey, folderId, slug, title: heading }
         )
       ),
-      () => {
-        change({ _tag: "restored", address: link, title: heading });
-        setOpen(true);
-        toastForumFailure();
+      {
+        onFailed: () => {
+          change({ _tag: "restored", address: link, title: heading });
+          setOpen(true);
+        },
       }
     );
   };
 
   /** Shows the Drive file at once, has the server import it, and takes its row away when the server refuses it. */
   const sendDrive = (author: string, picked: DriveFile) => {
-    runForumCall(
+    runSchoolWrite(
       sendLibraryFile(
         uploads.getState(),
         { author, kind: kindOf(picked.mimeType), title: heading },
         (clientKey) =>
-          forumCall(() =>
+          schoolCall(() =>
             importDrive({
               classId,
               clientKey,
@@ -157,8 +155,7 @@ export function AddToLibrary() {
               title: heading,
             })
           )
-      ).pipe(Effect.catchTags(fileRefusals)),
-      toastForumFailure
+      ).pipe(Effect.catchTags(fileRefusals))
     );
   };
 

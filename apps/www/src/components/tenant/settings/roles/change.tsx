@@ -15,10 +15,8 @@ import { useTenant } from "@/components/tenant/context";
 import { changeGrantRoleChange } from "@/components/tenant/settings/edits";
 import { SchoolRoleSelect } from "@/components/tenant/settings/grant";
 import { givenRoles } from "@/components/tenant/settings/grants";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Grant } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/roles/change";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that changes the role of one grant, over the same scope, in one step, so the person
@@ -63,9 +61,8 @@ export function SchoolRoleChangeDialog({
               }
               setOpen(false);
               startTransition(() =>
-                saveSchool(
-                  () => change({ grantId: grant.id, role, slug }),
-                  SOURCE
+                runSchoolWrite(
+                  schoolCall(() => change({ grantId: grant.id, role, slug }))
                 )
               );
             }}

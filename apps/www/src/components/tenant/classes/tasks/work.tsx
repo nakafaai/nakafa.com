@@ -35,11 +35,6 @@ import { TableEnd } from "@/components/shared/table/pages";
 import { TableName } from "@/components/shared/table/title";
 import { useServerSearch } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import {
   type ClassTask,
@@ -47,6 +42,7 @@ import {
   type TaskWork,
 } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
 
 /** How many pieces of work the table reads each time its end comes into view. */
@@ -238,16 +234,15 @@ function WorkPoints({ points, work }: { points: number; work: TaskWork }) {
     ) {
       return;
     }
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         score.withOptimisticUpdate(scoreUpdate)({
           classId,
           points: parsed.value,
           slug,
           submissionId: work.id,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 

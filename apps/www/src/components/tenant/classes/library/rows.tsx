@@ -20,11 +20,6 @@ import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   isSavedFolder,
   isWithin,
   type LibraryFolder,
@@ -48,6 +43,7 @@ import { useFolderList } from "@/components/tenant/classes/library/tree";
 import type { LibraryUpload } from "@/components/tenant/classes/library/uploads";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
 import { schoolClassFolderTarget } from "@/lib/routing/school/target";
 
@@ -226,31 +222,29 @@ function useDropMove() {
       if (isWithin(folders, target.id, folder.value.id)) {
         return;
       }
-      runForumCall(
-        forumCall(() =>
+      runSchoolWrite(
+        schoolCall(() =>
           moveFolder.withOptimisticUpdate(moveFolderUpdate)({
             classId,
             folderId: folder.value.id,
             parentId: target.id,
             slug,
           })
-        ),
-        toastForumFailure
+        )
       );
       return;
     }
     const itemId = Schema.decodeUnknownOption(Id("classroomLibrary"))(id);
     if (kind === "item" && Option.isSome(itemId)) {
-      runForumCall(
-        forumCall(() =>
+      runSchoolWrite(
+        schoolCall(() =>
           moveItem.withOptimisticUpdate(moveItemUpdate)({
             classId,
             folderId: target.id,
             itemId: itemId.value,
             slug,
           })
-        ),
-        toastForumFailure
+        )
       );
     }
   };

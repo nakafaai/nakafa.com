@@ -27,11 +27,9 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { createClassChange } from "@/components/tenant/settings/class/changes";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/settings/class/add";
 
 /** The ID of one cohort, as the cohorts list of a period names it. */
 type CohortId = Cohort["id"];
@@ -76,12 +74,15 @@ export function SchoolClassAdd({
     }
     setIsOpen(false);
     startSaving(() =>
-      saveSchool(
-        () => create({ cohortId, slug, ...(sd ? {} : { subject: next }) }),
-        SOURCE,
-        () => {
-          setCohortId(null);
-          setSubject("");
+      runSchoolWrite(
+        schoolCall(() =>
+          create({ cohortId, slug, ...(sd ? {} : { subject: next }) })
+        ),
+        {
+          onSaved: () => {
+            setCohortId(null);
+            setSubject("");
+          },
         }
       )
     );

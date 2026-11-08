@@ -38,9 +38,7 @@ import { TableFrame } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/requests";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The longest request, which the server also holds a parent to. */
 const REQUEST_LIMIT = 500;
@@ -227,9 +225,10 @@ function AskDialog({
               disabled={isSaving || text.trim() === ""}
               onClick={() =>
                 startSaving(async () => {
-                  await saveSchool(
-                    () => ask({ kind, linkId, slug, text: text.trim() }),
-                    SOURCE
+                  await runSchoolWrite(
+                    schoolCall(() =>
+                      ask({ kind, linkId, slug, text: text.trim() })
+                    )
                   );
                   setText("");
                   setOpen(false);
@@ -298,15 +297,15 @@ export function WaitingRequests({
   function decide(request: WaitingRequest, decision: "approved" | "declined") {
     startSaving(async () => {
       setAnswered(request.id);
-      await saveSchool(
-        () =>
+      await runSchoolWrite(
+        schoolCall(() =>
           answer({
             decision,
             linkId: request.linkId,
             requestId: request.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       );
     });
   }

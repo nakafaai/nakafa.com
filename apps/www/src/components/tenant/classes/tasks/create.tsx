@@ -30,11 +30,6 @@ import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DialogRefusal } from "@/components/shared/refusal";
-import {
-  forumCall,
-  runForumCall,
-} from "@/components/tenant/classes/forum/call";
-import { classRefusalCopy } from "@/components/tenant/classes/refusals";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import {
   checkedDraft,
@@ -47,6 +42,7 @@ import {
 } from "@/components/tenant/classes/tasks/questions";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many of the school's exams the picker offers. */
 const EXAM_PAGE_SIZE = 50;
@@ -75,9 +71,9 @@ export function NewTask() {
     }
     setOpen(false);
     setRefusal(null);
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
-        forumCall(() =>
+        schoolCall(() =>
           publish({
             ...checked.value,
             classId,
@@ -94,9 +90,11 @@ export function NewTask() {
           })
         )
       ),
-      (error) => {
-        setRefusal(classRefusalCopy(error));
-        setOpen(true);
+      {
+        onRefused: (copy) => {
+          setRefusal(copy);
+          setOpen(true);
+        },
       }
     );
   };

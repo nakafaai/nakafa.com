@@ -24,9 +24,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/device";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** One integration client as the school's list shows it. */
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
@@ -72,15 +70,17 @@ export function SchoolDeviceDialog({
               inert={isPending}
               onClick={() =>
                 startTransition(() =>
-                  saveSchool(
-                    () =>
-                      authorize({ clientId: client.id, slug, userCode: code }),
-                    SOURCE,
-                    () => {
-                      close();
-                      toast.success({
-                        title: "school-device-authorized.title",
-                      });
+                  runSchoolWrite(
+                    schoolCall(() =>
+                      authorize({ clientId: client.id, slug, userCode: code })
+                    ),
+                    {
+                      onSaved: () => {
+                        close();
+                        toast.success({
+                          title: "school-device-authorized.title",
+                        });
+                      },
                     }
                   )
                 )
@@ -111,14 +111,15 @@ export function SchoolDeviceDialog({
                   <DropdownMenuItem
                     onClick={() =>
                       startTransition(() =>
-                        saveSchool(
-                          () => deny({ slug, userCode: code }),
-                          SOURCE,
-                          () => {
-                            close();
-                            toast.success({
-                              title: "school-device-denied.title",
-                            });
+                        runSchoolWrite(
+                          schoolCall(() => deny({ slug, userCode: code })),
+                          {
+                            onSaved: () => {
+                              close();
+                              toast.success({
+                                title: "school-device-denied.title",
+                              });
+                            },
                           }
                         )
                       )

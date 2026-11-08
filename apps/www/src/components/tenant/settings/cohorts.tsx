@@ -40,7 +40,6 @@ import {
 } from "@/components/tenant/settings/cohort/menu";
 import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import { createCohortChange } from "@/components/tenant/settings/groups";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 import { isDraft } from "@/components/tenant/settings/state";
@@ -49,9 +48,8 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/settings/cohorts";
 
 /** The columns of the cohorts table. */
 const cohortColumns = tableColumns<Cohort>();
@@ -294,18 +292,20 @@ function SchoolCohortAdd({
     }
     setIsOpen(false);
     startSaving(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           create({
             grade: grade.value,
             name: next,
             periodId,
             slug,
-          }),
-        SOURCE,
-        () => {
-          setName("");
-          setGradeValue(null);
+          })
+        ),
+        {
+          onSaved: () => {
+            setName("");
+            setGradeValue(null);
+          },
         }
       )
     );

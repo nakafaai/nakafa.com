@@ -28,10 +28,6 @@ import {
   readingMeasureVariants,
 } from "@/components/shared/content/width";
 import {
-  forumCall,
-  runForumCall,
-} from "@/components/tenant/classes/forum/call";
-import {
   firstUnread,
   headToKeep,
   newestSeen,
@@ -48,6 +44,7 @@ import {
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { TalliesProvider } from "@/components/tenant/classes/forum/tallies";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How long the reader's view stays still before the read mark moves to it. */
 const MARK_DELAY_MILLISECONDS = 600;
@@ -220,8 +217,8 @@ function ReadTracker({
     if (settled === null || (at !== null && settled <= at)) {
       return;
     }
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         mark.withOptimisticUpdate(markUpdate)({
           at: settled,
           classId,
@@ -229,7 +226,7 @@ function ReadTracker({
           slug,
         })
       ),
-      () => undefined
+      { onRefused: () => undefined }
     );
   }, [at, classId, mark, place, settled, slug]);
 

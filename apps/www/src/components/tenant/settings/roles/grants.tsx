@@ -36,12 +36,10 @@ import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { revokeGrantChange } from "@/components/tenant/settings/grants";
 import { SchoolRoleChangeDialog } from "@/components/tenant/settings/roles/change";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
-
-const SOURCE = "components/tenant/settings/roles/grants";
 
 /** How many grants the table reads each time its end comes near. */
 const PAGE_SIZE = 25;
@@ -209,17 +207,18 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
                   }
                   // The saved revoke marks the role as ended, so the page lands on what the viewer keeps.
                   let ended = false;
-                  await saveSchool(
-                    () => revoke({ grantId: grant.id, slug }),
-                    SOURCE,
-                    own
-                      ? () => {
-                          ended = true;
-                          toast.success({
-                            title: "school-own-role-ended.title",
-                          });
-                        }
-                      : undefined
+                  await runSchoolWrite(
+                    schoolCall(() => revoke({ grantId: grant.id, slug })),
+                    {
+                      onSaved: own
+                        ? () => {
+                            ended = true;
+                            toast.success({
+                              title: "school-own-role-ended.title",
+                            });
+                          }
+                        : undefined,
+                    }
                   );
                   if (ended) {
                     await router.invalidate();

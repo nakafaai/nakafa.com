@@ -20,9 +20,7 @@ import {
   type PersonId,
   SchoolStudentPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/start";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that links a guardian to a student: the student, the guardian's name, and the
@@ -65,19 +63,21 @@ export function GuardianLinkStartDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           start({
             email: address.value,
             guardianName: guardianName.value,
             slug,
             studentId,
-          }),
-        SOURCE,
-        () => {
-          setStudentId(undefined);
-          setName("");
-          setEmail("");
+          })
+        ),
+        {
+          onSaved: () => {
+            setStudentId(undefined);
+            setName("");
+            setEmail("");
+          },
         }
       )
     );

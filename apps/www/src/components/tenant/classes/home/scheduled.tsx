@@ -37,11 +37,6 @@ import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   cancelWaitingUpdate,
@@ -55,6 +50,7 @@ import {
   localDeadline,
 } from "@/components/tenant/classes/tasks/deadline";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The announcements the viewer keeps for later, above the class's posts, the soonest first. Nobody else in the class
@@ -131,15 +127,14 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() =>
-                runForumCall(
-                  forumCall(() =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     cancel.withOptimisticUpdate(cancelWaitingUpdate)({
                       classId,
                       scheduledId: post.id,
                       slug,
                     })
-                  ),
-                  toastForumFailure
+                  )
                 )
               }
               variant="destructive"
@@ -194,8 +189,8 @@ function WaitingDialog({
       return;
     }
     setOpen(false);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         edit.withOptimisticUpdate(editWaitingUpdate)({
           classId,
           publishAt: publishAt.value,
@@ -204,9 +199,10 @@ function WaitingDialog({
           text: body,
         })
       ),
-      () => {
-        setOpen(true);
-        toastForumFailure();
+      {
+        onFailed: () => {
+          setOpen(true);
+        },
       }
     );
   };

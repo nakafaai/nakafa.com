@@ -18,14 +18,11 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Option, Schema, String as Str } from "effect";
 import { useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { openDiscussion } from "@/components/tenant/classes/forum/send";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
+import { runSchoolWrite } from "@/components/tenant/write";
 
 /**
  * Opens a numbered discussion in the channel: a title and a first message. The dialog closes on
@@ -73,7 +70,7 @@ export function StartDiscussion({
     const { person } = viewer.value;
     sent.current = true;
     setShown(false);
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
         openDiscussion(
           (update, args) => open.withOptimisticUpdate(update)(args),
@@ -93,9 +90,10 @@ export function StartDiscussion({
           )
         )
       ),
-      () => {
-        restore(t("discussion-failed"));
-        toastForumFailure();
+      {
+        onFailed: () => {
+          restore(t("discussion-failed"));
+        },
       }
     );
   };

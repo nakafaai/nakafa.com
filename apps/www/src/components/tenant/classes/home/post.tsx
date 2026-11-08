@@ -40,11 +40,6 @@ import {
 } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
 import {
   archivePostUpdate,
@@ -57,6 +52,7 @@ import {
 import { PostPoll } from "@/components/tenant/classes/home/poll";
 import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * One announcement of the class home: who posted it and when, and its text, which may break
@@ -146,15 +142,14 @@ function PostActions({
 
   const confirm = () => {
     setRemoving(false);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         remove.withOptimisticUpdate(removePostUpdate)({
           classId,
           postId: post.id,
           slug,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 
@@ -167,16 +162,15 @@ function PostActions({
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() =>
-                runForumCall(
-                  forumCall(() =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     pin.withOptimisticUpdate(pinPostUpdate(post))({
                       classId,
                       pinned: !post.pinned,
                       postId: post.id,
                       slug,
                     })
-                  ),
-                  toastForumFailure
+                  )
                 )
               }
             >
@@ -195,15 +189,14 @@ function PostActions({
                 {post.archived ? (
                   <DropdownMenuItem
                     onClick={() =>
-                      runForumCall(
-                        forumCall(() =>
+                      runSchoolWrite(
+                        schoolCall(() =>
                           restore.withOptimisticUpdate(restorePostUpdate)({
                             classId,
                             postId: post.id,
                             slug,
                           })
-                        ),
-                        toastForumFailure
+                        )
                       )
                     }
                   >
@@ -213,15 +206,14 @@ function PostActions({
                 ) : (
                   <DropdownMenuItem
                     onClick={() =>
-                      runForumCall(
-                        forumCall(() =>
+                      runSchoolWrite(
+                        schoolCall(() =>
                           archive.withOptimisticUpdate(archivePostUpdate)({
                             classId,
                             postId: post.id,
                             slug,
                           })
-                        ),
-                        toastForumFailure
+                        )
                       )
                     }
                   >
@@ -280,9 +272,9 @@ function PostEditor({ onDone, post }: { onDone: () => void; post: ClassPost }) {
     if (!Schema.is(PostText)(text) || text === post.text) {
       return;
     }
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(Clock.currentTimeMillis, (at) =>
-        forumCall(() =>
+        schoolCall(() =>
           edit.withOptimisticUpdate(editPostUpdate(at))({
             classId,
             postId: post.id,
@@ -290,8 +282,7 @@ function PostEditor({ onDone, post }: { onDone: () => void; post: ClassPost }) {
             text,
           })
         )
-      ),
-      toastForumFailure
+      )
     );
   };
 

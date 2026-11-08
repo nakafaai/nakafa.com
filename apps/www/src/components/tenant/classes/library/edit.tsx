@@ -32,9 +32,7 @@ import {
 } from "@/components/tenant/classes/library/optimistic";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
 import { useClassScope } from "@/components/tenant/classes/scope";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/classes/library/edit";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The choice that takes an item out of its folder, to the top of the library. */
 const NO_FOLDER = "none";
@@ -95,8 +93,8 @@ export function LibraryEditDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           edit({
             address: isLink ? nextAddress : null,
             classId,
@@ -104,8 +102,8 @@ export function LibraryEditDialog({
             itemId: item.id,
             slug,
             title: nextTitle,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };

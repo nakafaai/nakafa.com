@@ -43,11 +43,6 @@ import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   DiscussionReplies,
   DiscussionTitle,
 } from "@/components/tenant/classes/forum/discussion";
@@ -68,10 +63,8 @@ import {
 } from "@/components/tenant/classes/forum/tallies";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { LineDialog } from "@/components/tenant/line";
-import { saveSchool } from "@/components/tenant/settings/save";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { schoolClassDiscussionTarget } from "@/lib/routing/school/target";
-
-const SOURCE = "components/tenant/classes/forum/message";
 
 /**
  * One message of a channel or of a discussion, as a chat shows it. The viewer's own messages stand
@@ -250,9 +243,9 @@ function MessageActions({
 
   /** Starts a thread from this message and opens it beside its chat. */
   const startThread = () =>
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(
-        forumCall(() =>
+        schoolCall(() =>
           start({
             classId: scope.classId,
             messageId: message.id,
@@ -263,8 +256,7 @@ function MessageActions({
           Effect.promise(() =>
             navigate(schoolClassDiscussionTarget(scope.slug, classSlug, number))
           )
-      ),
-      toastForumFailure
+      )
     );
 
   if (!(scope.canPost || scope.canManage)) {
@@ -341,15 +333,15 @@ function MessageActions({
           label={t("discussion-title")}
           onSave={(title) =>
             startTransition(() =>
-              saveSchool(
-                () =>
+              runSchoolWrite(
+                schoolCall(() =>
                   rename({
                     classId: scope.classId,
                     number: discussion.number,
                     slug: scope.slug,
                     title,
-                  }),
-                SOURCE
+                  })
+                )
               )
             )
           }
@@ -388,9 +380,9 @@ function MessageEditor({
     if (!Schema.is(MessageText)(body) || body === text) {
       return;
     }
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(Clock.currentTimeMillis, (at) =>
-        forumCall(() =>
+        schoolCall(() =>
           edit.withOptimisticUpdate(editUpdate(at))({
             classId: scope.classId,
             messageId: message.id,
@@ -398,8 +390,7 @@ function MessageEditor({
             text: body,
           })
         )
-      ),
-      toastForumFailure
+      )
     );
   };
 
@@ -450,15 +441,14 @@ function HideMessage({
 
   const confirm = () => {
     setOpen(false);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         hide.withOptimisticUpdate(hideUpdate)({
           classId: scope.classId,
           messageId: message.id,
           slug: scope.slug,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 

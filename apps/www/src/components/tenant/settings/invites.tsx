@@ -52,15 +52,13 @@ import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation";
 import { cardOffered } from "@/components/tenant/settings/offer";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
 import {
   SchoolDateTime,
   useSchoolTimeZone,
 } from "@/components/tenant/settings/time";
-
-const SOURCE = "components/tenant/settings/invites";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many invites one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -222,7 +220,9 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
    */
   const sendPending = (locale: typeof ActiveAppLocaleCodeSchema.Type) =>
     startResending(() =>
-      saveSchool(() => resend({ inviteId: invite.id, locale, slug }), SOURCE)
+      runSchoolWrite(
+        schoolCall(() => resend({ inviteId: invite.id, locale, slug }))
+      )
     );
 
   /**
@@ -231,15 +231,15 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
    */
   const sendExpired = (locale: typeof ActiveAppLocaleCodeSchema.Type) =>
     startResending(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           inviteAgain({
             email: invite.email,
             locale,
             personId: invite.personId,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
 
@@ -250,15 +250,15 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           readdress({
             email: email.value,
             inviteId: invite.id,
             locale: sendLocale,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
@@ -314,9 +314,8 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
               onClick={() => {
                 dialogs.close();
                 startTransition(() =>
-                  saveSchool(
-                    () => revoke({ inviteId: invite.id, slug }),
-                    SOURCE
+                  runSchoolWrite(
+                    schoolCall(() => revoke({ inviteId: invite.id, slug }))
                   )
                 );
               }}

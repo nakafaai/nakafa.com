@@ -26,9 +26,7 @@ import {
 } from "@/components/tenant/guardian/change";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/family";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * A student's parents: the links the student and the school started, each with its state,
@@ -154,18 +152,20 @@ function ParentInviteDialog({
     const studentId = viewer.value.person.id;
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           start({
             email: address.value,
             guardianName: guardianName.value,
             slug,
             studentId,
-          }),
-        SOURCE,
-        () => {
-          setName("");
-          setEmail("");
+          })
+        ),
+        {
+          onSaved: () => {
+            setName("");
+            setEmail("");
+          },
         }
       )
     );

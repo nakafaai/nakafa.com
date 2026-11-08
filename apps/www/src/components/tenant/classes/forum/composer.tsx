@@ -41,7 +41,6 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import { runForumCall } from "@/components/tenant/classes/forum/call";
 import { useMentionPicker } from "@/components/tenant/classes/forum/picker";
 import { NewPoll } from "@/components/tenant/classes/forum/poll";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
@@ -54,6 +53,7 @@ import {
 } from "@/components/tenant/classes/forum/tray";
 import { shownFile } from "@/components/tenant/classes/forum/upload";
 import { useViewerQuery } from "@/components/tenant/context";
+import { runSchoolWrite } from "@/components/tenant/write";
 
 /** A message the server refused, kept with its key and all it carries so Try again never posts it twice. */
 const Unsent = Schema.Struct({
@@ -124,7 +124,7 @@ export function ForumComposer() {
     setUnsent(Option.none());
     picker.clear();
     tray.clear();
-    runForumCall(
+    runSchoolWrite(
       discussion === undefined
         ? sendMessage(
             (update, args) => send.withOptimisticUpdate(update)(args),
@@ -155,11 +155,13 @@ export function ForumComposer() {
             },
             shown
           ),
-      () => {
-        setText((current) => (current === "" ? message : current));
-        setUnsent(
-          Option.some({ ...carried, clientKey, mentions, text: message })
-        );
+      {
+        onRefused: () => {
+          setText((current) => (current === "" ? message : current));
+          setUnsent(
+            Option.some({ ...carried, clientKey, mentions, text: message })
+          );
+        },
       }
     );
   };
@@ -174,21 +176,21 @@ export function ForumComposer() {
       attachments: Arr.map(tray.files, shownFile),
       uploads: Arr.getSomes(Arr.map(tray.files, (file) => file.upload)),
     };
-    runForumCall(
+    runSchoolWrite(
       Effect.map(randomUuid, (clientKey) =>
         post(body, clientKey, mentions, carried, null)
       ),
-      () => undefined
+      { onRefused: () => undefined }
     );
   };
 
   /** Sends a poll on its own, as a message of the channel. */
   const sendPoll = (poll: typeof PollDraft.Type) =>
-    runForumCall(
+    runSchoolWrite(
       Effect.map(randomUuid, (clientKey) =>
         post("", clientKey, [], { attachments: [], uploads: [] }, poll)
       ),
-      () => undefined
+      { onRefused: () => undefined }
     );
 
   /** Puts an emoji where the caret stands. */

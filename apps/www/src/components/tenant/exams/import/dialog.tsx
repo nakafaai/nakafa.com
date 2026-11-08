@@ -14,9 +14,7 @@ import {
 import { ImportFileField } from "@/components/tenant/exams/import/field";
 import { IMPORT_ACCEPT } from "@/components/tenant/exams/import/file";
 import { useExam } from "@/components/tenant/exams/provider";
-import { reportClientException } from "@/lib/analytics/client";
-
-const SOURCE = "components/tenant/exams/import/dialog";
+import { failSchoolAction } from "@/components/tenant/write";
 
 /** Says that a form is read through a Google Drive connection this account does not have. */
 const toastNoDrive = () =>
@@ -99,16 +97,10 @@ export function ImportQuestions({
                     Effect.sync(toastNoDrive)
                   ),
                   Effect.catch((error) =>
-                    reportClientException(error, { source: SOURCE }).pipe(
-                      Effect.andThen(
-                        Effect.sync(() =>
-                          toast.error({
-                            description: "import-unread.description",
-                            title: "import-unread.title",
-                          })
-                        )
-                      )
-                    )
+                    failSchoolAction(error, {
+                      description: "import-unread.description",
+                      title: "import-unread.title",
+                    })
                   )
                 )
               )

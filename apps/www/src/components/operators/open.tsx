@@ -26,10 +26,8 @@ import {
   type OpenForm,
   openRequest,
 } from "@/components/operators/state";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { suggestSlug, typedSlug } from "@/components/tenant/start/state";
-
-const SOURCE = "components/operators/open";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** A field of the form that holds one line of text. */
 type TextField = keyof Pick<
@@ -143,12 +141,13 @@ export function OpenSchoolDialog({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () => openSchool(request.value),
-        SOURCE,
-        () => {
-          setOpen(false);
-          setForm(EMPTY_OPEN_FORM);
+      runSchoolWrite(
+        schoolCall(() => openSchool(request.value)),
+        {
+          onSaved: () => {
+            setOpen(false);
+            setForm(EMPTY_OPEN_FORM);
+          },
         }
       )
     );

@@ -14,10 +14,8 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { setRosterEntryChange } from "@/components/tenant/settings/entry";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { CohortMember } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/nisn";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that sets a student's NISN and under-age flag by hand, which decide whether the student needs a guardian's
@@ -59,9 +57,8 @@ export function RosterEntryDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () => save({ nisn: nisn.value, personId: person.id, slug }),
-        SOURCE
+      runSchoolWrite(
+        schoolCall(() => save({ nisn: nisn.value, personId: person.id, slug }))
       )
     );
   };

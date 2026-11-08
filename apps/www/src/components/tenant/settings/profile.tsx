@@ -23,9 +23,9 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolLocaleCard } from "@/components/tenant/settings/locale";
 import { removeLogoChange } from "@/components/tenant/settings/mutation";
 import { SchoolNameCard } from "@/components/tenant/settings/name";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
 import { storeSchoolLogo } from "@/components/tenant/settings/upload";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { reportClientException } from "@/lib/analytics/client";
 
 const SOURCE = "components/tenant/settings/profile";
@@ -113,15 +113,15 @@ function SchoolProfileCard({
     const url = URL.createObjectURL(file);
     setPreview(url);
     startTransition(async () => {
-      await saveSchool(
-        () =>
+      await runSchoolWrite(
+        schoolCall(() =>
           storeSchoolLogo({
             file,
             reserve: () =>
               reserveLogo({ byteSize: file.size, contentType, slug }),
             save: (fileId) => setLogo({ fileId, slug }),
-          }),
-        SOURCE
+          })
+        )
       );
       setPreview(undefined);
       URL.revokeObjectURL(url);
@@ -130,7 +130,9 @@ function SchoolProfileCard({
 
   const takeLogoOff = () => {
     setIsRemoving(false);
-    startTransition(() => saveSchool(() => removeLogo({ slug }), SOURCE));
+    startTransition(() =>
+      runSchoolWrite(schoolCall(() => removeLogo({ slug })))
+    );
   };
 
   const copyAddress = () => {

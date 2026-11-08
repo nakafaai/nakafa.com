@@ -25,11 +25,6 @@ import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
 import { useDialogs } from "@/components/shared/dialogs";
 import { RowItems } from "@/components/shared/table/menu";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   addLibraryFolder,
   type LibraryFolder,
   moveFolderUpdate,
@@ -46,6 +41,7 @@ import { MoveDialog } from "@/components/tenant/classes/library/move";
 import { useLibraryFolder } from "@/components/tenant/classes/library/scope";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that names a folder: a new one, or one the teacher renames. Its action waits for a name that holds and
@@ -145,7 +141,7 @@ export function NewFolder() {
     }
     const author = viewer.value.person.name;
     setOpen(false);
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
         addLibraryFolder(
           (update, args) => add.withOptimisticUpdate(update)(args),
@@ -153,9 +149,10 @@ export function NewFolder() {
           { classId, clientKey, name, parentId, slug }
         )
       ),
-      () => {
-        setOpen(true);
-        toastForumFailure();
+      {
+        onFailed: () => {
+          setOpen(true);
+        },
       }
     );
   };
@@ -242,8 +239,8 @@ export function FolderRowMenu({
         <MoveAndTrash
           onMove={() => dialogs.show("move")}
           onTrash={() =>
-            runForumCall(
-              forumCall(() =>
+            runSchoolWrite(
+              schoolCall(() =>
                 trash.withOptimisticUpdate(
                   trashFolderUpdate(Effect.runSync(Clock.currentTimeMillis))
                 )({
@@ -251,8 +248,7 @@ export function FolderRowMenu({
                   folderId: folder.id,
                   slug,
                 })
-              ),
-              toastForumFailure
+              )
             )
           }
         />
@@ -265,16 +261,15 @@ export function FolderRowMenu({
           named={folder.name}
           onName={(name) => {
             dialogs.close();
-            runForumCall(
-              forumCall(() =>
+            runSchoolWrite(
+              schoolCall(() =>
                 rename.withOptimisticUpdate(renameFolderUpdate)({
                   classId,
                   folderId: folder.id,
                   name,
                   slug,
                 })
-              ),
-              toastForumFailure
+              )
             );
           }}
           open={dialogs.isOpen("rename")}
@@ -289,16 +284,15 @@ export function FolderRowMenu({
           moving={folder.id}
           onMove={(parentId) => {
             dialogs.close();
-            runForumCall(
-              forumCall(() =>
+            runSchoolWrite(
+              schoolCall(() =>
                 move.withOptimisticUpdate(moveFolderUpdate)({
                   classId,
                   folderId: folder.id,
                   parentId,
                   slug,
                 })
-              ),
-              toastForumFailure
+              )
             );
           }}
           open={dialogs.isOpen("move")}

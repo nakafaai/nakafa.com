@@ -43,10 +43,8 @@ import {
   writeChange,
 } from "@/components/tenant/reports/change";
 import { checkAddress } from "@/components/tenant/reports/check";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-
-const SOURCE = "components/tenant/reports/detail";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The route of one class group's report cards, whose context holds the class group's ID. */
 const cohortRoute = getRouteApi("/school/$slug/reports/$cohortId");
@@ -305,9 +303,10 @@ export function ReportNoteDialog({
   const submit = () =>
     startTransition(() => {
       setOpen(false);
-      return saveSchool(
-        () => write({ cohortId, note, personId: line.student.id, slug }),
-        SOURCE
+      return runSchoolWrite(
+        schoolCall(() =>
+          write({ cohortId, note, personId: line.student.id, slug })
+        )
       );
     });
 

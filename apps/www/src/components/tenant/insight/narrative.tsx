@@ -21,9 +21,7 @@ import { createStore, type StoreApi, useStore } from "zustand";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { InsightStudent } from "@/components/tenant/insight/rows";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/insight/narrative";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The longest narrative, which the server also holds a teacher to. */
 const NARRATIVE_LIMIT = 4000;
@@ -154,7 +152,7 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
               onClick={() =>
                 startSaving(async () => {
                   setAsked(true);
-                  await saveSchool(() => ask(names), SOURCE);
+                  await runSchoolWrite(schoolCall(() => ask(names)));
                 })
               }
               type="button"
@@ -168,9 +166,8 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
               disabled={isSaving}
               onClick={() =>
                 startSaving(() =>
-                  saveSchool(
-                    () => (shared ? withdraw(names) : share(names)),
-                    SOURCE
+                  runSchoolWrite(
+                    schoolCall(() => (shared ? withdraw(names) : share(names)))
                   )
                 )
               }
@@ -184,7 +181,9 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
             disabled={isSaving || text.trim() === ""}
             onClick={() =>
               startSaving(() =>
-                saveSchool(() => write({ ...names, text: text.trim() }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => write({ ...names, text: text.trim() }))
+                )
               )
             }
             type="button"

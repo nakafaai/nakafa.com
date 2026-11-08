@@ -25,9 +25,7 @@ import {
 import { countryChoices } from "@/components/tenant/settings/choices";
 import { setLocaleChange } from "@/components/tenant/settings/edits";
 import { RegionPicker } from "@/components/tenant/settings/picker";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/locale";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The symbol a currency writes in one locale, such as Rp for the rupiah or € for the euro. */
 function currencySymbol(code: string, locale: string) {
@@ -94,14 +92,14 @@ export function SchoolLocaleCard({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           setLocale({
             country: decodedCountry.value,
             currency: decodedCurrency.value,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
