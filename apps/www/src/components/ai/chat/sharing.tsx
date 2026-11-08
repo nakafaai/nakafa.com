@@ -105,15 +105,7 @@ export function ChatSharing({
         <ChatShareWarm chatId={chat._id} skip={isPrivate || !warmed || open} />
       </ErrorBoundary>
       <ResponsiveDialog
-        description={
-          <ErrorBoundary
-            fallbackRender={() => t("share-link-error")}
-            key={attempt}
-          >
-            <ChatShareDescription chatId={chat._id} isPrivate={isPrivate} />
-          </ErrorBoundary>
-        }
-        footer={
+        action={
           // The description's boundary reports an undeclared failure of the read
           // that both of them make, so this boundary recovers it without a report.
           <ErrorBoundary
@@ -132,6 +124,14 @@ export function ChatSharing({
                 onCreate={() => handleUpdateVisibility("public")}
               />
             </ChatRetryContext>
+          </ErrorBoundary>
+        }
+        description={
+          <ErrorBoundary
+            fallbackRender={() => t("share-link-error")}
+            key={attempt}
+          >
+            <ChatShareDescription chatId={chat._id} isPrivate={isPrivate} />
           </ErrorBoundary>
         }
         open={open}

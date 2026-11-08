@@ -155,9 +155,9 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           ) : null}
         </div>
         <Button
-          aria-label={common("close")}
           onClick={close}
           size="icon-sm"
+          tooltip={common("close")}
           variant="ghost"
         >
           <HugeIcons icon={Cancel01Icon} />
@@ -193,6 +193,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               highlight: labels("highlight"),
               italic: labels("italic"),
               link: labels("link"),
+              linkInvalid: labels("link-invalid"),
               linkPlaceholder: labels("link-placeholder"),
               more: labels("more"),
               numbers: labels("numbers"),
@@ -200,7 +201,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               redo: labels("redo"),
               strike: labels("strike"),
               style: labels("style"),
-              styleMenu: labels("style-menu"),
+              styleMenu: labels("menu-style"),
               tasks: labels("tasks"),
               text: labels("text"),
               underline: labels("underline"),
@@ -244,6 +245,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
         }}
         onOpenChange={setAsking}
         open={asking}
+        title={draft.title.trim() === "" ? t("untitled") : draft.title}
       />
     </>
   );

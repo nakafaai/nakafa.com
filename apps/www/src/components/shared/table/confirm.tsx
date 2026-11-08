@@ -3,52 +3,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@repo/design-system/components/ui/item";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ComponentProps, type ReactNode, useState } from "react";
-import { useTranslations } from "use-intl";
 import { RowItems } from "@/components/shared/table/menu";
-
-/** An icon of the design system's set, as `HugeIcons` draws it. */
-type Icon = ComponentProps<typeof HugeIcons>["icon"];
-
-/**
- * What a confirmation takes away, as its body shows it: the record's icon and name, and what goes with it when that
- * says more than the name, in one outlined row, as the chat's delete shows the chat it removes.
- */
-export function ConfirmSubject({
-  detail,
-  icon,
-  name,
-}: {
-  /** What goes with the record, such as how many items it holds. */
-  readonly detail?: string;
-  readonly icon: Icon;
-  readonly name: string;
-}) {
-  return (
-    <Item size="sm" variant="outline">
-      <ItemMedia variant="icon">
-        <HugeIcons icon={icon} />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle className="line-clamp-2" dir="auto">
-          {name}
-        </ItemTitle>
-        {detail === undefined ? null : (
-          <ItemDescription>{detail}</ItemDescription>
-        )}
-      </ItemContent>
-    </Item>
-  );
-}
 
 /**
  * What the menu of one table row holds when its last action is destructive: the row's main actions, a separator, then the
@@ -71,23 +29,25 @@ export function ConfirmRowMenu({
   title,
 }: {
   readonly action: string;
-  /** What the confirmation shows the action loses, such as the record it deletes. */
-  readonly body?: ReactNode;
+  /**
+   * What the confirmation shows the action loses, such as the record it deletes: the dialog's body, which every
+   * dialog has, usually a ResponsiveDialogSubject with the row's name.
+   */
+  readonly body: ReactNode;
   /** The row's main actions, above the separator. */
   readonly children?: ReactNode;
   readonly confirm: string;
   readonly description: string;
-  /** Whether this row may not take the destructive action. */
+  /** Whether this row may not take the destructive action now. */
   readonly disabled?: boolean;
   /** The footer's action before the destructive one, such as Archive. */
   readonly footer?: ReactNode;
-  readonly icon: Icon;
+  readonly icon: ComponentProps<typeof HugeIcons>["icon"];
   /** Whether the menu offers the destructive action at all, as the server would take it. */
   readonly offered?: boolean;
   readonly onConfirm: () => void;
   readonly title: string;
 }) {
-  const common = useTranslations("Common");
   const [isConfirming, setIsConfirming] = useState(false);
   const hasFooter = footer !== undefined || offered;
 
@@ -100,38 +60,29 @@ export function ConfirmRowMenu({
         {offered ? (
           <DropdownMenuItem
             disabled={disabled}
+            icon={icon}
             onClick={() => setIsConfirming(true)}
             variant="destructive"
           >
-            <HugeIcons icon={icon} />
             {action}
           </DropdownMenuItem>
         ) : null}
       </RowItems>
       {offered ? (
         <ResponsiveDialog
-          description={description}
-          footer={
-            <>
-              <Button
-                onClick={() => setIsConfirming(false)}
-                type="button"
-                variant="outline"
-              >
-                {common("cancel")}
-              </Button>
-              <Button
-                onClick={() => {
-                  setIsConfirming(false);
-                  onConfirm();
-                }}
-                type="button"
-                variant="destructive"
-              >
-                {confirm}
-              </Button>
-            </>
+          action={
+            <Button
+              onClick={() => {
+                setIsConfirming(false);
+                onConfirm();
+              }}
+              type="button"
+              variant="destructive"
+            >
+              {confirm}
+            </Button>
           }
+          description={description}
           open={isConfirming}
           setOpen={setIsConfirming}
           title={title}

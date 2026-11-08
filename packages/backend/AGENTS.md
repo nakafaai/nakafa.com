@@ -50,6 +50,16 @@ deployment, never production. An ad-hoc query is an unbounded read until it is
 bounded, so give it `.take()`, pagination, or `maximumBytesRead` before it
 touches a real dataset.
 
+Every document a deployment reads is Database I/O on the team's plan, and the
+plan's included amount is the budget (`docs/convex/cost.md`). Answer a data
+question with a bounded query on the dev deployment, measure a code path's reads
+on the owned local backend's function log, and read production cost from the
+usage API. A snapshot export (`convex export`), a dashboard backup, and paging
+through tables in the dashboard or with `convex data` read whole tables or the
+whole deployment: on 7 November 2026 they read 2.2 GB, more than that day's
+builds. Exports and backups are recovery points the owner takes, never a way to
+read data.
+
 ## Nakafa Convex Architecture Rules
 
 Confect v10 owns the backend contract, registration, schema, middleware, and

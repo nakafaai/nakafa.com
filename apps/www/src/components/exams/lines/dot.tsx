@@ -127,18 +127,6 @@ export function LineDot({
 
   return (
     <Button
-      aria-label={
-        side === "targets"
-          ? t("line-answer", { name })
-          : Option.match(
-              Option.flatMap(pair, (item) => nameOf(board.names, item.target)),
-              {
-                onNone: () => t("line-statement", { name }),
-                onSome: (answerName) =>
-                  t("line-statement-joined", { answer: answerName, name }),
-              }
-            )
-      }
       aria-pressed={side === "sources" ? held : undefined}
       className={lineDot({ stretch: board.stretch })}
       data-line-dot={id}
@@ -262,6 +250,18 @@ export function LineDot({
           .release(Option.isSome(target) ? Option.some(id) : Option.none());
       }}
       size="icon-sm"
+      tooltip={
+        side === "targets"
+          ? t("line-answer", { name })
+          : Option.match(
+              Option.flatMap(pair, (item) => nameOf(board.names, item.target)),
+              {
+                onNone: () => t("line-statement", { name }),
+                onSome: (answerName) =>
+                  t("line-statement-joined", { answer: answerName, name }),
+              }
+            )
+      }
       type="button"
       variant="ghost"
     >

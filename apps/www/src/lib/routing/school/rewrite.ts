@@ -7,22 +7,13 @@ import {
   withPathname,
 } from "@repo/internationalization/src/rewrite";
 import { Array as Arr, Option } from "effect";
-import { readSchoolSlug, SCHOOL_DOMAINS } from "@/lib/routing/school/host";
+import { readSchoolSlug, schoolHostBeside } from "@/lib/routing/school/host";
 
 /** The segment of the router tree that holds every school page. */
 const SCHOOL_SEGMENT = "school";
 
 /** The school address that a reserved label takes on the main host, so no school can be named `new`. */
 const SCHOOL_START_SEGMENT = "new";
-
-/** The domain that a host sits under, such as `nakafa.com` for `www.nakafa.com`, or none. */
-function readHostDomain(hostname: string): Option.Option<string> {
-  return Arr.findFirst(SCHOOL_DOMAINS, (domain) =>
-    hostname === domain || hostname.endsWith(`.${domain}`)
-      ? Option.some(domain)
-      : Option.none()
-  );
-}
 
 /**
  * The school address that a path of the school tree names, such as `harapan`
@@ -61,12 +52,14 @@ export const schoolRewrite = {
   output: ({ url }: { url: URL }) => {
     const parts = url.pathname.split("/");
     return Option.match(
-      Option.all([readSchoolTreeSlug(parts), readHostDomain(url.hostname)]),
+      Option.flatMap(readSchoolTreeSlug(parts), (slug) =>
+        schoolHostBeside(url.hostname, slug)
+      ),
       {
         onNone: () => url,
-        onSome: ([label, domain]) => {
+        onSome: (host) => {
           const next = new URL(url);
-          next.hostname = `${label}.${domain}`;
+          next.hostname = host;
           next.pathname = `/${Arr.join(Arr.drop(parts, 3), "/")}`;
           return next;
         },

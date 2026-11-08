@@ -22,8 +22,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -349,10 +347,10 @@ function VisualCardFullscreen() {
         className="ms-auto shrink-0"
         onClick={(event) => toggle(event.currentTarget)}
         size="icon"
+        tooltip={t("fullscreen")}
         variant="secondary"
       >
         <HugeIcons icon={presented ? ArrowShrink02Icon : ArrowExpand01Icon} />
-        <span className="sr-only">{t("fullscreen")}</span>
       </Button>
       <span className="sr-only" role="status">
         {presented ? t("fullscreen-shown") : null}
@@ -371,21 +369,17 @@ function VisualCardMenu({ children }: { children: ReactNode }) {
   const t = useTranslations("Common");
 
   return (
-    <ButtonGroup className="ms-auto">
+    <ButtonGroup className="ms-auto" variant="secondary">
       <VisualCardFullscreen />
       <ButtonGroupSeparator />
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<Button size="icon" variant="secondary" />}
+          render={<Button size="icon" tooltip={t("more-actions")} />}
         >
           <HugeIcons icon={MoreHorizontalIcon} />
-          <span className="sr-only">{t("more-actions")}</span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
-            {children}
-          </DropdownMenuGroup>
+        <DropdownMenuContent align="end" label={t("menu-actions")}>
+          {children}
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>

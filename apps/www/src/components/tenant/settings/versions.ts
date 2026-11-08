@@ -14,6 +14,7 @@ import {
 import { Array as Arr, Option, Schema, String as Str } from "effect";
 import { createContext } from "react";
 import { draftText, isFirstPage } from "@/components/tenant/settings/state";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /** One stored version of the school's grading scheme, as the grading page lists it. */
 export type SchemeVersion = PaginatedQueryItem<typeof records.schemes.list>;
@@ -91,22 +92,11 @@ export const storeSchemeChange: OptimisticUpdate<
     id: Schema.decodeUnknownSync(Id("gradingSchemes"))(draftText()),
     used: false,
   };
-  for (const query of localStore.getAllQueries(records.schemes.list)) {
-    if (
-      Option.isSome(query.value) &&
-      query.args.slug === slug &&
-      isFirstPage(query.args)
-    ) {
-      localStore.setQuery(
-        records.schemes.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.prepend(query.value.value.page, draft),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, records.schemes.list, (value, args) =>
+    args.slug === slug && isFirstPage(args)
+      ? Option.some(withPage(value, (page) => Arr.prepend(page, draft)))
+      : Option.none()
+  );
 };
 
 /**
@@ -124,18 +114,9 @@ const changeVersions = (
   slug: string,
   change: (page: readonly SchemeVersion[]) => SchemeVersion[]
 ) => {
-  for (const query of localStore.getAllQueries(records.schemes.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        records.schemes.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, records.schemes.list, (value, args) =>
+    args.slug === slug ? Option.some(withPage(value, change)) : Option.none()
+  );
 };
 
 /** Shows a corrected version at once. */

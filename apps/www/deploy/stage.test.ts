@@ -4,10 +4,13 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   casFrontExposure,
   NAKAFA_ZONE,
+  OWN_HOST_LABELS,
+  ownHost,
   productionHostExposure,
   webExposure,
   workerName,
 } from "#www/deploy/stage";
+import { readHostRole } from "@/lib/routing/school/host";
 
 describe("workerName", () => {
   it("names a production Worker after its service alone", () => {
@@ -75,9 +78,18 @@ describe("casFrontExposure", () => {
 
 describe("productionHostExposure", () => {
   it("routes one exact production host and keeps workers.dev off", () => {
-    expect(productionHostExposure("api.nakafa.com")).toEqual({
+    expect(productionHostExposure("api")).toEqual({
       routes: [{ pattern: "api.nakafa.com/*", zoneName: NAKAFA_ZONE }],
       workersDev: false,
     });
   });
+});
+
+describe("hosts with a Worker of their own", () => {
+  it.each(OWN_HOST_LABELS)(
+    "refuses %s as a school host, so no school takes the host that the redirect leaves to its Worker",
+    (label) => {
+      expect(readHostRole(ownHost(label))).toEqual({ _tag: "Refused" });
+    }
+  );
 });

@@ -1,5 +1,9 @@
+import { AiBrain01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 
@@ -14,31 +18,32 @@ export function MemoryDeleteDialog({
   onConfirm,
   onOpenChange,
   open,
+  title,
 }: {
+  /** The memory's title, which the question shows as what goes. */
+  title: string;
   finalFocus?: ComponentProps<typeof ResponsiveDialog>["finalFocus"];
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
   open: boolean;
 }) {
   const t = useTranslations("Memory");
-  const common = useTranslations("Common");
   return (
     <ResponsiveDialog
+      action={
+        <Button onClick={onConfirm} variant="destructive">
+          {t("delete")}
+        </Button>
+      }
       description={t("delete-description")}
       finalFocus={finalFocus}
-      footer={
-        <>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button onClick={onConfirm} variant="destructive">
-            {t("delete")}
-          </Button>
-        </>
-      }
       open={open}
       setOpen={onOpenChange}
       title={t("delete-title")}
-    />
+    >
+      <ResponsiveDialogSubject icon={AiBrain01Icon}>
+        {title}
+      </ResponsiveDialogSubject>
+    </ResponsiveDialog>
   );
 }

@@ -12,9 +12,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -48,6 +46,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import type { PublicProfile } from "@/lib/profile/public";
 import { Link, useCurrentLocale } from "@/lib/routing/link";
+import { chatTarget } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
@@ -215,8 +214,7 @@ function ChatRow({ chat }: { chat: ChatView }) {
           activeOptions={EXACT_ACTIVE_OPTIONS}
           className="focus-visible:ring-ring rounded-sm wrap-anywhere outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-inset"
           dir="auto"
-          params={{ id: chat._id, locale }}
-          to="/$locale/chat/$id"
+          {...chatTarget(chat._id)}
         >
           {title}
         </Link>
@@ -277,26 +275,23 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button
-              aria-label={t("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
+            <Button size="icon-sm" tooltip={t("more-actions")} variant="ghost">
               <HugeIcons icon={MoreHorizontalIcon} />
             </Button>
           }
         />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => setConfirmDelete(true)}
-              variant="destructive"
-            >
-              <HugeIcons icon={Delete02Icon} />
-              {t("delete")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+        <DropdownMenuContent
+          align="end"
+          className="w-40"
+          label={t("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={Delete02Icon}
+            onClick={() => setConfirmDelete(true)}
+            variant="destructive"
+          >
+            {t("delete")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ChatDeletionDialog
@@ -313,12 +308,7 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
 function ChatActionsFrame() {
   const t = useTranslations("Common");
   return (
-    <Button
-      aria-label={t("more-actions")}
-      disabled
-      size="icon-sm"
-      variant="ghost"
-    >
+    <Button disabled size="icon-sm" tooltip={t("more-actions")} variant="ghost">
       <HugeIcons icon={MoreHorizontalIcon} />
     </Button>
   );

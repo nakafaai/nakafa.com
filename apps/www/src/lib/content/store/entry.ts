@@ -26,13 +26,17 @@ class ContentStoreLimitError extends Schema.TaggedError<
 }) {}
 
 /**
- * Version of every stored shape. Bump it whenever a stored schema changes in a
- * way that an entry of the old shape would still decode, so new code never
- * reads an entry that old code wrote. The store holds only what Convex
- * answered, never a value that code derives from an answer, so a change in a
- * derivation needs no bump: it takes effect with the deploy. The version is a
- * constant and never the build id: the build id changes with every deploy, and
- * the store exists to survive deploys.
+ * Version of every stored answer. The deploy's read store is keyed by the
+ * release alone (`deploy.yml`), so an answer stays as long as its release does,
+ * across code and dependency changes. Bump the version whenever what a query
+ * answers for the same release changes without failing to decode: a backend
+ * change to a query's result, or a stored schema change that an entry of the old
+ * shape would still decode. The bump reads each release once more. An answer
+ * whose shape changed needs no bump, because an entry that does not decode is a
+ * miss. The store holds only what Convex answered, never a value that code
+ * derives from an answer, so a change in a derivation needs no bump: it takes
+ * effect with the deploy. The version is a constant and never the build id: the
+ * build id changes with every deploy, and the store exists to survive deploys.
  */
 const CONTENT_STORE_VERSION = "1";
 
