@@ -70,7 +70,8 @@ test("a surah page's header finds another surah by its meaning, its names and it
             );
           }
 
-          await field.fill("zzz");
+          // No surah has this number, and no name or meaning holds it.
+          await field.fill("999");
           await expect(
             page.getByText(app.Holy["surah-empty"], { exact: true })
           ).toBeVisible();
