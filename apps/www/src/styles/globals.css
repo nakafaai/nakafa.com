@@ -214,12 +214,15 @@
 /*
  * A try-out action's name depends on the learner's attempt, which no first
  * paint knows. Under a signed-in hint it shows what this browser last read for
- * the page, which the cell's own script names in `data-kept-name`, or keeps its
- * room with no name on a first visit, until the learner read answers
+ * the page, which the cell's own script names in `data-kept-name`, or, on a
+ * first visit, its button keeps its room and draws nothing, never a frame
+ * without a name, until the learner read answers
  * (`components/tryout/set/name.tsx`).
  */
 :root[data-signed-in="yes"]
-  [data-learner-read="pending"]:not([data-kept-name]) {
+  [data-slot="button"]:has(
+    > [data-learner-read="pending"]:not([data-kept-name])
+  ) {
   visibility: hidden;
 }
 
@@ -240,11 +243,12 @@
 }
 
 /*
- * A page this browser last read as finished will hold two panes once its read
- * answers, so its card never draws (`components/tryout/section/card.tsx`).
+ * A try-out page's card holds the section's facts, a score, or nothing once
+ * the learner's read answers, so under a signed-in hint it keeps its room and
+ * draws nothing until then, never an empty frame
+ * (`components/tryout/section/card.tsx`).
  */
-:root[data-signed-in="yes"]
-  [data-summary-read="pending"][data-kept-name="restart-cta"] {
+:root[data-signed-in="yes"] [data-summary-read="pending"] {
   visibility: hidden;
 }
 
