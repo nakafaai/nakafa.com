@@ -205,9 +205,11 @@ describe("published content exchange", () => {
       );
 
       expect(
-        yield* decodePublishedDelivery(deliveryInput, head, projectionJson).pipe(
-          Effect.flip
-        )
+        yield* decodePublishedDelivery(
+          deliveryInput,
+          head,
+          projectionJson
+        ).pipe(Effect.flip)
       ).toEqual(new PublishedProjectionError(routeInput));
     })
   );
@@ -220,9 +222,11 @@ describe("published content exchange", () => {
         )
       );
       expect(
-        yield* decodePublishedDelivery(deliveryInput, head, projectionJson).pipe(
-          Effect.flip
-        )
+        yield* decodePublishedDelivery(
+          deliveryInput,
+          head,
+          projectionJson
+        ).pipe(Effect.flip)
       ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
     })
   );

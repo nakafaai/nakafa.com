@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
-import refs from "@repo/backend/confect/_generated/refs";
+import type refs from "@repo/backend/confect/_generated/refs";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
