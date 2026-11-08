@@ -45,11 +45,6 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { CoursesProvider } from "@/components/tenant/connectors/courses";
 import {
   SchoolHolder,
@@ -60,6 +55,7 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { SchoolSettingsHeader } from "@/components/tenant/settings/header";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The page of the school's connections that a school connect returns to. */
 const RETURN_PATH = "/settings/connections";
@@ -149,8 +145,8 @@ function SchoolDirectory() {
       value={{
         connect: (connector) => {
           const redirectUri = connectCallback(window.location, slug);
-          return runForumCall(
-            forumCall(() =>
+          return runSchoolWrite(
+            schoolCall(() =>
               GOOGLE_MANIFEST[connector].owner === "school"
                 ? startSchool({
                     connector,
@@ -167,13 +163,12 @@ function SchoolDirectory() {
               Effect.tap(({ url }) =>
                 Effect.sync(() => window.location.assign(url))
               )
-            ),
-            toastForumFailure
+            )
           );
         },
         disconnect: (connection) =>
-          runForumCall(
-            forumCall(() =>
+          runSchoolWrite(
+            schoolCall(() =>
               Arr.some(school.results, ({ id }) => id === connection.id)
                 ? disconnectSchool.withOptimisticUpdate(disconnectSchoolUpdate)(
                     { connectionId: connection.id, slug }
@@ -181,8 +176,7 @@ function SchoolDirectory() {
                 : disconnectOwn.withOptimisticUpdate(disconnectOwnUpdate)({
                     connectionId: connection.id,
                   })
-            ),
-            toastForumFailure
+            )
           ),
       }}
     >

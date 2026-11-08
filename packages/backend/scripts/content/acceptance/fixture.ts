@@ -1,68 +1,69 @@
-import { Schema } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
+
+/** The school that a browser test opens: its address and its name. */
+export const SchoolFixture = Schema.Struct({
+  name: Schema.String,
+  slug: Schema.String,
+});
 
 /**
- * The school that a browser test opens: its address and its name. The local
- * acceptance runtime writes it, and the browser test reads it back.
+ * The login card that a browser test redeems: the school login name that the
+ * student types, and the plain code of the card.
  */
-export const SchoolFixture = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, slug: Schema.String })
-);
+export const CardFixture = Schema.Struct({
+  code: Schema.String,
+  loginName: Schema.String,
+});
 
 /**
- * The login card that a browser test redeems: the school login name that the student types, and
- * the plain code of the card. The local acceptance runtime writes it, and the browser test reads
- * it back.
+ * The plain sign-in code of a parent whose address the school linked, which the
+ * seed answers in place of the mail.
  */
-export const CardFixture = Schema.fromJsonString(
-  Schema.Struct({ code: Schema.String, loginName: Schema.String })
-);
+export const GuardianFixture = Schema.Struct({ code: Schema.String });
+
+/** The sitting that a browser test enters: its exam, the sitting, and the sitting's token. */
+export const SittingFixture = Schema.Struct({
+  examId: Schema.String,
+  sittingId: Schema.String,
+  title: Schema.String,
+  token: Schema.String,
+});
+
+/** The graduating class group that a browser test opens: its ID and its name. */
+export const GraduationFixture = Schema.Struct({
+  cohort: Schema.String,
+  cohortId: Schema.String,
+});
 
 /**
- * The plain sign-in code of a parent whose address the school linked. The local acceptance
- * runtime writes it in place of the mail, and the browser test reads it back.
+ * The history of a class's general channel that a browser test reads: the
+ * channel, the class, and the seeded messages, oldest first.
  */
-export const GuardianFixture = Schema.fromJsonString(
-  Schema.Struct({ code: Schema.String })
-);
+export const ForumFixture = Schema.Struct({
+  channelId: Schema.String,
+  classId: Schema.String,
+  messages: Schema.Array(Schema.String),
+});
+
+/** The session cookie of an account that the local runtime signed in, for a browser to send. */
+export const SessionCookie = Schema.Struct({
+  name: Schema.String,
+  value: Schema.String,
+});
 
 /**
- * The sitting that a browser test enters: its exam, the sitting, and the sitting's token. The
- * local acceptance runtime writes it, and the browser test reads it back.
+ * Writes one fixture to `output` as JSON, mode 600, for a person or a script
+ * that asked the command line for it. A file that already stands is refused, so
+ * a fixture never replaces another one.
  */
-export const SittingFixture = Schema.fromJsonString(
-  Schema.Struct({
-    examId: Schema.String,
-    sittingId: Schema.String,
-    title: Schema.String,
-    token: Schema.String,
-  })
-);
-
-/**
- * The graduating class group that a browser test opens: its ID and its name. The local
- * acceptance runtime writes it, and the browser test reads it back.
- */
-export const GraduationFixture = Schema.fromJsonString(
-  Schema.Struct({ cohort: Schema.String, cohortId: Schema.String })
-);
-
-/**
- * The history of a class's general channel that a browser test reads: the channel, the class,
- * and the seeded messages, oldest first. The local acceptance runtime writes it, and the browser
- * test reads it back.
- */
-export const ForumFixture = Schema.fromJsonString(
-  Schema.Struct({
-    channelId: Schema.String,
-    classId: Schema.String,
-    messages: Schema.Array(Schema.String),
-  })
-);
-
-/**
- * The session cookie of an account that the local acceptance runtime signed in.
- * The runtime writes it, and the browser test reads it back before it sends it.
- */
-export const SessionCookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
+export const writeFixture = Effect.fn("contentAcceptance.writeFixture")(
+  function* <A, I>(output: string, schema: Schema.Codec<A, I>, value: A) {
+    const text = yield* Schema.encodeEffect(Schema.fromJsonString(schema))(
+      value
+    );
+    yield* (yield* FileSystem.FileSystem).writeFileString(output, text, {
+      flag: "wx",
+      mode: 0o600,
+    });
+  }
 );

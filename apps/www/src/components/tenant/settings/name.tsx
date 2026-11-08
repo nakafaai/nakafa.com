@@ -19,9 +19,7 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { setNameChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/name";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** Whether a trimmed name can name the school: three to 120 characters on one line. */
 const isSchoolName = Schema.is(SchoolName);
@@ -82,7 +80,7 @@ export function SchoolNameCard({
             disabled={!canSave}
             onClick={() =>
               startTransition(() =>
-                saveSchool(() => rename({ name: next, slug }), SOURCE)
+                runSchoolWrite(schoolCall(() => rename({ name: next, slug })))
               )
             }
             size="sm"

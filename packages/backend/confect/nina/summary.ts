@@ -68,10 +68,10 @@ const FOLD_BUDGET =
   countTextTokens("# Previous Summary\n\n# New Turns\n\n") -
   2 * languageModel.tokens.message;
 
-class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
-  "NinaSummaryError",
-  { operation: NinaFailureOperation }
-) {}
+class NinaSummaryError extends Schema.TaggedError<
+  NinaSummaryError,
+  { readonly brand: unique symbol }
+>()("NinaSummaryError", { operation: NinaFailureOperation }) {}
 
 /**
  * Lists the orders of the turns a fold covers, oldest first: the complete

@@ -19,6 +19,7 @@ import {
   sidebarOf,
   waitForRunningSection,
 } from "@/e2e/support/player";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import {
   expectStillShell,
@@ -27,13 +28,6 @@ import {
 } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, tryoutViewports } from "@/e2e/support/viewport";
-
-/**
- * The height of a window that is short enough for the sidebar to scroll: the column under the header
- * and over the footer (8rem together) keeps 192 px, about four of the six rows that a section's 30
- * numbers take in it.
- */
-const SHORT_WINDOW_HEIGHT = 320;
 
 /** An address whose `view` parameter names one question at a time. */
 const SINGLE_VIEW_ADDRESS = /[?&]view=single(?:&|$)/u;
@@ -125,14 +119,14 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
       page.getByRole("button", { exact: true, name: "Finish" })
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
-  // Late streamed content would still move the page, so let it settle.
-  yield* Effect.sleep("750 millis");
+  // Late streamed content would still move the page, so let it go quiet.
+  yield* Effect.promise(() => waitForQuiet(page));
   // The view's button grows with its name as the press answers, which the page may do.
   yield* chooseView(page, hasTouch, "One question");
   const since = yield* readPageTime(page);
   yield* expectView(page, "One question");
   yield* expectRemembered(page, "single");
-  yield* Effect.sleep("2 seconds");
+  yield* Effect.promise(() => waitForQuiet(page));
   const observation = yield* readShellObservation(page, since);
   yield* Effect.sync(() => expectStillShell(observation, [true]));
 
@@ -321,6 +315,26 @@ const verifyKeys = Effect.fn("NakafaE2E.verifyPlayerKeys")(function* (
 });
 
 /**
+ * Shrinks the window until the sidebar's column shows the top half of the numbers' grid, so the column
+ * must scroll to reach its last number however many numbers a row of the pane's width holds.
+ */
+const shortenToHalfTheGrid = Effect.fn("NakafaE2E.shortenToHalfTheGrid")(
+  function* (page: Page) {
+    const height = yield* Effect.promise(() =>
+      sidebarOf(page)
+        .locator("ol")
+        .evaluate((grid) => {
+          const box = grid.getBoundingClientRect();
+          return Math.round(box.top + box.height / 2);
+        })
+    );
+    yield* Effect.promise(() =>
+      page.setViewportSize({ height, width: desktopViewport.width })
+    );
+  }
+);
+
+/**
  * Keeps the current number inside a sidebar that is shorter than its grid, so
  * a learner always sees where they are, however the current question changed.
  */
@@ -332,12 +346,7 @@ const verifyShortSidebar = Effect.fn("NakafaE2E.verifyShortSidebar")(function* (
   // The questions stream in after the header, so wait for them to measure.
   yield* expectView(page, "List");
   // The window shrinks once the section runs, so the setup keeps its room.
-  yield* Effect.promise(() =>
-    page.setViewportSize({
-      height: SHORT_WINDOW_HEIGHT,
-      width: desktopViewport.width,
-    })
-  );
+  yield* shortenToHalfTheGrid(page);
   const current = currentNumberOf(page, false);
   yield* Effect.promise(() => expect(current).toHaveText("1"));
 

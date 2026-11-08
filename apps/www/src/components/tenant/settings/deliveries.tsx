@@ -31,10 +31,8 @@ import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
 import { resendDeliveryChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-
-const SOURCE = "components/tenant/settings/deliveries";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many attempts one page of the log loads, and each page after it. */
 const PAGE_SIZE = 30;
@@ -100,15 +98,15 @@ function DeliveryRow({
           {state.status === "failed" && webhook.status === "active" ? (
             <Button
               onClick={() =>
-                saveSchool(
-                  () =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     resend({
                       clientId: webhook.clientId,
                       deliveryId: delivery.id,
                       slug,
                       webhookId: webhook.id,
-                    }),
-                  SOURCE
+                    })
+                  )
                 )
               }
               size="sm"

@@ -1,4 +1,4 @@
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 /**
  * Where a detail draws, and how its header closes it: beside the first pane, where a row's
@@ -11,13 +11,11 @@ interface PaneMode {
   readonly place: "aside" | "sheet";
 }
 
-/** Where a detail draws and how its header closes it, which a page's panes or the player's sheet provide. */
+/**
+ * Where a detail draws and how its header closes it, read with `use()`: a page's panes and the player's sheet
+ * provide it.
+ */
 export const PaneModeContext = createContext<PaneMode>({
   close: undefined,
   place: "aside",
 });
-
-/** Where the detail around the caller draws, and how its header closes it. */
-export function usePaneMode() {
-  return use(PaneModeContext);
-}

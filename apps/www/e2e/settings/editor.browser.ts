@@ -49,7 +49,7 @@ const acrossTheWidth = (
     const after = `${Str.slice(0, caret)(words)}${typed}${Str.slice(caret)(words)}`;
 
     expect(await caretOf(page)).toBe(caret);
-    await page.waitForTimeout(GROUP_MILLISECONDS);
+    await page.clock.runFor(GROUP_MILLISECONDS);
     await page.keyboard.type(typed);
     await expect(editor).toHaveText(after);
     return after;
@@ -79,7 +79,7 @@ const verifyLayoutChange = Effect.fn("NakafaE2E.verifyLayoutChange")(function* (
 
     // Two steps of history: the words, and what is written inside them.
     await page.keyboard.type(WORDS);
-    await page.waitForTimeout(GROUP_MILLISECONDS);
+    await page.clock.runFor(GROUP_MILLISECONDS);
     for (const key of Arr.makeBy("world".length, () => "ArrowLeft")) {
       await page.keyboard.press(key);
     }

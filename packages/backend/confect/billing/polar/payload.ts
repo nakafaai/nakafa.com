@@ -2,13 +2,13 @@ import { BillingCountry } from "@repo/backend/confect/billing/schema";
 import { Effect, Schema } from "effect";
 
 /** A Polar response or webhook payload that does not match the contract its handler reads. */
-export class PolarPayloadError extends Schema.TaggedError<PolarPayloadError>()(
-  "PolarPayloadError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class PolarPayloadError extends Schema.TaggedError<
+  PolarPayloadError,
+  { readonly brand: unique symbol }
+>()("PolarPayloadError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /**
  * The customer fields Nakafa reads. Polar's type picks the email rule and is dropped after the check.

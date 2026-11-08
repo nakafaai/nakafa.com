@@ -7,6 +7,7 @@ import {
 } from "@playwright/test";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import {
   createSchool,
   grantStudent,
@@ -256,9 +257,6 @@ test("the cohorts, exams, notifications, rooms, exam editor, periods, profile an
   await context.close();
 });
 
-/** How long a settings page gets to draw its live answers before its header is read again. */
-const SETTLE_MILLISECONDS = 4000;
-
 /** Every School settings page, by its address under the school's host. */
 const SETTINGS_PAGES = [
   "/settings/profile",
@@ -305,10 +303,10 @@ async function expectSettledHeader(
   await expect(page.locator(HEADER).first()).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  // The live reads answer over Convex's socket, which no load state waits for, so the page gets time to draw every
-  // answer before the header is read again. Waiting longer only makes the check stricter.
+  // The live reads answer over Convex's socket, which no load state waits for, so the header is read again once the
+  // page has drawn every answer and gone quiet.
   await page.waitForLoadState("load");
-  await page.waitForTimeout(SETTLE_MILLISECONDS);
+  await waitForQuiet(page);
   const [first, now] = [
     await readFirstControls(page),
     await readControls(page, HEADER),

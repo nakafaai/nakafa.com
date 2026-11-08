@@ -2552,7 +2552,6 @@
     "set-column-questions": "Questions",
     "set-column-score": "Score",
     "set-column-status": "Status",
-    "set-filter-label": "Filter {column}",
     "set-filter-all": "All",
     "status-not-started": "Not started",
     "status-in-progress": "In progress",
@@ -2572,11 +2571,7 @@
     "set-updating": "Updating...",
     "set-update-error": "Unable to update results.",
     "set-offline": "Connection lost.",
-    "answer": "Answer",
-    "statement": "Statement",
     "check-answer": "Check answer",
-    "correct": "Correct",
-    "incorrect": "Incorrect",
     "reset": "Reset",
     "explanation": "Explanation",
     "prompt": "Question",
@@ -2612,7 +2607,11 @@
     "legend-answered": "Answered",
     "legend-flagged": "Flagged",
     "shortcut-flag": "Flag the question",
-    "cell-flagged": "{state, select, answered {Question {number}, answered, flagged for review} other {Question {number}, unanswered, flagged for review}}"
+    "cell-flagged": "{state, select, answered {Question {number}, answered, flagged for review} other {Question {number}, unanswered, flagged for review}}",
+    "answer": "Answer",
+    "statement": "Statement",
+    "correct": "Correct",
+    "incorrect": "Incorrect"
   },
   "Utils": {
     "clear-search": "Clear search",

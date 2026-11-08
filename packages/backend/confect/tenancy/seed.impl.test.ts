@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { archiveUnit } from "@repo/backend/test/exams";
 import {
@@ -9,11 +10,13 @@ import {
   slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Exit, Schema } from "effect";
+import { Array as Arr, Effect, Exit, Option, Schema } from "effect";
 
 const seedTeacher = refs.internal.tenancy.seed.teacher;
 const seedStudent = refs.internal.tenancy.seed.student;
 const seedExpired = refs.internal.tenancy.seed.expired;
+const seedUser = refs.internal.tenancy.seed.user;
+const seedInvitation = refs.internal.tenancy.seed.invitation;
 const teacherAddress = Schema.decodeSync(Email)("guru@acceptance.example.test");
 const memberAddress = Schema.decodeSync(Email)("member-0@example.com");
 const unknownAddress = Schema.decodeSync(Email)("tidak-ada@example.com");
@@ -273,6 +276,84 @@ describe("tenancy/seed expired", () => {
         expect(defectOf(exit)).toContain(
           "The school holds no pending invite for this address."
         );
+      })
+  );
+});
+
+describe("tenancy/seed user", () => {
+  it.effect(
+    "answers the app user of an account, and dies for an account without one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const account = yield* fixture.account(
+          "seed-user",
+          "seed-user@example.com",
+          true
+        );
+        expect(
+          yield* fixture.internal.query(seedUser, {
+            authId: account.authUserId,
+          })
+        ).toBe(account.userId);
+        const exit = yield* Effect.exit(
+          fixture.internal.query(seedUser, { authId: "no-account" })
+        );
+        expect(defectOf(exit)).toContain("The account has no app user.");
+      })
+  );
+
+  it.effect("refuses to read outside the acceptance runtime", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      vi.stubEnv("ACCEPTANCE_SEED", "false");
+      const refusal = yield* fixture.internal
+        .query(seedUser, { authId: "no-account" })
+        .pipe(Effect.flip);
+      expect(refusal).toMatchObject({ _tag: "SeedRefused" });
+    })
+  );
+});
+
+describe("tenancy/seed invitation", () => {
+  it.effect(
+    "answers whether the inbox holds the row of one invitation for its Person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const seeded = yield* fixture.internal.mutation(seedTeacher, {
+          email: teacherAddress,
+          locale: "id",
+          name: "Guru Acceptance",
+          slug: slugOf("nf"),
+        });
+        const ids = { invite: seeded.invite, person: seeded.person };
+        expect(yield* fixture.internal.query(seedInvitation, ids)).toBe(false);
+        const invited = Option.getOrThrow(
+          Arr.findFirst(
+            yield* fixture.run(journal),
+            (entry) => entry.change.type === "person.invited"
+          )
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("notifications").insert({
+              changeType: "person.invited",
+              createdAt: invited._creationTime,
+              inviteId: seeded.invite,
+              journalEntryId: invited._id,
+              recipientPersonId: seeded.person,
+              subject: { id: seeded.person, kind: "person" },
+              tenantId: fixture.tenants.nf,
+            })
+          )
+        );
+        expect(yield* fixture.internal.query(seedInvitation, ids)).toBe(true);
+        vi.stubEnv("ACCEPTANCE_SEED", "false");
+        const refusal = yield* fixture.internal
+          .query(seedInvitation, ids)
+          .pipe(Effect.flip);
+        expect(refusal).toMatchObject({ _tag: "SeedRefused" });
       })
   );
 });

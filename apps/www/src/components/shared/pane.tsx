@@ -11,10 +11,10 @@ import { TableRow } from "@repo/design-system/components/ui/table";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Option } from "effect";
-import type { ReactNode, Ref } from "react";
+import { type ReactNode, type Ref, use } from "react";
 import { useTranslations } from "use-intl";
 import { usePanes } from "@/components/shared/panes";
-import { usePaneMode } from "@/components/shared/panes/mode";
+import { PaneModeContext } from "@/components/shared/panes/mode";
 import { pressesRow } from "@/components/shared/row";
 import { tableCardVariants } from "@/components/shared/table/card";
 
@@ -43,7 +43,7 @@ export function PaneHeader({
   title: string;
 }) {
   const t = useTranslations("Common");
-  const { close, place } = usePaneMode();
+  const { close, place } = use(PaneModeContext);
 
   if (place === "sheet") {
     return (

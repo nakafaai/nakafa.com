@@ -33,7 +33,10 @@ const VapidKeys = Schema.Struct({
 });
 
 /** A push that failed: a key that does not decode, a crypto step, or a push service that refused or never answered. */
-export class PushFailed extends Schema.TaggedError<PushFailed>()("PushFailed", {
+export class PushFailed extends Schema.TaggedError<
+  PushFailed,
+  { readonly brand: unique symbol }
+>()("PushFailed", {
   reason: Schema.Literals(["key", "crypto", "unreached", "refused"]),
   status: Schema.optionalKey(Schema.Int),
 }) {}

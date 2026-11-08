@@ -5,10 +5,10 @@ import { Effect, Schema } from "effect";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 /** A seat whose Convex token the local backend did not issue. */
-export class TokenFailed extends Schema.TaggedError<TokenFailed>()(
-  "TokenFailed",
-  { status: Schema.Int }
-) {}
+export class TokenFailed extends Schema.TaggedError<
+  TokenFailed,
+  { readonly brand: unique symbol }
+>()("TokenFailed", { status: Schema.Int }) {}
 
 /** Better Auth's session cookie under its default name on plain HTTP. */
 const SESSION_COOKIE = "better-auth.session_token";

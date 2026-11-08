@@ -1,6 +1,7 @@
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
+import { seedConnection } from "@repo/backend/scripts/content/acceptance/connection";
 import { Effect } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { runFixture } from "@/e2e/support/acceptance";
 import {
   createSchool,
   hostAddress,
@@ -173,7 +174,7 @@ test("a connected school sees the check, finds its courses in the detail, and di
   });
   const before = await classroom.boundingBox();
 
-  await Effect.runPromise(runAcceptanceCommand("connection", slug, "active"));
+  await Effect.runPromise(runFixture(seedConnection(slug, "active")));
   await expect(
     classroom.getByRole("img", { name: "Connected." })
   ).toBeVisible();
@@ -216,7 +217,7 @@ test("a connect that just finished opens its service, where the next step waits"
   const context = await browser.newContext();
   const { page, slug } = await openDirectory(context, baseURL, signInOwner);
 
-  await Effect.runPromise(runAcceptanceCommand("connection", slug, "active"));
+  await Effect.runPromise(runFixture(seedConnection(slug, "active")));
   await page.goto(
     `${page.url().split("?")[0]}?connect=connected&connector=classroom`
   );
@@ -236,9 +237,7 @@ test("a connection Google stopped accepting says so, and connects again with one
   const { page, slug } = await openDirectory(context, baseURL, signInOwner);
   const classroom = cardOf(page, "Google Classroom");
 
-  await Effect.runPromise(
-    runAcceptanceCommand("connection", slug, "reconnect")
-  );
+  await Effect.runPromise(runFixture(seedConnection(slug, "reconnect")));
   await expect(classroom.getByText("Connection lost.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

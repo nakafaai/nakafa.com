@@ -22,14 +22,14 @@ const SidebarStateCookie = Schema.Struct({
 type SidebarStateCookie = typeof SidebarStateCookie.Type;
 
 /** Expected browser failure while persisting sidebar state. */
-export class SidebarStatePersistenceError extends Schema.TaggedError<SidebarStatePersistenceError>()(
-  "SidebarStatePersistenceError",
-  {
-    cause: Schema.Unknown,
-    cookieName: Schema.String,
-    message: Schema.String,
-  }
-) {}
+export class SidebarStatePersistenceError extends Schema.TaggedError<
+  SidebarStatePersistenceError,
+  { readonly brand: unique symbol }
+>()("SidebarStatePersistenceError", {
+  cause: Schema.Unknown,
+  cookieName: Schema.String,
+  message: Schema.String,
+}) {}
 
 /** Browser cookie writer required by the sidebar persistence program. */
 export class SidebarCookieWriter extends Context.Service<

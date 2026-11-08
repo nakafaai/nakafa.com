@@ -3,8 +3,8 @@ import type exams from "@repo/backend/confect/_generated/refs/exams";
 import type { PlacedQuestion } from "@repo/backend/confect/exams/import";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Data, Effect, Option, type Result } from "effect";
-import { forumCall } from "@/components/tenant/classes/forum/call";
 import type { DriveFile } from "@/components/tenant/classes/library/draft";
+import { schoolCall } from "@/components/tenant/write";
 
 /** The file type of a Google Form, which the Picker offers. */
 export const FORM_TYPE = "application/vnd.google-apps.form";
@@ -40,11 +40,11 @@ export const importForm = Effect.fn("exams.import.form")(function* <
   if (Option.isNone(picked)) {
     return;
   }
-  const questions = yield* forumCall(() => read(picked.value.id));
+  const questions = yield* schoolCall(() => read(picked.value.id));
   if (questions === null) {
     return yield* new FormDriveMissing();
   }
-  const placed = yield* forumCall(() => place(questions));
+  const placed = yield* schoolCall(() => place(questions));
   if (placed.placed.length === 0) {
     toast.info({
       description: "import-empty.description",

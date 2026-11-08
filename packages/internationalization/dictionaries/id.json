@@ -2552,7 +2552,6 @@
     "set-column-questions": "Soal",
     "set-column-score": "Nilai",
     "set-column-status": "Status",
-    "set-filter-label": "Filter {column}",
     "set-filter-all": "Semua",
     "status-not-started": "Belum mulai",
     "status-in-progress": "Sedang dikerjakan",
@@ -2572,11 +2571,7 @@
     "set-updating": "Memperbarui...",
     "set-update-error": "Hasil belum bisa diperbarui.",
     "set-offline": "Koneksi terputus.",
-    "answer": "Jawaban",
-    "statement": "Pernyataan",
     "check-answer": "Cek jawaban",
-    "correct": "Benar",
-    "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
     "prompt": "Soal",
@@ -2612,7 +2607,11 @@
     "legend-answered": "Terjawab",
     "legend-flagged": "Ditandai",
     "shortcut-flag": "Tandai soal",
-    "cell-flagged": "{state, select, answered {Soal {number}, terjawab, ditandai untuk ditinjau} other {Soal {number}, belum dijawab, ditandai untuk ditinjau}}"
+    "cell-flagged": "{state, select, answered {Soal {number}, terjawab, ditandai untuk ditinjau} other {Soal {number}, belum dijawab, ditandai untuk ditinjau}}",
+    "answer": "Jawaban",
+    "statement": "Pernyataan",
+    "correct": "Benar",
+    "incorrect": "Salah"
   },
   "Utils": {
     "clear-search": "Hapus pencarian",

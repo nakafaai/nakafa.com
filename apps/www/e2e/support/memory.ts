@@ -71,6 +71,9 @@ export const openMemoryPage = Effect.fn("NakafaE2E.openMemoryPage")(function* (
   page: Page,
   baseURL: string
 ) {
+  // The page runs on Playwright's clock, which flows as time does until a test moves it on past one of the
+  // editor's own timers (its pause before a save, its search, its undo grouping) instead of waiting it out.
+  yield* Effect.promise(() => page.clock.install());
   const changes = yield* trackChanges(page, [LIST_QUERY]);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);

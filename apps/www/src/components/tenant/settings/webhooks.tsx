@@ -30,7 +30,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -39,20 +38,20 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolDeliverySheet } from "@/components/tenant/settings/deliveries";
 import { revokeWebhookChange } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import {
   SchoolWebhookCreateDialog,
   SchoolWebhookEditDialog,
 } from "@/components/tenant/settings/webhook";
-
-const SOURCE = "components/tenant/settings/webhooks";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many webhooks one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -188,9 +187,9 @@ function SchoolWebhookTable() {
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="typing"
+          <EmptyState
             description={t("webhook-add-description")}
+            scene={<EmptyNina act="typing" />}
             title={t("webhooks-empty")}
           />
         }
@@ -243,10 +242,9 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
               icon={Key01Icon}
               onClick={() =>
                 startTransition(() =>
-                  saveSchool(
-                    () => rotate(names),
-                    SOURCE,
-                    (issued) => issueSecret(issued.secret)
+                  runSchoolWrite(
+                    schoolCall(() => rotate(names)),
+                    { onSaved: (issued) => issueSecret(issued.secret) }
                   )
                 )
               }
@@ -269,7 +267,9 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
           <Button
             onClick={() => {
               dialogs.close();
-              startTransition(() => saveSchool(() => revoke(names), SOURCE));
+              startTransition(() =>
+                runSchoolWrite(schoolCall(() => revoke(names)))
+              );
             }}
             type="button"
             variant="destructive"

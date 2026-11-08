@@ -1,10 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  getTryoutPreviewChoiceTone,
-  getTryoutReviewedChoiceTone,
-} from "@/lib/tryout/appearance";
+import { choiceTone, getChoiceReviewedTone } from "@/components/player/tone";
 
-describe("getTryoutReviewedChoiceTone", () => {
+describe("getChoiceReviewedTone", () => {
   it.each([
     [false, false, "idle"],
     [true, false, "wrong"],
@@ -13,14 +10,12 @@ describe("getTryoutReviewedChoiceTone", () => {
   ] as const)(
     "maps checked=%s correct=%s to %s",
     (checked, isCorrect, expected) => {
-      expect(getTryoutReviewedChoiceTone({ checked, isCorrect })).toBe(
-        expected
-      );
+      expect(getChoiceReviewedTone({ checked, isCorrect })).toBe(expected);
     }
   );
 });
 
-describe("getTryoutPreviewChoiceTone", () => {
+describe("choiceTone", () => {
   it.each([
     [false, { kind: "selectable" }, "idle"],
     [true, { kind: "selectable" }, "chosen"],
@@ -31,9 +26,7 @@ describe("getTryoutPreviewChoiceTone", () => {
   ] as const)(
     "maps checked=%s appearance=%o to %s",
     (checked, appearance, expected) => {
-      expect(getTryoutPreviewChoiceTone({ appearance, checked })).toBe(
-        expected
-      );
+      expect(choiceTone({ appearance, checked })).toBe(expected);
     }
   );
 });

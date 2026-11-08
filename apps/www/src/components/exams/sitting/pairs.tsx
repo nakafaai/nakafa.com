@@ -2,14 +2,14 @@ import { partLetter } from "@repo/backend/confect/exams/letters";
 import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
+import { SittingDocument } from "@/components/exams/sitting/document";
+import { usePaperLocked } from "@/components/exams/sitting/lock";
 import {
   LinesColumn,
   LinesItem,
   LinesProvider,
-} from "@/components/exams/lines/board";
-import { SittingDocument } from "@/components/exams/sitting/document";
-import { usePaperLocked } from "@/components/exams/sitting/lock";
-import type { MatchPart } from "@/components/exams/sitting/response";
+} from "@/components/player/lines/board";
+import type { MatchPart } from "@/components/player/response";
 
 /**
  * A matching question as a paper sets it: the statements in one column, each numbered, the answers in the other,

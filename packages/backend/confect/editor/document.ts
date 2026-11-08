@@ -60,19 +60,22 @@ export const DocumentTextSchema = Schema.fromJsonString(DocumentSchema);
  * A text that the contract refuses as a document, or that is not JSON. It names
  * no part of the text, so a learner's content never reaches an error message.
  */
-export class DocumentInvalid extends Schema.TaggedError<DocumentInvalid>()(
+export class DocumentInvalid extends Schema.TaggedError<
+  DocumentInvalid,
+  { readonly brand: unique symbol }
+>()(
   "DocumentInvalid",
   refusal("DOCUMENT_INVALID", "This is not a document the editor accepts.")
 ) {}
 
 /** A stored row whose complete size would reach one document's limit. */
-export class DocumentTooLarge extends Schema.TaggedError<DocumentTooLarge>()(
-  "DocumentTooLarge",
-  {
-    bytes: Schema.Int,
-    limit: Schema.Int,
-  }
-) {}
+export class DocumentTooLarge extends Schema.TaggedError<
+  DocumentTooLarge,
+  { readonly brand: unique symbol }
+>()("DocumentTooLarge", {
+  bytes: Schema.Int,
+  limit: Schema.Int,
+}) {}
 
 /** The JSON text of a contract document: the one string field a snapshot is stored in (ADR 0028). */
 const StoredTextSchema = Schema.fromJsonString(AssessmentDocumentSchema);
