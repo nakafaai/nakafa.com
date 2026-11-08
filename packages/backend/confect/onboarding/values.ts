@@ -1,6 +1,7 @@
 /** Product regions offered during first-run onboarding. */
 export const onboardingRegions = [
   "indonesia",
+  "malaysia",
   "singapore",
   "united-kingdom",
   "germany",
