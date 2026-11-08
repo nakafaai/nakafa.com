@@ -72,7 +72,7 @@ function PlayerPlace() {
   const number = usePlayer((state) => readPosition(state.keys, state.current));
 
   return (
-    <p className="text-muted-foreground justify-self-end truncate text-sm tabular-nums">
+    <p className="text-muted-foreground min-w-0 truncate text-end text-sm tabular-nums">
       {t("demo-exam-progress", { current: number, total: KEYS.length })}
     </p>
   );
