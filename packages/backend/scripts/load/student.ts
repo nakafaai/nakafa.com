@@ -27,7 +27,10 @@ const sittings = examsPublic.sittings;
 const { beat, look } = examsPublic.screens;
 
 /** A student whose entry the sitting refused, with the reason it gave. */
-class EntryRefused extends Schema.TaggedError<EntryRefused>()("EntryRefused", {
+class EntryRefused extends Schema.TaggedError<
+  EntryRefused,
+  { readonly brand: unique symbol }
+>()("EntryRefused", {
   reason: Schema.String,
 }) {}
 

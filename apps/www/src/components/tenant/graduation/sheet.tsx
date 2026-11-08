@@ -24,14 +24,16 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { GraduationLineDetail } from "@/components/tenant/graduation/detail";
 import { GraduationElsewhere } from "@/components/tenant/graduation/elsewhere";
 import {
@@ -218,13 +220,7 @@ function GraduationStudents() {
             <DataTable
               columns={columns}
               data={pagination.results}
-              empty={
-                <TableEmpty
-                  act="reading"
-                  description={t("students-empty-description")}
-                  title={t("students-empty")}
-                />
-              }
+              empty={<GraduationStudentsEmpty />}
               rowId={(line) => line.student.id}
               search="student"
             />
@@ -235,6 +231,19 @@ function GraduationStudents() {
         <GraduationLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>
+  );
+}
+
+/** The graduation table with no student yet, under its column heads. */
+function GraduationStudentsEmpty() {
+  const t = useTranslations("SchoolGraduation");
+
+  return (
+    <EmptyState
+      description={t("students-empty-description")}
+      scene={<EmptyNina act="reading" />}
+      title={t("students-empty")}
+    />
   );
 }
 

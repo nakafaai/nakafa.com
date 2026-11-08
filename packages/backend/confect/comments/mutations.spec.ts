@@ -8,19 +8,19 @@ import { LearnerTextRefusal } from "@repo/backend/confect/writing/text";
 import { Schema, Struct } from "effect";
 
 /** Expected denial while writing a comment, or a like on it. */
-export class CommentWriteError extends Schema.TaggedError<CommentWriteError>()(
-  "CommentWriteError",
-  {
-    code: Schema.Literals([
-      ...LearnerTextRefusal.literals,
-      "COMMENT_PARENT_NOT_FOUND",
-      "COMMENT_PARENT_MISMATCH",
-      "COMMENT_NOT_FOUND",
-      "FORBIDDEN",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class CommentWriteError extends Schema.TaggedError<
+  CommentWriteError,
+  { readonly brand: unique symbol }
+>()("CommentWriteError", {
+  code: Schema.Literals([
+    ...LearnerTextRefusal.literals,
+    "COMMENT_PARENT_NOT_FOUND",
+    "COMMENT_PARENT_MISMATCH",
+    "COMMENT_NOT_FOUND",
+    "FORBIDDEN",
+  ]),
+  message: Schema.String,
+}) {}
 
 /**
  * Writes the comments of a slug (article, post, etc.), their replies and their likes.

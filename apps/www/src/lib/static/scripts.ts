@@ -39,10 +39,10 @@ const StaticScripts = Schema.Struct({
 const StaticScriptsJson = Schema.fromJsonString(StaticScripts);
 
 /** A prerendered page whose scripts are not the ones TanStack writes, so the build cannot defer them. */
-class StaticScriptsUnreadable extends Schema.TaggedError<StaticScriptsUnreadable>()(
-  "StaticScriptsUnreadable",
-  { reason: Schema.String }
-) {}
+class StaticScriptsUnreadable extends Schema.TaggedError<
+  StaticScriptsUnreadable,
+  { readonly brand: unique symbol }
+>()("StaticScriptsUnreadable", { reason: Schema.String }) {}
 
 /**
  * Starts a static page's scripts once the browser has parsed and painted the page,

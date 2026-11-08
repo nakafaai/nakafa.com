@@ -15,10 +15,10 @@ type RoomCodeStorage = Readonly<
 >;
 
 /** The browser kept no storage, such as a private window that refuses it. */
-export class RoomCodeStorageFailed extends Schema.TaggedError<RoomCodeStorageFailed>()(
-  "RoomCodeStorageFailed",
-  {}
-) {}
+export class RoomCodeStorageFailed extends Schema.TaggedError<
+  RoomCodeStorageFailed,
+  { readonly brand: unique symbol }
+>()("RoomCodeStorageFailed", {}) {}
 
 /** The session storage key of the code scanned for one sitting. */
 function roomCodeKey(sittingId: string) {

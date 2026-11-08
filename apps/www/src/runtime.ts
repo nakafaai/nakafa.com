@@ -30,10 +30,10 @@ const messages = {
 } satisfies Record<Failure, string>;
 
 /** One server process attempted to cross the protected production-content seam. */
-export class UnsafeRuntimeError extends Schema.TaggedError<UnsafeRuntimeError>()(
-  "UnsafeRuntimeError",
-  { reason: FailureSchema }
-) {
+export class UnsafeRuntimeError extends Schema.TaggedError<
+  UnsafeRuntimeError,
+  { readonly brand: unique symbol }
+>()("UnsafeRuntimeError", { reason: FailureSchema }) {
   get message() {
     return messages[this.reason];
   }

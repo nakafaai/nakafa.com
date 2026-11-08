@@ -307,23 +307,23 @@ export const MAX_SOURCE_TEXT = 120_000;
  * Nina could not read the pages: the model failed, timed out, or answered with something that is
  * not the questions' shape. Nothing is placed, so the teacher can send the same pages again.
  */
-export class ImportUnread extends Schema.TaggedError<ImportUnread>()(
-  "ImportUnread",
-  {
-    ...refusal("IMPORT_UNREAD", "Nina could not read these pages."),
-  }
-) {}
+export class ImportUnread extends Schema.TaggedError<
+  ImportUnread,
+  { readonly brand: unique symbol }
+>()("ImportUnread", {
+  ...refusal("IMPORT_UNREAD", "Nina could not read these pages."),
+}) {}
 
 /** A page image that is no PNG or JPEG, or larger than an image may be. Every page image of the read is deleted. */
-export class ImportPageRefused extends Schema.TaggedError<ImportPageRefused>()(
-  "ImportPageRefused",
-  {
-    ...refusal(
-      "IMPORT_PAGE_REFUSED",
-      "A page must be a PNG or JPEG image of at most 2 MB."
-    ),
-  }
-) {}
+export class ImportPageRefused extends Schema.TaggedError<
+  ImportPageRefused,
+  { readonly brand: unique symbol }
+>()("ImportPageRefused", {
+  ...refusal(
+    "IMPORT_PAGE_REFUSED",
+    "A page must be a PNG or JPEG image of at most 2 MB."
+  ),
+}) {}
 
 /**
  * What Nina is told for every read. The questions stay in the file's own words and languages,
