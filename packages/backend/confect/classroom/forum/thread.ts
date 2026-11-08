@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { Repliers } from "@repo/backend/confect/classroom/forum/face";
 import {
   ClientKey,
   DiscussionNumber,
@@ -7,10 +8,10 @@ import {
 } from "@repo/backend/confect/classroom/forum/message";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { isSingleLine } from "@repo/utilities/line";
-import { Schema } from "effect";
+import { Array as Arr, Schema, String as Str } from "effect";
 
 /** The most characters the title of a discussion may have. */
-export const TITLE_MAX_LENGTH = 120;
+const TITLE_MAX_LENGTH = 120;
 
 /** The title of a discussion as a member writes it: one trimmed line of 1 to 120 characters. */
 export const DiscussionTitle = Schema.String.check(
@@ -26,8 +27,10 @@ export const DiscussionTitle = Schema.String.check(
  * that opens it, which shares that key, so the opening message is found by it.
  * The number counts per class: an open reads the highest number of the class in
  * its own transaction, and Convex retries a concurrent open, so two discussions
- * of one class never share a number. `replies` counts the replies, and
- * `lastReplyAt` is the time of the newest one.
+ * of one class never share a number. `replies` counts the replies,
+ * `lastReplyAt` is the time of the newest one, and `repliers` names who wrote the
+ * newest replies, as the summary under the opening message shows them; both stay
+ * absent until the first reply.
  */
 export const threadValidator = Schema.Struct({
   archivedAt: Schema.optionalKey(Schema.Finite),
@@ -39,9 +42,30 @@ export const threadValidator = Schema.Struct({
   lastReplyAt: Schema.optionalKey(Schema.Finite),
   number: DiscussionNumber,
   replies: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  repliers: Schema.optionalKey(Repliers),
   sealedTitle: Sealed,
   tenantId: Id("tenants"),
 });
+
+/**
+ * The title a thread takes from the message it starts from, as Discord names one: the first line of its text, else
+ * its poll's question, else its first file's name, cut to what a title holds. The server titles a thread with it,
+ * and the channel compares a discussion's title with it to tell a titled discussion from a thread of a message.
+ */
+export const threadTitle = (
+  message: Pick<typeof MessageView.Type, "attachments" | "poll" | "text">
+) => {
+  const line = Arr.headNonEmpty(Str.split(message.text ?? "", "\n"));
+  const title =
+    line === ""
+      ? (message.poll?.question ??
+        Arr.match(message.attachments, {
+          onEmpty: () => "",
+          onNonEmpty: ([first]) => first.name,
+        }))
+      : line;
+  return Str.trim(Str.slice(0, TITLE_MAX_LENGTH)(title));
+};
 
 /** One discussion as its own page shows it: its channel, its summary, and its opening message. */
 export const ThreadView = Schema.Struct({

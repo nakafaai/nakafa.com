@@ -1,3 +1,5 @@
+import { Option, Record as Rec } from "effect";
+
 /**
  * The keys of each set of Nakafa's formula keypad, as the LaTeX a key inserts. `#?` is an empty slot that the caret
  * moves to next, and `#@` takes what the writer had selected, so a fraction keeps a selected number as its numerator.
@@ -145,6 +147,28 @@ export const SET_SIGNS = {
 /** An empty slot of a key, which its face shows as an empty square. */
 const SLOT = /#[?@]/gu;
 
-/** What a key draws: its LaTeX with each slot shown as an empty square. */
+/** A limit whose range follows it, which a key draws with the range under it, as display math does. */
+const LIMIT = /\\lim(?=_)/gu;
+
+/**
+ * The faces of the keys whose slot alone would draw them as one empty square, so no writer could tell
+ * them apart: each shows what it makes. A chemistry formula turns its digits into subscripts, upright
+ * letters stand as they are, and a quantity keeps its unit beside its number.
+ */
+const SAMPLE_FACES: Readonly<Record<string, string>> = {
+  "\\ce{#?}": String.raw`\ce{A2B}`,
+  "\\mathrm{#@}": String.raw`\mathrm{Ab}`,
+  "\\pu{#?}": String.raw`\pu{1 m}`,
+};
+
+/**
+ * What a key draws: its LaTeX with each slot shown as an empty square, and a limit's range under it, so
+ * the face stays inside its key. A key that the squares alone would draw as one empty square shows what
+ * it makes instead (`SAMPLE_FACES`).
+ */
 export const keyFace = (latex: string) =>
-  latex.replaceAll(SLOT, String.raw`\square`);
+  Option.getOrElse(Rec.get(SAMPLE_FACES, latex), () =>
+    latex
+      .replaceAll(SLOT, String.raw`\square`)
+      .replaceAll(LIMIT, String.raw`\lim\limits`)
+  );

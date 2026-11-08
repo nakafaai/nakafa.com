@@ -4,23 +4,24 @@ import {
   Copy01Icon,
   Delete02Icon,
   PencilEdit02Icon,
+  TaskEdit01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Function as Fn } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant } from "@/components/tenant/context";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { ExamDeleteConfirm } from "@/components/tenant/exams/delete";
 import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
 import type { ListedExam } from "@/components/tenant/exams/optimistic";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
@@ -93,23 +94,13 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </RowItems>
-      <ResponsiveDialog
-        description={t("delete-description")}
-        footer={
-          <>
-            <Button onClick={() => setIsDeleting(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button onClick={deleteExam} variant="destructive">
-              <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-              {common("delete")}
-            </Button>
-          </>
-        }
+      <ExamDeleteConfirm
+        onConfirm={deleteExam}
         open={isDeleting}
         setOpen={setIsDeleting}
-        title={t("delete-title")}
-      />
+      >
+        <ConfirmSubject icon={TaskEdit01Icon} name={exam.title} />
+      </ExamDeleteConfirm>
     </>
   );
 }

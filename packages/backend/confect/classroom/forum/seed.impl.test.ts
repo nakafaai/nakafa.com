@@ -25,6 +25,10 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+/** The longest kind of name a school holds: a Javanese title, given names and two family names. */
+const LONG_NAME =
+  "Raden Ajeng Siti Nurhaliza Kusumawardhani Hadiningrat Wijayakusuma Putri Siregar";
+
 describe("classroom/forum seed history", () => {
   it.effect(
     "writes sealed messages a minute apart ending now, and the teacher's read mark after the first ones",
@@ -61,11 +65,19 @@ describe("classroom/forum seed history", () => {
         });
         expect(mark).toEqual({ at: actedAt() - 3 * 60_000 });
         yield* fixture.internal.mutation(history, {
+          author: LONG_NAME,
           classSlug: "fisika-x-1",
           count: 1,
           read: 0,
           slug: nf,
         });
+        // A run that names the classmate writes as a classmate of that name.
+        const named = yield* fixture
+          .as("teacher")
+          .query(page, { ...firstPage, ...forum, slug: nf });
+        expect(
+          Arr.map(Arr.take(named.page, 2), (message) => message.author.name)
+        ).toEqual([LONG_NAME, "Raka Pratama"]);
         const unchanged = yield* fixture.as("teacher").query(reads.get, {
           classId: forum.classId,
           place: { _tag: "channel", channelId: forum.channelId },

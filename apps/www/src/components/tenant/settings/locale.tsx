@@ -146,7 +146,12 @@ export function SchoolLocaleCard({
       </CardContent>
       <CardSectionFooter hint={t("locale-footer")}>
         <CardSectionActions>
-          <Button disabled={!changed} onClick={save} type="button">
+          <Button
+            disabled={!changed}
+            onClick={save}
+            type="button"
+            variant="outline"
+          >
             {t("save")}
           </Button>
         </CardSectionActions>

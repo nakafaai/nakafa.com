@@ -81,7 +81,7 @@ export function SchoolCardDialog({
       footer={
         <>
           <Button onClick={onClose} type="button" variant="outline">
-            {common("close")}
+            {common("cancel")}
           </Button>
           <Button
             onClick={() => {
