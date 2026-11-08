@@ -1,5 +1,5 @@
-import { optionLetters } from "@repo/backend/confect/exams/letters";
-import { Array as Arr, Number as Num, Option, Schema } from "effect";
+import { partLetter } from "@repo/backend/confect/exams/letters";
+import { Array as Arr, Option, Schema } from "effect";
 import type { MatchPart } from "@/components/exams/sitting/response";
 
 /** A place on a board, in the board's own pixels, so a paper drawn at any zoom keeps its lines on its dots. */
@@ -8,9 +8,6 @@ export type LinePoint = typeof LinePoint.Type;
 
 /** How far a pull travels before it draws, so a press that wobbles stays a press. */
 const PULL_START = 4;
-
-/** How far toward its answer the remove control of a line stands from its statement's dot. */
-const REMOVE_STEP = 28;
 
 /**
  * The curve of a line: it leaves each dot level and bends once halfway, as a pencil line drawn between two
@@ -22,13 +19,17 @@ export const linePath = (from: LinePoint, to: LinePoint) => {
 };
 
 /**
- * Where the remove control of a line stands: on its statement's row, one step toward its answer, so two lines
- * that cross never put their controls on each other.
+ * Where the remove control of a line stands: in the middle of the gap between the columns, as far from either dot,
+ * on its statement's row, so the controls of two statements never stand on each other and none stands on a dot or a
+ * row's outline. The line is cut around it (`removeRadius`), so it never runs under the control.
  */
 export const removePoint = (from: LinePoint, to: LinePoint): LinePoint => ({
-  x: from.x + Num.sign(to.x - from.x) * REMOVE_STEP,
+  x: (from.x + to.x) / 2,
   y: from.y,
 });
+
+/** How far a line stays from the middle of a remove control: the control's half (16) and a gap (4). */
+export const REMOVE_CLEARANCE = 20;
 
 /**
  * A point of the screen in a board's own pixels. A board drawn smaller or larger than its layout, as the editor's
@@ -52,19 +53,16 @@ export const isPull = (from: LinePoint, to: LinePoint) =>
  * The names a board gives its parts: each statement its number from one, and each answer its letter in the script
  * of the answers' labels, as the paper names them.
  */
-export const lineNames = (match: Pick<MatchPart, "sources" | "targets">) => {
-  const letterOf = optionLetters(Arr.map(match.targets, (part) => part.label));
-  return {
-    sources: Arr.map(match.sources, (part, index) => ({
-      id: part.id,
-      name: String(index + 1),
-    })),
-    targets: Arr.map(match.targets, (part, index) => ({
-      id: part.id,
-      name: letterOf(index),
-    })),
-  };
-};
+export const lineNames = (match: Pick<MatchPart, "sources" | "targets">) => ({
+  sources: Arr.map(match.sources, (part, index) => ({
+    id: part.id,
+    name: String(index + 1),
+  })),
+  targets: Arr.map(match.targets, (part, index) => ({
+    id: part.id,
+    name: partLetter(match.targets, index),
+  })),
+});
 
 /** The name of one part of a board, or none for a part the board does not hold. */
 export const nameOf = (
