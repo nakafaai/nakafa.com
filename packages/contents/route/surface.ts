@@ -33,17 +33,32 @@ const publicRouteSurfaceInput: readonly SchemaEncoded<
   {
     appSegment: "curricula",
     key: "curriculum",
-    routeSlugs: { de: "lehrplaene", en: "curriculum", id: "kurikulum" },
+    routeSlugs: {
+      de: "lehrplaene",
+      en: "curriculum",
+      id: "kurikulum",
+      ms: "kurikulum",
+    },
   },
   {
     appSegment: "materials",
     key: "subject",
-    routeSlugs: { de: "faecher", en: "subjects", id: "materi" },
+    routeSlugs: {
+      de: "faecher",
+      en: "subjects",
+      id: "materi",
+      ms: "mata-pelajaran",
+    },
   },
   {
     appSegment: "try-out",
     key: "tryout",
-    routeSlugs: { de: "try-out", en: "try-out", id: "try-out" },
+    routeSlugs: {
+      de: "try-out",
+      en: "try-out",
+      id: "try-out",
+      ms: "try-out",
+    },
   },
 ];
 export const PUBLIC_ROUTE_SURFACES = Schema.decodeSync(
