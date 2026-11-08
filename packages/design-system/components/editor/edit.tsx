@@ -1,4 +1,4 @@
-import { KeyboardIcon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, KeyboardIcon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import { FormulaKeypad } from "@repo/design-system/components/editor/keypad";
 import { formulaProblem } from "@repo/design-system/components/editor/render";
@@ -7,18 +7,13 @@ import {
   InlineMath,
 } from "@repo/design-system/components/markdown/math";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import {
-  Tabs,
-  TabsList,
-  TabsPanel,
-  TabsTab,
-} from "@repo/design-system/components/ui/tabs";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { fieldBoxVariants } from "@repo/design-system/lib/input";
 import { NEW_FORMULA } from "@repo/editor/math";
@@ -27,8 +22,11 @@ import { Effect, Fiber, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
 import {
   type ComponentProps,
+  createContext,
   type KeyboardEvent,
+  type ReactNode,
   type RefObject,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -41,7 +39,7 @@ class MathLiveUnavailable extends Schema.TaggedError<MathLiveUnavailable>()(
   { reason: Schema.String }
 ) {}
 
-/** Loads MathLive. A failed load leaves the LaTeX tab working, so the caller takes no failure. */
+/** Loads MathLive. A failed load leaves the LaTeX view working, so the caller takes no failure. */
 const loadMathLive = Effect.tryPromise({
   catch: (cause) => new MathLiveUnavailable({ reason: String(cause) }),
   try: () => import("mathlive"),
@@ -59,24 +57,19 @@ const loadMathLive = Effect.tryPromise({
 function MathField({
   field,
   keyboard,
-  keypad,
   mathlive,
   onInput,
-  onKeypad,
   value,
 }: {
   /** Receives the MathLive element, which the keypad types into. */
   field: RefObject<MathLive.MathfieldElement | null>;
   /** The name of the button that opens the keypad. */
   keyboard: string;
-  /** Whether the keypad shows. */
-  keypad: boolean;
   mathlive: typeof MathLive;
   onInput: (latex: string) => void;
-  /** Opens or closes the keypad. */
-  onKeypad: () => void;
   value: string;
 }) {
+  const { keypad, toggleKeypad } = useKeypad();
   const host = useRef<HTMLDivElement>(null);
   const input = useCallbackRef(onInput);
 
@@ -84,17 +77,21 @@ function MathField({
     const element = new mathlive.MathfieldElement();
     element.mathVirtualKeyboardPolicy = "manual";
     // The menu takes its items once the field has mounted; an empty menu leaves no context menu of MathLive's own.
-    element.addEventListener("mount", () => {
+    const mounted = () => {
       element.menuItems = [];
       element.focus();
       if (element.value === NEW_FORMULA) {
         element.executeCommand("selectAll");
       }
-    });
-    element.addEventListener("input", () => input(element.value));
+    };
+    const typed = () => input(element.value);
+    element.addEventListener("mount", mounted);
+    element.addEventListener("input", typed);
     host.current?.append(element);
     field.current = element;
     return () => {
+      element.removeEventListener("mount", mounted);
+      element.removeEventListener("input", typed);
       field.current = null;
       element.remove();
     };
@@ -121,7 +118,7 @@ function MathField({
         className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
         onClick={() => {
           field.current?.focus();
-          onKeypad();
+          toggleKeypad();
         }}
         // The press keeps the focus in the field, so its caret stays where the writer left it.
         onMouseDown={(event) => event.preventDefault()}
@@ -135,28 +132,99 @@ function MathField({
   );
 }
 
+/** Whether Nakafa's keypad shows under the MathLive field, and the press that opens or closes it. */
+const KeypadContext = createContext<{
+  readonly keypad: boolean;
+  readonly toggleKeypad: () => void;
+} | null>(null);
+
+/** The keypad's state, from the MathLive view around the field. */
+function useKeypad() {
+  const keypad = use(KeypadContext);
+  if (keypad === null) {
+    // The field is drawn only inside its view, so a missing view is a composition error.
+    throw new Error("MathField requires MathPanel.");
+  }
+  return keypad;
+}
+
+/**
+ * The MathLive view of a formula's editor: the field it holds, and Nakafa's keypad under it while the
+ * field's Keyboard button holds it open. The keypad types through the element that `field` holds.
+ */
+function MathPanel({
+  children,
+  field,
+  labels,
+}: {
+  /** The MathLive field. */
+  children: ReactNode;
+  field: RefObject<MathLive.MathfieldElement | null>;
+  /** The keypad's sets and its keys that move the caret and delete. */
+  labels: ComponentProps<typeof FormulaKeypad>["labels"];
+}) {
+  const [keypad, setKeypad] = useState(false);
+  const state = useMemo(
+    () => ({ keypad, toggleKeypad: () => setKeypad((shown) => !shown) }),
+    [keypad]
+  );
+
+  return (
+    <KeypadContext value={state}>
+      <div className="grid gap-3">
+        {children}
+        {keypad ? (
+          <FormulaKeypad
+            labels={labels}
+            onCommand={(command) => field.current?.executeCommand(command)}
+            onInsert={(key) =>
+              field.current?.insert(key, {
+                focus: true,
+                insertionMode: "replaceSelection",
+                selectionMode: "placeholder",
+              })
+            }
+          />
+        ) : null}
+      </div>
+    </KeypadContext>
+  );
+}
+
+/** The two ways a writer edits a formula in its editor: the MathLive field, or its LaTeX text. */
+const FormulaView = Schema.Literals(["formula", "latex"]);
+
 /**
  * The editor of one formula, opened by a press on the drawn formula, or at once for the formula the
- * writer just inserted (`opening`). The popover holds two tabs: the MathLive field with Nakafa's
- * keypad, and the LaTeX text. MathLive is loaded while the popover is open, so no page's first
- * JavaScript holds it. Closing the popover saves the
- * formula, unless the writer pressed Escape, which keeps the formula as it was. A blank formula
- * is never saved, and a formula that KaTeX does not parse is saved and drawn as its error, with
- * KaTeX's reason in one sentence. The formula the writer just inserted holds nothing yet to keep,
- * so Escape or a blank close takes it back out (`onDiscard`) instead of leaving its placeholder.
+ * writer just inserted (`defaultOpen`). The popover reads as a header, a body and a footer: two equal
+ * segments choose the MathLive field with Nakafa's keypad or the LaTeX text, the body edits the
+ * formula, and the footer removes it. MathLive is loaded while the popover is open, so no page's
+ * first JavaScript holds it. Closing the popover saves the formula, unless the writer pressed Escape,
+ * which keeps the formula as it was and puts the caret back in the text just after it (`onLeave`).
+ * A blank formula is never saved, and a formula that KaTeX does not parse is saved and drawn as its
+ * error, with KaTeX's reason in one sentence. The formula the writer just inserted holds nothing yet
+ * to keep, so Escape or a blank close takes it back out (`onRemove`) instead of leaving its placeholder.
+ * The popover never hands the focus back to the drawn formula, which takes no keys: Escape gives it to
+ * the text, and a press outside leaves it where the writer pressed.
  */
 export function FormulaEdit({
   block,
+  defaultOpen,
   labels,
   latex,
-  onDiscard,
+  onLeave,
+  onRemove,
   onSave,
-  opening,
 }: {
   block: boolean;
   /**
-   * The names of the editor: the popover's two tabs, the control that opens it, and the
-   * sentence before KaTeX's reason when a formula does not parse.
+   * Whether the editor opens as the formula first draws, as it does for the formula the writer just
+   * inserted, which a close without a formula takes back out.
+   */
+  defaultOpen: boolean;
+  /**
+   * The names of the editor: its two views, the control that opens it, the control that removes the
+   * formula, and the sentence before KaTeX's reason when a formula does not parse.
    */
   labels: {
     formula: string;
@@ -167,22 +235,24 @@ export function FormulaEdit({
     keys: ComponentProps<typeof FormulaKeypad>["labels"];
     latex: string;
     open: string;
+    /** The button that removes the formula from the text. */
+    remove: string;
   };
   latex: string;
-  /** Takes the formula the writer just inserted back out of the text, when it closes without one. */
-  onDiscard: () => void;
+  /** Puts the caret back in the text, just after the formula, when the writer leaves its editor with Escape. */
+  onLeave: () => void;
+  /** Takes the formula out of the text: on the remove button, and when the formula just inserted closes without one. */
+  onRemove: () => void;
   onSave: (latex: string) => void;
-  /** Whether the editor opens as the formula first draws, as it does for the formula the writer just inserted. */
-  opening: boolean;
 }) {
-  const [open, setOpen] = useState(opening);
+  const [open, setOpen] = useState(defaultOpen);
   const [draft, setDraft] = useState(latex);
+  const [view, setView] = useState<typeof FormulaView.Type>("formula");
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
-    Option.none()
+    Option.none
   );
   const discarded = useRef(false);
   const field = useRef<MathLive.MathfieldElement | null>(null);
-  const [keypad, setKeypad] = useState(false);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
   // MathLive loads the first time the popover shows, which may be as the formula first draws.
@@ -201,22 +271,24 @@ export function FormulaEdit({
     };
   }, [mathlive, open]);
 
-  /** Opens the editor on the saved formula. */
-  function openEditor(next: boolean) {
-    if (!next) {
-      setOpen(false);
-      if (!discarded.current && draft.trim() !== "") {
-        onSave(draft.trim());
-        return;
-      }
-      if (opening) {
-        onDiscard();
-      }
+  /** Opens the editor on the saved formula, or closes it, saving the draft unless Escape kept the formula as it was. */
+  function openEditor(next: boolean, escaped: boolean) {
+    if (next) {
+      discarded.current = false;
+      setDraft(latex);
+      setOpen(true);
       return;
     }
-    discarded.current = false;
-    setDraft(latex);
-    setOpen(true);
+    setOpen(false);
+    if (!discarded.current && draft.trim() !== "") {
+      onSave(draft.trim());
+    } else if (defaultOpen) {
+      onRemove();
+      return;
+    }
+    if (escaped) {
+      onLeave();
+    }
   }
 
   /** Escape keeps the formula as it was saved, so the popover closes without a save. */
@@ -227,7 +299,12 @@ export function FormulaEdit({
   }
 
   return (
-    <Popover onOpenChange={openEditor} open={open}>
+    <Popover
+      onOpenChange={(next, details) =>
+        openEditor(next, details.reason === "escape-key")
+      }
+      open={open}
+    >
       {/* A formula on its own line is the lesson's card, a block, so its button spans the line. */}
       <PopoverTrigger
         render={
@@ -245,58 +322,55 @@ export function FormulaEdit({
       </PopoverTrigger>
       <PopoverContent
         align="center"
-        className="flex w-80 flex-col gap-3 p-3"
+        className="w-80 gap-3 p-3"
+        finalFocus={false}
         onKeyDown={discardOnEscape}
       >
-        <Tabs defaultValue="formula">
-          <TabsList>
-            <TabsTab value="formula">{labels.formula}</TabsTab>
-            <TabsTab value="latex">{labels.latex}</TabsTab>
-          </TabsList>
-          <TabsPanel value="formula">
-            {Option.match(mathlive, {
-              onNone: () => null,
-              onSome: (module) => (
-                <div className="grid gap-3">
-                  <MathField
-                    field={field}
-                    keyboard={labels.keyboard}
-                    keypad={keypad}
-                    mathlive={module}
-                    onInput={setDraft}
-                    onKeypad={() => setKeypad((shown) => !shown)}
-                    value={draft}
-                  />
-                  {keypad ? (
-                    <FormulaKeypad
-                      labels={labels.keys}
-                      onCommand={(command) =>
-                        field.current?.executeCommand(command)
-                      }
-                      onInsert={(key) =>
-                        field.current?.insert(key, {
-                          focus: true,
-                          insertionMode: "replaceSelection",
-                          selectionMode: "placeholder",
-                        })
-                      }
-                    />
-                  ) : null}
-                </div>
-              ),
-            })}
-          </TabsPanel>
-          <TabsPanel value="latex">
-            <Textarea
-              aria-label={labels.latex}
-              className="font-mono"
-              onChange={(event) => setDraft(event.target.value)}
-              // An example of LaTeX, the same in every language.
-              placeholder={String.raw`\frac{a}{b}`}
-              value={draft}
-            />
-          </TabsPanel>
-        </Tabs>
+        <ButtonGroup className="w-full">
+          <Button
+            aria-pressed={view === "formula"}
+            className="flex-1"
+            onClick={() => setView("formula")}
+            type="button"
+            variant={view === "formula" ? "secondary" : "outline"}
+          >
+            {labels.formula}
+          </Button>
+          <Button
+            aria-pressed={view === "latex"}
+            className="flex-1"
+            onClick={() => setView("latex")}
+            type="button"
+            variant={view === "latex" ? "secondary" : "outline"}
+          >
+            {labels.latex}
+          </Button>
+        </ButtonGroup>
+        {view === "formula" ? (
+          Option.match(mathlive, {
+            onNone: () => null,
+            onSome: (module) => (
+              <MathPanel field={field} labels={labels.keys}>
+                <MathField
+                  field={field}
+                  keyboard={labels.keyboard}
+                  mathlive={module}
+                  onInput={setDraft}
+                  value={draft}
+                />
+              </MathPanel>
+            ),
+          })
+        ) : (
+          <Textarea
+            aria-label={labels.latex}
+            className="font-mono"
+            onChange={(event) => setDraft(event.target.value)}
+            // An example of LaTeX, the same in every language.
+            placeholder={String.raw`\frac{a}{b}`}
+            value={draft}
+          />
+        )}
         {Option.match(problem, {
           onNone: () => null,
           onSome: (reason) => (
@@ -305,6 +379,15 @@ export function FormulaEdit({
             </p>
           ),
         })}
+        <Button
+          className="self-end"
+          onClick={onRemove}
+          type="button"
+          variant="destructive-outline"
+        >
+          <HugeIcons icon={Delete02Icon} />
+          {labels.remove}
+        </Button>
       </PopoverContent>
     </Popover>
   );

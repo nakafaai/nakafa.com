@@ -1,0 +1,97 @@
+import { expect, test } from "@playwright/test";
+import { Effect, MutableList } from "effect";
+import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  openNewExam,
+  pressTool,
+  selectBack,
+  watchFailures,
+} from "@/e2e/support/toolbar";
+
+/** Every kind of question, by the name its type menu gives it. */
+const KINDS = [
+  "Multiple choice",
+  "Complex multiple choice",
+  "True or false",
+  "Cause and effect",
+  "Short answer",
+  "Numeric answer",
+  "Essay",
+  "Matching",
+  "True or false table",
+  "Answer and reason",
+] as const;
+
+/** The menu of a question's type, by the start of its name. */
+const QUESTION_TYPE = /^Question type: /u;
+
+/** The word each text of a question takes, which the toolbar's bold control marks. */
+const WORD = "uji";
+
+test("in every kind of question, each text of the question takes the toolbar's marks and tables, and a table left empty goes with Backspace", async ({
+  baseURL,
+  browser,
+}) => {
+  test.slow();
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  const failures = watchFailures(page);
+  await openNewExam(page, hostAddress(baseURL, host, "/exams"), "Uji jenis");
+  // The texts of the first question: its prompt, its options, statements and reasons, and its explanation.
+  const texts = page.locator('.ProseMirror[aria-label*="question 1" i]');
+
+  for (const kind of KINDS) {
+    await page.getByRole("button", { name: QUESTION_TYPE }).first().click();
+    await page.getByRole("menuitemradio", { exact: true, name: kind }).click();
+    await expect(
+      page.getByRole("button", { name: `Question type: ${kind}` })
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await expect(texts.first()).toBeEditable({
+      timeout: readinessTimeoutMilliseconds,
+    });
+
+    const count = await texts.count();
+    expect(count, `${kind} has its texts`).toBeGreaterThan(0);
+    for (let index = 0; index < count; index += 1) {
+      const text = texts.nth(index);
+      const name = await text.getAttribute("aria-label");
+      // A press at the text's bottom end puts the caret after its last words.
+      const box = await text.boundingBox();
+      await text.click({
+        position: {
+          x: Math.max((box?.width ?? 8) - 4, 1),
+          y: Math.max((box?.height ?? 8) - 4, 1),
+        },
+      });
+      await page.keyboard.type(` ${WORD}`);
+      await selectBack(page, WORD.length);
+      await pressTool(page, "Bold");
+      await expect(
+        text.locator("strong").last(),
+        `${kind}: ${name} takes bold`
+      ).toHaveText(WORD);
+      await page.keyboard.press("ArrowRight");
+      await pressTool(page, "Bold");
+      await pressTool(page, "Table");
+      await expect(
+        text.locator("table"),
+        `${kind}: ${name} takes a table`
+      ).toHaveCount(1);
+      await page.keyboard.press("Backspace");
+      await expect(
+        text.locator("table"),
+        `${kind}: ${name} drops an empty table on Backspace`
+      ).toHaveCount(0);
+    }
+  }
+  expect(MutableList.toArray(failures)).toEqual([]);
+  await context.close();
+});

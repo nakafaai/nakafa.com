@@ -11,6 +11,7 @@ import {
   RichEditorMarks,
 } from "@repo/design-system/components/editor/format";
 import {
+  barLine,
   editorBar,
   editorRow,
 } from "@repo/design-system/components/editor/frame";
@@ -88,12 +89,7 @@ function groupsKey(groups: readonly (typeof WrappedGroup.Type)[]) {
 
 /** The line that sets a group of controls off from the one before it. */
 function BarLine({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn("bg-border h-5 w-px shrink-0", className)}
-    />
-  );
+  return <span aria-hidden="true" className={cn(barLine(), className)} />;
 }
 
 /**

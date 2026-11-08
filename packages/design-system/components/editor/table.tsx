@@ -1,5 +1,4 @@
 import {
-  ArrowDown01Icon,
   DeleteColumnIcon,
   DeleteIcon,
   InsertColumnLeftIcon,
@@ -8,47 +7,69 @@ import {
   InsertRowUpIcon,
   RowDeleteIcon,
   TableIcon,
-  TablePropertiesIcon,
 } from "@hugeicons/core-free-icons";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
-import { RichEditorControl } from "@repo/design-system/components/editor/tools";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useCurrentEditor, useEditorState } from "@tiptap/react";
-import type { ComponentProps } from "react";
+  barLine,
+  objectBar,
+} from "@repo/design-system/components/editor/frame";
+import { RichEditorControl } from "@repo/design-system/components/editor/tools";
+import { type Editor, findParentNode } from "@tiptap/core";
+import type { Selection } from "@tiptap/pm/state";
+import { useCurrentEditor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
+import { Option } from "effect";
 
-/** One action of a table, as the menu lists it. */
-function TableAction({
-  icon,
-  label,
-  onSelect,
-}: {
-  icon: ComponentProps<typeof HugeIcons>["icon"];
-  label: string;
-  onSelect: () => void;
-}) {
+/** The insert control: a table of two rows and two columns, the first row a header, with the caret in its first cell. */
+export function DocumentTable({ labels }: { labels: { table: string } }) {
+  const { editor } = useCurrentEditor();
+
   return (
-    <DropdownMenuItem onClick={onSelect}>
-      <HugeIcons icon={icon} />
-      {label}
-    </DropdownMenuItem>
+    <RichEditorControl
+      icon={TableIcon}
+      label={labels.table}
+      onClick={() =>
+        editor
+          ?.chain()
+          .focus()
+          .insertTable({ cols: 2, rows: 2, withHeaderRow: true })
+          .run()
+      }
+    />
   );
 }
 
+/** The innermost table around a selection, or none outside a table. */
+const tableAround = (selection: Selection) =>
+  Option.fromNullishOr(
+    findParentNode((node) => node.type.name === "table")(selection)
+  );
+
+/** The box of the innermost table around the caret, which the table's bar stands beside, or none outside a table. */
+const tableBox = (editor: Editor) =>
+  tableAround(editor.state.selection).pipe(
+    Option.flatMap((table) =>
+      Option.fromNullishOr(editor.view.nodeDOM(table.pos))
+    ),
+    Option.filter((element) => element instanceof HTMLElement),
+    Option.map((element) => ({
+      getBoundingClientRect: () => element.getBoundingClientRect(),
+    })),
+    Option.getOrNull
+  );
+
+/** The line between two groups of the table's bar. */
+function TableBarLine() {
+  return <span aria-hidden="true" className={barLine({ space: true })} />;
+}
+
 /**
- * The table controls. The insert control places a table of two rows and two columns, the
- * first row a header, with the caret in its first cell. While the caret sits in a table, a
- * menu beside it adds and removes rows and columns, and removes the table.
+ * The bar of a table, at the table's top edge while the caret stands in it, so a writer adds and
+ * removes rows and columns where the table is, with no menu to open: rows above and below and the
+ * row's removal, then columns left and right and the column's removal, then the table's removal last.
+ * It floats over the text, so it takes no room of the document, and it shows only while the editor
+ * takes changes and has the focus. Each control keeps the caret in its cell, so the bar stays after a press.
  */
-export function DocumentTable({
+export function TableBar({
   labels,
 }: {
   labels: {
@@ -57,95 +78,72 @@ export function DocumentTable({
     columnDelete: string;
     rowAfter: string;
     rowBefore: string;
-    tableMenu: string;
     rowDelete: string;
     table: string;
-    tableActions: string;
     tableDelete: string;
   };
 }) {
   const { editor } = useCurrentEditor();
-  const inTable = useEditorState({
-    editor,
-    selector: ({ editor: current }) => current?.isActive("table") ?? false,
-  });
+
+  if (editor === null) {
+    return null;
+  }
 
   return (
-    <>
+    <BubbleMenu
+      aria-label={labels.table}
+      className={objectBar()}
+      editor={editor}
+      getReferencedVirtualElement={() => tableBox(editor)}
+      options={{
+        flip: true,
+        offset: 8,
+        placement: "top-start",
+        shift: { padding: 8 },
+      }}
+      pluginKey="tableBar"
+      role="toolbar"
+      shouldShow={({ editor: current, state }) =>
+        current.isEditable && Option.isSome(tableAround(state.selection))
+      }
+    >
       <RichEditorControl
-        icon={TableIcon}
-        label={labels.table}
-        onClick={() =>
-          editor
-            ?.chain()
-            .focus()
-            .insertTable({ cols: 2, rows: 2, withHeaderRow: true })
-            .run()
-        }
+        icon={InsertRowUpIcon}
+        label={labels.rowBefore}
+        onClick={() => editor.chain().focus().addRowBefore().run()}
       />
-      {inTable ? (
-        <DropdownMenu>
-          <ToolHint label={labels.tableActions}>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  aria-label={labels.tableActions}
-                  className="gap-0.5 has-[>svg]:px-1.5"
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                />
-              }
-            >
-              <HugeIcons icon={TablePropertiesIcon} />
-              <HugeIcons
-                className="text-muted-foreground size-3"
-                icon={ArrowDown01Icon}
-              />
-            </DropdownMenuTrigger>
-          </ToolHint>
-          <DropdownMenuContent className="w-48">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{labels.tableMenu}</DropdownMenuLabel>
-              <TableAction
-                icon={InsertRowUpIcon}
-                label={labels.rowBefore}
-                onSelect={() => editor?.chain().focus().addRowBefore().run()}
-              />
-              <TableAction
-                icon={InsertRowDownIcon}
-                label={labels.rowAfter}
-                onSelect={() => editor?.chain().focus().addRowAfter().run()}
-              />
-              <TableAction
-                icon={RowDeleteIcon}
-                label={labels.rowDelete}
-                onSelect={() => editor?.chain().focus().deleteRow().run()}
-              />
-              <TableAction
-                icon={InsertColumnLeftIcon}
-                label={labels.columnBefore}
-                onSelect={() => editor?.chain().focus().addColumnBefore().run()}
-              />
-              <TableAction
-                icon={InsertColumnRightIcon}
-                label={labels.columnAfter}
-                onSelect={() => editor?.chain().focus().addColumnAfter().run()}
-              />
-              <TableAction
-                icon={DeleteColumnIcon}
-                label={labels.columnDelete}
-                onSelect={() => editor?.chain().focus().deleteColumn().run()}
-              />
-              <TableAction
-                icon={DeleteIcon}
-                label={labels.tableDelete}
-                onSelect={() => editor?.chain().focus().deleteTable().run()}
-              />
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null}
-    </>
+      <RichEditorControl
+        icon={InsertRowDownIcon}
+        label={labels.rowAfter}
+        onClick={() => editor.chain().focus().addRowAfter().run()}
+      />
+      <RichEditorControl
+        icon={RowDeleteIcon}
+        label={labels.rowDelete}
+        onClick={() => editor.chain().focus().deleteRow().run()}
+      />
+      <TableBarLine />
+      <RichEditorControl
+        icon={InsertColumnLeftIcon}
+        label={labels.columnBefore}
+        onClick={() => editor.chain().focus().addColumnBefore().run()}
+      />
+      <RichEditorControl
+        icon={InsertColumnRightIcon}
+        label={labels.columnAfter}
+        onClick={() => editor.chain().focus().addColumnAfter().run()}
+      />
+      <RichEditorControl
+        icon={DeleteColumnIcon}
+        label={labels.columnDelete}
+        onClick={() => editor.chain().focus().deleteColumn().run()}
+      />
+      <TableBarLine />
+      <RichEditorControl
+        icon={DeleteIcon}
+        label={labels.tableDelete}
+        onClick={() => editor.chain().focus().deleteTable().run()}
+      />
+    </BubbleMenu>
   );
 }

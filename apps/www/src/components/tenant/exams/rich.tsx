@@ -11,6 +11,7 @@ import {
   PicturesProvider,
   pictureFileHandler,
 } from "@repo/design-system/components/editor/picture";
+import { TableBar } from "@repo/design-system/components/editor/table";
 import type { Node } from "@tiptap/pm/model";
 import type { Transaction } from "@tiptap/pm/state";
 import { Array as Arr, Option, Record as Rec } from "effect";
@@ -103,7 +104,7 @@ interface ExamDocumentProps {
 /**
  * One rich text of the exam editor: the prompt of a question or the label of one option. It takes
  * the pictures and formulas of its document, and it makes its editor the one the toolbar acts on
- * when the editor takes focus. A picture pasted or dropped into the text waits for its alt text in
+ * when the editor takes focus. A table of the text carries its own bar while the caret stands in it. A picture pasted or dropped into the text waits for its alt text in
  * the exam's queue, which inserts it into this editor. The editor gives its place up when it is
  * removed. Its owner, a question's text or an option row, wires it through `ExamDocumentWiringProvider`.
  * While the owner opens the document, the text the server holds stands in for the editor, so a text with
@@ -193,7 +194,9 @@ export function ExamDocument({
               onFocus={activate}
               placeholder={placeholder}
               size={size}
-            />
+            >
+              <TableBar labels={labels.toolbar} />
+            </DocumentEditor>
           </div>
         </FiguresProvider>
       </PicturesProvider>
