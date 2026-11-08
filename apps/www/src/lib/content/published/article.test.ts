@@ -37,6 +37,19 @@ const makeFound = Effect.fn("test.www.publishedArticle.found")(function* () {
     activeReleaseId: release.manifest.releaseId,
     artifact: yield* testSignedArtifact("politics", {
       contentKey: projection.contentKey,
+      contentTree: {
+        $node: "element",
+        children: [
+          {
+            $node: "element",
+            children: ["Article delivery evidence"],
+            name: "h2",
+            props: {},
+          },
+        ],
+        name: "fragment",
+        props: {},
+      },
       rawMdx: "## Article delivery evidence\n\nThe signed article source.",
     }),
     delivery: "public",
@@ -99,6 +112,13 @@ describe("published article delivery", () => {
         activeReleaseId: found.activeReleaseId,
         artifactHash: found.artifact.artifactHash,
         body: "cached-article-body",
+        headings: [
+          {
+            children: [],
+            href: "#article-delivery-evidence",
+            label: "Article delivery evidence",
+          },
+        ],
         categoryTitle: projection.categoryTitle,
         contentId: projection.graph.assetId,
         metadata: projection.metadata,

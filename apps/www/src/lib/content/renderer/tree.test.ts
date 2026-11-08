@@ -8,6 +8,7 @@ import type {
   ContentTreeElement,
   ContentTreeProps,
 } from "@nakafa/aksara-contracts/tree";
+import { contentOutline } from "@repo/contents/toc";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { Array as Arr, Effect, Schema } from "effect";
 import { createElement, type ReactNode } from "react";
@@ -200,6 +201,31 @@ describe("content tree rendering", () => {
         expect(renderToStaticMarkup(element)).toBe(
           "<span>marked@de</span><span>unmarked</span>"
         );
+      })
+  );
+  it.effect(
+    "gives every heading the anchor that the page's outline links to",
+    () =>
+      Effect.gen(function* () {
+        const tree = root([
+          node("h2", ["Heading with ", node("strong", ["bold"]), " words"]),
+          node("p", ["Body"]),
+          node("h3", ["Rate ", node("code", ["k"])]),
+          node("h3", ["Authored"], { id: "own" }),
+        ]);
+        const markup = renderToStaticMarkup(yield* renderTree(tree));
+        const ids = Arr.map(
+          Arr.fromIterable(markup.matchAll(/<h[23][^>]* id="(?<id>[^"]+)"/gu)),
+          (match) => `#${match[1]}`
+        );
+
+        expect(ids).toEqual(
+          Arr.flatMap(contentOutline(tree), (heading) => [
+            heading.href,
+            ...Arr.map(heading.children, (child) => child.href),
+          ])
+        );
+        expect(ids).toEqual(["#heading-with-bold-words", "#rate-k", "#own"]);
       })
   );
 });

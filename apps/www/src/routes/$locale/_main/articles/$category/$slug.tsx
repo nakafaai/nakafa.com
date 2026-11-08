@@ -1,6 +1,5 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
-import { getHeadings } from "@repo/contents/toc";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -126,7 +125,7 @@ const readArticle = createServerFn({ method: "GET" })
               : null,
             description: seo.description,
             filePath,
-            headings: getHeadings(published.rawMdx),
+            headings: published.headings,
             labels: {
               articles: tCommon("articles"),
               home: tCommon("home"),

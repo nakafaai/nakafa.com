@@ -115,12 +115,13 @@ const PROJECTS = {
   // WebKit. Its project runs after the navigation checks, so no other browser
   // shares the runner while those checks measure timing.
   webkit: {
-    // The visual cards, the lesson breadcrumb that must paint once, and a press into a lesson
-    // that must draw it whole, in Safari too.
+    // The visual cards, the lesson breadcrumb that must paint once, a press into a lesson
+    // that must draw it whole, and the outline that follows the reader, in Safari too.
     testMatch: [
       "**/visual/cards.browser.ts",
       "**/curriculum/placement.browser.ts",
       "**/reading/press.browser.ts",
+      "**/reading/outline.browser.ts",
     ],
     use: { browserName: "webkit" },
     workers: 1,

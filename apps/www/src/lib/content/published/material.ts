@@ -1,3 +1,4 @@
+import { contentOutline } from "@repo/contents/toc";
 import "@tanstack/react-start/server-only";
 
 import {
@@ -61,6 +62,7 @@ export const renderMaterialArtifact = Effect.fn(
     activeReleaseId: data.activeReleaseId,
     artifactHash: data.artifact.artifactHash,
     body,
+    headings: contentOutline(data.artifact.payload.contentTree),
     metadata: data.metadata,
     projection: data.projection,
     rawMdx: data.artifact.payload.rawMdx,
