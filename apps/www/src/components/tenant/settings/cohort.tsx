@@ -171,13 +171,16 @@ function SchoolCohortPage({
           {...(detail === undefined ? {} : { title: detail.name })}
         >
           <TableSearch placeholder={t("cohort-members-search")} />
-          <WithAction action="cohort.manage">
-            <SchoolPlacementAdd
-              cohortId={cohortId}
-              slug={slug}
-              status={detail === undefined ? undefined : detail.status}
-            />
-          </WithAction>
+          {/* An archived cohort takes no one new, so it offers no Add student. */}
+          {detail?.status === "archived" ? null : (
+            <WithAction action="cohort.manage">
+              <SchoolPlacementAdd
+                cohortId={cohortId}
+                slug={slug}
+                status={detail === undefined ? undefined : detail.status}
+              />
+            </WithAction>
+          )}
         </SchoolHeader>
         <div className={cn(pageRowVariants(), "pt-4")}>
           <WithAction action="cohort.manage">

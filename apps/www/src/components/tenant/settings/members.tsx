@@ -20,7 +20,10 @@ import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
@@ -30,6 +33,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableList } from "@/components/shared/table/list";
@@ -323,13 +327,16 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           </DropdownMenuItem>
         ) : null}
         {removable ? (
-          <DropdownMenuItem
-            onClick={() => dialogs.show("remove")}
-            variant="destructive"
-          >
-            <HugeIcons icon={UserRemove01Icon} />
-            {t("member-remove")}
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => dialogs.show("remove")}
+              variant="destructive"
+            >
+              <HugeIcons icon={UserRemove01Icon} />
+              {t("member-remove")}
+            </DropdownMenuItem>
+          </>
         ) : null}
       </RowItems>
       {dialogs.kind === "rename" ? (
@@ -385,7 +392,13 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         open={dialogs.isOpen("remove")}
         setOpen={dialogs.setOpen}
         title={t("member-remove-title")}
-      />
+      >
+        <ConfirmSubject
+          icon={UserCircleIcon}
+          name={member.name}
+          {...(member.email === null ? {} : { detail: member.email })}
+        />
+      </ResponsiveDialog>
     </>
   );
 }

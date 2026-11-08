@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { MascotCode } from "@repo/mascot/code";
 import { Array as Arr, Option, Schema } from "effect";
 import {
   archiveThreadUpdate,
@@ -19,14 +20,17 @@ const slug = Schema.decodeSync(TenantSlug)("sekolah");
 const classId = Schema.decodeUnknownSync(Id("classes"))("class-1");
 const channelOf = Schema.decodeUnknownSync(Id("classroomChannels"));
 const messageOf = Schema.decodeUnknownSync(Id("classroomMessages"));
-const personId = Schema.decodeUnknownSync(Id("tenantPeople"))("person-1");
+const personOf = Schema.decodeUnknownSync(Id("tenantPeople"));
+const mascot = Schema.decodeSync(MascotCode)("cat.0.243e66.right.open");
+const author = { id: personOf("p-1"), mascot, name: "Rina", nina: false };
+const raka = { ...author, id: personOf("p-9"), name: "Raka", photo: null };
 const general = channelOf("general");
 const topic = channelOf("topic");
 
 /** A message of the channel, written by the viewer. */
 const message = (id: string, text: string): ForumMessage => ({
   attachments: [],
-  author: { id: personId, name: "Bu Rina", nina: false },
+  author: { ...author, photo: null },
   clientKey: `key-${id}-0000`,
   createdAt: 1,
   discussion: null,
@@ -166,6 +170,7 @@ const summary = (
 ) => ({
   lastReplyAt,
   number,
+  repliers: [raka],
   replies,
   title: `Diskusi ${number}`,
   unread: true,
@@ -287,7 +292,8 @@ describe("replyUpdate", () => {
       text: "Balasan",
     });
 
-    const counted = { ...summary(1, 2, 50), unread: false };
+    const repliers = [sent.author, raka];
+    const counted = { ...summary(1, 2, 50), repliers, unread: false };
     expect(setQuery.mock.calls).toEqual([
       [
         classroom.forum.threads.replies,

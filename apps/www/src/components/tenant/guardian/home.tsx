@@ -4,6 +4,7 @@ import {
   Building03Icon,
   CheckmarkBadge01Icon,
   IdentityCardIcon,
+  StudentIcon,
   UserRemove01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
@@ -38,6 +39,7 @@ import {
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { TableFrame, TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
@@ -390,7 +392,9 @@ function GuardianWithdraw({ child }: { child: ChildItem }) {
         open={isWithdrawing}
         setOpen={setIsWithdrawing}
         title={t("withdraw-title")}
-      />
+      >
+        <ConfirmSubject icon={StudentIcon} name={child.student.name} />
+      </ResponsiveDialog>
     </>
   );
 }

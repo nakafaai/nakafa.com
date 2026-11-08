@@ -180,14 +180,14 @@ function SelectContent({
 }
 
 /**
- * What a list says with nothing to choose, in the words of the caller who knows what to do first. A
- * list that holds none of these says so by itself (`SelectNothing`).
+ * What a list says with nothing to choose, in one short sentence of the caller who knows what to do first, centred as
+ * every empty state is. A list that holds none of these says so by itself (`SelectNothing`).
  */
 function SelectEmpty({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       className={cn(
-        "text-muted-foreground max-w-xs px-2 py-1.5 text-sm",
+        "text-muted-foreground px-2 py-6 text-center text-sm",
         className
       )}
       data-slot="select-empty"
@@ -204,7 +204,7 @@ function SelectNothing() {
   const t = useTranslations("Common");
 
   return (
-    <p className="text-muted-foreground [display:var(--select-nothing,none)] max-w-xs px-2 py-1.5 text-sm">
+    <p className="text-muted-foreground [display:var(--select-nothing,none)] px-2 py-6 text-center text-sm">
       {t("popup-empty")}
     </p>
   );

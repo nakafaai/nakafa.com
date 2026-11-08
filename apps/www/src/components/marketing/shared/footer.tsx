@@ -10,7 +10,8 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PageConsentFooterItem } from "@/components/analytics/consent/mount";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
@@ -20,7 +21,6 @@ import {
   getSubjectMenuTarget,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
-import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 import {
   Link,
@@ -31,21 +31,21 @@ import {
 } from "@/lib/routing/link";
 import { PublicPathLink } from "@/lib/routing/public/link";
 import {
-  articleCategoryTarget,
+  ARTICLES_TARGET,
   CONTRIBUTOR_TARGET,
+  CURRICULA_TARGET,
   LANDING_TARGET,
   PRICING_TARGET,
+  SCHOOL_ENTER_TARGET,
+  SCHOOL_PRICING_TARGET,
+  SCHOOL_START_TARGET,
   SCHOOL_TARGET,
+  TRYOUT_TARGET,
 } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
-const highSchoolSubjects = Option.getOrElse(
-  Option.map(
-    Arr.findFirst(subjectMenu, (subject) => subject.title === "high-school"),
-    (subject) => subject.items || []
-  ),
-  () => []
-);
+/** Every grade of every program of the subject menu, which the Learn group lists after the curricula. */
+const subjectGrades = Arr.flatMap(subjectMenu, (program) => program.items);
 
 /**
  * Composes the shared marketing footer from product, policy, and social links
@@ -53,10 +53,8 @@ const highSchoolSubjects = Option.getOrElse(
  * they load on the press (see `PageNavigation`).
  */
 export function Footer({
-  articleNavigation,
   pageNavigation,
 }: {
-  articleNavigation: readonly ArticleNavigationItem[];
   pageNavigation: PageNavigation | null;
 }) {
   const t = useTranslations("About");
@@ -70,121 +68,113 @@ export function Footer({
   return (
     <footer className="w-full border-t" id="footer">
       <div className="mx-auto w-full max-w-7xl px-6">
-        <div className="grid scroll-mt-28 pt-24">
-          <section className="flex flex-col justify-between gap-8 md:flex-row">
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-medium">
-                {tCommon("subject")}
-              </span>
-              <ul className="flex flex-col gap-2">
-                {Arr.map(highSchoolSubjects, (subject) => (
-                  <li key={subject.value}>
-                    <FooterLink
-                      label={tSubject(subject.title, { grade: subject.value })}
-                      target={getSubjectMenuTarget(subject, locale)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
+        <div className="grid scroll-mt-28 grid-cols-2 gap-x-6 gap-y-12 pt-24 md:grid-cols-4">
+          <FooterGroup label={tMarketing("learn")}>
+            <li>
+              <FooterLink
+                label={tCommon("subject")}
+                target={CURRICULA_TARGET}
+              />
+            </li>
+            {Arr.map(subjectGrades, (subject) => (
+              <li key={subject.value}>
+                <FooterLink
+                  label={tSubject(subject.title, { grade: subject.value })}
+                  target={getSubjectMenuTarget(subject, locale)}
+                />
+              </li>
+            ))}
+            <li>
+              <FooterLink label={tCommon("try-out")} target={TRYOUT_TARGET} />
+            </li>
+            {Arr.map(holyMenu, (holy) => (
+              <li key={holy.title}>
+                <FooterLink label={tHoly(holy.title)} target={holy.target} />
+              </li>
+            ))}
+            <li>
+              <FooterLink
+                label={tCommon("articles")}
+                target={ARTICLES_TARGET}
+              />
+            </li>
+            <li>
+              <FooterLink
+                label={tMarketing("pricing")}
+                target={PRICING_TARGET}
+              />
+            </li>
+          </FooterGroup>
 
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-medium">
-                {tHoly("holy")}
-              </span>
-              <ul className="flex flex-col gap-2">
-                {Arr.map(holyMenu, (holy) => (
-                  <li key={holy.title}>
-                    <FooterLink
-                      label={tHoly(holy.title)}
-                      target={holy.target}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <FooterGroup label={tMarketing("school")}>
+            <li>
+              <FooterLink
+                label={tMarketing("school-home")}
+                target={SCHOOL_TARGET}
+              />
+            </li>
+            <li>
+              <FooterLink
+                label={tMarketing("pricing")}
+                target={SCHOOL_PRICING_TARGET}
+              />
+            </li>
+            <li>
+              <FooterLink
+                label={tCommon("open-school")}
+                target={SCHOOL_START_TARGET}
+              />
+            </li>
+            <li>
+              <FooterLink
+                label={tMarketing("school-enter")}
+                target={SCHOOL_ENTER_TARGET}
+              />
+            </li>
+          </FooterGroup>
 
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-medium">
-                {tCommon("articles")}
-              </span>
-              <ul className="flex flex-col gap-2">
-                {Arr.map(articleNavigation, (article) => (
-                  <li key={article.category}>
-                    <FooterLink
-                      label={article.title}
-                      target={articleCategoryTarget(article.route)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <FooterGroup label={t("company")}>
+            <li>
+              <FooterLink label={t("about-us")} target={LANDING_TARGET} />
+            </li>
+            <li>
+              <FooterLink
+                label={tCommon("contributor")}
+                target={CONTRIBUTOR_TARGET}
+              />
+            </li>
+            <li>
+              <a
+                className={linkItemVariants()}
+                href={COMPANY_IDENTITY.socialProfiles.discord}
+              >
+                {t("community")}
+              </a>
+            </li>
+            {pageNavigation ? (
+              <li>
+                <FooterPageLink
+                  label={pageNavigation.developerItem.title}
+                  preload={false}
+                  publicPath={pageNavigation.developerItem.publicPath}
+                />
+              </li>
+            ) : null}
+          </FooterGroup>
 
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-medium">
-                {t("company")}
-              </span>
-              <ul className="flex flex-col gap-2">
-                <li>
-                  <FooterLink label={t("about-us")} target={LANDING_TARGET} />
-                </li>
-                <li>
-                  <FooterLink
-                    label={tMarketing("pricing")}
-                    target={PRICING_TARGET}
+          <FooterGroup label={tLegal("terms-and-policies")}>
+            {pageNavigation &&
+              Arr.map(pageNavigation.legalItems, (page) => (
+                <li key={page.pageKey}>
+                  <FooterPageLink
+                    label={page.title}
+                    preload={false}
+                    publicPath={page.publicPath}
                   />
                 </li>
-                <li>
-                  <FooterLink
-                    label={tMarketing("school")}
-                    target={SCHOOL_TARGET}
-                  />
-                </li>
-                <li>
-                  <FooterLink
-                    label={tCommon("contributor")}
-                    target={CONTRIBUTOR_TARGET}
-                  />
-                </li>
-                <li>
-                  <a
-                    className={linkItemVariants()}
-                    href={COMPANY_IDENTITY.socialProfiles.discord}
-                  >
-                    {t("community")}
-                  </a>
-                </li>
-                {pageNavigation ? (
-                  <li>
-                    <FooterPageLink
-                      label={pageNavigation.developerItem.title}
-                      preload={false}
-                      publicPath={pageNavigation.developerItem.publicPath}
-                    />
-                  </li>
-                ) : null}
-              </ul>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-medium">
-                {tLegal("terms-and-policies")}
-              </span>
-              <ul className="flex flex-col gap-2">
-                {pageNavigation &&
-                  Arr.map(pageNavigation.legalItems, (page) => (
-                    <li key={page.pageKey}>
-                      <FooterPageLink
-                        label={page.title}
-                        preload={false}
-                        publicPath={page.publicPath}
-                      />
-                    </li>
-                  ))}
-                <PageConsentFooterItem />
-              </ul>
-            </div>
-          </section>
+              ))}
+            <PageConsentFooterItem />
+          </FooterGroup>
         </div>
       </div>
 
@@ -237,6 +227,26 @@ export function Footer({
 
       <FooterArt />
     </footer>
+  );
+}
+
+/**
+ * One group of footer links under its name. The groups follow what a visitor
+ * looks for, so a new subject, article category or page joins its group's list
+ * and never adds a column.
+ */
+function FooterGroup({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="text-muted-foreground text-sm font-medium">{label}</span>
+      <ul className="flex flex-col gap-2">{children}</ul>
+    </div>
   );
 }
 

@@ -1,5 +1,4 @@
 import { FunctionImpl } from "@confect/server";
-import type { ClassroomMessagesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -16,10 +15,9 @@ import {
   missing,
   nextThreadNumber,
 } from "@repo/backend/confect/classroom/forum/lookup";
-import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
 import {
-  TITLE_MAX_LENGTH,
+  threadTitle,
   titleField,
 } from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
@@ -28,35 +26,8 @@ import {
   schoolKeys,
 } from "@repo/backend/confect/classroom/forum/views";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Clock, Effect, String as Str, Struct } from "effect";
-
-/**
- * The title a thread takes from the message it starts from, as Discord names one:
- * the first line of its text, else its poll's question, else its first file's
- * name, cut to what a title holds. A message without text carries a poll or a file.
- */
-const titleOfMessage = Effect.fn("classroom.forum.threads.titleOf")(function* (
-  message: ClassroomMessagesDoc,
-  sealedText: ArrayBuffer
-) {
-  const line = Arr.headNonEmpty(
-    Str.split(
-      yield* openText(
-        yield* schoolKeys(message.tenantId),
-        messageField(message),
-        sealedText
-      ),
-      "\n"
-    )
-  );
-  const view = yield* messageView(message);
-  const title =
-    line === ""
-      ? (view.poll?.question ?? Arr.getUnsafe(view.attachments, 0).name)
-      : line;
-  return Str.trim(Str.slice(0, TITLE_MAX_LENGTH)(title));
-}, Effect.orDie);
+import { sealText } from "@repo/backend/confect/vault/text";
+import { Clock, Effect, Struct } from "effect";
 
 /**
  * Starts a thread from a message of a channel, as Slack and Discord let any message
@@ -105,7 +76,7 @@ export const start = FunctionImpl.make(
         sealedTitle: yield* sealText(
           yield* schoolKeys(row.tenantId),
           titleField(fields),
-          yield* titleOfMessage(message, message.sealedText)
+          threadTitle(yield* messageView(message))
         ).pipe(Effect.orDie),
         tenantId: row.tenantId,
       })

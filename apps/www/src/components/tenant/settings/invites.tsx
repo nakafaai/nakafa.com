@@ -27,6 +27,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { TableList } from "@/components/shared/table/list";
 import { RowItems } from "@/components/shared/table/menu";
@@ -331,7 +332,13 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("invite-revoke-title")}
-      />
+      >
+        <ConfirmSubject
+          detail={invite.email}
+          icon={MailSend01Icon}
+          name={invite.name}
+        />
+      </ResponsiveDialog>
       <SchoolIssueCardDialog
         name={invite.name}
         onIssued={setIssued}
