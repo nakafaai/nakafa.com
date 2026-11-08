@@ -81,6 +81,54 @@ const CHROMIUM_SCHOOL_TESTS = [
   "**/school/shift.browser.ts",
 ];
 
+// The School specs that check only what the server keeps and answers: data, roles, text, addresses and
+// navigation, through plain fields, buttons and menus. Chromium runs them in the runtime suite, and another
+// engine would only repeat the same answers, so the browsers suites leave them out. Every spec that measures
+// rendering, layout, paint, fonts, focus, scroll, touch, typing into the editor, a file, a download, the
+// connection or history stays in all five engines, and so do the walks and the roles.
+const BEHAVIOUR_SCHOOL_TESTS = Arr.map(
+  [
+    "access",
+    "announcement",
+    "billing",
+    "checkout",
+    "classrooms",
+    "delete",
+    "device",
+    "duplicate",
+    "duties",
+    "entry",
+    "expired",
+    "family",
+    "forum",
+    "full",
+    "grades",
+    "grading",
+    "homework",
+    "host",
+    "icons",
+    "insight",
+    "lock",
+    "outsider",
+    "people",
+    "preferences",
+    "reports",
+    "requests",
+    "reschedule",
+    "results",
+    "revoked",
+    "room",
+    "scheme",
+    "screen",
+    "setup",
+    "status",
+    "tabs",
+    "units",
+    "webhooks",
+  ],
+  (name) => `**/school/${name}.browser.ts`
+);
+
 // The visual cards take the whole screen through the Fullscreen API on desktop,
 // Android, and iPad, and cover the viewport on iPhone, in Safari too.
 const WEBKIT_TESTS = ["**/visual/cards.browser.ts"];
@@ -157,22 +205,34 @@ const PROJECTS = {
     use: { browserName: "webkit" },
   },
   "school-firefox": {
-    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testIgnore: [
+      ...CHROMIUM_SCHOOL_TESTS,
+      ...BEHAVIOUR_SCHOOL_TESTS,
+      ...TIMING_TESTS,
+    ],
     testMatch: SCHOOL_TESTS,
     use: devices["Desktop Firefox"],
   },
   "school-safari": {
-    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testIgnore: [
+      ...CHROMIUM_SCHOOL_TESTS,
+      ...BEHAVIOUR_SCHOOL_TESTS,
+      ...TIMING_TESTS,
+    ],
     testMatch: SCHOOL_TESTS,
     use: devices["Desktop Safari"],
   },
   "school-android": {
-    testIgnore: TIMING_TESTS,
+    testIgnore: [...BEHAVIOUR_SCHOOL_TESTS, ...TIMING_TESTS],
     testMatch: SCHOOL_TESTS,
     use: devices["Pixel 7"],
   },
   "school-iphone": {
-    testIgnore: [...CHROMIUM_SCHOOL_TESTS, ...TIMING_TESTS],
+    testIgnore: [
+      ...CHROMIUM_SCHOOL_TESTS,
+      ...BEHAVIOUR_SCHOOL_TESTS,
+      ...TIMING_TESTS,
+    ],
     testMatch: SCHOOL_TESTS,
     use: devices["iPhone 15"],
   },
