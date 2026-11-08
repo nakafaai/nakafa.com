@@ -26,6 +26,7 @@ const MARKETING_NAMESPACES = [
   "Marketing",
   "Memory",
   "Metadata",
+  "Player",
   "Pricing",
   "PricingPage",
   "SEO",
