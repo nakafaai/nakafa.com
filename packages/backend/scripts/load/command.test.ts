@@ -231,6 +231,7 @@ describe("load command", () => {
     () =>
       Effect.gen(function* () {
         mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
+        mocks.layer.mockReturnValue(localConvexDouble().layer);
         mocks.run.mockReturnValue(Effect.void);
         const directory =
           yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();

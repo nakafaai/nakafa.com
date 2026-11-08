@@ -67,21 +67,24 @@ const seatAll = Effect.fn("load.seed.seats")(function* <E, R>(
   yield* Effect.forEach(
     Arr.chunksOf(seats, SEATS_PER_CALL),
     (batch) =>
-      run(
-        "Load seats",
-        {
-          args: {
-            kind: seating.kind,
-            seats: Arr.map(batch, ({ key, name, token }) => ({
-              key,
-              name,
-              token,
-            })),
-            slug: seating.slug,
+      // Each attempt calls the runner again, so a retry sends the seats again.
+      Effect.suspend(() =>
+        run(
+          "Load seats",
+          {
+            args: {
+              kind: seating.kind,
+              seats: Arr.map(batch, ({ key, name, token }) => ({
+                key,
+                name,
+                token,
+              })),
+              slug: seating.slug,
+            },
+            path: "exams/seed:seats",
           },
-          path: "exams/seed:seats",
-        },
-        Arr.map(batch, (seat) => seat.token)
+          Arr.map(batch, (seat) => seat.token)
+        )
       ).pipe(Effect.retry({ times: SEED_RETRIES })),
     { concurrency: SEED_CONCURRENCY, discard: true }
   );

@@ -101,7 +101,7 @@ describe("acceptance forum", () => {
         {
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance forum <school-slug> <count> <read> <forum-file>",
+            "Usage: acceptance forum <school-slug> <count> <read> <forum-file> [author]",
         }
       );
       expect(mocks.layer).not.toHaveBeenCalled();
