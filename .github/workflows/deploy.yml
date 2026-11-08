@@ -124,7 +124,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           AKSARA_PUBLICATION_TOKEN: ${{ secrets.AKSARA_PUBLICATION_TOKEN }}
-          CONTENT_READ_TOKEN: ${{ secrets.CONTENT_READ_TOKEN }}
           CONVEX_CLOUD_URL: ${{ secrets.CONVEX_CLOUD_URL }}
           MATH_CAS_API_KEY: ${{ secrets.MATH_CAS_API_KEY }}
           NAKAFA_API_EDGE_SECRET: ${{ secrets.NAKAFA_API_EDGE_SECRET }}

@@ -86,6 +86,16 @@ describe("contentRelease/runtime/active", () => {
           publicPath: fixture.projection.publicPath,
         } as const;
         expect(
+          yield* context.query(contentRelease.runtime.active.head, {
+            appLocale: args.appLocale,
+            publicPath: args.publicPath,
+          })
+        ).toMatchObject({
+          activeReleaseId: fixture.release.releaseId,
+          artifactHash: fixture.artifact.artifactHash,
+          family: "page",
+        });
+        expect(
           yield* context.query(contentRelease.runtime.active.artifact, args)
         ).toEqual({ artifactJson: encodeJsonText(fixture.artifact) });
         expect(

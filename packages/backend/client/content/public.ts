@@ -272,20 +272,6 @@ export const readPublicContentEvidenceBatch = Effect.fn(
       )
   );
 });
-/** Reads one public artifact verified against the caller's live renderer. */
-export const readPublicContent = Effect.fn("NakafaContent.readPublicContent")(
-  function* (
-    target: ContentRuntimeTarget,
-    input: PublicContentRuntimeInput,
-    rendererManifest: unknown
-  ) {
-    return yield* readPublicContentProgram(target, input, {
-      kind: "live",
-      rendererManifest,
-    });
-  }
-);
-
 /**
  * Authenticates one public response that a reader composed from its parts: the
  * signed release document and renderer manifest of the release, the signed

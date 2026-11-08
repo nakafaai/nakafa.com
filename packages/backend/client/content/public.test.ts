@@ -16,7 +16,6 @@ import {
   ContentTransportError,
 } from "@repo/backend/client/content/errors";
 import {
-  readPublicContent,
   readPublicContentEvidence,
   readPublicContentEvidenceBatch,
   verifyPublicContentFound,
@@ -211,7 +210,7 @@ describe("public content runtime client", () => {
       fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
       expect(
-        yield* readPublicContent(target, input, found.rendererManifest)
+        yield* readPublicContentEvidence(target, input)
       ).toMatchObject({ kind: "found" });
       expect(fetchMock.mock.calls[0]?.[0]).toEqual(new URL(endpoint));
       expect(yield* sentJson()).toEqual({
@@ -403,11 +402,7 @@ describe("public content runtime client", () => {
         verifyMock.mockReturnValue(Effect.fail(cause));
 
         expect(
-          yield* readPublicContent(
-            target,
-            input,
-            foundResponse().rendererManifest
-          ).pipe(Effect.flip)
+          yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
         ).toEqual(new ContentRuntimeVerificationError({ cause }));
       })
   );

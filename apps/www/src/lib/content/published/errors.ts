@@ -12,13 +12,6 @@ export class ContentExecutionError extends Schema.TaggedError<ContentExecutionEr
     stage: Schema.Literal("render"),
   }
 ) {}
-/** Published content was selected without its private runtime credential. */
-export class ContentRuntimeConfigurationError extends Schema.TaggedError<ContentRuntimeConfigurationError>()(
-  "ContentRuntimeConfigurationError",
-  {
-    key: Schema.Literal("CONTENT_READ_TOKEN"),
-  }
-) {}
 /** A verified projection cannot satisfy its requested public surface. */
 export class PublishedProjectionError extends Schema.TaggedError<PublishedProjectionError>()(
   "PublishedProjectionError",
