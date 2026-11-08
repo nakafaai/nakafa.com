@@ -28,7 +28,7 @@ const markedLine = cva("flex min-w-0 items-start gap-2", {
     },
     written: {
       false: "",
-      true: "cursor-text select-text",
+      true: "cursor-text select-text active:scale-100!",
     },
   },
 });
@@ -37,7 +37,7 @@ const markedLine = cva("flex min-w-0 items-start gap-2", {
  * One marked line: a marker, the words it names, and what stands at its end, such as a remove control, all on the
  * words' first line however many lines they wrap to. An outlined tone draws the row as an answer: open (`idle`),
  * chosen, correct or wrong; `bare` draws only the parts, for a row inside a table's cell. `written` marks a row whose
- * words are edited in place, so a press places the caret. It renders a `div`, or the element `render` names, such as
+ * words are edited in place, so a press places the caret and the row holds still under it. It renders a `div`, or the element `render` names, such as
  * the `label` of a choice whose circle it holds. Compose `LineMark` and `LineWords` inside it.
  */
 export function MarkedLine({

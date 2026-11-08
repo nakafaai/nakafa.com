@@ -197,7 +197,7 @@ export function LinesItem({
   readonly name: string;
   readonly side: LineSide;
 }) {
-  const { store } = useLines();
+  const { store, stretch } = useLines();
   const marked = useStore(store, (state) =>
     side === "sources"
       ? Option.contains(state.held, id)
@@ -214,7 +214,7 @@ export function LinesItem({
           <LineDot id={id} name={name} side={side} />
         </LineMark>
       ) : null}
-      <MarkedLine tone={marked ? "chosen" : "idle"}>
+      <MarkedLine tone={marked ? "chosen" : "idle"} written={!stretch}>
         <LineMark letter>{name}.</LineMark>
         {children}
       </MarkedLine>
