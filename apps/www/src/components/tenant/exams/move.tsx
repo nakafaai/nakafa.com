@@ -26,7 +26,10 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { DateTime, Option, Schema, String as Str } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import {
+  ConfirmRowMenu,
+  ConfirmSubject,
+} from "@/components/shared/table/confirm";
 import {
   cancelRoomChange,
   rescheduleRoomChange,
