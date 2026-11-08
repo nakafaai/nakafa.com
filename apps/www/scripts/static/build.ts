@@ -56,10 +56,10 @@ type TextArtifact = typeof TextArtifact.Type;
  * carries one, so its HTML is not the one the build expects. The build is the only
  * writer of that link.
  */
-class MarkdownTwinLinkError extends Schema.TaggedError<MarkdownTwinLinkError>()(
-  "MarkdownTwinLinkError",
-  { page: Schema.String }
-) {}
+class MarkdownTwinLinkError extends Schema.TaggedError<
+  MarkdownTwinLinkError,
+  { readonly brand: unique symbol }
+>()("MarkdownTwinLinkError", { page: Schema.String }) {}
 
 const writeArtifact = Effect.fn("www.static.write")(function* (
   outDir: string,

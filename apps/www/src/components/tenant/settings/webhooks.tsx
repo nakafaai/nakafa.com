@@ -30,7 +30,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -39,6 +38,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -186,9 +187,9 @@ function SchoolWebhookTable() {
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="typing"
+          <EmptyState
             description={t("webhook-add-description")}
+            scene={<EmptyNina act="typing" />}
             title={t("webhooks-empty")}
           />
         }

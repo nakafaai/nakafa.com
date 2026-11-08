@@ -13,13 +13,13 @@ export const cleanupSourceValidator = Schema.Union([
 export type CleanupSource = typeof cleanupSourceValidator.Type;
 
 /** Typed failure for durable privacy cleanup coordination. */
-export class PrivacyCleanupError extends Schema.TaggedError<PrivacyCleanupError>()(
-  "PrivacyCleanupError",
-  {
-    code: Schema.Literal(privacyCleanupFailedCode),
-    message: Schema.String,
-  }
-) {}
+export class PrivacyCleanupError extends Schema.TaggedError<
+  PrivacyCleanupError,
+  { readonly brand: unique symbol }
+>()("PrivacyCleanupError", {
+  code: Schema.Literal(privacyCleanupFailedCode),
+  message: Schema.String,
+}) {}
 
 /** Lifts one workflow operation into the privacy cleanup error channel. */
 

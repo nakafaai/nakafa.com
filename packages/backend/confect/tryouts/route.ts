@@ -34,14 +34,14 @@ const TryoutSetIdentitySchema = Schema.Struct({
   trackKey: KebabKeySchema,
 });
 /** Expected failure while decoding one authored try-out route identity. */
-class TryoutRouteError extends Schema.TaggedError<TryoutRouteError>()(
-  "TryoutRouteError",
-  {
-    cause: Schema.optional(Schema.Unknown),
-    code: Schema.Literal("TRYOUT_ROUTE_INVALID"),
-    message: Schema.String,
-  }
-) {}
+class TryoutRouteError extends Schema.TaggedError<
+  TryoutRouteError,
+  { readonly brand: unique symbol }
+>()("TryoutRouteError", {
+  cause: Schema.optional(Schema.Unknown),
+  code: Schema.Literal("TRYOUT_ROUTE_INVALID"),
+  message: Schema.String,
+}) {}
 /** Decodes transport strings through the catalog keys of the assessment contract. */
 export const TryoutRouteErrorWire = publicFailure(TryoutRouteError);
 export const decodeTryoutSetIdentity = Effect.fn(

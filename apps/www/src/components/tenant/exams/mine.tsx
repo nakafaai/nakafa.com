@@ -16,7 +16,7 @@ import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -24,7 +24,9 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -159,9 +161,9 @@ function StudentExamsTable() {
       columns={columns}
       data={QueryResult.isSuccess(listed) ? orderSittings(listed.value) : []}
       empty={
-        <TableEmpty
-          act="sleeping"
+        <EmptyState
           description={t("mine-empty-description")}
+          scene={<EmptyNina act="sleeping" />}
           title={t("mine-empty")}
         />
       }

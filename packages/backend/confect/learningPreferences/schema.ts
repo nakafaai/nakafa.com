@@ -31,13 +31,13 @@ export const learningPreferencePersistenceFailedMessage =
   "Unable to read or persist learning preferences.";
 
 /** Expected database failure while reading or writing learner preferences. */
-export class LearningPreferencePersistenceError extends Schema.TaggedError<LearningPreferencePersistenceError>()(
-  "LearningPreferencePersistenceError",
-  {
-    code: Schema.Literal(learningPreferencePersistenceFailedCode),
-    message: Schema.Literal(learningPreferencePersistenceFailedMessage),
-  }
-) {}
+export class LearningPreferencePersistenceError extends Schema.TaggedError<
+  LearningPreferencePersistenceError,
+  { readonly brand: unique symbol }
+>()("LearningPreferencePersistenceError", {
+  code: Schema.Literal(learningPreferencePersistenceFailedCode),
+  message: Schema.Literal(learningPreferencePersistenceFailedMessage),
+}) {}
 
 /** Maps unknown database failures into the preference persistence contract. */
 
@@ -45,15 +45,15 @@ export const curriculumPreferenceIoFailedCode =
   "CURRICULUM_PREFERENCE_IO_FAILED";
 export const curriculumProgramNotFoundCode = "CURRICULUM_PROGRAM_NOT_FOUND";
 /** Expected curriculum preference failure exposed through Convex errors. */
-export class CurriculumPreferenceError extends Schema.TaggedError<CurriculumPreferenceError>()(
-  "CurriculumPreferenceError",
-  {
-    code: Schema.Literals([
-      curriculumPreferenceIoFailedCode,
-      curriculumProgramNotFoundCode,
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class CurriculumPreferenceError extends Schema.TaggedError<
+  CurriculumPreferenceError,
+  { readonly brand: unique symbol }
+>()("CurriculumPreferenceError", {
+  code: Schema.Literals([
+    curriculumPreferenceIoFailedCode,
+    curriculumProgramNotFoundCode,
+  ]),
+  message: Schema.String,
+}) {}
 /** Compact curriculum option consumed by selectors and preference storage. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */

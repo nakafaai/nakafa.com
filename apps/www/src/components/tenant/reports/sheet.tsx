@@ -28,7 +28,7 @@ import {
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -37,6 +37,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -193,13 +195,7 @@ function CohortReportsBody() {
             <DataTable
               columns={columns}
               data={pagination.results}
-              empty={
-                <TableEmpty
-                  act="reading"
-                  description={t("students-empty-description")}
-                  title={t("students-empty")}
-                />
-              }
+              empty={<ReportStudentsEmpty />}
               rowId={(line) => line.student.id}
               search="student"
             />
@@ -210,6 +206,19 @@ function CohortReportsBody() {
         <ReportLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>
+  );
+}
+
+/** The report cards table with no student yet, under its column heads. */
+function ReportStudentsEmpty() {
+  const t = useTranslations("SchoolReports");
+
+  return (
+    <EmptyState
+      description={t("students-empty-description")}
+      scene={<EmptyNina act="reading" />}
+      title={t("students-empty")}
+    />
   );
 }
 

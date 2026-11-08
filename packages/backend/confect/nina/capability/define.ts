@@ -87,10 +87,10 @@ const FailureFacts = Schema.Struct({
 });
 
 /** A run that left nothing usable. Nina and the learner only get `text`. */
-class CapabilityFailure extends Schema.TaggedError<CapabilityFailure>()(
-  "CapabilityFailure",
-  { facts: FailureFacts, text: Schema.String }
-) {}
+class CapabilityFailure extends Schema.TaggedError<
+  CapabilityFailure,
+  { readonly brand: unique symbol }
+>()("CapabilityFailure", { facts: FailureFacts, text: Schema.String }) {}
 
 /**
  * Ends a run that left nothing usable. The log gets the routing facts of what

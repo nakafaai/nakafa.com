@@ -6,7 +6,10 @@ import { Schema } from "effect";
  * Person the account does not hold, gets the same answer, so an ID probe learns
  * nothing.
  */
-export class NotificationNotFound extends Schema.TaggedError<NotificationNotFound>()(
+export class NotificationNotFound extends Schema.TaggedError<
+  NotificationNotFound,
+  { readonly brand: unique symbol }
+>()(
   "NotificationNotFound",
   refusal("NOTIFICATION_NOT_FOUND", "This notification does not exist.")
 ) {}
@@ -15,7 +18,10 @@ export class NotificationNotFound extends Schema.TaggedError<NotificationNotFoun
  * The account holds more Persons than one inbox request reads. The request is
  * refused, so no answer holds some of the account's rows and not others.
  */
-export class NotificationScopeTooLarge extends Schema.TaggedError<NotificationScopeTooLarge>()(
+export class NotificationScopeTooLarge extends Schema.TaggedError<
+  NotificationScopeTooLarge,
+  { readonly brand: unique symbol }
+>()(
   "NotificationScopeTooLarge",
   refusal(
     "NOTIFICATION_SCOPE_TOO_LARGE",
@@ -27,7 +33,10 @@ export class NotificationScopeTooLarge extends Schema.TaggedError<NotificationSc
  * The page cursor of the inbox list is not one that the list could return: it is
  * malformed, or it names more rows at its time than the account can hold.
  */
-export class NotificationCursorInvalid extends Schema.TaggedError<NotificationCursorInvalid>()(
+export class NotificationCursorInvalid extends Schema.TaggedError<
+  NotificationCursorInvalid,
+  { readonly brand: unique symbol }
+>()(
   "NotificationCursorInvalid",
   refusal(
     "NOTIFICATION_CURSOR_INVALID",
