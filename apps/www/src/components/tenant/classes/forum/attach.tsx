@@ -7,9 +7,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -17,7 +15,6 @@ import { InputGroupButton } from "@repo/design-system/components/ui/input-group"
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import { useTranslations } from "use-intl";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { DOCUMENT_ACCEPT } from "@/components/tenant/classes/forum/tray";
 
 /**
@@ -66,38 +63,40 @@ export function AttachMenu({
         type="file"
       />
       <DropdownMenu>
-        <IconTip label={t("attach-add")}>
-          <DropdownMenuTrigger
-            render={
-              <InputGroupButton
-                aria-label={t("attach-add")}
-                className="rounded-full"
-                size="icon"
-                variant="ghost"
-              />
-            }
+        <DropdownMenuTrigger
+          render={
+            <InputGroupButton
+              className="rounded-full"
+              size="icon"
+              tooltip={t("attach-add")}
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons icon={Add01Icon} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="w-44"
+          label={common("menu-attach")}
+        >
+          <DropdownMenuItem
+            icon={Image01Icon}
+            onClick={() => photos.current?.click()}
           >
-            <HugeIcons icon={Add01Icon} />
-          </DropdownMenuTrigger>
-        </IconTip>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-attach")}</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => photos.current?.click()}>
-              <HugeIcons icon={Image01Icon} />
-              {t("attach-photo")}
+            {t("attach-photo")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            icon={File02Icon}
+            onClick={() => documents.current?.click()}
+          >
+            {t("attach-document")}
+          </DropdownMenuItem>
+          {onPoll === undefined ? null : (
+            <DropdownMenuItem icon={ChartBarLineIcon} onClick={onPoll}>
+              {t("attach-poll")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => documents.current?.click()}>
-              <HugeIcons icon={File02Icon} />
-              {t("attach-document")}
-            </DropdownMenuItem>
-            {onPoll === undefined ? null : (
-              <DropdownMenuItem onClick={onPoll}>
-                <HugeIcons icon={ChartBarLineIcon} />
-                {t("attach-poll")}
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuGroup>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

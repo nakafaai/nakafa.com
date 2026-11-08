@@ -218,10 +218,6 @@ function TryoutReviewSeats({
       {Arr.map(joined, ({ question }, index) => (
         <li key={question.placementId}>
           <Button
-            aria-label={t("cell", {
-              number: question.questionOrder,
-              state: question.response === null ? "unanswered" : "answered",
-            })}
             className="w-full"
             disabled={index >= shown.length}
             onClick={() =>
@@ -232,6 +228,10 @@ function TryoutReviewSeats({
                 ?.scrollIntoView()
             }
             size="icon"
+            tooltip={t("cell", {
+              number: question.questionOrder,
+              state: question.response === null ? "unanswered" : "answered",
+            })}
             type="button"
             variant={
               question.response === null ? "destructive-outline" : "default"

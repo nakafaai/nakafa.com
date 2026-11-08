@@ -1,3 +1,4 @@
+import { useCallbackRef } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
@@ -107,6 +108,15 @@ export function LineDot({
   const press = useRef<LinePoint | null>(null);
   const pulled = useRef(false);
 
+  // The dot registers with its board as it mounts and leaves it as it unmounts, so the board measures its own dots.
+  const register = useCallbackRef((dot: HTMLButtonElement | null) => {
+    if (dot === null) {
+      return;
+    }
+    store.getState().anchor(id, dot);
+    return () => store.getState().unanchor(id, dot);
+  });
+
   /** Takes the line of the statement in hand to this answer, or away when it reaches this answer already. */
   const answer = (byKey: boolean) =>
     Option.map(store.getState().held, (source) => {
@@ -127,18 +137,6 @@ export function LineDot({
 
   return (
     <Button
-      aria-label={
-        side === "targets"
-          ? t("line-answer", { name })
-          : Option.match(
-              Option.flatMap(pair, (item) => nameOf(board.names, item.target)),
-              {
-                onNone: () => t("line-statement", { name }),
-                onSome: (answerName) =>
-                  t("line-statement-joined", { answer: answerName, name }),
-              }
-            )
-      }
       aria-pressed={side === "sources" ? held : undefined}
       className={lineDot({ stretch: board.stretch })}
       data-line-dot={id}
@@ -261,7 +259,20 @@ export function LineDot({
           .getState()
           .release(Option.isSome(target) ? Option.some(id) : Option.none());
       }}
+      ref={register}
       size="icon-sm"
+      tooltip={
+        side === "targets"
+          ? t("line-answer", { name })
+          : Option.match(
+              Option.flatMap(pair, (item) => nameOf(board.names, item.target)),
+              {
+                onNone: () => t("line-statement", { name }),
+                onSome: (answerName) =>
+                  t("line-statement-joined", { answer: answerName, name }),
+              }
+            )
+      }
       type="button"
       variant="ghost"
     >

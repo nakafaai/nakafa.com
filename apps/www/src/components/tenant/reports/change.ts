@@ -4,6 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { Array as Arr, Option, Schema } from "effect";
 import { draftText } from "@/components/tenant/settings/state";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /** One line of a cohort's report list: a student, their report card or none, and what the viewer may do. */
 export type ReportLine = Ref.Returns<
@@ -26,21 +27,11 @@ function changeLines(
   cohortId: CohortId | undefined,
   change: (line: ReportLine) => ReportLine
 ) {
-  for (const query of localStore.getAllQueries(records.reports.sheet)) {
-    if (
-      Option.isSome(query.value) &&
-      (cohortId === undefined || query.args.cohortId === cohortId)
-    ) {
-      localStore.setQuery(
-        records.reports.sheet,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, change),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, records.reports.sheet, (value, args) =>
+    cohortId === undefined || args.cohortId === cohortId
+      ? Option.some(withPage(value, (page) => Arr.map(page, change)))
+      : Option.none()
+  );
 }
 
 /** Shows a written note at once, on the student's draft, which the first note starts. */

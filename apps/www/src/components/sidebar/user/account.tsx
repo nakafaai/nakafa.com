@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
@@ -118,25 +117,27 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       </SidebarSchools>
       <DropdownMenuGroup>
         {username === undefined ? null : (
-          <DropdownMenuItem onClick={() => navigate(profileTarget(username))}>
-            <HugeIcons icon={UserIcon} />
+          <DropdownMenuItem
+            icon={UserIcon}
+            onClick={() => navigate(profileTarget(username))}
+          >
             {t("profile")}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
+          icon={Notification01Icon}
           onClick={() =>
             navigate({ from: LOCALE_ROUTE, to: "/$locale/notifications" })
           }
         >
-          <HugeIcons icon={Notification01Icon} />
           {tNotifications("title")}
         </DropdownMenuItem>
         <DropdownMenuItem
+          icon={Settings01Icon}
           onClick={() =>
             navigate({ from: LOCALE_ROUTE, to: "/$locale/user/settings" })
           }
         >
-          <HugeIcons icon={Settings01Icon} />
           {t("settings")}
         </DropdownMenuItem>
       </DropdownMenuGroup>

@@ -23,8 +23,8 @@ export function PostMenuTrigger() {
           <DropdownMenuTrigger
             render={
               <Button
-                aria-label={common("more-actions")}
                 size="icon-sm"
+                tooltip={common("more-actions")}
                 variant="ghost"
               />
             }

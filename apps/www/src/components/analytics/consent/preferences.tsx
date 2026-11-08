@@ -21,14 +21,14 @@ export function ConsentPreferences({
 
   return (
     <ResponsiveDialog
-      description={t(`status-${consent.preferences.statusAtOpen}`)}
-      footer={
+      action={
         <ConsentActions
           canDecline={consent.canDecline}
           canGrant={consent.canGrant}
           decide={consent.decide}
         />
       }
+      description={t(`status-${consent.preferences.statusAtOpen}`)}
       open={consent.preferences.isOpen}
       setOpen={consent.setPreferencesOpen}
       title={t("title")}

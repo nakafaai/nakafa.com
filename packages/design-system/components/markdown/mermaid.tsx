@@ -49,10 +49,10 @@ function DiagramCard() {
       actions={
         <>
           <Button
-            aria-label={t("open-diagram")}
             onClick={openDialog}
             size="icon"
             title={t("open-diagram")}
+            tooltip={t("open-diagram")}
             variant="ghost"
           >
             <HugeIcons icon={Maximize02Icon} />
