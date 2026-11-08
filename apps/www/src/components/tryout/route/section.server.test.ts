@@ -40,8 +40,8 @@ const address = {
 const catalogSection = {
   exam: { title: "SNBT" },
   group: { title: "2027" },
-  section: { publicPath: SECTION, title: "Section 1" },
-  set: { publicPath: SET, title: "Set 1" },
+  section: { publicPath: SECTION, sectionKey: "section-1", title: "Section 1" },
+  set: { countryKey: "id", examKey: "snbt", publicPath: SET, title: "Set 1" },
   track: { title: "UTBK" },
 };
 
@@ -73,6 +73,29 @@ describe("readTryoutSectionRoute", () => {
           "en",
           SECTION
         );
+      })
+  );
+
+  it.effect(
+    "shares the reviewed artwork of an SNBT section as its social image",
+    () =>
+      Effect.gen(function* () {
+        mocks.readTryoutSectionPage.mockReturnValueOnce(
+          Effect.succeed({
+            ...catalogSection,
+            section: {
+              ...catalogSection.section,
+              sectionKey: "general-reasoning",
+            },
+            set: { ...catalogSection.set, countryKey: "indonesia" },
+          })
+        );
+
+        expect(yield* readTryoutSectionRoute(address)).toMatchObject({
+          head: {
+            image: "/open-graph/tryout/indonesia/snbt/en-general-reasoning.png",
+          },
+        });
       })
   );
 

@@ -57,18 +57,21 @@ const makerVariants = cva("col-start-1 text-xs", {
 });
 
 /**
- * One service of the directory on one surface: its logo in a tile, its name, one line, and a third
- * line that names its maker, or says a state that asks for the reader. A press on the card opens the
- * service's detail beside the list. The corner connects with one press, or marks where the service
- * stands, and holds its width before the state is read, so a state that changes moves nothing.
+ * One service of the directory on one surface: its logo in a tile, its name and one line, each cut to
+ * one line, and a third line that names its maker, or says a state that asks for the reader. A press
+ * on the card opens the service's detail beside the list, where the line stands in full. The corner
+ * connects with one press, or marks where the service stands, and holds its width before the state is
+ * read, so a state that changes moves nothing.
  */
 export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
   const t = useTranslations("Connectors");
+  const line = t(`${entry.service.key}-line`);
 
   return (
     <ServiceContext value={entry}>
       <Card
         className="has-data-open:bg-muted hover:bg-muted/50 relative transition-colors"
+        lines="one"
         size="sm"
       >
         <div className="flex flex-1 items-start gap-3 px-(--card-spacing)">
@@ -77,8 +80,8 @@ export function ServiceCard({ entry }: { entry: typeof DirectoryEntry.Type }) {
             <CardTitle>
               <ServiceOpen />
             </CardTitle>
-            <CardDescription className="leading-snug">
-              {t(`${entry.service.key}-line`)}
+            <CardDescription className="leading-snug" title={line}>
+              {line}
             </CardDescription>
             <CardAction className="relative min-w-8">
               <CornerAction />
@@ -114,6 +117,7 @@ function ServiceOpen() {
       className="focus-visible:ring-ring min-w-0 cursor-pointer rounded-sm text-start outline-none after:absolute after:inset-0 focus-visible:ring-2"
       data-open={isOpen ? "" : undefined}
       onClick={() => show(service.key)}
+      title={t(service.key)}
       type="button"
     >
       {t(service.key)}

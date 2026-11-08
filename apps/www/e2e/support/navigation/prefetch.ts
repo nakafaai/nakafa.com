@@ -5,7 +5,7 @@ import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { settleRouter } from "@/e2e/support/navigation/settle";
 import { recordServerFunctionCalls } from "@/e2e/support/requests";
 import {
-  expectStillShell,
+  expectOnePress,
   observeShell,
   readPageTime,
   readShellObservation,
@@ -64,7 +64,8 @@ const recordClickToContent = Effect.fn("NakafaE2E.recordClickToContent")(
  * reader's own gesture. Its destination must show through `arrive`, and the
  * router must make no data request for it: the loader data came with the
  * preload. Every frame from the press on keeps the one app shell, with no empty
- * frame and no layout shift.
+ * frame and no layout shift, and the page it leaves whole until the next one
+ * renders.
  */
 export const pressPreloaded = Effect.fn("NakafaE2E.pressPreloaded")(function* <
   PressError,
@@ -100,7 +101,7 @@ export const pressPreloaded = Effect.fn("NakafaE2E.pressPreloaded")(function* <
   yield* Effect.sync(() => expect(dataCalls.length).toBe(0));
   yield* recordClickToContent(shownAt - pressedAt);
   const observation = yield* readShellObservation(page, since);
-  yield* Effect.sync(() => expectStillShell(observation, [false], shells));
+  yield* Effect.sync(() => expectOnePress(observation, [false], shells));
 });
 
 /**

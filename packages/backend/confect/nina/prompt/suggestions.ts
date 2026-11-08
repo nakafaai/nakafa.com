@@ -82,6 +82,7 @@ export function nakafaSuggestions({ locale }: Params) {
       # Communication Style
 
       Use conversational language that real students actually use.
+      Write casually, the way a student talks to a tutor they know: aku in Indonesian, ich and du in German, never formal.
       All suggestions must be from the student's perspective:
       - Ask Nina questions.
       - Make requests to Nina.

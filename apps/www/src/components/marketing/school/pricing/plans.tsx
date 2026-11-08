@@ -33,16 +33,23 @@ import { Link } from "@/lib/routing/link";
 /** The longest period a school pays for at once, whose discount each paid card shows. */
 const LONGEST_PERIOD = 12;
 
-/** The ring of a plan's card: Pro, the plan most schools fit, stands out with the brand ring. */
-const planCardVariants = cva("md:row-span-4 md:grid md:grid-rows-subgrid", {
-  variants: {
-    tier: {
-      free: "",
-      max: "",
-      pro: "ring-primary relative ring-2",
+/**
+ * A plan's card on the seven rows its siblings share from `md`: its name, its price, each of its four
+ * lines, and its action, so every row starts on one line across the cards however its words wrap. Pro,
+ * the plan most schools fit, stands out with the brand ring.
+ */
+const planCardVariants = cva(
+  "md:row-span-7 md:grid md:grid-rows-subgrid md:gap-y-3",
+  {
+    variants: {
+      tier: {
+        free: "",
+        max: "",
+        pro: "ring-primary relative ring-2",
+      },
     },
-  },
-});
+  }
+);
 
 /** One line of a plan: its own icon and its text. */
 function PlanLine({
@@ -53,7 +60,7 @@ function PlanLine({
   icon: typeof UserGroupIcon;
 }) {
   return (
-    <li className="flex items-start gap-3 text-base leading-6">
+    <li className="flex items-start gap-3 text-base leading-6 md:px-(--card-spacing)">
       <HugeIcons className="mt-1 size-4 shrink-0" icon={icon} />
       <span className="text-pretty">{children}</span>
     </li>
@@ -99,8 +106,13 @@ function TrialPrice() {
 
   return (
     <>
-      <p className="text-4xl font-semibold tracking-tight">
-        {t("plan-trial", { days: SCHOOL_TRIAL_DAYS })}
+      <p className="flex flex-wrap items-baseline gap-x-2 whitespace-nowrap">
+        <span className="text-4xl font-semibold tracking-tight">
+          {t("plan-free-price")}
+        </span>
+        <span className="text-muted-foreground">
+          {t("plan-trial-for", { days: SCHOOL_TRIAL_DAYS })}
+        </span>
       </p>
       <p className="text-muted-foreground text-sm">{t("plan-billed-free")}</p>
     </>
@@ -120,16 +132,16 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
 
   return (
     <Card className={planCardVariants({ tier })} data-school-plan={tier}>
-      <CardHeader>
+      <CardHeader className="md:mb-3">
         <h2 className="text-xl font-medium tracking-tight">
           {t(`plan-${tier}`)}
         </h2>
       </CardHeader>
-      <CardContent className="grid content-start gap-1">
+      <CardContent className="grid content-start gap-1 md:mb-3">
         {tier === "free" ? <TrialPrice /> : <PaidPrice tier={tier} />}
       </CardContent>
-      <CardContent>
-        <ul className="grid gap-3">
+      <CardContent className="md:contents">
+        <ul className="grid gap-3 md:contents">
           <PlanLine icon={UserGroupIcon}>
             {t("plan-accounts", { count: plan.accounts })}
           </PlanLine>
@@ -148,7 +160,7 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
           </PlanLine>
         </ul>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="md:mt-3">
         <Link
           className={buttonVariants({
             className: "w-full",
@@ -166,17 +178,18 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
 }
 
 /**
- * The three School plans side by side from `md`, sharing four rows so their
- * prices, lists and actions line up, one under another on a phone. Nina drums
+ * The three School plans side by side from `md`, sharing seven rows so their
+ * names, prices, each line and their actions line up, one under another on a
+ * phone. Nina drums
  * behind the top edge of Pro's card and peeks over it: the card is drawn over
  * her, so its edge cuts her body, and the row leaves her room under the words
  * above it.
  */
 export function SchoolPlans() {
   return (
-    <div className="mt-10 grid w-full gap-x-4 gap-y-18 md:grid-cols-3 md:grid-rows-[auto_auto_1fr_auto] md:gap-y-6">
+    <div className="mt-10 grid w-full gap-x-4 gap-y-18 md:grid-cols-3 md:grid-rows-[repeat(7,auto)] md:gap-y-6">
       <SchoolPlanCard tier="free" />
-      <div className="relative grid md:row-span-4 md:grid-rows-subgrid">
+      <div className="relative grid md:row-span-7 md:grid-rows-subgrid md:gap-y-3">
         <span className="absolute end-6 bottom-[calc(100%-0.5rem)]">
           <Nina act="drumming" label="" lean="peek" size={72} />
         </span>

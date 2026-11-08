@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
+  readPublicRouteHead,
   readRoutedPublicArtifact,
   readSelectedPublicHead,
   resolvePublicRoute,
@@ -49,6 +50,15 @@ describe("active public body selection", () => {
                 fixture.artifact.artifactHash
               )
             ).toEqual({ artifactJson: encodeJsonText(fixture.artifact) });
+            expect(yield* readPublicRouteHead(appLocale, publicPath)).toEqual({
+              activeReleaseId: fixture.release.releaseId,
+              artifactHash: fixture.artifact.artifactHash,
+              family: "page",
+              projectionHash: fixture.head.projectionHash,
+              projectionJson: fixture.head.projectionJson,
+              sourcePath: fixture.head.sourcePath,
+            });
+            expect(yield* readPublicRouteHead(appLocale, "missing")).toBeNull();
             for (const [family, path, hash] of [
               ["page", publicPath, `sha256:${"0".repeat(64)}`],
               ["page", "missing", fixture.artifact.artifactHash],
@@ -64,6 +74,8 @@ describe("active public body selection", () => {
         yield* empty.run(
           resolveActiveRoute("page", "en", "missing").pipe(
             Effect.flatMap(readSelectedPublicHead),
+            Effect.tap((head) => Effect.sync(() => expect(head).toBeNull())),
+            Effect.andThen(readPublicRouteHead("en", "missing")),
             Effect.tap((head) => Effect.sync(() => expect(head).toBeNull())),
             Effect.asVoid,
             Effect.provide(publicationLayer)
