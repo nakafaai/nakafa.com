@@ -12,18 +12,19 @@ export class ContentExecutionError extends Schema.TaggedError<
   contentKey: ContentKeySchema,
   stage: Schema.Literal("render"),
 }) {}
-/** Published content was selected without its private runtime credential. */
-export class ContentRuntimeConfigurationError extends Schema.TaggedError<
-  ContentRuntimeConfigurationError,
-  { readonly brand: unique symbol }
->()("ContentRuntimeConfigurationError", {
-  key: Schema.Literal("CONTENT_READ_TOKEN"),
-}) {}
 /** A verified projection cannot satisfy its requested public surface. */
 export class PublishedProjectionError extends Schema.TaggedError<
   PublishedProjectionError,
   { readonly brand: unique symbol }
 >()("PublishedProjectionError", {
+  appLocale: AppLocaleSchema,
+  publicPath: Schema.String,
+}) {}
+/** One public route has no active signed body. */
+export class PublishedMissingError extends Schema.TaggedError<
+  PublishedMissingError,
+  { readonly brand: unique symbol }
+>()("PublishedMissingError", {
   appLocale: AppLocaleSchema,
   publicPath: Schema.String,
 }) {}

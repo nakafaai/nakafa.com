@@ -68,14 +68,12 @@ export function getReactionSceneColors(resolvedTheme: string | undefined) {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     bubble: PLOT_COLORS.teal,
     glass: getColor("SLATE", 300),
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     heat: PLOT_COLORS.orange,
     liquidAfterColor: PLOT_COLORS.amber,
     liquidBase: isDarkTheme ? PLOT_COLORS.slate : getColor("GRAY"),
     liquidGas: PLOT_COLORS.violet,
     liquidWarm: PLOT_COLORS.orange,
     precipitate: PLOT_COLORS.fuchsia,
-    skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

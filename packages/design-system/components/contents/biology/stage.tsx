@@ -7,8 +7,8 @@ import {
 } from "@repo/design-system/components/contents/biology/context";
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { type ReactNode, Suspense } from "react";
 
@@ -33,34 +33,14 @@ export function BiologyStage({
   view: NarrowCameraPose;
 }) {
   return (
-    <ThreeCanvas frameloop="always">
+    <ScienceStage frameloop="always">
       <Suspense>
         <BiologyLabProvider colors={colors} store={store} view={view}>
           <BiologyCamera />
-          <ambientLight intensity={0.58} />
-          <hemisphereLight
-            color={colors.skyLight}
-            groundColor={colors.soil}
-            intensity={0.68}
-          />
-          <directionalLight
-            castShadow
-            intensity={1.45}
-            position={[4.5, 6, 4.5]}
-            shadow-bias={-0.0006}
-            shadow-mapSize-height={1024}
-            shadow-mapSize-width={1024}
-            shadow-normalBias={0.02}
-          />
-          <pointLight
-            color={colors.skyLight}
-            intensity={0.34}
-            position={[-3, 2, 3]}
-          />
           {children}
         </BiologyLabProvider>
       </Suspense>
-    </ThreeCanvas>
+    </ScienceStage>
   );
 }
 

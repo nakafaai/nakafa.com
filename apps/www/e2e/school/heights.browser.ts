@@ -14,7 +14,8 @@ const CONTROL_HEIGHT = 36;
 
 /**
  * The heights of the controls a page's header shows at its end, its buttons, its links drawn as buttons and its
- * fields, leaving out the path's own links, which are text.
+ * fields, leaving out the path's own links, which are text, and the hidden input a select keeps for its form, which
+ * no one sees or presses.
  */
 function readControlHeights(page: Page) {
   return page
@@ -25,6 +26,7 @@ function readControlHeights(page: Page) {
         .filter(
           (control) =>
             control.closest('nav[aria-label="Breadcrumb"]') === null &&
+            control.getAttribute("aria-hidden") !== "true" &&
             control.getBoundingClientRect().height > 0
         )
         .map((control) => ({

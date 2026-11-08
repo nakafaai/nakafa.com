@@ -7,11 +7,11 @@ import {
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
 import type { ModernPeriodicTableFocusStore } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/store";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense, useEffect, useMemo } from "react";
@@ -55,25 +55,10 @@ export function ModernPeriodicTableCanvas({
       className={threeSceneFrameVariants()}
       render={<section />}
     >
-      <ThreeCanvas frameloop="demand">
+      <ScienceStage frameloop="demand">
         <Suspense>
           <ModernPeriodicTableRenderSync key={focusId} />
           <ResponsiveModernPeriodicTableCamera />
-          <ambientLight intensity={0.74} />
-          <hemisphereLight
-            color={colors.skyLight}
-            groundColor={colors.groundLight}
-            intensity={0.62}
-          />
-          <directionalLight
-            castShadow
-            intensity={1.25}
-            position={[4, 7, 5]}
-            shadow-bias={-0.0006}
-            shadow-mapSize-height={1024}
-            shadow-mapSize-width={1024}
-            shadow-normalBias={0.02}
-          />
           <ModernPeriodicTableSceneProvider
             colors={colors}
             labels={labels}
@@ -82,7 +67,7 @@ export function ModernPeriodicTableCanvas({
             <ModernPeriodicTableScene />
           </ModernPeriodicTableSceneProvider>
         </Suspense>
-      </ThreeCanvas>
+      </ScienceStage>
     </VisualCardBody>
   );
 }

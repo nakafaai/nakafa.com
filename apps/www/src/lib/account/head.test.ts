@@ -32,6 +32,26 @@ describe("signedInHead", () => {
     });
   });
 
+  it("shares the site's image, or the artwork a screen names", () => {
+    const seo = {
+      canonicalPath: "/en/chat",
+      description: "Ask Nina",
+      indexable: false,
+      locale: "en",
+      title: "New chat",
+    } as const;
+    expect(signedInHead(seo).meta).toContainEqual({
+      content: "https://nakafa.com/og.png",
+      property: "og:image",
+    });
+    expect(
+      signedInHead(seo, "/open-graph/app/en-ask-nina.png").meta
+    ).toContainEqual({
+      content: "https://nakafa.com/open-graph/app/en-ask-nina.png",
+      property: "og:image",
+    });
+  });
+
   it("marks a private screen noindex", () => {
     const head = signedInHead({
       canonicalPath: "/en",

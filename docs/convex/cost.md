@@ -160,6 +160,41 @@ Database I/O is summed from the backend's function log (`usageStats`):
 - Every content query reads the active release row first: the smallest
   `contentRelease/runtime/active:read` is 11.5 KB, about 58 MB over 5,057 content calls.
 
+### Artifact bodies by hash (#2280)
+
+A lesson's and an article's query return the body's head; the build reads the
+release's signed frame once and each artifact once by its hash, which no later release
+changes. The same proof, run through `slot.sh` on #2280 at 1fa651a013 with main at
+28254a5ccb, built the same pinned release three times through one read store:
+
+| Build | Calls | Database I/O |
+| --- | ---: | ---: |
+| First build of the release, empty store | 5,577 | 154.1 MB |
+| Second build of the same release, store restored | 244 | 1.41 MB |
+| Third build of the same release | 203 | 0.71 MB |
+
+The first build, split by how the store keys each function's answers
+(`querySnapshotContentStore`, `readImmutableContentStore`, and the release for the
+rest), shows what a later release reads again:
+
+| Keyed by | Calls | Database I/O | Read again by a new release |
+| --- | ---: | ---: | --- |
+| A family snapshot | 1,200 | 106.6 MB | only when that snapshot changed |
+| The release, or read live | 3,856 | 35.5 MB | always |
+| An artifact's hash | 225 | 12.0 MB | only for a changed body |
+
+- A new release that keeps every artifact and snapshot reads about 35.5 MB here,
+  against 48.8 MB before (151.3 MB less the 102.5 MB of snapshot reads above), 27%
+  less. The 219 lesson reads fell from 14.24 MB to 5.92 MB; the artifacts are 225 reads
+  of `active:artifact` (12.0 MB) and the frame one read of `active:frame` per build.
+- 2,673 of the release-keyed calls are `active:read` pins, which Convex answers from its
+  query cache (0.02 MB in all).
+- The largest release-keyed read left is the runtime endpoint behind every page and
+  Markdown twin (`publication/internal:read`, 243 calls, 13.6 MB): it reads the release
+  document and the artifact again for every route of every release.
+- Each of the other 1,084 uncached release-keyed content calls reads the active release
+  row first, about 11.5 KB: about 12.5 MB, a third of what a new release reads.
+
 ### Budget against the $25 plan
 
 The plan includes 50 GB of Database I/O a month for the team, both deployments
@@ -173,7 +208,7 @@ local shares above, so they are projections until a production deploy measures t
 | --- | ---: | ---: | ---: | ---: |
 | #2254 and #2263 | 0.57 GB | about 3 MB | about 23 GB | about 225 GB |
 | #2264, a release that keeps the program and Quran snapshots | about 0.18 GB | about 3 MB | about 12 GB | about 110 GB |
-| Artifact bodies by hash and route heads | about 0.12 GB | about 3 MB | about 10 GB | about 90 GB |
+| #2280, a release that also keeps its artifacts | about 0.13 GB | about 3 MB | about 10 GB | about 95 GB |
 
 Today's rate fits the plan once #2254 deploys. Ten times the content does not, because
 four reads still grow with content:
@@ -186,6 +221,41 @@ four reads still grow with content:
    an unchanged route answer from the store.
 4. Every deploy reads the try-out set windows live, about 2.6 MB at production size. As
    a visitor's read they depend only on the assessment snapshot.
+
+### A compact active identity (designed, not built)
+
+Every content query starts with `loadActiveIdentity` (`content/publication/read.ts`). It
+reads `contentState` and the whole `contentReleases` row of the active release (the
+signed release document, the renderer manifest, the proof and the receipt), decodes both
+documents and checks the identity again. In #2280's first build the 1,084 uncached
+release-keyed content calls paid it: about 12.5 MB of the 35.5 MB a new release reads,
+about 0.05 GB a release at production size and 0.5 GB at ten times the content. Runtime
+queries pay it on every call too.
+
+The readers need little of the row: the release id (38 readers), its sequence and
+manifest hash, the active app locales (8), the three snapshot ids (`active:read`), and the
+Git origin (one). Only `active:frame` and the publish proofs need the signed documents.
+
+The design: the activation mutation (`activation/candidate.ts`), which already writes
+`activeReleaseId`, `activeManifestHash`, `activeSequence` and `activeContentGeneration`
+on `contentState` from the manifest it has just verified, also writes the active app
+locales, the three snapshot ids and the origin. `loadActiveIdentity` then reads
+`contentState` alone, and the frame and the proofs keep reading the row. Convex's
+authority over `contentState` is the trust that ADR 0002 already gives catalog
+membership.
+
+It lands as two changes, each in one step, because a reader cannot require fields that
+the active release's activation never wrote, and neither a fallback to the row nor a
+hand-written backfill is allowed:
+
+1. Activation writes the fields; nothing reads them yet.
+2. Once a production release has activated under the first change (dev and production
+   `contentState` both hold the fields), `loadActiveIdentity` reads them and stops
+   reading the row, with its tests pinning the documents a content query reads.
+
+Production deploys after Aksara activates a release, so the second change cannot ship
+with the first: the release that writes the fields must run on the backend that the
+first change deployed.
 
 ## Historical Post-change Evidence
 

@@ -37,7 +37,13 @@ describe("public artwork", () => {
   it("resolves app surfaces through stable keys", () => {
     expect(
       getAppSocialArtwork({ key: "quran", locale: "de", publicPath: "quran" })
-    ).toBe("/open-graph/quran/de-index.png");
+    ).toBe("/open-graph/quran/en-index.png");
+    expect(
+      getAppSocialArtwork({ key: "school", locale: "id", publicPath: "school" })
+    ).toBe("/open-graph/app/en-school.png");
+    expect(
+      getAppSocialArtwork({ key: "ask-nina", locale: "id", publicPath: "chat" })
+    ).toBe("/open-graph/app/id-ask-nina.png");
     expect(
       getAppSocialArtwork({
         key: "pricing",
@@ -91,8 +97,8 @@ describe("public artwork", () => {
         (entry) => `/open-graph/${entry}`
       );
 
-      expect(manifestPaths).toHaveLength(100);
-      expect(Arr.dedupe(manifestPaths)).toHaveLength(100);
+      expect(manifestPaths).toHaveLength(75);
+      expect(Arr.dedupe(manifestPaths)).toHaveLength(75);
       expect(Arr.sort(publicFilesystemPaths, Order.String)).toEqual(
         Arr.sort(manifestPaths, Order.String)
       );

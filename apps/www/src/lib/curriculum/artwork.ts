@@ -85,12 +85,16 @@ export function resolveCurriculumCatalogArtwork(
   );
 }
 
-/** Keeps the curriculum index on its localized generated social artwork. */
+/** The reviewed social artwork of the curriculum index. */
 export function getCurriculumIndexSocialImage(
   locale: Locale,
   publicPath: string
 ) {
-  return resolveSocialArtwork({ identity: undefined, locale, publicPath });
+  return resolveSocialArtwork({
+    identity: "curriculum/index",
+    locale,
+    publicPath,
+  });
 }
 
 /**

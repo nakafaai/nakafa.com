@@ -42,19 +42,23 @@ const PAPER = Buffer.from("%PDF-1.7\n1 0 obj\n");
 const LONG_FILE =
   "Rangkuman-Materi-Bab-1-Bilangan-Bulat-dan-Pecahan-Kelas-VII-Semester-Ganjil-2026-final-revisi-3.pdf";
 
-/** The words a reader searches the twelve emoji of one message by, in Indonesian. */
+/**
+ * The words a reader searches the twelve emoji of one message by. The chooser finds an emoji by its words in
+ * Indonesian, English and German whichever the reader reads, so this English-reading teacher mixes all three, and each
+ * word finds its emoji first.
+ */
 const REACTIONS = [
   "jempol",
-  "hati merah",
+  "red heart",
   "tertawa",
-  "api",
+  "feuer",
   "bintang",
   "tepuk",
-  "roket",
+  "rakete",
   "piala",
   "buku",
   "centang",
-  "lampu",
+  "light bulb",
   "pesta",
 ];
 
@@ -194,7 +198,7 @@ test("the forum holds the worst a class writes: a long name, long words, 2,000 c
     page.getByRole("button", { name: "Open panorama.png" })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
-  // Twelve reactions on one message, each found by an Indonesian word in the chooser.
+  // Twelve reactions on one message, each found in the chooser by a word in one of the three languages.
   const target = messageRow(page, Str.slice(0, 40)(LONG_URL)).first();
   for (const word of REACTIONS) {
     await target.hover();
