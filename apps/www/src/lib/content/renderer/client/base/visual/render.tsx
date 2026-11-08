@@ -3,9 +3,12 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { Polygon } from "@repo/design-system/components/three/polygon";
-import { Array as Arr, Result } from "effect";
+import { Array as Arr, Option, Result } from "effect";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
-import { resolveFormulaShapes } from "@/lib/content/renderer/client/base/visual/formula";
+import {
+  labelPoint,
+  resolveFormulaShapes,
+} from "@/lib/content/renderer/client/base/visual/formula";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
 import { FormulaShapes } from "@/lib/content/renderer/client/base/visual/shapes";
@@ -87,7 +90,13 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
   const anchors = Arr.flatMap(objects, (object) =>
     Arr.flatMap(sceneLabels, (label) =>
       label.objectId === object.id
-        ? [{ ...label, appearance: object.appearance }]
+        ? Option.toArray(
+            Option.map(labelPoint(label.at, scope), (at) => ({
+              ...label,
+              appearance: object.appearance,
+              position: projectVisualPoint(at, projection),
+            }))
+          )
         : []
     )
   );
@@ -146,7 +155,7 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
           fontSize="diagram"
           gap={0.15}
           key={label.key}
-          position={pointTuple(projectVisualPoint(label.at, projection))}
+          position={pointTuple(label.position)}
         >
           {labels[label.key]}
         </ThreeLabel>

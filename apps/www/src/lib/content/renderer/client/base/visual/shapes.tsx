@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/three/line";
+import { Origin } from "@repo/design-system/components/three/origin";
 import { Region } from "@repo/design-system/components/three/region";
 import { Solid } from "@repo/design-system/components/three/solid";
 import { Surface } from "@repo/design-system/components/three/surface";
@@ -18,6 +19,10 @@ function FormulaShapeView({ shape }: { readonly shape: FormulaShape }) {
         smooth={false}
       />
     );
+  }
+  if (shape.kind === "marker") {
+    const { x, y, z } = shape.point;
+    return <Origin color={color} position={[x, y, z]} size={0.125} />;
   }
   if (shape.kind === "region") {
     return <Region boundary={shape.boundary} color={color} fill={shape.fill} />;

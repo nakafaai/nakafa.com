@@ -1,4 +1,7 @@
-import type { FormulaParameter } from "@nakafa/aksara-contracts/math/formula/field";
+import type {
+  FormulaParameter,
+  FormulaReadout,
+} from "@nakafa/aksara-contracts/math/formula/field";
 import { parameterScope } from "@nakafa/aksara-contracts/math/formula/scope";
 import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
 import { PARAMETER_NAMES } from "@repo/design-system/components/three/names";
@@ -13,28 +16,39 @@ import {
 } from "@/lib/content/renderer/client/base/visual/parameters";
 
 const ParameterContext = createContext<{
+  readonly labels: Readonly<Record<string, ReactNode>>;
   readonly parameters: readonly FormulaParameter[];
+  readonly readouts: readonly FormulaReadout[];
   readonly store: ParameterStore;
 } | null>(null);
 
-/** Gives one scene's sliders a store that starts at their authored values. */
+/**
+ * Gives one scene's sliders a store that starts at their authored values, and
+ * the rich labels its sliders and readouts show.
+ */
 export function ParameterProvider({
   children,
+  labels,
   parameters,
+  readouts,
 }: {
   readonly children: ReactNode;
+  readonly labels: Readonly<Record<string, ReactNode>>;
   readonly parameters: readonly FormulaParameter[];
+  readonly readouts: readonly FormulaReadout[];
 }) {
   const [store] = useState(() =>
     createParameterStore(parameterScope(parameters))
   );
   return (
-    <ParameterContext value={{ parameters, store }}>{children}</ParameterContext>
+    <ParameterContext value={{ labels, parameters, readouts, store }}>
+      {children}
+    </ParameterContext>
   );
 }
 
-/** Reads the scene's sliders and their store. */
-function useParameters() {
+/** Reads the scene's sliders, their store, and the rich labels they show. */
+export function useParameters() {
   const value = use(ParameterContext);
   if (!value) {
     // A missing provider is a programmer composition error at this React seam.
@@ -54,9 +68,12 @@ function digits(parameter: FormulaParameter) {
   return Math.min(4, Math.max(0, Math.ceil(-Math.log10(step))));
 }
 
-/** One slider: its name as math, its value, and the track that moves it. */
+/**
+ * One slider: its rich label, or its name as math, its value, and the track
+ * that moves it.
+ */
 function ParameterSlider({ parameter }: { readonly parameter: FormulaParameter }) {
-  const { store } = useParameters();
+  const { labels, store } = useParameters();
   const value = useStore(store, (state) =>
     Option.getOrElse(Rec.get(state.values, parameter.name), () => parameter.value)
   );
@@ -65,7 +82,11 @@ function ParameterSlider({ parameter }: { readonly parameter: FormulaParameter }
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between gap-4 text-sm">
-        <DrawnInlineMath html={name} />
+        {parameter.label === undefined ? (
+          <DrawnInlineMath html={name} />
+        ) : (
+          labels[parameter.label]
+        )}
         <span className="shrink-0 tabular-nums">
           {value.toFixed(digits(parameter))}
         </span>

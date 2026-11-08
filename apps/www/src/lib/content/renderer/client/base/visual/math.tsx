@@ -13,6 +13,7 @@ import {
 import { type ReactNode, useId } from "react";
 
 import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/deferred";
+import { MathReadouts } from "@/lib/content/renderer/client/base/visual/readouts";
 import {
   ParameterProvider,
   ParameterSliders,
@@ -27,13 +28,19 @@ interface Props {
 
 /** Renders one stable mathematical scene without content-specific components. */
 export function MathVisual({ description, title, ...scene }: Props) {
+  const readouts =
+    scene.scene.space === "plane" ? (scene.scene.readouts ?? []) : [];
   const identifier = useId();
   const descriptionId = `${identifier}-description`;
   const titleId = `${identifier}-title`;
 
   return (
     <CoordinateProvider>
-      <ParameterProvider parameters={scene.scene.parameters ?? []}>
+      <ParameterProvider
+        labels={scene.labels ?? {}}
+        parameters={scene.scene.parameters ?? []}
+        readouts={readouts}
+      >
         <VisualCard>
           <VisualCardHeader
             description={<span id={descriptionId}>{description}</span>}
@@ -50,6 +57,7 @@ export function MathVisual({ description, title, ...scene }: Props) {
           <DeferredMathScene {...scene} />
         </VisualCardBody>
           <CoordinateControls />
+          <MathReadouts />
         </VisualCard>
       </ParameterProvider>
     </CoordinateProvider>

@@ -3,6 +3,8 @@ import { Array as Arr, Option, Result } from "effect";
 import {
   isPlaneFormula,
   isSpaceFormula,
+  labelPoint,
+  readoutValues,
   resolveFormulaShapes,
 } from "@/lib/content/renderer/client/base/visual/formula";
 import type {
@@ -97,4 +99,51 @@ describe("formula shapes", () => {
     const scene = plane([{ ...fields, formula: "2 +", id: "broken", kind: "function" }]);
     expect(Result.isFailure(resolveFormulaShapes(scene, resolveVisualProjection(scene), {}))).toBe(true);
   });
+
+  it("draws a marker and a closed path where the sliders place them", () => {
+    const corners = [
+      { x: "0", y: "0" },
+      { x: "2 cos(a)", y: "0" },
+      { x: "2 cos(a)", y: "2 sin(a)" },
+    ];
+    const drawn = shapes(
+      plane(
+        [
+          { ...fields, id: "tip", kind: "marker", x: "2 cos(a)", y: "2 sin(a)" },
+          { ...fields, closed: true, id: "legs", kind: "path", points: corners },
+        ],
+        [{ at: { x: "2 cos(a)", y: "0" }, key: "cosine", objectId: "legs" }]
+      ),
+      { a: 0 }
+    );
+    expect(Arr.map(drawn, ({ id, kind }) => `${id} ${kind}`)).toStrictEqual(["tip marker", "legs curve"]);
+    const [tip, legs] = drawn;
+    expect(tip?.kind === "marker" && tip.point.x > 0 && Math.abs(tip.point.y) < 1e-9).toBe(true);
+    expect(legs?.kind === "curve" && legs.points.length === 4).toBe(true);
+  });
+
+  it("places a label exactly or by its formulas, and hides one placed nowhere", () => {
+    expect(labelPoint({ x: 1, y: 2 }, {})).toStrictEqual(Option.some({ x: 1, y: 2 }));
+    expect(labelPoint({ x: "cos(a)", y: "0" }, { a: 0 })).toStrictEqual(Option.some({ x: 1, y: 0, z: 0 }));
+    expect(Option.isNone(labelPoint({ x: "ln(0)", y: "0" }, {}))).toBe(true);
+    expect(Option.isNone(labelPoint({ x: "cos(", y: "0" }, {}))).toBe(true);
+  });
+
+  it("reads each readout at the sliders' values", () => {
+    expect(
+      readoutValues(
+        [
+          { formula: "2 a", key: "double" },
+          { formula: "1 / (a - a)", key: "pole" },
+          { formula: "2 +", key: "broken" },
+        ],
+        { a: 3 }
+      )
+    ).toStrictEqual([
+      { key: "double", value: Option.some(6) },
+      { key: "pole", value: Option.none() },
+      { key: "broken", value: Option.none() },
+    ]);
+  });
 });
+

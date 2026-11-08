@@ -1,8 +1,14 @@
 import { MathAppearanceSchema, SpacePointSchema } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import {
+  type FormulaReadout,
+  isPlaneFormulaPoint,
+} from "@nakafa/aksara-contracts/math/formula/field";
+import {
+  compileText,
   type FormulaGeometry,
   planeFormulaGeometry,
+  planeFormulaPoint,
 } from "@nakafa/aksara-contracts/math/formula/plane";
 import { spaceFormulaGeometry } from "@nakafa/aksara-contracts/math/formula/space";
 import { Array as Arr, Option, Result, Schema } from "effect";
@@ -25,6 +31,7 @@ const ShapeFields = { appearance: MathAppearanceSchema, id: Schema.String };
 /** One drawable piece of a formula object, already in scene units. */
 export const FormulaShapeSchema = Schema.Union([
   Schema.Struct({ ...ShapeFields, kind: Schema.Literal("curve"), points: PointsSchema }),
+  Schema.Struct({ ...ShapeFields, kind: Schema.Literal("marker"), point: SpacePointSchema }),
   Schema.Struct({
     ...ShapeFields,
     boundary: Schema.Array(
@@ -50,7 +57,16 @@ export type FormulaShape = typeof FormulaShapeSchema.Type;
 
 type PlaneFormula = Extract<
   PlaneObject,
-  { readonly kind: "function" | "implicit" | "parametric" | "polar" | "region" }
+  {
+    readonly kind:
+      | "function"
+      | "implicit"
+      | "marker"
+      | "parametric"
+      | "path"
+      | "polar"
+      | "region";
+  }
 >;
 type SpaceFormula = Extract<
   SpaceObject,
@@ -70,7 +86,9 @@ export function isPlaneFormula(object: PlaneObject): object is PlaneFormula {
   return (
     object.kind === "function" ||
     object.kind === "implicit" ||
+    object.kind === "marker" ||
     object.kind === "parametric" ||
+    object.kind === "path" ||
     object.kind === "polar" ||
     object.kind === "region"
   );
@@ -102,6 +120,14 @@ function shapesOf(
       id: geometry.branches.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
       kind: "curve" as const,
       points: Arr.map(branch, project),
+    }));
+  }
+  if (geometry.kind === "points") {
+    return Arr.map(geometry.points, (point, index) => ({
+      ...fields,
+      id: geometry.points.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
+      kind: "marker" as const,
+      point: project(point),
     }));
   }
   if (geometry.kind === "region") {
@@ -152,7 +178,7 @@ export function resolveFormulaShapes(
       ? Arr.map(Arr.filter(scene.objects, isPlaneFormula), (object) => {
           const axis = object.kind === "function" ? (object.inputAxis ?? "x") : "x";
           const named = Arr.flatMap(labels, ({ at, objectId }) =>
-            objectId === object.id ? [at[axis]] : []
+            objectId === object.id && !isPlaneFormulaPoint(at) ? [at[axis]] : []
           );
           return Result.map(
             planeFormulaGeometry(object, scene.frame, scope, named),
@@ -165,4 +191,33 @@ export function resolveFormulaShapes(
           )
         );
   return Result.map(Result.all(sampled), Arr.flatten);
+}
+
+/**
+ * Where one label stands at the sliders' current values: its exact point, or
+ * the point its formulas place. A formula that is not finite there places
+ * nothing, so the label hides until the sliders bring it back.
+ */
+export function labelPoint(
+  at: NonNullable<PlaneVisual["labels"]>[number]["at"] | SpacePoint,
+  scope: FormulaScope
+): Option.Option<SpacePoint | { readonly x: number; readonly y: number }> {
+  if (!isPlaneFormulaPoint(at)) {
+    return Option.some(at);
+  }
+  return Result.match(planeFormulaPoint(at, scope), {
+    onFailure: () => Option.none(),
+    onSuccess: (placed) => placed,
+  });
+}
+
+/** The value of each readout at the sliders' current values, none where it is not finite. */
+export function readoutValues(readouts: readonly FormulaReadout[], scope: FormulaScope) {
+  return Arr.map(readouts, ({ formula, key }) => ({
+    key,
+    value: Result.match(compileText(formula), {
+      onFailure: () => Option.none<number>(),
+      onSuccess: (evaluate) => Option.filter(Option.some(evaluate(scope)), Number.isFinite),
+    }),
+  }));
 }
