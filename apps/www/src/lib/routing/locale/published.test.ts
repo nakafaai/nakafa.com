@@ -2,16 +2,16 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Array as Arr, Effect, Option } from "effect";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
+import { previewIdProjection, previewProjection } from "@/test/manifest";
 import {
   testArticleDeProjection,
   testArticleIdProjection,
   testArticleProjection,
-} from "@/test/content-article";
-import { previewIdProjection, previewProjection } from "@/test/content-preview";
+} from "@/test/published/article";
 import {
   readTestPublishedRoute,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 const publishedMocks = vi.hoisted(() => ({
   articleCategory: vi.fn(),

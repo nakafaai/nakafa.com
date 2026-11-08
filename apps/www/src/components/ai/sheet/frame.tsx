@@ -2,7 +2,7 @@
 
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
-import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { useResizable } from "@repo/design-system/hooks/resizable";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";

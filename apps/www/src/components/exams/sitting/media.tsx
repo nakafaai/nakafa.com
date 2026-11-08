@@ -1,5 +1,5 @@
 import type { PlayableMedia } from "@repo/backend/confect/exams/media";
-import { YoutubePlayer } from "@repo/design-system/components/markdown/youtube-player";
+import { YoutubePlayer } from "@repo/design-system/components/markdown/player";
 import { Array as Arr } from "effect";
 
 /**
