@@ -159,21 +159,19 @@ export function ForumComposer() {
       attachments: Arr.map(tray.files, shownFile),
       uploads: Arr.getSomes(Arr.map(tray.files, (file) => file.upload)),
     };
-    runSchoolWrite(
-      Effect.map(randomUuid, (clientKey) =>
-        post(body, clientKey, mentions, carried, null)
-      ),
-      { onRefused: () => undefined }
-    );
+    // The field empties at the press, so words typed right after it are the next message's: the write itself starts
+    // a turn later.
+    post(body, Effect.runSync(randomUuid), mentions, carried, null);
   };
 
   /** Sends a poll on its own, as a message of the channel. */
   const sendPoll = (poll: typeof PollDraft.Type) =>
-    runSchoolWrite(
-      Effect.map(randomUuid, (clientKey) =>
-        post("", clientKey, [], { attachments: [], uploads: [] }, poll)
-      ),
-      { onRefused: () => undefined }
+    post(
+      "",
+      Effect.runSync(randomUuid),
+      [],
+      { attachments: [], uploads: [] },
+      poll
     );
 
   /** Puts an emoji where the caret stands, and gives the field back its focus. */

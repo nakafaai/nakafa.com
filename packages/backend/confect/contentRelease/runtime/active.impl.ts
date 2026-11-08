@@ -3,7 +3,10 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/contentRelease/runtime/active.spec";
 import { readSnapshotDates } from "@repo/backend/confect/contentRelease/snapshot/dates";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
-import { readRoutedPublicArtifact } from "@repo/backend/content/publication/public";
+import {
+  readPublicRouteHead,
+  readRoutedPublicArtifact,
+} from "@repo/backend/content/publication/public";
 import {
   readActiveFrame,
   readActiveIdentity,
@@ -27,6 +30,18 @@ const frame = FunctionImpl.make(
   "frame",
   Effect.fn("contentRelease.runtime.active.frame")(function* () {
     return yield* readActiveFrame().pipe(Effect.provide(publicationLayer));
+  })
+);
+
+/** Returns the head of one active public route without its artifact. */
+const head = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "head",
+  Effect.fn("contentRelease.runtime.active.head")(function* (args) {
+    return yield* readPublicRouteHead(args.appLocale, args.publicPath).pipe(
+      Effect.provide(publicationLayer)
+    );
   })
 );
 
@@ -57,6 +72,7 @@ const dates = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(read),
   Layer.provide(frame),
+  Layer.provide(head),
   Layer.provide(artifact),
   Layer.provide(dates),
   GroupImpl.finalize

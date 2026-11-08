@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { UserSettingsPage } from "@/components/user/settings/section";
 import { UserSettingsSubscriptions } from "@/components/user/settings/subscriptions";
 import { privateHead } from "@/lib/account/head";
 import { subscriptionsScreenFn } from "@/lib/account/settings.functions";
@@ -15,5 +16,9 @@ export const Route = createFileRoute(
 
 function SubscriptionsPage() {
   const { overview } = Route.useLoaderData();
-  return <UserSettingsSubscriptions initialOverview={overview} />;
+  return (
+    <UserSettingsPage>
+      <UserSettingsSubscriptions initialOverview={overview} />
+    </UserSettingsPage>
+  );
 }

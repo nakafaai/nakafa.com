@@ -79,8 +79,11 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   );
   await closeSitting(teacher);
   await teacher.getByRole("link", { name: "Results", exact: true }).click();
-  // The integrity report says what it is, and names the signal the student showed.
-  await teacher.getByRole("button", { name: "Integrity", exact: true }).click();
+  // The integrity report, from the header's Analysis menu, says what it is, and names the signal the student showed.
+  await teacher.getByRole("button", { name: "Analysis", exact: true }).click();
+  await teacher
+    .getByRole("menuitem", { name: "Integrity", exact: true })
+    .click();
   const integrity = teacher.getByRole("dialog", { name: "Integrity report" });
   await expect(
     integrity.getByText(
@@ -94,8 +97,11 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   });
   await teacher.keyboard.press("Escape");
   await expect(integrity).toBeHidden();
-  // The results list each question's answers in the Questions sheet of the header, whose select picks the question.
-  await teacher.getByRole("button", { name: "Questions", exact: true }).click();
+  // The results list each question's answers in the Questions sheet of the header's Analysis menu, whose select picks the question.
+  await teacher.getByRole("button", { name: "Analysis", exact: true }).click();
+  await teacher
+    .getByRole("menuitem", { name: "Questions", exact: true })
+    .click();
   const questions = teacher.getByRole("dialog", { name: "Questions" });
   await questions.getByRole("combobox").click();
   await teacher

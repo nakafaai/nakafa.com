@@ -11,6 +11,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useEventListener, useMergedRef } from "@mantine/hooks";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Array as Arr, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -78,7 +79,7 @@ function useShownUploads(items: readonly LibraryItem[]) {
 
 /**
  * The library of a class, or one folder of it, as a Drive for the classroom: the class header with the search over
- * the titles, New folder and, standing alone, Add to library for whoever manages it, the header's path running through
+ * the titles and New folder in one group and, standing alone, Add to library for whoever manages it, the header's path running through
  * every folder above the open one; then, in the body, the Files, Starred and Trash views above the page's one table
  * card, which holds the folders and then the items, the newest first. Files dropped on the page upload into the folder
  * it shows, and a row dropped on a folder moves into it. The files being added show first with their progress from the
@@ -98,13 +99,12 @@ export function LibraryList() {
   return (
     <TableFiltersProvider>
       <ClassHeader>
-        <TableSearch placeholder={t("library-search")} />
-        {manages ? (
-          <>
-            <NewFolder />
-            <AddToLibrary />
-          </>
-        ) : null}
+        {/* The search and New folder read as one pill, and Add to library stands alone, so a phone's header holds two. */}
+        <ButtonGroup>
+          <TableSearch placeholder={t("library-search")} />
+          {manages ? <NewFolder /> : null}
+        </ButtonGroup>
+        {manages ? <AddToLibrary /> : null}
       </ClassHeader>
       <TablePageBody
         views={

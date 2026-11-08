@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
+import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { isRedirect } from "@tanstack/react-router";
@@ -11,6 +12,7 @@ import {
   chatScreenHandler,
   chatSidebarScreenHandler,
   homeScreenHandler,
+  islandScreenHandler,
   notificationsScreenHandler,
   searchScreenHandler,
 } from "@/lib/account/home.server";
@@ -353,5 +355,43 @@ describe("notificationsScreenHandler", () => {
       canonicalPath: "/en",
       indexable: false,
     });
+  });
+});
+
+describe("islandScreenHandler", () => {
+  it("sends a visitor to sign-in", async () => {
+    sessionWith(Option.none());
+    const cause = await failureOf(
+      islandScreenHandler({ data: { locale: "en" } })
+    );
+    expect(isRedirect(cause)).toBe(true);
+  });
+
+  it("reads the owner's island, their name and a noindex head", async () => {
+    sessionWith(Option.some("token"));
+    const own = { layout: [], lifetime: 12, stars: 12 };
+    answerQueries([
+      [island.queries.own, own],
+      [auth.queries.getCurrentUser, { authUser: { name: "Nabil" } }],
+    ]);
+    const screen = await islandScreenHandler({ data: { locale: "en" } });
+    expect(screen).toMatchObject({ island: own, name: "Nabil" });
+    expect(screen.seo).toMatchObject({
+      canonicalPath: "/en/island",
+      indexable: false,
+      title: "Island",
+    });
+  });
+
+  it("reads no island before the owner's first visit opens one", async () => {
+    sessionWith(Option.some("token"));
+    answerQueries([
+      [island.queries.own, null],
+      [auth.queries.getCurrentUser, null],
+    ]);
+    const screen = await islandScreenHandler({ data: { locale: "id" } });
+    expect(screen.island).toBeUndefined();
+    expect(screen.name).toBeUndefined();
+    expect(screen.seo.title).toBe("Pulau");
   });
 });

@@ -65,7 +65,7 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
       );
     }
     // The exam answers itself with the momentum of a 2 kg ball at 3 m/s.
-    const exam = page.locator("#exams");
+    const exam = page.locator("#player");
     yield* Effect.promise(() => exam.scrollIntoViewIfNeeded());
     yield* Effect.promise(() =>
       expect(exam.getByRole("radio", { checked: true })).toHaveAccessibleName(

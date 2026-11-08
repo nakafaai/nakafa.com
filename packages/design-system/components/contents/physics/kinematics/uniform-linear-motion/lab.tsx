@@ -20,8 +20,8 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -36,14 +36,14 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;
 const ROAD_Y = -0.02;
+/** Thickness of the road slab, whose top the car drives on. */
+const ROAD_HEIGHT = 0.08;
 const POSITION_MARK_Y = 0.08;
 const TRACK_Z = UNIFORM_LINEAR_MOTION_SCENE.roadWidth * 0.22;
 
@@ -131,23 +131,8 @@ export function UniformLinearMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ThreeCanvas frameloop="always">
+        <ScienceStage floor={ROAD_Y + ROAD_HEIGHT / 2} frameloop="always">
           <Suspense>
-            <ambientLight intensity={0.72} />
-            <hemisphereLight
-              color={getColor("SLATE", 50)}
-              groundColor={PLOT_COLORS.slate}
-              intensity={0.65}
-            />
-            <directionalLight
-              castShadow
-              intensity={1.35}
-              position={[3.4, 5.4, 4.8]}
-              shadow-bias={-0.0006}
-              shadow-mapSize-height={1024}
-              shadow-mapSize-width={1024}
-              shadow-normalBias={0.02}
-            />
             <CameraControls
               cameraPosition={UNIFORM_LINEAR_MOTION_CAMERA.cameraPosition}
               cameraTarget={UNIFORM_LINEAR_MOTION_CAMERA.cameraTarget}
@@ -158,7 +143,7 @@ export function UniformLinearMotionLab({
             />
             <UniformLinearMotionScene motion={motion} />
           </Suspense>
-        </ThreeCanvas>
+        </ScienceStage>
       </VisualCardBody>
 
       <VisualCardSceneActions />
@@ -269,7 +254,11 @@ function Road({ roadLength }: { roadLength: number }) {
     <group>
       <mesh position={[0, ROAD_Y, 0]} receiveShadow>
         <boxGeometry
-          args={[roadLength, 0.08, UNIFORM_LINEAR_MOTION_SCENE.roadWidth]}
+          args={[
+            roadLength,
+            ROAD_HEIGHT,
+            UNIFORM_LINEAR_MOTION_SCENE.roadWidth,
+          ]}
         />
         <meshStandardMaterial
           color={UNIFORM_LINEAR_MOTION_COLORS.road}

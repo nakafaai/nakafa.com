@@ -11,6 +11,7 @@ import { NINA_SIZE } from "@/components/state/size";
 import { expectNoOverflow } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { keepResourceTimings } from "@/e2e/support/resources";
 import { APP_CHUNK_PATH, openRoute } from "@/e2e/support/route";
 import { STATE_FIGURE } from "@/e2e/support/selector";
@@ -82,6 +83,16 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
   );
 
   const selector = target.control(page);
+  // The page loads more code by itself as a reader reaches its control: the
+  // sections near it, the links warmed once the scroll rests, and the decoration
+  // a first gesture starts. All of it loads before any chunk is cut, so the first
+  // chunk that fails is the one the press asks for, and the reload comes from it.
+  yield* Effect.promise(async () => {
+    await page.mouse.move(1, 1);
+    await selector.scrollIntoViewIfNeeded();
+    await waitUntilTakenOver(selector);
+    await waitForQuiet(page);
+  });
   const heading = page.getByRole("heading", {
     level: 1,
     name: en.Error.title,
@@ -106,7 +117,6 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
       (mark) => Reflect.set(window, mark, true),
       FIRST_DOCUMENT
     );
-    await waitUntilTakenOver(selector);
     const reloaded = page.waitForEvent("load", {
       timeout: readinessTimeoutMilliseconds,
     });

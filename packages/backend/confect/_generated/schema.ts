@@ -110,6 +110,8 @@ import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import islandAwards from "./tables/islandAwards";
+import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
@@ -286,6 +288,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
+  readonly islandAwards: typeof islandAwards;
+  readonly islands: typeof islands;
   readonly journalCursors: typeof journalCursors;
   readonly journalEntries: typeof journalEntries;
   readonly learningEngagementQueue: typeof learningEngagementQueue;
@@ -461,6 +465,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
+  islandAwards,
+  islands,
   journalCursors,
   journalEntries,
   learningEngagementQueue,

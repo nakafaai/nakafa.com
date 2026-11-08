@@ -85,6 +85,7 @@ export function SchoolToys() {
       <NinaToy act="typing" size={88} slot="forum-nina" />
       <NinaToy act="carrying" size={88} slot="library-nina" />
       <NinaToy act="writing" size={88} slot="tasks-nina" />
+      <NinaToy act="thinking" size={88} slot="exams-nina" />
       <NinaToy act="stamping" size={88} slot="reports-nina" />
       <NinaToy act="searching" size={88} slot="insight-nina" />
       <NinaToy act="graduating" size={88} slot="graduation-nina" />
