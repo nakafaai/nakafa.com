@@ -41,7 +41,6 @@ import { useDialogs } from "@/components/shared/dialogs";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
@@ -50,6 +49,8 @@ import {
   TableSearch,
   useServerSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -187,9 +188,9 @@ function SchoolLoginTable() {
         columns={columns}
         data={Option.getOrElse(kept, () => [])}
         empty={
-          <TableEmpty
-            act="pointing"
+          <EmptyState
             description={t("logins-footer")}
+            scene={<EmptyNina act="pointing" />}
             title={t("logins-empty")}
           />
         }

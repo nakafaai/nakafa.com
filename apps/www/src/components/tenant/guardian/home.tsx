@@ -39,16 +39,14 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import {
-  TableEmpty,
-  TableFrame,
-  TablePageBody,
-} from "@/components/shared/table/frame";
+import { TableFrame, TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import {
   type ChildItem,
@@ -171,9 +169,9 @@ function GuardianChildren() {
       columns={columns}
       data={QueryResult.isSuccess(children) ? children.value : []}
       empty={
-        <TableEmpty
-          act="waving"
+        <EmptyState
           description={t("home-empty-description")}
+          scene={<EmptyNina act="waving" />}
           title={t("home-empty")}
         />
       }

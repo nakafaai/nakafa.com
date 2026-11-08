@@ -26,7 +26,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -34,6 +33,8 @@ import {
   useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useKeptRows } from "@/lib/data/kept";
 
@@ -299,9 +300,9 @@ export function StudentsTable() {
         columns={columns}
         data={Option.getOrElse(kept, Arr.empty)}
         empty={
-          <TableEmpty
-            act="reading"
+          <EmptyState
             description={t(filtering ? "filter-empty" : "results-empty")}
+            scene={<EmptyNina act="reading" />}
             title={t(filtering ? "results-no-match" : "results-empty-title")}
           />
         }

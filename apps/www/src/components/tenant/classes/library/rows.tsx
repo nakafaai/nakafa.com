@@ -17,8 +17,9 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import {
   forumCall,
   runForumCall,
@@ -113,13 +114,13 @@ function LibraryEmpty() {
   const folderId = useLibraryFolder();
 
   return (
-    <TableEmpty
-      act="reading"
+    <EmptyState
       description={t(
         folderId === null
           ? "library-empty-description"
           : "library-folder-empty-description"
       )}
+      scene={<EmptyNina act="reading" />}
       title={t("library-empty")}
     />
   );

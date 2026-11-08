@@ -25,6 +25,7 @@ import { IntlProvider, useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
+import { Stage } from "@/components/state/stage";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStaticData } from "@/lib/static/data";
 
@@ -135,7 +136,11 @@ function ShellToaster() {
 function LocaleError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
   const reloading = useRouteFailure(error, "start-locale-error");
-  return reloading ? null : <LocalizedError locale={locale} />;
+  return reloading ? null : (
+    <Stage>
+      <LocalizedError locale={locale} />
+    </Stage>
+  );
 }
 
 /**

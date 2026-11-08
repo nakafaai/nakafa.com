@@ -19,13 +19,15 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { checkAddress } from "@/components/tenant/reports/check";
@@ -136,9 +138,9 @@ function OwnReportTable() {
       columns={columns}
       data={rows}
       empty={
-        <TableEmpty
-          act="relaxed"
+        <EmptyState
           description={t("own-empty-description")}
+          scene={<EmptyNina act="relaxed" />}
           title={t("own-empty")}
         />
       }

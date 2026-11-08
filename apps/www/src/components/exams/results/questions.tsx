@@ -66,7 +66,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -76,6 +75,8 @@ import {
   useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useKeptRows } from "@/lib/data/kept";
 
 /** The look of each verdict of an answer: a check, a cross, a half mark and a wait, each in its tone. */
@@ -265,9 +266,9 @@ function AnswerList({
 
   if (results.length === 0 && !filtering) {
     return (
-      <TableEmpty
-        act="reading"
+      <EmptyState
         description={t("results-no-answers")}
+        scene={<EmptyNina act="reading" />}
         title={t("results-answers")}
       />
     );
@@ -321,9 +322,9 @@ function AnswerList({
         rowId={(answer) => answer.attemptId}
       />
       {exhausted && results.length === 0 ? (
-        <TableEmpty
-          act="reading"
+        <EmptyState
           description={t("filter-empty")}
+          scene={<EmptyNina act="reading" />}
           title={t("results-no-match")}
         />
       ) : null}

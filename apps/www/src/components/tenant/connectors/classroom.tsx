@@ -29,10 +29,11 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import {
   forumCall,
   runForumCall,
@@ -157,18 +158,18 @@ function CourseTable({ preview }: { preview: Preview }) {
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
     return (
-      <TableEmpty
-        act="searching"
+      <EmptyState
         description={t("courses-none")}
+        scene={<EmptyNina act="searching" />}
         title={t("courses-none-title")}
       />
     );
   }
   if (needsClass(preview)) {
     return (
-      <TableEmpty
-        act="pointing"
+      <EmptyState
         description={t("courses-no-class")}
+        scene={<EmptyNina act="pointing" />}
         title={t("courses-no-class-title")}
       />
     );

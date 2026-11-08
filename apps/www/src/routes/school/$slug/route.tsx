@@ -11,8 +11,10 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActionLink } from "@/components/state/action";
-import { Broken, BrokenRetry } from "@/components/state/broken";
+import { BrokenRetry } from "@/components/state/broken";
+import { EmptyState } from "@/components/state/empty";
 import { useRouteFailure } from "@/components/state/localized";
+import { DeferredFigure } from "@/components/state/mascot";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { loadEntryForm } from "@/components/tenant/forms";
@@ -261,14 +263,22 @@ function SchoolFailure({ error }: { error: unknown }): ReactElement | null {
   }
   return (
     <Stage>
-      <Broken description={t("description")} title={t("title")}>
-        <BrokenRetry>{t("retry")}</BrokenRetry>
-        <ActionLink
-          href={new URL(`/${locale}`, SITE_ORIGIN).href}
-          label={tState("home-button")}
-          variant="ghost"
-        />
-      </Broken>
+      <EmptyState
+        action={
+          <>
+            <BrokenRetry>{t("retry")}</BrokenRetry>
+            <ActionLink
+              href={new URL(`/${locale}`, SITE_ORIGIN).href}
+              label={tState("home-button")}
+              variant="ghost"
+            />
+          </>
+        }
+        description={t("description")}
+        frame="page"
+        scene={<DeferredFigure scene="broken" />}
+        title={<h1>{t("title")}</h1>}
+      />
     </Stage>
   );
 }

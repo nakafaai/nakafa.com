@@ -10,9 +10,11 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableNote } from "@/components/shared/table/frame";
+import { TableNote } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { percentOf } from "@/components/tenant/insight/rows";
 import { Link } from "@/lib/routing/link";
@@ -67,8 +69,7 @@ export function OwnMastery() {
         ]}
         data={isRead ? mine.value : []}
         empty={
-          <TableEmpty
-            act="waving"
+          <EmptyState
             action={
               <Link
                 className={buttonVariants()}
@@ -79,6 +80,7 @@ export function OwnMastery() {
               </Link>
             }
             description={t("empty-description")}
+            scene={<EmptyNina act="waving" />}
             title={t("empty")}
           />
         }

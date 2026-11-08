@@ -29,12 +29,14 @@ import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableFrame } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { TableName } from "@/components/shared/table/title";
 import { useServerSearch } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import {
   forumCall,
   runForumCall,
@@ -205,13 +207,13 @@ function WorkDialog({ work }: { work: TaskWork }) {
 function WorkEmpty({ searched }: { readonly searched: boolean }) {
   const t = useTranslations("Classroom");
   return (
-    <TableEmpty
-      act="reading"
+    <EmptyState
       description={t(
         searched
           ? "task-work-no-match-description"
           : "task-work-empty-description"
       )}
+      scene={<EmptyNina act="reading" />}
       title={t(searched ? "task-work-no-match" : "task-work-empty")}
     />
   );

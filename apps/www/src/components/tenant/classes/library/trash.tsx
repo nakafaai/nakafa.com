@@ -22,8 +22,9 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import {
   forumCall,
   runForumCall,
@@ -193,9 +194,9 @@ export function LibraryTrash() {
         columns={columns}
         data={rows}
         empty={
-          <TableEmpty
-            act="reading"
+          <EmptyState
             description={t("library-trash-empty-description")}
+            scene={<EmptyNina act="reading" />}
             title={t("library-trash-empty")}
           />
         }

@@ -4,11 +4,6 @@ import {
   Calendar03Icon,
   FilterIcon,
 } from "@hugeicons/core-free-icons";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -66,7 +61,8 @@ import {
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { TableWaitingContext } from "@/components/shared/table/waiting";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 
 /** The link of a row's first column, which is the row's primary action. */
 const ROW_LINK = "td:first-child a[href]";
@@ -169,14 +165,11 @@ export function DataTable<TData extends RowData>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length}>
-                <Empty className="p-6 md:p-6">
-                  <EmptyHeader>
-                    <EmptyNina act="searching" />
-                    <EmptyTitle className="text-base">
-                      {t(waiting ? "searching" : "no-results")}
-                    </EmptyTitle>
-                  </EmptyHeader>
-                </Empty>
+                <EmptyState
+                  frame="table"
+                  scene={<EmptyNina act="searching" />}
+                  title={t(waiting ? "searching" : "no-results")}
+                />
               </TableCell>
             </TableRow>
           )}

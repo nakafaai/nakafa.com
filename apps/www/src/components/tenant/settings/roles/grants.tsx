@@ -24,12 +24,13 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
 import { useServerSearch } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
@@ -119,9 +120,9 @@ export function SchoolGrantTable() {
         columns={columns}
         data={Option.getOrElse(kept, () => [])}
         empty={
-          <TableEmpty
-            act="juggling"
+          <EmptyState
             description={t("roles-grants-description")}
+            scene={<EmptyNina act="juggling" />}
             title={t("roles-empty")}
           />
         }

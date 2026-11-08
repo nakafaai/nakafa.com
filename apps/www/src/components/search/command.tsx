@@ -32,7 +32,7 @@ import {
   getSubjectMenuTarget,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { getErrorMessage } from "@/lib/failure";
 import type { LinkTarget } from "@/lib/routing/link";

@@ -1,22 +1,5 @@
 import { Effect } from "effect";
-import type { ReactNode } from "react";
 import { ActionButton } from "@/components/state/action";
-import { DeferredFigure } from "@/components/state/mascot";
-import {
-  Screen,
-  ScreenActions,
-  ScreenDescription,
-  ScreenFigure,
-  ScreenHeader,
-  ScreenTitle,
-} from "@/components/state/screen";
-
-interface BrokenProps {
-  /** The ways on, as the page composes them: `BrokenRetry`, then a quiet way home. */
-  children: ReactNode;
-  description: string;
-  title: string;
-}
 
 /**
  * Tries again by loading the document again. The framework's own `retry`
@@ -32,29 +15,10 @@ const reloadDocument = Effect.fn("www.state.reloadDocument")(() =>
 );
 
 /**
- * The state of something that broke: Nina at her keyboard, one action that
- * tries again, and one quiet way home. It never shows the error itself, only
- * that it is not the learner's. The error is reported by the page that renders
- * it, which also knows what it caught.
+ * The main way on from something that broke, the first action of its page's state (`EmptyState` on a `page`, with Nina
+ * at her keyboard): it loads the document again, under the label it holds. The state never shows the error itself,
+ * only that it is not the learner's; the page that renders it reports what it caught.
  */
-export function Broken({ children, description, title }: BrokenProps) {
-  return (
-    <Screen>
-      <ScreenHeader>
-        <ScreenFigure>
-          <DeferredFigure scene="broken" />
-        </ScreenFigure>
-        <ScreenTitle>
-          <h1>{title}</h1>
-        </ScreenTitle>
-        <ScreenDescription>{description}</ScreenDescription>
-      </ScreenHeader>
-      <ScreenActions>{children}</ScreenActions>
-    </Screen>
-  );
-}
-
-/** The main way on from something that broke: it loads the document again, under the label it holds. */
 export function BrokenRetry({ children }: { children: string }) {
   return (
     <ActionButton

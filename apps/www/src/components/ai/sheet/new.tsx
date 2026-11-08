@@ -12,7 +12,7 @@ import { useAi } from "@/components/ai/context";
 import { NinaInput, NinaSuggestions } from "@/components/ai/input";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /**

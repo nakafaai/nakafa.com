@@ -14,11 +14,12 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useLongAction } from "@/components/shared/pending";
-import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -261,19 +262,19 @@ function RosterImportEmpty({
 
   if (active.value === null) {
     return (
-      <TableEmpty
-        act="pointing"
+      <EmptyState
         description={t("no-period-description")}
+        scene={<EmptyNina act="pointing" />}
         title={t("no-period")}
       />
     );
   }
   return (
-    <TableEmpty
-      act={problem === undefined ? "reading" : "pointing"}
+    <EmptyState
       description={t(
         problem === undefined ? "empty-description" : `file-${problem}`
       )}
+      scene={<EmptyNina act={problem === undefined ? "reading" : "pointing"} />}
       title={t(problem === undefined ? "empty" : "file-refused")}
     />
   );

@@ -27,8 +27,10 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageFrame } from "@/components/shared/content/frame";
 import { pageRowVariants } from "@/components/shared/content/width";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -196,8 +198,7 @@ function NoClass() {
   const leads = useLeadsSchool();
 
   return (
-    <TableEmpty
-      act="pointing"
+    <EmptyState
       action={
         canManage ? (
           <Link
@@ -210,6 +211,7 @@ function NoClass() {
         ) : undefined
       }
       description={leads ? t("no-class-description") : t("no-class-member")}
+      scene={<EmptyNina act="pointing" />}
       title={t("no-class")}
     />
   );

@@ -8,11 +8,13 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageFrame } from "@/components/shared/content/frame";
 import { pageRowVariants } from "@/components/shared/content/width";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -101,8 +103,7 @@ function CohortUnavailable() {
         title={t(section.labelKey)}
       />
       <TablePageBody>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           action={
             <TargetLink
               className={buttonVariants({ variant: "outline" })}
@@ -112,6 +113,7 @@ function CohortUnavailable() {
             </TargetLink>
           }
           description={t("cohort-unavailable-description")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohort-unavailable")}
         />
       </TablePageBody>

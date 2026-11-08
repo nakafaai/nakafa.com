@@ -30,13 +30,15 @@ import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty, TableNote } from "@/components/shared/table/frame";
+import { TableNote } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
@@ -147,9 +149,9 @@ function SchoolAuditBody() {
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="reading"
+          <EmptyState
             description={t("audit-description")}
+            scene={<EmptyNina act="reading" />}
             title={t("audit-empty")}
           />
         }

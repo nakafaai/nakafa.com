@@ -15,7 +15,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -23,6 +22,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -208,9 +209,9 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   if (QueryResult.isFailure(active)) {
     return (
       <SettingsTablePage actions={<CohortsActions slug={slug} />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           description={t("cohorts-unavailable-description")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohorts-unavailable")}
         />
       </SettingsTablePage>
@@ -226,8 +227,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   if (periodId === null) {
     return (
       <SettingsTablePage actions={<CohortsActions slug={slug} />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           action={
             <Link
               className={buttonVariants({ variant: "outline" })}
@@ -238,6 +238,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
             </Link>
           }
           description={t("cohorts-no-period")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohorts-no-period-title")}
         />
       </SettingsTablePage>
@@ -387,9 +388,9 @@ function SchoolCohortTable({
   }
   if (Arr.isReadonlyArrayEmpty(cohorts.value)) {
     return (
-      <TableEmpty
-        act="writing"
+      <EmptyState
         description={t("cohorts-description")}
+        scene={<EmptyNina act="writing" />}
         title={t("cohorts-empty")}
       />
     );
