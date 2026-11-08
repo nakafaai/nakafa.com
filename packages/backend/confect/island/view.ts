@@ -21,6 +21,7 @@ const islandFields = {
   badges: Schema.Array(EarnedBadge),
   layout: Layout,
   level: Schema.Finite,
+  size: Schema.Finite,
   timeZone: Schema.String,
 };
 
@@ -53,10 +54,12 @@ export const VisitedIsland = Schema.Struct({
 
 /** The fields both views take from the stored island. */
 function shared(island: Docs["islands"]) {
+  const growth = growthOf(island.lifetime);
   return {
     badges: island.badges,
     layout: island.layout,
-    level: growthOf(island.lifetime).level,
+    level: growth.level,
+    size: growth.size,
     timeZone: island.timeZone.id,
   };
 }

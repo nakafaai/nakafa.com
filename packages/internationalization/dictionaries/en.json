@@ -3783,6 +3783,9 @@
     "island-farm-unripe": {
       "title": "It has not grown its harvest yet."
     },
+    "island-link-copied": {
+      "title": "The link to your island is copied."
+    },
     "island-watered": {
       "title": "Your garden is watered."
     },
@@ -4622,6 +4625,10 @@
     "enter-top": "Your island is as big as an island grows.",
     "earn-lesson": "+{stars} Stars a lesson",
     "earn-section": "+{stars} Stars a section",
+    "badges": "Badges",
+    "share": "Share",
+    "share-title": "My island on Nakafa",
+    "visit-description": "{name}'s island, grown from learning on Nakafa.",
     "materials": "Garden",
     "materials-value": "{wood} wood, {petals} petals",
     "price-wood": "{stars} Stars, {wood} wood"

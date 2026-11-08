@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { Schema } from "effect";
-import { ChatInput, LocaleInput } from "@/lib/account/input";
+import { ChatInput, LocaleInput, ProfileInput } from "@/lib/account/input";
 
 /** Home: the onboarding gate, the account name and the recently viewed subjects. */
 export const homeScreenFn = createServerFn({ method: "GET" })
@@ -52,4 +52,12 @@ export const islandScreenFn = createServerFn({ method: "GET" })
   .handler(async (options) => {
     const { islandScreenHandler } = await import("@/lib/account/home.server");
     return islandScreenHandler(options);
+  });
+
+/** A visit to a learner's shared island. */
+export const islandVisitFn = createServerFn({ method: "GET" })
+  .validator(Schema.toStandardSchemaV1(ProfileInput))
+  .handler(async (options) => {
+    const { islandVisitHandler } = await import("@/lib/account/home.server");
+    return islandVisitHandler(options);
   });

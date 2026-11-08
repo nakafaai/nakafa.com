@@ -25,7 +25,7 @@ type Step = "edit" | "redo" | "undo";
  * no longer matches the island.
  */
 export function useEditIsland() {
-  const { layout, owner, size } = useIsland();
+  const { layout, level, owner, size } = useIsland();
   const tools = useToolStore();
   const cue = useCue();
   const edit = useMutation(island.mutations.edit).withOptimisticUpdate(
@@ -36,7 +36,7 @@ export function useEditIsland() {
       return false;
     }
     const applied = applyOperations(layout, operations, {
-      level: owner.value.level,
+      level,
       materials: owner.value.materials,
       size,
       stars: owner.value.stars,

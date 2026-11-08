@@ -2,6 +2,7 @@ import {
   DropletIcon,
   RotateLeft01Icon,
   RotateRight01Icon,
+  Share08Icon,
   VolumeHighIcon,
 } from "@hugeicons/core-free-icons";
 import { growthOf } from "@repo/backend/confect/island/level";
@@ -25,6 +26,7 @@ import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { BuildBand, BuildToggle } from "@/components/island/build";
 import { useWaterIsland } from "@/components/island/farm";
+import { useShareIsland } from "@/components/island/share";
 import { SkyProvider } from "@/components/island/sky";
 import { SoundProvider, useSoundSwitch } from "@/components/island/sound";
 import { ToolsProvider } from "@/components/island/tools";
@@ -44,6 +46,17 @@ function WaterItem() {
   );
 }
 
+/** Shares the owner's island with anyone who has the link (ADR 0042, D20). */
+function ShareItem() {
+  const t = useTranslations("Island");
+  const share = useShareIsland();
+  return (
+    <DropdownMenuItem icon={Share08Icon} onClick={share}>
+      {t("share")}
+    </DropdownMenuItem>
+  );
+}
+
 /** The island's one sound switch: music, ambience and cues together (ADR 0042, D26). */
 function SoundItem() {
   const t = useTranslations("Island");
@@ -59,30 +72,54 @@ function SoundItem() {
   );
 }
 
+/** What the owner can spend, what the next level asks for, and the badges they earned. */
+function IslandFacts() {
+  const t = useTranslations("Island");
+  const { badges, owner } = useIsland();
+  if (Option.isNone(owner)) {
+    return <VisualFactTabular label={t("badges")} value={badges} />;
+  }
+  const { lifetime, materials, stars } = owner.value;
+  return (
+    <>
+      <VisualFactTabular label={t("stars")} value={stars} />
+      <VisualFactTabular
+        label={t("materials")}
+        value={t("materials-value", materials)}
+      />
+      <VisualFactTabular
+        label={t("next")}
+        value={Option.match(growthOf(lifetime).next, {
+          onNone: () => t("top"),
+          onSome: (next) => t("next-value", { stars: next - lifetime }),
+        })}
+      />
+      <VisualFactTabular label={t("badges")} value={badges} />
+    </>
+  );
+}
+
 /**
- * The owner's island in a visual card, drawn from the surrounding
- * `IslandContext`: its name and level, the island itself
- * edge to edge, building as its main action, full screen and a menu that
- * waters the garden, turns the island a quarter left or right (open while
- * the owner turns, so each turn takes one press) and switches its sound, and what
- * the owner can spend and the Stars the next level asks for. The canvas loads
+ * An island in a visual card, drawn from the surrounding `IslandContext`: its
+ * name and level, the island itself edge to edge, building as the owner's main
+ * action, full screen and a menu that waters and shares the owner's island,
+ * turns it a quarter left or right (open while the reader turns, so each turn
+ * takes one press) and switches its sound. The footer shows the owner what
+ * they can spend and the next level, and a visitor the badges. The canvas loads
  * with the frame and holds nothing in its place until then, since no picture of
- * the island would be the truth before it draws.
+ * the island would be the truth before it draws; the camera comes down from
+ * the sky as it opens.
  */
 export function IslandFrame({
-  lifetime,
   name,
-  stars,
 }: {
-  lifetime: number;
   /** The owner's name, missing only when the account could not be read. */
   name: string | undefined;
-  stars: number;
 }) {
   const t = useTranslations("Island");
   const [turn, setTurn] = useState(0);
-  const growth = growthOf(lifetime);
-  const { owner } = useIsland();
+  const { level, owner } = useIsland();
+  const own = Option.isSome(owner);
   return (
     <ToolsProvider>
       <SkyProvider>
@@ -90,7 +127,7 @@ export function IslandFrame({
           <section className="motion-safe:[view-transition-name:island]">
             <VisualCard>
               <VisualCardHeader
-                description={t("level", { level: growth.level })}
+                description={t("level", { level })}
                 title={name === undefined ? t("title") : t("name", { name })}
               />
               <BuildBand />
@@ -100,9 +137,10 @@ export function IslandFrame({
                 </Suspense>
               </VisualCardBody>
               <VisualCardActions>
-                {Option.isSome(owner) ? <BuildToggle /> : null}
+                {own ? <BuildToggle /> : null}
                 <VisualCardMenu>
-                  {Option.isSome(owner) ? <WaterItem /> : null}
+                  {own ? <WaterItem /> : null}
+                  {own ? <ShareItem /> : null}
                   <DropdownMenuItem
                     closeOnClick={false}
                     icon={RotateLeft01Icon}
@@ -122,21 +160,7 @@ export function IslandFrame({
               </VisualCardActions>
               <VisualCardFooter>
                 <VisualCardFacts>
-                  <VisualFactTabular label={t("stars")} value={stars} />
-                  {Option.isSome(owner) ? (
-                    <VisualFactTabular
-                      label={t("materials")}
-                      value={t("materials-value", owner.value.materials)}
-                    />
-                  ) : null}
-                  <VisualFactTabular
-                    label={t("next")}
-                    value={Option.match(growth.next, {
-                      onNone: () => t("top"),
-                      onSome: (next) =>
-                        t("next-value", { stars: next - lifetime }),
-                    })}
-                  />
+                  <IslandFacts />
                 </VisualCardFacts>
               </VisualCardFooter>
             </VisualCard>

@@ -30,14 +30,27 @@ const IslandCanvas = lazy(() => import("@/components/island/canvas"));
 /** The island of a learner whose first visit has not opened it yet: the starter set. */
 const STARTER: Pick<
   NonNullable<Ref.Returns<typeof island.queries.own>>,
-  "layout" | "lifetime" | "materials" | "stars" | "timeZone" | "version"
+  | "badges"
+  | "layout"
+  | "level"
+  | "lifetime"
+  | "materials"
+  | "size"
+  | "stars"
+  | "timeZone"
+  | "version"
+  | "visibility"
 > = {
+  badges: [],
   layout: STARTER_LAYOUT,
+  level: 1,
   lifetime: 0,
   materials: NO_MATERIALS,
+  size: growthOf(0).size,
   stars: 0,
   timeZone: "UTC",
   version: 0,
+  visibility: "private",
 };
 
 /**
@@ -66,16 +79,20 @@ export function HomeIsland({
     <section className="motion-safe:[view-transition-name:island]">
       <IslandContext
         value={{
+          badges: shown.badges.length,
           layout: shown.layout,
+          level: shown.level,
           owner: Option.some({
             learned: Option.none(),
-            level: growth.level,
+            lifetime: shown.lifetime,
             materials: shown.materials,
             stars: shown.stars,
+            username: Option.none(),
             version: shown.version,
+            visibility: shown.visibility,
             watered: Option.none(),
           }),
-          size: growth.size,
+          size: shown.size,
           timeZone: shown.timeZone,
         }}
       >
