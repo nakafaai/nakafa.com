@@ -19,16 +19,13 @@ import { Effect, Option, Schema, String as Str } from "effect";
 import { useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   openDiscussion,
   viewerFace,
 } from "@/components/tenant/classes/forum/send";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
+import { runSchoolWrite } from "@/components/tenant/write";
 
 /**
  * Opens a numbered discussion in the channel: a title and a first message. The dialog closes on
@@ -42,7 +39,6 @@ export function StartDiscussion({
   channelId: Id<"classroomChannels">;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const open = useMutation(classroom.forum.threads.open);
   const viewer = useViewerQuery();
@@ -76,7 +72,7 @@ export function StartDiscussion({
     const author = viewerFace(viewer.value);
     sent.current = true;
     setShown(false);
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
         openDiscussion(
           (update, args) => open.withOptimisticUpdate(update)(args),
@@ -96,9 +92,10 @@ export function StartDiscussion({
           )
         )
       ),
-      () => {
-        restore(t("discussion-failed"));
-        toastForumFailure();
+      {
+        onFailed: () => {
+          restore(t("discussion-failed"));
+        },
       }
     );
   };
@@ -110,17 +107,12 @@ export function StartDiscussion({
         onClick={() => setShown(true)}
       />
       <ResponsiveDialog
-        description={t("discussion-new-description")}
-        footer={
-          <>
-            <Button onClick={() => setShown(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} onClick={submit}>
-              {t("discussion-start")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} onClick={submit}>
+            {t("discussion-start")}
+          </Button>
         }
+        description={t("discussion-new-description")}
         // A sent discussion's dialog empties once it has closed, so it keeps what was sent while it closes; a
         // refusal that comes back after that puts the text back.
         onOpenChangeComplete={(next) => {

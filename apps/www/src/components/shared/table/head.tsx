@@ -40,7 +40,10 @@ export function TableHeadButton({
   children,
   icon,
   ...props
-}: Omit<ComponentProps<typeof Button>, "className" | "size" | "variant"> & {
+}: Omit<
+  ComponentProps<typeof Button>,
+  "className" | "size" | "tooltip" | "variant"
+> & {
   readonly active?: boolean;
   readonly align?: typeof HeadAlign.Type;
   readonly icon: IconSvgElement;

@@ -11,10 +11,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { TaskPoints } from "@repo/backend/confect/classroom/tasks/task";
-import { Button } from "@repo/design-system/components/ui/button";
+import { TaskPoints } from "@repo/backend/confect/classroom/tasks/schema";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   NumberField,
   NumberFieldDecrement,
@@ -29,17 +27,14 @@ import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableFrame } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { TableName } from "@/components/shared/table/title";
 import { useServerSearch } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
+import { EmptyNina } from "@/components/state/nina";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import {
   type ClassTask,
@@ -47,6 +42,7 @@ import {
   type TaskWork,
 } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";
 
 /** How many pieces of work the table reads each time its end comes into view. */
@@ -162,12 +158,16 @@ function WorkMenu({ work }: { work: TaskWork }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
-          <HugeIcons icon={ViewIcon} />
+        <DropdownMenuItem
+          icon={ViewIcon}
+          onClick={() => setOpenings((count) => count + 1)}
+        >
           {t("task-read")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => clipboard.copy(work.text)}>
-          <HugeIcons icon={Copy01Icon} />
+        <DropdownMenuItem
+          icon={Copy01Icon}
+          onClick={() => clipboard.copy(work.text)}
+        >
           {common("copy")}
         </DropdownMenuItem>
       </RowItems>
@@ -179,17 +179,11 @@ function WorkMenu({ work }: { work: TaskWork }) {
 /** The whole work of one student, as they handed it in, and whether it came late. */
 function WorkDialog({ work }: { work: TaskWork }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const [open, setOpen] = useState(true);
 
   return (
     <ResponsiveDialog
       description={work.late ? t("task-handed-in-late") : t("task-handed-in")}
-      footer={
-        <Button onClick={() => setOpen(false)} variant="outline">
-          {common("close")}
-        </Button>
-      }
       open={open}
       setOpen={setOpen}
       title={work.person.name}
@@ -205,13 +199,13 @@ function WorkDialog({ work }: { work: TaskWork }) {
 function WorkEmpty({ searched }: { readonly searched: boolean }) {
   const t = useTranslations("Classroom");
   return (
-    <TableEmpty
-      act="reading"
+    <EmptyState
       description={t(
         searched
           ? "task-work-no-match-description"
           : "task-work-empty-description"
       )}
+      scene={<EmptyNina act="reading" />}
       title={t(searched ? "task-work-no-match" : "task-work-empty")}
     />
   );
@@ -238,16 +232,15 @@ function WorkPoints({ points, work }: { points: number; work: TaskWork }) {
     ) {
       return;
     }
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         score.withOptimisticUpdate(scoreUpdate)({
           classId,
           points: parsed.value,
           slug,
           submissionId: work.id,
         })
-      ),
-      toastForumFailure
+      )
     );
   };
 

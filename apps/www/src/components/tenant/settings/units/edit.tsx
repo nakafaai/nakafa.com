@@ -25,7 +25,6 @@ import {
   setNpsnChange,
   setUnitLocaleChange,
 } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SelectField } from "@/components/tenant/settings/select";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
@@ -33,8 +32,7 @@ import {
   UnitLevelField,
   UnitNameField,
 } from "@/components/tenant/settings/units/fields";
-
-const SOURCE = "components/tenant/settings/units/edit";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The edit's fields. Only what the teacher picks or types is kept; until then each field shows what the
@@ -136,18 +134,20 @@ export function UnitEditDialog({
     setOpen(false);
     startTransition(() => {
       if (identityChanged) {
-        saveSchool(() => edit({ level, name, slug, unitId: unit.id }), SOURCE);
+        runSchoolWrite(
+          schoolCall(() => edit({ level, name, slug, unitId: unit.id }))
+        );
       }
       if (localeChanged) {
-        saveSchool(
-          () => setLocale({ contentLanguage, slug, timeZone, unitId: unit.id }),
-          SOURCE
+        runSchoolWrite(
+          schoolCall(() =>
+            setLocale({ contentLanguage, slug, timeZone, unitId: unit.id })
+          )
         );
       }
       if (npsnChanged) {
-        saveSchool(
-          () => setNpsn({ npsn: typed, slug, unitId: unit.id }),
-          SOURCE
+        runSchoolWrite(
+          schoolCall(() => setNpsn({ npsn: typed, slug, unitId: unit.id }))
         );
       }
     });
@@ -155,21 +155,12 @@ export function UnitEditDialog({
 
   return (
     <ResponsiveDialog
-      description={t("unit-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {t("unit-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {t("unit-save")}
+        </Button>
       }
+      description={t("unit-edit-description")}
       open={open}
       setOpen={setOpen}
       title={unit.name}
@@ -182,12 +173,12 @@ export function UnitEditDialog({
         />
         <UnitLevelField id={`${id}-level`} onChange={setLevel} value={level} />
         <SelectField
-          choice="zone"
           items={Arr.map(timeZoneItems, (item) => ({
             ...item,
             icon: Globe02Icon,
           }))}
           label={t("unit-time-zone")}
+          menu={common("menu-zone")}
           onChoose={setTimeZone}
           value={timeZone}
         />

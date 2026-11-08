@@ -12,7 +12,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { PaneOpen } from "@/components/shared/pane";
@@ -25,14 +24,16 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
+import { EmptyNina } from "@/components/state/nina";
 import { GraduationLineDetail } from "@/components/tenant/graduation/detail";
 import { GraduationElsewhere } from "@/components/tenant/graduation/elsewhere";
 import {
@@ -219,13 +220,7 @@ function GraduationStudents() {
             <DataTable
               columns={columns}
               data={pagination.results}
-              empty={
-                <TableEmpty
-                  act="reading"
-                  description={t("students-empty-description")}
-                  title={t("students-empty")}
-                />
-              }
+              empty={<GraduationStudentsEmpty />}
               rowId={(line) => line.student.id}
               search="student"
             />
@@ -239,37 +234,53 @@ function GraduationStudents() {
   );
 }
 
+/** The graduation table with no student yet, under its column heads. */
+function GraduationStudentsEmpty() {
+  const t = useTranslations("SchoolGraduation");
+
+  return (
+    <EmptyState
+      description={t("students-empty-description")}
+      scene={<EmptyNina act="reading" />}
+      title={t("students-empty")}
+    />
+  );
+}
+
 /** The row menu of one student: open the SKL's PDF and its check page, once it is locked. */
 function GraduationLineMenu({ line }: { line: GraduationLine }) {
   const t = useTranslations("SchoolGraduation");
   const locale = useLocale();
 
-  if (line.letter === null || line.letter.file === null) {
+  const { letter } = line;
+  if (letter === null || letter.file === null) {
     return <RowCopy value={line.student.name} />;
   }
+  const file = letter.file;
+  const check = checkAddress(locale, letter.hash);
 
   return (
     <RowItems>
       <DropdownMenuItem
-        render={
-          <a href={line.letter.file} rel="noopener" target="_blank">
-            <HugeIcons icon={Download04Icon} />
-            {t("open-letter")}
+        icon={Download04Icon}
+        render={({ children, ...props }) => (
+          <a {...props} href={file} rel="noopener" target="_blank">
+            {children}
           </a>
-        }
-      />
+        )}
+      >
+        {t("open-letter")}
+      </DropdownMenuItem>
       <DropdownMenuItem
-        render={
-          <a
-            href={checkAddress(locale, line.letter.hash)}
-            rel="noopener"
-            target="_blank"
-          >
-            <HugeIcons icon={CheckmarkBadge01Icon} />
-            {t("open-check")}
+        icon={CheckmarkBadge01Icon}
+        render={({ children, ...props }) => (
+          <a {...props} href={check} rel="noopener" target="_blank">
+            {children}
           </a>
-        }
-      />
+        )}
+      >
+        {t("open-check")}
+      </DropdownMenuItem>
     </RowItems>
   );
 }

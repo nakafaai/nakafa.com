@@ -9,13 +9,15 @@ import { questionGap } from "@repo/backend/confect/exams/parts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { type KeyboardEvent, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import type {
@@ -156,7 +158,6 @@ function GridTile({
  */
 export function ExamGrid() {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const { exam } = useExam();
   const editable = !isLocked(exam);
   const active = useActiveQuestion();
@@ -339,26 +340,20 @@ export function ExamGrid() {
         ) : null}
       </ol>
       <ResponsiveDialog
-        description={t("remove-many-description")}
-        footer={
-          <>
-            <Button onClick={() => setAsking(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button onClick={remove} variant="destructive">
-              <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-              {t("grid-delete")}
-            </Button>
-          </>
+        action={
+          <Button onClick={remove} variant="destructive">
+            <HugeIcons aria-hidden="true" icon={Delete02Icon} />
+            {t("grid-delete")}
+          </Button>
         }
+        description={t("remove-many-description")}
         open={asking}
         setOpen={setAsking}
         title={t("remove-many-title", { count: chosen.length })}
       >
-        <ConfirmSubject
-          icon={TaskEdit01Icon}
-          name={t("selected-count", { count: chosen.length })}
-        />
+        <ResponsiveDialogSubject icon={TaskEdit01Icon}>
+          {t("selected-count", { count: chosen.length })}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </ScrollArea>
   );

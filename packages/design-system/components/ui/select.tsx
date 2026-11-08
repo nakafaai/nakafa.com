@@ -8,12 +8,17 @@ import {
   ArrowUp01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  HugeIcons,
+  OptionIcon,
+} from "@repo/design-system/components/ui/huge-icons";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
+import type { ComponentProps } from "react";
 import { use } from "react";
 import { useTranslations } from "use-intl";
 
@@ -30,16 +35,6 @@ function Select<Value, Multiple extends boolean | undefined = false>({
     <SelectPrimitive.Root
       disabled={disabled || (Arr.Array.isArray(items) && items.length === 0)}
       items={items}
-      {...props}
-    />
-  );
-}
-
-function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
-  return (
-    <SelectPrimitive.Group
-      className={cn("scroll-my-1 p-1", className)}
-      data-slot="select-group"
       {...props}
     />
   );
@@ -136,9 +131,14 @@ function SelectTrigger({
   );
 }
 
+/**
+ * The list of a select. It opens with its one-word label, which names what is chosen, so a list never reads as bare
+ * codes: the label is required, and the list draws it above its items.
+ */
 function SelectContent({
   className,
   children,
+  label,
   side = "bottom",
   sideOffset = 4,
   align = "center",
@@ -149,33 +149,46 @@ function SelectContent({
   Pick<
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "alignItemWithTrigger" | "side" | "sideOffset"
-  >) {
+  > & {
+    /** The one word that names what is chosen, such as "Kelas". */
+    label: string;
+  }) {
   return (
-    <SelectPrimitive.Portal container={use(PortalContainer)}>
-      <SelectPrimitive.Positioner
-        align={align}
-        alignItemWithTrigger={alignItemWithTrigger}
-        alignOffset={alignOffset}
-        className="isolate z-50"
-        side={side}
-        sideOffset={sideOffset}
-      >
-        <SelectPrimitive.Popup
-          className={cn(
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative isolate z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] ease-out not-dark:bg-clip-padding data-[align-trigger=true]:animate-none dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([data-slot=select-item],[data-slot=select-empty]))]:[--select-nothing:block]",
-            className
-          )}
-          data-align-trigger={alignItemWithTrigger}
-          data-slot="select-content"
-          {...props}
+    <ButtonGroupVariant value={undefined}>
+      <SelectPrimitive.Portal container={use(PortalContainer)}>
+        <SelectPrimitive.Positioner
+          align={align}
+          alignItemWithTrigger={alignItemWithTrigger}
+          alignOffset={alignOffset}
+          className="isolate z-50"
+          side={side}
+          sideOffset={sideOffset}
         >
-          <SelectScrollUpButton />
-          <SelectPrimitive.List>{children}</SelectPrimitive.List>
-          <SelectNothing />
-          <SelectScrollDownButton />
-        </SelectPrimitive.Popup>
-      </SelectPrimitive.Positioner>
-    </SelectPrimitive.Portal>
+          <SelectPrimitive.Popup
+            className={cn(
+              "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative isolate z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] ease-out not-dark:bg-clip-padding data-[align-trigger=true]:animate-none dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([data-slot=select-item],[data-slot=select-empty]))]:[--select-nothing:block]",
+              className
+            )}
+            data-align-trigger={alignItemWithTrigger}
+            data-slot="select-content"
+            {...props}
+          >
+            <SelectScrollUpButton />
+            <SelectPrimitive.List>
+              <SelectPrimitive.Group
+                className="scroll-my-1 p-1"
+                data-slot="select-group"
+              >
+                <SelectLabel>{label}</SelectLabel>
+                {children}
+                <SelectNothing />
+              </SelectPrimitive.Group>
+            </SelectPrimitive.List>
+            <SelectScrollDownButton />
+          </SelectPrimitive.Popup>
+        </SelectPrimitive.Positioner>
+      </SelectPrimitive.Portal>
+    </ButtonGroupVariant>
   );
 }
 
@@ -223,11 +236,14 @@ function SelectLabel({
   );
 }
 
+/** One choice of a select. It shows the icon of its kind before its words, so it never reads as a bare code. */
 function SelectItem({
   className,
   children,
+  icon,
   ...props
-}: SelectPrimitive.Item.Props) {
+}: SelectPrimitive.Item.Props &
+  Pick<ComponentProps<typeof OptionIcon>, "icon">) {
   return (
     <SelectPrimitive.Item
       className={cn(
@@ -238,6 +254,7 @@ function SelectItem({
       {...props}
     >
       <SelectPrimitive.ItemText className="flex min-w-0 flex-1 items-center gap-2 text-pretty">
+        <OptionIcon icon={icon} />
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator
@@ -304,9 +321,7 @@ export {
   Select,
   SelectContent,
   SelectEmpty,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectScrollDownButton,
   SelectScrollUpButton,
   SelectSeparator,

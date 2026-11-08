@@ -42,7 +42,7 @@ source check stays off, and its row names that check as the owner.
 | `effectSleepZeroToYieldNow` | error | Fixed at its source: a zero-duration `Effect.sleep` becomes `Effect.yieldNow` |
 | `errorPayloadShadowsName` | error | Fixed at its source: an error payload field named `name` is renamed, so the error keeps its own name |
 | `flatMapToTap` | error | Fixed at its source: a `flatMap` that runs an effect and returns its input becomes `Effect.tap`, with the same error and requirement types |
-| `schemaClassMissingBrand` | off | Stays off until the change that brands the last Schema error class, which sets it to error. See the brand paragraph below |
+| `schemaClassMissingBrand` | error | Fixed at its source: every Schema class carries a brand as its second type argument. See the brand paragraph below |
 | `preferEffectArray` | off | Owner: the source check `array-method`, `array-mutation`, and `array-search`, which forbid the native array methods (`scripts/check/calls.ts`, judged in `scripts/check/arrays.ts`) |
 | `preferEffectRecord` | off | Owner: the source check `object-helper`, which forbids `Object.entries`, `Object.fromEntries`, `Object.keys`, and `Object.values` (`scripts/check/globals.ts`) |
 | `preferSchemaTaggedError` | off | Not a duplicate. `Data.TaggedError` keeps its form for an error that is not a Schema contract, and the source check `error-class` (`scripts/check/rules.ts`) accepts either class for an expected failure |
@@ -98,16 +98,19 @@ typecheck targets on 7 November 2026.
 
 ### Schema error brands
 
-A missing brand lets a structurally equal value pass for a Schema class instance.
-The target is that every Schema error class carries `{ readonly brand: unique symbol }`
-as its second type argument, and that both repositories set `schemaClassMissingBrand`
-to error in the same change that brands the last one. This branch does not make that
-sweep: fourteen open pull requests add Schema error classes, so the rule stays off
-here, and no Schema error class carries a brand yet. Until the sweep lands, Aksara's
-copy of the block, which sets the rule to error, differs from this one in that rule
-alone. `Data.TaggedError` is not a Schema class and keeps its form.
-`scripts/provenance/schema.ts`, the one shared class, stays byte-identical to
-Aksara's copy until then.
+A missing brand lets a structurally equal value pass for a Schema class instance,
+so `schemaClassMissingBrand` is an error. Every Schema error class carries
+`{ readonly brand: unique symbol }` as its second type argument. The rule judges
+every Schema class, so the one Schema tagged class, `SyncDropped` in
+`apps/www/src/lib/editor/session.ts`, carries it too. The change that set the rule
+to error branded 545 error classes and that tagged class in 284 files.
+`Data.TaggedError` is not a Schema class and keeps its form.
+
+`scripts/provenance/schema.ts`, the one Schema class file shared with Aksara,
+carries the brand here first. Aksara copies it, sets the rule to error, and moves
+its native pin to that change's commit in one change of its own, because its
+`bun run native` compares both the shared file and the rule severity with the
+pinned commit of this repository.
 
 ### Source rules for raw TypeScript forms
 
@@ -149,7 +152,7 @@ one channel React offers, so the module that holds a hook is React code.
 
 A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
 `test.setup.ts` or `test.helpers.ts`, which only tests load. Any other module
-that supports tests, such as `apps/www/src/test/content-page.ts`, is product code.
+that supports tests, such as `apps/www/src/test/published/page.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
 `.tsx`, imports the Vitest configuration API, or has a default export

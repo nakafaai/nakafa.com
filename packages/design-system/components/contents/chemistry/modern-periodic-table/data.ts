@@ -162,13 +162,13 @@ export type PeriodicSeriesRowKey =
   (typeof PERIODIC_SERIES_ROW_SOURCE)[number]["key"];
 
 /** Expected failure: an authored periodic-table text row cannot be read. */
-class PeriodicTableSourceError extends Schema.TaggedError<PeriodicTableSourceError>()(
-  "PeriodicTableSourceError",
-  {
-    message: Schema.String,
-    source: Schema.String,
-  }
-) {}
+class PeriodicTableSourceError extends Schema.TaggedError<
+  PeriodicTableSourceError,
+  { readonly brand: unique symbol }
+>()("PeriodicTableSourceError", {
+  message: Schema.String,
+  source: Schema.String,
+}) {}
 
 /**
  * Finds the learning category used for one element tile.

@@ -7,6 +7,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cva } from "class-variance-authority";
@@ -207,17 +212,25 @@ export function Footer({
           <div className="flex flex-col items-center gap-4 lg:flex-row">
             <div className="flex items-center gap-1">
               {Arr.map(socialMedia, (social) => (
-                <a
-                  aria-label={social.label}
-                  className={buttonVariants({ size: "icon", variant: "ghost" })}
-                  href={social.href}
-                  key={social.label}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <HugeIcons className="size-4" icon={social.icon} />
-                  <span className="sr-only">{social.label}</span>
-                </a>
+                <Tooltip key={social.label}>
+                  <TooltipTrigger
+                    render={
+                      <a
+                        aria-label={social.label}
+                        className={buttonVariants({
+                          size: "icon",
+                          variant: "ghost",
+                        })}
+                        href={social.href}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <HugeIcons className="size-4" icon={social.icon} />
+                      </a>
+                    }
+                  />
+                  <TooltipContent>{social.label}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
             <FooterAction />
@@ -253,10 +266,13 @@ function FooterGroup({
 /**
  * The text treatment that every footer destination shares. Each link is at least
  * 24 px tall, so a finger meets one target at a time in a stacked column (WCAG
- * 2.5.8).
+ * 2.5.8). A word longer than its column, such as German's
+ * "Auftragsverarbeitungsvertrag", breaks at a syllable of the page's language,
+ * or anywhere where the language has no hyphenation, so no link runs past the
+ * page's edge.
  */
 const linkItemVariants = cva(
-  "hover:text-primary inline-flex min-h-6 items-center text-sm transition-colors ease-out"
+  "hover:text-primary inline-flex min-h-6 items-center text-sm wrap-anywhere hyphens-auto transition-colors ease-out"
 );
 
 /** One footer link of the app, at a route target that the app chose. */

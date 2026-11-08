@@ -14,11 +14,11 @@ import {
   LOAD_STEP,
 } from "@repo/design-system/components/contents/physics/vector/concept/tension";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {

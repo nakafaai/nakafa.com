@@ -112,20 +112,20 @@ export const MemoryRow = memo(
             onPointerDown={warmMemoryEditor}
             onPointerEnter={warmMemoryEditor}
             size="icon-sm"
+            tooltip={t("edit")}
             variant="ghost"
           >
             <HugeIcons icon={Edit02Icon} />
-            <span className="sr-only">{t("edit")}</span>
           </Button>
           <Button
             className="relative"
             disabled={waiting}
             onClick={() => askDelete(memory)}
             size="icon-sm"
+            tooltip={t("delete")}
             variant="ghost"
           >
             <HugeIcons icon={Delete02Icon} />
-            <span className="sr-only">{t("delete")}</span>
           </Button>
         </div>
       </div>

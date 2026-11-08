@@ -27,13 +27,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -51,12 +49,11 @@ import {
 } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 import { RoomLengthField } from "@/components/tenant/exams/length";
 import { useExam } from "@/components/tenant/exams/provider";
 import { SITTING_LENGTHS, sittingTimes } from "@/components/tenant/exams/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The length that a dialog opens with, in minutes. */
 const DEFAULT_MINUTES = 60;
@@ -221,8 +218,8 @@ export function ScheduleSitting({
     setRefused([]);
     setPastStart(false);
     startTransition(async () => {
-      await runExamAction(
-        sentAction(() =>
+      await runSchoolWrite(
+        schoolCall(() =>
           schedule({
             closesAt,
             examId: exam.id,
@@ -246,15 +243,14 @@ export function ScheduleSitting({
             ScheduleInvalid: refuseStart,
           })
         ),
-        { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+        { onFailed: Fn.constVoid, onSaved: Fn.constVoid }
       );
     });
   };
 
   return (
     <ResponsiveDialog
-      description={t("schedule-description")}
-      footer={
+      action={
         <>
           <ScheduleNotices
             missing={Option.orElse(firstUnready, () =>
@@ -267,14 +263,12 @@ export function ScheduleSitting({
             )}
             roomMissing={!Schema.is(RoomName)(roomName)}
           />
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
           <Button disabled={!ready} onClick={submit}>
             {t("schedule")}
           </Button>
         </>
       }
+      description={t("schedule-description")}
       open={open}
       setOpen={setOpen}
       title={t("schedule-title")}
@@ -293,17 +287,16 @@ export function ScheduleSitting({
             <SelectTrigger className="w-full" id={`${id}-unit`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="unit" />
-
-                {Arr.map(unitItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={SchoolIcon} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-unit")}>
+              {Arr.map(unitItems, (item) => (
+                <SelectItem
+                  icon={SchoolIcon}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
@@ -318,23 +311,20 @@ export function ScheduleSitting({
             <SelectTrigger className="w-full" id={`${id}-audience`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="audience" />
-
-                {Arr.map(audienceItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons
-                      icon={
-                        item.value === UNIT_AUDIENCE
-                          ? Building03Icon
-                          : UserMultiple02Icon
-                      }
-                    />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-audience")}>
+              {Arr.map(audienceItems, (item) => (
+                <SelectItem
+                  icon={
+                    item.value === UNIT_AUDIENCE
+                      ? Building03Icon
+                      : UserMultiple02Icon
+                  }
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {Arr.isReadonlyArrayNonEmpty(cohorts) ? null : (

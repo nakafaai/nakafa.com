@@ -8,11 +8,11 @@ import {
   type MassConservationModeId,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
 import { MassConservationScene } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,

@@ -17,9 +17,7 @@ import {
   type LinkItem,
   readdressLinkChange,
 } from "@/components/tenant/guardian/change";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/address";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that corrects the parent email of a pending link. It starts from the link's address and keeps only what
@@ -29,7 +27,6 @@ const SOURCE = "components/tenant/guardian/address";
  */
 export function GuardianLinkAddressDialog({ link }: { link: LinkItem }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const readdress = useMutation(guardians.links.readdress).withOptimisticUpdate(
@@ -50,34 +47,22 @@ export function GuardianLinkAddressDialog({ link }: { link: LinkItem }) {
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () => readdress({ email: address.value, linkId: link.id, slug }),
-        SOURCE
+      runSchoolWrite(
+        schoolCall(() =>
+          readdress({ email: address.value, linkId: link.id, slug })
+        )
       )
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("link-readdress-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(address)}
-            onClick={save}
-            type="button"
-          >
-            {t("link-readdress-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={Option.isNone(address)} onClick={save} type="button">
+          {t("link-readdress-save")}
+        </Button>
       }
+      description={t("link-readdress-description")}
       open={open}
       setOpen={setOpen}
       title={t("link-readdress")}

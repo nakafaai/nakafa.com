@@ -16,7 +16,6 @@ import { readPublishedMaterialPlacements } from "@/lib/content/material/context"
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { readPublishedPageLocalePath } from "@/lib/content/page/catalog";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
-import type { ContentReleasePin } from "@/lib/content/published/release";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/missing";
 import {
@@ -121,12 +120,10 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
 const readLocalizedMaterialSuffix = Effect.fn(
   "www.routing.locale.readMaterialSuffix"
 )(function* ({
-  expectedActiveReleaseId,
   locale,
   search,
   target,
 }: {
-  expectedActiveReleaseId: Exclude<ContentReleasePin, null>;
   locale: Locale;
   search: string;
   target: MaterialLessonProjection;
@@ -136,11 +133,7 @@ const readLocalizedMaterialSuffix = Effect.fn(
     return "";
   }
 
-  const places = yield* readPublishedMaterialPlacements(
-    locale,
-    target,
-    expectedActiveReleaseId
-  );
+  const places = yield* readPublishedMaterialPlacements(locale, target);
   return Arr.some(
     places,
     (place) =>
@@ -207,7 +200,6 @@ export const readPublishedLocalizedHref = Effect.fn(
       });
     }
     const suffix = yield* readLocalizedMaterialSuffix({
-      expectedActiveReleaseId: current.activeReleaseId,
       locale,
       search,
       target: target.value,

@@ -20,11 +20,6 @@ import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useId, useReducer, useRef, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   addLibraryLink,
   pickFromDrive,
   sendLibraryFile,
@@ -53,6 +48,7 @@ import {
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The library row's kind for a file's type. */
 const kindOf = (type: string) =>
@@ -67,7 +63,6 @@ const kindOf = (type: string) =>
  */
 export function AddToLibrary() {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const locale = useLocale();
   const { classId, slug } = useClassScope();
   const viewer = useViewerQuery();
@@ -99,7 +94,7 @@ export function AddToLibrary() {
    */
   const chooseDrive = () => {
     change({ _tag: "picking" });
-    runForumCall(
+    runSchoolWrite(
       pickFromDrive(
         () => pickerToken({}),
         locale,
@@ -115,16 +110,17 @@ export function AddToLibrary() {
           Effect.sync(() => change({ _tag: "missing" }))
         )
       ),
-      () => {
-        change({ _tag: "picked", picked: Option.none() });
-        toastForumFailure();
+      {
+        onFailed: () => {
+          change({ _tag: "picked", picked: Option.none() });
+        },
       }
     );
   };
 
   /** Shows the link at once, sends it under a new key, and restores the dialog when it fails. */
   const sendLink = (author: string) => {
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
         addLibraryLink(
           (update, args) => addLink.withOptimisticUpdate(update)(args),
@@ -132,22 +128,23 @@ export function AddToLibrary() {
           { address: link, classId, clientKey, folderId, slug, title: heading }
         )
       ),
-      () => {
-        change({ _tag: "restored", address: link, title: heading });
-        setOpen(true);
-        toastForumFailure();
+      {
+        onFailed: () => {
+          change({ _tag: "restored", address: link, title: heading });
+          setOpen(true);
+        },
       }
     );
   };
 
   /** Shows the Drive file at once, has the server import it, and takes its row away when the server refuses it. */
   const sendDrive = (author: string, picked: DriveFile) => {
-    runForumCall(
+    runSchoolWrite(
       sendLibraryFile(
         uploads.getState(),
         { author, kind: kindOf(picked.mimeType), title: heading },
         (clientKey) =>
-          forumCall(() =>
+          schoolCall(() =>
             importDrive({
               classId,
               clientKey,
@@ -157,8 +154,7 @@ export function AddToLibrary() {
               title: heading,
             })
           )
-      ).pipe(Effect.catchTags(fileRefusals)),
-      toastForumFailure
+      ).pipe(Effect.catchTags(fileRefusals))
     );
   };
 
@@ -186,17 +182,12 @@ export function AddToLibrary() {
     <>
       <SchoolHeaderAdd label={t("library-add")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
-        description={t("library-add-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} onClick={submit}>
-              {t("library-submit")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} onClick={submit}>
+            {t("library-submit")}
+          </Button>
         }
+        description={t("library-add-description")}
         // A sent item's dialog empties once it has closed, so it keeps what was sent while it closes.
         onOpenChangeComplete={(next) => {
           if (!next && sent.current) {

@@ -1,24 +1,40 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { SchoolFixture } from "@repo/backend/scripts/content/acceptance/fixture";
+import {
+  LocalConvex,
+  localConvexLayer,
+} from "@repo/backend/scripts/content/acceptance/convex";
+import {
+  type AcceptanceRuntimeError,
+  acceptanceRuntimeError,
+} from "@repo/backend/scripts/content/acceptance/error";
 import {
   type LocalRuntime,
   leaseReservedLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
 import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
-import { createAcceptanceOwner } from "@repo/backend/scripts/content/acceptance/owner";
+import { seedOwner } from "@repo/backend/scripts/content/acceptance/owner";
 import {
   PRODUCTION_CONCURRENCY,
   withLocalBackend,
 } from "@repo/backend/scripts/content/acceptance/process";
-import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
+import { seedSchool } from "@repo/backend/scripts/content/acceptance/school";
 import { captureLogs } from "@repo/backend/scripts/load/logs";
 import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
 import { recorderLayer, timed } from "@repo/backend/scripts/load/recorder";
 import { runLoad } from "@repo/backend/scripts/load/run";
 import { issueToken, sessionCookie } from "@repo/backend/scripts/load/token";
 import { openWire } from "@repo/backend/scripts/load/wire";
-import { Duration, Effect, FileSystem, Option, Schedule, Schema } from "effect";
+import {
+  Duration,
+  Effect,
+  type FileSystem,
+  Layer,
+  Option,
+  type PlatformError,
+  Schedule,
+  Schema,
+} from "effect";
+import type { SecureRandom } from "effect/crypto";
+import type { ChildProcessSpawner } from "effect/process";
 
 /** The usage of the load test: the report file, then the optional number of students and minutes of the paper. */
 const USAGE = "load <report-file> [students] [minutes]";
@@ -61,19 +77,11 @@ const ROOM_SIZE = BLUEPRINT_PLAN.students / BLUEPRINT_PLAN.rooms;
 
 /**
  * Opens the school of a load test, as a browser test opens one: a new school, and its Owner
- * signed in, who authors the load test's exam. Its files stay in `directory`, and it returns
- * the school's slug.
+ * signed in, who authors the load test's exam. It returns the school's slug.
  */
-const openSchool = Effect.fn("load.command.school")(function* (
-  root: string,
-  directory: string
-) {
-  const path = `${directory}/school.json`;
-  yield* createAcceptanceSchool(root, path);
-  const school = yield* (yield* FileSystem.FileSystem)
-    .readFileString(path)
-    .pipe(Effect.flatMap(Schema.decodeEffect(SchoolFixture)));
-  yield* createAcceptanceOwner(root, school.slug, `${directory}/owner.json`);
+const openSchool = Effect.fn("load.command.school")(function* () {
+  const school = yield* seedSchool();
+  yield* seedOwner(school.slug);
   return school.slug;
 });
 
@@ -109,15 +117,31 @@ export const runLoadCommand = Effect.fn("load.command")(function* (
   const runtime = reserved.value;
   return yield* withLocalBackend(
     runtime,
-    runLoad({
-      capture: (path) => captureLogs(runtime, path),
-      connect: connectTo(runtime),
-      output,
-      plan,
-      run: (operation, commandArgs, sensitiveValues) =>
-        runLocalConvex(runtime, operation, commandArgs, sensitiveValues),
-      school: (directory) => openSchool(root, directory),
-    }).pipe(Effect.provide(recorderLayer(`${output}.acknowledged.jsonl`))),
+    Effect.gen(function* () {
+      const convex = yield* LocalConvex;
+      return yield* runLoad<
+        | AcceptanceRuntimeError
+        | PlatformError.PlatformError
+        | Schema.SchemaError,
+        | ChildProcessSpawner.ChildProcessSpawner
+        | FileSystem.FileSystem
+        | SecureRandom.SecureRandom
+      >({
+        capture: (path) => captureLogs(runtime, path),
+        connect: connectTo(runtime),
+        output,
+        plan,
+        run: convex.run,
+        school: openSchool().pipe(Effect.provideService(LocalConvex, convex)),
+      });
+    }).pipe(
+      Effect.provide(
+        Layer.merge(
+          recorderLayer(`${output}.acknowledged.jsonl`),
+          localConvexLayer(root)
+        )
+      )
+    ),
     PRODUCTION_CONCURRENCY
   );
 }, Effect.scoped);

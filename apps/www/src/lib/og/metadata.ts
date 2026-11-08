@@ -7,13 +7,13 @@ import type { Locale } from "use-intl";
 import { queryContentStore } from "@/lib/content/store/query";
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
-class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
-  "TranslationLoadError",
-  {
-    locale: Schema.String,
-    namespace: Schema.String,
-  }
-) {}
+class TranslationLoadError extends Schema.TaggedError<
+  TranslationLoadError,
+  { readonly brand: unique symbol }
+>()("TranslationLoadError", {
+  locale: Schema.String,
+  namespace: Schema.String,
+}) {}
 /** Route metadata: title and description are the Convex reference summary
  * fields, while authors and date have no Convex source. */
 const SystemMetadataSchema = Schema.Struct({

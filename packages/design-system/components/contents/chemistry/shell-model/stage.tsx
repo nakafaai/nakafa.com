@@ -1,7 +1,7 @@
 import { useThree } from "@react-three/fiber";
 import { ShellModelScene } from "@repo/design-system/components/contents/chemistry/shell-model/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene-frame";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Suspense } from "react";
 

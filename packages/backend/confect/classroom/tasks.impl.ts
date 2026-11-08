@@ -21,7 +21,7 @@ import { removeTask } from "@repo/backend/confect/classroom/tasks/remove";
 import {
   standingOf,
   submissionField,
-} from "@repo/backend/confect/classroom/tasks/task";
+} from "@repo/backend/confect/classroom/tasks/schema";
 import {
   classTask,
   ownSubmission,

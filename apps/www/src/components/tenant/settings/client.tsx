@@ -30,11 +30,9 @@ import {
   toggleAction,
 } from "@/components/tenant/settings/actions";
 import { updateClientChange } from "@/components/tenant/settings/edits";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SelectField } from "@/components/tenant/settings/select";
 import type { Client } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/client";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * Renders the dialog that creates an integration client of the school: its name, the
@@ -95,18 +93,20 @@ export function SchoolClientCreateDialog({
       return;
     }
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           create({
             actions: held,
             name: clientName.value,
             scope: covered.value.scope,
             slug,
-          }),
-        SOURCE,
-        (issued) => {
-          setOpen(false);
-          onIssued(issued);
+          })
+        ),
+        {
+          onSaved: (issued) => {
+            setOpen(false);
+            onIssued(issued);
+          },
         }
       )
     );
@@ -114,28 +114,19 @@ export function SchoolClientCreateDialog({
 
   return (
     <ResponsiveDialog
-      description={t("client-add-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            aria-busy={isPending || undefined}
-            disabled={Option.isNone(clientName)}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <Spinner icon={Add01Icon} isLoading={isPending} />
-            {t("client-create")}
-          </Button>
-        </>
+      action={
+        <Button
+          aria-busy={isPending || undefined}
+          disabled={Option.isNone(clientName)}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <Spinner icon={Add01Icon} isLoading={isPending} />
+          {t("client-create")}
+        </Button>
       }
+      description={t("client-add-description")}
       open={open}
       setOpen={setOpen}
       title={t("client-add")}
@@ -151,9 +142,9 @@ export function SchoolClientCreateDialog({
           />
         </Field>
         <SelectField
-          choice="scope"
           items={scopeItems}
           label={t("client-scope")}
+          menu={common("menu-scope")}
           onChoose={setScope}
           value={scope}
         />
@@ -222,7 +213,6 @@ export function SchoolClientEditDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const update = useMutation(integrations.clients.update).withOptimisticUpdate(
     updateClientChange
@@ -244,40 +234,31 @@ export function SchoolClientEditDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           update({
             actions: held,
             clientId: client.id,
             name: clientName.value,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("client-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(clientName)}
-            onClick={save}
-            type="button"
-          >
-            {t("save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(clientName)}
+          onClick={save}
+          type="button"
+        >
+          {t("save")}
+        </Button>
       }
+      description={t("client-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("client-edit")}

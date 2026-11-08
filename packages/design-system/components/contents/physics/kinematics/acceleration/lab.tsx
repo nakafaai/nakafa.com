@@ -13,8 +13,8 @@ import {
   formatTrimmedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,

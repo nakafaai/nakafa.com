@@ -11,23 +11,22 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { startTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant } from "@/components/tenant/context";
 import {
   archiveUnitChange,
   unarchiveUnitChange,
 } from "@/components/tenant/settings/mutation";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Unit } from "@/components/tenant/settings/state";
 import { UnitEditDialog } from "@/components/tenant/settings/units/edit";
-
-const SOURCE = "components/tenant/settings/units/menu";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The row menu of one school of the organisation: Edit and Archive for an active school, and Restore for an archived
@@ -50,7 +49,7 @@ export function UnitMenu({ unit }: { unit: Unit }) {
   const archiveUnit = () => {
     dialogs.close();
     startTransition(() =>
-      saveSchool(() => archive({ slug, unitId: unit.id }), SOURCE)
+      runSchoolWrite(schoolCall(() => archive({ slug, unitId: unit.id })))
     );
   };
 
@@ -59,27 +58,31 @@ export function UnitMenu({ unit }: { unit: Unit }) {
       <RowItems>
         {isArchived ? (
           <DropdownMenuItem
+            icon={ArchiveRestoreIcon}
             onClick={() =>
               startTransition(() =>
-                saveSchool(() => restore({ slug, unitId: unit.id }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => restore({ slug, unitId: unit.id }))
+                )
               )
             }
           >
-            <HugeIcons icon={ArchiveRestoreIcon} />
             {t("unit-restore")}
           </DropdownMenuItem>
         ) : (
           <>
-            <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-              <HugeIcons icon={PencilEdit02Icon} />
+            <DropdownMenuItem
+              icon={PencilEdit02Icon}
+              onClick={() => dialogs.show("edit")}
+            >
               {common("edit")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              icon={Archive02Icon}
               onClick={() => dialogs.show("archive")}
               variant="destructive"
             >
-              <HugeIcons icon={Archive02Icon} />
               {t("unit-archive")}
             </DropdownMenuItem>
           </>
@@ -94,22 +97,19 @@ export function UnitMenu({ unit }: { unit: Unit }) {
         />
       ) : null}
       <ResponsiveDialog
-        description={t("unit-archive-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button onClick={archiveUnit} type="button" variant="destructive">
-              {t("unit-archive-confirm")}
-            </Button>
-          </>
+        action={
+          <Button onClick={archiveUnit} type="button" variant="destructive">
+            {t("unit-archive-confirm")}
+          </Button>
         }
+        description={t("unit-archive-description")}
         open={dialogs.isOpen("archive")}
         setOpen={dialogs.setOpen}
         title={t("unit-archive-title")}
       >
-        <ConfirmSubject icon={SchoolIcon} name={unit.name} />
+        <ResponsiveDialogSubject icon={SchoolIcon}>
+          {unit.name}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </>
   );

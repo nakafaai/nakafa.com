@@ -1,17 +1,14 @@
 import { Clock01Icon } from "@hugeicons/core-free-icons";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
 
 /**
  * How long a room runs, as the dialogs that schedule and move a room ask for it: the lengths it offers in minutes, each
@@ -29,6 +26,7 @@ export function RoomLengthField({
   minutes: number;
   onChange: (minutes: number) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Exams");
   const items = Arr.map(lengths, (length) => ({
     label: t("length-minutes", { count: length }),
@@ -54,16 +52,12 @@ export function RoomLengthField({
         <SelectTrigger className="w-full" id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="length" />
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons icon={Clock01Icon} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-length")}>
+          {Arr.map(items, (item) => (
+            <SelectItem icon={Clock01Icon} key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>

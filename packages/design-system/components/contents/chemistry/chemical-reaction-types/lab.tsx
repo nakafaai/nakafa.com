@@ -12,11 +12,11 @@ import {
   isChemicalReactionTypeId,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import { ChemicalReactionTypesScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,

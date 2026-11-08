@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
+import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
   formatRoundedMeterMath,
@@ -19,9 +19,9 @@ import {
   type StoppingDistanceState,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,

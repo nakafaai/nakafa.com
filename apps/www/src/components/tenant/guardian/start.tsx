@@ -20,9 +20,7 @@ import {
   type PersonId,
   SchoolStudentPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/start";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that links a guardian to a student: the student, the guardian's name, and the
@@ -37,7 +35,6 @@ export function GuardianLinkStartDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const start = useMutation(guardians.links.start).withOptimisticUpdate(
@@ -65,19 +62,21 @@ export function GuardianLinkStartDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           start({
             email: address.value,
             guardianName: guardianName.value,
             slug,
             studentId,
-          }),
-        SOURCE,
-        () => {
-          setStudentId(undefined);
-          setName("");
-          setEmail("");
+          })
+        ),
+        {
+          onSaved: () => {
+            setStudentId(undefined);
+            setName("");
+            setEmail("");
+          },
         }
       )
     );
@@ -85,27 +84,18 @@ export function GuardianLinkStartDialog({
 
   return (
     <ResponsiveDialog
-      description={t("link-add-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!ready || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={Link01Icon} />
-            {t("link-add")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={!ready || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={Link01Icon} />
+          {t("link-add")}
+        </Button>
       }
+      description={t("link-add-description")}
       open={open}
       setOpen={setOpen}
       title={t("link-add")}

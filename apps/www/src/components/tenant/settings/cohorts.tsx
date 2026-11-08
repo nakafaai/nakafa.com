@@ -11,11 +11,12 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -29,7 +30,6 @@ import {
 import { CohortLevelContext } from "@/components/tenant/settings/cohort/level";
 import { SchoolCohortTable } from "@/components/tenant/settings/cohort/table";
 import { createCohortChange } from "@/components/tenant/settings/groups";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { Period } from "@/components/tenant/settings/state";
 import {
@@ -37,9 +37,8 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
-
-const SOURCE = "components/tenant/settings/cohorts";
 
 /** The unit whose cohorts the tab shows, the school's units, and the choice of another one. */
 const CohortsUnitContext = createContext<{
@@ -193,9 +192,9 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   if (QueryResult.isFailure(active)) {
     return (
       <SettingsTablePage actions={<CohortsActions slug={slug} />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           description={t("cohorts-unavailable-description")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohorts-unavailable")}
         />
       </SettingsTablePage>
@@ -211,8 +210,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   if (periodId === null) {
     return (
       <SettingsTablePage actions={<CohortsActions slug={slug} />}>
-        <TableEmpty
-          act="pointing"
+        <EmptyState
           action={
             <Link
               className={buttonVariants({ variant: "outline" })}
@@ -223,6 +221,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
             </Link>
           }
           description={t("cohorts-no-period")}
+          scene={<EmptyNina act="pointing" />}
           title={t("cohorts-no-period-title")}
         />
       </SettingsTablePage>
@@ -254,7 +253,6 @@ function SchoolCohortAdd({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const create = useMutation(tenancy.cohorts.create).withOptimisticUpdate(
     createCohortChange
@@ -279,18 +277,20 @@ function SchoolCohortAdd({
     }
     setIsOpen(false);
     startSaving(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           create({
             grade: grade.value,
             name: next,
             periodId,
             slug,
-          }),
-        SOURCE,
-        () => {
-          setName("");
-          setGradeValue(null);
+          })
+        ),
+        {
+          onSaved: () => {
+            setName("");
+            setGradeValue(null);
+          },
         }
       )
     );
@@ -303,27 +303,18 @@ function SchoolCohortAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
+        action={
+          <Button
+            disabled={periodId === null || !isComplete || isPending}
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
+            {t("cohort-create")}
+          </Button>
+        }
         description={
           hasNoPeriod ? t("cohort-add-no-period") : t("cohort-add-footer")
-        }
-        footer={
-          <>
-            <Button
-              onClick={() => setIsOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={periodId === null || !isComplete || isPending}
-              inert={isPending}
-              onClick={submit}
-              type="button"
-            >
-              {t("cohort-create")}
-            </Button>
-          </>
         }
         open={isOpen}
         setOpen={setIsOpen}

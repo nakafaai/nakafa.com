@@ -6,7 +6,7 @@ import {
   testProgramClass,
   testProgramRoot,
   testProgramSubject,
-} from "@/test/content-program";
+} from "@/test/published/program";
 
 describe("curriculum route SEO context", () => {
   it("keeps root curriculum metadata scoped to the program title", () => {

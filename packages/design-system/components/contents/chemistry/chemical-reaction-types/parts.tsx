@@ -5,7 +5,7 @@ import {
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
   ChemistryParticleLabel,
   getChemistryParticleLabelPosition,
-} from "@repo/design-system/components/contents/chemistry/particle-label";
+} from "@repo/design-system/components/contents/chemistry/label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import {

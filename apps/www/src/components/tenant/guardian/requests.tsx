@@ -18,13 +18,14 @@ import {
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { RequestKind } from "@repo/backend/confect/guardians/request";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -39,11 +40,8 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/guardian/requests";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The longest request, which the server also holds a parent to. */
 const REQUEST_LIMIT = 500;
@@ -87,24 +85,17 @@ function useKindOptions() {
 /** The menu of one request's row: its whole note, which the table cuts to one line. */
 function RequestMenu({ request }: { request: ParentRequest }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => setOpen(true)}>
-          <HugeIcons icon={ViewIcon} />
+        <DropdownMenuItem icon={ViewIcon} onClick={() => setOpen(true)}>
           {t("request-read")}
         </DropdownMenuItem>
       </RowItems>
       <ResponsiveDialog
         description={t(`request-state-${request.state}`)}
-        footer={
-          <Button onClick={() => setOpen(false)} type="button">
-            {common("close")}
-          </Button>
-        }
         open={open}
         setOpen={setOpen}
         title={t(`request-kind-${request.kind}`)}
@@ -216,34 +207,26 @@ function AskDialog({
         {t("request-ask")}
       </Button>
       <ResponsiveDialog
-        description={t("request-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={isSaving || text.trim() === ""}
-              onClick={() =>
-                startSaving(async () => {
-                  await saveSchool(
-                    () => ask({ kind, linkId, slug, text: text.trim() }),
-                    SOURCE
-                  );
-                  setText("");
-                  setOpen(false);
-                })
-              }
-              type="button"
-            >
-              {t("request-send")}
-            </Button>
-          </>
+        action={
+          <Button
+            disabled={isSaving || text.trim() === ""}
+            onClick={() =>
+              startSaving(async () => {
+                await runSchoolWrite(
+                  schoolCall(() =>
+                    ask({ kind, linkId, slug, text: text.trim() })
+                  )
+                );
+                setText("");
+                setOpen(false);
+              })
+            }
+            type="button"
+          >
+            {t("request-send")}
+          </Button>
         }
+        description={t("request-description")}
         open={open}
         setOpen={setOpen}
         title={t("request-ask")}
@@ -259,17 +242,16 @@ function AskDialog({
             <SelectTrigger aria-label={t("request-kind")} className="w-full">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="kind" />
-
-                {Arr.map(items, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={Message01Icon} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-kind")}>
+              {Arr.map(items, (item) => (
+                <SelectItem
+                  icon={Message01Icon}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Textarea
@@ -286,7 +268,10 @@ function AskDialog({
   );
 }
 
-/** The waiting requests. An answer takes one off the list at once, and a refused one brings it back. */
+/**
+ * The waiting requests, a table that fills the guardians' card in its Requests view. An answer takes one off the list at
+ * once, and a refused one brings it back.
+ */
 export function WaitingRequests({
   requests,
 }: {
@@ -306,15 +291,15 @@ export function WaitingRequests({
   function decide(request: WaitingRequest, decision: "approved" | "declined") {
     startSaving(async () => {
       setAnswered(request.id);
-      await saveSchool(
-        () =>
+      await runSchoolWrite(
+        schoolCall(() =>
           answer({
             decision,
             linkId: request.linkId,
             requestId: request.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       );
     });
   }
@@ -324,63 +309,57 @@ export function WaitingRequests({
     (request) => !Arr.contains(answered, request.id)
   );
 
-  // A school with no waiting request sees its links alone, with no empty table above them.
-  if (Arr.isReadonlyArrayEmpty(unanswered)) {
-    return null;
-  }
-
   return (
     <TableFiltersProvider>
-      <TableFrame>
-        <DataTable
-          columns={[
-            waitingColumns.text((request) => request.student, {
-              cell: (info) => <span dir="auto">{info.getValue()}</span>,
-              header: t("request-student"),
-              id: "student",
-            }),
-            waitingColumns.values((request) => request.kind, {
-              cell: (info) => t(`request-kind-${info.getValue()}`),
-              header: t("request-kind"),
-              id: "kind",
-              options: kindOptions,
-            }),
-            waitingColumns.text((request) => request.text, {
-              cell: (info) => (
-                <span
-                  className="block max-w-xs truncate"
-                  dir="auto"
-                  title={info.getValue()}
-                >
-                  {info.getValue()}
-                </span>
-              ),
-              header: t("request-text"),
-              id: "text",
-            }),
-            waitingColumns.menu((info) => (
-              <RowItems>
-                <DropdownMenuItem
-                  onClick={() => decide(info.row.original, "approved")}
-                >
-                  <HugeIcons icon={CheckmarkCircle02Icon} />
-                  {t("request-approve")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => decide(info.row.original, "declined")}
-                  variant="destructive"
-                >
-                  <HugeIcons icon={CancelCircleIcon} />
-                  {t("request-decline")}
-                </DropdownMenuItem>
-              </RowItems>
-            )),
-          ]}
-          data={unanswered}
-          plain
-          rowId={(request) => request.id}
-        />
-      </TableFrame>
+      <DataTable
+        columns={[
+          waitingColumns.text((request) => request.student, {
+            cell: (info) => <span dir="auto">{info.getValue()}</span>,
+            header: t("request-student"),
+            id: "student",
+          }),
+          waitingColumns.values((request) => request.kind, {
+            cell: (info) => t(`request-kind-${info.getValue()}`),
+            header: t("request-kind"),
+            id: "kind",
+            options: kindOptions,
+          }),
+          waitingColumns.text((request) => request.text, {
+            cell: (info) => (
+              <span
+                className="block max-w-xs truncate"
+                dir="auto"
+                title={info.getValue()}
+              >
+                {info.getValue()}
+              </span>
+            ),
+            header: t("request-text"),
+            id: "text",
+          }),
+          waitingColumns.menu((info) => (
+            <RowItems>
+              <DropdownMenuItem
+                icon={CheckmarkCircle02Icon}
+                onClick={() => decide(info.row.original, "approved")}
+              >
+                {t("request-approve")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                icon={CancelCircleIcon}
+                onClick={() => decide(info.row.original, "declined")}
+                variant="destructive"
+              >
+                {t("request-decline")}
+              </DropdownMenuItem>
+            </RowItems>
+          )),
+        ]}
+        data={unanswered}
+        plain
+        rowId={(request) => request.id}
+      />
     </TableFiltersProvider>
   );
 }

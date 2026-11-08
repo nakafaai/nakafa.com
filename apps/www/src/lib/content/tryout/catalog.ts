@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import "@tanstack/react-start/server-only";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Effect } from "effect";
-import { queryContentStore } from "@/lib/content/store/query";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 type TryoutExamPageArgs = Ref.Args<typeof tryouts.queries.catalog.getExamPage>;
 type TryoutSectionPageArgs = Ref.Args<
@@ -17,7 +17,11 @@ type TryoutSectionPageArgs = Ref.Args<
 export const readPublishedTryoutExamPage = Effect.fn(
   "www.tryouts.readExamPage"
 )(function* (args: TryoutExamPageArgs) {
-  return yield* queryContentStore(tryouts.queries.catalog.getExamPage, args);
+  return yield* querySnapshotContentStore(
+    "assessment",
+    tryouts.queries.catalog.getExamPage,
+    args
+  );
 });
 
 /**
@@ -28,5 +32,9 @@ export const readPublishedTryoutExamPage = Effect.fn(
 export const readPublishedTryoutSectionPage = Effect.fn(
   "www.tryouts.readSectionPage"
 )(function* (args: TryoutSectionPageArgs) {
-  return yield* queryContentStore(tryouts.queries.catalog.getSectionPage, args);
+  return yield* querySnapshotContentStore(
+    "assessment",
+    tryouts.queries.catalog.getSectionPage,
+    args
+  );
 });

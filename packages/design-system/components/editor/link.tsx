@@ -1,5 +1,4 @@
 import { Link01Icon } from "@hugeicons/core-free-icons";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -8,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { TextSelection } from "@tiptap/pm/state";
 import { useCurrentEditor } from "@tiptap/react";
 import { String as Str } from "effect";
 import { useState } from "react";
@@ -25,7 +25,8 @@ const linkAddress = (typed: string) =>
 /**
  * The control that turns the selected words into a link. It opens a small
  * field for the address: Enter keeps it, and an empty address removes the
- * link. An address with no scheme links to its https address. An address the
+ * link. An address with no scheme links to its https address, and the caret goes to
+ * the end of the link, with the focus back in the text. An address the
  * editor's links refuse, such as one that is not https in an exam, keeps the
  * field open with `invalid` under it, so the writer sees why nothing was linked.
  */
@@ -73,34 +74,42 @@ export function RichEditorLink({
       setRefused(true);
       return;
     }
+    // The caret goes to the end of the link, so the next key writes after it and never over it.
     editor
       .chain()
       .focus()
       .extendMarkRange("link")
       .setLink({ href: target })
+      .command(({ tr }) => {
+        tr.setSelection(TextSelection.create(tr.doc, tr.selection.to));
+        return true;
+      })
       .run();
     setOpen(false);
   }
 
   return (
     <Popover onOpenChange={change} open={open}>
-      <ToolHint label={label}>
-        <PopoverTrigger
-          render={
-            <Button
-              aria-label={label}
-              aria-pressed={active}
-              className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            />
-          }
-        >
-          <HugeIcons icon={Link01Icon} />
-        </PopoverTrigger>
-      </ToolHint>
-      <PopoverContent align="start" className="w-72 p-2">
+      <PopoverTrigger
+        render={
+          <Button
+            aria-pressed={active}
+            className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+            size="icon-sm"
+            tooltip={label}
+            type="button"
+            variant="ghost"
+          />
+        }
+      >
+        <HugeIcons icon={Link01Icon} />
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-72 p-2"
+        // The focus goes back to the text, never to the control, so the caret is where the next key lands.
+        finalFocus={() => editor?.view.dom ?? true}
+      >
         {/* The field checks no address itself: the editor decides, and says why it refused. */}
         <form
           className="grid gap-2"

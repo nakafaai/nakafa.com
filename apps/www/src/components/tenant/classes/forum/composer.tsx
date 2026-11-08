@@ -22,7 +22,6 @@ import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { AttachMenu } from "@/components/tenant/classes/forum/attach";
-import { runForumCall } from "@/components/tenant/classes/forum/call";
 import {
   EmojiPopover,
   EmojiTrigger,
@@ -35,13 +34,13 @@ import {
   sendReply,
   viewerFace,
 } from "@/components/tenant/classes/forum/send";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import {
   UploadTray,
   useUploadTray,
 } from "@/components/tenant/classes/forum/tray";
 import { shownFile } from "@/components/tenant/classes/forum/upload";
 import { useViewerQuery } from "@/components/tenant/context";
+import { runSchoolWrite } from "@/components/tenant/write";
 
 /** A message the server refused, kept with its key and all it carries so Try again never posts it twice. */
 const Unsent = Schema.Struct({
@@ -108,7 +107,7 @@ export function ForumComposer() {
     setUnsent(Option.none());
     picker.clear();
     tray.clear();
-    runForumCall(
+    runSchoolWrite(
       discussion === undefined
         ? sendMessage(
             (update, args) => send.withOptimisticUpdate(update)(args),
@@ -139,11 +138,13 @@ export function ForumComposer() {
             },
             shown
           ),
-      () => {
-        setText((current) => (current === "" ? message : current));
-        setUnsent(
-          Option.some({ ...carried, clientKey, mentions, text: message })
-        );
+      {
+        onRefused: () => {
+          setText((current) => (current === "" ? message : current));
+          setUnsent(
+            Option.some({ ...carried, clientKey, mentions, text: message })
+          );
+        },
       }
     );
   };
@@ -158,21 +159,21 @@ export function ForumComposer() {
       attachments: Arr.map(tray.files, shownFile),
       uploads: Arr.getSomes(Arr.map(tray.files, (file) => file.upload)),
     };
-    runForumCall(
+    runSchoolWrite(
       Effect.map(randomUuid, (clientKey) =>
         post(body, clientKey, mentions, carried, null)
       ),
-      () => undefined
+      { onRefused: () => undefined }
     );
   };
 
   /** Sends a poll on its own, as a message of the channel. */
   const sendPoll = (poll: typeof PollDraft.Type) =>
-    runForumCall(
+    runSchoolWrite(
       Effect.map(randomUuid, (clientKey) =>
         post("", clientKey, [], { attachments: [], uploads: [] }, poll)
       ),
-      () => undefined
+      { onRefused: () => undefined }
     );
 
   /** Puts an emoji where the caret stands, and gives the field back its focus. */
@@ -259,31 +260,27 @@ export function ForumComposer() {
         {/* The send button stands at the end of the field's last line, as the field grows. */}
         <InputGroupAddon align="inline-end" className="self-end pb-1.5">
           <EmojiPopover onPick={insertEmoji} side="top">
-            <IconTip label={t("emoji-open")}>
-              <EmojiTrigger
-                render={
-                  <InputGroupButton
-                    aria-label={t("emoji-open")}
-                    className="rounded-full"
-                    size="icon"
-                    variant="ghost"
-                  />
-                }
-              />
-            </IconTip>
+            <EmojiTrigger
+              render={
+                <InputGroupButton
+                  className="rounded-full"
+                  size="icon"
+                  tooltip={t("emoji-open")}
+                  variant="ghost"
+                />
+              }
+            />
           </EmojiPopover>
-          <IconTip label={t("send-message")}>
-            <InputGroupButton
-              aria-label={t("send-message")}
-              className="rounded-full"
-              disabled={!ready}
-              size="icon"
-              type="submit"
-              variant="secondary"
-            >
-              <HugeIcons icon={ArrowUp02Icon} />
-            </InputGroupButton>
-          </IconTip>
+          <InputGroupButton
+            className="rounded-full"
+            disabled={!ready}
+            size="icon"
+            tooltip={t("send-message")}
+            type="submit"
+            variant="secondary"
+          >
+            <HugeIcons icon={ArrowUp02Icon} />
+          </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
       {picker.popup}

@@ -5,19 +5,19 @@ import { VaultError } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
 /** The component could not list or read the messages. The rows of a read never reach the caller. */
-export class SealedReadError extends Schema.TaggedError<SealedReadError>()(
-  "SealedReadError",
-  {}
-) {}
+export class SealedReadError extends Schema.TaggedError<
+  SealedReadError,
+  { readonly brand: unique symbol }
+>()("SealedReadError", {}) {}
 
 /**
  * The key ring cannot be read, so no turn can be sealed now. The fault is broad and
  * blames no turn, so the drain stops its run at once (ADR 0024).
  */
-export class SealUnavailable extends Schema.TaggedError<SealUnavailable>()(
-  "SealUnavailable",
-  {}
-) {}
+export class SealUnavailable extends Schema.TaggedError<
+  SealUnavailable,
+  { readonly brand: unique symbol }
+>()("SealUnavailable", {}) {}
 
 /** The message statuses the component's list filters by. */
 const ListedStatus = Schema.Literals(["failed", "pending", "success"]);

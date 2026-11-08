@@ -6,16 +6,16 @@ import { Schema } from "effect";
  * bytes end early or hold a record the format does not define, or it draws a template, character
  * or mark that this reader cannot write as LaTeX without changing the mathematics.
  */
-export class MathTypeUnread extends Schema.TaggedError<MathTypeUnread>()(
-  "MathTypeUnread",
-  {
-    reason: Schema.Literals([
-      "unloaded",
-      "ole",
-      "version",
-      "truncated",
-      "record",
-      "unsupported",
-    ]),
-  }
-) {}
+export class MathTypeUnread extends Schema.TaggedError<
+  MathTypeUnread,
+  { readonly brand: unique symbol }
+>()("MathTypeUnread", {
+  reason: Schema.Literals([
+    "unloaded",
+    "ole",
+    "version",
+    "truncated",
+    "record",
+    "unsupported",
+  ]),
+}) {}

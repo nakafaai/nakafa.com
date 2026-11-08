@@ -10,8 +10,8 @@ import {
   type Result,
   Schema,
 } from "effect";
-import { forumCall } from "@/components/tenant/classes/forum/call";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
+import { schoolCall } from "@/components/tenant/write";
 
 /** The longest edge of a photo a chat keeps: as sharp as WhatsApp's standard photo, a tenth of a phone's bytes. */
 const PHOTO_EDGE = 1600;
@@ -148,13 +148,13 @@ export const uploadAttachment = Effect.fn("classroom.forum.upload")(function* <
   const { putFile } = yield* Effect.tryPromise(() => import("@/lib/files/put"));
   const send = (bytes: Blob) =>
     Effect.flatMap(
-      forumCall(() => reserve(bytes)),
+      schoolCall(() => reserve(bytes)),
       (reserved) =>
         putFile(reserved.address, bytes).pipe(Effect.as(reserved.fileId))
     );
   if (!isPhoto(file)) {
     const sent = yield* send(file);
-    const registered = yield* forumCall(() =>
+    const registered = yield* schoolCall(() =>
       register({
         fileId: sent,
         height: null,
@@ -169,7 +169,7 @@ export const uploadAttachment = Effect.fn("classroom.forum.upload")(function* <
     [send(photo.full), send(photo.small)],
     { concurrency: 2 }
   );
-  const registered = yield* forumCall(() =>
+  const registered = yield* schoolCall(() =>
     register({
       fileId: sent,
       height: photo.height,

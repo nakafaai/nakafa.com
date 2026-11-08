@@ -15,10 +15,8 @@ import { useTenant } from "@/components/tenant/context";
 import { changeGrantRoleChange } from "@/components/tenant/settings/edits";
 import { SchoolRoleSelect } from "@/components/tenant/settings/grant";
 import { givenRoles } from "@/components/tenant/settings/grants";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Grant } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/roles/change";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that changes the role of one grant, over the same scope, in one step, so the person
@@ -36,7 +34,6 @@ export function SchoolRoleChangeDialog({
 }) {
   const { role: viewerRole, slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const change = useMutation(access.grants.change).withOptimisticUpdate(
     changeGrantRoleChange
@@ -45,36 +42,26 @@ export function SchoolRoleChangeDialog({
 
   return (
     <ResponsiveDialog
-      description={t("grant-change-description", { name: grant.person.name })}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={role === undefined}
-            onClick={() => {
-              if (role === undefined) {
-                return;
-              }
-              setOpen(false);
-              startTransition(() =>
-                saveSchool(
-                  () => change({ grantId: grant.id, role, slug }),
-                  SOURCE
-                )
-              );
-            }}
-            type="button"
-          >
-            {t("save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={role === undefined}
+          onClick={() => {
+            if (role === undefined) {
+              return;
+            }
+            setOpen(false);
+            startTransition(() =>
+              runSchoolWrite(
+                schoolCall(() => change({ grantId: grant.id, role, slug }))
+              )
+            );
+          }}
+          type="button"
+        >
+          {t("save")}
+        </Button>
       }
+      description={t("grant-change-description", { name: grant.person.name })}
       open={open}
       setOpen={setOpen}
       title={t("grant-change")}

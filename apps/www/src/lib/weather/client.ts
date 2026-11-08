@@ -8,10 +8,10 @@ import {
 } from "@/lib/weather/schema";
 import { requestWeatherJson } from "@/lib/weather/transport";
 
-export class WeatherConfigurationError extends Schema.TaggedError<WeatherConfigurationError>()(
-  "WeatherConfigurationError",
-  { message: Schema.String }
-) {}
+export class WeatherConfigurationError extends Schema.TaggedError<
+  WeatherConfigurationError,
+  { readonly brand: unique symbol }
+>()("WeatherConfigurationError", { message: Schema.String }) {}
 
 const WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5";
 const DEFAULT_CONDITION = "Clear";

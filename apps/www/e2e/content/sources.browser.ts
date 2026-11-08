@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";

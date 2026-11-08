@@ -6,10 +6,10 @@ import "katex/contrib/mhchem";
 import { MATH_ERROR_COLOR } from "@repo/design-system/lib/prose";
 
 /** A formula that KaTeX does not parse, with the reason KaTeX gives. */
-export class FormulaInvalid extends Schema.TaggedError<FormulaInvalid>()(
-  "FormulaInvalid",
-  { reason: Schema.String }
-) {}
+export class FormulaInvalid extends Schema.TaggedError<
+  FormulaInvalid,
+  { readonly brand: unique symbol }
+>()("FormulaInvalid", { reason: Schema.String }) {}
 
 /**
  * The markup of a formula, drawn by KaTeX. A formula that does not parse is drawn as KaTeX's

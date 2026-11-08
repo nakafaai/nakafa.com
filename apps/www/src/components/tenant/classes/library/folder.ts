@@ -13,7 +13,8 @@ import {
   type Result,
   Schema,
 } from "effect";
-import { forumCall } from "@/components/tenant/classes/forum/call";
+import { schoolCall } from "@/components/tenant/write";
+import { changeLoaded } from "@/lib/data/loaded";
 
 /** One folder of a class library, as the library shows it. */
 export type LibraryFolder = Ref.Returns<typeof classroom.folders.list>[number];
@@ -33,15 +34,9 @@ const changeFolders = (
   classId: Id<"classes">,
   change: (folders: readonly LibraryFolder[]) => LibraryFolder[]
 ) => {
-  for (const query of localStore.getAllQueries(list)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      localStore.setQuery(
-        list,
-        query.args,
-        Option.some(change(query.value.value))
-      );
-    }
-  }
+  changeLoaded(localStore, list, (folders, args) =>
+    args.classId === classId ? Option.some(change(folders)) : Option.none()
+  );
 };
 
 /** Shows a folder the teacher adds last among the folders, before the server holds it. */
@@ -183,7 +178,7 @@ export const addLibraryFolder = Effect.fn("classroom.folders.add")(function* <
   const id = yield* Schema.decodeUnknownEffect(Id("classroomFolders"))(
     args.clientKey
   );
-  return yield* forumCall(() =>
+  return yield* schoolCall(() =>
     add(
       addFolderUpdate({
         author,

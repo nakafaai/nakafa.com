@@ -13,7 +13,6 @@ import {
 import records from "@repo/backend/confect/_generated/refs/records";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { useState } from "react";
@@ -29,7 +28,7 @@ import {
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
@@ -38,6 +37,8 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -194,13 +195,7 @@ function CohortReportsBody() {
             <DataTable
               columns={columns}
               data={pagination.results}
-              empty={
-                <TableEmpty
-                  act="reading"
-                  description={t("students-empty-description")}
-                  title={t("students-empty")}
-                />
-              }
+              empty={<ReportStudentsEmpty />}
               rowId={(line) => line.student.id}
               search="student"
             />
@@ -211,6 +206,19 @@ function CohortReportsBody() {
         <ReportLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>
+  );
+}
+
+/** The report cards table with no student yet, under its column heads. */
+function ReportStudentsEmpty() {
+  const t = useTranslations("SchoolReports");
+
+  return (
+    <EmptyState
+      description={t("students-empty-description")}
+      scene={<EmptyNina act="reading" />}
+      title={t("students-empty")}
+    />
   );
 }
 
@@ -232,8 +240,10 @@ function ReportLineMenu({ line }: { line: ReportLine }) {
     <>
       <RowItems>
         {menu.write ? (
-          <DropdownMenuItem onClick={() => setIsWriting(true)}>
-            <HugeIcons icon={PencilEdit02Icon} />
+          <DropdownMenuItem
+            icon={PencilEdit02Icon}
+            onClick={() => setIsWriting(true)}
+          >
             {t("write")}
           </DropdownMenuItem>
         ) : null}
@@ -262,46 +272,53 @@ function ReportStateItems({
   const t = useTranslations("SchoolReports");
   const locale = useLocale();
   const actions = useReportActions();
+  const check = report.hash === null ? null : checkAddress(locale, report.hash);
 
   return (
     <>
       {menu.complete ? (
-        <DropdownMenuItem onClick={() => actions.complete(report.id)}>
-          <HugeIcons icon={SentIcon} />
+        <DropdownMenuItem
+          icon={SentIcon}
+          onClick={() => actions.complete(report.id)}
+        >
           {t("complete")}
         </DropdownMenuItem>
       ) : null}
       {menu.reopen ? (
-        <DropdownMenuItem onClick={() => actions.reopen(report.id)}>
-          <HugeIcons icon={ArrowTurnBackwardIcon} />
+        <DropdownMenuItem
+          icon={ArrowTurnBackwardIcon}
+          onClick={() => actions.reopen(report.id)}
+        >
           {t("reopen")}
         </DropdownMenuItem>
       ) : null}
       {menu.approve ? (
-        <DropdownMenuItem onClick={() => actions.approve(report.id)}>
-          <HugeIcons icon={CheckmarkCircle02Icon} />
+        <DropdownMenuItem
+          icon={CheckmarkCircle02Icon}
+          onClick={() => actions.approve(report.id)}
+        >
           {t("approve")}
         </DropdownMenuItem>
       ) : null}
       {menu.lock ? (
-        <DropdownMenuItem onClick={() => actions.approve(report.id)}>
-          <HugeIcons icon={RefreshIcon} />
+        <DropdownMenuItem
+          icon={RefreshIcon}
+          onClick={() => actions.approve(report.id)}
+        >
           {t("lock-again")}
         </DropdownMenuItem>
       ) : null}
-      {menu.open && report.hash !== null ? (
+      {menu.open && check !== null ? (
         <DropdownMenuItem
-          render={
-            <a
-              href={checkAddress(locale, report.hash)}
-              rel="noopener"
-              target="_blank"
-            >
-              <HugeIcons icon={CheckmarkBadge01Icon} />
-              {t("open-check")}
+          icon={CheckmarkBadge01Icon}
+          render={({ children, ...props }) => (
+            <a {...props} href={check} rel="noopener" target="_blank">
+              {children}
             </a>
-          }
-        />
+          )}
+        >
+          {t("open-check")}
+        </DropdownMenuItem>
       ) : null}
     </>
   );

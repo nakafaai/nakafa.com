@@ -7,11 +7,6 @@ import { Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { DialogRefusal } from "@/components/shared/refusal";
-import {
-  forumCall,
-  runForumCall,
-} from "@/components/tenant/classes/forum/call";
-import { classRefusalCopy } from "@/components/tenant/classes/refusals";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import {
   checkedDraft,
@@ -24,6 +19,7 @@ import {
   editUpdate,
 } from "@/components/tenant/classes/tasks/optimistic";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that edits a task: the same fields as its publish, filled in with the task. Save waits for a change
@@ -32,7 +28,6 @@ import { useClockZone } from "@/components/tenant/settings/time";
  */
 export function EditTaskDialog({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const edit = useMutation(classroom.tasks.edit).withOptimisticUpdate(
     editUpdate
@@ -62,30 +57,27 @@ export function EditTaskDialog({ task }: { task: ClassTask }) {
     }
     setOpen(false);
     setRefusal(null);
-    runForumCall(
-      forumCall(() =>
+    runSchoolWrite(
+      schoolCall(() =>
         edit({ ...checked.value, classId, slug, task: task.slug })
       ),
-      (error) => {
-        setRefusal(classRefusalCopy(error));
-        setOpen(true);
+      {
+        onRefused: (copy) => {
+          setRefusal(copy);
+          setOpen(true);
+        },
       }
     );
   };
 
   return (
     <ResponsiveDialog
-      description={t("task-edit-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={!changed} onClick={save}>
-            {t("task-edit-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!changed} onClick={save}>
+          {t("task-edit-save")}
+        </Button>
       }
+      description={t("task-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("task-edit")}

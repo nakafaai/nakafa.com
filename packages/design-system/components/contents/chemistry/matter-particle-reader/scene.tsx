@@ -1,17 +1,17 @@
 import { Line } from "@react-three/drei";
 import type { ElementName } from "@repo/design-system/components/contents/chemistry/element";
 import {
+  CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
+  ChemistryParticleLabel,
+  getChemistryParticleLabelPosition,
+} from "@repo/design-system/components/contents/chemistry/label";
+import {
   MATTER_PARTICLE_MODELS,
   type MatterParticleAtom,
   type MatterParticleModeId,
   type MatterParticleMolecule,
   type MatterParticleSceneColors,
 } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
-import {
-  CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
-  ChemistryParticleLabel,
-  getChemistryParticleLabelPosition,
-} from "@repo/design-system/components/contents/chemistry/particle-label";
 import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";

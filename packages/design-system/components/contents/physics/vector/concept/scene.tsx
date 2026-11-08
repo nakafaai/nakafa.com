@@ -3,7 +3,7 @@ import type { VectorConceptSceneColors } from "@repo/design-system/components/co
 import type { VectorConceptLabProps } from "@repo/design-system/components/contents/physics/vector/concept/lab";
 import type { VectorConceptState } from "@repo/design-system/components/contents/physics/vector/concept/tension";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
+import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import type { CoordinateTuple as ScenePoint } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";

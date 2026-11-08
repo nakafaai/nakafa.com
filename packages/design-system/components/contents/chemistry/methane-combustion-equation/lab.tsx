@@ -1,13 +1,13 @@
 import { Line } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,

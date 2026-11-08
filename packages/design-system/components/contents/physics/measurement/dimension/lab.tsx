@@ -14,11 +14,11 @@ import {
 } from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import { DimensionScene } from "@repo/design-system/components/contents/physics/measurement/dimension/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,

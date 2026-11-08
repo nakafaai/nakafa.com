@@ -9,7 +9,7 @@ import {
   testArticleDeProjection,
   testArticleIdProjection,
   testArticleProjection,
-} from "@/test/content-article";
+} from "@/test/published/article";
 
 describe("createLocalizedAlternates", () => {
   it("builds canonical, locale, and default alternates", () => {

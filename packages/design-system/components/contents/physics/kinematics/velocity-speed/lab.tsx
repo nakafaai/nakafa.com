@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
+import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
 import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import {
   formatSignedMeterMath,
@@ -17,9 +17,9 @@ import {
   type VelocitySpeedState,
 } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,

@@ -11,16 +11,16 @@ const NavigationReadinessPhaseSchema = Schema.Literals([
 ]);
 
 /** One bounded navigation-readiness phase did not complete. */
-export class NavigationReadinessTimeout extends Schema.TaggedError<NavigationReadinessTimeout>()(
-  "NavigationReadinessTimeout",
-  {
-    errorText: Schema.optional(Schema.String),
-    href: Schema.String,
-    phase: NavigationReadinessPhaseSchema,
-    sourceHref: Schema.String,
-    timeoutMilliseconds: Schema.Finite,
-  }
-) {
+export class NavigationReadinessTimeout extends Schema.TaggedError<
+  NavigationReadinessTimeout,
+  { readonly brand: unique symbol }
+>()("NavigationReadinessTimeout", {
+  errorText: Schema.optional(Schema.String),
+  href: Schema.String,
+  phase: NavigationReadinessPhaseSchema,
+  sourceHref: Schema.String,
+  timeoutMilliseconds: Schema.Finite,
+}) {
   get message() {
     const errorText =
       this.errorText === undefined ? "" : ` errorText=${this.errorText}`;
@@ -29,15 +29,15 @@ export class NavigationReadinessTimeout extends Schema.TaggedError<NavigationRea
 }
 
 /** Playwright could not inspect one browser-owned readiness signal. */
-export class NavigationBrowserReadinessError extends Schema.TaggedError<NavigationBrowserReadinessError>()(
-  "NavigationBrowserReadinessError",
-  {
-    errorText: Schema.optional(Schema.String),
-    href: Schema.String,
-    phase: NavigationReadinessPhaseSchema,
-    sourceHref: Schema.String,
-  }
-) {
+export class NavigationBrowserReadinessError extends Schema.TaggedError<
+  NavigationBrowserReadinessError,
+  { readonly brand: unique symbol }
+>()("NavigationBrowserReadinessError", {
+  errorText: Schema.optional(Schema.String),
+  href: Schema.String,
+  phase: NavigationReadinessPhaseSchema,
+  sourceHref: Schema.String,
+}) {
   get message() {
     const errorText =
       this.errorText === undefined ? "" : ` errorText=${this.errorText}`;
@@ -46,14 +46,14 @@ export class NavigationBrowserReadinessError extends Schema.TaggedError<Navigati
 }
 
 /** A source document request did not succeed. */
-export class NavigationRequestError extends Schema.TaggedError<NavigationRequestError>()(
-  "NavigationRequestError",
-  {
-    href: Schema.String,
-    ...requestFailureFields,
-    sourceHref: Schema.String,
-  }
-) {
+export class NavigationRequestError extends Schema.TaggedError<
+  NavigationRequestError,
+  { readonly brand: unique symbol }
+>()("NavigationRequestError", {
+  href: Schema.String,
+  ...requestFailureFields,
+  sourceHref: Schema.String,
+}) {
   get message() {
     return `Navigation request failed: sourceHref=${this.sourceHref} href=${this.href} ${formatRequestFailure(this)}`;
   }

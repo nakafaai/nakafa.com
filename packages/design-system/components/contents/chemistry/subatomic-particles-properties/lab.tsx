@@ -12,11 +12,11 @@ import {
   SubatomicParticlePropertiesScene,
   SubatomicParticlePropertiesSceneProvider,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,

@@ -7,7 +7,7 @@ import {
   TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { TaskText } from "@repo/backend/confect/classroom/tasks/task";
+import { TaskText } from "@repo/backend/confect/classroom/tasks/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -43,11 +43,6 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
@@ -60,6 +55,7 @@ import { TaskStanding } from "@/components/tenant/classes/tasks/standing";
 import { TaskWorkTable } from "@/components/tenant/classes/tasks/work";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
 
 /** The task the pane shows, which every part of the pane reads. */
@@ -287,9 +283,9 @@ function HandIn() {
     if (!ready) {
       return;
     }
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(Clock.currentTimeMillis, (at) =>
-        forumCall(() =>
+        schoolCall(() =>
           submit.withOptimisticUpdate(submitUpdate(at))({
             classId,
             slug,
@@ -297,8 +293,7 @@ function HandIn() {
             text: body,
           })
         )
-      ),
-      toastForumFailure
+      )
     );
   };
 

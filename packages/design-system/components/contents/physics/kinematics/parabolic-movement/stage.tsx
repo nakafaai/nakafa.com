@@ -1,6 +1,6 @@
 import { PARABOLIC_SCENE } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Suspense } from "react";
 

@@ -1,16 +1,10 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
 import { useTranslations } from "use-intl";
 import { useChatRetry } from "@/components/ai/chat/recovery";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 
 /**
  * The card a chat shows in place of its content when it cannot be read. A
@@ -24,32 +18,26 @@ export function ChatFailure({ kind }: { kind: "access" | "retry" }) {
 
   if (kind === "access") {
     return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyNina act="guarding" />
-          <EmptyTitle>{t("private-chat-error")}</EmptyTitle>
-          <EmptyDescription>{t("chat-unavailable")}</EmptyDescription>
-        </EmptyHeader>
-        <Unauthenticated>
-          <EmptyContent>
+      <EmptyState
+        action={
+          <Unauthenticated>
             <AuthGoogle />
-          </EmptyContent>
-        </Unauthenticated>
-      </Empty>
+          </Unauthenticated>
+        }
+        description={t("chat-unavailable")}
+        scene={<EmptyNina act="guarding" />}
+        title={t("private-chat-error")}
+      />
     );
   }
 
   return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyNina act="typing" />
-        <EmptyTitle>{t("chat-failed")}</EmptyTitle>
-        <EmptyDescription>{t("chat-failed-description")}</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <ChatRetryButton />
-      </EmptyContent>
-    </Empty>
+    <EmptyState
+      action={<ChatRetryButton />}
+      description={t("chat-failed-description")}
+      scene={<EmptyNina act="typing" />}
+      title={t("chat-failed")}
+    />
   );
 }
 

@@ -4,7 +4,6 @@ import { NoteEditIcon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, Option } from "effect";
@@ -21,9 +20,7 @@ import { createStore, type StoreApi, useStore } from "zustand";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { InsightStudent } from "@/components/tenant/insight/rows";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/insight/narrative";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The longest narrative, which the server also holds a teacher to. */
 const NARRATIVE_LIMIT = 4000;
@@ -106,8 +103,7 @@ export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
 
   return (
     <RowItems>
-      <DropdownMenuItem onClick={() => choose(id)}>
-        <HugeIcons icon={NoteEditIcon} />
+      <DropdownMenuItem icon={NoteEditIcon} onClick={() => choose(id)}>
         {t("narrative-open")}
       </DropdownMenuItem>
     </RowItems>
@@ -120,7 +116,6 @@ export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
  */
 function StudentNarrative({ student }: { student: InsightStudent }) {
   const t = useTranslations("SchoolInsight");
-  const common = useTranslations("Common");
   const classId = useNarrativeClass();
   const { slug } = useTenant();
   const viewer = useViewerQuery();
@@ -142,19 +137,15 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
 
   return (
     <ResponsiveDialog
-      description={t("narrative-description")}
-      footer={
+      action={
         <>
-          <Button onClick={close} type="button" variant="outline">
-            {common("cancel")}
-          </Button>
           {ninaOn ? (
             <Button
               disabled={asked && draft === null}
               onClick={() =>
                 startSaving(async () => {
                   setAsked(true);
-                  await saveSchool(() => ask(names), SOURCE);
+                  await runSchoolWrite(schoolCall(() => ask(names)));
                 })
               }
               type="button"
@@ -168,9 +159,8 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
               disabled={isSaving}
               onClick={() =>
                 startSaving(() =>
-                  saveSchool(
-                    () => (shared ? withdraw(names) : share(names)),
-                    SOURCE
+                  runSchoolWrite(
+                    schoolCall(() => (shared ? withdraw(names) : share(names)))
                   )
                 )
               }
@@ -184,7 +174,9 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
             disabled={isSaving || text.trim() === ""}
             onClick={() =>
               startSaving(() =>
-                saveSchool(() => write({ ...names, text: text.trim() }), SOURCE)
+                runSchoolWrite(
+                  schoolCall(() => write({ ...names, text: text.trim() }))
+                )
               )
             }
             type="button"
@@ -193,6 +185,7 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
           </Button>
         </>
       }
+      description={t("narrative-description")}
       open={open}
       setOpen={close}
       title={t("narrative-title", { student: student.name })}

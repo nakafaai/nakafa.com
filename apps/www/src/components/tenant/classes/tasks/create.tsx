@@ -12,14 +12,11 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -30,11 +27,6 @@ import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DialogRefusal } from "@/components/shared/refusal";
-import {
-  forumCall,
-  runForumCall,
-} from "@/components/tenant/classes/forum/call";
-import { classRefusalCopy } from "@/components/tenant/classes/refusals";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import {
   checkedDraft,
@@ -47,6 +39,7 @@ import {
 } from "@/components/tenant/classes/tasks/questions";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { useClockZone } from "@/components/tenant/settings/time";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How many of the school's exams the picker offers. */
 const EXAM_PAGE_SIZE = 50;
@@ -60,7 +53,6 @@ const EXAM_PAGE_SIZE = 50;
  */
 export function NewTask() {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const publish = useMutation(classroom.tasks.publish);
   const [open, setOpen] = useState(false);
@@ -75,9 +67,9 @@ export function NewTask() {
     }
     setOpen(false);
     setRefusal(null);
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
-        forumCall(() =>
+        schoolCall(() =>
           publish({
             ...checked.value,
             classId,
@@ -94,9 +86,11 @@ export function NewTask() {
           })
         )
       ),
-      (error) => {
-        setRefusal(classRefusalCopy(error));
-        setOpen(true);
+      {
+        onRefused: (copy) => {
+          setRefusal(copy);
+          setOpen(true);
+        },
       }
     );
   };
@@ -105,17 +99,12 @@ export function NewTask() {
     <>
       <SchoolHeaderAdd label={t("task-new")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
-        description={t("task-new-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={Option.isNone(checked)} onClick={submit}>
-              {t("task-publish")}
-            </Button>
-          </>
+        action={
+          <Button disabled={Option.isNone(checked)} onClick={submit}>
+            {t("task-publish")}
+          </Button>
         }
+        description={t("task-new-description")}
         open={open}
         setOpen={setOpen}
         title={t("task-new")}
@@ -139,6 +128,7 @@ function TaskExamField({
   exam: string;
   onExam: (exam: string) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Classroom");
   const { slug } = useClassScope();
   const id = useId();
@@ -173,21 +163,16 @@ function TaskExamField({
         <SelectTrigger className="w-full" id={`${id}-exam`}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>{t("select-questions")}</SelectLabel>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons
-                  aria-hidden="true"
-                  icon={
-                    item.value === WRITTEN ? PencilEdit02Icon : TaskEdit01Icon
-                  }
-                />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-question")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={item.value === WRITTEN ? PencilEdit02Icon : TaskEdit01Icon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <FieldDescription>{t("task-exam-description")}</FieldDescription>
