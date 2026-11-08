@@ -4,8 +4,9 @@ import { useTranslations } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { QuranSurahName } from "@/components/shared/quran/name";
 import { QuranSurahRow } from "@/components/shared/quran/surah";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { useTableFilters } from "@/components/shared/table/toolbar";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { type QuranIndexSurah, searchSurahs } from "@/lib/content/quran/search";
 import { quranSurahTarget } from "@/lib/routing/target";
 
@@ -25,9 +26,9 @@ export function QuranSurahCatalog({
 
   if (Arr.isReadonlyArrayEmpty(kept)) {
     return (
-      <TableEmpty
-        act="searching"
+      <EmptyState
         description={t("search-surah-none-description")}
+        scene={<EmptyNina act="searching" />}
         title={t("search-surah-none")}
       />
     );
