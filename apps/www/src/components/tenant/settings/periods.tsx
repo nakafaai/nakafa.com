@@ -37,7 +37,6 @@ import {
   SchoolPeriodMenu,
   SchoolPeriodRestore,
 } from "@/components/tenant/settings/period";
-import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
 import { createPeriodChange } from "@/components/tenant/settings/terms";
@@ -46,6 +45,7 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The look of each period status, in its table cell and in its column's filter: a planned calendar, a
@@ -56,8 +56,6 @@ const PERIOD_STATUS_LOOKS = {
   archived: { icon: Archive02Icon, tone: "neutral" },
   planned: { icon: Calendar03Icon, tone: "info" },
 } as const satisfies Record<typeof PeriodStatus.Type, StatusLook>;
-
-const SOURCE = "components/tenant/settings/periods";
 
 /** How many periods one page of the list loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -268,10 +266,9 @@ function SchoolPeriodAdd({ unitId }: { unitId: UnitId }) {
         key={round}
         onSave={(fields) =>
           startTransition(() =>
-            saveSchool(
-              () => create({ ...fields, slug, unitId }),
-              SOURCE,
-              () => setRound((count) => count + 1)
+            runSchoolWrite(
+              schoolCall(() => create({ ...fields, slug, unitId })),
+              { onSaved: () => setRound((count) => count + 1) }
             )
           )
         }

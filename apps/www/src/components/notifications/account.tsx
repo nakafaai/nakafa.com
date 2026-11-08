@@ -7,9 +7,7 @@ import {
   PreferenceTable,
 } from "@/components/notifications/settings";
 import { LoadFailure } from "@/components/state/failure";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/notifications/account";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The Nakafa inbox's preferences: the notices the account holds itself, with a switch for each channel. */
 export function AccountPreferences() {
@@ -36,7 +34,7 @@ function AccountChoices() {
       value={
         isRead
           ? (channel, kind, on) =>
-              saveSchool(() => set({ channel, kind, on }), SOURCE)
+              runSchoolWrite(schoolCall(() => set({ channel, kind, on })))
           : null
       }
     >

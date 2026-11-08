@@ -3,6 +3,7 @@ import { Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -53,8 +54,8 @@ test("a lesson loads its next lesson for a reader who saves data only when they 
           .last();
         yield* Effect.promise(() => waitUntilTakenOver(next));
         yield* Effect.promise(() => next.scrollIntoViewIfNeeded());
-        // A page drawn and scrolled to its end still asks for nothing more.
-        yield* Effect.promise(() => page.waitForTimeout(2000));
+        // A page drawn and scrolled to its end still asks for nothing more once it has gone quiet.
+        yield* Effect.promise(() => waitForQuiet(page));
         yield* Effect.sync(() =>
           expect(MutableList.toArray(answers)).toEqual([])
         );
