@@ -20,7 +20,7 @@ export function TryoutResponseLabel({
   readonly correctness?: boolean | undefined;
   readonly document: Pick<AssessmentDocument, "content">;
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Player");
 
   return (
     <>
@@ -30,7 +30,7 @@ export function TryoutResponseLabel({
       <span className="sr-only">{spokenText(documentMarkdown(document))}</span>
       {correctness === undefined ? null : (
         <span className="sr-only">
-          {t(correctness ? "correct" : "incorrect")}
+          {correctness ? t("correct") : t("incorrect")}
         </span>
       )}
     </>
