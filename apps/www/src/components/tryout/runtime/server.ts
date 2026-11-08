@@ -6,7 +6,7 @@ import {
   HttpClient,
   HttpClientRequest,
 } from "effect/http";
-import { serverClockOffset } from "@/components/exams/sitting/clock";
+import { serverClockOffset } from "@/components/player/clock";
 
 /** A file the edge answers itself, so the read costs no Worker and the Date header is the edge's clock. */
 const CLOCK_PATH = "/robots.txt";

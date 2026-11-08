@@ -1,5 +1,9 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
+import {
+  Building03Icon,
+  SchoolIcon,
+  UserMultiple02Icon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   questionGap,
@@ -29,6 +33,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -46,7 +51,9 @@ import {
 } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
+import { RoomLengthField } from "@/components/tenant/exams/length";
 import { useExam } from "@/components/tenant/exams/provider";
 import { SITTING_LENGTHS, sittingTimes } from "@/components/tenant/exams/time";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
@@ -129,10 +136,6 @@ export function ScheduleSitting({
   const unitItems = Arr.map(units, (unit) => ({
     label: unit.name,
     value: unit.id,
-  }));
-  const lengthItems = Arr.map(SITTING_LENGTHS, (length) => ({
-    label: t("length-minutes", { count: length }),
-    value: `${length}`,
   }));
   const choice = Option.orElse(
     Arr.findFirst(units, (unit) => unit.id === picked),
@@ -291,11 +294,16 @@ export function ScheduleSitting({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(unitItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="unit" />
+
+                {Arr.map(unitItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={SchoolIcon} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>
@@ -311,18 +319,22 @@ export function ScheduleSitting({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(audienceItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  <HugeIcons
-                    icon={
-                      item.value === UNIT_AUDIENCE
-                        ? Building03Icon
-                        : UserMultiple02Icon
-                    }
-                  />
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="audience" />
+
+                {Arr.map(audienceItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons
+                      icon={
+                        item.value === UNIT_AUDIENCE
+                          ? Building03Icon
+                          : UserMultiple02Icon
+                      }
+                    />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
           {Arr.isReadonlyArrayNonEmpty(cohorts) ? null : (
@@ -358,33 +370,12 @@ export function ScheduleSitting({
           </FieldDescription>
           <FieldError>{pastStart ? t("schedule-past") : null}</FieldError>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
-          <Select
-            items={lengthItems}
-            onValueChange={(value) => {
-              const next = Arr.findFirst(
-                SITTING_LENGTHS,
-                (length) => `${length}` === value
-              );
-              if (Option.isSome(next)) {
-                setMinutes(next.value);
-              }
-            }}
-            value={`${minutes}`}
-          >
-            <SelectTrigger className="w-full" id={`${id}-length`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(lengthItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <RoomLengthField
+          id={`${id}-length`}
+          lengths={SITTING_LENGTHS}
+          minutes={minutes}
+          onChange={setMinutes}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

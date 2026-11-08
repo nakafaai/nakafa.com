@@ -103,7 +103,7 @@ export function ClassTeachersDialog({
             type="button"
             variant="outline"
           >
-            {common("close")}
+            {common("cancel")}
           </Button>
           <Button
             disabled={personId === undefined || isPending}

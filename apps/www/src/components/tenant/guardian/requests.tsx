@@ -11,6 +11,7 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   Copy01Icon,
+  Message01Icon,
   PencilEdit02Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
@@ -23,6 +24,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -37,6 +39,7 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
@@ -256,11 +259,16 @@ function AskDialog({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(items, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="kind" />
+
+                {Arr.map(items, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={Message01Icon} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
           <Textarea

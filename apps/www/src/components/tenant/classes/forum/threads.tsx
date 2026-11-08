@@ -8,6 +8,7 @@ import {
   ArrowTurnBackwardIcon,
   BubbleChatIcon,
   MoreHorizontalIcon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ThreadRow } from "@repo/backend/confect/classroom/forum/thread";
@@ -18,6 +19,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -44,6 +46,7 @@ import {
   archiveThreadUpdate,
   restoreThreadUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
@@ -173,7 +176,7 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
               discussion.number
             )}
           >
-            <span className="min-w-0 truncate">
+            <span className="min-w-0 wrap-anywhere">
               {t("discussion-label", {
                 number: discussion.number,
                 title: discussion.title,
@@ -184,7 +187,7 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
         </ItemTitle>
         <ItemDescription className="line-clamp-1">
           {discussion.replies === 0
-            ? t("discussion-reply")
+            ? t("thread-empty")
             : t("discussion-replies", { count: discussion.replies })}
         </ItemDescription>
       </ItemContent>
@@ -200,7 +203,7 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
 function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
   const t = useTranslations("Classroom");
   const common = useTranslations("Common");
-  const { classId, slug } = useClassScope();
+  const { classId, classSlug, slug } = useClassScope();
   const archive = useMutation(classroom.forum.threads.archive);
   const restore = useMutation(classroom.forum.threads.restore);
   const args = { classId, number: row.discussion.number, slug };
@@ -208,20 +211,39 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
   return (
     <ItemActions className="relative">
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
+        <IconTip label={common("more-actions")}>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label={common("more-actions")}
+                size="icon"
+                variant="ghost"
+              />
+            }
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+          </DropdownMenuTrigger>
+        </IconTip>
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            <DropdownMenuItem
+              render={
+                <TargetLink
+                  target={schoolClassDiscussionTarget(
+                    slug,
+                    classSlug,
+                    row.discussion.number
+                  )}
+                >
+                  <HugeIcons icon={ViewIcon} />
+                  {common("open")}
+                </TargetLink>
+              }
+            />
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
             {row.archived ? (
               <DropdownMenuItem
                 onClick={() =>

@@ -1,16 +1,14 @@
 import { Array as Arr, Effect } from "effect";
 import { useEffect, useRef } from "react";
 import { keptStorage } from "@/components/player/storage";
-import { keptPicks } from "@/components/tryout/runtime/response/keep";
-import { useSendPick } from "@/components/tryout/runtime/response/submit";
+import { usePickLedger } from "@/components/tryout/runtime/response/submit";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
-import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * Sends again the picks that the browser kept for the section's questions, once its player shows: the picks
  * that a closed page or a reload left unsent or unconfirmed, as the School sitting does with its answers. Each
  * send shows the pick at once, so a reload brings it back on the screen, and a pick that a newer write
- * overtook since is refused as stale and dropped.
+ * overtook since is refused as stale and dropped. The failures of the pass show one toast.
  */
 export function useResendKeptPicks({
   locked,
@@ -20,7 +18,7 @@ export function useResendKeptPicks({
   readonly locked: boolean;
   readonly questions: readonly TryoutRuntimeQuestion[];
 }) {
-  const send = useSendPick();
+  const ledger = usePickLedger();
   const resumed = useRef(false);
 
   useEffect(() => {
@@ -29,31 +27,9 @@ export function useResendKeptPicks({
     }
     resumed.current = true;
     Effect.runFork(
-      keptPicks
-        .answersFor(Arr.map(questions, (question) => question.placementId))
-        .pipe(
-          Effect.provide(keptStorage),
-          Effect.flatMap((kept) =>
-            Effect.forEach(
-              kept,
-              ({ answer, questionId }) =>
-                send(
-                  {
-                    placementId: questionId,
-                    response: answer.response,
-                    version: answer.version,
-                  },
-                  answer.answeredAt
-                ),
-              { discard: true }
-            )
-          ),
-          Effect.catchTag("KeyValueStoreError", (error) =>
-            reportClientException(error, {
-              source: "components/tryout/runtime/response/kept",
-            })
-          )
-        )
+      ledger
+        .resend(Arr.map(questions, (question) => question.placementId))
+        .pipe(Effect.provide(keptStorage))
     );
-  }, [locked, questions, send]);
+  }, [ledger, locked, questions]);
 }

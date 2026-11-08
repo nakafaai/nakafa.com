@@ -1,4 +1,5 @@
 import { QueryResult, useMutation } from "@confect/react";
+import { Image01Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { LogoType } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -16,6 +17,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { logoRefusalOf } from "@/components/tenant/logo";
 import { SchoolMark } from "@/components/tenant/mark";
@@ -195,6 +197,7 @@ function SchoolProfileCard({
               onClick={() => fileInput.current?.click()}
               size="sm"
               type="button"
+              variant="outline"
             >
               {t("logo-upload")}
             </Button>
@@ -219,7 +222,9 @@ function SchoolProfileCard({
           open={isRemoving}
           setOpen={setIsRemoving}
           title={t("logo-remove-title")}
-        />
+        >
+          <ConfirmSubject icon={Image01Icon} name={tenant.name} />
+        </ResponsiveDialog>
       </CardSection>
       <CardSection
         description={t("address-description")}
@@ -236,7 +241,12 @@ function SchoolProfileCard({
         </CardContent>
         <CardSectionFooter hint={t("address-footer")}>
           <CardSectionActions>
-            <Button onClick={copyAddress} size="sm" type="button">
+            <Button
+              onClick={copyAddress}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               {t("address-copy")}
             </Button>
           </CardSectionActions>

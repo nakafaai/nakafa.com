@@ -18,7 +18,10 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Option, Schema, String as Str } from "effect";
 import { useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import { openDiscussion } from "@/components/tenant/classes/forum/send";
+import {
+  openDiscussion,
+  viewerFace,
+} from "@/components/tenant/classes/forum/send";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
@@ -67,14 +70,14 @@ export function StartDiscussion({
     if (!ready) {
       return;
     }
-    const { person } = viewer.value;
+    const author = viewerFace(viewer.value);
     sent.current = true;
     setShown(false);
     runSchoolWrite(
       Effect.flatMap(randomUuid, (clientKey) =>
         openDiscussion(
           (update, args) => open.withOptimisticUpdate(update)(args),
-          { id: person.id, name: person.name, nina: false },
+          author,
           {
             channelId,
             classId,

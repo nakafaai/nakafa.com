@@ -44,6 +44,7 @@ import {
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { TalliesProvider } from "@/components/tenant/classes/forum/tallies";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** How long the reader's view stays still before the read mark moves to it. */
@@ -94,6 +95,9 @@ export function MessageStream({
   if (Option.isSome(head)) {
     setKept(Arr.append(kept, head.value));
   }
+  /** The day the message at `index` opens, which a divider shows above it. */
+  const dayAt = (index: number) =>
+    opensDay(messages, index, loadOlder !== undefined, opening, dayOf);
   // The divider marks where unread messages start, so it shows only once the message before it is
   // loaded, or when the place holds nothing older.
   const divided = Option.filter(
@@ -102,6 +106,17 @@ export function MessageStream({
       loadOlder === undefined ||
       Option.exists(Arr.head(messages), (first) => first.clientKey !== key)
   );
+
+  /**
+   * Whether the message at `index` opens a run, under its own header: a new day, the unread divider above it, or what
+   * `opensRun` says.
+   */
+  const opensAt = (index: number) =>
+    Option.isSome(dayAt(index)) ||
+    Option.exists(Arr.get(messages, index), (message) =>
+      Option.contains(divided, message.clientKey)
+    ) ||
+    opensRun(messages, index, kept);
 
   return (
     <TalliesProvider
@@ -120,7 +135,7 @@ export function MessageStream({
               className={cn(
                 readingMeasureVariants(),
                 pageGutterVariants(),
-                "gap-4 py-4"
+                "gap-0.5 py-4"
               )}
             >
               {loadOlder === undefined && Option.isSome(opening) ? (
@@ -133,60 +148,53 @@ export function MessageStream({
                   <ForumMessageRow message={opening.value} opens />
                 </MessageScrollerItem>
               ) : null}
-              {Arr.map(messages, (message, index) => (
-                // The client key stays the same from the send to the server's answer, so the row
-                // and anything open in it outlive the placeholder ID.
-                <MessageScrollerItem
-                  className="data-[jumped=true]:bg-muted/60 rounded-xl transition-colors"
-                  data-jumped={
-                    Option.contains(jump, message.id) ? "true" : undefined
-                  }
-                  key={message.clientKey}
-                  messageId={message.clientKey}
-                  scrollAnchor={Option.contains(unread, message.clientKey)}
-                >
-                  {index === 0 && loadOlder ? (
-                    <Intersection onIntersect={loadOlder} />
-                  ) : null}
-                  {Option.match(
-                    opensDay(
-                      messages,
-                      index,
-                      loadOlder !== undefined,
-                      opening,
-                      dayOf
-                    ),
-                    {
+              {Arr.map(messages, (message, index) => {
+                const day = dayAt(index);
+                return (
+                  // The client key stays the same from the send to the server's answer, so the row
+                  // and anything open in it outlive the placeholder ID.
+                  <MessageScrollerItem
+                    className="data-[jumped=true]:bg-muted/60 rounded-2xl transition-colors"
+                    data-jumped={
+                      Option.contains(jump, message.id) ? "true" : undefined
+                    }
+                    key={message.clientKey}
+                    messageId={message.clientKey}
+                    scrollAnchor={Option.contains(unread, message.clientKey)}
+                  >
+                    {index === 0 && loadOlder ? (
+                      <Intersection onIntersect={loadOlder} />
+                    ) : null}
+                    {Option.match(day, {
                       onNone: () => null,
-                      onSome: (day) => (
+                      onSome: (shown) => (
                         <Marker
                           className="mb-4"
                           role="separator"
                           variant="separator"
                         >
-                          <MarkerContent>{day}</MarkerContent>
+                          <MarkerContent>{shown}</MarkerContent>
                         </Marker>
                       ),
-                    }
-                  )}
-                  {Option.contains(divided, message.clientKey) ? (
-                    <Marker
-                      className="mb-4"
-                      role="separator"
-                      variant="separator"
-                    >
-                      <MarkerContent>{t("unread-divider")}</MarkerContent>
-                    </Marker>
-                  ) : null}
-                  <ForumMessageRow
-                    message={message}
-                    opens={opensRun(messages, index, kept)}
-                  />
-                </MessageScrollerItem>
-              ))}
+                    })}
+                    {Option.contains(divided, message.clientKey) ? (
+                      <Marker
+                        className="mb-4"
+                        role="separator"
+                        variant="separator"
+                      >
+                        <MarkerContent>{t("unread-divider")}</MarkerContent>
+                      </Marker>
+                    ) : null}
+                    <ForumMessageRow message={message} opens={opensAt(index)} />
+                  </MessageScrollerItem>
+                );
+              })}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <MessageScrollerButton aria-label={t("scroll-to-latest")} />
+          <IconTip label={t("scroll-to-latest")}>
+            <MessageScrollerButton aria-label={t("scroll-to-latest")} />
+          </IconTip>
         </MessageScroller>
         <ReadTracker at={at} messages={messages} />
         <JumpTo jump={jump} loadOlder={loadOlder} messages={messages} />

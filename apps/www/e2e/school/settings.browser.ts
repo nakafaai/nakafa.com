@@ -11,6 +11,7 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
+import { settingsLink } from "@/e2e/support/settings";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The Admin grant that the Owner gives an invited learner. */
@@ -67,7 +68,9 @@ test("an admin opens the profile and the periods of a school", async ({
     addressCard.getByRole("button", { name: "Copy address" })
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Periods" }).click();
+  await (
+    await settingsLink(page.locator('[data-slot="sidebar-content"]'), "periods")
+  ).click();
   await expect(page).toHaveURL(address("/settings/periods"));
   await expect(
     page.locator("header").getByRole("button", { name: "Add period" })

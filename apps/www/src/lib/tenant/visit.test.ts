@@ -8,6 +8,7 @@ import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import { KEPT_SCHOOL_KEY } from "@/lib/auth/keys";
+import { readBrowserPresence } from "@/lib/auth/presence";
 import { SchoolReadFailed, SchoolReads } from "@/lib/tenant/read";
 import {
   confirmFrame,
@@ -70,6 +71,14 @@ const AYU_TOKEN = `header.${Base64Url.encode(
   })
 )}.signature`;
 
+/** The school host whose token route the presence of these tests reads. */
+const ORIGIN = "https://harapan.nakafa.com";
+
+/** The presence of a browser whose cookie holds the signed-in hint, or none. */
+function presenceOf(signedIn: boolean) {
+  return readBrowserPresence(signedIn ? "nakafa-signed-in=1" : "", ORIGIN);
+}
+
 /**
  * Decides the school in the browser of these tests, whose token route answers with the fetch double, with the
  * sign-in hint saying signed in unless the test says otherwise.
@@ -78,7 +87,7 @@ function decide(locale: "en" | "id", signedIn = true) {
   return readBrowserVisit({
     legal: Effect.sync(legal),
     locale,
-    signedIn,
+    presence: presenceOf(signedIn),
     slug: SLUG,
   }).pipe(
     Effect.provideService(FetchHttpClient.Fetch, fetcher),
@@ -91,13 +100,6 @@ describe("readBrowserSchoolFrame", () => {
     fetcher.mockReset();
     legal.mockClear();
     frame.read.mockReset().mockReturnValue(Effect.succeed({ _tag: "Refused" }));
-    vi.stubGlobal("window", {
-      location: { origin: "https://harapan.nakafa.com" },
-    });
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it.effect(
@@ -278,6 +280,8 @@ describe("frameOfNavigation", () => {
   /** A navigation that stays in the visit, and one that enters it. */
   const STAY = { cause: "stay", invalid: false } as const;
   const ENTER = { cause: "enter", invalid: false } as const;
+  /** The presence of a browser with no session, whose token route the fetch double answers with a 401. */
+  const VISITOR_PRESENCE = presenceOf(false);
 
   const PROFILE = {
     kind: "school",
@@ -325,10 +329,7 @@ describe("frameOfNavigation", () => {
     vi.stubGlobal("document", { cookie: "" });
     vi.stubGlobal("fetch", fetcher);
     vi.stubGlobal("navigator", { languages: ["en"] });
-    vi.stubGlobal("window", {
-      localStorage: storage,
-      location: { origin: "https://harapan.nakafa.com" },
-    });
+    vi.stubGlobal("window", { localStorage: storage });
   });
 
   afterEach(() => {
@@ -342,15 +343,21 @@ describe("frameOfNavigation", () => {
 
     confirmFrame(visit, live);
 
-    await expect(frameOfNavigation(visit, SLUG, STAY)).resolves.toBe(live);
-    await expect(frameOfNavigation(visit, SLUG, STAY)).resolves.toBe(DRAWN);
+    await expect(
+      frameOfNavigation(visit, SLUG, STAY, VISITOR_PRESENCE)
+    ).resolves.toBe(live);
+    await expect(
+      frameOfNavigation(visit, SLUG, STAY, VISITOR_PRESENCE)
+    ).resolves.toBe(DRAWN);
     expect(frame.read).not.toHaveBeenCalled();
   });
 
   it("reads the frame of a visit that enters the school, and keeps it for the next visit", async () => {
     const visit: SchoolVisit = { frame: DRAWN };
 
-    await expect(frameOfNavigation(visit, SLUG, ENTER)).resolves.toEqual(DRAWN);
+    await expect(
+      frameOfNavigation(visit, SLUG, ENTER, VISITOR_PRESENCE)
+    ).resolves.toEqual(DRAWN);
 
     expect(takeLiveRead(visit)).toBeUndefined();
     expect(storage.setItem).toHaveBeenCalledWith(
@@ -363,7 +370,12 @@ describe("frameOfNavigation", () => {
     frame.read.mockReturnValueOnce(Effect.succeed({ _tag: "Refused" }));
 
     await expect(
-      frameOfNavigation({ frame: DRAWN }, SLUG, { ...STAY, invalid: true })
+      frameOfNavigation(
+        { frame: DRAWN },
+        SLUG,
+        { ...STAY, invalid: true },
+        VISITOR_PRESENCE
+      )
     ).resolves.toEqual({ legal: null, school: { _tag: "Refused" } });
 
     expect(storage.removeItem).toHaveBeenCalledWith(KEPT_SCHOOL_KEY);
@@ -377,7 +389,12 @@ describe("frameOfNavigation", () => {
     const visit: SchoolVisit = {};
 
     await expect(
-      frameOfNavigation(visit, SLUG, { ...STAY, invalid: true })
+      frameOfNavigation(
+        visit,
+        SLUG,
+        { ...STAY, invalid: true },
+        VISITOR_PRESENCE
+      )
     ).resolves.toEqual({ legal: null, school: { _tag: "Refused" } });
 
     expect(takeLiveRead(visit)).toBeUndefined();
@@ -389,7 +406,9 @@ describe("frameOfNavigation", () => {
     );
     const visit: SchoolVisit = {};
 
-    await expect(frameOfNavigation(visit, SLUG, STAY)).resolves.toEqual(DRAWN);
+    await expect(
+      frameOfNavigation(visit, SLUG, STAY, VISITOR_PRESENCE)
+    ).resolves.toEqual(DRAWN);
 
     await expect(takeLiveRead(visit)).resolves.toEqual(DRAWN);
     expect(takeLiveRead(visit)).toBeUndefined();
@@ -399,7 +418,9 @@ describe("frameOfNavigation", () => {
     vi.useFakeTimers();
     staticData.read.mockRejectedValue("offline");
 
-    const read = expect(frameOfNavigation({}, SLUG, ENTER)).rejects.toThrow();
+    const read = expect(
+      frameOfNavigation({}, SLUG, ENTER, VISITOR_PRESENCE)
+    ).rejects.toThrow();
     await vi.advanceTimersByTimeAsync(2000);
 
     await read;

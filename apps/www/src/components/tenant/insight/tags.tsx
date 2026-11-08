@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Tag01Icon } from "@hugeicons/core-free-icons";
+import { Tag01Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import insight from "@repo/backend/confect/_generated/refs/insight";
@@ -21,6 +21,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -31,6 +32,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
@@ -114,11 +116,16 @@ export function QuestionTags() {
                   <SelectValue placeholder={t("exam-placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Arr.map(items, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    <ChoiceLabel name="exam" />
+
+                    {Arr.map(items, (item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        <HugeIcons icon={TaskEdit01Icon} />
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </Field>

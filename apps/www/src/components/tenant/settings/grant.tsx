@@ -21,6 +21,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import { roleIcon } from "@/components/tenant/roles";
 import {
@@ -181,6 +182,7 @@ export function SchoolRoleSelect({
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
+          <ChoiceLabel name="role" />
           {Arr.map(roleItems, (item) => (
             <SelectItem key={item.value} value={item.value}>
               <HugeIcons icon={roleIcon(item.value)} />

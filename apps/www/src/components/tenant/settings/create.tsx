@@ -1,5 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
+import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -9,10 +10,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -28,14 +31,12 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { CountryFlagIcon } from "@/components/shared/flag";
-import {
-  languageItems,
-  timeZoneItems,
-} from "@/components/tenant/settings/choices";
+import { ChoiceLabel } from "@/components/tenant/choice";
+import { timeZoneItems } from "@/components/tenant/settings/choices";
 import { addUnitChange } from "@/components/tenant/settings/mutation";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
+  UnitLanguageField,
   UnitLevelField,
   UnitNameField,
 } from "@/components/tenant/settings/units/fields";
@@ -193,42 +194,24 @@ function SchoolUnitCreateForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(timeZoneItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <ChoiceLabel name="zone" />
+
+                {Arr.map(timeZoneItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={Globe02Icon} />
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-language`}>
-            {t("unit-page-language")}
-          </FieldLabel>
-          <Select
-            items={languageItems}
-            onValueChange={(value) => {
-              const next =
-                Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
-              if (Option.isSome(next)) {
-                setLanguageChoice(next.value);
-              }
-            }}
-            value={contentLanguage}
-          >
-            <SelectTrigger className="w-full" id={`${id}-language`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(languageItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  <CountryFlagIcon countryCode={item.countryCode} />
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <UnitLanguageField
+          id={`${id}-language`}
+          onChange={setLanguageChoice}
+          value={contentLanguage}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

@@ -30,6 +30,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
@@ -296,7 +297,9 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("client-revoke-title")}
-      />
+      >
+        <ConfirmSubject icon={Key01Icon} name={client.name} />
+      </ResponsiveDialog>
       {dialogs.kind === "edit" ? (
         <SchoolClientEditDialog
           client={client}

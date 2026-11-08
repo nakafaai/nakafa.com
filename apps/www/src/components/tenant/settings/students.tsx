@@ -10,6 +10,7 @@ import {
   Key01Icon,
   PencilEdit02Icon,
   Refresh01Icon,
+  SchoolIcon,
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import identity from "@repo/backend/confect/_generated/refs/identity";
@@ -29,6 +30,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -51,6 +53,7 @@ import {
   useServerSearch,
 } from "@/components/shared/table/toolbar";
 import { WithAction } from "@/components/tenant/action";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -398,11 +401,16 @@ function SchoolStudentDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Arr.map(unitItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <ChoiceLabel name="unit" />
+
+                  {Arr.map(unitItems, (item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      <HugeIcons icon={SchoolIcon} />
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </Field>

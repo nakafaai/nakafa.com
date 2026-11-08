@@ -130,6 +130,7 @@ export function SchoolHomeroomCard({
               onClick={save}
               size="sm"
               type="button"
+              variant="outline"
             >
               {t("homeroom-save")}
             </Button>

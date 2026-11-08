@@ -40,6 +40,7 @@ import {
   shareOf,
   voteUpdate,
 } from "@/components/tenant/classes/forum/tally";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** One choice while the poll is written: its text, and an ID that keeps its field as others leave. */
@@ -54,7 +55,7 @@ const FIRST_CHOICES: readonly (typeof PollChoice.Type)[] = [
 /** The poll a message carries. */
 type ForumPoll = NonNullable<ForumMessage["poll"]>;
 
-/** One choice of a poll, marked when the viewer took it. */
+/** One choice of a poll, marked on the neutral surface when the viewer took it: the primary fill is the page's button's. */
 const pollChoice = cva(
   "relative flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-xl border px-3 py-2 text-start text-sm disabled:cursor-default",
   { variants: { mine: { false: "", true: "border-foreground" } } }
@@ -271,20 +272,21 @@ export function NewPoll({
                 value={option.text}
               />
               {options.length > POLL_MIN_OPTIONS ? (
-                <Button
-                  aria-label={t("poll-remove-option", { number: index + 1 })}
-                  onClick={() =>
-                    setOptions(
-                      Arr.filter(options, (held) => held.id !== option.id)
-                    )
-                  }
-                  size="icon"
-                  title={t("poll-remove-option", { number: index + 1 })}
-                  type="button"
-                  variant="ghost"
-                >
-                  <HugeIcons icon={Cancel01Icon} />
-                </Button>
+                <IconTip label={t("poll-remove-option", { number: index + 1 })}>
+                  <Button
+                    aria-label={t("poll-remove-option", { number: index + 1 })}
+                    onClick={() =>
+                      setOptions(
+                        Arr.filter(options, (held) => held.id !== option.id)
+                      )
+                    }
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <HugeIcons icon={Cancel01Icon} />
+                  </Button>
+                </IconTip>
               ) : null}
             </div>
           ))}
@@ -301,7 +303,6 @@ export function NewPoll({
                   })
                 )
               }
-              size="sm"
               type="button"
               variant="outline"
             >

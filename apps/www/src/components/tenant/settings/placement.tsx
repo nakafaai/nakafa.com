@@ -1,5 +1,9 @@
 import { useMutation } from "@confect/react";
-import { IdCardIcon, Move01Icon } from "@hugeicons/core-free-icons";
+import {
+  IdCardIcon,
+  Move01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -39,9 +43,10 @@ type CohortId = Cohort["id"];
 /**
  * The page's action that places a student of the school in the cohort: the Add student
  * button, ready from the first paint, and the dialog it opens for one student. The dialog
- * waits for the cohort: Save holds until the cohort is read, and an archived cohort says to
- * restore it first. The dialog closes as the placement is sent, and its student clears once
- * the server accepts it; a refusal opens the dialog again with its student and says why inside it.
+ * waits for the cohort: Save holds until the cohort is read. An archived cohort takes no one
+ * new, so its page offers no Add student (`SchoolCohortPage`). The dialog closes as the placement
+ * is sent, and its student clears once the server accepts it; a refusal opens the dialog again
+ * with its student and says why inside it.
  */
 export function SchoolPlacementAdd({
   cohortId,
@@ -92,11 +97,7 @@ export function SchoolPlacementAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
-        description={
-          status === "archived"
-            ? t("placement-add-archived")
-            : t("placement-add-footer")
-        }
+        description={t("placement-add-footer")}
         footer={
           <>
             <Button
@@ -166,6 +167,7 @@ export function SchoolPlacementMove({
   const dialogs = useDialogs<"entry" | "move">();
   const [target, setTarget] = useState<CohortId | null>(null);
   const items = Arr.map(targets, (cohort) => ({
+    icon: UserGroupIcon,
     label: cohort.name,
     value: cohort.id,
   }));
@@ -221,6 +223,7 @@ export function SchoolPlacementMove({
       >
         <FieldGroup>
           <SelectField
+            choice="cohort"
             items={items}
             label={t("placement-move-to")}
             onChoose={(value) =>
@@ -231,6 +234,7 @@ export function SchoolPlacementMove({
                 )
               )
             }
+            placeholder={t("placement-move-placeholder")}
             value={target}
           />
         </FieldGroup>

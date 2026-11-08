@@ -8,6 +8,7 @@ import {
   getArticleModel,
   getArticlePublication,
 } from "@/lib/content/article/publication";
+import { activateTestRelease } from "@/test/active";
 import {
   testArticleArtifact as artifact,
   testArticleDeProjection as deProjection,
@@ -15,6 +16,7 @@ import {
   testArticleProjection as projection,
   testArticleSourcePath as sourcePath,
 } from "@/test/content-article";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const layerMock = vi.hoisted(() => vi.fn());
 
@@ -80,6 +82,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
@@ -91,6 +101,8 @@ vi.mock("@/lib/content/published/article", async (importOriginal) => ({
   renderArticleArtifact: renderMock,
 }));
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease(activeReleaseId);
   queryMock.mockReset().mockReturnValue(
     Effect.succeed({
       model,

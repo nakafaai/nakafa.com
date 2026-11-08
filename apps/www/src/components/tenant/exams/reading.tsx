@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ReadingSource } from "@repo/backend/confect/exams/question";
 import {
@@ -6,9 +7,11 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -16,6 +19,7 @@ import {
 import { Array as Arr, Function as Fn, Option, pipe } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import {
   readingUpdate,
   sharedReadings,
@@ -101,11 +105,16 @@ export function ReadingField({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
+          <SelectGroup>
+            <ChoiceLabel name="passage" />
+
+            {Arr.map(items, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                <HugeIcons icon={BookOpen01Icon} />
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
       <FieldDescription>{t("reading-hint")}</FieldDescription>

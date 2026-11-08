@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { Invoice01Icon } from "@hugeicons/core-free-icons";
+import { Calendar03Icon, Invoice01Icon } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import {
   type PlanPeriod,
@@ -155,7 +155,9 @@ export function SchoolOrderDialog({
         ) : null}
         {kind === "plan" ? (
           <SelectField
+            choice="period"
             items={Arr.map(SchoolPeriod.literals, (each) => ({
+              icon: Calendar03Icon,
               label: t("billing-months", {
                 discount: schoolPeriodDiscounts[each],
                 months: each,

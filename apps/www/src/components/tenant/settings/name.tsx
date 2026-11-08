@@ -85,6 +85,7 @@ export function SchoolNameCard({
             }
             size="sm"
             type="button"
+            variant="outline"
           >
             {t("save")}
           </Button>

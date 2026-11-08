@@ -34,6 +34,7 @@ import {
   SittingTabElsewhere,
   SittingTabGuard,
 } from "@/components/exams/sitting/tab";
+import { ClockProvider } from "@/components/player/now";
 import { useOffline } from "@/components/shared/offline";
 import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -137,12 +138,15 @@ export function StudentSitting({
           </PaperFrame>
         }
       >
-        <StudentPlayer
-          admission={admitted}
-          attempt={attempt}
-          sitting={sitting}
-          slug={slug}
-        />
+        {/* The player's clock keeps the server's time with the correction this device's admission read. */}
+        <ClockProvider key={admitted.deviceId} offset={admitted.clockOffset}>
+          <StudentPlayer
+            admission={admitted}
+            attempt={attempt}
+            sitting={sitting}
+            slug={slug}
+          />
+        </ClockProvider>
       </SittingTabGuard>
     );
   }

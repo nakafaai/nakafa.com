@@ -1,5 +1,6 @@
 import { useMutation } from "@confect/react";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
+import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   Npsn,
@@ -14,23 +15,11 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { CountryFlagIcon } from "@/components/shared/flag";
 import { useTenant } from "@/components/tenant/context";
-import {
-  languageItems,
-  timeZoneItems,
-} from "@/components/tenant/settings/choices";
+import { timeZoneItems } from "@/components/tenant/settings/choices";
 import {
   editUnitChange,
   setNpsnChange,
@@ -39,6 +28,7 @@ import {
 import { SelectField } from "@/components/tenant/settings/select";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
+  UnitLanguageField,
   UnitLevelField,
   UnitNameField,
 } from "@/components/tenant/settings/units/fields";
@@ -192,41 +182,20 @@ export function UnitEditDialog({
         />
         <UnitLevelField id={`${id}-level`} onChange={setLevel} value={level} />
         <SelectField
-          items={timeZoneItems}
+          choice="zone"
+          items={Arr.map(timeZoneItems, (item) => ({
+            ...item,
+            icon: Globe02Icon,
+          }))}
           label={t("unit-time-zone")}
           onChoose={setTimeZone}
           value={timeZone}
         />
-        <Field>
-          <FieldLabel htmlFor={`${id}-language`}>
-            {t("unit-page-language")}
-          </FieldLabel>
-          <Select
-            items={languageItems}
-            onValueChange={(value) => {
-              const next =
-                Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
-              if (Option.isSome(next)) {
-                setContentLanguage(next.value);
-              }
-            }}
-            value={contentLanguage}
-          >
-            <SelectTrigger className="w-full" id={`${id}-language`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(languageItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <CountryFlagIcon countryCode={item.countryCode} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
+        <UnitLanguageField
+          id={`${id}-language`}
+          onChange={setContentLanguage}
+          value={contentLanguage}
+        />
         <Field>
           <FieldLabel htmlFor={`${id}-npsn`}>{t("unit-npsn")}</FieldLabel>
           <Input

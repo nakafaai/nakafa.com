@@ -2,11 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import {
-  isSchoolTreePath,
-  readSchoolTreeGate,
-  withPageHeaders,
-} from "@/lib/tenant/gate";
+import { readSchoolTreeGate, withPageHeaders } from "@/lib/tenant/gate";
 
 /** A request to a path on one host, with the `host` header the server reads. */
 function requestTo(path: string, host?: string) {
@@ -15,40 +11,11 @@ function requestTo(path: string, host?: string) {
   });
 }
 
-describe("isSchoolTreePath", () => {
-  it.each([
-    "/school",
-    "/school/harapan",
-    "/school/harapan/exams/abc",
-    "/school/new/extra",
-    "/school/pricing",
-    "/id/school/pricing/extra",
-    "/id/school/harapan",
-    "/%73chool/harapan",
-  ])("names a school tree page at %s", (path) => {
-    expect(isSchoolTreePath(path)).toBe(true);
-  });
-
-  it.each([
-    "/",
-    "/id",
-    "/exams",
-    "/school/new",
-    "/id/school/new",
-    "/id/school",
-    "/id/school/pricing",
-    "/en/school/enter",
-    "/school%E0%A4%A",
-  ])("does not name a school tree page at %s", (path) => {
-    expect(isSchoolTreePath(path)).toBe(false);
-  });
-});
-
 describe("readSchoolTreeGate", () => {
   it("answers a school tree page of a main host with the not-found locale that it negotiates", () => {
     expect(
       readSchoolTreeGate(requestTo("/school/harapan", "nakafa.test"))
-    ).toStrictEqual(Option.some("en"));
+    ).toStrictEqual(Option.some("id"));
   });
 
   it("answers a school tree page under a locale in the locale that its path names", () => {
@@ -59,14 +26,14 @@ describe("readSchoolTreeGate", () => {
 
   it("answers a school tree page of a request without a host header", () => {
     expect(readSchoolTreeGate(requestTo("/school/harapan"))).toStrictEqual(
-      Option.some("en")
+      Option.some("id")
     );
   });
 
   it("answers a school tree page of a host that names no valid host", () => {
     expect(
       readSchoolTreeGate(requestTo("/school/harapan", "bad host"))
-    ).toStrictEqual(Option.some("en"));
+    ).toStrictEqual(Option.some("id"));
   });
 
   it("lets a school host through to its own school tree", () => {

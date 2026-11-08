@@ -1,9 +1,9 @@
 import { readCookie } from "@repo/internationalization/src/cookie";
 import {
-  DEFAULT_LOCALE,
   decodeLocale,
   LOCALE_COOKIE,
   type Locale,
+  VISITOR_LOCALE,
 } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Order, Schema } from "effect";
 
@@ -66,9 +66,11 @@ function readAcceptedLocale(acceptLanguage: string): Option.Option<Locale> {
 
 /**
  * Chooses the locale of a request: the valid `NAKAFA_LOCALE` cookie first, then
- * the first Accept-Language range that names a public locale, then the default.
- * An invalid cookie value and an unknown language are skipped, so they never
- * change the answer.
+ * the first Accept-Language range that names a public locale, then Indonesian
+ * (`VISITOR_LOCALE`). An invalid cookie value and an unknown language are
+ * skipped, so they never change the answer. This is the one negotiation of the
+ * product: the root, every address without a locale, a school page and the
+ * root's Markdown twin all read it.
  */
 export function negotiateLocale(headers: Headers): Locale {
   return readCookie(headers, LOCALE_COOKIE).pipe(
@@ -79,6 +81,6 @@ export function negotiateLocale(headers: Headers): Locale {
         readAcceptedLocale
       )
     ),
-    Option.getOrElse(() => DEFAULT_LOCALE)
+    Option.getOrElse(() => VISITOR_LOCALE)
   );
 }

@@ -35,6 +35,7 @@ type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 /** The arguments of the seed function, as the Convex CLI receives them. */
 const SeedArgs = Schema.fromJsonString(
   Schema.Struct({
+    author: Schema.optionalKey(Schema.String),
     classSlug: Schema.String,
     count: Schema.Finite,
     read: Schema.Finite,
@@ -102,6 +103,32 @@ describe("acceptance forum", () => {
           .pipe(Effect.flatMap(Schema.decodeEffect(ForumFixture)));
         expect(written.messages).toEqual(["message-1", "message-2"]);
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect("names the classmate when the run gives a name", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({
+        prefix: "acceptance-forum-test-",
+      });
+      const specs = MutableList.make<CommandSpec>();
+      yield* seedIn(root, specs);
+
+      yield* forumMode.run(root, [
+        "acc-1234abcd",
+        "1",
+        "0",
+        `${root}/forum.json`,
+        "Siti Nurhaliza Kusumawardhani",
+      ]);
+
+      const [spec] = MutableList.toArray(specs);
+      expect(
+        yield* Schema.decodeEffect(SeedArgs)(
+          Option.getOrThrow(Arr.last(spec?.args ?? []))
+        )
+      ).toMatchObject({ author: "Siti Nurhaliza Kusumawardhani", count: 1 });
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
   it.effect("seeds nothing when no local runtime is running", () =>

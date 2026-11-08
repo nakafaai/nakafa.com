@@ -9,7 +9,10 @@ import {
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassName, ClassSubject } from "@repo/backend/confect/classroom/class";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
@@ -102,6 +105,7 @@ export function SchoolClassMenu({
             {t("class-subject-change")}
           </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() =>
             startTransition(() =>

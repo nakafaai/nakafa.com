@@ -4,6 +4,7 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
+import { Key01Icon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import {
   ReceiverUrl,
@@ -21,6 +22,7 @@ import {
   FieldSet,
 } from "@repo/design-system/components/ui/field";
 import { PopupHold } from "@repo/design-system/components/ui/hold";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -36,6 +38,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import {
   offeredChanges,
@@ -265,8 +268,10 @@ export function SchoolWebhookCreateDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
+                <ChoiceLabel name="client" />
                 {Arr.map(active, (each) => (
                   <SelectItem key={each.id} value={each.id}>
+                    <HugeIcons icon={Key01Icon} />
                     {each.name}
                   </SelectItem>
                 ))}

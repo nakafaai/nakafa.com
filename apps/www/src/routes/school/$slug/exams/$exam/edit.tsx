@@ -1,9 +1,9 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { ExamEditor } from "@/components/tenant/exams/editor";
-import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readExamId } from "@/lib/tenant/params";
 
 /**
@@ -11,19 +11,12 @@ import { readExamId } from "@/lib/tenant/params";
  * address to an exam is not found for every viewer.
  */
 export const Route = createFileRoute("/school/$slug/exams/$exam/edit")({
-  beforeLoad: ({ context, params }) => {
-    const { school } = context;
-    const examId = readExamId(params.exam);
-    if (Option.isNone(examId)) {
-      throw notFound();
-    }
-    if (school._tag === "Member" && !canOpenExams(school.viewer)) {
-      throw notFound();
-    }
-    return { examId: examId.value };
-  },
+  ...guardSchoolPage({
+    opens: canOpenExams,
+    reads: (params: { readonly exam: string }) =>
+      Option.all({ examId: readExamId(params.exam) }),
+  }),
   component: SchoolExamEditPage,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolExamEditPage(): ReactElement | null {
