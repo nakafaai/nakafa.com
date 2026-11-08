@@ -61,6 +61,7 @@ type PlaneFormula = Extract<
     readonly kind:
       | "function"
       | "implicit"
+      | "loop"
       | "marker"
       | "parametric"
       | "path"
@@ -86,6 +87,7 @@ export function isPlaneFormula(object: PlaneObject): object is PlaneFormula {
   return (
     object.kind === "function" ||
     object.kind === "implicit" ||
+    object.kind === "loop" ||
     object.kind === "marker" ||
     object.kind === "parametric" ||
     object.kind === "path" ||

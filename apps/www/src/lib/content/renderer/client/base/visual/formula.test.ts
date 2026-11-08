@@ -100,7 +100,7 @@ describe("formula shapes", () => {
     expect(Result.isFailure(resolveFormulaShapes(scene, resolveVisualProjection(scene), {}))).toBe(true);
   });
 
-  it("draws a marker and a closed path where the sliders place them", () => {
+  it("draws a marker and a loop where the sliders place them", () => {
     const corners = [
       { x: "0", y: "0" },
       { x: "2 cos(a)", y: "0" },
@@ -110,7 +110,7 @@ describe("formula shapes", () => {
       plane(
         [
           { ...fields, id: "tip", kind: "marker", x: "2 cos(a)", y: "2 sin(a)" },
-          { ...fields, closed: true, id: "legs", kind: "path", points: corners },
+          { ...fields, id: "legs", kind: "loop", points: corners },
         ],
         [{ at: { x: "2 cos(a)", y: "0" }, key: "cosine", objectId: "legs" }]
       ),
