@@ -238,12 +238,12 @@ export function OptionRow({
       </ExamDocumentWiringProvider>
       {onRemove === null ? null : (
         <Button
-          aria-label={removeName}
           className="absolute end-1 top-1/2 -translate-y-1/2 opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
           data-remove=""
           disabled={locked}
           onClick={remove}
           size="icon-sm"
+          tooltip={removeName}
           type="button"
           variant="ghost"
         >

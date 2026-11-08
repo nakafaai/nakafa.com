@@ -12,7 +12,6 @@ import { useAuthSession } from "@/components/auth/session";
 import {
   SidebarKnownSchoolItems,
   SidebarSchoolMenuItem,
-  SidebarSchools,
 } from "@/components/sidebar/menu/schools";
 import { saveKnownSchools } from "@/lib/identity/schools";
 
@@ -90,14 +89,5 @@ function SidebarMembershipRows() {
         <Intersection onIntersect={() => memberships.loadMore(SCHOOL_PAGE)} />
       ) : null}
     </>
-  );
-}
-
-/** The whole group of schools, for a menu that loads it in one piece, as a school's switcher does: no new school opens there. */
-export function SidebarMembershipGroup() {
-  return (
-    <SidebarSchools canOpenSchool={false}>
-      <SidebarMembershipItems />
-    </SidebarSchools>
   );
 }

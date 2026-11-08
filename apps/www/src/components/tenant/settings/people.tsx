@@ -6,28 +6,16 @@ import {
 import { ArrowDown01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import {
-  Command,
-  CommandCollection,
-  CommandGroup,
-  CommandGroupLabel,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
-import {
-  SelectEmpty,
-  selectTriggerVariants,
-} from "@repo/design-system/components/ui/select";
+  Picker,
+  PickerContent,
+  PickerItem,
+  PickerTrigger,
+} from "@repo/design-system/components/ui/picker";
+import { selectTriggerVariants } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
@@ -70,6 +58,21 @@ function usePickerSearch() {
   return { search: search === "" ? {} : { search }, setTyped, typed };
 }
 
+/**
+ * What a picker's list does at its end, which loads the next page while one is left, and whether its first page is
+ * still being read.
+ */
+function pagesOf<Item, E>(
+  pagination: PaginatedQueryResult.PaginatedQueryResult<Item, E>
+) {
+  return {
+    onEnd: PaginatedQueryResult.isCanLoadMore(pagination)
+      ? () => pagination.loadMore(PICKER_SIZE)
+      : undefined,
+    waiting: PaginatedQueryResult.isLoadingFirstPage(pagination),
+  };
+}
+
 /** The field of the picker that renders the select, which its list reads. */
 const PickerFieldContext = createContext<PickerField | null>(null);
 
@@ -110,6 +113,7 @@ function SchoolPersonSelect() {
     isSettled ? { slug, status: "active", ...search } : "skip",
     { initialNumItems: PICKER_SIZE }
   );
+  const pages = pagesOf(pagination);
 
   return (
     <>
@@ -117,18 +121,12 @@ function SchoolPersonSelect() {
         <LoadFailure onRetry={reloadPage} />
       ) : null}
       <PersonSelect
+        onEnd={pages.onEnd}
         people={pagination.results}
         setTyped={setTyped}
         typed={typed}
-      >
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PICKER_SIZE)} />
-        ) : null}
-        {PaginatedQueryResult.isExhausted(pagination) &&
-        Arr.isReadonlyArrayEmpty(pagination.results) ? (
-          <NoPerson typed={typed} />
-        ) : null}
-      </PersonSelect>
+        waiting={pages.waiting}
+      />
     </>
   );
 }
@@ -189,6 +187,7 @@ function SchoolTeacherSelect() {
     { cohortId, slug, ...search },
     { initialNumItems: PICKER_SIZE }
   );
+  const pages = pagesOf(pagination);
 
   return (
     <>
@@ -196,40 +195,14 @@ function SchoolTeacherSelect() {
         <LoadFailure onRetry={reloadPage} />
       ) : null}
       <PersonSelect
+        onEnd={pages.onEnd}
         people={pagination.results}
         setTyped={setTyped}
+        source="teacher-picker-empty"
         typed={typed}
-      >
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PICKER_SIZE)} />
-        ) : null}
-        {PaginatedQueryResult.isExhausted(pagination) &&
-        !Arr.isReadonlyArrayNonEmpty(pagination.results) ? (
-          <NoPerson empty="teacher-picker-empty" typed={typed} />
-        ) : null}
-      </PersonSelect>
+        waiting={pages.waiting}
+      />
     </>
-  );
-}
-
-/** What a picker says with nobody to choose: that its box found nobody, or where its people come from. */
-function NoPerson({
-  empty,
-  typed,
-}: {
-  empty?:
-    | "cohort-picker-empty"
-    | "student-picker-empty"
-    | "teacher-picker-empty";
-  typed: string;
-}) {
-  const t = useTranslations("SchoolSettings");
-  const tTable = useTranslations("DataTable");
-
-  return (
-    <SelectEmpty>
-      {typed === "" && empty !== undefined ? t(empty) : tTable("no-results")}
-    </SelectEmpty>
   );
 }
 
@@ -249,6 +222,7 @@ function SchoolStudentSelect() {
     { initialNumItems: PICKER_SIZE }
   );
   const pagination = cohortId === null ? school : cohort;
+  const pages = pagesOf(pagination);
 
   return (
     <>
@@ -256,58 +230,53 @@ function SchoolStudentSelect() {
         <LoadFailure onRetry={reloadPage} />
       ) : null}
       <PersonSelect
+        onEnd={pages.onEnd}
         people={pagination.results}
         setTyped={setTyped}
+        source={
+          cohortId === null ? "student-picker-empty" : "cohort-picker-empty"
+        }
         typed={typed}
-      >
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PICKER_SIZE)} />
-        ) : null}
-        {PaginatedQueryResult.isExhausted(pagination) &&
-        !Arr.isReadonlyArrayNonEmpty(pagination.results) ? (
-          <NoPerson
-            empty={
-              cohortId === null ? "student-picker-empty" : "cohort-picker-empty"
-            }
-            typed={typed}
-          />
-        ) : null}
-      </PersonSelect>
+        waiting={pages.waiting}
+      />
     </>
   );
 }
 
 /**
- * A picker's button, under its field's label, with the box that finds a person in the popup under it: one row per
- * person, named by the person's name, and what the caller composes after the rows, the end that loads the next page or
- * the words for a list with nobody in it. A person listed twice shows once. The server reads the box, so it reaches a
- * person of any page of a school of thousands.
+ * A picker's button, under its field's label, and the list it opens with the box that finds a person: one row per
+ * person, named by the person's name, which loads the next page as its end comes into view. A person listed twice shows
+ * once. The server reads the box, so it reaches a person of any page of a school of thousands, and while a new search
+ * is read the list keeps the people it showed. A list with nobody in it says where its people come from (`source`), or
+ * that the box found nobody.
  */
 function PersonSelect({
-  children,
+  onEnd,
   people,
   setTyped,
+  source,
   typed,
+  waiting,
 }: {
-  children: ReactNode;
+  onEnd: (() => void) | undefined;
   people: readonly PersonItem[];
   setTyped: (typed: string) => void;
+  source?:
+    | "cohort-picker-empty"
+    | "student-picker-empty"
+    | "teacher-picker-empty";
   typed: string;
+  waiting: boolean;
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const { id, onChoose, personId } = usePickerField();
-  const [open, setOpen] = useState(false);
   // A later search can leave the chosen person out of the list, and the button still names them.
   const [chosen, setChosen] = useState<Option.Option<PersonItem>>(Option.none);
   const items = Arr.dedupeWith(
-    people,
+    useKeptPeople(people, waiting),
     (first, second) => first.id === second.id
   );
-  // The list opens with its one-word label above the people, and holds no group while it holds no one.
-  const groups = Arr.isReadonlyArrayEmpty(items)
-    ? []
-    : [{ items, value: common("menu-person") }];
   const named = Arr.findFirst(
     Option.match(chosen, {
       onNone: () => items,
@@ -315,10 +284,11 @@ function PersonSelect({
     }),
     (person) => person.id === personId
   );
+  const origin = source === undefined ? undefined : t(source);
 
   return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
+    <Picker search={{ onTextChange: setTyped, text: typed }}>
+      <PickerTrigger
         data-placeholder={Option.isNone(named) ? "" : undefined}
         id={id}
         render={
@@ -340,52 +310,79 @@ function PersonSelect({
           className="size-4 text-inherit opacity-80"
           icon={ArrowDown01Icon}
         />
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-(--anchor-width) p-0">
-        <Command
-          filter={null}
-          items={groups}
-          itemToStringValue={(person: PersonItem) => person.name}
-          onValueChange={setTyped}
-          value={typed}
-        >
-          <CommandInput
-            autoFocus
-            clearLabel={common("clear-search")}
-            maxLength={SEARCH_LIMIT}
-            placeholder={t("person-search")}
+      </PickerTrigger>
+      <PickerContent
+        empty={
+          typed === "" && origin !== undefined
+            ? origin
+            : t("person-search-empty")
+        }
+        items={items}
+        itemToStringValue={(person) => person.name}
+        label={common("menu-person")}
+        maxLength={SEARCH_LIMIT}
+        onEnd={onEnd}
+        placeholder={t("person-search")}
+        waiting={waiting}
+      >
+        {(person) => (
+          <PersonOption
+            key={person.id}
+            onChoose={() => {
+              setChosen(Option.some(person));
+              onChoose(person.id);
+            }}
+            person={person}
+            selected={person.id === personId}
           />
-          <div className="max-h-64 overflow-y-auto border-t">
-            <CommandList scrollArea={false}>
-              {(group: (typeof groups)[number]) => (
-                <CommandGroup items={group.items} key={group.value}>
-                  <CommandGroupLabel>{group.value}</CommandGroupLabel>
-                  <CommandCollection>
-                    {(person: PersonItem) => (
-                      <CommandItem
-                        key={person.id}
-                        onClick={() => {
-                          setChosen(Option.some(person));
-                          onChoose(person.id);
-                          setTyped("");
-                          setOpen(false);
-                        }}
-                        value={person}
-                      >
-                        <HugeIcons icon={UserIcon} />
-                        <span className="truncate" dir="auto">
-                          {person.name}
-                        </span>
-                      </CommandItem>
-                    )}
-                  </CommandCollection>
-                </CommandGroup>
-              )}
-            </CommandList>
-            {children}
-          </div>
-        </Command>
-      </PopoverContent>
-    </Popover>
+        )}
+      </PickerContent>
+    </Picker>
   );
+}
+
+/** One person of a picker, named by the person's name. */
+function PersonOption({
+  onChoose,
+  person,
+  selected,
+}: {
+  onChoose: () => void;
+  person: PersonItem;
+  selected: boolean;
+}) {
+  return (
+    <PickerItem
+      icon={UserIcon}
+      onClick={onChoose}
+      selected={selected}
+      value={person}
+    >
+      <span className="truncate" dir="auto">
+        {person.name}
+      </span>
+    </PickerItem>
+  );
+}
+
+/**
+ * The people a picker lists: the read's, or the last ones it listed while a new search reads its first page, so the
+ * list never empties under the learner's typing.
+ */
+function useKeptPeople(people: readonly PersonItem[], waiting: boolean) {
+  const [kept, setKept] = useState(people);
+  if (waiting) {
+    return kept;
+  }
+  if (!samePeople(people, kept)) {
+    setKept(people);
+  }
+  return people;
+}
+
+/** Whether two lists name the same people in the same order. */
+function samePeople(left: readonly PersonItem[], right: readonly PersonItem[]) {
+  return Arr.makeEquivalence(
+    (one: PersonItem, other: PersonItem) => one.id === other.id
+  )(left, right);
 }

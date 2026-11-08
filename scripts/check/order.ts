@@ -1,6 +1,7 @@
 import { Array as Arr, HashSet, Option, Schema } from "effect";
 import {
   isCallExpression,
+  isConditionalExpression,
   isIdentifier,
   isJsxAttribute,
   isJsxElement,
@@ -83,10 +84,13 @@ function itemPart(item: Node, attributes: JsxAttributes): typeof MenuPart.Type {
   ) {
     return "delete";
   }
+  // An item that switches between Archive and Restore names the archive in one branch of its icon or its key.
   const archives =
-    named(
-      "icon",
-      (value) => isIdentifier(value) && ARCHIVE_ICON_PATTERN.test(value.text)
+    named("icon", (value) =>
+      Arr.some(
+        Arr.prepend(nodesBelow(value), value),
+        (node) => isIdentifier(node) && ARCHIVE_ICON_PATTERN.test(node.text)
+      )
     ) ||
     Arr.some(nodesBelow(item), (node) => {
       if (!isCallExpression(node)) {
@@ -95,31 +99,64 @@ function itemPart(item: Node, attributes: JsxAttributes): typeof MenuPart.Type {
       const [key] = node.arguments;
       return (
         key !== undefined &&
-        isStringLiteralLikeNode(key) &&
-        ARCHIVE_KEY_PATTERN.test(key.text)
+        Arr.some(
+          Arr.prepend(nodesBelow(key), key),
+          (text) =>
+            isStringLiteralLikeNode(text) && ARCHIVE_KEY_PATTERN.test(text.text)
+        )
       );
     });
   return archives ? "archive" : "main";
 }
 
+/** How far down a menu a part belongs: its main actions, its separator, then Archive and Delete. */
+const PART_RANK: Record<typeof MenuPart.Type, number> = {
+  archive: 2,
+  delete: 3,
+  main: 0,
+  separator: 1,
+};
+
+/**
+ * The parts of a choice between two branches, such as Archive on a live record and Restore on an archived one. Only one
+ * branch renders, so two branches of one length stand as one part each, the one that belongs further down the menu;
+ * branches of different lengths keep every part in order.
+ */
+function choiceParts(
+  whenTrue: readonly (typeof MenuPart.Type)[],
+  whenFalse: readonly (typeof MenuPart.Type)[]
+) {
+  return whenTrue.length === whenFalse.length
+    ? Arr.zipWith(whenTrue, whenFalse, (one, other) =>
+        PART_RANK[one] >= PART_RANK[other] ? one : other
+      )
+    : Arr.appendAll(whenTrue, whenFalse);
+}
+
 /** The parts of one menu in the order a reader meets them, leaving its submenus to their own reading. */
+/** The parts one node of a menu adds: an item, a separator, a choice between two branches, or what it holds. */
+function partsOf(node: Node): readonly (typeof MenuPart.Type)[] {
+  if (isConditionalExpression(node)) {
+    return choiceParts(partsOf(node.whenTrue), partsOf(node.whenFalse));
+  }
+  return Option.match(opening(node), {
+    onNone: () => menuParts(node),
+    onSome: ({ attributes, tag }) => {
+      if (tag === SUBMENU_TAG) {
+        return [];
+      }
+      if (tag === SEPARATOR_TAG) {
+        return ["separator" as const];
+      }
+      return tag !== undefined && HashSet.has(ITEM_TAGS, tag)
+        ? [itemPart(node, attributes)]
+        : menuParts(node);
+    },
+  });
+}
+
 function menuParts(node: Node): readonly (typeof MenuPart.Type)[] {
-  return Arr.flatMap(children(node), (child) =>
-    Option.match(opening(child), {
-      onNone: () => menuParts(child),
-      onSome: ({ attributes, tag }) => {
-        if (tag === SUBMENU_TAG) {
-          return [];
-        }
-        if (tag === SEPARATOR_TAG) {
-          return ["separator" as const];
-        }
-        return tag !== undefined && HashSet.has(ITEM_TAGS, tag)
-          ? [itemPart(child, attributes)]
-          : menuParts(child);
-      },
-    })
-  );
+  return Arr.flatMap(children(node), partsOf);
 }
 
 /** Reports how one menu falls short of label, actions, separator, then Archive and Delete last. */

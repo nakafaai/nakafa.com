@@ -18,18 +18,17 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
-import {
-  ConfirmRowMenu,
-  ConfirmSubject,
-} from "@/components/shared/table/confirm";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Period } from "@/components/tenant/settings/state";
 import {
@@ -62,13 +61,13 @@ export function SchoolPeriodRestore({
   return (
     <ConfirmRowMenu {...remove}>
       <DropdownMenuItem
+        icon={ArchiveRestoreIcon}
         onClick={() =>
           startTransition(() =>
             saveSchool(() => restore({ periodId: period.id, slug }), SOURCE)
           )
         }
       >
-        <HugeIcons icon={ArchiveRestoreIcon} />
         {t("period-restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>
@@ -102,7 +101,11 @@ function usePeriodDelete(period: Period, slug: TenantSlug) {
           () => toast.success({ title: "school-period-deleted.title" })
         )
       ),
-    body: <ConfirmSubject icon={Calendar03Icon} name={period.name} />,
+    body: (
+      <ResponsiveDialogSubject icon={Calendar03Icon}>
+        {period.name}
+      </ResponsiveDialogSubject>
+    ),
     title: t("period-delete-title", { name: period.name }),
   };
 }
@@ -146,6 +149,7 @@ export function SchoolPeriodMenu({
         footer={
           period.status === "active" ? (
             <DropdownMenuItem
+              icon={Archive02Icon}
               onClick={() =>
                 startTransition(() =>
                   saveSchool(
@@ -171,25 +175,26 @@ export function SchoolPeriodMenu({
                 )
               }
             >
-              <HugeIcons icon={Archive02Icon} />
               {t("period-archive")}
             </DropdownMenuItem>
           ) : undefined
         }
       >
-        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("edit")}
+        >
           {t("period-edit")}
         </DropdownMenuItem>
         {period.status === "planned" ? (
           <DropdownMenuItem
+            icon={CheckmarkCircle02Icon}
             onClick={() =>
               startTransition(() =>
                 saveSchool(() => open({ periodId: period.id, slug }), SOURCE)
               )
             }
           >
-            <HugeIcons icon={CheckmarkCircle02Icon} />
             {t("period-open")}
           </DropdownMenuItem>
         ) : null}
@@ -241,7 +246,6 @@ export function PeriodDialog({
   title: string;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const [nameChoice, setName] = useState<string | null>(null);
   const [startChoice, setStart] = useState<string | null>(null);
@@ -257,28 +261,19 @@ export function PeriodDialog({
 
   return (
     <ResponsiveDialog
-      description={description}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!canSave}
-            onClick={() => {
-              setOpen(false);
-              onSave(next);
-            }}
-            type="button"
-          >
-            {saveLabel}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={!canSave}
+          onClick={() => {
+            setOpen(false);
+            onSave(next);
+          }}
+          type="button"
+        >
+          {saveLabel}
+        </Button>
       }
+      description={description}
       open={open}
       setOpen={setOpen}
       title={title}

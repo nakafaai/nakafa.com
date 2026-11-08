@@ -115,6 +115,64 @@ export function Menu() {
       })
   );
 
+  it.effect(
+    "reads a choice between Archive and Restore as one archive, and keeps every part of branches of other lengths",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+export function Menu() {
+  return (
+    <>
+      <DropdownMenuContent label={t("menu-actions")}>
+        <DropdownMenuItem icon={ViewIcon}>{t("open")}</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {archived ? (
+          <DropdownMenuItem icon={ArrowTurnBackwardIcon}>{t("restore")}</DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem icon={Archive02Icon}>{t("archive")}</DropdownMenuItem>
+        )}
+        <DropdownMenuItem icon={Delete02Icon} variant="destructive">{t("delete")}</DropdownMenuItem>
+      </DropdownMenuContent>
+      <DropdownMenuContent label={t("menu-actions")}>
+        <DropdownMenuItem icon={ViewIcon}>{t("open")}</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {live ? <DropdownMenuItem icon={Archive02Icon}>{t("archive")}</DropdownMenuItem> : <DropdownMenuItem icon={Undo02Icon}>{t("restore")}</DropdownMenuItem>}
+      </DropdownMenuContent>
+      <RowItems>
+        <DropdownMenuItem icon={ViewIcon}>{t("open")}</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem icon={archived ? ArchiveRestoreIcon : Archive02Icon}>
+          {t(archived ? "channel-unarchive" : "channel-archive")}
+        </DropdownMenuItem>
+        <DropdownMenuItem icon={Delete02Icon} variant="destructive">{t("delete")}</DropdownMenuItem>
+      </RowItems>
+    </>
+  );
+}`),
+          []
+        );
+        assert.deepStrictEqual(
+          yield* inspect(`
+export function Menu() {
+  return (
+    <DropdownMenuContent label={t("menu-actions")}>
+      {mine ? (
+        <>
+          <DropdownMenuItem icon={PencilEdit01Icon}>{t("edit")}</DropdownMenuItem>
+          <DropdownMenuItem icon={Delete02Icon} variant="destructive">{t("delete")}</DropdownMenuItem>
+        </>
+      ) : (
+        <DropdownMenuItem icon={Flag01Icon}>{t("report")}</DropdownMenuItem>
+      )}
+    </DropdownMenuContent>
+  );
+}`),
+          [AMONG, AFTER]
+        );
+      })
+  );
+
   it.effect("leaves plain TypeScript and the registry's sets alone", () =>
     Effect.gen(function* () {
       const source = `export const Menu = () => (

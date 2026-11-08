@@ -180,8 +180,10 @@ export function ResponsiveDialogSubject({
       <ItemMedia variant="icon">
         <OptionIcon icon={icon} />
       </ItemMedia>
-      <ItemContent>
-        <ItemTitle className="line-clamp-2">{children}</ItemTitle>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="line-clamp-3 wrap-anywhere" dir="auto">
+          {children}
+        </ItemTitle>
         {description === undefined ? null : (
           <ItemDescription className="line-clamp-2">
             {description}
