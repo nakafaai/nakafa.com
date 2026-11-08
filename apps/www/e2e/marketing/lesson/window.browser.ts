@@ -13,6 +13,7 @@ import {
   visibleShare,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
@@ -95,6 +96,8 @@ test("home lesson window stops turning once the reader picks a lesson", async ({
       },
       (context) =>
         Effect.gen(function* () {
+          // The window turns on a timer, which the context's clock moves on below instead of waiting it out.
+          yield* Effect.promise(() => context.clock.install());
           const page = yield* Effect.promise(() => context.newPage());
           yield* withObservedPageErrors(
             page,
@@ -126,7 +129,7 @@ test("home lesson window stops turning once the reader picks a lesson", async ({
                 })
               );
 
-              yield* Effect.promise(() => page.waitForTimeout(LESSON_WAIT_MS));
+              yield* Effect.promise(() => context.clock.runFor(LESSON_WAIT_MS));
               yield* Effect.promise(() =>
                 expect(
                   lesson
@@ -331,7 +334,8 @@ test("home lesson window keeps a focused control on the page while the window is
                   window.scrollTo(0, document.documentElement.scrollHeight)
                 )
               );
-              yield* Effect.promise(() => page.waitForTimeout(500));
+              // The window has had its chance to drop what it drew and the focus with it.
+              yield* Effect.promise(() => waitForQuiet(page));
               yield* Effect.promise(() => expect(probe).toBeFocused());
 
               // The window comes back, and the control is still the one with focus.

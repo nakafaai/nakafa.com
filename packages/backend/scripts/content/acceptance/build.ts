@@ -41,7 +41,9 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  * The build calls Turborepo directly. The root build script runs the policy
  * checks first, which prove nothing about the built app, and every browser
  * suite run would repeat what the local verification already runs on the same
- * commit.
+ * commit. It builds only the app that start serves (`--filter=www`): the other
+ * workspaces' builds are the API's and MCP's typechecks, CAS's type check, the
+ * CLI and the email export, which no browser suite reads.
  *
  * The start serves the build through Vite's preview server, which runs the Worker
  * in workerd (the Alchemy plugin of apps/www/vite.config.ts). The served app takes
@@ -51,7 +53,7 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  * @see https://man7.org/linux/man-pages/man1/nice.1.html
  */
 const applicationCommands = {
-  build: ["nice", "-n", "10", "bunx", "turbo", "run", "build"],
+  build: ["nice", "-n", "10", "bunx", "turbo", "run", "build", "--filter=www"],
   start: ["bunx", "--cwd", "apps/www", "vite", "preview", "--strictPort"],
 } as const;
 

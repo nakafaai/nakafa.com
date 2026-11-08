@@ -19,6 +19,7 @@ import {
   sidebarOf,
   waitForRunningSection,
 } from "@/e2e/support/player";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import {
   expectStillShell,
@@ -125,14 +126,14 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
       page.getByRole("button", { exact: true, name: "Finish" })
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
-  // Late streamed content would still move the page, so let it settle.
-  yield* Effect.sleep("750 millis");
+  // Late streamed content would still move the page, so let it go quiet.
+  yield* Effect.promise(() => waitForQuiet(page));
   // The view's button grows with its name as the press answers, which the page may do.
   yield* chooseView(page, hasTouch, "One question");
   const since = yield* readPageTime(page);
   yield* expectView(page, "One question");
   yield* expectRemembered(page, "single");
-  yield* Effect.sleep("2 seconds");
+  yield* Effect.promise(() => waitForQuiet(page));
   const observation = yield* readShellObservation(page, since);
   yield* Effect.sync(() => expectStillShell(observation, [true]));
 
