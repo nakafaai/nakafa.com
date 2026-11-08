@@ -28,7 +28,7 @@ import {
   getRouteMessages,
   loadLocaleMessages,
 } from "@repo/internationalization/src/messages";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Predicate, Record as Rec } from "effect";
 
 const app = { de: appDe, en: appEn, id: appId, ms: appMs };
 
@@ -38,7 +38,7 @@ const standalone = { de, en, id, ms };
 
 /** The key path of every word of an app dictionary, nested namespaces included. */
 function leafPaths(value: unknown, path: string): readonly string[] {
-  if (typeof value !== "object" || value === null) {
+  if (!Predicate.isObject(value)) {
     return [path];
   }
   return Arr.flatMap(Rec.toEntries(value), ([key, child]) =>

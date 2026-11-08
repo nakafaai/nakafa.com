@@ -1,5 +1,4 @@
 import {
-  type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
   type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
@@ -62,9 +61,9 @@ const inviteEmailCopy = {
   (organisation: string) => typeof InviteEmailCopySchema.Type
 >;
 
-/** Returns the reviewed product copy for one active app locale and the inviting organisation. */
+/** Returns the reviewed product copy for one app locale and the inviting organisation. */
 export function getInviteEmailCopy(
-  locale: ActiveAppLocaleCode,
+  locale: AppLocaleCode,
   organisation: string
 ) {
   return { ...inviteEmailCopy[locale](organisation), ...legalLabels[locale] };
