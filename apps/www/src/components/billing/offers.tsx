@@ -31,7 +31,6 @@ export function ProOfferDialog({
   offers: readonly ProOffer[] | null;
 }) {
   const t = useTranslations("Pricing");
-  const common = useTranslations("Common");
   const [picked, setPicked] = useState<ProOffer["offer"] | null>(null);
   // The list stays while the dialog animates out, so its body never empties in the last frames.
   const [listed, setListed] = useState<readonly ProOffer[]>(offers ?? []);
@@ -48,28 +47,23 @@ export function ProOfferDialog({
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={chosen === null || isPending}
+          onClick={() => {
+            if (chosen !== null) {
+              choose(chosen.offer);
+            }
+          }}
+          type="button"
+        >
+          <HugeIcons icon={Wallet01Icon} />
+          {t("offer-continue")}
+        </Button>
+      }
       description={t(
         sellsPlan ? "offer-description" : "offer-pass-description"
       )}
-      footer={
-        <>
-          <Button onClick={dismiss} type="button" variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={chosen === null || isPending}
-            onClick={() => {
-              if (chosen !== null) {
-                choose(chosen.offer);
-              }
-            }}
-            type="button"
-          >
-            <HugeIcons icon={Wallet01Icon} />
-            {t("offer-continue")}
-          </Button>
-        </>
-      }
       open={offers !== null}
       setOpen={(open) => {
         if (!open) {

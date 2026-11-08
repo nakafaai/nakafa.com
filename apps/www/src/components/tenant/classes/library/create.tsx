@@ -67,7 +67,6 @@ const kindOf = (type: string) =>
  */
 export function AddToLibrary() {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const locale = useLocale();
   const { classId, slug } = useClassScope();
   const viewer = useViewerQuery();
@@ -186,17 +185,12 @@ export function AddToLibrary() {
     <>
       <SchoolHeaderAdd label={t("library-add")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
-        description={t("library-add-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} onClick={submit}>
-              {t("library-submit")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} onClick={submit}>
+            {t("library-submit")}
+          </Button>
         }
+        description={t("library-add-description")}
         // A sent item's dialog empties once it has closed, so it keeps what was sent while it closes.
         onOpenChangeComplete={(next) => {
           if (!next && sent.current) {

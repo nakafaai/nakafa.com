@@ -56,7 +56,6 @@ export function AiChatMessageActions() {
             disabled={disabled}
             label={t("retry-message")}
             onClick={() => retry(order)}
-            tooltip={t("retry-message")}
           >
             <HugeIcons icon={Refresh03Icon} />
           </Action>
@@ -65,7 +64,6 @@ export function AiChatMessageActions() {
           <Action
             label={t("copy-message")}
             onClick={() => clipboard.copy(text)}
-            tooltip={t("copy-message")}
           >
             <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
           </Action>

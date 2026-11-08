@@ -182,7 +182,6 @@ function LineRemove({ pair }: { readonly pair: LinePair }) {
 
   return (
     <Button
-      aria-label={t("line-remove", { name: name.value })}
       className={removeShown({
         className:
           "absolute -translate-x-1/2 -translate-y-1/2 rounded-full focus-visible:opacity-100",
@@ -199,6 +198,7 @@ function LineRemove({ pair }: { readonly pair: LinePair }) {
       onPointerLeave={() => store.getState().light(Option.none())}
       size="icon-sm"
       style={{ left: place.x, top: place.y }}
+      tooltip={t("line-remove", { name: name.value })}
       type="button"
       variant="ghost"
     >

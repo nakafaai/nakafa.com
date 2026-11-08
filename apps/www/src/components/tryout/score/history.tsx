@@ -2,32 +2,19 @@ import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   ArrowDown01Icon,
-  Search02Icon,
-  Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
-import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import {
-  Autocomplete,
-  AutocompleteCollection,
-  AutocompleteEmpty,
-  AutocompleteGroup,
-  AutocompleteGroupLabel,
-  AutocompleteInput,
-  AutocompleteItem,
-  AutocompleteList,
-} from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
+  Picker,
+  PickerContent,
+  PickerItem,
+  PickerTrigger,
+} from "@repo/design-system/components/ui/picker";
 import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -48,41 +35,36 @@ type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
 type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
 type ScoredHistoryRow = TryoutAttemptHistoryProps["value"]["attempts"][number];
 
-/** Props of one attempt row: `value.attempt` is the option the picker lists. */
-interface TryoutAttemptHistoryItemProps {
-  value: {
-    attempt: {
-      attemptId: HistoryRow["attemptId"];
-      label: string;
-      subtitle: string;
-    };
-    isSelected: boolean;
-    onChoose: () => void;
-  };
-}
+/** One attempt of the picker, named by its number, with the moment it started under it. */
+function TryoutAttemptOption({
+  attempt,
+  locale,
+  onChoose,
+  selected,
+}: {
+  attempt: ScoredHistoryRow;
+  locale: HistoryIdentity["locale"];
+  onChoose: () => void;
+  selected: boolean;
+}) {
+  const t = useTranslations("Tryouts");
 
-/** Renders one selectable attempt row inside the history picker. */
-function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
   return (
-    <AutocompleteItem
-      className="min-h-8 py-1.5 text-sm sm:min-h-8"
-      onClick={value.onChoose}
-      value={value.attempt}
+    <PickerItem
+      icon={TransactionHistoryIcon}
+      onClick={onChoose}
+      selected={selected}
+      value={attempt}
     >
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className={rowLineVariants()}>{value.attempt.label}</span>
-        <span className={rowLineVariants({ line: "fact" })}>
-          {value.attempt.subtitle}
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className={rowLineVariants()}>
+          {t("attempt-select-label", { number: attempt.attemptNumber })}
         </span>
-      </div>
-      <HugeIcons
-        className={cn(
-          "ml-auto size-4 opacity-0 transition-opacity ease-out",
-          value.isSelected && "opacity-100"
-        )}
-        icon={Tick01Icon}
-      />
-    </AutocompleteItem>
+        <span className={rowLineVariants({ line: "fact" })}>
+          {formatMoment(attempt.startedAt, locale)}
+        </span>
+      </span>
+    </PickerItem>
   );
 }
 
@@ -147,12 +129,9 @@ function TryoutAttemptPlace() {
   );
 }
 
-/** Renders the prior production attempt-history picker styling. */
+/** The picker of a set's scored attempts, newest first, which loads older attempts as its end comes into view. */
 function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
-  // Choosing an attempt opens its own page, so the picker closes with the choice.
-  const [open, { close, set }] = useDisclosure(false);
   const tTryouts = useTranslations("Tryouts");
-  const tCommon = useTranslations("Common");
   const labelOf = (attempt: ScoredHistoryRow) =>
     tTryouts("attempt-select-label", { number: attempt.attemptNumber });
   const latest = Option.map(Arr.head(value.attempts), labelOf);
@@ -177,23 +156,9 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
     return null;
   }
 
-  const attemptOptions = Arr.map(value.attempts, (attempt) => ({
-    attemptId: attempt.attemptId,
-    label: tTryouts("attempt-select-label", {
-      number: attempt.attemptNumber,
-    }),
-    subtitle: formatMoment(attempt.startedAt, value.locale),
-  }));
-  const attemptGroups = [
-    {
-      items: attemptOptions,
-      value: tTryouts("attempt-menu-label"),
-    },
-  ];
-
   return (
-    <Popover onOpenChange={set} open={open}>
-      <PopoverTrigger
+    <Picker>
+      <PickerTrigger
         render={
           <Button
             className="group data-open:[&_.tryout-history-chevron]:rotate-180"
@@ -204,70 +169,28 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
         }
       >
         <TryoutAttemptFace>{label.value}</TryoutAttemptFace>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-0">
-        <Autocomplete
-          autoHighlight="always"
-          inline
-          items={attemptGroups}
-          itemToStringValue={(attempt) =>
-            `${attempt.label} ${attempt.subtitle}`
-          }
-          keepHighlight
-          open
-        >
-          <AutocompleteInput
-            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
-            clearLabel={tCommon("clear-search")}
-            placeholder={tTryouts("attempt-menu-search-placeholder")}
-            showClear
-            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
+      </PickerTrigger>
+      <PickerContent
+        empty={tTryouts("attempt-menu-empty")}
+        items={value.attempts}
+        itemToStringValue={(attempt) =>
+          `${labelOf(attempt)} ${formatMoment(attempt.startedAt, value.locale)}`
+        }
+        label={tTryouts("menu-history")}
+        onEnd={value.onLoadMore}
+        placeholder={tTryouts("attempt-menu-search-placeholder")}
+      >
+        {(attempt) => (
+          <TryoutAttemptOption
+            attempt={attempt}
+            key={attempt.attemptId}
+            locale={value.locale}
+            onChoose={() => value.onChoose(attempt.attemptId)}
+            selected={attempt.attemptId === value.selectedAttemptId}
           />
-          <AutocompleteEmpty>
-            {tTryouts("attempt-menu-empty")}
-          </AutocompleteEmpty>
-          <AutocompleteList
-            className="max-h-64"
-            onScroll={(event) => {
-              if (!value.onLoadMore) {
-                return;
-              }
-
-              const target = event.currentTarget;
-              const remainingScroll =
-                target.scrollHeight - target.scrollTop - target.clientHeight;
-
-              if (remainingScroll <= 48) {
-                value.onLoadMore();
-              }
-            }}
-            scrollArea={false}
-          >
-            {(group) => (
-              <AutocompleteGroup items={group.items} key={group.value}>
-                <AutocompleteGroupLabel>{group.value}</AutocompleteGroupLabel>
-                <AutocompleteCollection>
-                  {(attempt) => (
-                    <TryoutAttemptHistoryItem
-                      key={attempt.attemptId}
-                      value={{
-                        attempt,
-                        isSelected:
-                          attempt.attemptId === value.selectedAttemptId,
-                        onChoose: () => {
-                          close();
-                          value.onChoose(attempt.attemptId);
-                        },
-                      }}
-                    />
-                  )}
-                </AutocompleteCollection>
-              </AutocompleteGroup>
-            )}
-          </AutocompleteList>
-        </Autocomplete>
-      </PopoverContent>
-    </Popover>
+        )}
+      </PickerContent>
+    </Picker>
   );
 }
 

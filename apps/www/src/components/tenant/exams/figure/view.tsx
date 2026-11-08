@@ -39,11 +39,11 @@ export function ExamFigure() {
         <div className="absolute end-2 top-2 flex gap-1">
           {Option.isSome(editing) ? (
             <Button
-              aria-label={t("figure-edit")}
               onClick={() =>
                 openFigure({ draft: editing.value, editor, position })
               }
               size="icon-sm"
+              tooltip={t("figure-edit")}
               type="button"
               variant="outline"
             >
@@ -51,9 +51,9 @@ export function ExamFigure() {
             </Button>
           ) : null}
           <Button
-            aria-label={t("figure-remove")}
             onClick={onRemove}
             size="icon-sm"
+            tooltip={t("figure-remove")}
             type="button"
             variant="outline"
           >

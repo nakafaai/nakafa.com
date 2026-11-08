@@ -6,9 +6,10 @@ import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { LANDING_TARGET } from "@/lib/routing/target";
 
-type BackButtonProps = ComponentProps<typeof Button>;
-
-export function BackButton({ ...props }: BackButtonProps) {
+/** Goes back a page, or to the landing page when the tab has no page to go back to. */
+export function BackButton(
+  props: Omit<ComponentProps<typeof Button>, "size" | "tooltip">
+) {
   const t = useTranslations("Common");
   const router = useRouter();
   const navigate = useNavigate();

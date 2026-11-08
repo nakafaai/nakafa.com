@@ -4,12 +4,10 @@ import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -17,7 +15,6 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useViewerQuery } from "@/components/tenant/context";
 import { languageItems } from "@/components/tenant/settings/choices";
 import { levelsOf } from "@/components/tenant/start/state";
@@ -74,6 +71,7 @@ export function UnitLevelField({
   onChange: (level: Level) => void;
   value: Level;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
   const start = useTranslations("SchoolStart");
   const viewer = useViewerQuery();
@@ -110,17 +108,12 @@ export function UnitLevelField({
         <SelectTrigger className="w-full" id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="level" />
-
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons icon={SchoolIcon} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-level")}>
+          {Arr.map(items, (item) => (
+            <SelectItem icon={SchoolIcon} key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>
@@ -137,6 +130,7 @@ export function UnitLanguageField({
   onChange: (language: typeof AppLocaleCodeSchema.Type) => void;
   value: typeof AppLocaleCodeSchema.Type | null;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -155,16 +149,16 @@ export function UnitLanguageField({
         <SelectTrigger className="w-full" id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="language" />
-            {Arr.map(languageItems, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <CountryFlagIcon countryCode={item.countryCode} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-language")}>
+          {Arr.map(languageItems, (item) => (
+            <SelectItem
+              icon={<CountryFlagIcon countryCode={item.countryCode} />}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>

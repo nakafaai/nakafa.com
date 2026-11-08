@@ -3,7 +3,7 @@ import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Effect, Option } from "effect";
 import { readSessionCookie } from "@/lib/auth/cookie.server";
 import { hasStaticRelease } from "@/lib/routing/release";
-import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
+import { readRequestHostRole } from "@/lib/routing/school/host";
 import { SHELL_PATH, schoolEntryPath } from "@/lib/routing/shell";
 import { answerShell } from "@/lib/routing/shell.server";
 import { namesFile } from "@/lib/routing/template";
@@ -22,9 +22,8 @@ function readSchoolHostPath(request: Request): Option.Option<string> {
     return Option.none();
   }
   const { pathname } = new URL(request.url);
-  return Option.isSome(
-    Option.flatMap(readRequestHostname(request.headers), readSchoolSlug)
-  ) && !isSharedPath(pathname)
+  return readRequestHostRole(request.headers)._tag === "School" &&
+    !isSharedPath(pathname)
     ? Option.some(pathname)
     : Option.none();
 }

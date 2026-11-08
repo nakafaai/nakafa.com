@@ -236,7 +236,7 @@ describe("components/tenant/settings/mutation", () => {
       expect(Arr.map(elsewhere.page, (item) => item.id)).toEqual([first.id]);
     });
 
-    it("shows a client as revoked, at the time it is revoked, and no other client", () => {
+    it("shows a client as revoked, at the time it is revoked, and no other client or school", () => {
       const local = createLocalStore();
       const first = client("first");
       const second = client("second");
@@ -250,7 +250,21 @@ describe("components/tenant/settings/mutation", () => {
         { paginationOpts: later, slug },
         undefined
       );
+      local.seed(
+        integrations.clients.list,
+        { paginationOpts: paging, slug: otherSlug },
+        { continueCursor: "next", isDone: true, page: [first] }
+      );
       revokeClientChange(local.store, { clientId: first.id, slug });
+      expect(
+        Option.map(
+          local.store.getQuery(integrations.clients.list, {
+            paginationOpts: paging,
+            slug: otherSlug,
+          }),
+          (elsewhere) => Arr.map(elsewhere.page, (item) => item.status)
+        )
+      ).toEqual(Option.some(["active"]));
       const shown = Option.getOrThrow(
         local.store.getQuery(integrations.clients.list, {
           paginationOpts: paging,
