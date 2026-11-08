@@ -21,6 +21,9 @@ const ARTICLES = 'main article[id^="exercise-question-"]';
 /** The name of an option the key marks correct; an incorrect one ends with "Incorrect". */
 const CORRECT = /Correct\s*$/u;
 
+/** How a graded question's badge reads. */
+const GRADED = /^(?:Correct|Wrong)$/u;
+
 /** The global that holds the fewest question articles the page showed while it watched. */
 const FEWEST = "__nakafaFewestReviewArticles";
 
@@ -119,9 +122,6 @@ const expectFullReview = Effect.fn("NakafaE2E.expectFullTryoutReview")(
       await expect(
         articles.getByRole("button", { exact: true, name: "Explanation" })
       ).toHaveCount(QUESTIONS);
-      await expect(
-        page.locator('[data-slot="tryout-review-locked"]')
-      ).toHaveCount(0);
     });
     const question = questionArticle(page, 1);
     yield* Effect.promise(async () => {
@@ -271,7 +271,7 @@ test.describe("The review of a finished try-out", () => {
     );
   });
 
-  test("shows a free learner the preview under the Pro offer", async ({
+  test("shows a free learner every question with how it went, the free samples' keys and explanations, and the Pro offer in the others' place", async ({
     baseURL,
     page,
   }) => {
@@ -282,17 +282,44 @@ test.describe("The review of a finished try-out", () => {
           page.goto(entrySetHref, { waitUntil: "commit" })
         );
         yield* takeAttempt(page, "Start", "Start free", true);
+        const articles = page.locator(ARTICLES);
         yield* Effect.promise(async () => {
+          await expect(articles).toHaveCount(QUESTIONS, {
+            timeout: readinessTimeoutMilliseconds,
+          });
+          // Every question says how it went: the answered one is graded, the rest are unanswered.
           await expect(
-            page.locator('[data-slot="tryout-review-locked"]')
-          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-          await expect(page.locator("#tryout-review-offer")).toBeVisible();
+            questionArticle(page, 1).getByText(GRADED)
+          ).toBeVisible();
           await expect(
-            page
-              .locator(ARTICLES)
-              .getByRole("button", { exact: true, name: "Ask Nina" })
+            questionArticle(page, 3).getByText("Unanswered", { exact: true })
+          ).toBeVisible();
+          // A free sample marks its options against the key; a question past the samples marks none.
+          await expect(
+            questionArticle(page, 1).getByRole("checkbox", { name: CORRECT })
+          ).not.toHaveCount(0);
+          await expect(
+            questionArticle(page, 3).getByRole("checkbox", { name: CORRECT })
+          ).toHaveCount(0);
+          await expect(
+            articles.getByRole("button", { exact: true, name: "Ask Nina" })
           ).toHaveCount(0);
         });
+        yield* activate(
+          questionArticle(page, 3).getByRole("button", {
+            exact: true,
+            name: "Explanation",
+          }),
+          false
+        );
+        yield* Effect.promise(() =>
+          expect(
+            questionArticle(page, 3).getByRole("button", {
+              exact: true,
+              name: "Get Pro",
+            })
+          ).toBeVisible()
+        );
       })
     );
   });

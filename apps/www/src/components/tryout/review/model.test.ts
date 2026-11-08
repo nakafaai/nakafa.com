@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
 import {
   readsWhole,
   reviewCellsOf,
@@ -71,17 +70,17 @@ describe("readsWhole", () => {
 });
 
 describe("reviewCellsOf", () => {
-  it("numbers each question with its verdict, open only in a whole review", () => {
+  it("numbers each question with its verdict, every one open", () => {
     const questions = [
       makeTryoutQuestion("a"),
-      makeTryoutQuestion("b", answered(["first"])),
+      makeTryoutQuestion(
+        "b",
+        answered(["first"], { category: 1, ceiling: 1, status: "scored" })
+      ),
     ];
-    expect(reviewCellsOf(questions, true)).toEqual([
+    expect(reviewCellsOf(questions)).toEqual([
       { key: questions[0]?.placementId, shown: true, verdict: "unanswered" },
-      { key: questions[1]?.placementId, shown: true, verdict: "answered" },
+      { key: questions[1]?.placementId, shown: true, verdict: "correct" },
     ]);
-    expect(
-      Arr.every(reviewCellsOf(questions, false), (cell) => !cell.shown)
-    ).toBe(true);
   });
 });

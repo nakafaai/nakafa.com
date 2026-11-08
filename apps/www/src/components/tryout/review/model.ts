@@ -31,16 +31,15 @@ export function readsWhole(joined: readonly { readonly body: TryoutBody }[]) {
 }
 
 /**
- * The numbers of a finished section's navigator, in question order: each question's verdict, and a number
- * opens its question only where the review shows the questions whole.
+ * The numbers of a finished section's navigator, in question order: each question's verdict. The review
+ * shows every question, so every number opens its own.
  */
 export function reviewCellsOf(
-  questions: readonly TryoutRuntimeQuestion[],
-  whole: boolean
+  questions: readonly TryoutRuntimeQuestion[]
 ): readonly PlayerReviewCellModel[] {
   return Arr.map(questions, (question) => ({
     key: question.placementId,
-    shown: whole,
+    shown: true,
     verdict: verdictOfQuestion(question),
   }));
 }

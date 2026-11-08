@@ -35,8 +35,8 @@ import { useKeptFinished } from "@/components/tryout/set/name";
  * A finished attempt's page, in the player that ran it: its header, the questions it reviews in the list or
  * one at a time, the result in the pane at the screen's right from the large breakpoint, and the footer with
  * previous, next and, below that breakpoint, the result's sheet. The address names the current question, so
- * a reload opens it again. A reader who may not read the section whole has no question to move through: the
- * page shows its preview under the Pro offer, and the result holds the numbers alone.
+ * a reload opens it again. Every reader moves through every question and sees how each went; whether the
+ * reader may read every key and explanation (`whole`) decides only what each question opens.
  *
  * The page read sends the bodies with the runtime, so a question without its body is a broken read, which
  * the route's error boundary shows with Retry and reports, never a review without its questions.
@@ -71,14 +71,7 @@ export function TryoutReviewFrame({
       <TryoutExplainedContext value={explained}>
         <PlayerProvider
           address
-          // A reader who takes Pro on the page reads the section whole once its read comes back, so the
-          // player starts again with every question to move through.
-          key={whole ? "whole" : "preview"}
-          keys={
-            whole
-              ? Arr.map(runtime.questions, (question) => question.placementId)
-              : []
-          }
+          keys={Arr.map(runtime.questions, (question) => question.placementId)}
           mode={mode}
           review
         >
@@ -88,7 +81,7 @@ export function TryoutReviewFrame({
             label={t("finished-panel")}
             navigator={
               <PlayerSidebar
-                footer={whole ? <TryoutResultFooter /> : undefined}
+                footer={<TryoutResultFooter />}
                 title={t("finished-panel")}
               >
                 <TryoutResult />
@@ -102,7 +95,7 @@ export function TryoutReviewFrame({
           </PlayerFooter>
           <PlayerSheet
             description={t("finished-panel-description")}
-            footer={whole ? <TryoutResultFooter /> : undefined}
+            footer={<TryoutResultFooter />}
             title={t("finished-panel")}
           >
             <TryoutResult />

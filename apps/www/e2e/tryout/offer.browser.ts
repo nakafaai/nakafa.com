@@ -1,10 +1,10 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, Option } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { readFooterActions, setLargeText } from "@/e2e/support/footer";
+import { setLargeText } from "@/e2e/support/footer";
 import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
 import { activate, visibleLink } from "@/e2e/support/input";
 import {
@@ -13,7 +13,6 @@ import {
   runFirstSection,
   waitForRunningSection,
 } from "@/e2e/support/player";
-import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { arrive, arriveLocked, setHref } from "@/e2e/support/tryout";
 import { compactViewport } from "@/e2e/support/viewport";
@@ -21,8 +20,8 @@ import { compactViewport } from "@/e2e/support/viewport";
 /** The link to the page's Indonesian address, which the catalog resolves, since a slug can differ by locale. */
 const INDONESIAN_ALTERNATE = 'link[rel="alternate"][hreflang="id"]';
 
-/** The review that a free learner sees once the whole attempt is finished. */
-const LOCKED_REVIEW = '[data-slot="tryout-review-locked"]';
+/** A question past the section's free samples, whose explanation a free learner may not read. */
+const LOCKED_QUESTION = 3;
 
 /** The checkout action that the Pro offer's button starts. */
 const CHECKOUT_ACTION = "billing/sessions:generateCheckoutLink";
@@ -48,15 +47,30 @@ const holdCheckoutAction = (page: Page) =>
     server.onMessage((message) => socket.send(message));
   });
 
-/** The Pro offer's card: the card that holds the offer's heading. */
-const offerCard = (page: Page) =>
-  page.locator(CARD).filter({ has: page.locator("#tryout-review-offer") });
-
-/** The links and buttons of the offer's footer, which the offer's card holds. */
-const offerActions = (page: Page) =>
-  offerCard(page).locator(
-    '[data-slot="card-footer"] a, [data-slot="card-footer"] button'
+/** The Pro offer that a locked question's explanation shows in its place. */
+const offerOf = (page: Page) =>
+  page.locator(
+    `section[aria-labelledby="question-${LOCKED_QUESTION}-explanation"]`
   );
+
+/**
+ * Whether the offer's checkout stands inside the offer, and whether its label is cut. The script runs in the
+ * page, so it uses the browser's own APIs.
+ */
+const readCheckout = (checkout: Locator) =>
+  checkout.evaluate((element) => {
+    const offer = element.closest("section")?.getBoundingClientRect();
+    const box = element.getBoundingClientRect();
+    return {
+      clipped: element.scrollWidth > element.clientWidth,
+      inside:
+        offer !== undefined &&
+        box.left >= offer.left &&
+        box.right <= offer.right &&
+        box.top >= offer.top &&
+        box.bottom <= offer.bottom,
+    };
+  });
 
 /**
  * The section rows of the learner's attempt on its set page. Each one carries
@@ -135,9 +149,10 @@ const finishOtherSections = Effect.fn("NakafaE2E.finishOtherTryoutSections")(
 
 /**
  * Finishes the sections of a set as a free learner, then opens the review of
- * the first section in Indonesian on a compact phone. The offer's two actions
- * must sit inside its card, and each label must fit its own action. At large
- * text the offer's footer is narrow, and its checkout spinner must still show.
+ * the first section in Indonesian on a compact phone, where a question past the
+ * free samples offers Pro in its explanation's place. The checkout must sit
+ * inside the offer with its whole label, and at large text its spinner must
+ * still show.
  */
 const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
   function* (page: Page, baseURL: string) {
@@ -165,39 +180,35 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
         waitUntil: "commit",
       })
     );
+    const question = page.locator(`#exercise-question-${LOCKED_QUESTION}`);
     yield* Effect.promise(() =>
-      expect(page.locator(LOCKED_REVIEW)).toBeVisible({
-        timeout: readinessTimeoutMilliseconds,
-      })
+      expect(question).toBeVisible({ timeout: readinessTimeoutMilliseconds })
     );
-    // Labels are measured in the loaded Inter typeface, not in a fallback.
-    yield* Effect.promise(() =>
-      page.evaluate(async () => {
-        await document.fonts.ready;
-      })
+    yield* activate(
+      question.getByRole("button", {
+        exact: true,
+        name: app.Tryouts.explanation,
+      }),
+      false
     );
-
-    const actions = yield* Effect.promise(() =>
-      readFooterActions(offerActions(page))
-    );
-    yield* Effect.sync(() => {
-      expect(Arr.map(actions, ({ label }) => label)).toEqual([
-        app.Tryouts["paywall-compare"],
-        app.Pricing["pro-cta"],
-      ]);
-      for (const action of actions) {
-        expect(action.inside).toBe(true);
-        expect(action.clipped).toBe(false);
-      }
-    });
-
-    // Large text makes the offer's footer narrow. A narrow footer keeps the
-    // spinner of a pending checkout, so the learner sees that checkout started.
-    const rootSize = yield* setLargeText(page);
-    const checkout = offerCard(page).getByRole("button", {
+    const checkout = offerOf(page).getByRole("button", {
       exact: true,
       name: app.Pricing["pro-cta"],
     });
+    // Labels are measured in the loaded Inter typeface, not in a fallback.
+    yield* Effect.promise(async () => {
+      await expect(checkout).toBeVisible();
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
+    });
+    const placed = yield* Effect.promise(() => readCheckout(checkout));
+    yield* Effect.sync(() => {
+      expect(placed).toEqual({ clipped: false, inside: true });
+    });
+
+    // Large text keeps the spinner of a pending checkout, so the learner sees that checkout started.
+    const rootSize = yield* setLargeText(page);
     yield* activate(checkout, false);
     yield* Effect.promise(() =>
       expect(checkout.locator("svg.animate-spin")).toBeVisible({
@@ -215,7 +226,7 @@ test.describe("The Pro offer of a finished set, on a compact phone", () => {
   // flow runs each section in turn before it checks the offer.
   test.describe.configure({ timeout: 240_000 });
 
-  test("keeps the Pro offer's actions inside its card, and its checkout spinner visible at large text", async ({
+  test("keeps a locked explanation's Pro checkout inside its offer, and its spinner visible at large text", async ({
     baseURL,
     page,
   }) => {
