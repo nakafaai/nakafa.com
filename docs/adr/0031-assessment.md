@@ -257,7 +257,7 @@ has exactly one owner.
 | Module | Owns | Status | Replaces |
 | --- | --- | --- | --- |
 | `catalog` | Profiles, frozen manuscripts, and bundles | Planned | The catalog and the runtime bundle of `confect/tryouts`, wave B |
-| `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | The admission of try-out answers and section finishes is live (#1040). The rest is planned, wave B | `confect/tryouts/start`, `confect/tryouts/mutations`, and the try-out store `confect/tryouts/gate.ts`, wave B |
+| `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | The admission of try-out answers and section finishes is live (#1040), and so are the deadline rule and the one sweep of try-outs and sittings (`gate/deadline.ts`). The rest is planned, wave B | `confect/tryouts/start`, `confect/tryouts/mutations`, and the try-out store `confect/tryouts/gate.ts`, wave B |
 | `response` | Answer evaluation as pure functions, shared by the client and the server | Live as `confect/response` (#792) | `confect/response` and `confect/tryouts/response`, across waves A and B |
 | `scoring` | Raw, penalized, IRT, composite, and report scores | The estimator is live in `confect/tryouts/runtime`. The module is planned. | `confect/tryouts/score` and the estimator, wave B |
 | `grading` | The teacher's queue, Nina's suggestions (K6 and K7), grade release, and the frozen results of finished attempts (`assessmentResults`) | Planned, new | Nothing. Finished attempts are not converted (section 10) |
