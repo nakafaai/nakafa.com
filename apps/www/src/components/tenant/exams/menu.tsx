@@ -2,6 +2,7 @@ import {
   Copy01Icon,
   Delete02Icon,
   FileImportIcon,
+  TaskEdit01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -11,15 +12,18 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { SplitMenuTrigger } from "@/components/shared/split";
-import { DeleteExam } from "@/components/tenant/exams/delete";
+import {
+  ExamDeleteConfirm,
+  useDeleteExam,
+} from "@/components/tenant/exams/delete";
 import { useDuplicateExam } from "@/components/tenant/exams/duplicate";
 import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
 import { ExamLockMark } from "@/components/tenant/exams/lock";
@@ -40,6 +44,7 @@ export function ExamMenu() {
   const locked = useExamLocked();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
   const { isPending, press } = useDuplicateExam(exam, slug);
+  const remove = useDeleteExam(() => setDialog(null));
 
   // A gone exam has no try to open.
   if (gone) {
@@ -60,29 +65,35 @@ export function ExamMenu() {
         <TryAsStudent />
         <DropdownMenu>
           <SplitMenuTrigger />
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent
+            align="end"
+            className="w-48"
+            label={common("menu-actions")}
+          >
             <DropdownMenuGroup>
-              <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => setDialog("import")}>
-                  <HugeIcons icon={FileImportIcon} />
-                  {t("import-action")}
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={isPending} onClick={press}>
-                  <HugeIcons icon={Copy01Icon} />
-                  {t("duplicate-action")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => setDialog("delete")}
-                  variant="destructive"
-                >
-                  <HugeIcons icon={Delete02Icon} />
-                  {t("delete-action")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
+              <DropdownMenuItem
+                icon={FileImportIcon}
+                onClick={() => setDialog("import")}
+              >
+                {t("import-action")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={isPending}
+                icon={Copy01Icon}
+                onClick={press}
+              >
+                {t("duplicate-action")}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                icon={Delete02Icon}
+                onClick={() => setDialog("delete")}
+                variant="destructive"
+              >
+                {t("delete-action")}
+              </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -91,10 +102,15 @@ export function ExamMenu() {
         onOpenChange={(open) => setDialog(open ? "import" : null)}
         open={dialog === "import"}
       />
-      <DeleteExam
-        onOpenChange={(open) => setDialog(open ? "delete" : null)}
+      <ExamDeleteConfirm
+        onConfirm={remove.confirm}
         open={dialog === "delete"}
-      />
+        setOpen={(open) => setDialog(open ? "delete" : null)}
+      >
+        <ResponsiveDialogSubject icon={TaskEdit01Icon}>
+          {remove.title}
+        </ResponsiveDialogSubject>
+      </ExamDeleteConfirm>
     </>
   );
 }
@@ -108,7 +124,7 @@ export function ExamMenuFrame() {
 
   return (
     <ButtonGroup aria-label={t("exam-actions")}>
-      <Button aria-label={t("try-action")} disabled variant="outline">
+      <Button aria-label={t("try-action")} disabled>
         <TryAsStudentLabel />
       </Button>
       <DropdownMenu disabled>

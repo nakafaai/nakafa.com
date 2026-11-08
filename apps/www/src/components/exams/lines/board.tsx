@@ -3,6 +3,7 @@ import {
   useIsomorphicEffect,
   useWindowEvent,
 } from "@mantine/hooks";
+import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactNode, useRef, useState } from "react";
@@ -24,14 +25,16 @@ import {
 
 /**
  * A board's three tracks: the statements, the gap the lines cross, and the answers. A paper leaves the lines a wide
- * gap from a tablet up and a narrow one on a phone; the key in the teacher's panel keeps the narrow one.
+ * gap from a tablet up and a narrow one on a phone; the key in the teacher's panel keeps the narrow one. A board never
+ * draws narrower than its least width, where every part's words still read a dozen letters to a line beside its
+ * letter, its remove control and its dot; on a narrower screen it scrolls sideways inside its paper, as a table does.
  */
-const linesBoard = cva("relative grid min-w-0 items-start", {
+const linesBoard = cva("relative grid items-start", {
   variants: {
     size: {
-      key: "grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)]",
+      key: "min-w-md grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)]",
       paper:
-        "grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]",
+        "min-w-lg grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]",
     },
   },
 });
@@ -41,16 +44,6 @@ const linesColumn = cva(
   "relative row-start-1 grid min-w-0 content-start gap-2",
   {
     variants: { side: { sources: "col-start-1", targets: "col-start-3" } },
-  }
-);
-
-/** One part's row, ringed while it is in hand or under a pull. */
-const linesItem = cva(
-  "relative flex min-h-10 min-w-0 items-center gap-2 rounded-lg px-2 py-1",
-  {
-    variants: {
-      marked: { false: "", true: "ring-primary ring-2" },
-    },
   }
 );
 
@@ -162,9 +155,11 @@ export function LinesProvider({
         stretch,
       }}
     >
-      <div className={linesBoard({ size })} data-lines="" ref={root}>
-        <LinesOverlay />
-        {children}
+      <div className="min-w-0 overflow-x-auto overscroll-x-contain">
+        <div className={linesBoard({ size })} data-lines="" ref={root}>
+          <LinesOverlay />
+          {children}
+        </div>
       </div>
     </LinesContext>
   );
@@ -190,8 +185,10 @@ export function LinesColumn({
 }
 
 /**
- * One part of a board: its number or letter and its text, with its dot on the side that faces the other column.
- * An answer's whole row takes a pull's release, and a part ringed is in hand or under a pull.
+ * One part of a board: its outlined row, the number or letter that names it with its words, and its dot outside the
+ * row on the side that faces the other column, so a line leaves the dot in the open and touches no outline. The row
+ * reads chosen while its statement is in hand or a pull hovers its answer, and an answer's whole part takes a pull's
+ * release. The caller composes the row's words (`LineWords`) and anything at its end, such as a remove control.
  */
 export function LinesItem({
   children,
@@ -204,7 +201,7 @@ export function LinesItem({
   readonly name: string;
   readonly side: LineSide;
 }) {
-  const { store } = useLines();
+  const { store, stretch } = useLines();
   const marked = useStore(store, (state) =>
     side === "sources"
       ? Option.contains(state.held, id)
@@ -213,13 +210,23 @@ export function LinesItem({
 
   return (
     <li
-      className={linesItem({ marked })}
+      className="relative flex min-w-0 items-start gap-2"
       data-line-target={side === "targets" ? id : undefined}
     >
-      {side === "targets" ? <LineDot id={id} name={name} side={side} /> : null}
-      <span className="shrink-0 font-medium tabular-nums">{name}.</span>
-      <div className="min-w-0 flex-1">{children}</div>
-      {side === "sources" ? <LineDot id={id} name={name} side={side} /> : null}
+      {side === "targets" ? (
+        <LineMark beside>
+          <LineDot id={id} name={name} side={side} />
+        </LineMark>
+      ) : null}
+      <MarkedLine tone={marked ? "chosen" : "idle"} written={!stretch}>
+        <LineMark letter>{name}.</LineMark>
+        {children}
+      </MarkedLine>
+      {side === "sources" ? (
+        <LineMark beside>
+          <LineDot id={id} name={name} side={side} />
+        </LineMark>
+      ) : null}
     </li>
   );
 }

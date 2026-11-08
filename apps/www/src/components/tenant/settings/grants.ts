@@ -17,6 +17,7 @@ import {
   type Person,
   withoutItem,
 } from "@/components/tenant/settings/state";
+import { findLoaded } from "@/lib/data/loaded";
 
 /**
  * The roles the viewer may give a person. The Integration role belongs to an integration client
@@ -35,14 +36,8 @@ function nameOfPerson(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   personId: Person["id"]
 ) {
-  return Arr.findFirst(
-    Arr.flatMap(localStore.getAllQueries(tenancy.people.list), (query) =>
-      Option.match(query.value, {
-        onNone: (): Person[] => [],
-        onSome: (result) => [...result.page],
-      })
-    ),
-    (person) => person.id === personId
+  return findLoaded(localStore, tenancy.people.list, (value) =>
+    Arr.findFirst(value.page, (person) => person.id === personId)
   );
 }
 

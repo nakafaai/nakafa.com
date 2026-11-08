@@ -1,12 +1,11 @@
 import type { Ref } from "@confect/core";
+import { SchoolIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -31,6 +30,7 @@ export function SchoolUnitChoice({
   unitId: UnitId;
   units: readonly { readonly id: UnitId; readonly name: string }[];
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
   const items = Arr.map(units, (unit) => ({
     label: unit.name,
@@ -54,15 +54,12 @@ export function SchoolUnitChoice({
       >
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectLabel>{t("unit-choice")}</SelectLabel>
-          {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
+      <SelectContent label={common("menu-unit")}>
+        {Arr.map(items, (item) => (
+          <SelectItem icon={SchoolIcon} key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

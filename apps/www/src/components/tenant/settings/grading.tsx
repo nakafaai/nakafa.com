@@ -5,6 +5,7 @@ import {
 } from "@confect/react";
 import {
   Archive02Icon,
+  Calendar03Icon,
   Delete02Icon,
   PencilEdit02Icon,
   Target02Icon,
@@ -12,9 +13,14 @@ import {
 import records from "@repo/backend/confect/_generated/refs/records";
 import { DEFAULT_GRADING_SCHEME } from "@repo/backend/confect/records/scheme";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { startTransition } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -242,7 +248,6 @@ function GradingTable({
  */
 function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const { reach, slug } = useTenant();
   const remove = useMutation(records.schemes.remove).withOptimisticUpdate(
     removeSchemeChange
@@ -255,15 +260,18 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("edit")}
+        >
           {t("grading-edit")}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
+          icon={Delete02Icon}
           onClick={() => dialogs.show("remove")}
           variant="destructive"
         >
-          <HugeIcons icon={Delete02Icon} />
           {t("grading-remove")}
         </DropdownMenuItem>
       </RowItems>
@@ -271,32 +279,28 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
         <SchemeVersionDialog editing={Option.some(version)} key={dialogs.key} />
       ) : null}
       <ResponsiveDialog
-        description={t("grading-remove-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                dialogs.close();
-                startTransition(() =>
-                  saveSchool(
-                    () => remove({ schemeId: version.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              variant="destructive"
-            >
-              {t("grading-remove")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              dialogs.close();
+              startTransition(() =>
+                saveSchool(() => remove({ schemeId: version.id, slug }), SOURCE)
+              );
+            }}
+            variant="destructive"
+          >
+            {t("grading-remove")}
+          </Button>
         }
+        description={t("grading-remove-description")}
         open={dialogs.isOpen("remove")}
         setOpen={dialogs.setOpen}
         title={t("grading-remove-title")}
-      />
+      >
+        <ResponsiveDialogSubject
+          icon={Calendar03Icon}
+        >{`${t("grading-kktp")} ${version.kktp}`}</ResponsiveDialogSubject>
+      </ResponsiveDialog>
     </>
   );
 }

@@ -6,7 +6,7 @@ import {
 import { isNotFound, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
-import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
+import { readRequestHostRole } from "@/lib/routing/school/host";
 
 /**
  * The not-found page that the server answers a refused or missing address with
@@ -41,9 +41,7 @@ export function readNotFoundPageLocale(error: unknown): Option.Option<Locale> {
 export function notFoundPageOf(request: Request, locale: Locale): NotFoundPage {
   return {
     locale,
-    school: Option.isSome(
-      Option.flatMap(readRequestHostname(request.headers), readSchoolSlug)
-    ),
+    school: readRequestHostRole(request.headers)._tag === "School",
   };
 }
 

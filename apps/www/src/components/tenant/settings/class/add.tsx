@@ -1,4 +1,5 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -16,7 +17,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -55,7 +55,6 @@ export function SchoolClassAdd({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const create = useMutation(classroom.classes.create).withOptimisticUpdate(
     createClassChange
@@ -94,26 +93,17 @@ export function SchoolClassAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
-        description={hasNoPeriod ? t("class-add-no-period") : startsAs}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={!isComplete || isPending}
-              inert={isPending}
-              onClick={submit}
-              type="button"
-            >
-              {t("class-create")}
-            </Button>
-          </>
+        action={
+          <Button
+            disabled={!isComplete || isPending}
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
+            {t("class-create")}
+          </Button>
         }
+        description={hasNoPeriod ? t("class-add-no-period") : startsAs}
         open={isOpen}
         setOpen={setIsOpen}
         title={t("class-create")}
@@ -168,6 +158,7 @@ function ClassCohortSelect({
   periodId: Period["id"] | null;
   slug: TenantSlug;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohorts = useQuery(
@@ -208,14 +199,16 @@ function ClassCohortSelect({
             }
           />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-cohort")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={UserGroupIcon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       {isEmpty ? (

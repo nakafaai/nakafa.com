@@ -4,6 +4,7 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
+import { Key01Icon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import {
   ReceiverUrl,
@@ -26,7 +27,6 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -212,30 +212,21 @@ export function SchoolWebhookCreateDialog({
 
   return (
     <ResponsiveDialog
-      description={t("webhook-add-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={
-              Option.isNone(client) ||
-              Option.isNone(address) ||
-              Option.isNone(carried)
-            }
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            {t("webhook-create")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={
+            Option.isNone(client) ||
+            Option.isNone(address) ||
+            Option.isNone(carried)
+          }
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          {t("webhook-create")}
+        </Button>
       }
+      description={t("webhook-add-description")}
       open={open}
       setOpen={setOpen}
       title={t("webhook-add")}
@@ -263,14 +254,12 @@ export function SchoolWebhookCreateDialog({
             <SelectTrigger className="w-full" id={`${id}-client`}>
               <SelectValue placeholder={t("webhook-client-placeholder")} />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(active, (each) => (
-                  <SelectItem key={each.id} value={each.id}>
-                    {each.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-client")}>
+              {Arr.map(active, (each) => (
+                <SelectItem icon={Key01Icon} key={each.id} value={each.id}>
+                  {each.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {hasNoClient ? (
@@ -315,7 +304,6 @@ export function SchoolWebhookEditDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const change = useMutation(integrations.webhooks.change).withOptimisticUpdate(
     changeWebhookChange
   );
@@ -351,26 +339,17 @@ export function SchoolWebhookEditDialog({
 
   return (
     <ResponsiveDialog
-      description={t("webhook-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(address) || Option.isNone(carried)}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            {t("webhook-save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(address) || Option.isNone(carried)}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          {t("webhook-save")}
+        </Button>
       }
+      description={t("webhook-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("webhook-edit")}

@@ -1,5 +1,9 @@
 import { useMutation } from "@confect/react";
-import { IdCardIcon, Move01Icon } from "@hugeicons/core-free-icons";
+import {
+  IdCardIcon,
+  Move01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -10,7 +14,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Option, Schema } from "effect";
@@ -41,9 +44,10 @@ type CohortId = Cohort["id"];
 /**
  * The page's action that places a student of the school in the cohort: the Add student
  * button, ready from the first paint, and the dialog it opens for one student. The dialog
- * waits for the cohort: Save holds until the cohort is read, and an archived cohort says to
- * restore it first. The dialog closes as the placement is sent, and its student clears once
- * the server accepts it; a refusal opens the dialog again with its student and says why inside it.
+ * waits for the cohort: Save holds until the cohort is read. An archived cohort takes no one
+ * new, so its page offers no Add student (`SchoolCohortPage`). The dialog closes as the placement
+ * is sent, and its student clears once the server accepts it; a refusal opens the dialog again
+ * with its student and says why inside it.
  */
 export function SchoolPlacementAdd({
   cohortId,
@@ -56,7 +60,6 @@ export function SchoolPlacementAdd({
   status: Cohort["status"] | undefined;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const place = useMutation(tenancy.placements.place).withOptimisticUpdate(
     placeStudentChange
@@ -93,32 +96,19 @@ export function SchoolPlacementAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
-        description={
-          status === "archived"
-            ? t("placement-add-archived")
-            : t("placement-add-footer")
+        action={
+          <Button
+            disabled={
+              status !== "active" || personId === undefined || isPending
+            }
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
+            {t("placement-add")}
+          </Button>
         }
-        footer={
-          <>
-            <Button
-              onClick={() => setIsOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={
-                status !== "active" || personId === undefined || isPending
-              }
-              inert={isPending}
-              onClick={submit}
-              type="button"
-            >
-              {t("placement-add")}
-            </Button>
-          </>
-        }
+        description={t("placement-add-footer")}
         open={isOpen}
         setOpen={setIsOpen}
         title={t("placement-add")}
@@ -167,6 +157,7 @@ export function SchoolPlacementMove({
   const dialogs = useDialogs<"entry" | "move">();
   const [target, setTarget] = useState<CohortId | null>(null);
   const items = Arr.map(targets, (cohort) => ({
+    icon: UserGroupIcon,
     label: cohort.name,
     value: cohort.id,
   }));
@@ -188,12 +179,16 @@ export function SchoolPlacementMove({
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("move")}>
-          <HugeIcons icon={Move01Icon} />
+        <DropdownMenuItem
+          icon={Move01Icon}
+          onClick={() => dialogs.show("move")}
+        >
           {t("placement-move")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => dialogs.show("entry")}>
-          <HugeIcons icon={IdCardIcon} />
+        <DropdownMenuItem
+          icon={IdCardIcon}
+          onClick={() => dialogs.show("entry")}
+        >
           {t("roster-entry")}
         </DropdownMenuItem>
       </RowItems>
@@ -206,17 +201,12 @@ export function SchoolPlacementMove({
         />
       ) : null}
       <ResponsiveDialog
-        description={t("placement-move-footer")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={target === null} onClick={submit} type="button">
-              {t("placement-move-save")}
-            </Button>
-          </>
+        action={
+          <Button disabled={target === null} onClick={submit} type="button">
+            {t("placement-move-save")}
+          </Button>
         }
+        description={t("placement-move-footer")}
         open={dialogs.isOpen("move")}
         setOpen={dialogs.setOpen}
         title={t("placement-move")}
@@ -225,6 +215,7 @@ export function SchoolPlacementMove({
           <SelectField
             items={items}
             label={t("placement-move-to")}
+            menu={common("menu-cohort")}
             onChoose={(value) =>
               setTarget(
                 Option.getOrElse(
@@ -233,6 +224,7 @@ export function SchoolPlacementMove({
                 )
               )
             }
+            placeholder={t("placement-move-placeholder")}
             value={target}
           />
         </FieldGroup>

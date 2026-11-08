@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { Invoice01Icon } from "@hugeicons/core-free-icons";
+import { Calendar03Icon, Invoice01Icon } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import {
   type PlanPeriod,
@@ -101,6 +101,17 @@ export function SchoolOrderDialog({
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={Option.isNone(draft) || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={Invoice01Icon} />
+          {t("billing-issue")}
+        </Button>
+      }
       description={
         kind === "plan"
           ? t("billing-order-description")
@@ -108,26 +119,6 @@ export function SchoolOrderDialog({
               credits: schoolAccount.credits,
               drive: schoolAccount.storageMegabytes,
             })
-      }
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(draft) || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={Invoice01Icon} />
-            {t("billing-issue")}
-          </Button>
-        </>
       }
       open={open}
       setOpen={setOpen}
@@ -158,6 +149,7 @@ export function SchoolOrderDialog({
         {kind === "plan" ? (
           <SelectField
             items={Arr.map(SchoolPeriod.literals, (each) => ({
+              icon: Calendar03Icon,
               label: t("billing-months", {
                 discount: schoolPeriodDiscounts[each],
                 months: each,
@@ -165,6 +157,7 @@ export function SchoolOrderDialog({
               value: String(each),
             }))}
             label={t("billing-order-period")}
+            menu={common("menu-period")}
             onChoose={(value) => {
               const chosen = Number(value);
               if (isMonths(chosen)) {
@@ -207,7 +200,6 @@ export function SchoolOrderDialog({
                     )
                   }
                   type="button"
-                  variant="outline"
                 >
                   {`+${formatCount(preset, locale)}`}
                 </Button>

@@ -1,7 +1,4 @@
-import {
-  optionDirection,
-  optionLetters,
-} from "@repo/backend/confect/exams/letters";
+import { partDirection, partLetter } from "@repo/backend/confect/exams/letters";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useId } from "react";
@@ -32,9 +29,7 @@ export function SittingChoice({
 }) {
   const disabled = usePaperLocked();
   const id = useId();
-  const labels = Arr.map(choice.options, (option) => option.label);
-  const letterOf = optionLetters(labels);
-  const direction = optionDirection(labels);
+  const direction = partDirection(choice.options);
 
   if (choice.maxChoices === 1) {
     return (
@@ -51,7 +46,7 @@ export function SittingChoice({
             disabled={disabled}
             id={`${id}-${option.id}`}
             key={option.id}
-            letter={letterOf(index)}
+            letter={partLetter(choice.options, index)}
             value={option.id}
           >
             <SittingDocument document={option.label} size="line" />
@@ -73,7 +68,7 @@ export function SittingChoice({
           disabled={disabled}
           id={`${id}-${option.id}`}
           key={option.id}
-          letter={letterOf(index)}
+          letter={partLetter(choice.options, index)}
           onCheckedChange={(checked) =>
             onChoose(
               toggleOption(response, option.id, checked, choice.maxChoices)

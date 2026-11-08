@@ -20,9 +20,15 @@ import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import { Array as Arr, Option, Schema } from "effect";
 import { type ComponentProps, startTransition, useState } from "react";
@@ -252,7 +258,6 @@ function SchoolMembersBody() {
 function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
   );
@@ -298,37 +303,46 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("rename")}
+        >
           {t("person-rename")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => dialogs.show("give")}>
-          <HugeIcons icon={UserStar01Icon} />
+        <DropdownMenuItem
+          icon={UserStar01Icon}
+          onClick={() => dialogs.show("give")}
+        >
           {t("roles-assign-dialog")}
         </DropdownMenuItem>
         {member.status === "notInvited" ? (
           <DropdownMenuItem
             disabled={sendLocale === undefined}
+            icon={MailSend01Icon}
             onClick={() => dialogs.show("invite")}
           >
-            <HugeIcons icon={MailSend01Icon} />
             {t("invite-action")}
           </DropdownMenuItem>
         ) : null}
         {member.status === "notInvited" && cardOffered(member.roles) ? (
-          <DropdownMenuItem onClick={() => dialogs.show("card")}>
-            <HugeIcons icon={IdCardIcon} />
+          <DropdownMenuItem
+            icon={IdCardIcon}
+            onClick={() => dialogs.show("card")}
+          >
             {t("invite-card")}
           </DropdownMenuItem>
         ) : null}
         {removable ? (
-          <DropdownMenuItem
-            onClick={() => dialogs.show("remove")}
-            variant="destructive"
-          >
-            <HugeIcons icon={UserRemove01Icon} />
-            {t("member-remove")}
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              icon={UserRemove01Icon}
+              onClick={() => dialogs.show("remove")}
+              variant="destructive"
+            >
+              {t("member-remove")}
+            </DropdownMenuItem>
+          </>
         ) : null}
       </RowItems>
       {dialogs.kind === "rename" ? (
@@ -370,21 +384,23 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       />
       <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
       <ResponsiveDialog
-        description={t("member-remove-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button onClick={removeMember} type="button" variant="destructive">
-              {t("member-remove-confirm")}
-            </Button>
-          </>
+        action={
+          <Button onClick={removeMember} type="button" variant="destructive">
+            {t("member-remove-confirm")}
+          </Button>
         }
+        description={t("member-remove-description")}
         open={dialogs.isOpen("remove")}
         setOpen={dialogs.setOpen}
         title={t("member-remove-title")}
-      />
+      >
+        <ResponsiveDialogSubject
+          description={member.email ?? undefined}
+          icon={UserCircleIcon}
+        >
+          {member.name}
+        </ResponsiveDialogSubject>
+      </ResponsiveDialog>
     </>
   );
 }

@@ -1,5 +1,9 @@
 import { QueryResult, useMutation } from "@confect/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  Building03Icon,
+  SchoolIcon,
+} from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import type { IssuedClient } from "@repo/backend/confect/integrations/clients.spec";
@@ -66,11 +70,13 @@ export function SchoolClientCreateDialog({
   // Each choice carries the scope it sends, so the whole school never travels as a unit ID.
   const scopeItems = [
     {
+      icon: SchoolIcon,
       label: t("grant-scope-school"),
       scope: { kind: "tenant" } satisfies GrantScope,
       value: "school",
     },
     ...Arr.map(units, (unit) => ({
+      icon: Building03Icon,
       label: unit.name,
       scope: { kind: "unit", unitId: unit.id } satisfies GrantScope,
       value: unit.id,
@@ -108,28 +114,19 @@ export function SchoolClientCreateDialog({
 
   return (
     <ResponsiveDialog
-      description={t("client-add-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            aria-busy={isPending || undefined}
-            disabled={Option.isNone(clientName)}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <Spinner icon={Add01Icon} isLoading={isPending} />
-            {t("client-create")}
-          </Button>
-        </>
+      action={
+        <Button
+          aria-busy={isPending || undefined}
+          disabled={Option.isNone(clientName)}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <Spinner icon={Add01Icon} isLoading={isPending} />
+          {t("client-create")}
+        </Button>
       }
+      description={t("client-add-description")}
       open={open}
       setOpen={setOpen}
       title={t("client-add")}
@@ -147,6 +144,7 @@ export function SchoolClientCreateDialog({
         <SelectField
           items={scopeItems}
           label={t("client-scope")}
+          menu={common("menu-scope")}
           onChoose={setScope}
           value={scope}
         />
@@ -215,7 +213,6 @@ export function SchoolClientEditDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const update = useMutation(integrations.clients.update).withOptimisticUpdate(
     updateClientChange
@@ -252,25 +249,16 @@ export function SchoolClientEditDialog({
 
   return (
     <ResponsiveDialog
-      description={t("client-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(clientName)}
-            onClick={save}
-            type="button"
-          >
-            {t("save")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(clientName)}
+          onClick={save}
+          type="button"
+        >
+          {t("save")}
+        </Button>
       }
+      description={t("client-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("client-edit")}

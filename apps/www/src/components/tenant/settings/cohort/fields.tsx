@@ -1,9 +1,9 @@
+import { Mortarboard01Icon } from "@hugeicons/core-free-icons";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -52,6 +52,7 @@ export function CohortGradeField({
   onChange: (grade: string | null) => void;
   value: string | null;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
   const level = use(CohortLevelContext);
   if (level === null) {
@@ -66,14 +67,16 @@ export function CohortGradeField({
         <SelectTrigger className="w-full" id={id}>
           <SelectValue placeholder={t("cohort-grade-placeholder")} />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Arr.map(gradeItems, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-grade")}>
+          {Arr.map(gradeItems, (item) => (
+            <SelectItem
+              icon={Mortarboard01Icon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>

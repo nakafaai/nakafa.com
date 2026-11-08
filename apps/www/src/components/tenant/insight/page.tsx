@@ -7,6 +7,7 @@ import { Share08Icon, Target02Icon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ import { PageFrame } from "@/components/shared/content/frame";
 import { pageRowVariants } from "@/components/shared/content/width";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { markOf } from "@/components/tenant/classes/marks";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -106,6 +108,7 @@ function useLeadsSchool() {
  * instead of offering an empty list.
  */
 function TeacherInsight() {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -155,9 +158,18 @@ function TeacherInsight() {
               <SelectTrigger aria-label={t("class")} className="w-32 sm:w-56">
                 <SelectValue placeholder={t("class")} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent label={common("menu-class")}>
                 {Arr.map(items, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
+                  <SelectItem
+                    icon={
+                      <PersonAvatar
+                        className="size-5"
+                        mascot={markOf(item.value)}
+                      />
+                    }
+                    key={item.value}
+                    value={item.value}
+                  >
                     {item.label}
                   </SelectItem>
                 ))}

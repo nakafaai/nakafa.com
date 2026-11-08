@@ -13,6 +13,20 @@ const STAGING_STAGE = "staging";
 /** The zone that holds every public hostname of Nakafa, School hosts included. */
 export const NAKAFA_ZONE = "nakafa.com";
 
+/**
+ * The labels under the zone whose hosts serve a Worker of their own through an
+ * exact route, which beats the School wildcard: staging, the API, MCP and CAS
+ * hosts. No school may take one (`readHostRole` refuses each), and the redirect
+ * of a main site page on another subdomain (`deploy/redirect.ts`) leaves them to
+ * their Worker.
+ */
+export const OWN_HOST_LABELS = ["staging", "api", "mcp", "cas"] as const;
+
+/** The host of one label with a Worker of its own, such as `api.nakafa.com`. */
+export function ownHost(label: (typeof OWN_HOST_LABELS)[number]) {
+  return `${label}.${NAKAFA_ZONE}`;
+}
+
 /** The only accounts that may open staging through Cloudflare Access. */
 const STAGING_OWNER_EMAILS = [
   "nabilakbarazzima@gmail.com",
@@ -88,7 +102,7 @@ export function webExposure(stage: string) {
   }
   if (stage === STAGING_STAGE) {
     return {
-      routes: [hostRoute(`staging.${NAKAFA_ZONE}`)],
+      routes: [hostRoute(ownHost("staging"))],
       workersDev: false,
       access: {
         name: workerName("web", stage),
@@ -105,11 +119,13 @@ export function webExposure(stage: string) {
 }
 
 /**
- * A production API or MCP Worker on its own exact host. Other stages do not
+ * A production API, MCP or CAS Worker on its own exact host. Other stages do not
  * deploy these Workers, so they get no route.
  */
-export function productionHostExposure(host: string) {
-  return { routes: [hostRoute(host)], workersDev: false };
+export function productionHostExposure(
+  label: Exclude<(typeof OWN_HOST_LABELS)[number], "staging">
+) {
+  return { routes: [hostRoute(ownHost(label))], workersDev: false };
 }
 
 /**
@@ -118,7 +134,7 @@ export function productionHostExposure(host: string) {
  */
 export function casFrontExposure(stage: string) {
   if (stage === PRODUCTION_DEPLOY_STAGE) {
-    return productionHostExposure("cas.nakafa.com");
+    return productionHostExposure("cas");
   }
   return { routes: [], workersDev: true };
 }

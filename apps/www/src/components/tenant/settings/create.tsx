@@ -1,5 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
+import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -28,15 +29,12 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { CountryFlagIcon } from "@/components/shared/flag";
-import {
-  languageItems,
-  timeZoneItems,
-} from "@/components/tenant/settings/choices";
+import { timeZoneItems } from "@/components/tenant/settings/choices";
 import { addUnitChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
+  UnitLanguageField,
   UnitLevelField,
   UnitNameField,
 } from "@/components/tenant/settings/units/fields";
@@ -148,24 +146,17 @@ function SchoolUnitCreateForm({
 
   return (
     <ResponsiveDialog
-      description={t("unit-add-description")}
-      footer={
+      action={
         <>
           <p className="text-muted-foreground me-auto text-sm">
             {t("unit-add-footer")}
           </p>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
           <Button disabled={!ready} onClick={submit} type="button">
             {t("unit-add-submit")}
           </Button>
         </>
       }
+      description={t("unit-add-description")}
       // An added unit's name is cleared once the dialog has closed, so the closing dialog keeps it.
       onOpenChangeComplete={(next) => {
         if (!next && sent.current) {
@@ -194,43 +185,24 @@ function SchoolUnitCreateForm({
             <SelectTrigger className="w-full" id={`${id}-zone`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent label={common("menu-zone")}>
               {Arr.map(timeZoneItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
+                <SelectItem
+                  icon={Globe02Icon}
+                  key={item.value}
+                  value={item.value}
+                >
                   {item.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-language`}>
-            {t("unit-page-language")}
-          </FieldLabel>
-          <Select
-            items={languageItems}
-            onValueChange={(value) => {
-              const next =
-                Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
-              if (Option.isSome(next)) {
-                setLanguageChoice(next.value);
-              }
-            }}
-            value={contentLanguage}
-          >
-            <SelectTrigger className="w-full" id={`${id}-language`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(languageItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  <CountryFlagIcon countryCode={item.countryCode} />
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <UnitLanguageField
+          id={`${id}-language`}
+          onChange={setLanguageChoice}
+          value={contentLanguage}
+        />
       </FieldGroup>
     </ResponsiveDialog>
   );

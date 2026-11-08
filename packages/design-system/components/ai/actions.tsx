@@ -1,10 +1,6 @@
+import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
@@ -19,59 +15,27 @@ export function Actions({ className, children, ...props }: ActionsProps) {
   );
 }
 
-type ActionProps = ComponentProps<typeof Button> & {
-  tooltip?: string;
-  label?: string;
-};
-
-/** Renders the button owned by one response action, named for assistive technology by its label. */
-function ActionButton({
+/**
+ * Renders one response action: an icon button whose label names it on hover and focus and for assistive
+ * technology, as every icon button does.
+ */
+export function Action({
   children,
-  className,
   label,
-  variant = "outline",
-  size = "icon",
   ...props
-}: ComponentProps<typeof Button> & { label: string | undefined }) {
+}: ButtonPrimitive.Props & {
+  /** The action in words. */
+  label: string;
+}) {
   return (
     <Button
-      className={cn(className)}
-      size={size}
+      size="icon"
+      tooltip={label}
       type="button"
-      variant={variant}
+      variant="outline"
       {...props}
     >
       {children}
-      <span className="sr-only">{label}</span>
     </Button>
-  );
-}
-
-/**
- * Renders one response action with optional tooltip context. The action names
- * itself for assistive technology: its label, or its tooltip when it has none.
- */
-export function Action({ children, label, tooltip, ...props }: ActionProps) {
-  if (!tooltip) {
-    return (
-      <ActionButton label={label} {...props}>
-        {children}
-      </ActionButton>
-    );
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <ActionButton label={label || tooltip} {...props}>
-            {children}
-          </ActionButton>
-        }
-      />
-      <TooltipContent side="bottom">
-        <p>{tooltip}</p>
-      </TooltipContent>
-    </Tooltip>
   );
 }

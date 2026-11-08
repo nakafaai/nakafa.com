@@ -1,4 +1,5 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import { use } from "react";
@@ -24,24 +25,26 @@ function PopoverContent({
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
   return (
-    <PopoverPrimitive.Portal container={use(PortalContainer)}>
-      <PopoverPrimitive.Positioner
-        align={align}
-        alignOffset={alignOffset}
-        className="isolate z-50"
-        side={side}
-        sideOffset={sideOffset}
-      >
-        <PopoverPrimitive.Popup
-          className={cn(
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 flex w-72 origin-(--transform-origin) flex-col gap-2 rounded-md border p-4 shadow-md outline-hidden ease-out",
-            className
-          )}
-          data-slot="popover-content"
-          {...props}
-        />
-      </PopoverPrimitive.Positioner>
-    </PopoverPrimitive.Portal>
+    <ButtonGroupVariant value={undefined}>
+      <PopoverPrimitive.Portal container={use(PortalContainer)}>
+        <PopoverPrimitive.Positioner
+          align={align}
+          alignOffset={alignOffset}
+          className="isolate z-50"
+          side={side}
+          sideOffset={sideOffset}
+        >
+          <PopoverPrimitive.Popup
+            className={cn(
+              "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 flex w-72 origin-(--transform-origin) flex-col gap-2 rounded-md border p-4 shadow-md outline-hidden ease-out",
+              className
+            )}
+            data-slot="popover-content"
+            {...props}
+          />
+        </PopoverPrimitive.Positioner>
+      </PopoverPrimitive.Portal>
+    </ButtonGroupVariant>
   );
 }
 

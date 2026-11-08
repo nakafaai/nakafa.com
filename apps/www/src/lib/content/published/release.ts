@@ -10,8 +10,9 @@ import {
   type PublishedProjectionIdentity,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
+
 /** Active signed publication identity shared across one multi-read request. */
-export type ContentReleasePin = ActiveContentReleaseId | null;
+type ContentReleasePin = ActiveContentReleaseId | null;
 /**
  * Decodes the release that one signed read names. A pinned read needs nothing
  * more: the content store already proved its release against the pin.

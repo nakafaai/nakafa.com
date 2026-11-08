@@ -28,12 +28,27 @@ const readOverflow = (page: Page) =>
     )
   );
 
+/** The name of the exam's right answer: the momentum of a 2 kg ball at 3 m/s. */
+const MOMENTUM = /6 kg·m\/s/u;
+
+/** The sections of the School landing, one per feature, in the order the page shows them. */
+const FEATURE_SECTIONS = [
+  "forum",
+  "library",
+  "tasks",
+  "exams",
+  "reports",
+  "insight",
+  "graduation",
+  "parents",
+] as const;
+
 const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/en/school");
     yield* Effect.promise(() =>
       expect(page.getByRole("heading", { level: 1 })).toContainText(
-        "Your whole school"
+        "One platform for your whole school"
       )
     );
     yield* Effect.promise(() =>
@@ -41,13 +56,24 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
         page.locator("#hero").getByRole("link", { name: "Start free trial" })
       ).toHaveAttribute("href", "/en/school/new")
     );
+    for (const feature of FEATURE_SECTIONS) {
+      yield* Effect.promise(() =>
+        expect(page.locator(`section#${feature} h2`)).toHaveCount(1)
+      );
+    }
+    // The exam answers itself with the momentum of a 2 kg ball at 3 m/s.
+    const exam = page.locator("#exams");
+    yield* Effect.promise(() => exam.scrollIntoViewIfNeeded());
     yield* Effect.promise(() =>
-      expect(page.locator("[data-school-feature]")).toHaveCount(9)
+      expect(exam.getByRole("radio", { checked: true })).toHaveAccessibleName(
+        MOMENTUM,
+        { timeout: 10_000 }
+      )
     );
     yield* Effect.promise(() =>
-      expect(page.locator('[data-school-plan="pro"]')).toContainText(
-        rupiah("1.790.000")
-      )
+      expect(
+        page.locator("#closing").getByRole("link", { name: "See pricing" })
+      ).toHaveAttribute("href", "/en/school/pricing")
     );
     expect(yield* readOverflow(page)).toBeLessThanOrEqual(0);
   }
@@ -56,32 +82,46 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
 const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/id/school/pricing");
+    // Each paid card shows its price a month, and what a month costs over 12 months.
     const max = page.locator('[data-school-plan="max"]');
     yield* Effect.promise(() => expect(max).toContainText(rupiah("7.990.000")));
+    yield* Effect.promise(() => expect(max).toContainText(rupiah("7.590.500")));
+    yield* Effect.promise(() =>
+      expect(page.locator('[data-school-plan="pro"]')).toContainText(
+        rupiah("1.700.500")
+      )
+    );
+    // The comparison's heads name the plans alone.
+    yield* Effect.promise(() =>
+      expect(page.locator("#compare thead")).not.toContainText("akun")
+    );
 
     // Max with 550 added accounts holds a school of 1,050 for Rp16.735.000 a month.
-    const calculator = page.locator("[data-school-calculator]");
+    const calculator = page.locator("#accounts");
+    yield* Effect.promise(() => calculator.scrollIntoViewIfNeeded());
     yield* Effect.promise(() =>
       calculator.getByRole("button", { name: "Max" }).click()
     );
     const added = calculator.getByLabel("Akun yang ditambah");
     yield* Effect.promise(() => added.fill("550"));
     yield* Effect.promise(() => added.blur());
+    const figures = calculator.locator("dl");
+    yield* Effect.promise(() => expect(figures).toContainText("1.050"));
     yield* Effect.promise(() =>
-      expect(calculator.locator("dl")).toContainText("1.050")
-    );
-    yield* Effect.promise(() =>
-      expect(calculator.locator("dl")).toContainText(rupiah("16.735.000"))
+      expect(figures).toContainText(rupiah("16.735.000"))
     );
 
     // Twelve months take 5 % off and bill the whole year at once.
     yield* Effect.promise(() =>
-      page.getByRole("button", { name: TWELVE_MONTHS }).click()
+      calculator.getByRole("button", { name: TWELVE_MONTHS }).click()
     );
-    yield* Effect.promise(() => expect(max).toContainText(rupiah("7.590.500")));
     yield* Effect.promise(() =>
-      expect(max).toContainText(rupiah("91.086.000"))
+      expect(figures).toContainText(rupiah("15.898.250"))
     );
+    yield* Effect.promise(() =>
+      expect(figures).toContainText(rupiah("190.779.000"))
+    );
+    yield* Effect.promise(() => expect(figures).toContainText("hemat 5%"));
     expect(yield* readOverflow(page)).toBeLessThanOrEqual(0);
   }
 );
@@ -93,7 +133,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
       viewport: { height: viewport.height, width: viewport.width },
     });
 
-    test("the landing leads to the free trial and shows the plans", async ({
+    test("the landing leads to the free trial and shows every feature's screen", async ({
       page,
     }) => {
       await Effect.runPromise(
@@ -101,7 +141,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
       );
     });
 
-    test("the pricing page follows the period and counts added accounts", async ({
+    test("the pricing page shows each plan's yearly price and counts added accounts by period", async ({
       page,
     }) => {
       await Effect.runPromise(

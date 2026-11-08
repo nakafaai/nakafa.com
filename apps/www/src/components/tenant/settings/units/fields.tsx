@@ -1,4 +1,6 @@
 import { QueryResult } from "@confect/react";
+import { SchoolIcon } from "@hugeicons/core-free-icons";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -12,7 +14,9 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { useViewerQuery } from "@/components/tenant/context";
+import { languageItems } from "@/components/tenant/settings/choices";
 import { levelsOf } from "@/components/tenant/start/state";
 
 /** One level of a school, as the unit schema names it. */
@@ -67,6 +71,7 @@ export function UnitLevelField({
   onChange: (level: Level) => void;
   value: Level;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
   const start = useTranslations("SchoolStart");
   const viewer = useViewerQuery();
@@ -103,9 +108,54 @@ export function UnitLevelField({
         <SelectTrigger className="w-full" id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent label={common("menu-level")}>
           {Arr.map(items, (item) => (
-            <SelectItem key={item.value} value={item.value}>
+            <SelectItem icon={SchoolIcon} key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Field>
+  );
+}
+
+/** The language of a unit's pages, each language with its flag, as the dialogs that add and edit a unit ask for it. */
+export function UnitLanguageField({
+  id,
+  onChange,
+  value,
+}: {
+  id: string;
+  onChange: (language: typeof AppLocaleCodeSchema.Type) => void;
+  value: typeof AppLocaleCodeSchema.Type | null;
+}) {
+  const common = useTranslations("Common");
+  const t = useTranslations("SchoolSettings");
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{t("unit-page-language")}</FieldLabel>
+      <Select
+        items={languageItems}
+        onValueChange={(next) => {
+          const chosen = Schema.decodeUnknownOption(AppLocaleCodeSchema)(next);
+          if (Option.isSome(chosen)) {
+            onChange(chosen.value);
+          }
+        }}
+        value={value}
+      >
+        <SelectTrigger className="w-full" id={id}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent label={common("menu-language")}>
+          {Arr.map(languageItems, (item) => (
+            <SelectItem
+              icon={<CountryFlagIcon countryCode={item.countryCode} />}
+              key={item.value}
+              value={item.value}
+            >
               {item.label}
             </SelectItem>
           ))}

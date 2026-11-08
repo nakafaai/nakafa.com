@@ -6,25 +6,18 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useNavigate } from "@tanstack/react-router";
 import { Function as Fn } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { useExam } from "@/components/tenant/exams/provider";
 import { removeExamUpdate } from "@/components/tenant/exams/removal";
 
 /**
- * Asks once before the open draft is deleted, as Canva asks before a design goes to the trash. The
- * editor's menu opens it (ExamMenu). On confirm the exam leaves the lists and the home at once and the
- * teacher lands on the exams; a refusal puts it back with the action-error toast.
+ * The delete of the open draft, as Canva asks before a design goes to the trash: the editor's menu (ExamMenu) asks with
+ * `ExamDeleteConfirm`, and on confirm the exam leaves the lists and the home at once and the teacher lands on the
+ * exams; a refusal puts it back with the action-error toast. `close` closes the confirmation first.
  */
-export function DeleteExam({
-  onOpenChange,
-  open,
-}: {
-  onOpenChange: (open: boolean) => void;
-  open: boolean;
-}) {
-  const t = useTranslations("Exams");
-  const common = useTranslations("Common");
+export function useDeleteExam(close: () => void) {
   const { exam, slug } = useExam();
   const navigate = useNavigate();
   const remove = useMutation(exams.exams.remove).withOptimisticUpdate(
@@ -37,7 +30,7 @@ export function DeleteExam({
    * on screen drew the exam as not available, with its error, before the exams opened.
    */
   async function confirm() {
-    onOpenChange(false);
+    close();
     const examId = exam.id;
     await navigate({
       params: { slug },
@@ -50,23 +43,42 @@ export function DeleteExam({
     );
   }
 
+  return { confirm, title: exam.title };
+}
+
+/**
+ * Asks once before an exam is deleted, from its editor or its row in the list: the exam it removes in the body, and
+ * Cancel beside Delete in the footer.
+ */
+export function ExamDeleteConfirm({
+  children,
+  onConfirm,
+  open,
+  setOpen,
+}: {
+  /** The body: the exam it removes, a `ResponsiveDialogSubject` with its title. */
+  children: ReactNode;
+  onConfirm: () => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+
   return (
     <ResponsiveDialog
-      description={t("delete-description")}
-      footer={
-        <>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button onClick={confirm} variant="destructive">
-            <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-            {common("delete")}
-          </Button>
-        </>
+      action={
+        <Button onClick={onConfirm} variant="destructive">
+          <HugeIcons aria-hidden="true" icon={Delete02Icon} />
+          {common("delete")}
+        </Button>
       }
+      description={t("delete-description")}
       open={open}
-      setOpen={onOpenChange}
+      setOpen={setOpen}
       title={t("delete-title")}
-    />
+    >
+      {children}
+    </ResponsiveDialog>
   );
 }

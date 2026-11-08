@@ -44,7 +44,6 @@ export function PlayerFinish({
   title: string;
 }) {
   const t = useTranslations("Player");
-  const tCommon = useTranslations("Common");
   const overlay = usePlayer((state) => state.overlay);
   const waiting = usePlayer((state) => state.pending !== null);
   const open = usePlayer((state) => state.open);
@@ -67,26 +66,21 @@ export function PlayerFinish({
         <span className="max-sm:sr-only">{label}</span>
       </Button>
       <ResponsiveDialog
+        action={
+          <Button
+            aria-busy={pending || undefined}
+            disabled={locked}
+            inert={pending}
+            onClick={onFinish}
+            type="button"
+            variant="destructive"
+          >
+            {pending ? <Spinner /> : <HugeIcons icon={StopIcon} />}
+            {label}
+          </Button>
+        }
         description={description}
         finalFocus={!waiting}
-        footer={
-          <>
-            <Button onClick={close} type="button" variant="outline">
-              {tCommon("cancel")}
-            </Button>
-            <Button
-              aria-busy={pending || undefined}
-              disabled={locked}
-              inert={pending}
-              onClick={onFinish}
-              type="button"
-              variant="destructive"
-            >
-              {pending ? <Spinner /> : <HugeIcons icon={StopIcon} />}
-              {label}
-            </Button>
-          </>
-        }
         onOpenChangeComplete={(next) => {
           if (!next) {
             settle();

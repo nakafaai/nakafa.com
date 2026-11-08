@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Tag01Icon } from "@hugeicons/core-free-icons";
+import { Tag01Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import insight from "@repo/backend/confect/_generated/refs/insight";
@@ -57,6 +57,7 @@ const ShownTags = Schema.Struct({
  * keeps the fields of the last one until its own are read, so the body never blanks.
  */
 export function QuestionTags() {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolInsight");
   const { slug } = useTenant();
   const id = useId();
@@ -79,8 +80,7 @@ export function QuestionTags() {
         <HeaderLabel>{t("tags")}</HeaderLabel>
       </Button>
       <ResponsiveDialog
-        description={t("tags-description")}
-        footer={
+        action={
           hasNoExam ? (
             <Link
               className={buttonVariants()}
@@ -95,6 +95,7 @@ export function QuestionTags() {
             </Button>
           )
         }
+        description={t("tags-description")}
         open={open}
         setOpen={setOpen}
         title={t("tags")}
@@ -115,9 +116,13 @@ export function QuestionTags() {
                 <SelectTrigger className="w-full" id={`${id}-exam`}>
                   <SelectValue placeholder={t("exam-placeholder")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent label={common("menu-exam")}>
                   {Arr.map(items, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
+                    <SelectItem
+                      icon={TaskEdit01Icon}
+                      key={item.value}
+                      value={item.value}
+                    >
                       {item.label}
                     </SelectItem>
                   ))}

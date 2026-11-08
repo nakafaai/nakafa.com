@@ -245,7 +245,6 @@ function ArchivedChats({ shown }: { shown: boolean }) {
         aria-pressed={shown}
         className="w-full justify-start"
         onClick={() => choose(CHAT_FILTER, ["archived"])}
-        size="sm"
         variant={shown ? "secondary" : "ghost"}
       >
         <HugeIcons icon={Archive02Icon} />
