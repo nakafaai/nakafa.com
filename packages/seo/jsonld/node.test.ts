@@ -1,0 +1,261 @@
+import { describe, expect, it } from "@effect/vitest";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { FOUNDER, ORGANIZATION_ID } from "@repo/seo/jsonld/constants";
+import {
+  makeBreadcrumbNodes,
+  makeCollectionPageNode,
+  makeContributorsNode,
+  makeEducationalOrganizationNode,
+  makeFaqPageNode,
+  makeProductNode,
+  makeSurahNode,
+  makeWebsiteNode,
+} from "@repo/seo/jsonld/node";
+
+describe("makeEducationalOrganizationNode", () => {
+  it("describes the site as an educational organization that names its founder", () => {
+    const node = makeEducationalOrganizationNode({
+      alternateName: "Nakafa",
+      description: "Free learning for every student",
+      knowsAbout: ["Matematika", "Fisika"],
+    });
+
+    expect(node).toMatchObject({
+      "@context": "https://schema.org",
+      "@id": ORGANIZATION_ID,
+      "@type": "EducationalOrganization",
+      alternateName: "Nakafa",
+      areaServed: COMPANY_IDENTITY.registeredAddress.country,
+      description: "Free learning for every student",
+      founder: FOUNDER,
+      image: COMPANY_IDENTITY.logoUrl,
+    });
+    expect(node).toMatchObject({ knowsAbout: ["Matematika", "Fisika"] });
+  });
+});
+
+describe("makeBreadcrumbNodes", () => {
+  it("returns no node for an empty hierarchy", () => {
+    expect(makeBreadcrumbNodes([])).toEqual([]);
+  });
+
+  it("returns one BreadcrumbList node that carries every item", () => {
+    const items = [
+      {
+        "@type": "ListItem" as const,
+        item: "https://nakafa.com/en",
+        name: "Home",
+        position: 1,
+      },
+    ];
+
+    expect(makeBreadcrumbNodes(items)).toEqual([
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: items,
+      },
+    ]);
+  });
+});
+
+describe("makeCollectionPageNode", () => {
+  const input = {
+    description: "Articles",
+    items: [
+      {
+        name: "Algebra",
+        url: "https://nakafa.com/en/articles/math/algebra",
+      },
+    ],
+    name: "Mathematics",
+    url: "https://nakafa.com/en/articles/math",
+  };
+
+  it("lists every item as a WebPage part", () => {
+    const node = makeCollectionPageNode(input);
+
+    expect(node["@type"]).toBe("CollectionPage");
+    expect(node.hasPart).toEqual([
+      {
+        "@type": "WebPage",
+        name: "Algebra",
+        url: "https://nakafa.com/en/articles/math/algebra",
+      },
+    ]);
+    expect(node).not.toHaveProperty("datePublished");
+  });
+
+  it("names the date that the collection was published, when it has one", () => {
+    expect(
+      makeCollectionPageNode({ ...input, datePublished: "2026-10-01" })
+    ).toMatchObject({ datePublished: "2026-10-01" });
+  });
+});
+
+describe("makeSurahNode", () => {
+  it("describes one surah as a free chapter of the book, with no page count", () => {
+    const node = makeSurahNode({
+      bookName: "Quran",
+      bookUrl: "https://nakafa.com/en/quran",
+      description: "Read Surah Al-Fatihah with 7 verses.",
+      inLanguage: "en",
+      meaning: "The Opening",
+      name: "Al-Fatihah",
+      position: 1,
+      url: "https://nakafa.com/en/quran/1",
+    });
+
+    expect(node).toMatchObject({
+      "@type": "Chapter",
+      alternateName: "The Opening",
+      isAccessibleForFree: true,
+      isPartOf: {
+        "@type": "Book",
+        name: "Quran",
+        url: "https://nakafa.com/en/quran",
+      },
+      position: 1,
+    });
+    expect(node).not.toHaveProperty("numberOfPages");
+  });
+});
+
+describe("makeContributorsNode", () => {
+  it("lists each person in order, with the profiles they have", () => {
+    const node = makeContributorsNode({
+      description: "The people who build Nakafa.",
+      inLanguage: "en",
+      name: "Contributor",
+      people: [
+        {
+          name: "Nabil",
+          profiles: ["https://github.com/nabilfatih"],
+          username: "nabilfatih",
+        },
+        { name: "Sita", profiles: [], username: "sita" },
+      ],
+      url: "https://nakafa.com/en/contributor",
+    });
+
+    expect(node.mainEntity.itemListElement).toStrictEqual([
+      {
+        "@type": "ListItem",
+        item: {
+          "@type": "Person",
+          "@id": "https://nakafa.com/#person-nabilfatih",
+          name: "Nabil",
+          url: "https://nakafa.com/en/contributor",
+          sameAs: ["https://github.com/nabilfatih"],
+        },
+        position: 1,
+      },
+      {
+        "@type": "ListItem",
+        item: {
+          "@type": "Person",
+          "@id": "https://nakafa.com/#person-sita",
+          name: "Sita",
+          url: "https://nakafa.com/en/contributor",
+        },
+        position: 2,
+      },
+    ]);
+  });
+});
+
+describe("makeProductNode", () => {
+  it("offers the plan in each currency, by the month and before tax", () => {
+    const node = makeProductNode({
+      description: "Compare the plans.",
+      image: "https://nakafa.com/og.png",
+      name: "Nakafa Pro",
+      offers: [
+        { amount: 79_000, currency: "IDR" },
+        { amount: 8.99, currency: "USD" },
+      ],
+      url: "https://nakafa.com/en/pricing",
+    });
+
+    expect(node).toMatchObject({
+      "@type": "Product",
+      brand: { name: "Nakafa" },
+      name: "Nakafa Pro",
+    });
+    expect(node.offers).toHaveLength(2);
+    expect(node.offers[0]).toMatchObject({
+      price: 79_000,
+      priceCurrency: "IDR",
+      priceSpecification: { unitCode: "MON", valueAddedTaxIncluded: false },
+      url: "https://nakafa.com/en/pricing",
+    });
+  });
+});
+
+describe("makeFaqPageNode", () => {
+  it("returns one FAQPage node whose questions carry their answers in order", () => {
+    expect(
+      makeFaqPageNode({
+        inLanguage: "en",
+        items: [
+          {
+            answer: "Start with arithmetic.",
+            question: "How do I learn math?",
+          },
+          { answer: "Yes, it is free.", question: "Is it free?" },
+        ],
+        url: "https://nakafa.com/en",
+      })
+    ).toEqual({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      inLanguage: "en",
+      mainEntity: [
+        {
+          "@type": "Question",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Start with arithmetic.",
+          },
+          name: "How do I learn math?",
+        },
+        {
+          "@type": "Question",
+          acceptedAnswer: { "@type": "Answer", text: "Yes, it is free." },
+          name: "Is it free?",
+        },
+      ],
+      url: "https://nakafa.com/en",
+    });
+  });
+});
+
+describe("makeWebsiteNode", () => {
+  it("describes the site with the search action of its search page, in the locale of the page", () => {
+    const node = makeWebsiteNode({
+      alternateName: "Nakafa: Free Lessons",
+      description: "Free learning for every student",
+      locale: "en",
+    });
+
+    expect(node).toMatchObject({
+      "@context": "https://schema.org",
+      "@id": new URL("#website", COMPANY_IDENTITY.url).href,
+      "@type": "WebSite",
+      alternateName: "Nakafa: Free Lessons",
+      description: "Free learning for every student",
+      inLanguage: "en",
+      maintainer: { "@id": ORGANIZATION_ID },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${COMPANY_IDENTITY.url}/en/search?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+      publisher: { "@id": ORGANIZATION_ID },
+      url: COMPANY_IDENTITY.url,
+    });
+  });
+});

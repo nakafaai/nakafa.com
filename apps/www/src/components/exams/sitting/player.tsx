@@ -52,8 +52,8 @@ import { useNow } from "@/components/player/now";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
-import { sentAction } from "@/components/tenant/exams/action";
 import { useHeartbeat } from "@/components/tenant/exams/beat";
+import { schoolCall } from "@/components/tenant/write";
 
 /** The error of a query that failed, or none while it loads or once it answered. */
 function failureOf<A, E>(result: QueryResult.QueryResult<A, E>) {
@@ -99,7 +99,7 @@ export function StudentPlayer({
   useHeartbeat({
     isOpen: isActive(attempt.state),
     join: (session) =>
-      sentAction(() =>
+      schoolCall(() =>
         beat({ attemptId: attempt.id, deviceId, session, slug })
       ).pipe(Effect.map((present) => present.token)),
     source: "components/exams/sitting/player",

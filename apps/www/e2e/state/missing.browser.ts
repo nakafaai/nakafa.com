@@ -360,18 +360,39 @@ const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
 });
 
 /**
- * The addresses that the Worker answers with 404 before any route renders: a
- * school tree address on the main host, a removed route, and an unsupported
- * system resource. `answer.server.test.ts` checks which page answers each, and
- * the tests above check the not-found page itself, so here only the status is
- * checked.
+ * The addresses that the Worker answers with 404: a school tree address on the
+ * main host, which moves to the visitor's locale and still names no page there, a
+ * removed route, and an unsupported system resource. `answer.server.test.ts`
+ * checks which page answers each, and the tests above check the not-found page
+ * itself, so here only the status is checked.
  */
 const PROXY_ANSWERS = [
-  "/school",
   "/school/anything",
   "/en/events",
   "/missing-machine-document.xml",
 ];
+
+/**
+ * The School landing written without its locale opens in the visitor's locale,
+ * as every School page of the main host does (`locale/bare.ts`), so a visitor who
+ * types nakafa.com/school reads it instead of a missing page.
+ */
+test("/school opens the School landing in the visitor's locale", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const response = yield* openAddress(page, "/school");
+        yield* Effect.sync(() => {
+          expect(response?.status()).toBe(200);
+          expect(new URL(page.url()).pathname).toBe("/en/school");
+        });
+      })
+    )
+  );
+});
 
 for (const address of PROXY_ANSWERS) {
   test(`${address} answers 404`, async ({ page }) => {

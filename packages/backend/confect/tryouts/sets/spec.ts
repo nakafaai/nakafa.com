@@ -2,7 +2,7 @@ import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/Pagi
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
+import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import {
   setFilterValidator,
@@ -50,15 +50,15 @@ export const emptySetPage = {
   page: [],
 };
 /** Stable client failure for invalid signed-catalog pagination. */
-export class PublishedSetPaginationError extends Schema.TaggedError<PublishedSetPaginationError>()(
-  "PublishedSetPaginationError",
-  {
-    code: Schema.Literals([
-      "INVALID_TRYOUT_SET_CURSOR",
-      "INVALID_TRYOUT_SET_PAGE_SIZE",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class PublishedSetPaginationError extends Schema.TaggedError<
+  PublishedSetPaginationError,
+  { readonly brand: unique symbol }
+>()("PublishedSetPaginationError", {
+  code: Schema.Literals([
+    "INVALID_TRYOUT_SET_CURSOR",
+    "INVALID_TRYOUT_SET_PAGE_SIZE",
+  ]),
+  message: Schema.String,
+}) {}
 /** Paginates one signed list and invalidates cursors when its rows move. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
