@@ -4,8 +4,7 @@ import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import { Array as Arr, Effect, HashSet, Order, Record as Rec } from "effect";
-import { baseRenderers } from "@/lib/content/renderer/domain/base";
-import { rendererDomainImplementations } from "@/lib/content/renderer/selection";
+import { rendererImplementations } from "@/lib/content/renderer/selection";
 
 vi.mock("use-intl", () => ({
   /** Keeps registry discovery independent from navigation runtime behavior. */
@@ -70,7 +69,7 @@ describe("renderer manifest", () => {
   );
 
   it.effect(
-    "keeps every registered domain exactly aligned with the manifest",
+    "registers every visual for every domain, exactly as the manifest names them",
     () =>
       Effect.gen(function* () {
         const { rendererManifest } = yield* Effect.promise(
@@ -80,34 +79,23 @@ describe("renderer manifest", () => {
         const semanticNames = HashSet.fromIterable<string>(
           semanticComponentNames
         );
-        const expectedBaseNames = Arr.sort(
-          Arr.filter(
-            manifest.base,
-            (name) => !HashSet.has(semanticNames, name)
-          ),
-          Order.String
-        );
 
         expect(
           Arr.sort(
-            Arr.map(baseRenderers, ({ name }) => name),
+            Arr.map(rendererImplementations, ({ name }) => name),
             Order.String
           )
-        ).toEqual(expectedBaseNames);
-
-        for (const domain of manifest.domains) {
-          const expectedDomainNames = Arr.sort(domain.components, Order.String);
-
-          expect(
-            Arr.sort(
-              Arr.map(
-                rendererDomainImplementations[domain.name],
-                ({ name }) => name
-              ),
-              Order.String
-            )
-          ).toEqual(expectedDomainNames);
-        }
+        ).toEqual(
+          Arr.sort(
+            Arr.filter(manifest.base, (name) => !HashSet.has(semanticNames, name)),
+            Order.String
+          )
+        );
+        expect(
+          Arr.every(manifest.domains, ({ components }) =>
+            Arr.isReadonlyArrayEmpty(components)
+          )
+        ).toBe(true);
       })
   );
 });

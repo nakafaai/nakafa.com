@@ -35,7 +35,8 @@ import {
 import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainRenderers = [
+/** Every physics visual, which any lesson in any domain may use. */
+export const physicsRenderers = [
   {
     name: physicsComponentNames.accelerationGraphCard,
     component: AccelerationGraphCard,

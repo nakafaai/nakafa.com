@@ -13,7 +13,7 @@ const contentKey = ContentKeySchema.make("test:renderer-components");
 
 afterEach(() => {
   vi.doUnmock("@repo/design-system/lib/markdown/semantic");
-  vi.doUnmock("@/lib/content/renderer/domain/site");
+  vi.doUnmock("@/lib/content/renderer/registry/politics");
   vi.resetModules();
 });
 
@@ -115,11 +115,11 @@ describe("renderer components", () => {
       })
   );
 
-  it.effect("rejects a base and selected-domain ownership collision", () =>
+  it.effect("rejects a name that a visual registry also claims", () =>
     Effect.gen(function* () {
       yield* Effect.sync(() =>
-        vi.doMock("@/lib/content/renderer/domain/site", () => ({
-          domainRenderers: [{ component: () => null, name: "InlineMath" }],
+        vi.doMock("@/lib/content/renderer/registry/politics", () => ({
+          politicsRenderers: [{ component: () => null, name: "InlineMath" }],
         }))
       );
       const { resolveRendererComponents } = yield* Effect.promise(
@@ -141,12 +141,12 @@ describe("renderer components", () => {
   );
 
   it.effect(
-    "rejects duplicate implementations inside the selected domain",
+    "rejects duplicate implementations of one name",
     () =>
       Effect.gen(function* () {
         yield* Effect.sync(() =>
-          vi.doMock("@/lib/content/renderer/domain/site", () => ({
-            domainRenderers: [
+          vi.doMock("@/lib/content/renderer/registry/politics", () => ({
+            politicsRenderers: [
               { component: () => null, name: "SiteWidget" },
               { component: () => null, name: "SiteWidget" },
             ],
@@ -170,7 +170,7 @@ describe("renderer components", () => {
       })
   );
 
-  it.effect("resolves only the signed renderer from its selected domain", () =>
+  it.effect("resolves only the signed renderers", () =>
     Effect.gen(function* () {
       const { semanticMdxComponents } = yield* Effect.promise(
         () => import("@repo/design-system/lib/markdown/semantic")
@@ -193,23 +193,20 @@ describe("renderer components", () => {
     })
   );
 
-  it.effect("rejects a renderer registered only in another domain", () =>
+  it.effect("resolves any visual for a lesson of any domain", () =>
     Effect.gen(function* () {
       const { resolveRendererComponents } = yield* Effect.promise(
         () => import("@/lib/content/renderer/components")
       );
-      const failure = yield* resolveRendererComponents({
+      const components = yield* resolveRendererComponents({
         contentKey,
         rendererDomain: "site",
-        requiredComponents: ["Triangle"],
-      }).pipe(Effect.flip);
-
-      expect(failure).toMatchObject({
-        _tag: "RendererImplementationMissing",
-        componentName: "Triangle",
-        contentKey,
-        rendererDomain: "site",
+        requiredComponents: ["Triangle", "AtomShellLab", "VirusRoleLab"],
       });
+
+      expect(components).toHaveProperty("Triangle");
+      expect(components).toHaveProperty("AtomShellLab");
+      expect(components).toHaveProperty("VirusRoleLab");
     })
   );
 });

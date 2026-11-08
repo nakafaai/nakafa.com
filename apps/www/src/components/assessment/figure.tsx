@@ -20,7 +20,7 @@ import { MathVisual } from "@/lib/content/renderer/client/base/visual/math";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 import { LineEquation } from "@/lib/content/renderer/client/mathematics/equation";
 import { UnitCircle } from "@/lib/content/renderer/client/mathematics/geometry";
-import { NumberLine } from "@/lib/content/renderer/client/snbt/math/number";
+import { NumberLine } from "@/lib/content/renderer/client/mathematics/number";
 
 /** The data chart of a figure, whose code loads when a figure draws one, as a lesson's charts do. */
 const SeriesChart = withHydrationBoundary(
