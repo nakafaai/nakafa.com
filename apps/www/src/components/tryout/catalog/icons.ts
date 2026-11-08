@@ -84,7 +84,6 @@ export const TRYOUT_SUBJECT_ICONS: Readonly<Record<string, IconSvgElement>> = {
 export const TRYOUT_YEAR_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> = [
   Calendar01Icon,
   CalendarsIcon,
-  DeskIcon,
   DigitalClockIcon,
   StopWatchIcon,
   SunMoonIcon,

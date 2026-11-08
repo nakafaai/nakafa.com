@@ -61,10 +61,10 @@ describe("tryouts/queries/catalog", () => {
     () =>
       Effect.gen(function* () {
         const world = yield* tryoutWorld();
-        const page = <Ref extends typeof catalog.getCountryPage>(
-          ref: Ref,
-          publicPath: string
-        ) => world.visitor.query(ref, { appLocale: "id", publicPath });
+        const args = (publicPath: string) => ({
+          appLocale: "id" as const,
+          publicPath,
+        });
         expect(
           yield* world.visitor.query(catalog.getHubPage, { appLocale: "id" })
         ).toEqual({
@@ -81,7 +81,10 @@ describe("tryouts/queries/catalog", () => {
           sourceRevision: FIXTURE_REVISION,
         });
         expect(
-          yield* page(catalog.getCountryPage, "try-out/indonesia-id")
+          yield* world.visitor.query(
+            catalog.getCountryPage,
+            args("try-out/indonesia-id")
+          )
         ).toMatchObject({
           country: { countryKey: "indonesia" },
           exams: [
@@ -99,14 +102,20 @@ describe("tryouts/queries/catalog", () => {
           publicPath: "try-out/indonesia/snbt/2027-id",
         };
         expect(
-          yield* page(catalog.getExamPage, "try-out/indonesia/snbt-id")
+          yield* world.visitor.query(
+            catalog.getExamPage,
+            args("try-out/indonesia/snbt-id")
+          )
         ).toMatchObject({
           country: { countryKey: "indonesia" },
           exam: { examKey: "snbt", groupAxis: "year" },
           groups: [group],
         });
         expect(
-          yield* page(catalog.getGroupPage, "try-out/indonesia/snbt/2027-id")
+          yield* world.visitor.query(
+            catalog.getGroupPage,
+            args("try-out/indonesia/snbt/2027-id")
+          )
         ).toMatchObject({
           exam: { examKey: "snbt" },
           group,
@@ -114,9 +123,9 @@ describe("tryouts/queries/catalog", () => {
           tracks: [{ groupKey: "2027", trackKey: "2027" }],
         });
         expect(
-          yield* page(
+          yield* world.visitor.query(
             catalog.getTrackPage,
-            "try-out/indonesia/snbt/2027/utbk-id"
+            args("try-out/indonesia/snbt/2027/utbk-id")
           )
         ).toMatchObject({
           country: { countryKey: "indonesia" },
