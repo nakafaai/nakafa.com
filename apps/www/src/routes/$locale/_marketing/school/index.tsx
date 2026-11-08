@@ -36,14 +36,18 @@ import { readStaticData } from "@/lib/static/data";
  * of the paid plans.
  */
 export const Route = createFileRoute("/$locale/_marketing/school/")({
+  // A warm of a link to this page is a preload: it takes the page's code and data, never the sections a reader
+  // reaches by scrolling, which a navigation opens here before the page commits.
+  beforeLoad: async ({ preload }) => {
+    if (!preload) {
+      await openSchoolLanding();
+    }
+  },
   loader: async ({ params }) => {
-    const [, messages] = await Promise.all([
-      openSchoolLanding(),
-      readStaticData(readRouteMessages, {
-        locale: params.locale,
-        namespaces: ["Common", "SchoolSite"],
-      }),
-    ]);
+    const messages = await readStaticData(readRouteMessages, {
+      locale: params.locale,
+      namespaces: ["Common", "SchoolSite"],
+    });
     const t = createTranslator({
       locale: params.locale,
       messages,
