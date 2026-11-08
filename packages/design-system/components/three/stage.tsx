@@ -71,7 +71,7 @@ function StudioEnvironment() {
 export function ScienceStage({
   children,
   floor,
-  frameloop,
+  frameloop = "demand",
   reach = DEFAULT_REACH,
 }: {
   readonly children: ReactNode;
