@@ -1,13 +1,3 @@
-import { divisionCells } from "@repo/design-system/components/contents/mathematics/bacterial/layout";
-import {
-  NO_DIVISION,
-  stepDivision,
-} from "@repo/design-system/components/contents/mathematics/bacterial/sketch";
-import {
-  type BacteriaStore,
-  createBacteriaStore,
-  shownGeneration,
-} from "@repo/design-system/components/contents/mathematics/bacterial/store";
 import {
   BacterialGenerations,
   BacterialSpeeds,
@@ -18,6 +8,16 @@ import {
   BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial/growth";
+import { divisionCells } from "@repo/design-system/components/contents/mathematics/bacterial/layout";
+import {
+  NO_DIVISION,
+  stepDivision,
+} from "@repo/design-system/components/contents/mathematics/bacterial/sketch";
+import {
+  type BacteriaStore,
+  createBacteriaStore,
+  shownGeneration,
+} from "@repo/design-system/components/contents/mathematics/bacterial/store";
 import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
 import {
   useVisualScene,
