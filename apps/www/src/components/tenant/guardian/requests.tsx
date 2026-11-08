@@ -18,13 +18,14 @@ import {
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { RequestKind } from "@repo/backend/confect/guardians/request";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -39,7 +40,6 @@ import { DataTable } from "@/components/shared/table/data";
 import { TableFrame } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import { saveSchool } from "@/components/tenant/settings/save";
 
@@ -87,24 +87,17 @@ function useKindOptions() {
 /** The menu of one request's row: its whole note, which the table cuts to one line. */
 function RequestMenu({ request }: { request: ParentRequest }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => setOpen(true)}>
-          <HugeIcons icon={ViewIcon} />
+        <DropdownMenuItem icon={ViewIcon} onClick={() => setOpen(true)}>
           {t("request-read")}
         </DropdownMenuItem>
       </RowItems>
       <ResponsiveDialog
         description={t(`request-state-${request.state}`)}
-        footer={
-          <Button onClick={() => setOpen(false)} type="button">
-            {common("close")}
-          </Button>
-        }
         open={open}
         setOpen={setOpen}
         title={t(`request-kind-${request.kind}`)}
@@ -216,34 +209,25 @@ function AskDialog({
         {t("request-ask")}
       </Button>
       <ResponsiveDialog
-        description={t("request-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={isSaving || text.trim() === ""}
-              onClick={() =>
-                startSaving(async () => {
-                  await saveSchool(
-                    () => ask({ kind, linkId, slug, text: text.trim() }),
-                    SOURCE
-                  );
-                  setText("");
-                  setOpen(false);
-                })
-              }
-              type="button"
-            >
-              {t("request-send")}
-            </Button>
-          </>
+        action={
+          <Button
+            disabled={isSaving || text.trim() === ""}
+            onClick={() =>
+              startSaving(async () => {
+                await saveSchool(
+                  () => ask({ kind, linkId, slug, text: text.trim() }),
+                  SOURCE
+                );
+                setText("");
+                setOpen(false);
+              })
+            }
+            type="button"
+          >
+            {t("request-send")}
+          </Button>
         }
+        description={t("request-description")}
         open={open}
         setOpen={setOpen}
         title={t("request-ask")}
@@ -259,17 +243,16 @@ function AskDialog({
             <SelectTrigger aria-label={t("request-kind")} className="w-full">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="kind" />
-
-                {Arr.map(items, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={Message01Icon} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-kind")}>
+              {Arr.map(items, (item) => (
+                <SelectItem
+                  icon={Message01Icon}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Textarea
@@ -361,16 +344,17 @@ export function WaitingRequests({
             waitingColumns.menu((info) => (
               <RowItems>
                 <DropdownMenuItem
+                  icon={CheckmarkCircle02Icon}
                   onClick={() => decide(info.row.original, "approved")}
                 >
-                  <HugeIcons icon={CheckmarkCircle02Icon} />
                   {t("request-approve")}
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  icon={CancelCircleIcon}
                   onClick={() => decide(info.row.original, "declined")}
                   variant="destructive"
                 >
-                  <HugeIcons icon={CancelCircleIcon} />
                   {t("request-decline")}
                 </DropdownMenuItem>
               </RowItems>

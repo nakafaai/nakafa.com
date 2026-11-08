@@ -42,7 +42,6 @@ type DialogError = (typeof dialogError)[keyof typeof dialogError] | null;
 /** Renders the destructive account-deletion card and confirmation flow. */
 export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
-  const common = useTranslations("Common");
   const locale = useCurrentLocale();
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
@@ -144,39 +143,29 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
       </CardSection>
 
       <ResponsiveDialog
-        description={t("delete-account-dialog-description")}
-        footer={
-          <>
+        action={
+          error === dialogError.sessionExpired ? (
             <Button
               disabled={isPending}
-              onClick={() => handleOpenChange(false)}
+              onClick={handleReauthenticate}
               type="button"
-              variant="outline"
             >
-              {common("cancel")}
+              <Spinner icon={Login01Icon} isLoading={isPending} />
+              {t("delete-account-sign-in-again")}
             </Button>
-            {error === dialogError.sessionExpired ? (
-              <Button
-                disabled={isPending}
-                onClick={handleReauthenticate}
-                type="button"
-              >
-                <Spinner icon={Login01Icon} isLoading={isPending} />
-                {t("delete-account-sign-in-again")}
-              </Button>
-            ) : (
-              <Button
-                disabled={isPending}
-                onClick={handleDelete}
-                type="button"
-                variant="destructive"
-              >
-                <Spinner icon={Delete02Icon} isLoading={isPending} />
-                {t("delete-account")}
-              </Button>
-            )}
-          </>
+          ) : (
+            <Button
+              disabled={isPending}
+              onClick={handleDelete}
+              type="button"
+              variant="destructive"
+            >
+              <Spinner icon={Delete02Icon} isLoading={isPending} />
+              {t("delete-account")}
+            </Button>
+          )
         }
+        description={t("delete-account-dialog-description")}
         // The error is forgotten once the dialog has closed, so the closing dialog keeps its line.
         onOpenChangeComplete={(next) => {
           if (!next) {

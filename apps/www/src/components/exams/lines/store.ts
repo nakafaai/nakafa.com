@@ -1,5 +1,6 @@
-import { Option, Schema } from "effect";
+import { HashMap, Option, Schema } from "effect";
 import { createStore } from "zustand";
+import type { LineSide } from "@/components/exams/lines/context";
 import { LinePoint } from "@/components/exams/lines/curve";
 
 /** The middle of each dot of a board, by the part it belongs to. */
@@ -23,8 +24,22 @@ const LinesState = Schema.Struct({
   tip: Schema.Option(LinePoint),
 });
 
+/**
+ * The elements a board measures, which each one registers as it mounts: every dot by its part, the middle its line
+ * meets, and each column's list, whose size changes move its dots. Elements are no data a Schema describes, and two
+ * of them compare by reference alone, since Effect's equality reads two elements with no fields of their own as one.
+ */
+interface LinesAnchors {
+  readonly anchors: HashMap.HashMap<string, HTMLElement>;
+  readonly columns: HashMap.HashMap<LineSide, HTMLElement>;
+}
+
 /** The actions of one board. */
 interface LinesActions {
+  /** Registers the dot of a part, which the board measures from now on. */
+  readonly anchor: (part: string, dot: HTMLElement) => void;
+  /** Registers the list of a column, whose size the board follows. */
+  readonly frame: (side: LineSide, list: HTMLElement) => void;
   /** Points at the line of a statement, or at no line. */
   readonly light: (source: Option.Option<string>) => void;
   /** Keeps where each dot stands now, and changes nothing when no dot moved. */
@@ -39,15 +54,25 @@ interface LinesActions {
   readonly release: (drawn: Option.Option<string>) => void;
   /** Takes a statement in hand, or puts it down when it is in hand already. */
   readonly take: (source: string) => void;
+  /** Forgets the dot of a part, unless another element took its place since. */
+  readonly unanchor: (part: string, dot: HTMLElement) => void;
+  /** Forgets the list of a column, unless another list took its place since. */
+  readonly unframe: (side: LineSide, list: HTMLElement) => void;
 }
 
 /** One board's state and its actions. */
-export type LinesStore = typeof LinesState.Type & LinesActions;
+export type LinesStore = typeof LinesState.Type & LinesAnchors & LinesActions;
 
 /** Creates the state of one board, with nothing in hand. */
 export const createLines = () =>
   createStore<LinesStore>()((set) => ({
+    anchor: (part, dot) =>
+      set((state) => ({ anchors: HashMap.set(state.anchors, part, dot) })),
+    anchors: HashMap.empty(),
+    columns: HashMap.empty(),
     drawn: Option.none(),
+    frame: (side, list) =>
+      set((state) => ({ columns: HashMap.set(state.columns, side, list) })),
     held: Option.none(),
     light: (lit) => set({ lit }),
     lit: Option.none(),
@@ -72,4 +97,16 @@ export const createLines = () =>
           : Option.some(source),
       })),
     tip: Option.none(),
+    unanchor: (part, dot) =>
+      set((state) =>
+        Option.exists(HashMap.get(state.anchors, part), (held) => held === dot)
+          ? { anchors: HashMap.remove(state.anchors, part) }
+          : state
+      ),
+    unframe: (side, list) =>
+      set((state) =>
+        Option.exists(HashMap.get(state.columns, side), (held) => held === list)
+          ? { columns: HashMap.remove(state.columns, side) }
+          : state
+      ),
   }));

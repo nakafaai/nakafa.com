@@ -16,13 +16,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -32,7 +30,6 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { roleIcon } from "@/components/tenant/roles";
@@ -137,19 +134,11 @@ function SchoolInviteDialog({
 
   return (
     <ResponsiveDialog
-      description={t("invite-dialog-description")}
-      footer={
+      action={
         <>
           <p className="text-muted-foreground me-auto text-sm">
             {t("invite-footer")}
           </p>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
           <Button
             disabled={!submittable}
             inert={isPending}
@@ -182,6 +171,7 @@ function SchoolInviteDialog({
           </Button>
         </>
       }
+      description={t("invite-dialog-description")}
       open={open}
       setOpen={setOpen}
       title={t("invite-dialog-title")}
@@ -226,16 +216,16 @@ function SchoolInviteDialog({
             <SelectTrigger className="w-full" id={`${id}-role`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="role" />
-                {Arr.map(roleItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={roleIcon(item.value)} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-role")}>
+              {Arr.map(roleItems, (item) => (
+                <SelectItem
+                  icon={roleIcon(item.value)}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
@@ -256,16 +246,16 @@ function SchoolInviteDialog({
             <SelectTrigger className="w-full" id={`${id}-locale`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="language" />
-                {Arr.map(localeItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <CountryFlagIcon countryCode={item.countryCode} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-language")}>
+              {Arr.map(localeItems, (item) => (
+                <SelectItem
+                  icon={<CountryFlagIcon countryCode={item.countryCode} />}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>

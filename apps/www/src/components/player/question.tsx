@@ -45,8 +45,9 @@ export function PlayerQuestion({
 
 /**
  * The head of one question, the same wherever a question is answered or reviewed: its number in a circle
- * at the start, which links to the question itself, and the question's actions at the end. The number
- * names the question for a screen reader through its heading.
+ * at the start, which links to the question itself, and the question's actions at the end. The link is the
+ * circle alone, so its press area never runs under the question's flag or actions. The number names the
+ * question for a screen reader through its heading.
  */
 export function PlayerQuestionHeader({
   children,
@@ -60,9 +61,9 @@ export function PlayerQuestionHeader({
   const ids = readQuestionIds(number);
 
   return (
-    <div className="@container flex items-center gap-4">
+    <div className="@container flex items-center justify-between gap-4">
       <a
-        className="flex w-full flex-1 shrink-0 scroll-mt-44 ring-0 outline-none"
+        className="flex shrink-0 scroll-mt-44 ring-0 outline-none"
         href={`#${ids.anchor}`}
         id={ids.anchor}
       >
