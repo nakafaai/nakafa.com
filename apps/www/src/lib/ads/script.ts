@@ -22,10 +22,10 @@ const TEST_ATTRIBUTE = "data-adtest";
 const STATUS_ATTRIBUTE = "data-ad-status";
 
 /** The ad script did not load: an ad blocker, the network, or the content policy stopped it. */
-export class AdScriptFailed extends Schema.TaggedError<AdScriptFailed>()(
-  "AdScriptFailed",
-  {}
-) {}
+export class AdScriptFailed extends Schema.TaggedError<
+  AdScriptFailed,
+  { readonly brand: unique symbol }
+>()("AdScriptFailed", {}) {}
 
 /** The ad queue of the page, started as an array until the ad script takes it over. */
 function adQueue(): GoogleQueue {
