@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
-import { withContentLanguage } from "@/lib/routing/not-found";
+import { withContentLanguage } from "@/lib/routing/missing";
 import { readsSchoolShell } from "@/lib/routing/school/shell.server";
 import { schoolNotFoundPath } from "@/lib/static/notfound";
 

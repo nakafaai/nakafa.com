@@ -5,7 +5,7 @@ import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
 import {
   makeArticleJsonLd,
   makeLearningResourceNode,
-} from "@repo/seo/json-ld/article";
+} from "@repo/seo/jsonld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";

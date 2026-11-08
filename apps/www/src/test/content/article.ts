@@ -40,7 +40,7 @@ import {
 import {
   testArticleProjection,
   testArticleSourcePath,
-} from "@/test/content-article";
+} from "@/test/published/article";
 
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema

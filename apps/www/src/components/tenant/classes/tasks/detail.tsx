@@ -7,7 +7,7 @@ import {
   TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { TaskText } from "@repo/backend/confect/classroom/tasks/task";
+import { TaskText } from "@repo/backend/confect/classroom/tasks/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,

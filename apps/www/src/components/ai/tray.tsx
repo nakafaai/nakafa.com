@@ -7,7 +7,7 @@ import {
   AttachmentGroup,
 } from "@repo/design-system/components/ui/attachment";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import { usePromptInputAttachments } from "@repo/design-system/lib/prompt/context";
 import { Array as Arr, Effect, HashSet } from "effect";
 import { useTranslations } from "use-intl";
 import {

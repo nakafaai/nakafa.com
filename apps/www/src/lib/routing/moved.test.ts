@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/profiles";
 import { Option } from "effect";
 import { readMovedRedirect } from "@/lib/routing/moved";
 

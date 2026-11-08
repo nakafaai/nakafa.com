@@ -1,6 +1,6 @@
 import { monospace } from "@repo/design-system/lib/monospace";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
+import { makeArticleJsonLd } from "@repo/seo/jsonld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { cn } from "cn";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
