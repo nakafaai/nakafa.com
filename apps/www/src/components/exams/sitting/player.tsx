@@ -27,15 +27,15 @@ import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingLook } from "@/components/exams/sitting/look";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
-import { mergePaper, type PaperValue } from "@/components/exams/sitting/paper";
+import {
+  mergePaper,
+  type PaperValue,
+  paperCell,
+} from "@/components/exams/sitting/paper";
 import {
   PaperReveal,
   SittingQuestion,
 } from "@/components/exams/sitting/question";
-import {
-  projectSittingCells,
-  projectSittingQuestions,
-} from "@/components/exams/sitting/questions";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import { useSittingSignals } from "@/components/exams/sitting/signals";
 import { useSittingClock } from "@/components/exams/sitting/timer";
@@ -45,6 +45,7 @@ import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerKeys } from "@/components/player/keys";
 import type { PlayerMode } from "@/components/player/mode";
+import { projectQuestions } from "@/components/player/model";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
@@ -231,7 +232,7 @@ function StudentFinish({
       locked={!takesAnswers(attempt.state)}
       onFinish={finish}
       pending={false}
-      questions={paper === null ? [] : projectSittingCells(paper)}
+      questions={paper === null ? [] : Arr.map(paper.questions, paperCell)}
       title={t("finish-title")}
     />
   );
@@ -283,8 +284,8 @@ function RunningPaper({
   const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
   useResendKeptAnswers({ attemptId, deviceId, locked, paper, sittingId, slug });
 
-  const questions = projectSittingQuestions({
-    choose: (question, response) =>
+  const questions = projectQuestions({
+    answer: (question, response) =>
       choose({
         attemptId,
         deviceId,
@@ -293,8 +294,10 @@ function RunningPaper({
         sittingId,
         slug,
       }),
+    cell: paperCell,
     flag: flagQuestion,
-    paper,
+    interactions: (question) => question.interactions,
+    questions: paper.questions,
   });
 
   return (
