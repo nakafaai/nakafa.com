@@ -421,6 +421,11 @@ bounded pages.
   delete the obsolete path.
 - Do not disable backups without a documented recovery-point objective and a
   tested restore procedure.
+- Read data for a question with a bounded query on the dev deployment, and cost
+  through the usage API. A snapshot export, a dashboard backup and paging through
+  tables (dashboard or `convex data`) read whole tables or the whole deployment:
+  on 7 November 2026 one lane's exports read 1.3 GB, its two backups 0.7 GB and
+  table paging 0.2 GB, more than that day's builds (`packages/backend/AGENTS.md`).
 
 ## References
 
