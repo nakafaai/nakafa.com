@@ -13,51 +13,37 @@ import {
   readLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
-/** The app users of the local runtime, as the Convex CLI prints them. */
-const UserRows = Schema.fromJsonString(
-  Schema.Array(Schema.Struct({ _id: Schema.String, authId: Schema.String }))
-);
+/** The app user id that `tenancy/seed:user` answers, as the Convex CLI prints it. */
+const AppUserId = Schema.fromJsonString(Schema.String);
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 export const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
-/** The app user of one Better Auth account, read from the local runtime. */
+/** The app user of one Better Auth account, read by its index from the local runtime. */
 export const appUserOf = Effect.fn("contentAcceptance.appUser")(function* <
   E,
   R,
 >(run: RunConvex<E, R>, authId: string) {
-  const users = yield* run("app users", [
-    "data",
-    "users",
-    "--format",
-    "jsonArray",
-    "--limit",
-    "1000",
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(UserRows)));
-  const user = Arr.findFirst(users, (row) => row.authId === authId);
-  if (Option.isNone(user)) {
-    return yield* acceptanceRuntimeError("The new account has no app user.");
-  }
-  return user.value._id;
+  return yield* encodeArguments({ authId }).pipe(
+    Effect.flatMap((args) =>
+      run("app user", ["run", "tenancy/seed:user", args])
+    ),
+    Effect.flatMap(Schema.decodeEffect(AppUserId))
+  );
 });
 
 /**
- * Signs in the account that holds an address which a school's invite waits for.
- * The first sign-in creates the account with the address, so the invite is
- * claimed for its app user, and the account is then a member of the school. A
- * later sign-in opens a new session of the same account, so a test may sign the
- * same Owner into several browser contexts. A claim is a scheduled function, so
- * this command runs the claim itself, and then writes the session cookie to
- * `output`. A browser test must not start before the claim is done.
+ * Signs in the account that holds an address which a school's invite waits for,
+ * and returns its session token. The first sign-in creates the account with the
+ * address, so the invite is claimed for its app user, and the account is then a
+ * member of the school. A later sign-in opens a new session of the same account,
+ * so a test may sign the same Owner into several browser contexts. A claim is a
+ * scheduled function, so this runs the claim itself: a browser test must not
+ * start before the claim is done.
  */
-export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
-  function* (runtime: LocalRuntime, address: string, output: string) {
-    const run = (
-      operation: string,
-      args: readonly string[],
-      sensitiveValues?: readonly string[]
-    ) => runLocalConvex(runtime, operation, args, sensitiveValues);
+export const openInvitedMember = Effect.fn("contentAcceptance.openMember")(
+  function* <E, R>(run: RunConvex<E, R>, address: string) {
     const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
     const userId = yield* appUserOf(run, account.userId);
     yield* encodeArguments({ cursor: null, userId }).pipe(
@@ -65,7 +51,19 @@ export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
         run("school claim", ["run", "tenancy/claims:run", args])
       )
     );
-    yield* writeSessionCookie(output, account.token);
+    return account.token;
+  }
+);
+
+/** Signs in the invited member of `address` and writes its session cookie to `output`. */
+export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
+  function* (runtime: LocalRuntime, address: string, output: string) {
+    const token = yield* openInvitedMember(
+      (operation, args, sensitiveValues) =>
+        runLocalConvex(runtime, operation, args, sensitiveValues),
+      address
+    );
+    yield* writeSessionCookie(output, token);
   }
 );
 

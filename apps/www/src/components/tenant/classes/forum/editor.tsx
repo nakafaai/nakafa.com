@@ -6,15 +6,11 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Clock, Effect, Schema, String as Str } from "effect";
 import { useTranslations } from "use-intl";
 import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
-import {
   editUpdate,
   type ForumMessage,
 } from "@/components/tenant/classes/forum/optimistic";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The field that edits the viewer's own message in its place. Save shows the new text at once,
@@ -41,9 +37,9 @@ export function MessageEditor({
     if (!Schema.is(MessageText)(body) || body === text) {
       return;
     }
-    runForumCall(
+    runSchoolWrite(
       Effect.flatMap(Clock.currentTimeMillis, (at) =>
-        forumCall(() =>
+        schoolCall(() =>
           edit.withOptimisticUpdate(editUpdate(at))({
             classId: scope.classId,
             messageId: message.id,
@@ -51,8 +47,7 @@ export function MessageEditor({
             text: body,
           })
         )
-      ),
-      toastForumFailure
+      )
     );
   };
 

@@ -4,6 +4,7 @@ import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import {
   createSchool,
   hostAddress,
@@ -26,9 +27,6 @@ const SHIFTS_KEY = "nakafaPaperShifts";
 /** A prompt of several lines on a phone, so a late one moves all that stands below it. */
 const PROMPT =
   "Sebuah benda bergerak lurus beraturan dengan kecepatan tetap selama sepuluh detik di atas lintasan datar yang panjang, lalu berhenti. ";
-
-/** How long the page keeps still before its shifts are read: longer than any text takes to land at this load. */
-const SETTLE_MILLISECONDS = 3000;
 
 /** How long an exam's words may take to reach the server at this load. */
 const SAVED_MILLISECONDS = 60_000;
@@ -101,7 +99,7 @@ const writeExam = async (page: Page, address: string) => {
 
 /** The shifts the page recorded that nothing the teacher did caused, with what each moved. */
 const stillness = async (page: Page) => {
-  await page.waitForTimeout(SETTLE_MILLISECONDS);
+  await waitForQuiet(page);
   const shifts = await Effect.runPromise(
     readRecordedLayoutShifts(page, SHIFTS_KEY)
   );

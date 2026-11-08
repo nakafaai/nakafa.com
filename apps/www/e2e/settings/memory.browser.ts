@@ -16,6 +16,7 @@ import {
   openMemoryPage,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForAnimations } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOver, waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -258,9 +259,6 @@ const rowBackground = (row: Locator) =>
     .locator('[class*="group/row"]')
     .evaluate((element) => getComputedStyle(element).backgroundColor);
 
-/** Longer than the row's colour transition, so a hover has finished drawing. */
-const HOVER_SETTLE_MILLISECONDS = 400;
-
 /**
  * A memory the server has not stored yet has no press to take, so its row does
  * not light up under the pointer. Once the server stores it, it does.
@@ -287,7 +285,7 @@ const verifyPendingRow = Effect.fn("NakafaE2E.verifyPendingRow")(function* (
 
     const resting = await rowBackground(row);
     await row.hover();
-    await page.waitForTimeout(HOVER_SETTLE_MILLISECONDS);
+    await waitForAnimations(row);
     expect(await rowBackground(row)).toBe(resting);
 
     changes.release();

@@ -5,12 +5,10 @@ import type { TileLook } from "@repo/design-system/lib/look";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
+import type { TryoutStatusValue } from "@/components/tryout/progress";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import type { TryoutPageAddress } from "@/components/tryout/route/path";
-import {
-  TryoutStatus,
-  type TryoutStatusValue,
-} from "@/components/tryout/status";
+import { TryoutStatus } from "@/components/tryout/status";
 
 /**
  * Props of the divided try-out row list; each row carries its own tile and
