@@ -2,13 +2,13 @@ import { PublicationFailureCodeSchema } from "@nakafa/aksara-contracts/transport
 import { Effect, Schema } from "effect";
 
 /** Typed publication failure translated at the native Convex boundary. */
-export class ReleaseError extends Schema.TaggedError<ReleaseError>()(
-  "ReleaseError",
-  {
-    code: PublicationFailureCodeSchema,
-    message: Schema.String,
-  }
-) {}
+export class ReleaseError extends Schema.TaggedError<
+  ReleaseError,
+  { readonly brand: unique symbol }
+>()("ReleaseError", {
+  code: PublicationFailureCodeSchema,
+  message: Schema.String,
+}) {}
 
 /** Fails one domain program with a stable publication code. */
 

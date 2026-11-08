@@ -35,9 +35,7 @@ import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { roleIcon } from "@/components/tenant/roles";
 import { addMemberChange } from "@/components/tenant/settings/accounts";
 import { cardOffered } from "@/components/tenant/settings/offer";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/settings/invite";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The languages an invite may be written in: the active ones of the app. */
 const localeItems = Arr.map(
@@ -152,16 +150,16 @@ function SchoolInviteDialog({
               }
               setOpen(false);
               startTransition(() =>
-                saveSchool(
-                  () =>
+                runSchoolWrite(
+                  schoolCall(() =>
                     invite({
                       email: parsedEmail.value,
                       locale: parsedLocale.value,
                       name: parsedName.value,
                       role,
                       slug,
-                    }),
-                  SOURCE
+                    })
+                  )
                 )
               );
             }}

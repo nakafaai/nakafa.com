@@ -21,12 +21,12 @@ const TryoutMetadataArgsSchema = Schema.Struct({
 type TryoutMetadataArgs = typeof TryoutMetadataArgsSchema.Type;
 
 /** Expected failure while reading one authenticated try-out page. */
-class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>()(
-  "TryoutCatalogReadError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class TryoutCatalogReadError extends Schema.TaggedError<
+  TryoutCatalogReadError,
+  { readonly brand: unique symbol }
+>()("TryoutCatalogReadError", {
+  cause: Schema.Unknown,
+}) {}
 
 /**
  * Reads the question demonstrated on the marketing page, decoded from the JSON text its body crosses

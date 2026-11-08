@@ -10,17 +10,14 @@ import { LineWords } from "@repo/design-system/components/ui/line";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
+import { ChoiceCheck, ChoiceRadio } from "@/components/player/choice";
 import {
   type Choice,
   markedWith,
   type TablePart,
   toggleOption,
-} from "@/components/exams/sitting/response";
-import {
-  TryoutSelectableMultipleChoice,
-  TryoutSelectableRadioOption,
-} from "@/components/tryout/runtime/choice/surface";
-import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
+} from "@/components/player/response";
+import { ChoiceTable } from "@/components/player/table";
 import { optionLabelId } from "@/components/tryout/runtime/response/id";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
 
@@ -64,7 +61,7 @@ function SingleChoiceFields({
   choice: Choice;
   value: TryoutResponseFieldsProps["value"];
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Player");
   const { id, locked, onChange, response } = value;
   const selected = Option.getOrElse(
     Arr.head(chosenOptions(response ?? [])),
@@ -86,7 +83,7 @@ function SingleChoiceFields({
         value={selected}
       >
         {Arr.map(choice.options, (option, index) => (
-          <TryoutSelectableRadioOption
+          <ChoiceRadio
             appearance={revealedAppearance(value.answer, option.id)}
             checked={selected === option.id}
             disabled={locked}
@@ -99,7 +96,7 @@ function SingleChoiceFields({
               correctness={revealedCorrectness(value.answer, option.id)}
               document={option.label}
             />
-          </TryoutSelectableRadioOption>
+          </ChoiceRadio>
         ))}
       </RadioGroup>
     </fieldset>
@@ -113,7 +110,7 @@ function MultipleChoiceFields({
   choice: Choice;
   value: TryoutResponseFieldsProps["value"];
 }) {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Player");
   const { id, locked, onChange, response } = value;
   const chosen = chosenOptions(response ?? []);
   const parts = choice.options;
@@ -124,7 +121,7 @@ function MultipleChoiceFields({
     >
       <legend className="sr-only">{t("answer")}</legend>
       {Arr.map(choice.options, (option, index) => (
-        <TryoutSelectableMultipleChoice
+        <ChoiceCheck
           appearance={revealedAppearance(value.answer, option.id)}
           checked={Arr.contains(chosen, option.id)}
           disabled={locked}
@@ -146,7 +143,7 @@ function MultipleChoiceFields({
             correctness={revealedCorrectness(value.answer, option.id)}
             document={option.label}
           />
-        </TryoutSelectableMultipleChoice>
+        </ChoiceCheck>
       ))}
     </fieldset>
   );
@@ -163,7 +160,7 @@ function MatrixFields({
   const { locked, onChange, response } = value;
   const cells = markedCells(response ?? []);
   return (
-    <TryoutChoiceTable
+    <ChoiceTable
       columns={Arr.map(table.columns, (column) => ({
         id: column.id,
         label: <TryoutResponseLabel document={column.label} />,

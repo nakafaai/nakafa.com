@@ -17,12 +17,12 @@ type SavePreferredTryout = (
   typeof learningPreferences.mutations.setPreferredTryoutCountry
 >;
 /** Expected failure when a background try-out preference save fails. */
-class TryoutPreferenceSaveError extends Schema.TaggedError<TryoutPreferenceSaveError>()(
-  "TryoutPreferenceSaveError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class TryoutPreferenceSaveError extends Schema.TaggedError<
+  TryoutPreferenceSaveError,
+  { readonly brand: unique symbol }
+>()("TryoutPreferenceSaveError", {
+  cause: Schema.Unknown,
+}) {}
 /** Persists try-out country selection without blocking route navigation. */
 export function saveTryoutPreference({
   countryKey,

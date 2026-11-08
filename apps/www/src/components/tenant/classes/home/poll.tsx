@@ -13,11 +13,6 @@ import { Array as Arr, Effect } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
-import {
-  forumCall,
-  runForumCall,
-  toastForumFailure,
-} from "@/components/tenant/classes/forum/call";
 import { NewPoll, PollCard } from "@/components/tenant/classes/forum/poll";
 import {
   type ClassPost,
@@ -26,6 +21,7 @@ import {
 import { publishPost } from "@/components/tenant/classes/home/publish";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * Asks the class a poll on its home. The dialog closes on send and the poll shows at once first among the posts, and
@@ -68,7 +64,7 @@ export function NewPostPoll() {
             return;
           }
           const { person } = viewer.value;
-          runForumCall(
+          runSchoolWrite(
             Effect.flatMap(randomUuid, (clientKey) =>
               publishPost(
                 (update, args) => publish.withOptimisticUpdate(update)(args),
@@ -82,8 +78,7 @@ export function NewPostPoll() {
                   text: poll.question,
                 }
               )
-            ),
-            toastForumFailure
+            )
           );
         }}
         open={open}
@@ -110,16 +105,15 @@ export function PostPoll({ post }: { post: ClassPost }) {
     <PollCard
       disabled={!(saved && Arr.contains(can, "forum.post"))}
       onChoose={(options) =>
-        runForumCall(
-          forumCall(() =>
+        runSchoolWrite(
+          schoolCall(() =>
             vote.withOptimisticUpdate(votePostUpdate)({
               classId,
               options,
               postId: post.id,
               slug,
             })
-          ),
-          toastForumFailure
+          )
         )
       }
       poll={post.poll}

@@ -25,19 +25,19 @@ export const tryoutFlagArgsValidator = Schema.Struct({
 export type TryoutFlagArgs = typeof tryoutFlagArgsValidator.Type;
 
 /** Expected failure while saving one selected try-out response. */
-export class TryoutResponseError extends Schema.TaggedError<TryoutResponseError>()(
-  "TryoutResponseError",
-  {
-    cause: Schema.optional(Schema.Unknown),
-    code: Schema.Literals([
-      "TRYOUT_RESPONSE_FAILED",
-      "TRYOUT_PLACEMENT_NOT_FOUND",
-      "TRYOUT_EXPIRED",
-      "TRYOUT_RESPONSE_STALE",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class TryoutResponseError extends Schema.TaggedError<
+  TryoutResponseError,
+  { readonly brand: unique symbol }
+>()("TryoutResponseError", {
+  cause: Schema.optional(Schema.Unknown),
+  code: Schema.Literals([
+    "TRYOUT_RESPONSE_FAILED",
+    "TRYOUT_PLACEMENT_NOT_FOUND",
+    "TRYOUT_EXPIRED",
+    "TRYOUT_RESPONSE_STALE",
+  ]),
+  message: Schema.String,
+}) {}
 export const TryoutResponseErrorWire = publicFailure(TryoutResponseError);
 /** Redacts unexpected storage failures while retaining the internal cause. */
 export function toTryoutResponseError(error: unknown) {
@@ -51,30 +51,30 @@ export function toTryoutResponseError(error: unknown) {
  * A response does not fit its question's frozen interaction (`fitsQuestion`): it holds another kind of
  * answer, or parts the interaction does not have, or more choices than it takes.
  */
-export class TryoutResponseUnfitError extends Schema.TaggedError<TryoutResponseUnfitError>()(
-  "TryoutResponseUnfitError",
-  {
-    code: Schema.Literal("TRYOUT_RESPONSE_UNFIT"),
-    message: Schema.String,
-  }
-) {}
+export class TryoutResponseUnfitError extends Schema.TaggedError<
+  TryoutResponseUnfitError,
+  { readonly brand: unique symbol }
+>()("TryoutResponseUnfitError", {
+  code: Schema.Literal("TRYOUT_RESPONSE_UNFIT"),
+  message: Schema.String,
+}) {}
 
 /** Stable corruption detected across response, placement, and attempt rows. */
-export class TryoutResponseIntegrityError extends Schema.TaggedError<TryoutResponseIntegrityError>()(
-  "TryoutResponseIntegrityError",
-  {
-    code: Schema.Literals([
-      "TRYOUT_PLACEMENT_COUNT_MISMATCH",
-      "TRYOUT_PLACEMENT_DUPLICATE",
-      "TRYOUT_RESPONSE_GRADE_MISMATCH",
-      "TRYOUT_RESPONSE_COUNT_EXCEEDED",
-      "TRYOUT_RESPONSE_LINK_MISMATCH",
-      "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
-      "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class TryoutResponseIntegrityError extends Schema.TaggedError<
+  TryoutResponseIntegrityError,
+  { readonly brand: unique symbol }
+>()("TryoutResponseIntegrityError", {
+  code: Schema.Literals([
+    "TRYOUT_PLACEMENT_COUNT_MISMATCH",
+    "TRYOUT_PLACEMENT_DUPLICATE",
+    "TRYOUT_RESPONSE_GRADE_MISMATCH",
+    "TRYOUT_RESPONSE_COUNT_EXCEEDED",
+    "TRYOUT_RESPONSE_LINK_MISMATCH",
+    "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
+    "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
+  ]),
+  message: Schema.String,
+}) {}
 
 /** Creates one typed fail-closed response graph error. */
 export function responseIntegrity(

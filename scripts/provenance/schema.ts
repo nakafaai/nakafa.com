@@ -102,10 +102,10 @@ export const CliArgumentsSchema = Schema.Tuple([
   PublisherIdentity.fields.environment,
 ]);
 
-export class ProvenanceVerificationError extends Schema.TaggedError<ProvenanceVerificationError>()(
-  "ProvenanceVerificationError",
-  {
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {}
+export class ProvenanceVerificationError extends Schema.TaggedError<
+  ProvenanceVerificationError,
+  { readonly brand: unique symbol }
+>()("ProvenanceVerificationError", {
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {}

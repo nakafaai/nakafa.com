@@ -12,7 +12,7 @@ import {
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { markedWith } from "@/components/exams/sitting/response";
+import { markedWith } from "@/components/player/response";
 import { OptionSketch } from "@/components/tenant/exams/sketch";
 import { keyCells } from "@/components/tenant/exams/table";
 

@@ -45,13 +45,13 @@ const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/u;
 export type ChartConfig = ChartContainerProps["config"];
 
 /** Expected failure: a chart config entry has colors but no theme key. */
-class ChartConfigColorsError extends Schema.TaggedError<ChartConfigColorsError>()(
-  "ChartConfigColorsError",
-  {
-    key: Schema.String,
-    message: Schema.String,
-  }
-) {}
+class ChartConfigColorsError extends Schema.TaggedError<
+  ChartConfigColorsError,
+  { readonly brand: unique symbol }
+>()("ChartConfigColorsError", {
+  key: Schema.String,
+  message: Schema.String,
+}) {}
 
 // Validation for chart config colors at runtime
 function validateChartConfigColors(

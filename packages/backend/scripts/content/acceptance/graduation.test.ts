@@ -1,57 +1,31 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { GraduationFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
-  createAcceptanceGraduation,
   graduationMode,
+  seedGraduation,
 } from "@repo/backend/scripts/content/acceptance/graduation";
-import {
-  Array as Arr,
-  Effect,
-  Exit,
-  FileSystem,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
+import { Effect, FileSystem, Schema } from "effect";
 
-const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
-vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
-  runAcceptanceCommand: mocks.command,
-}));
+const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
 vi.mock(
-  "@repo/backend/scripts/content/acceptance/local",
+  "@repo/backend/scripts/content/acceptance/convex",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@repo/backend/scripts/content/acceptance/local")
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
     >()),
-    readLocalRuntime: mocks.read,
+    localConvexLayer: mocks.layer,
   })
 );
 
-type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
+/** A temporary folder for the files a mode writes. */
+const folder = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.makeTempDirectoryScoped({ prefix: "acceptance-mode-test-" });
+});
 
-/** The arguments of the seed function, as the Convex CLI receives them. */
-const SeedArgs = Schema.fromJsonString(
-  Schema.Struct({ email: Schema.String, slug: Schema.String })
-);
-
-/** What the seed function prints: the seeded class group. */
-const SEEDED = '{"cohort":"12-Lulus","cohortId":"cohort-1"}';
-
-/** A runtime whose backend folder sits under the test's own temporary root, and a command that records its call. */
-const runtimeIn = (root: string, fs: FileSystem.FileSystem) => {
-  mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
-  const specs = MutableList.make<CommandSpec>();
-  mocks.command.mockImplementation((spec: CommandSpec) =>
-    Effect.gen(function* () {
-      MutableList.append(specs, spec);
-      yield* fs.writeFileString(spec.stdoutPath, SEEDED);
-    })
-  );
-  return specs;
-};
+const ANSWER = { cohort: "XII-1", cohortId: "cohort-1" };
 
 describe("acceptance graduation", () => {
   afterEach(() => {
@@ -59,61 +33,61 @@ describe("acceptance graduation", () => {
   });
 
   it.effect(
-    "seeds the graduation that the mode names through the seed function and writes the class group",
+    "seeds through records/seed:graduation and answers what it returned",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({
-          prefix: "acceptance-graduation-test-",
+        const backend = localConvexDouble({
+          "records/seed:graduation": ANSWER,
         });
-        const specs = runtimeIn(root, fs);
 
-        yield* graduationMode.run(root, [
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/graduation.json`,
-        ]);
+        const seeded = yield* seedGraduation(
+          "acc-1",
+          "siswa@example.test"
+        ).pipe(Effect.provide(backend.layer));
 
-        const [spec] = MutableList.toArray(specs);
-        expect(Arr.take(Arr.drop(spec?.args ?? [], 1), 2)).toEqual([
-          "run",
-          "records/seed:graduation",
-        ]);
-        expect(
-          yield* Schema.decodeEffect(SeedArgs)(
-            Option.getOrThrow(Arr.last(spec?.args ?? []))
-          )
-        ).toEqual({
-          email: "learner@acceptance.example.test",
-          slug: "acc-1234abcd",
+        expect(seeded).toEqual(ANSWER);
+        expect(backend.argsOf("records/seed:graduation")).toEqual({
+          email: "siswa@example.test",
+          slug: "acc-1",
         });
-        expect(
-          yield* fs
-            .readFileString(`${root}/graduation.json`)
-            .pipe(Effect.flatMap(Schema.decodeEffect(GraduationFixture)))
-        ).toEqual({ cohort: "12-Lulus", cohortId: "cohort-1" });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      })
   );
 
-  it.effect("seeds no graduation when no local runtime is running", () =>
+  it.effect("writes what the mode seeded to the file it names, mode 600", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "acceptance-graduation-test-",
-      });
-      mocks.read.mockReturnValue(Effect.void);
-
-      const exit = yield* Effect.exit(
-        createAcceptanceGraduation(
-          root,
-          "acc-1234abcd",
-          "learner@acceptance.example.test",
-          `${root}/graduation.json`
-        )
+      const root = yield* folder;
+      const output = `${root}/mode.json`;
+      mocks.layer.mockReturnValue(
+        localConvexDouble({ "records/seed:graduation": ANSWER }).layer
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      yield* graduationMode.run(root, ["acc-1", "siswa@example.test", output]);
+
+      const fs = yield* FileSystem.FileSystem;
+      expect(
+        yield* fs
+          .readFileString(output)
+          .pipe(
+            Effect.flatMap(
+              Schema.decodeEffect(Schema.fromJsonString(GraduationFixture))
+            )
+          )
+      ).toEqual(ANSWER);
+      expect((yield* fs.stat(output)).mode % 0o1000).toBe(0o600);
+      expect(mocks.layer).toHaveBeenCalledWith(root);
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
+  );
+
+  it.effect("refuses the mode without its arguments", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* graduationMode.run("/root", []).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "AcceptanceRuntimeError",
+        message:
+          "Usage: acceptance graduation <school-slug> <learner-email> <graduation-file>",
+      });
+      expect(mocks.layer).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

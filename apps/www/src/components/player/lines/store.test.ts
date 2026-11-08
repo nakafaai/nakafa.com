@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { HashMap, Option } from "effect";
-import { createLines } from "@/components/exams/lines/store";
+import { createLines } from "@/components/player/lines/store";
 
 describe("createLines", () => {
   it("takes a statement in hand, moves the hand to another, and puts it down on a second press", () => {
