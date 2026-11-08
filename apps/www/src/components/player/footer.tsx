@@ -82,9 +82,9 @@ export function PlayerNote({
         openOnHover
         render={
           <Button
-            aria-label={t("note")}
             className="max-lg:absolute max-lg:start-full max-lg:top-1/2 max-lg:ms-2 max-lg:-translate-y-1/2"
             size="icon"
+            tooltip={t("note")}
             type="button"
             variant="outline"
           />

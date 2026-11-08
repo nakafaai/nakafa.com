@@ -1,5 +1,9 @@
+import { Plug01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { useTranslations } from "use-intl";
 import { useConnectorActions } from "@/components/connectors/actions";
 import type { Connection } from "@/components/connectors/optimistic";
@@ -17,31 +21,29 @@ export function DisconnectDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Connectors");
-  const common = useTranslations("Common");
   const { disconnect } = useConnectorActions();
 
   return (
     <ResponsiveDialog
-      description={t("disconnect-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button
-            onClick={() => {
-              setOpen(false);
-              disconnect(connection);
-            }}
-            variant="destructive"
-          >
-            {t("disconnect")}
-          </Button>
-        </>
+      action={
+        <Button
+          onClick={() => {
+            setOpen(false);
+            disconnect(connection);
+          }}
+          variant="destructive"
+        >
+          {t("disconnect")}
+        </Button>
       }
+      description={t("disconnect-description")}
       open={open}
       setOpen={setOpen}
       title={t("disconnect-title", { name })}
-    />
+    >
+      <ResponsiveDialogSubject icon={Plug01Icon}>
+        {name}
+      </ResponsiveDialogSubject>
+    </ResponsiveDialog>
   );
 }

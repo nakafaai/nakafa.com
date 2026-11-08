@@ -58,12 +58,12 @@ export function SittingKeypad({
       <PopoverTrigger
         render={
           <InputGroupButton
-            aria-label={t(keys === "digits" ? "arabic-digits" : "arabic")}
             aria-pressed={open}
             className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
             disabled={disabled}
             onMouseDown={(event) => event.preventDefault()}
-            size="icon-xs"
+            size="icon-sm"
+            tooltip={t(keys === "digits" ? "arabic-digits" : "arabic")}
           />
         }
       >

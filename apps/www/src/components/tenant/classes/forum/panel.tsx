@@ -25,7 +25,6 @@ import {
   sectionStarts,
   stepEmoji,
 } from "@/components/tenant/classes/forum/emoji";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** How many emoji a row of the chooser holds. */
 const COLUMNS = 8;
@@ -258,19 +257,17 @@ function CategoryTab({
   const label = t(`emoji-${category}`);
 
   return (
-    <IconTip label={label}>
-      <Button
-        aria-label={label}
-        aria-pressed={current}
-        className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-        onClick={onPress}
-        onMouseDown={(event) => event.preventDefault()}
-        size="icon"
-        type="button"
-        variant="ghost"
-      >
-        <HugeIcons icon={CATEGORY_ICONS[category]} />
-      </Button>
-    </IconTip>
+    <Button
+      aria-pressed={current}
+      className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+      onClick={onPress}
+      onMouseDown={(event) => event.preventDefault()}
+      size="icon"
+      tooltip={label}
+      type="button"
+      variant="ghost"
+    >
+      <HugeIcons icon={CATEGORY_ICONS[category]} />
+    </Button>
   );
 }
