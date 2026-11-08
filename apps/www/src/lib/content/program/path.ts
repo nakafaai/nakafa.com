@@ -4,17 +4,21 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Effect } from "effect";
 import type { Locale } from "use-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
-import { queryContentStore } from "@/lib/content/store/query";
+import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 /** Resolves one exact curriculum path without loading its full page model. */
 export const readPublishedProgramPath = Effect.fn(
   "NakafaProgram.readPublishedPath"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* queryContentStore(contentRelease.program.path, {
-    appLocale,
-    publicPath,
-  });
+  const result = yield* querySnapshotContentStore(
+    "program",
+    contentRelease.program.path,
+    {
+      appLocale,
+      publicPath,
+    }
+  );
   if (!(result.managed && result.routeJson)) {
     return {
       managed: result.managed,

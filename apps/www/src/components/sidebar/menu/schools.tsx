@@ -5,7 +5,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect } from "effect";
 import { type ReactNode, useState } from "react";
@@ -23,13 +22,15 @@ import { schoolOrigin } from "@/lib/routing/school/host";
 export function SidebarSchoolMenuItem({ tenant }: { tenant: KnownSchool }) {
   return (
     <DropdownMenuItem
-      render={(props) => (
+      icon={<SchoolMark logo={tenant.logo} mascot={tenant.mascot} />}
+      render={({ children, ...props }) => (
         <a {...props} href={schoolOrigin(tenant.slug).href}>
-          <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
-          <span className="truncate">{tenant.name}</span>
+          {children}
         </a>
       )}
-    />
+    >
+      <span className="truncate">{tenant.name}</span>
+    </DropdownMenuItem>
   );
 }
 
@@ -66,13 +67,15 @@ function SidebarStartSchoolMenuItem() {
 
   return (
     <DropdownMenuItem
-      render={(props) => (
+      icon={PlusSignIcon}
+      render={({ children, ...props }) => (
         <a {...props} href={new URL(`/${locale}/school/new`, SITE_ORIGIN).href}>
-          <HugeIcons icon={PlusSignIcon} />
-          {t("open-school")}
+          {children}
         </a>
       )}
-    />
+    >
+      {t("open-school")}
+    </DropdownMenuItem>
   );
 }
 

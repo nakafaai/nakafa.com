@@ -1,8 +1,6 @@
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import type { ReactElement } from "react";
@@ -18,11 +16,9 @@ export function ThemeMenu({ children }: { children: ReactElement }) {
       <DropdownMenuContent
         align="end"
         className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
+        label={common("menu-theme")}
       >
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-theme")}</DropdownMenuLabel>
-          <ThemeMenuItems />
-        </DropdownMenuGroup>
+        <ThemeMenuItems />
       </DropdownMenuContent>
     </DropdownMenu>
   );

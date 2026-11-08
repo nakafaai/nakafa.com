@@ -23,13 +23,23 @@ export const publicBatchResultValidator = Schema.mutable(
 );
 /** Stored active public row returned only to the authenticated HTTP adapter. */
 export type PublicRuntimeRow = typeof publicResultValidator.Type;
-/** Exact active signed publication identity exposed to server consumers. */
+/**
+ * Exact active signed publication identity exposed to server consumers, with the
+ * snapshot that each structured family resolves to under it. A release that does
+ * not change a family keeps its snapshot, so a reader keys that family's answers
+ * by the snapshot and reads them again only when it changes.
+ */
 export const activeIdentityValidator = Schema.Union([
   Schema.Null,
   Schema.Struct({
     manifestHash: Schema.String,
     releaseId: Schema.String,
     sequence: Schema.Finite,
+    snapshots: Schema.Struct({
+      assessment: Schema.NullOr(Schema.String),
+      program: Schema.NullOr(Schema.String),
+      quran: Schema.NullOr(Schema.String),
+    }),
   }),
 ]);
 

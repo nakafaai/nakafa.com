@@ -1,3 +1,4 @@
+import { CatIcon, Image01Icon } from "@hugeicons/core-free-icons";
 import { photoOf, UserPicture } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
@@ -6,7 +7,6 @@ import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -59,6 +59,12 @@ function saveAccount<A, E>(write: () => Promise<Result.Result<A, E>>) {
   );
 }
 
+/** The icon of each kind of picture: the account's animal, or the photo of its Google account. */
+const pictureIcons = {
+  animal: CatIcon,
+  photo: Image01Icon,
+} as const;
+
 /**
  * Renders the profile picture card: the picture that shows for the account, a
  * choice of the animal or the Google photo when the account has a photo, and a
@@ -68,6 +74,7 @@ function saveAccount<A, E>(write: () => Promise<Result.Result<A, E>>) {
  */
 export function UserSettingsPicture({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
+  const common = useTranslations("Common");
   const updatePicture = useUpdatePictureMutation();
   const updateMascot = useUpdateMascotMutation();
   const { appUser } = user;
@@ -116,14 +123,16 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {Arr.map(pictureItems, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
+              <SelectContent label={common("menu-picture")}>
+                {Arr.map(pictureItems, (item) => (
+                  <SelectItem
+                    icon={pictureIcons[item.value]}
+                    key={item.value}
+                    value={item.value}
+                  >
+                    {item.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>

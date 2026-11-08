@@ -130,37 +130,28 @@ describe("published material places", () => {
       })
   );
 
-  it.effect("asks Convex once for a material's places in one release", () =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValue(Effect.succeed([place]));
+  it.effect(
+    "asks Convex once for a material's places in one curriculum snapshot, across releases that keep it",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockReturnValue(Effect.succeed([place]));
 
-      for (const _ of [1, 2, 3]) {
+        for (const _ of [1, 2, 3]) {
+          yield* readPublishedMaterialPlacements("en", previewProjection);
+        }
+        expect(runtimeQueryMock).toHaveBeenCalledOnce();
+
+        activateTestRelease(ReleaseIdSchema.make("release-material-kept"), {
+          program: `sha256:${"7".repeat(64)}`,
+        });
         yield* readPublishedMaterialPlacements("en", previewProjection);
-      }
-      expect(runtimeQueryMock).toHaveBeenCalledOnce();
-
-      activateTestRelease(ReleaseIdSchema.make("release-material-next"));
-      yield* readPublishedMaterialPlacements("en", previewProjection);
-      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
-    })
-  );
-
-  it.effect("pins the read when its caller reads several in one release", () =>
-    Effect.gen(function* () {
-      const activeReleaseId = ReleaseIdSchema.make("release-material");
-      runtimeQueryMock.mockReturnValueOnce(Effect.succeed([]));
-
-      yield* readPublishedMaterialPlacements(
-        "en",
-        previewProjection,
-        activeReleaseId
-      );
-
-      expect(runtimeQueryMock).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
-      );
-    })
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+        activateTestRelease(ReleaseIdSchema.make("release-material-next"), {
+          program: `sha256:${"7".repeat(64)}`,
+        });
+        yield* readPublishedMaterialPlacements("en", previewProjection);
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+      })
   );
 
   it.effect("answers no place for a material that no curriculum shows", () =>

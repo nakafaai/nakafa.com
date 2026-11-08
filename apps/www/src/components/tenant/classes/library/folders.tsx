@@ -70,7 +70,6 @@ function FolderNameDialog({
   title: string;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const id = useId();
   const [edited, setEdited] = useState<string | null>(null);
   const name = edited ?? named;
@@ -86,21 +85,12 @@ function FolderNameDialog({
 
   return (
     <ResponsiveDialog
-      description={description}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} form={id} type="submit">
-            {action}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} form={id} type="submit">
+          {action}
+        </Button>
       }
+      description={description}
       open={open}
       setOpen={setOpen}
       title={title}
@@ -235,8 +225,10 @@ export function FolderRowMenu({
           }
           starred={folder.starred}
         />
-        <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => dialogs.show("rename")}
+        >
           {t("library-folder-rename")}
         </DropdownMenuItem>
         <MoveAndTrash

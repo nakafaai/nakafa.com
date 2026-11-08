@@ -11,6 +11,7 @@ import {
   type Period,
   setPeriodStatus,
 } from "@/components/tenant/settings/state";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /**
  * The optimistic changes of the periods of a unit. Each one shows a mutation's result
@@ -24,18 +25,9 @@ function changePeriodLists(
   matches: (args: Ref.Args<typeof tenancy.periods.list>) => boolean,
   change: (page: readonly Period[]) => Period[]
 ) {
-  for (const query of localStore.getAllQueries(tenancy.periods.list)) {
-    if (Option.isSome(query.value) && matches(query.args)) {
-      localStore.setQuery(
-        tenancy.periods.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, tenancy.periods.list, (value, args) =>
+    matches(args) ? Option.some(withPage(value, change)) : Option.none()
+  );
 }
 
 /**

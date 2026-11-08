@@ -125,7 +125,6 @@ function MathField({
     >
       <div className="min-w-0 flex-1" ref={host} />
       <Button
-        aria-label={keyboard}
         aria-pressed={keypad}
         className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
         onClick={() => {
@@ -135,6 +134,7 @@ function MathField({
         // The press keeps the focus in the field, so its caret stays where the writer left it.
         onMouseDown={(event) => event.preventDefault()}
         size="icon-sm"
+        tooltip={keyboard}
         type="button"
         variant="ghost"
       >
@@ -344,7 +344,6 @@ export function FormulaEdit({
             className="flex-1"
             onClick={() => setView("formula")}
             type="button"
-            variant={view === "formula" ? "secondary" : "outline"}
           >
             {labels.formula}
           </Button>
@@ -353,7 +352,6 @@ export function FormulaEdit({
             className="flex-1"
             onClick={() => setView("latex")}
             type="button"
-            variant={view === "latex" ? "secondary" : "outline"}
           >
             {labels.latex}
           </Button>

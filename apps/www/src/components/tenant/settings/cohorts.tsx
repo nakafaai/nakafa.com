@@ -254,7 +254,6 @@ function SchoolCohortAdd({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const create = useMutation(tenancy.cohorts.create).withOptimisticUpdate(
     createCohortChange
@@ -303,27 +302,18 @@ function SchoolCohortAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
+        action={
+          <Button
+            disabled={periodId === null || !isComplete || isPending}
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
+            {t("cohort-create")}
+          </Button>
+        }
         description={
           hasNoPeriod ? t("cohort-add-no-period") : t("cohort-add-footer")
-        }
-        footer={
-          <>
-            <Button
-              onClick={() => setIsOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={periodId === null || !isComplete || isPending}
-              inert={isPending}
-              onClick={submit}
-              type="button"
-            >
-              {t("cohort-create")}
-            </Button>
-          </>
         }
         open={isOpen}
         setOpen={setIsOpen}
