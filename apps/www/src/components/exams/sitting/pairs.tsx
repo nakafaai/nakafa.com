@@ -1,4 +1,5 @@
-import { optionLetters } from "@repo/backend/confect/exams/letters";
+import { partLetter } from "@repo/backend/confect/exams/letters";
+import { LineWords } from "@repo/design-system/components/ui/line";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import {
@@ -37,9 +38,6 @@ export function SittingPairs({
 }) {
   const disabled = usePaperLocked();
   const t = useTranslations("Exams");
-  // The answers are named in the script of their labels, as the teacher's paper names them: أ, ب, ج for answers
-  // written in Arabic.
-  const letterOf = optionLetters(Arr.map(match.targets, (part) => part.label));
 
   return (
     <fieldset aria-labelledby={labelledBy} className="grid min-w-0 gap-3">
@@ -59,7 +57,9 @@ export function SittingPairs({
               name={String(index + 1)}
               side="sources"
             >
-              <SittingDocument document={source.label} size="line" />
+              <LineWords>
+                <SittingDocument document={source.label} size="line" />
+              </LineWords>
             </LinesItem>
           ))}
         </LinesColumn>
@@ -68,10 +68,12 @@ export function SittingPairs({
             <LinesItem
               id={target.id}
               key={target.id}
-              name={letterOf(index)}
+              name={partLetter(match.targets, index)}
               side="targets"
             >
-              <SittingDocument document={target.label} size="line" />
+              <LineWords>
+                <SittingDocument document={target.label} size="line" />
+              </LineWords>
             </LinesItem>
           ))}
         </LinesColumn>

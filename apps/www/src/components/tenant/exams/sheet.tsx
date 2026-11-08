@@ -1,18 +1,17 @@
+import type { IconSvgElement } from "@hugeicons/react";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import type { optionDirection } from "@repo/backend/confect/exams/letters";
+import type { partDirection } from "@repo/backend/confect/exams/letters";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
-import { lineMark } from "@repo/design-system/lib/mark";
 import { cva } from "class-variance-authority";
-import { cn } from "cn";
 import { Function as Fn, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { SittingField } from "@/components/exams/sitting/field";
 import { writtenOf } from "@/components/exams/sitting/response";
-import { OptionRemove } from "@/components/tenant/exams/option";
-import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
-import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 
 /**
  * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
@@ -35,29 +34,54 @@ const questionPaper = cva(
 );
 
 /**
- * The paper of one question, as the student reads it in the player: its prompt, then its
- * options. The canvas draws the paper at full size and the thumbnails draw it small, so one
- * component draws both. The page's number sits outside the paper, so nothing inside it is
- * the teacher's own label.
+ * The paper of one question, as the student reads it in the player: its text, its picture and reading over its
+ * prompt, then its answers. The canvas draws the paper at full size and the thumbnails draw it small, so one
+ * component draws both. The page's number sits outside the paper, so nothing inside it is the teacher's own label.
  */
 export function QuestionPaper({
   children,
+  prompt,
   selected,
 }: {
+  /** The answers under the prompt: options, a board, a table or a field. */
   children: ReactNode;
+  /** The question's text: its picture, its reading and its prompt, in the order the student reads them. */
+  prompt: ReactNode;
   selected?: boolean;
 }) {
-  return <div className={questionPaper({ selected })}>{children}</div>;
+  return (
+    <div className={questionPaper({ selected })}>
+      <div className="grid gap-6">{prompt}</div>
+      {children}
+    </div>
+  );
 }
 
-/** A question's text on its paper: its reading, when it has one, over its prompt, as the student reads them. */
-export function PaperPrompt({ children }: { children: ReactNode }) {
-  return <div className="grid gap-6">{children}</div>;
-}
-
-/** The room of the action that adds an option, which a page keeps while its editors are not mounted. */
-export function OptionAddRoom() {
-  return <span aria-hidden className="h-8" />;
+/**
+ * The action that adds a part under a set, an option, a statement or an answer, `shown` on the chosen page alone, as
+ * a design tool shows its handles on the page in hand. On any other page, and on a page drawn without its editors,
+ * which passes no `onAdd`, it keeps its room hidden, so choosing a page or mounting its editors moves nothing.
+ */
+export function PartAdd({
+  icon,
+  label,
+  onAdd,
+  shown = false,
+}: {
+  /** The icon of the kind of part it adds, so the two columns of a match never draw the same one. */
+  readonly icon: IconSvgElement;
+  readonly label: string;
+  readonly onAdd?: () => void;
+  readonly shown?: boolean;
+}) {
+  return (
+    <div className={shown && onAdd !== undefined ? undefined : "invisible"}>
+      <Button onClick={onAdd} size="sm" type="button" variant="outline">
+        <HugeIcons aria-hidden="true" icon={icon} />
+        {label}
+      </Button>
+    </div>
+  );
 }
 
 /** The options of the paper, one column on a narrow paper and two on a wide one, as the player lays them out. */
@@ -67,7 +91,7 @@ export function PaperOptions({
 }: {
   children: ReactNode;
   /** The way the set reads, which its letters decide. */
-  dir: ReturnType<typeof optionDirection>;
+  dir: ReturnType<typeof partDirection>;
 }) {
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2" dir={dir}>
@@ -77,51 +101,33 @@ export function PaperOptions({
 }
 
 /**
- * One option of the paper, as the player draws it: the student's own circle with its letter, unmarked and out
- * of reach, a radio for one answer and a check box for several, then its rich text, in the player's choice
- * frame. Only the cursor differs, since the text is edited here. The key is marked by letter in the teacher's
- * layer, and letters run in the paper's reading order.
+ * One option of the paper, as the player draws it: a marked line with the student's own circle and its letter,
+ * unmarked and out of reach, a radio for one answer and a check box for several, then the words and the remove
+ * control the caller composes. Only the cursor differs, since the words are written here. The key is marked by
+ * letter in the teacher's layer, and letters run in the paper's reading order.
  */
 export function PaperOption({
   children,
   letter,
   multiple,
 }: {
+  /** The option's `LineWords`, and its remove control while it may go. */
   children: ReactNode;
   letter: string;
   /** Whether the question takes several answers, so the student meets check boxes. */
   multiple: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 text-sm leading-none font-medium",
-        choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
-        "w-full cursor-text select-text"
-      )}
-    >
-      <span className={lineMark()} inert>
+    <MarkedLine written>
+      <LineMark inert>
         {multiple ? (
           <Checkbox letter={letter} />
         ) : (
           <Radio letter={letter} value="unmarked" />
         )}
-      </span>
+      </LineMark>
       {children}
-    </div>
-  );
-}
-
-/**
- * The text of an option or a statement, with the remove control of its option row at the end of its first line. A
- * touch screen shows the remove control at all times, so the text stops short of it.
- */
-export function PaperPartText({ children }: { children: ReactNode }) {
-  return (
-    <div className="relative min-w-0 flex-1 pe-(--option-end)">
-      {children}
-      <OptionRemove />
-    </div>
+    </MarkedLine>
   );
 }
 

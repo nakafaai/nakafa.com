@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { readRowAxis } from "@/e2e/support/axis";
+import { readOverlaps } from "@/e2e/support/overlap";
 
 /**
  * What one look at a surface finds out of line between markers and their words, measured as the owner's rule of
@@ -437,6 +438,10 @@ function readAsymmetry({
 /** The words of a marker: a number or a letter, one to three of them, with its point. */
 const MARKER_WORDS = /^[\p{L}\p{N}]{1,3}[.):]?$/u;
 
+/** One shadow of a computed box-shadow: whether it is inset (before or after, by engine), its colour, offsets, blur and spread. */
+const SHADOW =
+  /(?<before>inset\s+)?(?:rgba?\([^)]*\)|#\w+|[a-z]+)?\s*(?<x>-?[\d.]+)px\s+(?<y>-?[\d.]+)px\s+(?<blur>[\d.]+)px\s+(?<spread>-?[\d.]+)px(?<after>\s+inset)?/u;
+
 /** The class that pushes a child to its row's far end, so its gap is room left over and not a gap. */
 const AUTO_MARGIN = /(?:^|\s|:)-?m[selrx]?-auto(?:\s|$)/u;
 
@@ -455,8 +460,10 @@ function settled() {
 const SETTLE_MILLISECONDS = 5000;
 
 /**
- * Soft-expects one surface to stand symmetric: every element under `scope` as `readAsymmetry` and `readRowAxis` read
- * it, once the page's fonts are in and its animations that end have ended.
+ * Soft-expects one surface to stand symmetric and apart: every element under `scope` as `readAsymmetry`,
+ * `readRowAxis` and `readOverlaps` read it, once the page's fonts are in and its animations that end have ended. Call
+ * it again in each state a surface takes, hovered, focused, chosen or dragged, since a ring or a control that shows
+ * only then can cover another.
  */
 export const expectSymmetric = async (
   page: Page,
@@ -478,6 +485,7 @@ export const expectSymmetric = async (
           margin: AUTO_MARGIN.source,
           scope,
         })),
+        ...(await page.evaluate(readOverlaps, { ring: SHADOW.source, scope })),
       ],
       `${label}: stands symmetric`
     )

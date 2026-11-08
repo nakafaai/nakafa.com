@@ -21,6 +21,9 @@ const WIDTHS = [320, 390, 768, 1440] as const;
 const LONG =
   "Pernyataan yang sengaja ditulis sangat panjang agar barisnya terlipat menjadi beberapa baris di setiap lebar layar";
 
+/** The dot of the matching's second statement, whatever it is joined to. */
+const SECOND_STATEMENT = /^Statement 2, /u;
+
 /** The quiet period of an option's save, with room for the server's answer. */
 const SAVED_MILLISECONDS = 2500;
 
@@ -38,6 +41,30 @@ async function rewrite(page: Page, editor: Locator, words: string) {
   await page.keyboard.press("Backspace");
   if (words !== "") {
     await page.keyboard.type(words);
+  }
+}
+
+/**
+ * Measures one question in each state its parts take, hovered, focused from the keyboard, in hand and under a pull,
+ * and saves its picture in each, since a ring or a control that shows only then can cover another.
+ */
+async function measureStates(
+  page: Page,
+  question: Locator,
+  name: string,
+  states: readonly {
+    readonly enter: () => Promise<void>;
+    readonly leave?: () => Promise<void>;
+    readonly state: string;
+  }[]
+) {
+  for (const { enter, leave, state } of states) {
+    await enter();
+    await expectSymmetric(page, `${name} ${state}`, '[data-page=""]');
+    await question.screenshot({
+      path: test.info().outputPath(`${name}-${state}.png`),
+    });
+    await leave?.();
   }
 }
 
@@ -125,6 +152,74 @@ for (const width of WIDTHS) {
       '[aria-label="For teachers"]'
     );
     await photograph(page.locator('[data-page=""]'), `editor-${width}`);
+
+    // Every state of the matching's parts, then of an option and of a table's statement.
+    const matching = page.getByRole("region", {
+      name: `Question ${QUESTIONS.match}`,
+    });
+    const statementDot = matching.getByRole("button", {
+      name: "Statement 1, joined to B",
+    });
+    const secondDot = matching.getByRole("button", {
+      name: SECOND_STATEMENT,
+    });
+    const answerRow = matching.locator("[data-line-target]").first();
+    await matching.scrollIntoViewIfNeeded();
+    await measureStates(page, matching, `matching-${width}`, [
+      { enter: () => editors.statement.hover(), state: "hover" },
+      {
+        enter: async () => {
+          await secondDot.focus();
+          await page.keyboard.press("ArrowUp");
+        },
+        state: "focus",
+      },
+      {
+        enter: () => statementDot.click(),
+        leave: () => page.keyboard.press("Escape"),
+        state: "held",
+      },
+      {
+        enter: async () => {
+          const from = await secondDot.boundingBox();
+          const to = await answerRow.boundingBox();
+          if (from === null || to === null) {
+            return;
+          }
+          await page.mouse.move(
+            from.x + from.width / 2,
+            from.y + from.height / 2
+          );
+          await page.mouse.down();
+          await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {
+            steps: 8,
+          });
+        },
+        leave: () => page.mouse.up(),
+        state: "drag",
+      },
+    ]);
+    const choice = page.getByRole("region", {
+      name: `Question ${QUESTIONS.choice}`,
+    });
+    await choice.scrollIntoViewIfNeeded();
+    await measureStates(page, choice, `choice-${width}`, [
+      { enter: () => editors.choice.hover(), state: "hover" },
+      {
+        enter: async () => {
+          await editors.choice.click();
+          await page.keyboard.press("Tab");
+        },
+        state: "focus",
+      },
+    ]);
+    const table = page.getByRole("region", {
+      name: `Question ${QUESTIONS.table}`,
+    });
+    await table.scrollIntoViewIfNeeded();
+    await measureStates(page, table, `table-${width}`, [
+      { enter: () => editors.table.hover(), state: "hover" },
+    ]);
 
     // The student's paper draws the same parts through the player.
     const paper = await owner.newPage();

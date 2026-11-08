@@ -60,8 +60,10 @@ export const editorPlaceholder = cva(
  * The document of the text: the element that holds its blocks. The editor gives
  * these classes to the element Tiptap edits, and the saved words give them to
  * their own element, so each block takes the same box in both. A line takes no
- * padding and no space between its blocks: the frame around it gives the room, so
- * its first line shares a line box with the letter that names it. An exam's
+ * padding, no space between its blocks and no line height of its own: the marked
+ * line around it (`LineWords` in `components/ui/line`) sets the words' size and
+ * stands their first line on the middle of the band its letter, circle, dot and
+ * remove control share, so every marker reads on that line. An exam's
  * document (`article`) takes the published article's headings, lists, quotations,
  * inline code, tables and room between blocks from `articleProse`, so only a plain
  * text, such as a memory, draws them here. An exam's page takes no padding either:
