@@ -10440,7 +10440,19 @@ export declare const api: {
         { at: { x: number; y: number; z: number }; version: number },
         { version: number }
       >;
+      keepSnapshot: FunctionReference<
+        "mutation",
+        "public",
+        { fileId: Id<"bucketFiles"> },
+        null
+      >;
       open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
+      reserveSnapshot: FunctionReference<
+        "mutation",
+        "public",
+        { byteSize: number },
+        { address: string; fileId: Id<"bucketFiles"> }
+      >;
       share: FunctionReference<
         "mutation",
         "public",
@@ -10475,6 +10487,7 @@ export declare const api: {
           level: number;
           lifetime: number;
           materials: { petals: number; wood: number };
+          size: number;
           stars: number;
           timeZone: string;
           version: number;
@@ -10501,6 +10514,8 @@ export declare const api: {
           level: number;
           mascot: string;
           name: string;
+          size: number;
+          snapshot?: string;
           timeZone: string;
           username: string;
         } | null

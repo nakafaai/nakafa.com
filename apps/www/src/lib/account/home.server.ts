@@ -284,6 +284,9 @@ export const islandVisitHandler = accountHandler(
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}/island/${found.value.username}`,
         description: t("visit-description", { name: found.value.name }),
+        ...(found.value.snapshot === undefined
+          ? {}
+          : { image: found.value.snapshot }),
         indexable: false,
         locale,
         title: t("name", { name: found.value.name }),

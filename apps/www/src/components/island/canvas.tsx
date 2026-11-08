@@ -64,10 +64,8 @@ export default function IslandCanvas({
               preserveDrawingBuffer: true,
             }}
             linear
-            onCreated={(state) => {
-              clip.current = state.gl.domElement;
-            }}
             orthographic
+            ref={clip}
           >
             {descend ? <Descent /> : null}
             <PixelPipeline

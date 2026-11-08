@@ -11,6 +11,8 @@ import {
 export const ScreenSeo = Schema.Struct({
   canonicalPath: LocalizedPath,
   description: Schema.String,
+  /** The screen's own social image, such as a shared island's snapshot; the site's card without one. */
+  image: Schema.optionalKey(Schema.String),
   indexable: Schema.Boolean,
   locale: LocaleSchema,
   title: Schema.String,
@@ -24,7 +26,7 @@ export function signedInHead(seo: ScreenSeo) {
     createSeoHead({
       canonicalPath: seo.canonicalPath,
       description: seo.description,
-      image: "/og.png",
+      image: seo.image ?? "/og.png",
       indexable: seo.indexable,
       jsonLd: [],
       locale: seo.locale,

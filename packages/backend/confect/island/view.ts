@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/confect/island/material";
 import { EarnedBadge, Visibility } from "@repo/backend/confect/island/schema";
 import { MascotCode } from "@repo/mascot/code";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 
 /**
  * What every reader of an island sees: its placements, level, badges, and the
@@ -49,6 +49,8 @@ export const VisitedIsland = Schema.Struct({
   ...islandFields,
   mascot: MascotCode,
   name: Schema.String,
+  /** The signed address of the picture its owner last shared, the visit's OpenGraph image (D20). */
+  snapshot: Schema.optionalKey(Schema.String),
   username: Schema.String,
 });
 
@@ -90,16 +92,21 @@ export function toOwnIsland(island: Docs["islands"]) {
   };
 }
 
-/** Projects an island for a visitor, with its owner's public face. */
+/** Projects an island for a visitor, with its owner's public face and the address of its snapshot when it has one. */
 export function toVisitedIsland(
   island: Docs["islands"],
   owner: Pick<Docs["users"], "mascot" | "name">,
-  username: string
+  username: string,
+  snapshot: Option.Option<string>
 ) {
   return {
     ...shared(island),
     mascot: owner.mascot,
     name: owner.name,
+    ...Option.match(snapshot, {
+      onNone: () => ({}),
+      onSome: (address) => ({ snapshot: address }),
+    }),
     username,
   };
 }

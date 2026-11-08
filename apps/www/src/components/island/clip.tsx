@@ -1,4 +1,4 @@
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { delay } from "motion";
 import {
   createContext,
@@ -7,6 +7,7 @@ import {
   use,
   useRef,
 } from "react";
+import { RAMPS } from "@/lib/island/palette";
 
 const ClipContext = createContext<RefObject<HTMLCanvasElement | null> | null>(
   null
@@ -75,19 +76,74 @@ function recordClip(source: HTMLCanvasElement | null, fileName: string) {
   };
   recorder.onstop = () => {
     cancelAnimationFrame(frame);
+    const url = URL.createObjectURL(new Blob(Arr.copy(parts), { type }));
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob(Arr.copy(parts), { type }));
+    link.href = url;
     link.download = `${fileName}.${type.startsWith("video/mp4") ? "mp4" : "webm"}`;
     link.click();
-    delay(() => URL.revokeObjectURL(link.href), 1);
+    URL.revokeObjectURL(url);
   };
   copy();
   recorder.start();
   delay(() => recorder.stop(), CLIP_SECONDS);
 }
 
+/** The size of a snapshot: the social card every network shows. */
+const SNAPSHOT_WIDTH = 1200;
+const SNAPSHOT_HEIGHT = 630;
+
+/** The sky a snapshot's island floats in: the palette's pale day sky. */
+const SNAPSHOT_SKY = RAMPS.sky.tones[2];
+
+/**
+ * Draws the frame's island as its snapshot, the OpenGraph image of a visit
+ * (ADR 0042, D20): its pixels enlarged by the largest whole number that fits
+ * the social card, with no smoothing, centred over the day sky, as a PNG. A
+ * canvas that is not there yet, or a browser that draws no PNG, gives none.
+ */
+function drawSnapshot(source: HTMLCanvasElement | null) {
+  return Effect.callback<Option.Option<Blob>>((resume) => {
+    const card = document.createElement("canvas");
+    card.width = SNAPSHOT_WIDTH;
+    card.height = SNAPSHOT_HEIGHT;
+    const pen = card.getContext("2d");
+    if (source === null || source.width === 0 || pen === null) {
+      resume(Effect.succeedNone);
+      return;
+    }
+    const scale = Math.max(
+      1,
+      Math.floor(
+        Math.min(SNAPSHOT_WIDTH / source.width, SNAPSHOT_HEIGHT / source.height)
+      )
+    );
+    const width = source.width * scale;
+    const height = source.height * scale;
+    pen.imageSmoothingEnabled = false;
+    pen.fillStyle = SNAPSHOT_SKY;
+    pen.fillRect(0, 0, SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
+    pen.drawImage(
+      source,
+      Math.floor((SNAPSHOT_WIDTH - width) / 2),
+      Math.floor((SNAPSHOT_HEIGHT - height) / 2),
+      width,
+      height
+    );
+    card.toBlob(
+      (blob) => resume(Effect.succeed(Option.fromNullishOr(blob))),
+      "image/png"
+    );
+  });
+}
+
 /** Records a few seconds of the frame's island as a video file to share. */
 export function useRecordClip(fileName: string) {
   const canvas = useClipCanvas();
   return () => recordClip(canvas.current, fileName);
+}
+
+/** Draws the frame's island as its snapshot, when its canvas is there. */
+export function useSnapshot() {
+  const canvas = useClipCanvas();
+  return () => drawSnapshot(canvas.current);
 }

@@ -429,6 +429,21 @@ describe("islandVisitHandler", () => {
     );
   });
 
+  it("names the island's snapshot as the visit's social image", async () => {
+    sessionWith(Option.none());
+    const snapshot = "https://account.r2.test/files/islands/one/two";
+    answerQueries([
+      [
+        island.queries.visit,
+        { badges: [], level: 2, name: "Nabil", snapshot, username: "nabil" },
+      ],
+    ]);
+    const screen = await islandVisitHandler({
+      data: { locale: "en", username: "nabil" },
+    });
+    expect(screen.seo.image).toBe(snapshot);
+  });
+
   it("answers not found for an island nobody may visit", async () => {
     sessionWith(Option.some("token"));
     answerQueries([[island.queries.visit, null]]);

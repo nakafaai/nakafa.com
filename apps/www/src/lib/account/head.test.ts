@@ -45,6 +45,25 @@ describe("signedInHead", () => {
       name: "robots",
     });
   });
+
+  it("shows the site's card, or the screen's own image when it names one", () => {
+    const screen = {
+      canonicalPath: "/en/island/nabil",
+      description: "Visit Nabil's island",
+      indexable: false,
+      locale: "en",
+      title: "Nabil's Island",
+    } as const;
+    expect(signedInHead(screen).meta).toContainEqual({
+      content: "https://nakafa.com/og.png",
+      property: "og:image",
+    });
+    const snapshot = "https://account.r2.test/files/islands/one/two";
+    expect(signedInHead({ ...screen, image: snapshot }).meta).toContainEqual({
+      content: snapshot,
+      property: "og:image",
+    });
+  });
 });
 
 describe("profileHead", () => {
