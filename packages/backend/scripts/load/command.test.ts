@@ -6,6 +6,7 @@ import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
 import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
 import type { LoadInput } from "@repo/backend/scripts/load/run";
 import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
+import { localConvexDouble } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
@@ -21,8 +22,8 @@ import { TestClock } from "effect/testing";
 const mocks = vi.hoisted(() => ({
   backend: vi.fn(),
   capture: vi.fn(),
-  convex: vi.fn(),
   issue: vi.fn(),
+  layer: vi.fn(),
   open: vi.fn(),
   lease: vi.fn(),
   owner: vi.fn(),
@@ -54,14 +55,20 @@ vi.mock(
     },
   })
 );
-vi.mock("@repo/backend/scripts/content/acceptance/convex", () => ({
-  runLocalConvex: mocks.convex,
-}));
+vi.mock(
+  "@repo/backend/scripts/content/acceptance/convex",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@repo/backend/scripts/content/acceptance/convex")
+    >()),
+    localConvexLayer: mocks.layer,
+  })
+);
 vi.mock("@repo/backend/scripts/content/acceptance/school", () => ({
-  createAcceptanceSchool: mocks.school,
+  seedSchool: mocks.school,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/owner", () => ({
-  createAcceptanceOwner: mocks.owner,
+  seedOwner: mocks.owner,
 }));
 vi.mock("@repo/backend/scripts/load/logs", () => ({
   captureLogs: mocks.capture,
@@ -119,11 +126,12 @@ describe("load command", () => {
         const directory = yield* fs.makeTempDirectoryScoped();
         mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
         mocks.run.mockReturnValue(Effect.void);
-        mocks.convex.mockReturnValue(Effect.succeed("printed"));
+        const backend = localConvexDouble({ "exams/seed:answers": "answered" });
+        mocks.layer.mockReturnValue(backend.layer);
         mocks.capture.mockReturnValue(Effect.void);
         mocks.owner.mockReturnValue(Effect.void);
-        mocks.school.mockImplementation((_root: string, path: string) =>
-          fs.writeFileString(path, '{"name":"Sekolah 1","slug":"acc-1"}')
+        mocks.school.mockReturnValue(
+          Effect.succeed({ name: "Sekolah 1", slug: "acc-1" })
         );
         const output = `${directory}/report.json`;
         const ledger = `${output}.acknowledged.jsonl`;
@@ -152,25 +160,23 @@ describe("load command", () => {
           runtime.site,
           yield* sessionCookie("session-1")
         );
-        expect(yield* load.school(directory)).toBe("acc-1");
-        expect(mocks.school).toHaveBeenCalledWith(
-          "/root",
-          `${directory}/school.json`
-        );
-        expect(mocks.owner).toHaveBeenCalledWith(
-          "/root",
-          "acc-1",
-          `${directory}/owner.json`
-        );
-        expect(yield* load.run("Stored answers", ["data"], ["secret"])).toBe(
-          "printed"
-        );
-        expect(mocks.convex).toHaveBeenCalledWith(
-          runtime,
-          "Stored answers",
-          ["data"],
-          ["secret"]
-        );
+        expect(yield* load.school).toBe("acc-1");
+        expect(mocks.owner).toHaveBeenCalledWith("acc-1");
+        expect(mocks.layer).toHaveBeenCalledWith("/root");
+        expect(
+          yield* load.run(
+            "Stored answers",
+            { args: {}, path: "exams/seed:answers" },
+            ["secret"]
+          )
+        ).toBe("answered");
+        expect(backend.calls()).toEqual([
+          {
+            call: { args: {}, path: "exams/seed:answers" },
+            operation: "Stored answers",
+            sensitiveValues: ["secret"],
+          },
+        ]);
         yield* load.capture("functions.jsonl");
         expect(mocks.capture).toHaveBeenCalledWith(runtime, "functions.jsonl");
       }).pipe(Effect.scoped, Effect.provide(services))
@@ -184,6 +190,7 @@ describe("load command", () => {
           yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
         const output = `${directory}/report.json`;
         mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
+        mocks.layer.mockReturnValue(localConvexDouble().layer);
         mocks.run.mockReturnValue(Effect.void);
         yield* runLoadCommand("/root", [output]);
         const load: LoadInput<AcceptanceModeError, never> =
@@ -224,6 +231,7 @@ describe("load command", () => {
     () =>
       Effect.gen(function* () {
         mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
+        mocks.layer.mockReturnValue(localConvexDouble().layer);
         mocks.run.mockReturnValue(Effect.void);
         const directory =
           yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();

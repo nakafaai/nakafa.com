@@ -1,65 +1,35 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { type BrowserContext, expect, type Page } from "@playwright/test";
+import { seedCard as seedLoginCard } from "@repo/backend/scripts/content/acceptance/card";
+import { seedClassTeacher } from "@repo/backend/scripts/content/acceptance/classes";
+import { seedForum as seedForumHistory } from "@repo/backend/scripts/content/acceptance/forum";
+import { fillSchool as fillFullSchool } from "@repo/backend/scripts/content/acceptance/full";
+import { seedGraduation as seedGraduatingCohort } from "@repo/backend/scripts/content/acceptance/graduation";
+import { seedInvite } from "@repo/backend/scripts/content/acceptance/invite";
+import { seedOwner } from "@repo/backend/scripts/content/acceptance/owner";
+import { seedSchool } from "@repo/backend/scripts/content/acceptance/school";
 import {
-  CardFixture,
-  ForumFixture,
-  GraduationFixture,
-  SchoolFixture,
-  SessionCookie,
-  SittingFixture,
-} from "@repo/backend/scripts/content/acceptance/fixture";
-import { Array as Arr, Effect, FileSystem, Schema } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+  type SittingExtra,
+  seedSitting as seedProctoredSitting,
+} from "@repo/backend/scripts/content/acceptance/sitting";
+import { seedStudent } from "@repo/backend/scripts/content/acceptance/student";
+import { seedTeacher } from "@repo/backend/scripts/content/acceptance/teacher";
+import { recordTransfer as recordInvoiceTransfer } from "@repo/backend/scripts/content/acceptance/transfer";
+import { payInvoice as payInvoiceOnXendit } from "@repo/backend/scripts/content/acceptance/xendit";
+import { Array as Arr, Effect } from "effect";
+import { runFixture } from "@/e2e/support/acceptance";
 import { addSessionCookie } from "@/e2e/support/context";
 
 /**
- * Opens a new school in the running local acceptance runtime and reads its
- * address and name back. No account holds the school's Owner address yet, so
- * the school has no member until `signInOwner` signs its Owner in. Opening can
- * time out under a busy machine, the same way a learner can (see
- * `signInLearner`), and a school that a failed run left behind is harmless
- * because every run opens a new one.
+ * Opens a new school in the running local acceptance runtime and answers its
+ * address and name. No account holds the school's Owner address yet, so the
+ * school has no member until `signInOwner` signs its Owner in. Opening can time
+ * out under a busy machine, the same way a learner can (see `signInLearner`),
+ * and a school that a failed attempt left behind is harmless because every
+ * attempt opens a new one.
  */
-export const createSchool = Effect.fn("NakafaE2E.createSchool")(
-  function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-school-",
-    });
-    const output = `${directory}/school.json`;
-    yield* runAcceptanceCommand("school", output).pipe(
-      Effect.retry({ times: 2 })
-    );
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(SchoolFixture)));
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
-
-/**
- * Signs in a member of a school that `createSchool` opened, through the acceptance
- * command of its kind (`owner` or `teacher`), and returns its session cookie. The
- * command holds the member's address and claims the school's invite before the
- * cookie is returned, so the member is a member when the cookie is used. Each
- * command runs once per school: a second run would open the same account again.
- */
-const createMemberCookie = Effect.fn("NakafaE2E.createMemberCookie")(
-  function* (kind: "owner" | "teacher" | "class-teacher", slug: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: `nakafa-${kind}-`,
-    });
-    const output = `${directory}/cookie.json`;
-    yield* runAcceptanceCommand(kind, slug, output);
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+export const createSchool = Effect.fn("NakafaE2E.createSchool")(function* () {
+  return yield* runFixture(seedSchool()).pipe(Effect.retry({ times: 2 }));
+});
 
 /**
  * Fills a school that `createSchool` opened with the records of a real one, a thousand students
@@ -68,30 +38,35 @@ const createMemberCookie = Effect.fn("NakafaE2E.createMemberCookie")(
 export const fillSchool = Effect.fn("NakafaE2E.fillSchool")(function* (
   slug: string
 ) {
-  yield* runAcceptanceCommand("full", slug);
-}, Effect.provide(nodeServicesLayer));
+  yield* runFixture(fillFullSchool(slug));
+});
 
-/** Signs the Owner of a school into one browser context, for the school host at `address`. */
+/**
+ * Signs the Owner of a school into one browser context, for the school host at `address`. The
+ * Owner's account claims the school's invite before the cookie is answered, so the Owner is a
+ * member when the cookie is used.
+ */
 export const signInOwner = Effect.fn("NakafaE2E.signInOwner")(function* (
   context: BrowserContext,
   slug: string,
   address: string
 ) {
-  const cookie = yield* createMemberCookie("owner", slug);
+  const cookie = yield* runFixture(seedOwner(slug));
   yield* addSessionCookie(context, cookie, address);
 });
 
 /**
  * Signs the Teacher of a school into one browser context, for the school host at
  * `address`. A Teacher is a member without the school's management rights, so the
- * school settings answer not found for it.
+ * school settings answer not found for it. It runs once per school: a second run
+ * would seed the same address again.
  */
 export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
   context: BrowserContext,
   slug: string,
   address: string
 ) {
-  const cookie = yield* createMemberCookie("teacher", slug);
+  const cookie = yield* runFixture(seedTeacher(slug));
   yield* addSessionCookie(context, cookie, address);
 });
 
@@ -99,11 +74,11 @@ export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
  * Signs the Teacher of one class into one browser context, for the school host at `address`.
  * The acceptance runtime opens the school's active period, creates the class `Fisika X-1` in
  * it, and makes the Teacher teach that class, so the Teacher sees the class in the sidebar.
- * The command runs once per school, because a second run would add another class.
+ * It runs once per school, because a second run would add another class.
  */
 export const signInClassTeacher = Effect.fn("NakafaE2E.signInClassTeacher")(
   function* (context: BrowserContext, slug: string, address: string) {
-    const cookie = yield* createMemberCookie("class-teacher", slug);
+    const cookie = yield* runFixture(seedClassTeacher(slug));
     yield* addSessionCookie(context, cookie, address);
   }
 );
@@ -114,7 +89,7 @@ export const signInClassTeacher = Effect.fn("NakafaE2E.signInClassTeacher")(
  * creates the learner's account with that address, claims the invitation for the account,
  * and waits until the inbox holds the row. With `expired`, the invite ends before the
  * account signs in, as its term ending does, so the learner signs in as no member of the
- * school. The command runs once, because a second run would invite the same address again.
+ * school. It runs once, because a second run would invite the same address again.
  */
 export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
   function* (learner: {
@@ -124,25 +99,11 @@ export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
     readonly expired?: boolean;
     readonly slug: string;
   }) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-invite-",
-    });
-    const output = `${directory}/cookie.json`;
-    yield* runAcceptanceCommand(
-      "invite",
-      learner.slug,
-      learner.address,
-      output,
-      ...(learner.expired === true ? ["expired"] : [])
+    const cookie = yield* runFixture(
+      seedInvite(learner.slug, learner.address, learner.expired === true)
     );
-    const cookie = yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
     yield* addSessionCookie(learner.context, cookie, learner.baseURL);
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
+  }
 );
 
 /**
@@ -154,7 +115,7 @@ export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
   slug: string,
   learnerAddress: string
 ) {
-  yield* runAcceptanceCommand("student", slug, learnerAddress);
+  yield* runFixture(seedStudent(slug, learnerAddress));
 });
 
 /**
@@ -162,82 +123,43 @@ export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
  * learner who is already a member of it, and returns the exam, the sitting, and its token. The
  * sitting opens now and closes an hour later, and the learner gets a student grant in the
  * school's first active unit. A `crowd` seats that many extra students with attempts in
- * progress first, so the learner's own attempt lands on a later dashboard page. `upcoming` also
- * schedules a room of the same exam for the next day, which the owner's home lists as upcoming,
- * `essay` adds an essay that the student writes and the teacher grades, `prose` ends the exam with a
- * third question whose prompt holds every block and mark once, and `templates` adds a question of
- * every other template, each written and keyed, and the essay. Each call seeds a new exam and sitting.
+ * progress first, so the learner's own attempt lands on a later dashboard page. `extra` adds
+ * what `SittingExtra` names. Each call seeds a new exam and sitting.
  */
-export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
-  function* (
-    slug: string,
-    learnerAddress: string,
-    crowd = 0,
-    extra?: "essay" | "prose" | "templates" | "upcoming"
-  ) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-sitting-",
-    });
-    const output = `${directory}/sitting.json`;
-    yield* runAcceptanceCommand(
-      "sitting",
-      slug,
-      learnerAddress,
-      output,
-      String(crowd),
-      ...(extra === undefined ? [] : [extra])
-    );
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(SittingFixture)));
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(function* (
+  slug: string,
+  learnerAddress: string,
+  crowd = 0,
+  extra?: typeof SittingExtra.Type
+) {
+  return yield* runFixture(
+    seedProctoredSitting(slug, learnerAddress, crowd, extra)
+  );
+});
 
-/**
- * Seeds one new student in a school that `createSchool` opened, with a student grant and a login card,
- * and returns the school login name that the student types and the card's plain code. The card is
- * not redeemed yet, so a browser test redeems it through the school's own form.
- */
 /**
  * Seeds a graduation for the learner with the address (ADR 0033, S6): a class group of the last
  * grade of the school's first active unit with the learner placed in it, a NISN on file, the
  * unit's NPSN, and the learner's report card approved, whose PDF the runtime draws next. Each
  * call seeds a new class group.
  */
-export const seedGraduation = Effect.fn("NakafaE2E.seedGraduation")(
-  function* (slug: string, learnerAddress: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-graduation-",
-    });
-    const output = `${directory}/graduation.json`;
-    yield* runAcceptanceCommand("graduation", slug, learnerAddress, output);
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(GraduationFixture)));
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+export const seedGraduation = Effect.fn("NakafaE2E.seedGraduation")(function* (
+  slug: string,
+  learnerAddress: string
+) {
+  return yield* runFixture(seedGraduatingCohort(slug, learnerAddress));
+});
 
-export const seedCard = Effect.fn("NakafaE2E.seedCard")(
-  function* (slug: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-card-",
-    });
-    const output = `${directory}/card.json`;
-    yield* runAcceptanceCommand("card", slug, output);
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(CardFixture)));
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+/**
+ * Seeds one new student in a school that `createSchool` opened, with a student grant and a login card,
+ * and returns the school login name that the student types and the card's plain code. The card is
+ * not redeemed yet, so a browser test redeems it through the school's own form.
+ */
+export const seedCard = Effect.fn("NakafaE2E.seedCard")(function* (
+  slug: string
+) {
+  return yield* runFixture(seedLoginCard(slug));
+});
 
 /**
  * Seeds the history of the general channel of the class `signInClassTeacher` seeds, in a school
@@ -245,28 +167,14 @@ export const seedCard = Effect.fn("NakafaE2E.seedCard")(
  * and the class teacher's read mark after the first `read` of them. It returns the channel and the
  * messages, oldest first. Each call adds a new classmate and its messages.
  */
-export const seedForum = Effect.fn("NakafaE2E.seedForum")(
-  function* (slug: string, count: number, read: number, author?: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-forum-",
-    });
-    const output = `${directory}/forum.json`;
-    yield* runAcceptanceCommand(
-      "forum",
-      slug,
-      String(count),
-      String(read),
-      output,
-      ...(author === undefined ? [] : [author])
-    );
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(ForumFixture)));
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
+export const seedForum = Effect.fn("NakafaE2E.seedForum")(function* (
+  slug: string,
+  count: number,
+  read: number,
+  author?: string
+) {
+  return yield* runFixture(seedForumHistory(slug, count, read, author));
+});
 
 /**
  * Records the bank transfer of a school invoice in the running local acceptance runtime,
@@ -276,7 +184,7 @@ export const recordTransfer = Effect.fn("NakafaE2E.recordTransfer")(function* (
   number: string,
   reference: string
 ) {
-  yield* runAcceptanceCommand("transfer", number, reference);
+  yield* runFixture(recordInvoiceTransfer(number, reference));
 });
 
 /**
@@ -288,7 +196,7 @@ export const payInvoice = Effect.fn("NakafaE2E.payInvoice")(function* (
   number: string,
   step: "open" | "paid"
 ) {
-  yield* runAcceptanceCommand("invoice", number, step);
+  yield* runFixture(payInvoiceOnXendit(number, step));
 });
 
 /** The address of a path on a host under the same server as the test's base address. */

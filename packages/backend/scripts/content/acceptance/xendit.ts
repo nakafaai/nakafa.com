@@ -1,7 +1,9 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
+import {
+  LocalConvex,
+  localConvexLayer,
+  readRows,
+} from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { encodeArguments } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
@@ -15,19 +17,14 @@ import {
   Effect,
   Option,
   Schema,
-  String as Str,
 } from "effect";
 
 /** What a learner seeds: a one-month pass, or the monthly plan with its first month paid. */
 const XenditPurchase = Schema.Literals(["pass", "plan"]);
 
-/** The answers of the checkout's prepare step and of the event inbox, as the Convex CLI prints them. */
-const Prepared = Schema.fromJsonString(
-  Schema.Struct({ accountId: Schema.String })
-);
-const Recorded = Schema.fromJsonString(
-  Schema.Struct({ eventId: Schema.String })
-);
+/** The answers of the checkout's prepare step and of the event inbox. */
+const Prepared = Schema.Struct({ accountId: Schema.String });
+const Recorded = Schema.Struct({ eventId: Schema.String });
 
 /** One Xendit webhook body for an event, as Xendit posts it. */
 function deliveryOf(event: string, data: object, now: number) {
@@ -72,62 +69,50 @@ function deliveryOfPaid(sessionId: string, now: number, saved: boolean) {
  * then fails to open against the inert Xendit key, which leaves the paid month
  * to show, so a browser test sees a pass or a Xendit plan without a provider.
  */
-export const seedAcceptanceXendit = Effect.fn("contentAcceptance.seedXendit")(
-  function* (
-    root: string,
-    userId: string,
-    purchase: typeof XenditPurchase.Type,
-    now: number
-  ) {
-    const runtime = yield* readLocalRuntime(root);
-    if (runtime === undefined) {
-      return yield* acceptanceRuntimeError(
-        "Run bun run acceptance:prepare and start acceptance before seeding a Xendit purchase."
-      );
-    }
-    const run = (operation: string, path: string, args: object) =>
-      encodeArguments(args).pipe(
-        Effect.flatMap((text) =>
-          runLocalConvex(runtime, operation, ["run", path, text])
-        )
-      );
-    const offer = purchase === "pass" ? "pro.pass.1" : "pro.monthly";
-    const sessionId = `ps_acceptance_${now}`;
-    const { accountId } = yield* run(
-      "xendit prepare",
-      "billing/xendit/checkout:prepare",
-      { offer, userId }
-    ).pipe(Effect.flatMap(Schema.decodeEffect(Prepared)));
-    yield* run("xendit admit", "billing/xendit/checkout:admit", {
-      accountId,
-      event: {
-        name: "checkout started",
-        properties: {
-          checkout_locale: "en",
-          customer_ip_available: false,
-          locale: "en",
-          product_count: 1,
-          product_id: offer,
-          rail: "xendit",
-        },
+export const seedXendit = Effect.fn("contentAcceptance.seedXendit")(function* (
+  userId: string,
+  purchase: typeof XenditPurchase.Type
+) {
+  const convex = yield* LocalConvex;
+  const run = (operation: string, path: string, args: object) =>
+    convex.run(operation, { args, path });
+  const now = yield* Clock.currentTimeMillis;
+  const offer = purchase === "pass" ? "pro.pass.1" : "pro.monthly";
+  const sessionId = `ps_acceptance_${now}`;
+  const { accountId } = yield* run(
+    "xendit prepare",
+    "billing/xendit/checkout:prepare",
+    { offer, userId }
+  ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Prepared)));
+  yield* run("xendit admit", "billing/xendit/checkout:admit", {
+    accountId,
+    event: {
+      name: "checkout started",
+      properties: {
+        checkout_locale: "en",
+        customer_ip_available: false,
+        locale: "en",
+        product_count: 1,
+        product_id: offer,
+        rail: "xendit",
       },
-      locale: "en",
-      offer,
-      session: {
-        expiresAt: now + Duration.toMillis(Duration.minutes(30)),
-        sessionId,
-        url: `https://checkout-staging.xendit.co/sessions/${sessionId}`,
-      },
-      userId,
-    });
-    const { eventId } = yield* run(
-      "xendit event",
-      "billing/events:record",
-      deliveryOfPaid(sessionId, now, purchase === "plan")
-    ).pipe(Effect.flatMap(Schema.decodeEffect(Recorded)));
-    yield* run("xendit apply", "billing/events:apply", { eventId });
-  }
-);
+    },
+    locale: "en",
+    offer,
+    session: {
+      expiresAt: now + Duration.toMillis(Duration.minutes(30)),
+      sessionId,
+      url: `https://checkout-staging.xendit.co/sessions/${sessionId}`,
+    },
+    userId,
+  });
+  const { eventId } = yield* run(
+    "xendit event",
+    "billing/events:record",
+    deliveryOfPaid(sessionId, now, purchase === "plan")
+  ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Recorded)));
+  yield* run("xendit apply", "billing/events:apply", { eventId });
+});
 
 /** The usage of the xendit mode: the learner's app user ID, then the purchase. */
 const USAGE = "xendit <user-id> <pass|plan>";
@@ -149,29 +134,22 @@ export const xenditMode = {
       XenditArguments,
       args
     );
-    return yield* seedAcceptanceXendit(
-      root,
-      userId,
-      purchase,
-      yield* Clock.currentTimeMillis
+    yield* seedXendit(userId, purchase).pipe(
+      Effect.provide(localConvexLayer(root))
     );
   }),
 } satisfies AcceptanceMode;
 
-/** The school invoices of the local runtime, newest first, as the Convex CLI prints them. */
-const InvoiceRows = Schema.fromJsonString(
-  Schema.Array(
-    Schema.Struct({
-      _id: Schema.String,
-      accountId: Schema.String,
-      dueAt: Schema.Finite,
-      number: Schema.String,
-    })
-  )
-);
+/** One school invoice of the local runtime, as much of it as the mode reads. */
+const InvoiceRow = Schema.Struct({
+  _id: Schema.String,
+  accountId: Schema.String,
+  dueAt: Schema.Finite,
+  number: Schema.String,
+});
 
 /** The most invoices the mode reads to find one: every school a shared runtime holds. */
-const INVOICE_LIMIT = "1000";
+const INVOICE_LIMIT = 1000;
 
 /** What happens to a school invoice on Xendit: its hosted payment opens, or the school pays it. */
 const InvoiceStep = Schema.Literals(["open", "paid"]);
@@ -185,62 +163,44 @@ const InvoiceStep = Schema.Literals(["open", "paid"]);
  * that page, so the invoice is paid and its School grant written. The session
  * takes its ID from the invoice number, so both steps name the same one.
  */
-export const payAcceptanceInvoice = Effect.fn("contentAcceptance.payInvoice")(
-  function* (
-    root: string,
-    number: string,
-    step: typeof InvoiceStep.Type,
-    now: number
-  ) {
-    const runtime = yield* readLocalRuntime(root);
-    if (runtime === undefined) {
-      return yield* acceptanceRuntimeError(
-        "Run bun run acceptance:prepare and start acceptance before paying an invoice."
-      );
-    }
-    const run = (operation: string, path: string, args: object) =>
-      encodeArguments(args).pipe(
-        Effect.flatMap((text) =>
-          runLocalConvex(runtime, operation, ["run", path, text])
-        )
-      );
-    const sessionId = `ps_acceptance_${number}`;
-    if (step === "paid") {
-      const { eventId } = yield* run(
-        "xendit event",
-        "billing/events:record",
-        deliveryOfPaid(sessionId, now, false)
-      ).pipe(Effect.flatMap(Schema.decodeEffect(Recorded)));
-      yield* run("xendit apply", "billing/events:apply", { eventId });
-      return;
-    }
-    const invoices = yield* runLocalConvex(runtime, "invoice rows", [
-      "data",
-      "billingInvoices",
-      "--format",
-      "jsonArray",
-      "--limit",
-      INVOICE_LIMIT,
-    ]).pipe(
-      // The CLI prints nothing for a table that holds no row.
-      Effect.map((printed) => (Str.isEmpty(printed) ? "[]" : printed)),
-      Effect.flatMap(Schema.decodeEffect(InvoiceRows))
-    );
-    const invoice = Arr.findFirst(invoices, (row) => row.number === number);
-    if (Option.isNone(invoice)) {
-      return yield* acceptanceRuntimeError(
-        `The local runtime holds no invoice ${number}.`
-      );
-    }
-    yield* run("xendit invoice session", "billing/xendit/invoice:record", {
-      accountId: invoice.value.accountId,
-      expiresAt: invoice.value.dueAt,
-      invoiceId: invoice.value._id,
-      sessionId,
-      url: `https://checkout-staging.xendit.co/sessions/${sessionId}`,
-    });
+export const payInvoice = Effect.fn("contentAcceptance.payInvoice")(function* (
+  number: string,
+  step: typeof InvoiceStep.Type
+) {
+  const convex = yield* LocalConvex;
+  const run = (operation: string, path: string, args: object) =>
+    convex.run(operation, { args, path });
+  const now = yield* Clock.currentTimeMillis;
+  const sessionId = `ps_acceptance_${number}`;
+  if (step === "paid") {
+    const { eventId } = yield* run(
+      "xendit event",
+      "billing/events:record",
+      deliveryOfPaid(sessionId, now, false)
+    ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Recorded)));
+    yield* run("xendit apply", "billing/events:apply", { eventId });
+    return;
   }
-);
+  const invoices = yield* readRows(
+    convex.run,
+    "billingInvoices",
+    InvoiceRow,
+    INVOICE_LIMIT
+  );
+  const invoice = Arr.findFirst(invoices, (row) => row.number === number);
+  if (Option.isNone(invoice)) {
+    return yield* acceptanceRuntimeError(
+      `The local runtime holds no invoice ${number}.`
+    );
+  }
+  yield* run("xendit invoice session", "billing/xendit/invoice:record", {
+    accountId: invoice.value.accountId,
+    expiresAt: invoice.value.dueAt,
+    invoiceId: invoice.value._id,
+    sessionId,
+    url: `https://checkout-staging.xendit.co/sessions/${sessionId}`,
+  });
+});
 
 /** The usage of the invoice mode: the invoice number, then the step on Xendit. */
 const INVOICE_USAGE = "invoice <invoice-number> <open|paid>";
@@ -262,11 +222,8 @@ export const invoiceMode = {
       InvoiceArguments,
       args
     );
-    return yield* payAcceptanceInvoice(
-      root,
-      number,
-      step,
-      yield* Clock.currentTimeMillis
+    yield* payInvoice(number, step).pipe(
+      Effect.provide(localConvexLayer(root))
     );
   }),
 } satisfies AcceptanceMode;

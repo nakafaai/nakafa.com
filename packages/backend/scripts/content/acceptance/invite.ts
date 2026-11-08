@@ -1,24 +1,22 @@
-import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { writeSessionCookie } from "@repo/backend/scripts/content/acceptance/learner";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
-  encodeArguments,
-  openInvitedMember,
-} from "@repo/backend/scripts/content/acceptance/member";
+  LocalConvex,
+  localConvexLayer,
+  type RunConvex,
+} from "@repo/backend/scripts/content/acceptance/convex";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import {
+  SessionCookie,
+  writeFixture,
+} from "@repo/backend/scripts/content/acceptance/fixture";
+import { seedInvitedMember } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
   decodeModeArguments,
 } from "@repo/backend/scripts/content/acceptance/mode";
 import { Duration, Effect, Option, Schedule, Schema } from "effect";
 
-/** The invite and the Person that the invite function wrote, as the Convex CLI prints them. */
-const Invited = Schema.fromJsonString(
-  Schema.Struct({ invite: Schema.String, person: Schema.String })
-);
-/** Whether the inbox holds the invitation's row, as the Convex CLI prints it. */
-const HoldsRow = Schema.fromJsonString(Schema.Boolean);
+/** The invite and the Person that the invite function wrote. */
+const Invited = Schema.Struct({ invite: Schema.String, person: Schema.String });
 
 /** The name of the learner the command invites, as the other acceptance accounts name theirs. */
 const LEARNER_NAME = "Acceptance Learner";
@@ -31,7 +29,7 @@ const CONTENT_LOCALE = "id";
  * read; a loaded backend runs the consumer later.
  */
 const ROW_WAIT = Duration.seconds(30);
-/** How often the one row is read while the command waits for it. */
+/** How often the one row is read while the invite waits for it. */
 const ROW_READ_PAUSE = Duration.millis(250);
 
 /**
@@ -41,15 +39,13 @@ const ROW_READ_PAUSE = Duration.millis(250);
 export const waitForInboxRow = Effect.fn("contentAcceptance.inboxRow")(
   function* <E, R>(
     run: RunConvex<E, R>,
-    invited: { readonly invite: string; readonly person: string },
+    invited: typeof Invited.Type,
     wait: Duration.Input
   ) {
-    const holdsRow = encodeArguments(invited).pipe(
-      Effect.flatMap((args) =>
-        run("inbox row", ["run", "tenancy/seed:invitation", args])
-      ),
-      Effect.flatMap(Schema.decodeEffect(HoldsRow))
-    );
+    const holdsRow = run("inbox row", {
+      args: invited,
+      path: "tenancy/seed:invitation",
+    }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Schema.Boolean)));
     const found = yield* holdsRow.pipe(
       Effect.repeat({
         schedule: Schedule.spaced(ROW_READ_PAUSE),
@@ -66,60 +62,38 @@ export const waitForInboxRow = Effect.fn("contentAcceptance.inboxRow")(
 );
 
 /**
- * Invites one learner into a school that `school` opened, through the internal
- * invite path that the school's own invite mutation uses. The learner's account
- * holds the invited address, so it claims the invitation the way `owner` claims
- * the school for its Owner. The command waits until the inbox holds the row, and
- * then writes the learner's session cookie to `output`, mode 600, for a browser
- * test to send. An address that already holds an account signs that account in
- * again, so a learner invited to a second school keeps one inbox. An `expired`
- * invite ends before the account signs in, as its term ending does, so the claim
- * joins no school, and no inbox row is waited for.
+ * Invites one learner into a school that `seedSchool` opened, through the
+ * internal invite path that the school's own invite mutation uses, and answers
+ * the learner's session cookie once the inbox holds the invitation. The
+ * learner's account holds the invited address, so it claims the invitation the
+ * way `seedOwner` claims the school for its Owner. An address that already holds
+ * an account signs that account in again, so a learner invited to a second
+ * school keeps one inbox. An `expired` invite ends before the account signs in,
+ * as its term ending does, so the claim joins no school, and no inbox row is
+ * waited for.
  */
-export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
-  function* (
-    root: string,
-    slug: string,
-    address: string,
-    output: string,
-    expired = false
-  ) {
-    const runtime = yield* readLocalRuntime(root);
-    if (runtime === undefined) {
-      return yield* acceptanceRuntimeError(
-        "Run bun run acceptance:prepare and start acceptance before inviting a learner."
-      );
-    }
-    const run = (
-      operation: string,
-      args: readonly string[],
-      sensitiveValues?: readonly string[]
-    ) => runLocalConvex(runtime, operation, args, sensitiveValues);
-    const invited = yield* encodeArguments({
-      email: address,
-      locale: CONTENT_LOCALE,
-      name: LEARNER_NAME,
-      slug,
-    }).pipe(
-      Effect.flatMap((args) =>
-        run("school invite", ["run", "tenancy/provision:invite", args])
-      ),
-      Effect.flatMap(Schema.decodeEffect(Invited))
-    );
-    if (expired) {
-      yield* encodeArguments({ email: address, slug }).pipe(
-        Effect.flatMap((args) =>
-          run("invite expiry", ["run", "tenancy/seed:expired", args])
-        )
-      );
-    }
-    const token = yield* openInvitedMember(run, address);
-    if (!expired) {
-      yield* waitForInboxRow(run, invited, ROW_WAIT);
-    }
-    yield* writeSessionCookie(output, token);
+export const seedInvite = Effect.fn("contentAcceptance.seedInvite")(function* (
+  slug: string,
+  address: string,
+  expired = false
+) {
+  const { run } = yield* LocalConvex;
+  const invited = yield* run("school invite", {
+    args: { email: address, locale: CONTENT_LOCALE, name: LEARNER_NAME, slug },
+    path: "tenancy/provision:invite",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Invited)));
+  if (expired) {
+    yield* run("invite expiry", {
+      args: { email: address, slug },
+      path: "tenancy/seed:expired",
+    });
   }
-);
+  const cookie = yield* seedInvitedMember(address);
+  if (!expired) {
+    yield* waitForInboxRow(run, invited, ROW_WAIT);
+  }
+  return cookie;
+});
 
 /**
  * The usage of the invite mode: the school, the learner's address, the file for the session cookie, then
@@ -151,12 +125,9 @@ export const inviteMode = {
       InviteArguments,
       args
     );
-    return yield* createAcceptanceInvite(
-      root,
-      slug,
-      address,
-      output,
-      state === "expired"
+    const cookie = yield* seedInvite(slug, address, state === "expired").pipe(
+      Effect.provide(localConvexLayer(root))
     );
+    yield* writeFixture(output, SessionCookie, cookie);
   }),
 } satisfies AcceptanceMode;
