@@ -1,18 +1,11 @@
-import {
-  Book02Icon,
-  Bookmark01Icon,
-  Flag01Icon,
-  Folder01Icon,
-  TaskEdit01Icon,
-} from "@hugeicons/core-free-icons";
+import { TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { Array as Arr, DateTime } from "effect";
+import { DateTime } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import { FeatureProduct, FeatureRow } from "@/components/marketing/shared/feature";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { namedOptions } from "@/components/shared/table/filter";
 import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
@@ -21,10 +14,9 @@ import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 /** The clock the demo's deadlines are printed by, so the page reads the same wherever it is opened. */
 const DEMO_ZONE = "Asia/Jakarta";
 
-/** The class's tasks, the soonest deadline first, as its table lists them: the key of each title and category, and how many of the class's 30 handed it in. */
+/** The class's tasks, the soonest deadline first, as its table lists them: the key of each title, and how many of the class's 30 handed it in. */
 const DEMO_TASKS = [
   {
-    category: "worksheet",
     deadline: DateTime.toEpochMillis(
       DateTime.makeUnsafe("2026-11-13T05:00:00Z")
     ),
@@ -32,7 +24,6 @@ const DEMO_TASKS = [
     title: "title",
   },
   {
-    category: "lab",
     deadline: DateTime.toEpochMillis(
       DateTime.makeUnsafe("2026-11-17T02:00:00Z")
     ),
@@ -40,7 +31,6 @@ const DEMO_TASKS = [
     title: "lab",
   },
   {
-    category: "quiz",
     deadline: DateTime.toEpochMillis(
       DateTime.makeUnsafe("2026-11-20T01:00:00Z")
     ),
@@ -48,7 +38,6 @@ const DEMO_TASKS = [
     title: "quiz",
   },
   {
-    category: "essay",
     deadline: DateTime.toEpochMillis(
       DateTime.makeUnsafe("2026-11-27T10:00:00Z")
     ),
@@ -63,17 +52,9 @@ type DemoTask = (typeof DEMO_TASKS)[number];
 /** The columns of the demo's task table. */
 const taskColumns = tableColumns<DemoTask>();
 
-/** The icons of the categories in the category filter, as the class's own table gives them. */
-const CATEGORY_ICONS = [
-  Bookmark01Icon,
-  Folder01Icon,
-  Flag01Icon,
-  Book02Icon,
-] as const;
-
 /**
- * The columns of the class's task table, as a teacher reads it: each task's title, its category, its
- * deadline, how many handed it in, and the row's menu. Every head filters its column, as it does in
+ * The columns of the class's task table that fit the page's middle, as a teacher reads them: each
+ * task's title, its deadline, how many handed it in, and the row's menu. Every head filters its column, as it does in
  * the School.
  */
 function useDemoColumns() {
@@ -88,23 +69,12 @@ function useDemoColumns() {
       header: t("demo-head-title"),
       id: "title",
     }),
-    taskColumns.values((task) => t(`demo-category-${task.category}`), {
-      cell: (info) => (
-        <span className="text-muted-foreground">{info.getValue()}</span>
-      ),
-      header: t("demo-head-category"),
-      id: "category",
-      options: namedOptions(
-        Arr.map(DEMO_TASKS, (task) => t(`demo-category-${task.category}`)),
-        CATEGORY_ICONS
-      ),
-    }),
     taskColumns.days((task) => task.deadline, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
           {format.dateTime(
             DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeStyle: "short", timeZone: DEMO_ZONE }
+            { dateStyle: "medium", timeZone: DEMO_ZONE }
           )}
         </span>
       ),

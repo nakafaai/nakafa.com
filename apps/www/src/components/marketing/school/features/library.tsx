@@ -6,9 +6,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { Array as Arr, DateTime } from "effect";
-import { useFormatter, useTranslations } from "use-intl";
-import { DEMO_TEACHER } from "@/components/marketing/school/features/cast";
+import { Array as Arr } from "effect";
+import { useTranslations } from "use-intl";
 import { SchoolFeatureText } from "@/components/marketing/school/features/text";
 import {
   FeatureProduct,
@@ -30,26 +29,16 @@ const KIND_ICONS = {
   pdf: Pdf02Icon,
 };
 
-/** The day each entry was added, as an instant the table prints. */
-function added(day: string) {
-  return DateTime.toEpochMillis(DateTime.makeUnsafe(`${day}T03:00:00Z`));
-}
-
 /**
  * The class's drive, as its library lists it, the chapter's folder first: the key of each entry's
- * title, its kind, who added it, and when.
+ * title, its kind, and who added it.
  */
 const DEMO_ENTRIES = [
-  { added: added("2026-11-02"), by: "teacher", kind: "folder", title: "folder" },
-  {
-    added: added("2026-11-03"),
-    by: "teacher",
-    kind: "pdf",
-    title: "worksheet",
-  },
-  { added: added("2026-11-04"), by: "nina", kind: "pdf", title: "summary" },
-  { added: added("2026-11-05"), by: "teacher", kind: "link", title: "video" },
-  { added: added("2026-11-06"), by: "nina", kind: "image", title: "formulas" },
+  { by: "teacher", kind: "folder", title: "folder" },
+  { by: "teacher", kind: "pdf", title: "worksheet" },
+  { by: "nina", kind: "pdf", title: "summary" },
+  { by: "teacher", kind: "link", title: "video" },
+  { by: "nina", kind: "image", title: "formulas" },
 ] as const;
 
 /** One entry of the demo's library. */
@@ -75,15 +64,14 @@ function EntryTitle({ entry }: { entry: DemoEntry }) {
 }
 
 /**
- * The columns of the class library's table: each entry's title after its kind's icon, its kind, who
- * added it, the day it came, and the row's menu. Every head filters its column, as it does in the
- * School.
+ * The columns of the class library's table that fit beside the words: each entry's title after its
+ * kind's icon, its kind, who added it, and the row's menu. Every head filters its column, as it does
+ * in the School.
  */
 function useDemoColumns() {
   const t = useTranslations("SchoolSite");
-  const format = useFormatter();
-  const author = (entry: DemoEntry) =>
-    entry.by === "nina" ? "Nina" : DEMO_TEACHER.name;
+  const teacher = t("demo-teacher");
+  const author = (entry: DemoEntry) => (entry.by === "nina" ? "Nina" : teacher);
 
   return [
     libraryColumns.text((entry) => t(`demo-library-${entry.title}`), {
@@ -111,20 +99,7 @@ function useDemoColumns() {
       ),
       header: t("demo-head-by"),
       id: "author",
-      options: namedOptions([DEMO_TEACHER.name, "Nina"], PERSON_ICONS),
-    }),
-    libraryColumns.days((entry) => entry.added, {
-      cell: (info) => (
-        <span className="text-muted-foreground tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeZone: "Asia/Jakarta" }
-          )}
-        </span>
-      ),
-      header: t("demo-head-added"),
-      id: "added",
-      timeZone: () => "Asia/Jakarta",
+      options: namedOptions([teacher, "Nina"], PERSON_ICONS),
     }),
     libraryColumns.menu((info) => (
       <RowCopy value={t(`demo-library-${info.row.original.title}`)} />
