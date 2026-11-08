@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
 import { Npsn, type UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { isSingleLine } from "@repo/utilities/line";
 import { DateTime, Match, Schema } from "effect";
@@ -74,7 +75,7 @@ export const GraduationAction = Schema.Literals([
  * A graduating class group's page: its name and period, its unit with the unit's NPSN, the
  * unit's decision or none yet, the date the rules suggest for one, and what the viewer may do.
  */
-export const GraduationOverview = Schema.Struct({
+export const GraduationOverview = Schema.TaggedStruct("Graduating", {
   can: Schema.Array(GraduationAction),
   cohort: Schema.Struct({
     id: Id("tenantCohorts"),
@@ -86,6 +87,29 @@ export const GraduationOverview = Schema.Struct({
   suggested: CivilDate,
   unit: Schema.Struct({ name: Schema.String, npsn: Schema.NullOr(Npsn) }),
 });
+
+/**
+ * The page of a class group outside its unit's last grade, which does not graduate: its name and
+ * grade, and its unit with the grade that graduates, or none in a unit without graduation (PAUD,
+ * SLB, other). The page says so in place of the students' list.
+ */
+export const GraduationElsewhere = Schema.TaggedStruct("NotGraduating", {
+  cohort: Schema.Struct({
+    grade: CohortGrade,
+    id: Id("tenantCohorts"),
+    name: Schema.String,
+  }),
+  unit: Schema.Struct({
+    last: Schema.NullOr(CohortGrade),
+    name: Schema.String,
+  }),
+});
+
+/** A class group's graduation page: the graduating class group's, or the one that does not graduate. */
+export const GraduationPage = Schema.Union([
+  GraduationOverview,
+  GraduationElsewhere,
+]);
 
 /** One graduating class group the viewer opens: the class group, its unit, and its period. */
 export const GraduationCohort = Schema.Struct({

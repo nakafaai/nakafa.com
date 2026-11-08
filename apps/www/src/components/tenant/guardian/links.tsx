@@ -6,7 +6,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Option } from "effect";
-import { createContext, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -28,7 +28,7 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import {
@@ -48,7 +48,7 @@ import { WaitingRequests } from "@/components/tenant/guardian/requests";
 import { GuardianLinkStartDialog } from "@/components/tenant/guardian/start";
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { SchoolSettingsHeader } from "@/components/tenant/settings/header";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { useKeptRows } from "@/lib/data/kept";
@@ -66,7 +66,7 @@ const LinksContext = createContext<readonly LinkItem[] | null>(null);
 function useLinks() {
   const links = use(LinksContext);
   if (links === null) {
-    throw new Error("useLinks must be used within GuardianLinksBody");
+    throw new Error("useLinks must be used within LinksFrame");
   }
   return links;
 }
@@ -85,34 +85,30 @@ export function GuardianLinksSettings() {
   return (
     <TableFiltersProvider>
       <PanesProvider>
-        <SettingsTablePage
-          actions={
-            <>
-              <TableSearch placeholder={t("links-search")} />
-              <WithAction action="guardian.link">
-                <Button onClick={() => setIsStarting(true)} type="button">
-                  <HugeIcons icon={Link01Icon} />
-                  <span className="@max-sm/header:sr-only">
-                    {t("link-add")}
-                  </span>
-                </Button>
-              </WithAction>
-            </>
-          }
+        <SchoolSettingsHeader>
+          <TableSearch placeholder={t("links-search")} />
+          <WithAction action="guardian.link">
+            <Button onClick={() => setIsStarting(true)} type="button">
+              <HugeIcons icon={Link01Icon} />
+              <span className="@max-sm/header:sr-only">{t("link-add")}</span>
+            </Button>
+          </WithAction>
+        </SchoolSettingsHeader>
+        <ReadBoundary
+          fallback={(failure) => <TablePageBody>{failure}</TablePageBody>}
         >
-          <ReadBoundary>
-            <GuardianLinksBody />
-          </ReadBoundary>
-          <GuardianLinkStartDialog open={isStarting} setOpen={setIsStarting} />
-        </SettingsTablePage>
+          <GuardianLinksBody />
+        </ReadBoundary>
+        <GuardianLinkStartDialog open={isStarting} setOpen={setIsStarting} />
       </PanesProvider>
     </TableFiltersProvider>
   );
 }
 
 /**
- * The links of the school, read a page at a time: the table, which loads more rows as its end
- * comes into view, beside the open link; or the empty state while the school has no link.
+ * The links of the school, read a page at a time, in the one card of a settings table: the
+ * table, which loads more rows as its end comes into view, beside the open link; or the empty
+ * state while the school has no link. The card stands from the first frame.
  */
 function GuardianLinksBody() {
   const t = useTranslations("SchoolGuardians");
@@ -141,34 +137,57 @@ function GuardianLinksBody() {
   const failed = PaginatedQueryResult.isFailure(pagination);
   // Both reads arrive before the list draws, so a waiting request never pushes the table down.
   if (Option.isNone(kept) || PaginatedQueryResult.isLoadingFirstPage(waiting)) {
-    return null;
+    return <LinksFrame links={[]}>{null}</LinksFrame>;
   }
   if (Arr.isReadonlyArrayEmpty(kept.value) && search === "") {
-    if (failed) {
-      return <LoadFailure onRetry={reloadPage} />;
-    }
     return (
-      <TableEmpty
-        act="typing"
-        description={t("links-empty-description")}
-        title={t("links-empty")}
-      />
+      <LinksFrame links={kept.value}>
+        {failed ? (
+          <LoadFailure onRetry={reloadPage} />
+        ) : (
+          <TableEmpty
+            act="typing"
+            description={t("links-empty-description")}
+            title={t("links-empty")}
+          />
+        )}
+      </LinksFrame>
     );
   }
 
   return (
-    <LinksContext value={kept.value}>
+    <LinksFrame links={kept.value}>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      <WaitingRequests requests={waiting.results} />
+      {PaginatedQueryResult.isCanLoadMore(waiting) ? (
+        <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
+      ) : null}
+      <GuardianLinkTable />
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </LinksFrame>
+  );
+}
+
+/**
+ * The one card of a settings table, in the list's pane, beside the open link: the links it holds
+ * are the ones the table lists and the open link is found in.
+ */
+function LinksFrame({
+  children,
+  links,
+}: {
+  children: ReactNode;
+  links: readonly LinkItem[];
+}) {
+  const t = useTranslations("SchoolGuardians");
+
+  return (
+    <LinksContext value={links}>
       <Panes id="links">
         <PanesList>
-          {failed ? <DataFailure onRetry={reloadPage} /> : null}
-          <WaitingRequests requests={waiting.results} />
-          {PaginatedQueryResult.isCanLoadMore(waiting) ? (
-            <Intersection onIntersect={() => waiting.loadMore(PAGE_SIZE)} />
-          ) : null}
-          <GuardianLinkTable />
-          {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-            <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-          ) : null}
+          <TablePageBody>{children}</TablePageBody>
         </PanesList>
         <PanesDetail label={t("link-detail")}>
           <GuardianLinkDetail />
