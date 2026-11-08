@@ -52,9 +52,7 @@ describe("TryoutAttemptSearch", () => {
     expect(
       Schema.decodeUnknownSync(TryoutAttemptSearch)({ question: "abc" })
     ).toEqual({});
-    expect(
-      Schema.decodeUnknownSync(TryoutAttemptSearch)({ question: 0 })
-    ).toEqual({});
+    expect(Schema.decodeSync(TryoutAttemptSearch)({ question: 0 })).toEqual({});
   });
 
   it("encodes the text it decoded back to the same text", () => {
