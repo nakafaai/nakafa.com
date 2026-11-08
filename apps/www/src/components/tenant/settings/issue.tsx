@@ -33,7 +33,6 @@ export function SchoolIssueCardDialog({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const issue = useMutation(identity.cards.issue);
   const [loginName, setLoginName] = useState("");
   const login = Schema.decodeOption(LoginName)(loginName.trim().toLowerCase());
@@ -41,39 +40,28 @@ export function SchoolIssueCardDialog({
 
   return (
     <ResponsiveDialog
-      description={t("invite-card-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(login)}
-            onClick={() => {
-              if (Option.isNone(login)) {
-                return;
-              }
-              const chosen = login.value;
-              setOpen(false);
-              startTransition(() =>
-                runSchoolWrite(
-                  schoolCall(() =>
-                    issue({ loginName: chosen, personId, slug })
-                  ),
-                  { onSaved: (card) => onIssued({ ...card, name }) }
-                )
-              );
-            }}
-            type="button"
-          >
-            {t("invite-card-submit")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={Option.isNone(login)}
+          onClick={() => {
+            if (Option.isNone(login)) {
+              return;
+            }
+            const chosen = login.value;
+            setOpen(false);
+            startTransition(() =>
+              runSchoolWrite(
+                schoolCall(() => issue({ loginName: chosen, personId, slug })),
+                { onSaved: (card) => onIssued({ ...card, name }) }
+              )
+            );
+          }}
+          type="button"
+        >
+          {t("invite-card-submit")}
+        </Button>
       }
+      description={t("invite-card-description")}
       open={open}
       setOpen={setOpen}
       title={t("card-issue-action")}

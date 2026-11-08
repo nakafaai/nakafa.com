@@ -9,14 +9,13 @@ import {
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { usePanes } from "@/components/shared/panes";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
-import { LossItem } from "@/components/tenant/classes/loss";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
 import {
@@ -63,17 +62,19 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
       <ConfirmRowMenu
         action={t("task-remove")}
         body={
-          <LossItem
-            detail={t("task-remove-work", { count: task.handedIn })}
+          <ResponsiveDialogSubject
+            description={t("task-remove-work", { count: task.handedIn })}
             icon={Task01Icon}
-            name={task.title}
-          />
+          >
+            {task.title}
+          </ResponsiveDialogSubject>
         }
         confirm={t("task-remove")}
         description={t("task-remove-description")}
         footer={
           task.archived ? (
             <DropdownMenuItem
+              icon={ArrowTurnBackwardIcon}
               onClick={() => {
                 leave();
                 runSchoolWrite(
@@ -83,11 +84,11 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
                 );
               }}
             >
-              <HugeIcons icon={ArrowTurnBackwardIcon} />
               {t("task-restore")}
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem
+              icon={Archive02Icon}
               onClick={() => {
                 leave();
                 runSchoolWrite(
@@ -97,7 +98,6 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
                 );
               }}
             >
-              <HugeIcons icon={Archive02Icon} />
               {t("task-archive")}
             </DropdownMenuItem>
           )
@@ -112,8 +112,10 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
         title={t("task-remove-title")}
       >
         <RowOpen icon={ArrowRight01Icon} label={t("task-open")} />
-        <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
-          <HugeIcons icon={PencilEdit02Icon} />
+        <DropdownMenuItem
+          icon={PencilEdit02Icon}
+          onClick={() => setOpenings((count) => count + 1)}
+        >
           {t("task-edit")}
         </DropdownMenuItem>
       </ConfirmRowMenu>

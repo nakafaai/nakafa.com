@@ -1,25 +1,20 @@
-import {
-  ArrowDown01Icon,
-  Search02Icon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
-import {
-  Autocomplete,
-  AutocompleteEmpty,
-  AutocompleteInput,
-  AutocompleteItem,
-  AutocompleteList,
-} from "@repo/design-system/components/ui/autocomplete";
+import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
-import { cn } from "cn";
+  Picker,
+  PickerContent,
+  PickerItem,
+  PickerTrigger,
+} from "@repo/design-system/components/ui/picker";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import { Suspense, use, useState } from "react";
+import {
+  createContext,
+  type ReactElement,
+  Suspense,
+  use,
+  useState,
+} from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
 
@@ -37,10 +32,14 @@ const loadFlags = () =>
     (flags): Readonly<Record<string, string>> => ({ ...flags })
   );
 
+/** The flags of a country picker, loading from its first draw; a currency picker has none. */
+const RegionFlags = createContext<Promise<
+  Readonly<Record<string, string>>
+> | null>(null);
+
 /**
- * A searchable choice among every country or every currency: a button that shows the
- * chosen one, and a popover with a search field over the whole list. A country shows
- * its flag, which loads with the list, and a currency its symbol.
+ * A searchable choice among every country or every currency: a button that shows the chosen one, and the picker's
+ * search over the whole list. A country shows its flag, which loads with the list, and a currency its symbol.
  */
 export function RegionPicker({
   choices,
@@ -57,107 +56,111 @@ export function RegionPicker({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const [open, setOpen] = useState(false);
   const [flags] = useState(() => (kind === "country" ? loadFlags() : null));
   const chosen = Arr.findFirst(choices, (choice) => choice.value === value);
 
   return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
-        render={
-          <Button
-            className="w-full justify-start data-open:[&>svg:last-child]:rotate-180"
-            id={id}
-            type="button"
-            variant="outline"
+    <RegionFlags value={flags}>
+      <Picker>
+        <PickerTrigger
+          id={id}
+          render={
+            <Button
+              className="w-full justify-start data-open:[&>svg:last-child]:rotate-180"
+              type="button"
+              variant="outline"
+            />
+          }
+        >
+          {flags === null ? (
+            <RegionSymbol symbol={Option.getOrUndefined(chosen)?.symbol} />
+          ) : (
+            <Suspense fallback={<CountryFlagIcon countryCode={value} />}>
+              <RegionFlag code={value} />
+            </Suspense>
+          )}
+          <span className="truncate">
+            {Option.match(chosen, {
+              onNone: () => value,
+              onSome: (choice) => choice.label,
+            })}
+          </span>
+          <HugeIcons
+            className="ml-auto size-4 transition-transform ease-out"
+            icon={ArrowDown01Icon}
           />
-        }
-      >
-        {flags === null ? (
-          <RegionSymbol symbol={Option.getOrUndefined(chosen)?.symbol} />
-        ) : (
-          <Suspense fallback={<CountryFlagIcon countryCode={value} />}>
-            <RegionFlag code={value} flags={flags} />
-          </Suspense>
-        )}
-        <span className="truncate">
-          {Option.match(chosen, {
-            onNone: () => value,
-            onSome: (choice) => choice.label,
-          })}
-        </span>
-        <HugeIcons
-          className="ml-auto size-4 transition-transform ease-out"
-          icon={ArrowDown01Icon}
-        />
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-(--anchor-width) min-w-72 p-0">
-        <Autocomplete
-          autoHighlight="always"
-          inline
+        </PickerTrigger>
+        <PickerContent
+          empty={t("locale-empty")}
           items={choices}
           itemToStringValue={(choice) => `${choice.label} ${choice.value}`}
-          keepHighlight
-          open
+          label={
+            kind === "country"
+              ? common("menu-country")
+              : common("menu-currency")
+          }
+          placeholder={t(
+            kind === "country"
+              ? "locale-country-search"
+              : "locale-currency-search"
+          )}
         >
-          <AutocompleteInput
-            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
-            clearLabel={common("clear-search")}
-            placeholder={t(
-              kind === "country"
-                ? "locale-country-search"
-                : "locale-currency-search"
-            )}
-            showClear
-            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
-          />
-          <AutocompleteEmpty>{t("locale-empty")}</AutocompleteEmpty>
-          <AutocompleteList className="max-h-72" scrollArea={false}>
-            {(choice: RegionChoice) => (
-              <AutocompleteItem
-                className="min-h-8 py-1.5 text-sm sm:min-h-8"
-                key={choice.value}
-                onClick={() => {
-                  setOpen(false);
-                  onChoose(choice.value);
-                }}
-                value={choice}
-              >
-                {flags === null ? (
+          {(choice) => (
+            <RegionOption
+              choice={choice}
+              icon={
+                flags === null ? (
                   <RegionSymbol symbol={choice.symbol} />
                 ) : (
                   <Suspense fallback={<span className="size-4 shrink-0" />}>
-                    <RegionFlag code={choice.value} flags={flags} />
+                    <RegionFlag code={choice.value} />
                   </Suspense>
-                )}
-                <span className="truncate">{choice.label}</span>
-                <span className="text-muted-foreground ml-auto text-xs tabular-nums">
-                  {choice.value}
-                </span>
-                <HugeIcons
-                  className={cn(
-                    "size-4 opacity-0 transition-opacity ease-out",
-                    choice.value === value && "opacity-100"
-                  )}
-                  icon={Tick01Icon}
-                />
-              </AutocompleteItem>
-            )}
-          </AutocompleteList>
-        </Autocomplete>
-      </PopoverContent>
-    </Popover>
+                )
+              }
+              key={choice.value}
+              onChoose={() => onChoose(choice.value)}
+              selected={choice.value === value}
+            />
+          )}
+        </PickerContent>
+      </Picker>
+    </RegionFlags>
   );
 }
 
-/** The flag of one country, drawn from the flags once they load. */
-function RegionFlag({
-  code,
-  flags,
+/** One country or currency of the picker: its mark, its name, and its code at the end of the row. */
+function RegionOption({
+  choice,
+  icon,
+  onChoose,
+  selected,
 }: {
-  code: string;
-  flags: Promise<Readonly<Record<string, string>>>;
+  choice: RegionChoice;
+  icon: ReactElement;
+  onChoose: () => void;
+  selected: boolean;
 }) {
+  return (
+    <PickerItem
+      icon={icon}
+      onClick={onChoose}
+      selected={selected}
+      value={choice}
+    >
+      <span className="truncate">{choice.label}</span>
+      <span className="text-muted-foreground ml-auto text-xs tabular-nums">
+        {choice.value}
+      </span>
+    </PickerItem>
+  );
+}
+
+/** The flag of one country, drawn from the picker's flags once they load. */
+function RegionFlag({ code }: { code: string }) {
+  const flags = use(RegionFlags);
+  if (flags === null) {
+    throw new Error("RegionFlag must be used within a country picker");
+  }
   return (
     <CountryFlagIcon
       countryCode={code}

@@ -12,16 +12,15 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  ConfirmRowMenu,
-  ConfirmSubject,
-} from "@/components/shared/table/confirm";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { chosenGrade } from "@/components/tenant/settings/choices";
 import {
   CohortGradeField,
@@ -57,6 +56,7 @@ export function SchoolCohortRestore({
   return (
     <ConfirmRowMenu {...remove}>
       <DropdownMenuItem
+        icon={ArchiveRestoreIcon}
         onClick={() =>
           startTransition(() =>
             runSchoolWrite(
@@ -65,7 +65,6 @@ export function SchoolCohortRestore({
           )
         }
       >
-        <HugeIcons icon={ArchiveRestoreIcon} />
         {t("cohort-restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>
@@ -105,11 +104,12 @@ function useCohortDelete(cohort: Cohort, slug: TenantSlug) {
         )
       ),
     body: (
-      <ConfirmSubject
-        detail={t("cohort-delete-detail", { grade: cohort.grade })}
+      <ResponsiveDialogSubject
+        description={t("cohort-delete-detail", { grade: cohort.grade })}
         icon={UserGroupIcon}
-        name={cohort.name}
-      />
+      >
+        {cohort.name}
+      </ResponsiveDialogSubject>
     ),
     title: t("cohort-delete-title", { name: cohort.name }),
   };
@@ -160,6 +160,7 @@ export function SchoolCohortMenu({
         {...remove}
         footer={
           <DropdownMenuItem
+            icon={Archive02Icon}
             onClick={() =>
               startTransition(() =>
                 runSchoolWrite(
@@ -187,59 +188,49 @@ export function SchoolCohortMenu({
               )
             }
           >
-            <HugeIcons icon={Archive02Icon} />
             {t("cohort-archive")}
           </DropdownMenuItem>
         }
       >
         <DropdownMenuItem
+          icon={PencilEdit02Icon}
           onClick={() => {
             setName(cohort.name);
             setGradeValue(String(cohort.grade));
             setIsEditing(true);
           }}
         >
-          <HugeIcons icon={PencilEdit02Icon} />
           {common("edit")}
         </DropdownMenuItem>
       </ConfirmRowMenu>
       <ResponsiveDialog
-        description={t("cohort-edit-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsEditing(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={!canSave}
-              onClick={() => {
-                if (Option.isNone(grade)) {
-                  return;
-                }
-                setIsEditing(false);
-                startTransition(() =>
-                  runSchoolWrite(
-                    schoolCall(() =>
-                      edit({
-                        cohortId: cohort.id,
-                        grade: grade.value,
-                        name: next,
-                        slug,
-                      })
-                    )
+        action={
+          <Button
+            disabled={!canSave}
+            onClick={() => {
+              if (Option.isNone(grade)) {
+                return;
+              }
+              setIsEditing(false);
+              startTransition(() =>
+                runSchoolWrite(
+                  schoolCall(() =>
+                    edit({
+                      cohortId: cohort.id,
+                      grade: grade.value,
+                      name: next,
+                      slug,
+                    })
                   )
-                );
-              }}
-              type="button"
-            >
-              {t("cohort-edit-save")}
-            </Button>
-          </>
+                )
+              );
+            }}
+            type="button"
+          >
+            {t("cohort-edit-save")}
+          </Button>
         }
+        description={t("cohort-edit-description")}
         open={isEditing}
         setOpen={setIsEditing}
         title={cohort.name}

@@ -68,19 +68,14 @@ export function SchoolCardDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 1500 });
   const printCard = useMutation(identity.cards.print);
   const [isPrinting, startPrinting] = useTransition();
 
   return (
     <ResponsiveDialog
-      description={t("card-code-description")}
-      footer={
+      action={
         <>
-          <Button onClick={onClose} type="button" variant="outline">
-            {common("cancel")}
-          </Button>
           <Button
             onClick={() => {
               if (card !== undefined) {
@@ -114,6 +109,7 @@ export function SchoolCardDialog({
           </Button>
         </>
       }
+      description={t("card-code-description")}
       open={card !== undefined}
       setOpen={(open) => {
         if (!open) {

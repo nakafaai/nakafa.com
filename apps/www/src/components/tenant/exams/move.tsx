@@ -20,16 +20,15 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { DateTime, Option, Schema, String as Str } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  ConfirmRowMenu,
-  ConfirmSubject,
-} from "@/components/shared/table/confirm";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import {
   cancelRoomChange,
   rescheduleRoomChange,
@@ -76,7 +75,11 @@ export function RoomMenu({
     <>
       <ConfirmRowMenu
         action={t("room-cancel")}
-        body={<ConfirmSubject icon={Door01Icon} name={room.room} />}
+        body={
+          <ResponsiveDialogSubject icon={Door01Icon}>
+            {room.room}
+          </ResponsiveDialogSubject>
+        }
         confirm={t("room-cancel-confirm")}
         description={t("room-cancel-description")}
         icon={Cancel01Icon}
@@ -91,32 +94,32 @@ export function RoomMenu({
         title={t("room-cancel-title")}
       >
         <DropdownMenuItem
+          icon={DashboardSquare01Icon}
           render={
             <Link
               params={params}
               to="/school/$slug/exams/$exam/sittings/$sitting"
-            >
-              <HugeIcons icon={DashboardSquare01Icon} />
-              {common("open")}
-            </Link>
+            />
           }
-        />
+        >
+          {common("open")}
+        </DropdownMenuItem>
         <DropdownMenuItem
+          icon={ChartBarLineIcon}
           render={
             <Link
               params={params}
               to="/school/$slug/exams/$exam/sittings/$sitting/results"
-            >
-              <HugeIcons icon={ChartBarLineIcon} />
-              {t("results-title")}
-            </Link>
+            />
           }
-        />
+        >
+          {t("results-title")}
+        </DropdownMenuItem>
         <DropdownMenuItem
           disabled={!room.canChange}
+          icon={Calendar03Icon}
           onClick={() => setMoves((count) => count + 1)}
         >
-          <HugeIcons icon={Calendar03Icon} />
           {t("room-move")}
         </DropdownMenuItem>
       </ConfirmRowMenu>
@@ -134,7 +137,6 @@ export function RoomMenu({
  */
 function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const id = useId();
   const reschedule = useMutation(
     exams.sittings.reschedule
@@ -189,21 +191,12 @@ function RoomMoveDialog({ room, slug }: { room: Room; slug: TenantSlug }) {
 
   return (
     <ResponsiveDialog
-      description={t("room-move-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!ready} onClick={save} type="button">
-            {t("room-move-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!ready} onClick={save} type="button">
+          {t("room-move-save")}
+        </Button>
       }
+      description={t("room-move-description")}
       open={open}
       setOpen={setOpen}
       title={t("room-move")}

@@ -216,56 +216,56 @@ function XenditPlanFooter({
         </Button>
       </CardSectionActions>
       <ResponsiveDialog
+        action={
+          <Button
+            onClick={() => {
+              setIsConfirming(false);
+              Effect.runPromise(
+                Effect.tryPromise(() => cancelPlan({})).pipe(
+                  Effect.flatMap(Effect.fromResult),
+                  Effect.catch((error) =>
+                    reportClientException(error, {
+                      source: "components/user/settings/plan",
+                    }).pipe(
+                      Effect.andThen(
+                        Effect.sync(() => {
+                          toast.error({
+                            description: "action-error.description",
+                            title: "action-error.title",
+                          });
+                        })
+                      )
+                    )
+                  )
+                )
+              );
+            }}
+            type="button"
+            variant="destructive"
+          >
+            <HugeIcons icon={Cancel01Icon} />
+            {t("plan-cancel")}
+          </Button>
+        }
         description={t("plan-cancel-description", {
           date: formatBillingDate(
             subscription.currentPeriodEnd ?? subscription.currentPeriodStart,
             locale
           ),
         })}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsConfirming(false)}
-              type="button"
-              variant="outline"
-            >
-              {t("plan-keep")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsConfirming(false);
-                Effect.runPromise(
-                  Effect.tryPromise(() => cancelPlan({})).pipe(
-                    Effect.flatMap(Effect.fromResult),
-                    Effect.catch((error) =>
-                      reportClientException(error, {
-                        source: "components/user/settings/plan",
-                      }).pipe(
-                        Effect.andThen(
-                          Effect.sync(() => {
-                            toast.error({
-                              description: "action-error.description",
-                              title: "action-error.title",
-                            });
-                          })
-                        )
-                      )
-                    )
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              <HugeIcons icon={Cancel01Icon} />
-              {t("plan-cancel")}
-            </Button>
-          </>
-        }
         open={isConfirming}
         setOpen={setIsConfirming}
         title={t("plan-cancel-title")}
-      />
+      >
+        {/* What the cancel changes: the day Pro ends, and the billing that stops. */}
+        <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-sm whitespace-nowrap">
+          <EndDate ending subscription={subscription} />
+          <dt className="text-muted-foreground">{t("billing-interval")}</dt>
+          <dd>
+            <BillingInterval offer={subscription.offer} />
+          </dd>
+        </dl>
+      </ResponsiveDialog>
     </CardSectionFooter>
   );
 }

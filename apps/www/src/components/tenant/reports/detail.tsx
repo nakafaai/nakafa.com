@@ -294,7 +294,6 @@ export function ReportNoteDialog({
   const cohortId = cohortRoute.useRouteContext({
     select: (context) => context.cohortId,
   });
-  const common = useTranslations("Common");
   const id = useId();
   const write = useMutation(records.reports.write).withOptimisticUpdate(
     writeChange
@@ -314,30 +313,18 @@ export function ReportNoteDialog({
 
   return (
     <ResponsiveDialog
-      description={t("write-description", { name: line.student.name })}
-      footer={
-        <>
-          <Button
-            onClick={() => {
-              setNote(line.report?.note ?? "");
-              setOpen(false);
-            }}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={note.length > NOTE_LIMIT || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("save-note")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={note.length > NOTE_LIMIT || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={PencilEdit02Icon} />
+          {t("save-note")}
+        </Button>
       }
+      description={t("write-description", { name: line.student.name })}
       open={open}
       setOpen={setOpen}
       title={t("write")}

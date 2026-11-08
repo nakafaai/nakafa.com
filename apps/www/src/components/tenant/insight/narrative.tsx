@@ -4,7 +4,6 @@ import { NoteEditIcon } from "@hugeicons/core-free-icons";
 import insight from "@repo/backend/confect/_generated/refs/insight";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, Option } from "effect";
@@ -104,8 +103,7 @@ export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
 
   return (
     <RowItems>
-      <DropdownMenuItem onClick={() => choose(id)}>
-        <HugeIcons icon={NoteEditIcon} />
+      <DropdownMenuItem icon={NoteEditIcon} onClick={() => choose(id)}>
         {t("narrative-open")}
       </DropdownMenuItem>
     </RowItems>
@@ -118,7 +116,6 @@ export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
  */
 function StudentNarrative({ student }: { student: InsightStudent }) {
   const t = useTranslations("SchoolInsight");
-  const common = useTranslations("Common");
   const classId = useNarrativeClass();
   const { slug } = useTenant();
   const viewer = useViewerQuery();
@@ -140,12 +137,8 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
 
   return (
     <ResponsiveDialog
-      description={t("narrative-description")}
-      footer={
+      action={
         <>
-          <Button onClick={close} type="button" variant="outline">
-            {common("cancel")}
-          </Button>
           {ninaOn ? (
             <Button
               disabled={asked && draft === null}
@@ -192,6 +185,7 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
           </Button>
         </>
       }
+      description={t("narrative-description")}
       open={open}
       setOpen={close}
       title={t("narrative-title", { student: student.name })}

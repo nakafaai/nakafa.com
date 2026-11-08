@@ -27,7 +27,6 @@ import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
  */
 export function GuardianLinkAddressDialog({ link }: { link: LinkItem }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const readdress = useMutation(guardians.links.readdress).withOptimisticUpdate(
@@ -58,25 +57,12 @@ export function GuardianLinkAddressDialog({ link }: { link: LinkItem }) {
 
   return (
     <ResponsiveDialog
-      description={t("link-readdress-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={Option.isNone(address)}
-            onClick={save}
-            type="button"
-          >
-            {t("link-readdress-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={Option.isNone(address)} onClick={save} type="button">
+          {t("link-readdress-save")}
+        </Button>
       }
+      description={t("link-readdress-description")}
       open={open}
       setOpen={setOpen}
       title={t("link-readdress")}

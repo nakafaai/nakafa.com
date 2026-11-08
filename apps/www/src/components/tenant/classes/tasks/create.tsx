@@ -12,14 +12,11 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -56,7 +53,6 @@ const EXAM_PAGE_SIZE = 50;
  */
 export function NewTask() {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const publish = useMutation(classroom.tasks.publish);
   const [open, setOpen] = useState(false);
@@ -103,17 +99,12 @@ export function NewTask() {
     <>
       <SchoolHeaderAdd label={t("task-new")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
-        description={t("task-new-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={Option.isNone(checked)} onClick={submit}>
-              {t("task-publish")}
-            </Button>
-          </>
+        action={
+          <Button disabled={Option.isNone(checked)} onClick={submit}>
+            {t("task-publish")}
+          </Button>
         }
+        description={t("task-new-description")}
         open={open}
         setOpen={setOpen}
         title={t("task-new")}
@@ -137,6 +128,7 @@ function TaskExamField({
   exam: string;
   onExam: (exam: string) => void;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("Classroom");
   const { slug } = useClassScope();
   const id = useId();
@@ -171,21 +163,16 @@ function TaskExamField({
         <SelectTrigger className="w-full" id={`${id}-exam`}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>{t("select-questions")}</SelectLabel>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons
-                  aria-hidden="true"
-                  icon={
-                    item.value === WRITTEN ? PencilEdit02Icon : TaskEdit01Icon
-                  }
-                />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-question")}>
+          {Arr.map(items, (item) => (
+            <SelectItem
+              icon={item.value === WRITTEN ? PencilEdit02Icon : TaskEdit01Icon}
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <FieldDescription>{t("task-exam-description")}</FieldDescription>

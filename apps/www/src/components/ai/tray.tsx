@@ -54,7 +54,6 @@ export function NinaAttachments({
         <NinaAttachment file={file} key={file.id} variant="preview">
           <AttachmentActions>
             <AttachmentAction
-              aria-label={t("remove-attachment", { filename: file.file.name })}
               onClick={() => {
                 removeAttachment(file.id);
                 clearUpload(file.id);
@@ -68,6 +67,7 @@ export function NinaAttachments({
                   )
                 );
               }}
+              tooltip={t("remove-attachment", { filename: file.file.name })}
               type="button"
               variant="secondary"
             >

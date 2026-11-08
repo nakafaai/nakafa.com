@@ -14,7 +14,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Option, Schema } from "effect";
@@ -59,7 +58,6 @@ export function SchoolPlacementAdd({
   status: Cohort["status"] | undefined;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const place = useMutation(tenancy.placements.place).withOptimisticUpdate(
     placeStudentChange
@@ -97,28 +95,19 @@ export function SchoolPlacementAdd({
         onClick={() => setIsOpen(true)}
       />
       <ResponsiveDialog
-        description={t("placement-add-footer")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsOpen(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={
-                status !== "active" || personId === undefined || isPending
-              }
-              inert={isPending}
-              onClick={submit}
-              type="button"
-            >
-              {t("placement-add")}
-            </Button>
-          </>
+        action={
+          <Button
+            disabled={
+              status !== "active" || personId === undefined || isPending
+            }
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
+            {t("placement-add")}
+          </Button>
         }
+        description={t("placement-add-footer")}
         open={isOpen}
         setOpen={setIsOpen}
         title={t("placement-add")}
@@ -188,12 +177,16 @@ export function SchoolPlacementMove({
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("move")}>
-          <HugeIcons icon={Move01Icon} />
+        <DropdownMenuItem
+          icon={Move01Icon}
+          onClick={() => dialogs.show("move")}
+        >
           {t("placement-move")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => dialogs.show("entry")}>
-          <HugeIcons icon={IdCardIcon} />
+        <DropdownMenuItem
+          icon={IdCardIcon}
+          onClick={() => dialogs.show("entry")}
+        >
           {t("roster-entry")}
         </DropdownMenuItem>
       </RowItems>
@@ -206,26 +199,21 @@ export function SchoolPlacementMove({
         />
       ) : null}
       <ResponsiveDialog
-        description={t("placement-move-footer")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={target === null} onClick={submit} type="button">
-              {t("placement-move-save")}
-            </Button>
-          </>
+        action={
+          <Button disabled={target === null} onClick={submit} type="button">
+            {t("placement-move-save")}
+          </Button>
         }
+        description={t("placement-move-footer")}
         open={dialogs.isOpen("move")}
         setOpen={dialogs.setOpen}
         title={t("placement-move")}
       >
         <FieldGroup>
           <SelectField
-            choice="cohort"
             items={items}
             label={t("placement-move-to")}
+            menu={common("menu-cohort")}
             onChoose={(value) =>
               setTarget(
                 Option.getOrElse(

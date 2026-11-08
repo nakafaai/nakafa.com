@@ -35,7 +35,6 @@ export function GuardianLinkStartDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const start = useMutation(guardians.links.start).withOptimisticUpdate(
@@ -85,27 +84,18 @@ export function GuardianLinkStartDialog({
 
   return (
     <ResponsiveDialog
-      description={t("link-add-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!ready || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            <HugeIcons icon={Link01Icon} />
-            {t("link-add")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={!ready || isPending}
+          inert={isPending}
+          onClick={submit}
+          type="button"
+        >
+          <HugeIcons icon={Link01Icon} />
+          {t("link-add")}
+        </Button>
       }
+      description={t("link-add-description")}
       open={open}
       setOpen={setOpen}
       title={t("link-add")}

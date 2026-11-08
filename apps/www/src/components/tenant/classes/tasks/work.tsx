@@ -12,9 +12,7 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskPoints } from "@repo/backend/confect/classroom/tasks/task";
-import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   NumberField,
   NumberFieldDecrement,
@@ -158,12 +156,16 @@ function WorkMenu({ work }: { work: TaskWork }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => setOpenings((count) => count + 1)}>
-          <HugeIcons icon={ViewIcon} />
+        <DropdownMenuItem
+          icon={ViewIcon}
+          onClick={() => setOpenings((count) => count + 1)}
+        >
           {t("task-read")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => clipboard.copy(work.text)}>
-          <HugeIcons icon={Copy01Icon} />
+        <DropdownMenuItem
+          icon={Copy01Icon}
+          onClick={() => clipboard.copy(work.text)}
+        >
           {common("copy")}
         </DropdownMenuItem>
       </RowItems>
@@ -175,17 +177,11 @@ function WorkMenu({ work }: { work: TaskWork }) {
 /** The whole work of one student, as they handed it in, and whether it came late. */
 function WorkDialog({ work }: { work: TaskWork }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const [open, setOpen] = useState(true);
 
   return (
     <ResponsiveDialog
       description={work.late ? t("task-handed-in-late") : t("task-handed-in")}
-      footer={
-        <Button onClick={() => setOpen(false)} variant="outline">
-          {common("close")}
-        </Button>
-      }
       open={open}
       setOpen={setOpen}
       title={work.person.name}

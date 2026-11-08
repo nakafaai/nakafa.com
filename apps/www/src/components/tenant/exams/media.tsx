@@ -106,7 +106,6 @@ function MediaDialog({
   readonly onClose: () => void;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const id = useId();
   const [alt, setAlt] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -120,29 +119,24 @@ function MediaDialog({
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={!ready}
+          onClick={() => {
+            onAdd({
+              alt: Str.trim(alt),
+              file,
+              video: Option.getOrElse(video, () => ""),
+            });
+            setOpen(false);
+          }}
+        >
+          {t("media-save")}
+        </Button>
+      }
       description={t(
         kind === "audio" ? "media-audio-hint" : "media-video-hint"
       )}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!ready}
-            onClick={() => {
-              onAdd({
-                alt: Str.trim(alt),
-                file,
-                video: Option.getOrElse(video, () => ""),
-              });
-              setOpen(false);
-            }}
-          >
-            {t("media-save")}
-          </Button>
-        </>
-      }
       onOpenChangeComplete={(next) => {
         if (!next) {
           onClose();
@@ -250,7 +244,6 @@ export function MediaField({
                 {item.alt}
               </span>
               <Button
-                aria-label={t("media-remove", { name: item.alt })}
                 disabled={!editable}
                 onClick={() =>
                   runSchoolWrite(saveMedia(Arr.remove(question.media, index)), {
@@ -259,6 +252,7 @@ export function MediaField({
                   })
                 }
                 size="icon-sm"
+                tooltip={t("media-remove", { name: item.alt })}
                 type="button"
                 variant="ghost"
               >

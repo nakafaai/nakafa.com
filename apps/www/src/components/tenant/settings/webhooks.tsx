@@ -19,15 +19,16 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
@@ -206,7 +207,6 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
   const { slug } = useTenant();
   const issueSecret = useIssueSecret();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const rotate = useMutation(integrations.webhooks.rotate);
   const revoke = useMutation(integrations.webhooks.revoke).withOptimisticUpdate(
     revokeWebhookChange
@@ -222,18 +222,23 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem onClick={() => dialogs.show("read")}>
-          <HugeIcons icon={TaskDaily01Icon} />
+        <DropdownMenuItem
+          icon={TaskDaily01Icon}
+          onClick={() => dialogs.show("read")}
+        >
           {t("webhook-deliveries")}
         </DropdownMenuItem>
         {webhook.status === "active" ? (
           <>
-            <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-              <HugeIcons icon={PencilEdit02Icon} />
+            <DropdownMenuItem
+              icon={PencilEdit02Icon}
+              onClick={() => dialogs.show("edit")}
+            >
               {t("webhook-edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={isPending}
+              icon={Key01Icon}
               onClick={() =>
                 startTransition(() =>
                   runSchoolWrite(
@@ -243,46 +248,42 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
                 )
               }
             >
-              <HugeIcons icon={Key01Icon} />
               {t("client-rotate")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              icon={Delete02Icon}
               onClick={() => dialogs.show("revoke")}
               variant="destructive"
             >
-              <HugeIcons icon={Delete02Icon} />
               {t("client-revoke")}
             </DropdownMenuItem>
           </>
         ) : null}
       </RowItems>
       <ResponsiveDialog
-        description={t("webhook-revoke-description")}
-        footer={
-          <>
-            <Button onClick={dialogs.close} type="button" variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                dialogs.close();
-                startTransition(() =>
-                  runSchoolWrite(schoolCall(() => revoke(names)))
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("client-revoke-confirm")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              dialogs.close();
+              startTransition(() =>
+                runSchoolWrite(schoolCall(() => revoke(names)))
+              );
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("client-revoke-confirm")}
+          </Button>
         }
+        description={t("webhook-revoke-description")}
         open={dialogs.isOpen("revoke")}
         setOpen={dialogs.setOpen}
         title={t("webhook-revoke-title")}
       >
-        <ConfirmSubject icon={WebhookIcon} name={webhook.url} />
+        <ResponsiveDialogSubject icon={WebhookIcon}>
+          {webhook.url}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
       <SchoolDeliverySheet
         open={dialogs.isOpen("read")}

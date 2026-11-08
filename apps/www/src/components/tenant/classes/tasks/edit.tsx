@@ -28,7 +28,6 @@ import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
  */
 export function EditTaskDialog({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const edit = useMutation(classroom.tasks.edit).withOptimisticUpdate(
     editUpdate
@@ -73,17 +72,12 @@ export function EditTaskDialog({ task }: { task: ClassTask }) {
 
   return (
     <ResponsiveDialog
-      description={t("task-edit-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={!changed} onClick={save}>
-            {t("task-edit-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!changed} onClick={save}>
+          {t("task-edit-save")}
+        </Button>
       }
+      description={t("task-edit-description")}
       open={open}
       setOpen={setOpen}
       title={t("task-edit")}

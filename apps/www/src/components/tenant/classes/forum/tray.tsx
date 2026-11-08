@@ -24,7 +24,6 @@ import {
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import {
   type TrayFile,
   uploadAttachment,
@@ -206,16 +205,13 @@ export function UploadTray({
             <AttachmentTitle>{file.name}</AttachmentTitle>
           </AttachmentContent>
           <AttachmentActions>
-            <IconTip label={t("attach-remove", { name: file.name })}>
-              <AttachmentAction
-                aria-label={t("attach-remove", { name: file.name })}
-                onClick={() => onRemove(file)}
-                size="icon"
-                type="button"
-              >
-                <HugeIcons icon={Cancel01Icon} />
-              </AttachmentAction>
-            </IconTip>
+            <AttachmentAction
+              onClick={() => onRemove(file)}
+              tooltip={t("attach-remove", { name: file.name })}
+              type="button"
+            >
+              <HugeIcons icon={Cancel01Icon} />
+            </AttachmentAction>
           </AttachmentActions>
         </Attachment>
       ))}

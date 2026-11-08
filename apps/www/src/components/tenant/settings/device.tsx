@@ -12,9 +12,7 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -58,83 +56,77 @@ export function SchoolDeviceDialog({
 
   return (
     <ResponsiveDialog
-      description={t("device-description", { name: client.name })}
-      footer={
-        <>
-          <Button onClick={close} type="button" variant="outline">
-            {common("cancel")}
-          </Button>
-          <ButtonGroup aria-label={t("device-title")}>
-            <Button
-              disabled={!isComplete || isPending}
-              inert={isPending}
-              onClick={() =>
-                startTransition(() =>
-                  runSchoolWrite(
-                    schoolCall(() =>
-                      authorize({ clientId: client.id, slug, userCode: code })
-                    ),
-                    {
-                      onSaved: () => {
-                        close();
-                        toast.success({
-                          title: "school-device-authorized.title",
-                        });
-                      },
-                    }
-                  )
+      action={
+        <ButtonGroup aria-label={t("device-title")}>
+          <Button
+            disabled={!isComplete || isPending}
+            inert={isPending}
+            onClick={() =>
+              startTransition(() =>
+                runSchoolWrite(
+                  schoolCall(() =>
+                    authorize({ clientId: client.id, slug, userCode: code })
+                  ),
+                  {
+                    onSaved: () => {
+                      close();
+                      toast.success({
+                        title: "school-device-authorized.title",
+                      });
+                    },
+                  }
                 )
+              )
+            }
+            type="button"
+          >
+            <HugeIcons icon={CommandLineIcon} />
+            {t("device-authorize")}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              disabled={!isComplete || isPending}
+              render={
+                <Button
+                  size="icon"
+                  tooltip={common("more-actions")}
+                  type="button"
+                />
               }
-              type="button"
             >
-              <HugeIcons icon={CommandLineIcon} />
-              {t("device-authorize")}
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                disabled={!isComplete || isPending}
-                render={
-                  <Button
-                    aria-label={common("more-actions")}
-                    size="icon"
-                    type="button"
-                  />
+              <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-48"
+              label={common("menu-actions")}
+            >
+              <DropdownMenuItem
+                icon={UnavailableIcon}
+                onClick={() =>
+                  startTransition(() =>
+                    runSchoolWrite(
+                      schoolCall(() => deny({ slug, userCode: code })),
+                      {
+                        onSaved: () => {
+                          close();
+                          toast.success({
+                            title: "school-device-denied.title",
+                          });
+                        },
+                      }
+                    )
+                  )
                 }
+                variant="destructive"
               >
-                <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>
-                    {common("menu-actions")}
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      startTransition(() =>
-                        runSchoolWrite(
-                          schoolCall(() => deny({ slug, userCode: code })),
-                          {
-                            onSaved: () => {
-                              close();
-                              toast.success({
-                                title: "school-device-denied.title",
-                              });
-                            },
-                          }
-                        )
-                      )
-                    }
-                    variant="destructive"
-                  >
-                    <HugeIcons icon={UnavailableIcon} />
-                    {t("device-deny")}
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </ButtonGroup>
-        </>
+                {t("device-deny")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ButtonGroup>
       }
+      description={t("device-description", { name: client.name })}
       // The typed code is forgotten once the dialog has closed, so the closing dialog keeps it.
       onOpenChangeComplete={(next) => {
         if (!next) {

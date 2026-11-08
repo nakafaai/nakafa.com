@@ -396,13 +396,11 @@ function LibraryOpen({ folder }: { folder: LibraryFolder }) {
 
   return (
     <DropdownMenuItem
-      render={
-        <Link {...schoolClassFolderTarget(slug, classSlug, folder.id)}>
-          <HugeIcons icon={ArrowRight01Icon} />
-          {t("library-open")}
-        </Link>
-      }
-    />
+      icon={ArrowRight01Icon}
+      render={<Link {...schoolClassFolderTarget(slug, classSlug, folder.id)} />}
+    >
+      {t("library-open")}
+    </DropdownMenuItem>
   );
 }
 

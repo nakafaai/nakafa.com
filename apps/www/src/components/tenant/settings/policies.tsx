@@ -18,11 +18,9 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -38,7 +36,6 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation";
@@ -177,6 +174,7 @@ function SchoolSwitchPolicy({
  * saves each choice at once, once Convex holds the session. A cap set elsewhere stays among the choices.
  */
 function SchoolNinaCreditsPolicy({ current }: { current: number }) {
+  const common = useTranslations("Common");
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const setPolicy = useMutation(
@@ -225,16 +223,12 @@ function SchoolNinaCreditsPolicy({ current }: { current: number }) {
         <SelectTrigger className="w-40" disabled={!isSettled} id={id}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <ChoiceLabel name="credits" />
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                <HugeIcons icon={Coins01Icon} />
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+        <SelectContent label={common("menu-credits")}>
+          {Arr.map(items, (item) => (
+            <SelectItem icon={Coins01Icon} key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </Field>

@@ -7,13 +7,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -21,7 +19,6 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { useTenant } from "@/components/tenant/context";
 import { roleIcon } from "@/components/tenant/roles";
 import {
@@ -51,7 +48,6 @@ export function SchoolGrantDialog({
 }) {
   const { role: viewerRole, slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const assign = useMutation(access.grants.assign).withOptimisticUpdate(
     assignGrantChange
@@ -64,49 +60,40 @@ export function SchoolGrantDialog({
 
   return (
     <ResponsiveDialog
-      description={t("roles-assign-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={personId === undefined || role === undefined || isPending}
-            inert={isPending}
-            onClick={() => {
-              if (personId === undefined || role === undefined) {
-                return;
-              }
-              setOpen(false);
-              startAssigning(() =>
-                runSchoolWrite(
-                  schoolCall(() =>
-                    assign({
-                      personId,
-                      role,
-                      scope: { kind: "tenant" },
-                      slug,
-                    })
-                  ),
-                  {
-                    onSaved: () => {
-                      setChosen(undefined);
-                      setRole(undefined);
-                    },
-                  }
-                )
-              );
-            }}
-            type="button"
-          >
-            {t("roles-assign")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={personId === undefined || role === undefined || isPending}
+          inert={isPending}
+          onClick={() => {
+            if (personId === undefined || role === undefined) {
+              return;
+            }
+            setOpen(false);
+            startAssigning(() =>
+              runSchoolWrite(
+                schoolCall(() =>
+                  assign({
+                    personId,
+                    role,
+                    scope: { kind: "tenant" },
+                    slug,
+                  })
+                ),
+                {
+                  onSaved: () => {
+                    setChosen(undefined);
+                    setRole(undefined);
+                  },
+                }
+              )
+            );
+          }}
+          type="button"
+        >
+          {t("roles-assign")}
+        </Button>
       }
+      description={t("roles-assign-description")}
       open={open}
       setOpen={setOpen}
       title={t("roles-assign-dialog")}
@@ -159,6 +146,7 @@ export function SchoolRoleSelect({
   roles: readonly BuiltinRole[];
   value: BuiltinRole | undefined;
 }) {
+  const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const roleItems = Arr.map(roles, (role) => ({
@@ -180,16 +168,16 @@ export function SchoolRoleSelect({
       <SelectTrigger className="w-full" id={id}>
         <SelectValue placeholder={t("roles-role-placeholder")} />
       </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <ChoiceLabel name="role" />
-          {Arr.map(roleItems, (item) => (
-            <SelectItem key={item.value} value={item.value}>
-              <HugeIcons icon={roleIcon(item.value)} />
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
+      <SelectContent label={common("menu-role")}>
+        {Arr.map(roleItems, (item) => (
+          <SelectItem
+            icon={roleIcon(item.value)}
+            key={item.value}
+            value={item.value}
+          >
+            {item.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

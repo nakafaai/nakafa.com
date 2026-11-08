@@ -155,21 +155,12 @@ export function UnitEditDialog({
 
   return (
     <ResponsiveDialog
-      description={t("unit-edit-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {t("unit-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {t("unit-save")}
+        </Button>
       }
+      description={t("unit-edit-description")}
       open={open}
       setOpen={setOpen}
       title={unit.name}
@@ -182,12 +173,12 @@ export function UnitEditDialog({
         />
         <UnitLevelField id={`${id}-level`} onChange={setLevel} value={level} />
         <SelectField
-          choice="zone"
           items={Arr.map(timeZoneItems, (item) => ({
             ...item,
             icon: Globe02Icon,
           }))}
           label={t("unit-time-zone")}
+          menu={common("menu-zone")}
           onChoose={setTimeZone}
           value={timeZone}
         />

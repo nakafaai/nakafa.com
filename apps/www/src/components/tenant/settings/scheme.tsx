@@ -73,7 +73,6 @@ export function SchemeVersionDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const { newest, ready } = use(SchemeVersionsContext);
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const id = useId();
   const store = useMutation(records.schemes.store).withOptimisticUpdate(
@@ -135,29 +134,20 @@ export function SchemeVersionDialog({
 
   return (
     <ResponsiveDialog
+      action={
+        <Button
+          disabled={!ready || Option.isNone(checked)}
+          onClick={save}
+          type="button"
+        >
+          {t("grading-save")}
+        </Button>
+      }
       description={t(
         Option.isSome(editing)
           ? "grading-edit-description"
           : "grading-new-description"
       )}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!ready || Option.isNone(checked)}
-            onClick={save}
-            type="button"
-          >
-            {t("grading-save")}
-          </Button>
-        </>
-      }
       open={open}
       setOpen={setOpen}
       title={t(Option.isSome(editing) ? "grading-edit" : "grading-new")}
@@ -227,7 +217,6 @@ export function SchemeVersionDialog({
                 </NumberField>
               </Field>
               <Button
-                aria-label={t("grading-band-remove")}
                 onClick={() =>
                   setDraft({
                     ...draft,
@@ -238,6 +227,7 @@ export function SchemeVersionDialog({
                   })
                 }
                 size="icon"
+                tooltip={t("grading-band-remove")}
                 type="button"
                 variant="ghost"
               >

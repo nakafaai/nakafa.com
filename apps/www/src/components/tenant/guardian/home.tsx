@@ -20,7 +20,10 @@ import {
 import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogSubject,
+} from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -39,7 +42,6 @@ import {
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
-import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import {
   TableEmpty,
@@ -341,7 +343,6 @@ function GuardianGrades({ child }: { child: ChildItem }) {
 /** Ends a child's link, verified or still waiting, once the parent confirms it. */
 function GuardianWithdraw({ child }: { child: ChildItem }) {
   const t = useTranslations("SchoolGuardians");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const withdraw = useMutation(guardians.family.withdraw).withOptimisticUpdate(
     withdrawChange
@@ -360,38 +361,31 @@ function GuardianWithdraw({ child }: { child: ChildItem }) {
         {t("withdraw")}
       </Button>
       <ResponsiveDialog
-        description={t("withdraw-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsWithdrawing(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsWithdrawing(false);
-                startTransition(() =>
-                  runSchoolWrite(
-                    schoolCall(() => withdraw({ linkId: child.linkId, slug }))
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              <HugeIcons icon={UserRemove01Icon} />
-              {t("withdraw")}
-            </Button>
-          </>
+        action={
+          <Button
+            onClick={() => {
+              setIsWithdrawing(false);
+              startTransition(() =>
+                runSchoolWrite(
+                  schoolCall(() => withdraw({ linkId: child.linkId, slug }))
+                )
+              );
+            }}
+            type="button"
+            variant="destructive"
+          >
+            <HugeIcons icon={UserRemove01Icon} />
+            {t("withdraw")}
+          </Button>
         }
+        description={t("withdraw-description")}
         open={isWithdrawing}
         setOpen={setIsWithdrawing}
         title={t("withdraw-title")}
       >
-        <ConfirmSubject icon={StudentIcon} name={child.student.name} />
+        <ResponsiveDialogSubject icon={StudentIcon}>
+          {child.student.name}
+        </ResponsiveDialogSubject>
       </ResponsiveDialog>
     </>
   );

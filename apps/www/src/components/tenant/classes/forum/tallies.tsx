@@ -21,7 +21,6 @@ import {
   type ForumTally,
   reactUpdate,
 } from "@/components/tenant/classes/forum/tally";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The tallies of the messages a place has loaded. */
@@ -141,18 +140,16 @@ export function ReactButton({ message }: { message: ForumMessage }) {
 
   return (
     <EmojiPopover onPick={press} quick={QUICK_EMOJI}>
-      <IconTip label={t("reaction-add")}>
-        <EmojiTrigger
-          render={
-            <Button
-              aria-label={t("reaction-add")}
-              disabled={isPending(message)}
-              size="icon"
-              variant="ghost"
-            />
-          }
-        />
-      </IconTip>
+      <EmojiTrigger
+        render={
+          <Button
+            disabled={isPending(message)}
+            size="icon"
+            tooltip={t("reaction-add")}
+            variant="ghost"
+          />
+        }
+      />
     </EmojiPopover>
   );
 }

@@ -37,7 +37,6 @@ export function ImportQuestions({
   open: boolean;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const { exam, slug } = useExam();
   const importFile = useImportFile(slug);
   const importForm = useImportForm(slug);
@@ -48,26 +47,21 @@ export function ImportQuestions({
 
   return (
     <ResponsiveDialog
-      description={t("import-dialog-description")}
-      footer={
-        <>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={file === null}
-            onClick={() => {
-              if (file === null) {
-                return;
-              }
-              onOpenChange(false);
-              Effect.runFork(importFile(exam.id, file));
-            }}
-          >
-            {t("import-submit")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={file === null}
+          onClick={() => {
+            if (file === null) {
+              return;
+            }
+            onOpenChange(false);
+            Effect.runFork(importFile(exam.id, file));
+          }}
+        >
+          {t("import-submit")}
+        </Button>
       }
+      description={t("import-dialog-description")}
       // The dialog forgets its file once it has closed, so it opens empty again and the closing dialog
       // keeps showing the file it imports.
       onOpenChangeComplete={(next) => {

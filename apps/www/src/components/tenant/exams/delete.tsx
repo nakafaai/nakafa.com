@@ -56,7 +56,7 @@ export function ExamDeleteConfirm({
   open,
   setOpen,
 }: {
-  /** The body: the exam it removes, a `ConfirmSubject` with its title. */
+  /** The body: the exam it removes, a `ResponsiveDialogSubject` with its title. */
   children: ReactNode;
   onConfirm: () => void;
   open: boolean;
@@ -67,18 +67,13 @@ export function ExamDeleteConfirm({
 
   return (
     <ResponsiveDialog
-      description={t("delete-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button onClick={onConfirm} variant="destructive">
-            <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-            {common("delete")}
-          </Button>
-        </>
+      action={
+        <Button onClick={onConfirm} variant="destructive">
+          <HugeIcons aria-hidden="true" icon={Delete02Icon} />
+          {common("delete")}
+        </Button>
       }
+      description={t("delete-description")}
       open={open}
       setOpen={setOpen}
       title={t("delete-title")}

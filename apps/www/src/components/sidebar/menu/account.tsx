@@ -63,6 +63,7 @@ export function AccountMenu({
   onSignOut: () => Promise<void>;
 }) {
   const t = useTranslations("Auth");
+  const common = useTranslations("Common");
   const [open, { close, set }] = useDisclosure(false);
   const { warm, warmed } = useMenuWarm();
   const side = useSidebar((sidebar) => (sidebar.isMobile ? "bottom" : "right"));
@@ -96,6 +97,7 @@ export function AccountMenu({
           align="end"
           className="w-(--anchor-width) max-w-[calc(100vw-2rem)] min-w-56 rounded-lg"
           keepMounted
+          label={common("menu-account")}
           side={side}
           sideOffset={4}
         >
@@ -127,9 +129,9 @@ export function AccountMenu({
             <DropdownMenuItem
               closeOnClick={false}
               disabled={isSigningOut}
+              icon={<Spinner icon={Logout01Icon} isLoading={isSigningOut} />}
               onClick={() => startSigningOut(onSignOut)}
             >
-              <Spinner icon={Logout01Icon} isLoading={isSigningOut} />
               {t("logout")}
             </DropdownMenuItem>
           </DropdownMenuGroup>

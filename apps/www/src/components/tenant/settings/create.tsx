@@ -10,12 +10,10 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -31,7 +29,6 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ChoiceLabel } from "@/components/tenant/choice";
 import { timeZoneItems } from "@/components/tenant/settings/choices";
 import { addUnitChange } from "@/components/tenant/settings/mutation";
 import type { Unit } from "@/components/tenant/settings/state";
@@ -147,24 +144,17 @@ function SchoolUnitCreateForm({
 
   return (
     <ResponsiveDialog
-      description={t("unit-add-description")}
-      footer={
+      action={
         <>
           <p className="text-muted-foreground me-auto text-sm">
             {t("unit-add-footer")}
           </p>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
           <Button disabled={!ready} onClick={submit} type="button">
             {t("unit-add-submit")}
           </Button>
         </>
       }
+      description={t("unit-add-description")}
       // An added unit's name is cleared once the dialog has closed, so the closing dialog keeps it.
       onOpenChangeComplete={(next) => {
         if (!next && sent.current) {
@@ -193,17 +183,16 @@ function SchoolUnitCreateForm({
             <SelectTrigger className="w-full" id={`${id}-zone`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <ChoiceLabel name="zone" />
-
-                {Arr.map(timeZoneItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons icon={Globe02Icon} />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent label={common("menu-zone")}>
+              {Arr.map(timeZoneItems, (item) => (
+                <SelectItem
+                  icon={Globe02Icon}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>

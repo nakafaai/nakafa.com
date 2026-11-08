@@ -31,7 +31,6 @@ import { runSchoolWrite } from "@/components/tenant/write";
  */
 export function NewAnnouncement() {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const publish = useMutation(classroom.posts.publish);
   const schedule = useMutation(classroom.scheduled.schedule);
@@ -96,17 +95,12 @@ export function NewAnnouncement() {
     <>
       <SchoolHeaderAdd label={t("post-new")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
-        description={t("post-new-description")}
-        footer={
-          <>
-            <Button onClick={() => setOpen(false)} variant="outline">
-              {common("cancel")}
-            </Button>
-            <Button disabled={!ready} onClick={submit}>
-              {t(later ? "post-schedule-submit" : "post-submit")}
-            </Button>
-          </>
+        action={
+          <Button disabled={!ready} onClick={submit}>
+            {t(later ? "post-schedule-submit" : "post-submit")}
+          </Button>
         }
+        description={t("post-new-description")}
         open={open}
         setOpen={setOpen}
         title={t("post-new")}

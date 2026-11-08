@@ -36,7 +36,6 @@ export function LoginRenameDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
   const rename = useMutation(identity.logins.rename).withOptimisticUpdate(
     renameLoginChange
@@ -68,21 +67,12 @@ export function LoginRenameDialog({
 
   return (
     <ResponsiveDialog
-      description={t("login-rename-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} type="button">
-            {t("login-rename-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!canSave} onClick={save} type="button">
+          {t("login-rename-save")}
+        </Button>
       }
+      description={t("login-rename-description")}
       open={open}
       setOpen={setOpen}
       title={login.person.name}

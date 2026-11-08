@@ -5,12 +5,10 @@ import {
   Heading03Icon,
   TextIcon,
 } from "@hugeicons/core-free-icons";
-import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -97,37 +95,38 @@ export function RichEditorStyle({
 
   return (
     <DropdownMenu>
-      <ToolHint label={labels.style}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={labels.style}
-              className="gap-0.5 has-[>svg]:px-1.5"
-              size="sm"
-              type="button"
-              variant="ghost"
-            />
-          }
-        >
-          <HugeIcons icon={icon} />
-          <HugeIcons
-            className="text-muted-foreground size-3"
-            icon={ArrowDown01Icon}
+      <DropdownMenuTrigger
+        render={
+          <Button
+            className="gap-0.5 has-[>svg]:px-1.5"
+            size="sm"
+            tooltip={labels.style}
+            type="button"
+            variant="ghost"
           />
-        </DropdownMenuTrigger>
-      </ToolHint>
+        }
+      >
+        <HugeIcons icon={icon} />
+        <HugeIcons
+          className="text-muted-foreground size-3"
+          icon={ArrowDown01Icon}
+        />
+      </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-44"
         // After a pick with the pointer the caret goes back to the text.
         finalFocus={(closed) =>
           closed === "keyboard" ? true : (editor?.view.dom ?? true)
         }
+        label={labels.styleMenu}
       >
         <DropdownMenuRadioGroup onValueChange={apply} value={used}>
-          <DropdownMenuLabel>{labels.styleMenu}</DropdownMenuLabel>
           {Arr.map(styles, (style) => (
-            <DropdownMenuRadioItem key={style.name} value={style.name}>
-              <HugeIcons icon={style.icon} />
+            <DropdownMenuRadioItem
+              icon={style.icon}
+              key={style.name}
+              value={style.name}
+            >
               {style.label}
             </DropdownMenuRadioItem>
           ))}

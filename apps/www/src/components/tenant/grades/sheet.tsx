@@ -456,6 +456,7 @@ function GradeLineMenu({ line }: { line: SheetLine }) {
   return (
     <RowItems>
       <DropdownMenuItem
+        icon={SentIcon}
         onClick={() =>
           startTransition(() =>
             runSchoolWrite(
@@ -464,7 +465,6 @@ function GradeLineMenu({ line }: { line: SheetLine }) {
           )
         }
       >
-        <HugeIcons icon={SentIcon} />
         {t("release")}
       </DropdownMenuItem>
     </RowItems>

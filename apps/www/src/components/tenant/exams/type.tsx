@@ -16,8 +16,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -111,25 +109,29 @@ export function QuestionType({
         <span className="truncate @max-xl/row:sr-only">{name}</span>
         <HugeIcons aria-hidden="true" icon={UnfoldMoreIcon} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-60">
-        <DropdownMenuGroup>
-          <DropdownMenuRadioGroup
-            onValueChange={(value) => {
-              if (Schema.is(QuestionTemplate)(value)) {
-                onChange(value);
-              }
-            }}
-            value={template}
-          >
-            <DropdownMenuLabel>{common("menu-type")}</DropdownMenuLabel>
-            {Arr.map(QuestionTemplate.literals, (item) => (
-              <DropdownMenuRadioItem key={item} value={item}>
-                <HugeIcons icon={TEMPLATE_ICON[item]} />
-                {t(TEMPLATE_NAME[item])}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+      <DropdownMenuContent
+        align="start"
+        className="w-60"
+        label={common("menu-type")}
+      >
+        <DropdownMenuRadioGroup
+          onValueChange={(value) => {
+            if (Schema.is(QuestionTemplate)(value)) {
+              onChange(value);
+            }
+          }}
+          value={template}
+        >
+          {Arr.map(QuestionTemplate.literals, (item) => (
+            <DropdownMenuRadioItem
+              icon={TEMPLATE_ICON[item]}
+              key={item}
+              value={item}
+            >
+              {t(TEMPLATE_NAME[item])}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
