@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { COMMENT_PHOTO_BYTE_LIMIT } from "@repo/backend/confect/comments/photo";
-import { Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, Result, Schema } from "effect";
 import { PhotoRefused, uploadPhoto } from "@/components/comments/upload";
 
 const bucketFile = Schema.decodeUnknownSync(Id("bucketFiles"));
@@ -34,19 +34,20 @@ const paintable = (type: string) => {
 
 /** The calls of the page's client: each reservation answers the next file, and the register its upload. */
 const client = () => {
-  const reserved: string[] = [];
-  const reserve = vi.fn((_bytes: Blob, contentType: string) => {
-    reserved.push(contentType);
-    return Promise.resolve(
+  const reserve = vi.fn((_bytes: Blob, _contentType: string) =>
+    Promise.resolve(
       Result.succeed({
-        address: `https://r2.test/${reserved.length}`,
-        fileId: bucketFile(`file-${reserved.length}`),
+        address: `https://r2.test/${reserve.mock.calls.length}`,
+        fileId: bucketFile(`file-${reserve.mock.calls.length}`),
       })
-    );
-  });
+    )
+  );
   const register = vi.fn(() =>
     Promise.resolve(Result.succeed(commentUpload("upload")))
   );
+  /** The type each reservation declared, in order. */
+  const reserved = () =>
+    Arr.map(reserve.mock.calls, ([, contentType]) => contentType);
   return { register, reserve, reserved };
 };
 
@@ -70,7 +71,7 @@ describe("comments/upload", () => {
         const sent = yield* uploadPhoto(file, reserve, register);
 
         expect(sent).toEqual({ height: 1200, upload: "upload", width: 1600 });
-        expect(reserved).toEqual(["image/webp", "image/webp"]);
+        expect(reserved()).toEqual(["image/webp", "image/webp"]);
         expect(register).toHaveBeenCalledWith({
           fileId: "file-1",
           height: 1200,
@@ -92,7 +93,7 @@ describe("comments/upload", () => {
       const sent = yield* uploadPhoto(file, reserve, register);
 
       expect(sent).toEqual({ height: 3000, upload: "upload", width: 4000 });
-      expect(reserved).toEqual(["image/gif"]);
+      expect(reserved()).toEqual(["image/gif"]);
       expect(register).toHaveBeenCalledWith({
         fileId: "file-1",
         height: 3000,

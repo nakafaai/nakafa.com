@@ -12,6 +12,7 @@ import { CommentComposer } from "@/components/comments/composer";
 import { isThreadShown } from "@/components/comments/draft";
 import { useCommentDraft } from "@/components/comments/provider";
 import { CommentRow, ReplyButton, ReplyingTo } from "@/components/comments/row";
+import { ComposerAnswersContext } from "@/components/comments/scope";
 import {
   type CommentRow as CommentRowData,
   threadOf,
@@ -157,7 +158,9 @@ function ThreadReplies({ threadId }: { threadId: CommentRowData["_id"] }) {
       {composing ? (
         <ThreadBranch last>
           <div className="py-3">
-            <CommentComposer answers={target} />
+            <ComposerAnswersContext value={target}>
+              <CommentComposer />
+            </ComposerAnswersContext>
           </div>
         </ThreadBranch>
       ) : null}

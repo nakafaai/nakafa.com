@@ -5,11 +5,12 @@ import { lazy, readChunk } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { Effect, String as Str } from "effect";
-import { Suspense, useState } from "react";
+import { Suspense, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { photosOf, textOf } from "@/components/comments/draft";
 import { usePostComment } from "@/components/comments/posting";
 import { useCommentDraft } from "@/components/comments/provider";
+import { ComposerAnswersContext } from "@/components/comments/scope";
 import type { CommentRow } from "@/components/comments/state";
 import { FeedAvatar } from "@/components/user/feed";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
@@ -30,11 +31,12 @@ const closedField = cva(
 );
 
 /**
- * The composer of a comment, or of a reply when it `answers` one: the writer's picture beside a field. A
+ * The composer of a comment, or of a reply when a thread names the comment it answers
+ * (`ComposerAnswersContext`): the writer's picture beside a field. A
  * visitor's field asks them to sign in. A learner's list composer stays one closed line until it is pressed,
  * so the page loads no editor before then; a reply composer opens at once, with the focus in it.
  */
-export function CommentComposer({ answers }: { answers?: CommentRow }) {
+export function CommentComposer() {
   const account = useViewer((state) => state.account);
   return (
     <div className="flex items-start gap-3">
@@ -42,7 +44,7 @@ export function CommentComposer({ answers }: { answers?: CommentRow }) {
         mascot={account?.appUser.mascot}
         photo={account ? photoOf(account.appUser) : undefined}
       />
-      {account ? <LearnerComposer answers={answers} /> : <VisitorComposer />}
+      {account ? <LearnerComposer /> : <VisitorComposer />}
     </div>
   );
 }
@@ -76,16 +78,17 @@ function ClosedComposer({ onOpen }: { onOpen: () => void }) {
 }
 
 /** A learner's composer: closed until pressed for a new comment, open at once for a reply. */
-function LearnerComposer({ answers }: { answers: CommentRow | undefined }) {
+function LearnerComposer() {
+  const answers = use(ComposerAnswersContext);
   const composerKey = answers?._id ?? "";
   const drafted = useCommentDraft(
     (draft) =>
       !Str.isEmpty(textOf(draft, composerKey)) ||
       photosOf(draft, composerKey).length > 0
   );
-  const [open, setOpen] = useState(answers !== undefined || drafted);
+  const [open, setOpen] = useState(answers !== null || drafted);
   const close = useCommentDraft((draft) => draft.close);
-  const send = useSend(answers ?? null);
+  const send = useSend(answers);
 
   if (!open) {
     return <ClosedComposer onOpen={() => setOpen(true)} />;
@@ -97,7 +100,7 @@ function LearnerComposer({ answers }: { answers: CommentRow | undefined }) {
           autoFocus
           composerKey={composerKey}
           onClose={() => {
-            if (answers !== undefined) {
+            if (answers !== null) {
               close();
               return;
             }

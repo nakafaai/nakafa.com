@@ -162,5 +162,10 @@ describe("the draft of a list of comments", () => {
     draft.getState().open(reply);
     expect(isThreadShown(draft.getState(), root)).toBe(true);
     expect(HashSet.has(draft.getState().expanded, root._id)).toBe(true);
+
+    const answered = createCommentDraft();
+    answered.getState().open(root);
+    expect(isThreadShown(answered.getState(), root)).toBe(true);
+    expect(isThreadShown(answered.getState(), other)).toBe(false);
   });
 });

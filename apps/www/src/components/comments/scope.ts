@@ -1,5 +1,5 @@
 import { createContext, use } from "react";
-import type { RowComment } from "@/components/comments/state";
+import type { CommentRow, RowComment } from "@/components/comments/state";
 
 /** The comment of the row around its parts: its text, its photos, its menu and its like. */
 export const RowCommentContext = createContext<RowComment | null>(null);
@@ -20,3 +20,6 @@ export function useRowComment() {
 export const CommentsPlaceContext = createContext<"page" | "profile">(
   "profile"
 );
+
+/** The comment a composer below answers: a reply composer's target, and none for the list's own composer. */
+export const ComposerAnswersContext = createContext<CommentRow | null>(null);
