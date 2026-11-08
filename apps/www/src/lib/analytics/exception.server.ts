@@ -1,23 +1,23 @@
 import { waitUntil } from "cloudflare:workers";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
-import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import { isServerExceptionReportingEnabled } from "@repo/analytics/reporting";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { Cause, Effect, Schema } from "effect";
 
 /** The request has no user agent to read, because no request scope is active. */
-class RequestUserAgentUnavailable extends Schema.TaggedError<RequestUserAgentUnavailable>()(
-  "RequestUserAgentUnavailable",
-  { cause: Schema.Unknown }
-) {}
+class RequestUserAgentUnavailable extends Schema.TaggedError<
+  RequestUserAgentUnavailable,
+  { readonly brand: unique symbol }
+>()("RequestUserAgentUnavailable", { cause: Schema.Unknown }) {}
 
 /** Expected failure while registering request completion work with the platform. */
-class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionScheduleError>()(
-  "ServerExceptionScheduleError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class ServerExceptionScheduleError extends Schema.TaggedError<
+  ServerExceptionScheduleError,
+  { readonly brand: unique symbol }
+>()("ServerExceptionScheduleError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /**
  * Reads the current request user agent so PostHog classifies the fault's

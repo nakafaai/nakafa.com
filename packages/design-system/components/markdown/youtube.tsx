@@ -1,5 +1,5 @@
 import { ArrowUpRight01Icon, YoutubeIcon } from "@hugeicons/core-free-icons";
-import { YoutubePlayer } from "@repo/design-system/components/markdown/youtube-player";
+import { YoutubePlayer } from "@repo/design-system/components/markdown/player";
 import {
   Card,
   CardFooter,

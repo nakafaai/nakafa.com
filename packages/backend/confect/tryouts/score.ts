@@ -27,15 +27,15 @@ export const tryoutScoreResultValidator = Schema.Struct({
 });
 export type TryoutScoreResult = typeof tryoutScoreResultValidator.Type;
 /** Expected integrity failure while reading a stored try-out score. */
-export class TryoutScoreReadError extends Schema.TaggedError<TryoutScoreReadError>()(
-  "TryoutScoreReadError",
-  {
-    code: Schema.Literals([
-      "TRYOUT_SCORE_NOT_FOUND",
-      "TRYOUT_SECTION_SCORE_NOT_FOUND",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class TryoutScoreReadError extends Schema.TaggedError<
+  TryoutScoreReadError,
+  { readonly brand: unique symbol }
+>()("TryoutScoreReadError", {
+  code: Schema.Literals([
+    "TRYOUT_SCORE_NOT_FOUND",
+    "TRYOUT_SECTION_SCORE_NOT_FOUND",
+  ]),
+  message: Schema.String,
+}) {}
 /** Loads the immutable attempt score exposed after terminal completion. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */

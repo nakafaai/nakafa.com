@@ -126,10 +126,10 @@ it.effect("emits pending evidence before the provider finishes", () =>
   })
 );
 
-class EvidenceUnavailable extends Schema.TaggedError<EvidenceUnavailable>()(
-  "EvidenceUnavailable",
-  {}
-) {}
+class EvidenceUnavailable extends Schema.TaggedError<
+  EvidenceUnavailable,
+  { readonly brand: unique symbol }
+>()("EvidenceUnavailable", {}) {}
 
 it.effect("preserves a typed capability failure after progress", () =>
   Effect.gen(function* () {

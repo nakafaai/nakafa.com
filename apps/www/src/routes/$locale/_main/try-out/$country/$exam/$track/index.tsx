@@ -1,4 +1,4 @@
-import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
+import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import {
   createFileRoute,
   notFound,
@@ -15,7 +15,7 @@ import {
   CatalogQuery,
   catalogLoaderDeps,
 } from "@/components/tryout/catalog/table/query";
-import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
+import { TryoutSetTable } from "@/components/tryout/catalog/table/sets";
 import { readTryoutTrackFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";

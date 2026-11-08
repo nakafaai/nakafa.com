@@ -1,9 +1,4 @@
 import { FileIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-} from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn } from "cn";
@@ -12,7 +7,8 @@ import { createContext, Fragment, type ReactElement, use } from "react";
 import { useTranslations } from "use-intl";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
-import { EmptyNina } from "@/components/state/empty";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { PublicPathLink } from "@/lib/routing/public/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import type { ContentSearchResultItem } from "@/lib/search/answer";
@@ -70,12 +66,10 @@ export function SearchResults({
 
   if (results.length === 0 && query) {
     return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyNina act="searching" />
-          <EmptyDescription>{t("search-not-found")}</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <EmptyState
+        scene={<EmptyNina act="searching" />}
+        title={t("search-not-found")}
+      />
     );
   }
 

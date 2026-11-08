@@ -1,4 +1,4 @@
-import { reportUncaughtRequestError } from "@repo/analytics/server-reporting";
+import { reportUncaughtRequestError } from "@repo/analytics/reporting";
 import {
   createServerEntry,
   createStartHandler,
