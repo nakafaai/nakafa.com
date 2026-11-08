@@ -29,10 +29,10 @@ const RANDOM_DIGITS = Arr.range(2, 8);
 const DRAWS_PER_DIGITS = 2;
 
 /** Every name that one allocation tried was taken. Only a flood of accounts of one name can cause it. */
-export class UsernameExhausted extends Schema.TaggedError<UsernameExhausted>()(
-  "UsernameExhausted",
-  { tries: Schema.Finite }
-) {}
+export class UsernameExhausted extends Schema.TaggedError<
+  UsernameExhausted,
+  { readonly brand: unique symbol }
+>()("UsernameExhausted", { tries: Schema.Finite }) {}
 
 /**
  * The letters and digits of a name, as far as a username can hold them: accents

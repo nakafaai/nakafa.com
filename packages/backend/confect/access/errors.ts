@@ -8,21 +8,21 @@ const accessDenied = Schema.Literal("ACCESS_DENIED");
  * `action` is a plain string on the wire, so clients built before a lane
  * added an action still decode the denial.
  */
-export class AccessDenied extends Schema.TaggedError<AccessDenied>()(
-  "AccessDenied",
-  {
-    action: Schema.String,
-    code: accessDenied.pipe(
-      Schema.withConstructorDefault(Effect.succeed(accessDenied.literal))
-    ),
-    message: Schema.String.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed("You do not have access to this.")
-      )
-    ),
-    reason: Schema.Literals(["resource", "role", "condition"]),
-  }
-) {}
+export class AccessDenied extends Schema.TaggedError<
+  AccessDenied,
+  { readonly brand: unique symbol }
+>()("AccessDenied", {
+  action: Schema.String,
+  code: accessDenied.pipe(
+    Schema.withConstructorDefault(Effect.succeed(accessDenied.literal))
+  ),
+  message: Schema.String.pipe(
+    Schema.withConstructorDefault(
+      Effect.succeed("You do not have access to this.")
+    )
+  ),
+  reason: Schema.Literals(["resource", "role", "condition"]),
+}) {}
 
 /**
  * A grant the caller may manage but the tenant's invariants refuse:
@@ -33,22 +33,22 @@ export class AccessDenied extends Schema.TaggedError<AccessDenied>()(
  * Admin role on a temporary grant, `LAST_OWNER` removing the tenant's last
  * claimed Owner.
  */
-export class GrantRejected extends Schema.TaggedError<GrantRejected>()(
-  "GrantRejected",
-  {
-    code: Schema.Literals([
-      "GRANT_ROLE",
-      "GRANT_SCOPE",
-      "GRANT_LIMIT",
-      "PERSON_INACTIVE",
-      "PERSON_KIND",
-      "TEMPORARY_ROLE",
-      "LAST_OWNER",
-      "SEAT_LIMIT",
-    ]),
-    message: Schema.String,
-  }
-) {}
+export class GrantRejected extends Schema.TaggedError<
+  GrantRejected,
+  { readonly brand: unique symbol }
+>()("GrantRejected", {
+  code: Schema.Literals([
+    "GRANT_ROLE",
+    "GRANT_SCOPE",
+    "GRANT_LIMIT",
+    "PERSON_INACTIVE",
+    "PERSON_KIND",
+    "TEMPORARY_ROLE",
+    "LAST_OWNER",
+    "SEAT_LIMIT",
+  ]),
+  message: Schema.String,
+}) {}
 
 /** A Person that is not active, refused the same way by a standing and a temporary grant. */
 export const inactivePerson = () =>

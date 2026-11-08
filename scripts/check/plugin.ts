@@ -40,13 +40,13 @@ const RuleDecisions = Schema.Struct({
 const decodeRuleDecisions = Schema.decodeUnknownOption(RuleDecisions);
 
 /** The rule list of the installed Effect compiler plugin cannot be read. */
-export class PluginRulesError extends Schema.TaggedError<PluginRulesError>()(
-  "PluginRulesError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+export class PluginRulesError extends Schema.TaggedError<
+  PluginRulesError,
+  { readonly brand: unique symbol }
+>()("PluginRulesError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Builds the typed failure for a plugin schema that is missing or lists no rules. */
 function unreadableRules(cause: unknown) {

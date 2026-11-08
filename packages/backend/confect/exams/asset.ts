@@ -26,20 +26,20 @@ export const AssetAddress = Schema.Struct({
 });
 
 /** A file whose leading bytes are no image the editor accepts. The file is deleted. */
-export class AssetTypeRefused extends Schema.TaggedError<AssetTypeRefused>()(
-  "AssetTypeRefused",
-  {
-    ...refusal(
-      "ASSET_TYPE",
-      "Only PNG, JPEG, WebP, and GIF images can be added."
-    ),
-  }
-) {}
+export class AssetTypeRefused extends Schema.TaggedError<
+  AssetTypeRefused,
+  { readonly brand: unique symbol }
+>()("AssetTypeRefused", {
+  ...refusal(
+    "ASSET_TYPE",
+    "Only PNG, JPEG, WebP, and GIF images can be added."
+  ),
+}) {}
 
 /** A file over `IMAGE_BYTE_LIMIT`. The file is deleted. */
-export class AssetSizeRefused extends Schema.TaggedError<AssetSizeRefused>()(
-  "AssetSizeRefused",
-  {
-    ...refusal("ASSET_SIZE", "An image may be at most 2 MB."),
-  }
-) {}
+export class AssetSizeRefused extends Schema.TaggedError<
+  AssetSizeRefused,
+  { readonly brand: unique symbol }
+>()("AssetSizeRefused", {
+  ...refusal("ASSET_SIZE", "An image may be at most 2 MB."),
+}) {}

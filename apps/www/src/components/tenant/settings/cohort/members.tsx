@@ -11,11 +11,12 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableText } from "@/components/shared/table/text";
 import { TableName } from "@/components/shared/table/title";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 
@@ -98,9 +99,9 @@ export function SchoolCohortMembers({
         columns={columns}
         data={pagination.results}
         empty={
-          <TableEmpty
-            act="reading"
+          <EmptyState
             description={t("cohort-members-description")}
+            scene={<EmptyNina act="reading" />}
             title={t("cohort-members-empty")}
           />
         }

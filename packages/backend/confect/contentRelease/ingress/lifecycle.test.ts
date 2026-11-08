@@ -56,12 +56,12 @@ const signedLifecycleRelease = Effect.fn(
 const recoveryReleaseId = ReleaseIdSchema.make(
   "release-lifecycle-ingress-recovery"
 );
-class ObservedLifecycleActionFailure extends Schema.TaggedError<ObservedLifecycleActionFailure>()(
-  "ObservedLifecycleActionFailure",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class ObservedLifecycleActionFailure extends Schema.TaggedError<
+  ObservedLifecycleActionFailure,
+  { readonly brand: unique symbol }
+>()("ObservedLifecycleActionFailure", {
+  cause: Schema.Unknown,
+}) {}
 
 /** Runs one lifecycle program through the explicit technical verification key. */
 const runLifecycle = Effect.fn("test.contentRelease.runLifecycle")(function* <

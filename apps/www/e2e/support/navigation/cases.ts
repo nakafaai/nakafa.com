@@ -62,13 +62,13 @@ const instantShellSelector = {
 } as const;
 
 /** A rendered source route has no visible link matching its signed catalog. */
-class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMissing>()(
-  "NavigationLinkMissing",
-  {
-    hrefPattern: Schema.String,
-    sourceHref: Schema.String,
-  }
-) {
+class NavigationLinkMissing extends Schema.TaggedError<
+  NavigationLinkMissing,
+  { readonly brand: unique symbol }
+>()("NavigationLinkMissing", {
+  hrefPattern: Schema.String,
+  sourceHref: Schema.String,
+}) {
   get message() {
     return `No visible link matching ${this.hrefPattern} was found on ${this.sourceHref}.`;
   }
