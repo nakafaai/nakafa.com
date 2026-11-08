@@ -135,7 +135,10 @@ test("a comment, a reply and a reply to that reply make one thread behind its to
 
             yield* Effect.promise(async () => {
               await commentRow(author, top)
-                .getByRole("button", { name: app.Common.more, exact: true })
+                .getByRole("button", {
+                  name: app.Common["more-actions"],
+                  exact: true,
+                })
                 .first()
                 .click();
               await author
