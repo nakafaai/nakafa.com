@@ -6,6 +6,7 @@ import type {
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
+import { changeLoaded } from "@/lib/data/loaded";
 
 /** The tally of one message for the viewer, as a chat shows it. */
 export type ForumTally = Ref.Returns<
@@ -28,29 +29,26 @@ const changeTally = (
   messageId: Id<"classroomMessages">,
   change: (tally: ForumTally) => ForumTally
 ) => {
-  for (const query of localStore.getAllQueries(since)) {
-    if (Option.isSome(query.value) && query.args.classId === classId) {
-      const held = Arr.findFirst(
-        query.value.value,
-        (tally) => tally.messageId === messageId
-      );
-      const next = change(Option.getOrElse(held, () => emptyTally(messageId)));
-      const others = Arr.filter(
-        query.value.value,
-        (tally) => tally.messageId !== messageId
-      );
-      localStore.setQuery(
-        since,
-        query.args,
-        Option.some(
-          Arr.isReadonlyArrayEmpty(next.reactions) &&
-            Arr.isReadonlyArrayEmpty(next.votes)
-            ? others
-            : Arr.append(others, next)
-        )
-      );
+  changeLoaded(localStore, since, (tallies, args) => {
+    if (args.classId !== classId) {
+      return Option.none();
     }
-  }
+    const held = Arr.findFirst(
+      tallies,
+      (tally) => tally.messageId === messageId
+    );
+    const next = change(Option.getOrElse(held, () => emptyTally(messageId)));
+    const others = Arr.filter(
+      tallies,
+      (tally) => tally.messageId !== messageId
+    );
+    return Option.some(
+      Arr.isReadonlyArrayEmpty(next.reactions) &&
+        Arr.isReadonlyArrayEmpty(next.votes)
+        ? others
+        : Arr.append(others, next)
+    );
+  });
 };
 
 /** The reactions after the viewer presses an emoji: their own goes, or joins, and an emoji nobody holds leaves. */
