@@ -3,6 +3,7 @@ import {
   useIsomorphicEffect,
   useWindowEvent,
 } from "@mantine/hooks";
+import { lineMark } from "@repo/design-system/lib/mark";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { type ReactNode, useRef, useState } from "react";
@@ -57,9 +58,6 @@ const linesItem = cva(
     },
   }
 );
-
-/** The room of a part's dot: one line of its text high, so the dot stands on that line's middle. */
-const lineMark = cva("flex h-lh shrink-0 items-center");
 
 /**
  * A matching as a paper sets it, where a line joins each statement to its answer: drag a statement's dot to an

@@ -1,5 +1,4 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { cva } from "class-variance-authority";
 import { cn } from "cn";
 
 type ButtonVariantOptions = NonNullable<Parameters<typeof buttonVariants>[0]>;
@@ -18,6 +17,3 @@ export const choiceFrame = (
     buttonVariants({ variant }),
     "h-auto min-w-0 items-start text-base font-normal whitespace-normal ltr:text-left rtl:text-right"
   );
-
-/** The room of an option's circle: one line of its answer high, so the circle stands on that line's middle. */
-export const choiceMark = cva("flex h-lh shrink-0 items-center");

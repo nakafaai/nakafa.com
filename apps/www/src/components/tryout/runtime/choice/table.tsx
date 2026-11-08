@@ -4,6 +4,7 @@ import {
   Radio,
   RadioGroup,
 } from "@repo/design-system/components/ui/radio-group";
+import { lineMark } from "@repo/design-system/lib/mark";
 import {
   tableCellVariants,
   tableFrameVariants,
@@ -60,9 +61,6 @@ const choiceCell = cva(rowCell("flex items-start justify-center"), {
   },
   defaultVariants: { tone: "open" },
 });
-
-/** The room of a cell's radio: one line of the statement high. */
-const choiceRoom = cva("flex h-lh items-center");
 
 /**
  * A true or false question as a printed exam sets it: one table, a row for each numbered statement and a
@@ -175,7 +173,7 @@ function ChoiceTableRow({
           className={choiceCell({ tone: toneOf(statement, column.id) })}
           key={column.id}
         >
-          <span className={choiceRoom()}>
+          <span className={lineMark()}>
             <Radio
               aria-labelledby={`${table.headerId}-${column.id}`}
               disabled={table.locked}

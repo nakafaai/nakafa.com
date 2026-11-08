@@ -4,11 +4,9 @@ import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import type { buttonVariants } from "@repo/design-system/lib/button";
+import { lineMark } from "@repo/design-system/lib/mark";
 import type { ReactNode } from "react";
-import {
-  choiceFrame,
-  choiceMark,
-} from "@/components/tryout/runtime/choice/frame";
+import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
 import {
   getTryoutPreviewChoiceVariant,
@@ -39,7 +37,7 @@ export function TryoutSelectableRadioOption({
     <TryoutChoiceFrame
       variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
-      <span className={choiceMark()}>
+      <span className={lineMark()}>
         <Radio
           aria-labelledby={`${id}-label`}
           disabled={disabled}
@@ -78,7 +76,7 @@ export function TryoutSelectableMultipleChoice({
     <TryoutChoiceFrame
       variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
-      <span className={choiceMark()}>
+      <span className={lineMark()}>
         <Checkbox
           aria-labelledby={`${id}-label`}
           checked={checked}
@@ -114,7 +112,7 @@ export function TryoutReviewedChoice({
     <TryoutChoiceFrame
       variant={getTryoutReviewedChoiceVariant({ checked, isCorrect })}
     >
-      <span className={choiceMark()}>
+      <span className={lineMark()}>
         <Checkbox
           aria-labelledby={`${id}-label`}
           checked={checked}

@@ -5,7 +5,6 @@ import {
 } from "@repo/design-system/components/editor/blocks";
 import {
   editorTask,
-  editorTaskBox,
   editorTaskWords,
 } from "@repo/design-system/components/editor/frame";
 import {
@@ -16,6 +15,7 @@ import { EditorPane } from "@repo/design-system/components/editor/pane";
 import { itemTokens } from "@repo/design-system/components/editor/plain";
 import { decodeReferences } from "@repo/design-system/components/editor/references";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
+import { lineMark } from "@repo/design-system/lib/mark";
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import { linkVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Match, String as Str } from "effect";
@@ -214,7 +214,7 @@ function ListItem({ item }: { item: Tokens.ListItem }) {
   return (
     <li data-checked={checked} data-type="taskItem" dir="auto">
       <div className={editorTask()}>
-        <span className={editorTaskBox()}>
+        <span className={lineMark()}>
           <Checkbox
             aria-labelledby={words}
             checked={checked}

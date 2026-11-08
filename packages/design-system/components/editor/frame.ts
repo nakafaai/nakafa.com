@@ -104,8 +104,5 @@ export const editorDocument = cva(
  */
 export const editorTask = cva("flex items-start gap-2");
 
-/** The room of a task's check box: one line of the task's words high, so the box sits on the first line. */
-export const editorTaskBox = cva("flex h-lh shrink-0 items-center");
-
 /** The words of a task, which take the rest of the row. */
 export const editorTaskWords = cva("min-w-0 flex-1");

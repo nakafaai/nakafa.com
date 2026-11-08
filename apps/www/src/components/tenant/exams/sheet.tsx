@@ -2,6 +2,7 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { optionDirection } from "@repo/backend/confect/exams/letters";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
+import { lineMark } from "@repo/design-system/lib/mark";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Function as Fn, Option } from "effect";
@@ -10,10 +11,7 @@ import { useTranslations } from "use-intl";
 import { SittingField } from "@/components/exams/sitting/field";
 import { writtenOf } from "@/components/exams/sitting/response";
 import { OptionRemove } from "@/components/tenant/exams/option";
-import {
-  choiceFrame,
-  choiceMark,
-} from "@/components/tryout/runtime/choice/frame";
+import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 
 /**
@@ -102,7 +100,7 @@ export function PaperOption({
         "w-full cursor-text select-text"
       )}
     >
-      <span className={choiceMark()} inert>
+      <span className={lineMark()} inert>
         {multiple ? (
           <Checkbox letter={letter} />
         ) : (

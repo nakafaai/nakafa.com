@@ -8,6 +8,7 @@ import { articleProse } from "@repo/design-system/components/editor/prose";
 import { documentSizeGuard } from "@repo/design-system/components/editor/size";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { lineMark } from "@repo/design-system/lib/mark";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
@@ -286,7 +287,7 @@ export function OptionRemove() {
   }
 
   return (
-    <span className="absolute end-0 top-0 flex h-lh items-center">
+    <span className={lineMark({ place: "end" })}>
       <Button
         aria-label={control.name}
         className="opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
