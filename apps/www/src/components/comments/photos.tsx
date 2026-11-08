@@ -1,13 +1,16 @@
+import { CommentPhotoView } from "@repo/backend/confect/comments/photo";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Result } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useRowComment } from "@/components/comments/scope";
-import type { RowComment } from "@/components/comments/state";
 
 /** One photo of a comment that the list shows: its file is stored, so it has an address to open. */
-type Photo = RowComment["photos"][number] & { readonly address: string };
+const ShownPhoto = Schema.Struct({
+  ...CommentPhotoView.fields,
+  address: Schema.String,
+});
 
 /** The photos of a comment: one at its own shape, and several in equal squares, as a chat's album. */
 const photoGrid = cva("grid w-full max-w-sm gap-1 py-1", {
@@ -21,11 +24,7 @@ const photoGrid = cva("grid w-full max-w-sm gap-1 py-1", {
 export function CommentPhotos() {
   const comment = useRowComment();
   // A photo whose file is gone has no address, so it has nothing to show or to open.
-  const shown = Arr.filterMap(comment.photos, (photo) =>
-    photo.address === null
-      ? Result.failVoid
-      : Result.succeed({ ...photo, address: photo.address })
-  );
+  const shown = Arr.filter(comment.photos, Schema.is(ShownPhoto));
   if (Arr.isReadonlyArrayEmpty(shown)) {
     return null;
   }
@@ -52,7 +51,7 @@ function CommentPhoto({
   single,
 }: {
   index: number;
-  photo: Photo;
+  photo: typeof ShownPhoto.Type;
   single: boolean;
 }) {
   const t = useTranslations("Comments");
