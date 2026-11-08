@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   createAcceptanceInvite,
@@ -36,12 +37,9 @@ type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
 const SLUG = "acc-1a2b3c4d";
 const ADDRESS = "learner-1a2b3c4d@acceptance.example.test";
-const APP_USERS =
-  '[{"_id":"app-user-0","authId":"someone-else"},{"_id":"app-user-1","authId":"user-1"}]';
+/** What `tenancy/seed:user` prints for the new account: the id of its app user. */
+const APP_USER = '"app-user-1"';
 const INVITED = '{"invite":"invite-1","person":"person-1"}';
-/** An account's reply notice, which names no Person, stands before the invited Person's row. */
-const INBOX_ROWS =
-  '[{"commentId":"comment-1"},{"recipientPersonId":"person-1"}]';
 const CreatedAccount = Schema.fromJsonString(
   Schema.Struct({
     input: Schema.Struct({
@@ -62,17 +60,12 @@ const InviteArgs = Schema.fromJsonString(
 );
 
 /** The text one Convex command prints, as the local backend answers it. */
-function answerOf(
-  args: readonly string[],
-  users: string,
-  rows: string,
-  account: string
-) {
+function answerOf(args: readonly string[], holds: string, account: string) {
   if (Arr.contains(args, "adapter:findOne")) {
     return account;
   }
-  if (Arr.contains(args, "data")) {
-    return Arr.contains(args, "notifications") ? rows : users;
+  if (Arr.contains(args, "tenancy/seed:invitation")) {
+    return holds;
   }
   if (Arr.contains(args, "tenancy/provision:invite")) {
     return INVITED;
@@ -86,21 +79,28 @@ function answerOf(
   return '{"_creationTime":1,"_id":"user-1"}';
 }
 
-/** Answers every command and keeps the commands in the order they ran. The new account's Better Auth user is `user-1`. */
+/**
+ * Answers every command and keeps the commands in the order they ran. The new account's Better
+ * Auth user is `user-1`; `appUser` is what the seed of its app user prints, and `null` fails it
+ * as the seed fails for an account without one. `holds` is what the read of the inbox row prints.
+ */
 function answerCommands(
-  users: string,
-  rows: string = INBOX_ROWS,
+  appUser: string | null = APP_USER,
+  holds = "true",
   account = "null"
 ) {
   const specs = MutableList.make<CommandSpec>();
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
       MutableList.append(specs, spec);
+      const answer = Arr.contains(spec.args, "tenancy/seed:user")
+        ? appUser
+        : answerOf(spec.args, holds, account);
+      if (answer === null) {
+        return yield* acceptanceRuntimeError("The account has no app user.");
+      }
       const fs = yield* FileSystem.FileSystem;
-      yield* fs.writeFileString(
-        spec.stdoutPath,
-        answerOf(spec.args, users, rows, account)
-      );
+      yield* fs.writeFileString(spec.stdoutPath, answer);
     })
   );
   return specs;
@@ -129,7 +129,7 @@ describe("acceptance invite", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        const specs = answerCommands(APP_USERS);
+        const specs = answerCommands();
 
         yield* createAcceptanceInvite(
           root,
@@ -181,7 +181,7 @@ describe("acceptance invite", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        const specs = answerCommands(APP_USERS, INBOX_ROWS, '{"_id":"user-1"}');
+        const specs = answerCommands(APP_USER, "true", '{"_id":"user-1"}');
         const SessionCreate = Schema.fromJsonString(
           Schema.Struct({
             input: Schema.Struct({
@@ -228,7 +228,7 @@ describe("acceptance invite", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        const specs = answerCommands("[]");
+        const specs = answerCommands(null);
 
         const exit = yield* Effect.exit(
           createAcceptanceInvite(root, SLUG, ADDRESS, `${root}/invite.json`)
@@ -261,12 +261,34 @@ describe("acceptance invite", () => {
     }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
-  it.live("fails when no inbox row belongs to the invited person in time", () =>
+  it.live(
+    "reads the one inbox row of the invite and its Person until it stands",
+    () =>
+      Effect.gen(function* () {
+        const asked = MutableList.make<string>();
+        // The row stands from the third read on.
+        yield* waitForInboxRow(
+          (_operation, args) =>
+            Effect.sync(() => {
+              MutableList.append(asked, Option.getOrThrow(Arr.last(args)));
+              return asked.length < 3 ? "false" : "true";
+            }),
+          { invite: "invite-1", person: "person-1" },
+          Duration.seconds(5)
+        );
+
+        expect(MutableList.toArray(asked)).toEqual(
+          Arr.replicate('{"invite":"invite-1","person":"person-1"}', 3)
+        );
+      })
+  );
+
+  it.live("fails when the inbox does not hold the row in time", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
         waitForInboxRow(
-          () => Effect.succeed("[]"),
-          "person-1",
+          () => Effect.succeed("false"),
+          { invite: "invite-1", person: "person-1" },
           Duration.millis(1)
         )
       );
@@ -280,7 +302,7 @@ describe("acceptance invite", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        answerCommands(APP_USERS);
+        answerCommands();
 
         yield* inviteMode.run(root, [SLUG, ADDRESS, `${root}/mode.json`]);
 
@@ -296,8 +318,8 @@ describe("acceptance invite", () => {
     () =>
       Effect.gen(function* () {
         const { fs, root } = yield* fixture;
-        // No inbox row ever holds the person, so a wait for one would run out its 30 seconds.
-        const specs = answerCommands(APP_USERS, "[]");
+        // The inbox never holds the row, so a wait for it would run out its 30 seconds.
+        const specs = answerCommands(APP_USER, "false");
 
         yield* inviteMode.run(root, [
           SLUG,
@@ -328,7 +350,9 @@ describe("acceptance invite", () => {
           )
         ).toEqual({ email: ADDRESS, slug: SLUG });
         expect(
-          Arr.some(calls, (spec) => Arr.contains(spec.args, "notifications"))
+          Arr.some(calls, (spec) =>
+            Arr.contains(spec.args, "tenancy/seed:invitation")
+          )
         ).toBe(false);
         const cookie = yield* fs
           .readFileString(`${root}/expired.json`)
@@ -342,7 +366,7 @@ describe("acceptance invite", () => {
     () =>
       Effect.gen(function* () {
         const { root } = yield* fixture;
-        const specs = answerCommands(APP_USERS);
+        const specs = answerCommands();
 
         expect(
           yield* inviteMode
@@ -358,7 +382,7 @@ describe("acceptance invite", () => {
     () =>
       Effect.gen(function* () {
         const { root } = yield* fixture;
-        const specs = answerCommands(APP_USERS);
+        const specs = answerCommands();
 
         expect(
           yield* inviteMode.run(root, [SLUG, ADDRESS]).pipe(Effect.flip)

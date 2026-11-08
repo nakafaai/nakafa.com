@@ -10,9 +10,7 @@ import {
 } from "@/components/notifications/settings";
 import { LoadFailure } from "@/components/state/failure";
 import { useTenant } from "@/components/tenant/context";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/inbox/preferences";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The School inbox's preferences: each kind of notice this member gets, with a switch for each channel. */
 export function SchoolPreferences() {
@@ -43,7 +41,7 @@ function SchoolChoices() {
       value={
         isRead
           ? (channel, kind, on) =>
-              saveSchool(() => set({ channel, kind, on, slug }), SOURCE)
+              runSchoolWrite(schoolCall(() => set({ channel, kind, on, slug })))
           : null
       }
     >

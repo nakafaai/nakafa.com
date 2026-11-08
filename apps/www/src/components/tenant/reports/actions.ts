@@ -4,9 +4,7 @@ import records from "@repo/backend/confect/_generated/refs/records";
 import { useTransition } from "react";
 import { useTenant } from "@/components/tenant/context";
 import { stateChange } from "@/components/tenant/reports/change";
-import { saveSchool } from "@/components/tenant/settings/save";
-
-const SOURCE = "components/tenant/reports/actions";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * Hands a report in, takes it back, or approves it, each shown at once on the list and
@@ -28,15 +26,15 @@ export function useReportActions() {
   return {
     approve: (reportId: Id<"reportCards">) =>
       startTransition(() =>
-        saveSchool(() => approve({ reportId, slug }), SOURCE)
+        runSchoolWrite(schoolCall(() => approve({ reportId, slug })))
       ),
     complete: (reportId: Id<"reportCards">) =>
       startTransition(() =>
-        saveSchool(() => complete({ reportId, slug }), SOURCE)
+        runSchoolWrite(schoolCall(() => complete({ reportId, slug })))
       ),
     reopen: (reportId: Id<"reportCards">) =>
       startTransition(() =>
-        saveSchool(() => reopen({ reportId, slug }), SOURCE)
+        runSchoolWrite(schoolCall(() => reopen({ reportId, slug })))
       ),
   };
 }

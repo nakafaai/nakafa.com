@@ -7,6 +7,7 @@ import {
 } from "@/e2e/support/layout";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForQuiet } from "@/e2e/support/quiet";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 /** The English Nakafa landing and the English School landing, as the address bar reads them. */
@@ -82,8 +83,8 @@ const readWatch = Effect.fn("NakafaE2E.readSteadyWatch")(function* (
   ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Watch)));
 });
 
-/** Waits for the page to settle, so its late work (sections, Nina, particles) has had its chance to move anything. */
-const settle = (page: Page) => Effect.promise(() => page.waitForTimeout(2500));
+/** Waits for the page to go quiet, so its late work (sections, Nina, particles) has had its chance to move anything. */
+const settle = (page: Page) => Effect.promise(() => waitForQuiet(page));
 
 /**
  * Expects the current document to have drawn no blank frame and moved nothing.
