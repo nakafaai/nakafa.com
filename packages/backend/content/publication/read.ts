@@ -76,3 +76,29 @@ export const readActiveIdentity = Effect.fn(
     )
   )
 );
+
+/**
+ * The signed release document and renderer manifest of the active release, which
+ * every public body of the release is verified against. A reader takes them once
+ * per release instead of once per body.
+ */
+export const readActiveFrame = Effect.fn("contentRelease.readActiveFrame")(
+  function* () {
+    const active = yield* loadActiveIdentity();
+    if (!active) {
+      return null;
+    }
+    if (active.releaseId !== active.signed.manifest.releaseId) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "The active release identity is invalid."
+      );
+    }
+    return {
+      activeManifestHash: active.manifestHash,
+      activeReleaseId: active.releaseId,
+      releaseJson: active.release.releaseJson,
+      rendererJson: active.release.rendererJson,
+    };
+  }
+);

@@ -1,11 +1,10 @@
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { materialLayer } from "@repo/backend/content/material/confect";
@@ -16,6 +15,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { composeTestDelivery } from "@repo/backend/test/content/delivery";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
@@ -25,10 +25,6 @@ import { Array as Arr, Effect, Layer, Schema } from "effect";
 // Strict decoding rejects undeclared keys instead of stripping them.
 const decodeProjection = Schema.decodeUnknownSync(
   Schema.fromJsonString(MaterialLessonProjectionSchema),
-  { onExcessProperty: "error" }
-);
-const decodeFoundRuntime = Schema.decodeUnknownSync(
-  Schema.fromJsonString(PublicContentRuntimeFoundSchema),
   { onExcessProperty: "error" }
 );
 
@@ -57,27 +53,59 @@ const readModel = (
   );
 
 describe("contentRelease/material/model", () => {
-  it("delivers coherent lesson metadata and its signed public body", async () => {
-    const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
-    const projection = makeMaterialProjection("en", 1);
-    const result = await target.query(api.contentRelease.material.lesson, {
-      appLocale: projection.appLocale,
-      publicPath: projection.publicPath,
-    });
-    const runtime = decodeFoundRuntime(result.runtimeJson ?? "");
-    expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
-    expect(runtime.projection).toEqual(
-      decodeProjection(result.model.projectionJson ?? "")
-    );
-    expect(runtime.delivery).toBe("public");
-    const missing = await target.query(api.contentRelease.material.lesson, {
-      appLocale: "en",
-      publicPath: "materials/missing",
-    });
-    expect(missing.model.projectionJson).toBeNull();
-    expect(missing.runtimeJson).toBeNull();
-  });
+  it.effect(
+    "delivers coherent lesson metadata and the head of its signed public body",
+    () =>
+      Effect.gen(function* () {
+        const target = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)))
+        );
+        const projection = makeMaterialProjection("en", 1);
+        const result = yield* Effect.promise(() =>
+          target.query(api.contentRelease.material.lesson, {
+            appLocale: projection.appLocale,
+            publicPath: projection.publicPath,
+          })
+        );
+        assert(
+          result.delivery && result.model.projectionJson,
+          "Expected the lesson's public head."
+        );
+        const head = result.delivery;
+        const frame = yield* Effect.promise(() =>
+          target.query(api.contentRelease.runtime.active.frame, {})
+        );
+        const artifact = yield* Effect.promise(() =>
+          target.query(api.contentRelease.runtime.active.artifact, {
+            appLocale: projection.appLocale,
+            artifactHash: head.artifactHash,
+            family: "material",
+            publicPath: projection.publicPath,
+          })
+        );
+        assert(frame && artifact, "Expected the frame and the artifact.");
+        const runtime = yield* composeTestDelivery(
+          frame,
+          head,
+          artifact.artifactJson,
+          result.model.projectionJson
+        );
+        expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
+        expect(runtime.artifact.artifactHash).toBe(head.artifactHash);
+        expect(runtime.projection).toEqual(
+          decodeProjection(result.model.projectionJson)
+        );
+        const missing = yield* Effect.promise(() =>
+          target.query(api.contentRelease.material.lesson, {
+            appLocale: "en",
+            publicPath: "materials/missing",
+          })
+        );
+        expect(missing.model.projectionJson).toBeNull();
+        expect(missing.delivery).toBeNull();
+      })
+  );
   it("fails closed before signed material publication", async () => {
     const target = convexTest(schema, convexModules);
     await expect(

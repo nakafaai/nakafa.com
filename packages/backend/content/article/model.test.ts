@@ -8,7 +8,6 @@ import {
   ArticleProjectionSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationCtx,
@@ -17,6 +16,7 @@ import {
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import { readArticleModel } from "@repo/backend/content/article/model";
+import { composeTestDelivery } from "@repo/backend/test/content/delivery";
 import {
   insertRuntimeArticles,
   testArticleProjection,
@@ -97,15 +97,39 @@ describe("contentRelease/article/model", () => {
                 publicPath: localizedArticle(0).publicPath,
               }
             );
-            const runtime = yield* Schema.decodeEffect(
-              Schema.fromJsonString(PublicContentRuntimeFoundSchema)
-            )(result.runtimeJson ?? "", { onExcessProperty: "error" });
+            assert(
+              result.delivery && result.model.projectionJson,
+              "Expected the article's public head."
+            );
+            const runQuery = (yield* QueryRunner).runQuery;
+            const frame = yield* runQuery(
+              refs.public.contentRelease.runtime.active.frame,
+              {}
+            );
+            const artifact = yield* runQuery(
+              refs.public.contentRelease.runtime.active.artifact,
+              {
+                appLocale: "en",
+                artifactHash: result.delivery.artifactHash,
+                family: "article",
+                publicPath: localizedArticle(0).publicPath,
+              }
+            );
+            assert(frame && artifact, "Expected the frame and the artifact.");
+            const runtime = yield* composeTestDelivery(
+              frame,
+              result.delivery,
+              artifact.artifactJson,
+              result.model.projectionJson
+            );
             expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
+            expect(runtime.artifact.artifactHash).toBe(
+              result.delivery.artifactHash
+            );
             const projection = yield* Schema.decodeEffect(
               Schema.fromJsonString(ArticleProjectionSchema)
-            )(result.model.projectionJson ?? "", { onExcessProperty: "error" });
+            )(result.model.projectionJson, { onExcessProperty: "error" });
             expect(runtime.projection).toEqual(projection);
-            expect(runtime.delivery).toBe("public");
             const missing = yield* (yield* QueryRunner).runQuery(
               refs.public.contentRelease.article.delivery,
               {
@@ -114,7 +138,7 @@ describe("contentRelease/article/model", () => {
               }
             );
             expect(missing.model.projectionJson).toBeNull();
-            expect(missing.runtimeJson).toBeNull();
+            expect(missing.delivery).toBeNull();
           })
         );
       })

@@ -4,8 +4,7 @@ import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelea
 import { resolveArticleRoute } from "@repo/backend/content/article/route";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
-import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
-import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
+import { readSelectedPublicHead } from "@repo/backend/content/publication/public";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { Array as Arr, Effect, Option } from "effect";
 
@@ -102,7 +101,10 @@ export const readArticleModel = Effect.fn("contentRelease.readArticleModel")(
   }
 );
 
-/** Reads the article shell and signed body in one Convex snapshot. */
+/**
+ * Reads the article shell and the head of its signed body in one Convex
+ * snapshot; the reader takes the artifact by the hash the head names, once.
+ */
 export const readArticleDelivery = Effect.fn(
   "contentRelease.readArticleDelivery"
 )(function* (
@@ -111,10 +113,15 @@ export const readArticleDelivery = Effect.fn(
 ) {
   const route = yield* resolveArticleRoute(appLocale, publicPath);
   const model = yield* assembleArticleModel(appLocale, route);
-  const runtime = yield* readSelectedPublicRuntime(route);
-  const runtimeJson = yield* encodePublicDelivery(runtime, model);
+  const delivery = yield* readSelectedPublicHead(route);
+  if ((model.projectionJson === null) !== (delivery === null)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "The public body and route model do not share one publication."
+    );
+  }
   return {
+    delivery,
     model,
-    runtimeJson,
   };
 });

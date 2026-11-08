@@ -100,13 +100,20 @@ vi.mock("@/lib/content/published/article", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/content/published/article")>()),
   renderArticleArtifact: renderMock,
 }));
+/** The head of the signed body that the lesson's query names. */
+const signedHead = {
+  artifactHash: `sha256:${"a".repeat(64)}`,
+  projectionHash: `sha256:${"b".repeat(64)}`,
+  sourcePath: "content/source.mdx",
+};
+
 beforeEach(() => {
   resetTestRuntimeCache();
   activateTestRelease(activeReleaseId);
   queryMock.mockReset().mockReturnValue(
     Effect.succeed({
       model,
-      runtimeJson: "signed-envelope",
+      delivery: signedHead,
     })
   );
   deliveryMock.mockReset().mockReturnValue(Effect.succeed(data));
@@ -138,10 +145,13 @@ describe("coherent article publication", () => {
         });
         expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
           {
+            activeReleaseId: model.activeReleaseId,
             appLocale: "en",
+            family: "article",
             publicPath: projection.publicPath,
           },
-          "signed-envelope"
+          signedHead,
+          model.projectionJson
         );
         expect(renderMock).toHaveBeenCalledOnce();
       })
@@ -155,7 +165,7 @@ describe("coherent article publication", () => {
             alternateJson: [],
             projectionJson: null,
           },
-          runtimeJson: null,
+          delivery: null,
         })
       );
       expect(
@@ -179,7 +189,7 @@ describe("coherent article publication", () => {
                     projectionJson: null,
                   }
                 : model,
-            runtimeJson: kind === "missing-body" ? null : "signed-envelope",
+            delivery: kind === "missing-body" ? null : signedHead,
           })
         );
         expect(
@@ -253,7 +263,7 @@ describe("verified article metadata", () => {
             alternateJson: [],
             projectionJson: null,
           },
-          runtimeJson: null,
+          delivery: null,
         })
       );
       expect(

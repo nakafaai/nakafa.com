@@ -50,7 +50,7 @@ const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
         ...source.model,
         siblingJson: Option.getOrUndefined(navigation)?.siblingJson ?? [],
       },
-      runtimeJson: source.runtimeJson,
+      delivery: source.delivery,
     };
   }
 );
