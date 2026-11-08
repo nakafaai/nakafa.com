@@ -11,7 +11,15 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  Fragment,
+  type ReactNode,
+  use,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "use-intl";
 import {
   holdsLabel,
@@ -41,6 +49,16 @@ const OPTION_EXTENSIONS = [
   documentSizeGuard(MAX_DOCUMENT_BYTES, refusePaste),
 ];
 
+/**
+ * The remove control of the option row around it, which the row's text draws at the end of its first line, or none
+ * for a part that stays. It holds a function, which no Schema describes as data.
+ */
+const OptionRemoveContext = createContext<{
+  readonly locked: boolean;
+  readonly name: string;
+  readonly remove: () => void;
+} | null>(null);
+
 /** The props of one option row: the option it shows, and the teacher's controls beside it. */
 interface OptionRowProps {
   /**
@@ -68,9 +86,9 @@ interface OptionRowProps {
 /**
  * One option of a question: the letter and the rich text the caller composes, framed as the player
  * frames it, as wide as the student reads it, with the teacher's remove control over its end. The row wires the text it holds. The key of the question is marked in the teacher's layer,
- * not here. Every answer type removes a part with this one control: at the row's end, centered on the row however
- * tall its text grows, 32 pixels square, shown when the part may go, on hover or focus, and always on a touch
- * screen. The row is at least as tall as the control, so a pointer finds it anywhere along the row. The text saves after its quiet period once the teacher types in it. A change that edits no
+ * not here. Every answer type removes a part with this one control, which the text draws (`OptionRemove`): at the
+ * end of the text's first line, on the same line as the part's letter, its circle and its dot however tall the text
+ * grows, 32 pixels square, shown when the part may go, on hover or focus, and always on a touch screen. The text saves after its quiet period once the teacher types in it. A change that edits no
  * text, such as the editor taking its lock, saves nothing. Removing the option drops the pending save
  * of its text. A label the server refused goes back into the editor, unless the teacher has typed on since. A
  * save the server never answered keeps the teacher's words in the editor, with a retry under them, since the
@@ -211,7 +229,7 @@ export function OptionRow({
   }, [saver]);
 
   return (
-    <div className="group/option relative flex min-h-8 flex-col justify-center pointer-coarse:has-[[data-remove]]:[--option-end:--spacing(8)]">
+    <div className="group/option flex flex-col pointer-coarse:has-[[data-remove]]:[--option-end:--spacing(8)]">
       <ExamDocumentWiringProvider
         content={Node.fromJSON(assessmentSchema, label).toJSON()}
         extensions={OPTION_EXTENSIONS}
@@ -234,22 +252,14 @@ export function OptionRow({
           next.setEditable(!locked, false);
         }}
       >
-        <Fragment key={editorRound}>{children}</Fragment>
-      </ExamDocumentWiringProvider>
-      {onRemove === null ? null : (
-        <Button
-          aria-label={removeName}
-          className="absolute end-1 top-1/2 -translate-y-1/2 opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
-          data-remove=""
-          disabled={locked}
-          onClick={remove}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
+        <OptionRemoveContext
+          value={
+            onRemove === null ? null : { locked, name: removeName, remove }
+          }
         >
-          <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-        </Button>
-      )}
+          <Fragment key={editorRound}>{children}</Fragment>
+        </OptionRemoveContext>
+      </ExamDocumentWiringProvider>
       {unsaved ? (
         <div
           className="flex items-center justify-between gap-2 pt-1"
@@ -262,5 +272,33 @@ export function OptionRow({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The remove control of the option row around it, at the end of the first line of the text that draws it, so the
+ * control stands on one line with the part's letter, circle and dot. Nothing outside a row whose part may go.
+ */
+export function OptionRemove() {
+  const control = use(OptionRemoveContext);
+  if (control === null) {
+    return null;
+  }
+
+  return (
+    <span className="absolute end-0 top-0 flex h-lh items-center">
+      <Button
+        aria-label={control.name}
+        className="opacity-0 group-focus-within/option:opacity-100 group-hover/option:opacity-100 pointer-coarse:opacity-100"
+        data-remove=""
+        disabled={control.locked}
+        onClick={control.remove}
+        size="icon-sm"
+        type="button"
+        variant="ghost"
+      >
+        <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+      </Button>
+    </span>
   );
 }

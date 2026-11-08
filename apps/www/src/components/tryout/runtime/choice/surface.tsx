@@ -5,7 +5,10 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import type { buttonVariants } from "@repo/design-system/lib/button";
 import type { ReactNode } from "react";
-import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
+import {
+  choiceFrame,
+  choiceMark,
+} from "@/components/tryout/runtime/choice/frame";
 import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
 import {
   getTryoutPreviewChoiceVariant,
@@ -36,12 +39,14 @@ export function TryoutSelectableRadioOption({
     <TryoutChoiceFrame
       variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
-      <Radio
-        aria-labelledby={`${id}-label`}
-        disabled={disabled}
-        letter={letter}
-        value={value}
-      />
+      <span className={choiceMark()}>
+        <Radio
+          aria-labelledby={`${id}-label`}
+          disabled={disabled}
+          letter={letter}
+          value={value}
+        />
+      </span>
       <ChoiceAnswer id={id} letter={letter}>
         {children}
       </ChoiceAnswer>
@@ -73,13 +78,15 @@ export function TryoutSelectableMultipleChoice({
     <TryoutChoiceFrame
       variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
-      <Checkbox
-        aria-labelledby={`${id}-label`}
-        checked={checked}
-        disabled={disabled}
-        letter={letter}
-        onCheckedChange={onCheckedChange}
-      />
+      <span className={choiceMark()}>
+        <Checkbox
+          aria-labelledby={`${id}-label`}
+          checked={checked}
+          disabled={disabled}
+          letter={letter}
+          onCheckedChange={onCheckedChange}
+        />
+      </span>
       <ChoiceAnswer id={id} letter={letter}>
         {children}
       </ChoiceAnswer>
@@ -107,12 +114,14 @@ export function TryoutReviewedChoice({
     <TryoutChoiceFrame
       variant={getTryoutReviewedChoiceVariant({ checked, isCorrect })}
     >
-      <Checkbox
-        aria-labelledby={`${id}-label`}
-        checked={checked}
-        disabled
-        letter={letter}
-      />
+      <span className={choiceMark()}>
+        <Checkbox
+          aria-labelledby={`${id}-label`}
+          checked={checked}
+          disabled
+          letter={letter}
+        />
+      </span>
       <ChoiceAnswer id={id} letter={letter}>
         {children}
       </ChoiceAnswer>
@@ -122,7 +131,7 @@ export function TryoutReviewedChoice({
 
 type ButtonVariantOptions = NonNullable<Parameters<typeof buttonVariants>[0]>;
 
-/** Owns the shared visual composition for every explicit choice variant: its control, then its label. */
+/** Owns the shared visual composition for every explicit choice variant: its control on its first line, then its label. */
 function TryoutChoiceFrame({
   children,
   variant,

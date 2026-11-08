@@ -11,6 +11,7 @@ import {
   tableRowVariants,
 } from "@repo/design-system/lib/prose";
 import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { createContext, type ReactNode, use, useId } from "react";
 import { useTranslations } from "use-intl";
@@ -38,22 +39,30 @@ const ChoiceTableContext = createContext<{
 } | null>(null);
 
 /**
- * How one choice's cell reads: open, the key's column once answers show, or the learner's mark that misses it.
- * It is the lesson's table cell, at least 3rem tall so the radio in it is easy to press.
+ * A cell of a statement's row: the lesson's table cell, its parts from the top, padded so a row of one line stands
+ * 3rem tall and its radios are easy to press. The number, the statement's first line and every radio share that
+ * line however many lines the statement wraps to.
  */
-const choiceCell = cva(
-  tableCellVariants({ className: "flex min-h-12 items-center justify-center" }),
-  {
-    variants: {
-      tone: {
-        correct: "bg-success/10",
-        open: "",
-        wrong: "bg-destructive/10",
-      },
+const rowCell = (className: string) =>
+  cn(tableCellVariants(), "content-start py-3.5", className);
+
+/**
+ * How one choice's cell reads: open, the key's column once answers show, or the learner's mark that misses it.
+ * Its radio stands in a box one line high, so it sits on the middle of the statement's first line.
+ */
+const choiceCell = cva(rowCell("flex items-start justify-center"), {
+  variants: {
+    tone: {
+      correct: "bg-success/10",
+      open: "",
+      wrong: "bg-destructive/10",
     },
-    defaultVariants: { tone: "open" },
-  }
-);
+  },
+  defaultVariants: { tone: "open" },
+});
+
+/** The room of a cell's radio: one line of the statement high. */
+const choiceRoom = cva("flex h-lh items-center");
 
 /**
  * A true or false question as a printed exam sets it: one table, a row for each numbered statement and a
@@ -157,17 +166,8 @@ function ChoiceTableRow({
       onValueChange={(column) => table.onMark?.(statement.id, column)}
       value={statement.marked ?? ""}
     >
-      <span
-        className={tableCellVariants({
-          className: "content-center font-medium tabular-nums",
-        })}
-      >
-        {number}.
-      </span>
-      <div
-        className={tableCellVariants({ className: "min-w-0 content-center" })}
-        id={labelId}
-      >
+      <span className={rowCell("font-medium tabular-nums")}>{number}.</span>
+      <div className={rowCell("min-w-0")} id={labelId}>
         {statement.label}
       </div>
       {Arr.map(table.columns, (column) => (
@@ -175,11 +175,13 @@ function ChoiceTableRow({
           className={choiceCell({ tone: toneOf(statement, column.id) })}
           key={column.id}
         >
-          <Radio
-            aria-labelledby={`${table.headerId}-${column.id}`}
-            disabled={table.locked}
-            value={column.id}
-          />
+          <span className={choiceRoom()}>
+            <Radio
+              aria-labelledby={`${table.headerId}-${column.id}`}
+              disabled={table.locked}
+              value={column.id}
+            />
+          </span>
           {statement.correct === column.id ? (
             <span className="sr-only">{t("correct")}</span>
           ) : null}

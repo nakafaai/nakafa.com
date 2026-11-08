@@ -44,15 +44,22 @@ const linesColumn = cva(
   }
 );
 
-/** One part's row, ringed while it is in hand or under a pull. */
+/**
+ * One part's row, ringed while it is in hand or under a pull. Its parts stand from the top, so its number or letter
+ * shares the first line's baseline and its dot that line's middle however many lines the text wraps to, and its
+ * padding is the same above and below a line.
+ */
 const linesItem = cva(
-  "relative flex min-h-10 min-w-0 items-center gap-2 rounded-lg px-2 py-1",
+  "relative flex min-w-0 items-start gap-2 rounded-lg px-2 py-2",
   {
     variants: {
       marked: { false: "", true: "ring-primary ring-2" },
     },
   }
 );
+
+/** The room of a part's dot: one line of its text high, so the dot stands on that line's middle. */
+const lineMark = cva("flex h-lh shrink-0 items-center");
 
 /**
  * A matching as a paper sets it, where a line joins each statement to its answer: drag a statement's dot to an
@@ -216,10 +223,20 @@ export function LinesItem({
       className={linesItem({ marked })}
       data-line-target={side === "targets" ? id : undefined}
     >
-      {side === "targets" ? <LineDot id={id} name={name} side={side} /> : null}
-      <span className="shrink-0 font-medium tabular-nums">{name}.</span>
+      {side === "targets" ? (
+        <span className={lineMark()}>
+          <LineDot id={id} name={name} side={side} />
+        </span>
+      ) : null}
+      <span className="min-w-5 shrink-0 text-end font-medium tabular-nums">
+        {name}.
+      </span>
       <div className="min-w-0 flex-1">{children}</div>
-      {side === "sources" ? <LineDot id={id} name={name} side={side} /> : null}
+      {side === "sources" ? (
+        <span className={lineMark()}>
+          <LineDot id={id} name={name} side={side} />
+        </span>
+      ) : null}
     </li>
   );
 }

@@ -9,7 +9,11 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { SittingField } from "@/components/exams/sitting/field";
 import { writtenOf } from "@/components/exams/sitting/response";
-import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
+import { OptionRemove } from "@/components/tenant/exams/option";
+import {
+  choiceFrame,
+  choiceMark,
+} from "@/components/tryout/runtime/choice/frame";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 
 /**
@@ -98,7 +102,7 @@ export function PaperOption({
         "w-full cursor-text select-text"
       )}
     >
-      <span className="contents" inert>
+      <span className={choiceMark()} inert>
         {multiple ? (
           <Checkbox letter={letter} />
         ) : (
@@ -110,9 +114,17 @@ export function PaperOption({
   );
 }
 
-/** The text of an option or a statement. A touch screen shows the remove control at all times, so the text stops short of it. */
+/**
+ * The text of an option or a statement, with the remove control of its option row at the end of its first line. A
+ * touch screen shows the remove control at all times, so the text stops short of it.
+ */
 export function PaperPartText({ children }: { children: ReactNode }) {
-  return <div className="min-w-0 flex-1 pe-(--option-end)">{children}</div>;
+  return (
+    <div className="relative min-w-0 flex-1 pe-(--option-end)">
+      {children}
+      <OptionRemove />
+    </div>
+  );
 }
 
 /**
