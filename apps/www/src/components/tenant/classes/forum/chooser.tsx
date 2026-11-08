@@ -1,9 +1,10 @@
-import { SmileIcon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, SmileIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
   PopoverContent,
+  PopoverTitle,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { readChunk } from "@repo/design-system/lib/lazy";
@@ -16,8 +17,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 import type { EmojiEntry } from "@/components/tenant/classes/forum/emoji";
 import { EmojiPanel } from "@/components/tenant/classes/forum/panel";
+import { IconTip } from "@/components/tenant/classes/forum/tip";
 
 /** The emoji the chat ships, once a first intent loaded them. */
 type Glyphs = readonly (typeof EmojiEntry.Type)[];
@@ -34,9 +37,10 @@ const WarmContext = createContext<() => void>(() => undefined);
  * An emoji chooser in a popover, as the composer and a message's reactions open it, around the button its caller
  * composes (`EmojiTrigger`, with its tooltip): the emoji load on the first intent on the button, and the popover opens
  * only once they are in, so it never opens empty and never grows after it opened; a tap with no intent before it
- * opens it the moment they arrive. It opens on the search field for a mouse or the keys, so typing searches at once,
- * and on nothing for a touch, so a phone's keyboard stays down until asked. A pick closes it. `quick` stands above
- * the search, one press each.
+ * opens it the moment they arrive. It reads as header, body and footer: its title and the close in the header, `quick`
+ * (one press each), the search and the grid in the body, and the active emoji's name in the footer. It opens on the
+ * search field for a mouse or the keys, so typing searches at once, and on nothing for a touch, so a phone's keyboard
+ * stays down until asked. A pick closes it.
  */
 export function EmojiPopover({
   children,
@@ -51,6 +55,8 @@ export function EmojiPopover({
   quick?: readonly string[];
   side?: "bottom" | "top";
 }) {
+  const t = useTranslations("Classroom");
+  const common = useTranslations("Common");
   const [glyphs, setGlyphs] = useState<Option.Option<Glyphs>>(Option.none);
   const [open, setOpen] = useState(false);
   const popup = useRef<HTMLDivElement>(null);
@@ -87,7 +93,7 @@ export function EmojiPopover({
       <WarmContext value={warm}>{children}</WarmContext>
       <PopoverContent
         align="end"
-        className="w-80 max-w-[calc(100vw-2rem)] gap-0 p-0"
+        className="w-80 max-w-[calc(100vw-1rem)] gap-0 p-0"
         initialFocus={(type) =>
           type === "touch"
             ? false
@@ -96,15 +102,29 @@ export function EmojiPopover({
         ref={popup}
         side={side}
       >
+        <header className="flex items-center justify-between gap-2 border-b py-2 ps-3 pe-2">
+          <PopoverTitle className="text-sm">{t("emoji-title")}</PopoverTitle>
+          <IconTip label={common("close")}>
+            <Button
+              aria-label={common("close")}
+              onClick={() => setOpen(false)}
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <HugeIcons icon={Cancel01Icon} />
+            </Button>
+          </IconTip>
+        </header>
         {Arr.isReadonlyArrayEmpty(quick) ? null : (
-          <div className="grid grid-cols-6 gap-1 border-b p-2">
+          <div className="grid grid-cols-6 justify-items-center border-b p-2">
             {Arr.map(quick, (emoji) => (
               <Button
                 aria-label={emoji}
-                className="w-full text-lg"
+                className="text-lg"
                 key={emoji}
                 onClick={() => pick(emoji)}
-                size="icon-sm"
+                size="icon"
                 type="button"
                 variant="ghost"
               >

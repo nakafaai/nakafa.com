@@ -114,21 +114,17 @@ describe("class page path", () => {
     );
   });
 
-  it("ends a discussion with its title after a link to its channel", () => {
+  it("ends a discussion at its channel, which its pane names, as the channel's page does", () => {
     const view = {
       _tag: "discussion" as const,
       jump: Option.none(),
       number: 12,
     };
-    const path = classPath(view, root, channel, Option.some("#12 Gaya gesek"));
-    expect(Arr.map(path, (item) => item.label)).toEqual([
-      "Fisika X-1",
-      "Forum",
-      "Umum",
-      "#12 Gaya gesek",
-    ]);
-    expect(path[2]?.target).toEqual(
-      expect.objectContaining({ search: { channel: channelId } })
+    expect(
+      Arr.map(classPath(view, root, channel, none), (item) => item.label)
+    ).toEqual(["Fisika X-1", "Forum", "Umum"]);
+    expect(Arr.last(classPath(view, root, channel, none))).toEqual(
+      Option.some({ label: "Umum" })
     );
     expect(
       Arr.map(classPath(view, root, none, none), (item) => item.label)

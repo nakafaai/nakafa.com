@@ -19,6 +19,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { LoadFailure } from "@/components/state/failure";
 import { MESSAGE_PAGE_SIZE } from "@/components/tenant/classes/forum/channel";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
+import { isTitled } from "@/components/tenant/classes/forum/marks";
 import {
   type OpenedThread,
   ThreadReadyContext,
@@ -45,16 +46,18 @@ const threadSlot = cva("flex flex-col", {
 });
 
 /**
- * The label of a thread: its number and title, the title the server gave it, or the one it takes from its opening
- * message while that answer is on its way.
+ * The label of a thread's pane: a titled discussion's number and title, or Thread for a thread of a message, whose
+ * opening message right under the header already says what the title would repeat.
  */
 function useThreadLabel(thread: ShownThread) {
   const t = useTranslations("Classroom");
 
-  return t("discussion-label", {
-    number: thread.number,
-    title: thread.opening.discussion?.title ?? threadTitle(thread.opening),
-  });
+  return isTitled(thread.opening) && thread.opening.discussion !== null
+    ? t("discussion-label", {
+        number: thread.number,
+        title: thread.opening.discussion.title,
+      })
+    : t("thread-title");
 }
 
 /**

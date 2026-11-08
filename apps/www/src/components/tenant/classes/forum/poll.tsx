@@ -311,7 +311,6 @@ export function NewPoll({
                   })
                 )
               }
-              size="sm"
               type="button"
               variant="outline"
             >

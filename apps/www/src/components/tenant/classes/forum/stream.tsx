@@ -98,6 +98,9 @@ export function MessageStream({
   if (Option.isSome(head)) {
     setKept(Arr.append(kept, head.value));
   }
+  /** The day the message at `index` opens, which a divider shows above it. */
+  const dayAt = (index: number) =>
+    opensDay(messages, index, loadOlder !== undefined, opening, dayOf);
   // The divider marks where unread messages start, so it shows only once the message before it is
   // loaded, or when the place holds nothing older.
   const divided = Option.filter(
@@ -106,6 +109,17 @@ export function MessageStream({
       loadOlder === undefined ||
       Option.exists(Arr.head(messages), (first) => first.clientKey !== key)
   );
+
+  /**
+   * Whether the message at `index` opens a run, under its own header: a new day, the unread divider above it, or what
+   * `opensRun` says. The message before it then closes its run, with the author's face.
+   */
+  const opensAt = (index: number) =>
+    Option.isSome(dayAt(index)) ||
+    Option.exists(Arr.get(messages, index), (message) =>
+      Option.contains(divided, message.clientKey)
+    ) ||
+    opensRun(messages, index, kept);
 
   return (
     <TalliesProvider
@@ -134,17 +148,11 @@ export function MessageStream({
                       {dayOf(opening.value.createdAt)}
                     </MarkerContent>
                   </Marker>
-                  <ForumMessageRow message={opening.value} opens />
+                  <ForumMessageRow closes message={opening.value} opens />
                 </MessageScrollerItem>
               ) : null}
               {Arr.map(messages, (message, index) => {
-                const day = opensDay(
-                  messages,
-                  index,
-                  loadOlder !== undefined,
-                  opening,
-                  dayOf
-                );
+                const day = dayAt(index);
                 return (
                   // The client key stays the same from the send to the server's answer, so the row
                   // and anything open in it outlive the placeholder ID.
@@ -182,10 +190,11 @@ export function MessageStream({
                       </Marker>
                     ) : null}
                     <ForumMessageRow
-                      message={message}
-                      opens={
-                        Option.isSome(day) || opensRun(messages, index, kept)
+                      closes={
+                        index === messages.length - 1 || opensAt(index + 1)
                       }
+                      message={message}
+                      opens={opensAt(index)}
                     />
                   </MessageScrollerItem>
                 );

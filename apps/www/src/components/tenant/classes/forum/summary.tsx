@@ -77,7 +77,7 @@ export function ThreadSummary({
   return (
     <Item
       aria-current={open ? "true" : undefined}
-      className="aria-current:bg-muted w-fit max-w-full flex-nowrap group-data-[align=end]/message:self-end"
+      className="aria-current:bg-muted bg-background w-fit max-w-full flex-nowrap group-data-[align=end]/message:self-end"
       onClick={() =>
         keep({ channelId, number: discussion.number, opening: message })
       }
@@ -91,6 +91,7 @@ export function ThreadSummary({
         />
       }
       size="xs"
+      variant="outline"
     >
       {Arr.isReadonlyArrayNonEmpty(discussion.repliers) ? (
         <ItemMedia>

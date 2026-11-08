@@ -217,6 +217,7 @@ export function UploadTray({
               <AttachmentAction
                 aria-label={t("attach-remove", { name: file.name })}
                 onClick={() => onRemove(file)}
+                size="icon"
                 type="button"
               >
                 <HugeIcons icon={Cancel01Icon} />

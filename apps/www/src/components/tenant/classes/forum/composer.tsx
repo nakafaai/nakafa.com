@@ -197,7 +197,6 @@ export function ForumComposer() {
                 null
               )
             }
-            size="sm"
             type="button"
             variant="outline"
           >

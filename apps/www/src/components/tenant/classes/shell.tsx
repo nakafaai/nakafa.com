@@ -225,9 +225,9 @@ function useViewFolder(classId: Resolved["id"]) {
 
 /**
  * The resolved class: the path and the title that its header shows, given to the view, which
- * draws the header with its own actions, the tabs, and its body. The channel's name and the
- * discussion's number and title end the path, read from the same channel list and discussion the
- * forum shows. A discussion the class does not hold shows the missing state.
+ * draws the header with its own actions, the tabs, and its body. The channel's name ends the path of a
+ * channel and of its discussions, read from the same channel list the forum shows, since a discussion's
+ * pane names the discussion. A discussion the class does not hold shows the missing state.
  */
 function ResolvedClass({ klass }: { klass: Resolved }) {
   const view = useClassView();
@@ -283,16 +283,7 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
       id: channel.id,
       label: channelLabel(channel, t("general-channel")),
     })),
-    QueryResult.isSuccess(task)
-      ? Option.some(task.value.title)
-      : Option.orElse(folder.name, () =>
-          Option.map(found, (shown) =>
-            t("discussion-label", {
-              number: shown.discussion.number,
-              title: shown.discussion.title,
-            })
-          )
-        )
+    QueryResult.isSuccess(task) ? Option.some(task.value.title) : folder.name
   );
 
   return (

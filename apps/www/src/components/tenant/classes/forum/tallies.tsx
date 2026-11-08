@@ -18,7 +18,6 @@ import {
 import { QUICK_EMOJI } from "@/components/tenant/classes/forum/emoji";
 import { isPending } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
-import { messageActionVariants } from "@/components/tenant/classes/forum/reveal";
 import {
   useChannelScope,
   useReadPlace,
@@ -88,7 +87,7 @@ function useReact(messageId: ForumMessage["id"]) {
 }
 
 /** One emoji of a message and its count, on the secondary surface when the viewer gave it. */
-const reactionChip = cva("h-7 gap-1 rounded-full px-2 text-xs tabular-nums", {
+const reactionChip = cva("gap-1.5 rounded-full px-3 tabular-nums", {
   variants: {
     mine: {
       false: "bg-muted/60 border-transparent",
@@ -126,7 +125,6 @@ export function MessageReactions({ message }: { message: ForumMessage }) {
           disabled={!canPost}
           key={reaction.emoji}
           onClick={() => press(reaction.emoji)}
-          size="sm"
           variant="outline"
         >
           <span>{reaction.emoji}</span>
@@ -153,9 +151,8 @@ export function ReactButton({ message }: { message: ForumMessage }) {
           render={
             <Button
               aria-label={t("reaction-add")}
-              className={messageActionVariants()}
               disabled={isPending(message)}
-              size="icon-xs"
+              size="icon"
               variant="ghost"
             />
           }

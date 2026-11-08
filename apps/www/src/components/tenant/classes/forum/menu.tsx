@@ -88,7 +88,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
               <Button
                 aria-label={common("more-actions")}
                 className="pointer-fine:opacity-0 pointer-fine:group-focus-within/chat:opacity-100 pointer-fine:group-hover/chat:opacity-100 pointer-fine:data-popup-open:opacity-100"
-                size="icon-sm"
+                size="icon"
                 variant="ghost"
               />
             }
@@ -136,11 +136,16 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
                 {t("channel-mark-read")}
               </DropdownMenuItem>
               {managed ? (
-                <>
-                  <DropdownMenuItem onClick={() => dialogs.show("rename")}>
-                    <HugeIcons icon={PencilEdit02Icon} />
-                    {t("channel-rename")}
-                  </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => dialogs.show("rename")}>
+                  <HugeIcons icon={PencilEdit02Icon} />
+                  {t("channel-rename")}
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuGroup>
+            {managed ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
                   <DropdownMenuItem
                     onClick={() =>
                       runForumCall(
@@ -165,13 +170,6 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
                       channel.archived ? "channel-unarchive" : "channel-archive"
                     )}
                   </DropdownMenuItem>
-                </>
-              ) : null}
-            </DropdownMenuGroup>
-            {managed ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
                   <DropdownMenuItem
                     onClick={() => dialogs.show("remove")}
                     variant="destructive"

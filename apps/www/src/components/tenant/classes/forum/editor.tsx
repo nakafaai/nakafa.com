@@ -75,10 +75,10 @@ export function MessageEditor({
         placeholder={t("message-placeholder")}
       />
       <div className="flex justify-end gap-2">
-        <Button onClick={onDone} size="sm" type="button" variant="outline">
+        <Button onClick={onDone} type="button" variant="outline">
           {common("cancel")}
         </Button>
-        <Button size="sm" type="submit" variant="secondary">
+        <Button type="submit" variant="secondary">
           {t("message-save")}
         </Button>
       </div>

@@ -143,7 +143,7 @@ for (const viewport of SCREENS) {
     const pane = page.locator("[data-slot=discussion]");
     await expect(pane.getByText("Pesan 5")).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "#1 Pesan 5", level: 2 })
+      page.getByRole("heading", { exact: true, level: 2, name: "Thread" })
     ).toBeVisible();
     if (viewport.width >= BESIDE_FROM) {
       // The message whose thread stands open keeps its selected look.

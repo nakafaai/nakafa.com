@@ -132,7 +132,7 @@ export function EmojiPanel({
       </div>
       <div
         aria-label={t("emoji-categories")}
-        className="grid grid-cols-8 gap-0.5 border-b px-2 pb-2"
+        className="grid grid-cols-8 justify-items-center border-b px-1 pb-2"
         role="toolbar"
       >
         {Arr.map(grouped, (section, at) => (
@@ -165,7 +165,7 @@ export function EmojiPanel({
       </div>
       <div
         aria-label={t("emoji-list")}
-        className="h-64 overflow-y-auto overscroll-contain px-2 pb-2"
+        className="h-56 overflow-y-auto overscroll-contain px-2 pb-2"
         id={`${id}-list`}
         ref={list}
         role="listbox"
@@ -262,10 +262,10 @@ function CategoryTab({
       <Button
         aria-label={label}
         aria-pressed={current}
-        className="aria-pressed:bg-accent aria-pressed:text-accent-foreground w-full"
+        className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
         onClick={onPress}
         onMouseDown={(event) => event.preventDefault()}
-        size="icon-sm"
+        size="icon"
         type="button"
         variant="ghost"
       >

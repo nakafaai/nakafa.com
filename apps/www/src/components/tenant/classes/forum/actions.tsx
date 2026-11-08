@@ -1,6 +1,7 @@
 import { useMutation } from "@confect/react";
 import {
   BubbleChatIcon,
+  Copy01Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
   TextFontIcon,
@@ -18,11 +19,13 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
 import { type ReactNode, startTransition } from "react";
@@ -40,7 +43,7 @@ import {
   hideUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
 import { renameDiscussionUpdate } from "@/components/tenant/classes/forum/rename";
-import { messageActionVariants } from "@/components/tenant/classes/forum/reveal";
+import { messageToolbarVariants } from "@/components/tenant/classes/forum/reveal";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 import { ReactButton } from "@/components/tenant/classes/forum/tallies";
 import { IconTip } from "@/components/tenant/classes/forum/tip";
@@ -63,17 +66,18 @@ function useMessageRights({ discussion, mine, poll }: ForumMessage) {
 
   return {
     editable,
-    hasMenu: editable || scope.canManage || discussion !== null,
     threads: scope.discussion === undefined && (opens || discussion !== null),
   };
 }
 
 /**
- * The actions of a message: an emoji and Reply in thread, then what the row composes after them, its menu, for
- * whoever writes in the class or manages its forum. A message the server is still saving keeps its controls in place,
- * pressed by nobody, since it has no ID to act on yet.
+ * The toolbar of a message, as Slack and Discord float one over the row's top corner on the bubble's inner side: an
+ * emoji, Reply in thread, then what the row composes after them, its menu, each a square button of one size with its
+ * tooltip. With a mouse it shows on the row's hover or focus and while one of its popups is open; a tap on the row
+ * shows it on a touch screen. A message the server is still saving keeps its controls in place, pressed by nobody,
+ * since it has no ID to act on yet.
  */
-export function MessageActions({
+export function MessageToolbar({
   children,
   message,
 }: {
@@ -81,18 +85,22 @@ export function MessageActions({
   children: ReactNode;
   message: ForumMessage;
 }) {
+  const t = useTranslations("Classroom");
   const scope = useChannelScope();
   const { threads } = useMessageRights(message);
 
-  if (!(scope.canPost || scope.canManage)) {
-    return null;
-  }
   return (
-    <>
+    <div
+      aria-label={t("message-actions")}
+      className={messageToolbarVariants({ mine: message.mine })}
+      role="toolbar"
+    >
       {scope.canPost ? <ReactButton message={message} /> : null}
-      {threads ? <ThreadButton message={message} /> : null}
+      {threads && (scope.canPost || scope.canManage) ? (
+        <ThreadButton message={message} />
+      ) : null}
       {children}
-    </>
+    </div>
   );
 }
 
@@ -160,10 +168,9 @@ function ThreadButton({ message }: { message: ForumMessage }) {
       <Button
         aria-busy={starting || undefined}
         aria-label={t("reply-thread")}
-        className={messageActionVariants()}
         disabled={isPending(message) || starting}
         onClick={press}
-        size="icon-xs"
+        size="icon"
         variant="ghost"
       >
         <Spinner icon={BubbleChatIcon} isLoading={starting} />
@@ -173,9 +180,10 @@ function ThreadButton({ message }: { message: ForumMessage }) {
 }
 
 /**
- * The menu of a message: Edit on the viewer's own message, Hide for whoever manages the forum, and Rename on the
- * message that opens a discussion, for whoever opened it or a teacher who writes in the class, as the server allows.
- * A message none of them reaches has no menu.
+ * The menu of a message, as every menu reads: its label, then the main actions, Copy text when it has words, Edit on
+ * the viewer's own message and Rename on the message that opens a discussion for whoever opened it or a teacher who
+ * writes in the class, as the server allows; then, apart, Hide in the destructive style for whoever manages the forum.
+ * A message none of them reaches, such as another member's poll, has no menu.
  */
 export function MessageMenu({
   message,
@@ -187,14 +195,26 @@ export function MessageMenu({
   const t = useTranslations("Classroom");
   const common = useTranslations("Common");
   const scope = useChannelScope();
-  const { editable, hasMenu } = useMessageRights(message);
+  const { editable } = useMessageRights(message);
   const rename = useMutation(
     classroom.forum.threads.rename
   ).withOptimisticUpdate(renameDiscussionUpdate);
   const dialogs = useDialogs<"hide" | "rename">();
   const { discussion } = message;
+  const words = message.text ?? "";
 
-  if (!hasMenu) {
+  /** Copies the message's text, and says so. */
+  const copy = () =>
+    Effect.runPromise(
+      Effect.tryPromise(() => navigator.clipboard.writeText(words)).pipe(
+        Effect.match({
+          onFailure: () => toast.error({ title: "copy-error.title" }),
+          onSuccess: () => toast.success({ title: "copy-success.title" }),
+        })
+      )
+    );
+
+  if (!(words !== "" || editable || discussion !== null || scope.canManage)) {
     return null;
   }
   return (
@@ -205,9 +225,8 @@ export function MessageMenu({
             render={
               <Button
                 aria-label={common("more-actions")}
-                className={messageActionVariants()}
                 disabled={isPending(message)}
-                size="icon-xs"
+                size="icon"
                 variant="ghost"
               />
             }
@@ -215,19 +234,19 @@ export function MessageMenu({
             <HugeIcons icon={MoreHorizontalIcon} />
           </DropdownMenuTrigger>
         </IconTip>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
+            {words === "" ? null : (
+              <DropdownMenuItem onClick={copy}>
+                <HugeIcons icon={Copy01Icon} />
+                {t("message-copy")}
+              </DropdownMenuItem>
+            )}
             {editable ? (
               <DropdownMenuItem onClick={onEdit}>
                 <HugeIcons icon={PencilEdit02Icon} />
                 {t("message-edit")}
-              </DropdownMenuItem>
-            ) : null}
-            {scope.canManage ? (
-              <DropdownMenuItem onClick={() => dialogs.show("hide")}>
-                <HugeIcons icon={ViewOffSlashIcon} />
-                {t("message-hide")}
               </DropdownMenuItem>
             ) : null}
             {discussion === null ? null : (
@@ -237,6 +256,20 @@ export function MessageMenu({
               </DropdownMenuItem>
             )}
           </DropdownMenuGroup>
+          {scope.canManage ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  onClick={() => dialogs.show("hide")}
+                  variant="destructive"
+                >
+                  <HugeIcons icon={ViewOffSlashIcon} />
+                  {t("message-hide")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
       <HideMessage
@@ -320,6 +353,14 @@ function HideMessage({
       open={open}
       setOpen={setOpen}
       title={t("hide-title")}
-    />
+    >
+      {/* What the hide takes away: the message's words, as its readers see them now. */}
+      <p
+        className="bg-muted max-h-40 overflow-y-auto rounded-lg p-3 text-sm wrap-anywhere whitespace-pre-wrap"
+        dir="auto"
+      >
+        {message.text}
+      </p>
+    </ResponsiveDialog>
   );
 }

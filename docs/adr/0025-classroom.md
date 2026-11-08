@@ -151,11 +151,24 @@ The owner reviewed the forum on production on 8 November 2026 and asked for a ch
 that reads as Slack, Discord and the shadcn Message and Bubble components do. These
 decisions hold it.
 
-- Every message shows its author's face (`PersonAvatar`, or Nina's head for her
-  replies) and name. A run of one author keeps one face and one name at its first
-  message, and a run ends at another author, a pause of more than five minutes, a new
-  day, or a message that opens a thread (`opensRun` in `forum/marks.ts`). The viewer's
-  own messages stand at the end of the row with their face there.
+- A message follows the anatomy of shadcn's Message and Bubble, drawn with Nakafa's
+  own parts: a header row above the bubble with the author's name and the time, the
+  author's face beside the bubble at its foot, and the reactions, the thread's summary
+  and the edited note under it. The time stands in the header, never inside the
+  bubble. A run of one author keeps one header at its first message and one face at its
+  last, so a burst reads as one block, and a run ends at another author, a pause of
+  more than five minutes, a new day, or a message that opens a thread (`opensRun` in
+  `forum/marks.ts`). The viewer's own messages stand at the end of the row.
+- A message's actions float in one toolbar over the row's top corner on hover, on
+  focus and on a tap: React, Reply in thread and More, each a square button of the
+  default size with a tooltip. Its menu reads as header, body and footer: the label,
+  then Copy text, Edit and Rename, then a separator and Hide, destructive and last.
+  Every forum dropdown has that shape, Archive before Delete in a chat's menu, and the
+  emoji chooser has a header with its title and a close button.
+- No label repeats another. The path in the header ends at the chat, since the thread
+  pane's heading names the thread. That heading is the discussion's number and title
+  for a titled discussion and "Thread" for a thread of a message, whose title would
+  only repeat the message under it.
 - A message carries its author's face: `MessageView.author` is a `Face`
   (`classroom/forum/face.ts`) with the Person's name, the animal of their account,
   the photo the account shows, or the animal of the Person's own ID when no account
@@ -163,7 +176,8 @@ decisions hold it.
   (`readFaces`).
 - A thread shows a summary row under its message, as Slack's does: the faces of its
   three newest repliers, how many replies it holds, when the newest came, and the
-  unread dot. The row opens the thread. The thread row keeps the three newest
+  unread dot. The row is a real button, outlined like an `Item`, never a link in
+  colored text, and it opens the thread. The thread row keeps the three newest
   repliers (`repliers`, absent until the first reply, like `lastReplyAt`), so the
   channel draws them without reading a reply. A thread started from a message shows
   the row from its first reply; a titled discussion shows it from the start.

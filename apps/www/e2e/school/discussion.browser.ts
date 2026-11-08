@@ -63,17 +63,18 @@ for (const viewport of [
     });
 
     // The discussion opens from the thread row under its message, at its own address, with its title as its
-    // heading, and in the path beside it from tablet width; on a phone it is a modal sheet, which takes the page
-    // behind it, the header's path included, out of reach.
+    // heading. The path keeps ending at the chat from tablet width, since the pane's heading already names the
+    // discussion; on a phone it is a modal sheet, which takes the page behind it, the header's path included, out of
+    // reach.
     await page.getByRole("link", { name: NO_REPLY }).click();
     await page.waitForURL(DISCUSSION_PATH);
     await expect(
       page.getByRole("heading", { name: `#1 ${TITLE}`, level: 2 })
     ).toBeVisible();
     if (viewport.width >= 768) {
-      await expect(
-        page.getByRole("navigation", { name: "breadcrumb" })
-      ).toContainText("#1");
+      const path = page.getByRole("navigation", { name: "breadcrumb" });
+      await expect(path).toContainText("General");
+      await expect(path).not.toContainText("#1");
     }
     const discussion = page.locator("[data-slot=discussion]");
     await expect(
