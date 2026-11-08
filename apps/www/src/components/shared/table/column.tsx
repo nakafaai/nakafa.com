@@ -9,13 +9,11 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { use } from "react";
 import { useTranslations } from "use-intl";
@@ -64,47 +62,49 @@ export function ColumnFilter({
           </TableHeadButton>
         }
       />
-      <DropdownMenuContent align={align} className="min-w-48">
+      <DropdownMenuContent
+        align={align}
+        className="min-w-48"
+        label={common("menu-filter")}
+      >
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
-          <DropdownMenuGroup>
-            {Arr.isReadonlyArrayEmpty(options) ? (
-              <DropdownMenuItem disabled>
-                <HugeIcons icon={InformationCircleIcon} />
-                {t("no-values")}
-              </DropdownMenuItem>
-            ) : null}
-            {Arr.map(options, (option) => (
-              <DropdownMenuCheckboxItem
-                checked={Arr.contains(chosen, option.value)}
-                closeOnClick={false}
-                key={option.value}
-                onCheckedChange={(next) =>
-                  choose(
-                    column,
-                    next
-                      ? Arr.append(chosen, option.value)
-                      : Arr.filter(chosen, (value) => value !== option.value)
-                  )
-                }
-              >
-                <HugeIcons icon={option.icon} />
-                {option.label}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuGroup>
-          {filtered ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => choose(column, [])}>
-                  <HugeIcons icon={Cancel01Icon} />
-                  {t("reset")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </>
+          {Arr.isReadonlyArrayEmpty(options) ? (
+            <DropdownMenuItem disabled icon={InformationCircleIcon}>
+              {t("no-values")}
+            </DropdownMenuItem>
           ) : null}
+          {Arr.map(options, (option) => (
+            <DropdownMenuCheckboxItem
+              checked={Arr.contains(chosen, option.value)}
+              closeOnClick={false}
+              icon={option.icon}
+              key={option.value}
+              onCheckedChange={(next) =>
+                choose(
+                  column,
+                  next
+                    ? Arr.append(chosen, option.value)
+                    : Arr.filter(chosen, (value) => value !== option.value)
+                )
+              }
+            >
+              {option.label}
+            </DropdownMenuCheckboxItem>
+          ))}
         </DropdownMenuGroup>
+        {filtered ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                icon={Cancel01Icon}
+                onClick={() => choose(column, [])}
+              >
+                {t("reset")}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -152,28 +152,32 @@ export function ColumnChoice({
           </TableHeadButton>
         }
       />
-      <DropdownMenuContent align={align} className="min-w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{common("menu-filter")}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            onValueChange={(next) =>
-              choose(
-                column,
-                Option.contains(first, next) || !Schema.is(Schema.String)(next)
-                  ? []
-                  : [next]
-              )
-            }
-            value={value}
-          >
-            {Arr.map(options, (option) => (
-              <DropdownMenuRadioItem key={option.value} value={option.value}>
-                <HugeIcons icon={option.icon} />
-                {option.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+      <DropdownMenuContent
+        align={align}
+        className="min-w-48"
+        label={common("menu-filter")}
+      >
+        <DropdownMenuRadioGroup
+          onValueChange={(next) =>
+            choose(
+              column,
+              Option.contains(first, next) || !Schema.is(Schema.String)(next)
+                ? []
+                : [next]
+            )
+          }
+          value={value}
+        >
+          {Arr.map(options, (option) => (
+            <DropdownMenuRadioItem
+              icon={option.icon}
+              key={option.value}
+              value={option.value}
+            >
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -235,10 +235,10 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
             <TooltipTrigger
               render={
                 <Button
-                  aria-label={t("grid")}
                   aria-pressed={grid}
                   onClick={toggleGrid}
                   size="icon-sm"
+                  tooltip={t("grid")}
                   type="button"
                   variant="ghost"
                 />
@@ -252,12 +252,12 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
             <TooltipTrigger
               render={
                 <Button
-                  aria-label={t("fullscreen")}
                   aria-pressed={fullscreen}
                   className="@max-sm/bar:hidden"
                   disabled={!canFullscreen}
                   onClick={toggleFullscreen}
                   size="icon-sm"
+                  tooltip={t("fullscreen")}
                   type="button"
                   variant="ghost"
                 />

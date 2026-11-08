@@ -26,9 +26,12 @@ function readNoRoom() {
   return Number.POSITIVE_INFINITY;
 }
 
-/** The pane at the screen's right, which steps aside below the width its page gives it. */
+/**
+ * The pane at the screen's right, which steps aside below the width its page gives it. Its header, body and
+ * footer keep the inset a page's panes give them, wherever the pane stands, so every pane reads alike.
+ */
 export const paneSideVariants = cva(
-  "bg-background fixed inset-y-0 end-0 z-30 flex w-(--pane-width) flex-col border-s",
+  "bg-background fixed inset-y-0 end-0 z-30 flex w-(--pane-width) flex-col border-s [--pane-end:1.5rem]",
   {
     variants: {
       from: {

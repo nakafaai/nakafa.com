@@ -11,9 +11,10 @@ import { TableRow } from "@repo/design-system/components/ui/table";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Option } from "effect";
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import { useTranslations } from "use-intl";
-import { usePaneMode, usePanes } from "@/components/shared/panes";
+import { usePanes } from "@/components/shared/panes";
+import { usePaneMode } from "@/components/shared/panes/mode";
 import { pressesRow } from "@/components/shared/row";
 import { tableCardVariants } from "@/components/shared/table/card";
 
@@ -94,10 +95,10 @@ export function PaneHeader({
       </div>
       {close === undefined ? null : (
         <Button
-          aria-label={t("close")}
           className="absolute end-2 top-2"
           onClick={close}
           size="icon-sm"
+          tooltip={t("close")}
           type="button"
           variant="ghost"
         >
@@ -113,9 +114,20 @@ export function PaneHeader({
  * the pane and in the phone's sheet: both headers end on a rule, so the body's first field needs the room above it,
  * and its focus ring stays inside the scrolling box.
  */
-export function PaneBody({ children }: { children: ReactNode }) {
+export function PaneBody({
+  children,
+  viewportRef,
+}: {
+  children: ReactNode;
+  /** The scrolling element, for a body that keeps something of its own in view, as the player's navigator does. */
+  viewportRef?: Ref<HTMLDivElement>;
+}) {
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea
+      className="flex-1"
+      viewportClassName="relative"
+      viewportRef={viewportRef}
+    >
       <div className="px-(--pane-end,1rem) py-4">{children}</div>
     </ScrollArea>
   );

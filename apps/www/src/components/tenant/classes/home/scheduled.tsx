@@ -11,9 +11,7 @@ import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
@@ -121,33 +119,36 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
     <ItemActions>
       <DropdownMenu>
         <PostMenuTrigger />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{common("menu-actions")}</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => dialogs.show("edit")}>
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("message-edit")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() =>
-                runForumCall(
-                  forumCall(() =>
-                    cancel.withOptimisticUpdate(cancelWaitingUpdate)({
-                      classId,
-                      scheduledId: post.id,
-                      slug,
-                    })
-                  ),
-                  toastForumFailure
-                )
-              }
-              variant="destructive"
-            >
-              <HugeIcons icon={Cancel01Icon} />
-              {t("post-schedule-cancel")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+        <DropdownMenuContent
+          align="end"
+          className="w-44"
+          label={common("menu-actions")}
+        >
+          <DropdownMenuItem
+            icon={PencilEdit02Icon}
+            onClick={() => dialogs.show("edit")}
+          >
+            {t("message-edit")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            icon={Cancel01Icon}
+            onClick={() =>
+              runForumCall(
+                forumCall(() =>
+                  cancel.withOptimisticUpdate(cancelWaitingUpdate)({
+                    classId,
+                    scheduledId: post.id,
+                    slug,
+                  })
+                ),
+                toastForumFailure
+              )
+            }
+            variant="destructive"
+          >
+            {t("post-schedule-cancel")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {dialogs.kind === "edit" ? (
@@ -173,7 +174,6 @@ function WaitingDialog({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const id = useId();
   const edit = useMutation(classroom.scheduled.edit);
@@ -213,17 +213,12 @@ function WaitingDialog({
 
   return (
     <ResponsiveDialog
-      description={t("post-schedule-description")}
-      footer={
-        <>
-          <Button onClick={() => setOpen(false)} variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={!ready} onClick={save}>
-            {t("message-save")}
-          </Button>
-        </>
+      action={
+        <Button disabled={!ready} onClick={save}>
+          {t("message-save")}
+        </Button>
       }
+      description={t("post-schedule-description")}
       open={open}
       setOpen={setOpen}
       title={t("post-waiting-edit")}

@@ -3,7 +3,6 @@ import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Effect } from "effect";
 import { useEffect } from "react";
@@ -13,7 +12,6 @@ import { useAuthSession } from "@/components/auth/session";
 import {
   SidebarKnownSchoolItems,
   SidebarSchoolMenuItem,
-  SidebarSchools,
 } from "@/components/sidebar/menu/schools";
 import { saveKnownSchools } from "@/lib/identity/schools";
 
@@ -25,8 +23,7 @@ function MembershipsFailure() {
   const t = useTranslations("Common");
 
   return (
-    <DropdownMenuItem disabled>
-      <HugeIcons icon={AlertCircleIcon} />
+    <DropdownMenuItem disabled icon={AlertCircleIcon}>
       {t("load-error")}
     </DropdownMenuItem>
   );
@@ -92,14 +89,5 @@ function SidebarMembershipRows() {
         <Intersection onIntersect={() => memberships.loadMore(SCHOOL_PAGE)} />
       ) : null}
     </>
-  );
-}
-
-/** The whole group of schools, for a menu that loads it in one piece, as a school's switcher does: no new school opens there. */
-export function SidebarMembershipGroup() {
-  return (
-    <SidebarSchools canOpenSchool={false}>
-      <SidebarMembershipItems />
-    </SidebarSchools>
   );
 }

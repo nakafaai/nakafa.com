@@ -1,17 +1,14 @@
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerPanel,
-  DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { monospace } from "@repo/design-system/lib/monospace";
 import { cn } from "cn";
 import { type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { usePlayer } from "@/components/player/provider";
+import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
+import { PaneModeContext } from "@/components/shared/panes/mode";
 
 /**
  * The navigator below the large breakpoint: a drawer that the footer opens, with
@@ -19,7 +16,8 @@ import { usePlayer } from "@/components/player/provider";
  * Picking a number closes the drawer first, and the question is revealed once
  * the drawer has finished closing, because the page cannot scroll while the
  * drawer holds it. A finished paper names the drawer for its result and closes
- * it on a footer, as its pane does.
+ * it on a footer, as its pane does. It draws a pane's header, body and footer,
+ * as every phone sheet of a page's panes does.
  */
 export function PlayerSheet({
   children,
@@ -60,16 +58,18 @@ export function PlayerSheet({
           true
         }
       >
-        <DrawerHeader>
-          <DrawerTitle>{title ?? t("navigator")}</DrawerTitle>
-          <DrawerDescription>
-            {description ?? t("navigator-description")}
-          </DrawerDescription>
-        </DrawerHeader>
-        <DrawerPanel className={cn(monospace, "grid gap-4")} ref={body}>
-          {children}
-        </DrawerPanel>
-        {footer === undefined ? null : <DrawerFooter>{footer}</DrawerFooter>}
+        <PaneModeContext value={{ close, place: "sheet" }}>
+          <PaneHeader
+            description={description ?? t("navigator-description")}
+            title={title ?? t("navigator")}
+          />
+          <PaneBody>
+            <div className={cn(monospace, "grid gap-4")} ref={body}>
+              {children}
+            </div>
+          </PaneBody>
+          {footer === undefined ? null : <PaneFooter>{footer}</PaneFooter>}
+        </PaneModeContext>
       </DrawerContent>
     </Drawer>
   );

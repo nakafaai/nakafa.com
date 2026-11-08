@@ -35,7 +35,6 @@ import {
   sendReply,
   viewerFace,
 } from "@/components/tenant/classes/forum/send";
-import { IconTip } from "@/components/tenant/classes/forum/tip";
 import {
   UploadTray,
   useUploadTray,
@@ -259,31 +258,27 @@ export function ForumComposer() {
         {/* The send button stands at the end of the field's last line, as the field grows. */}
         <InputGroupAddon align="inline-end" className="self-end pb-1.5">
           <EmojiPopover onPick={insertEmoji} side="top">
-            <IconTip label={t("emoji-open")}>
-              <EmojiTrigger
-                render={
-                  <InputGroupButton
-                    aria-label={t("emoji-open")}
-                    className="rounded-full"
-                    size="icon"
-                    variant="ghost"
-                  />
-                }
-              />
-            </IconTip>
+            <EmojiTrigger
+              render={
+                <InputGroupButton
+                  className="rounded-full"
+                  size="icon"
+                  tooltip={t("emoji-open")}
+                  variant="ghost"
+                />
+              }
+            />
           </EmojiPopover>
-          <IconTip label={t("send-message")}>
-            <InputGroupButton
-              aria-label={t("send-message")}
-              className="rounded-full"
-              disabled={!ready}
-              size="icon"
-              type="submit"
-              variant="secondary"
-            >
-              <HugeIcons icon={ArrowUp02Icon} />
-            </InputGroupButton>
-          </IconTip>
+          <InputGroupButton
+            className="rounded-full"
+            disabled={!ready}
+            size="icon"
+            tooltip={t("send-message")}
+            type="submit"
+            variant="secondary"
+          >
+            <HugeIcons icon={ArrowUp02Icon} />
+          </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
       {picker.popup}

@@ -104,9 +104,9 @@ export function ChosenFile({
         <TooltipTrigger
           render={
             <Button
-              aria-label={t("library-file-clear")}
               onClick={onClear}
               size="icon-sm"
+              tooltip={t("library-file-clear")}
               variant="ghost"
             />
           }

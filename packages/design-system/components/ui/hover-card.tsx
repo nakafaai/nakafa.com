@@ -1,4 +1,5 @@
 import { PreviewCard as HoverCardPrimitive } from "@base-ui/react/preview-card";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import { use } from "react";
@@ -35,27 +36,29 @@ function HoverCardContent({
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
   return (
-    <HoverCardPrimitive.Portal
-      container={use(PortalContainer)}
-      data-slot="hover-card-portal"
-    >
-      <HoverCardPrimitive.Positioner
-        align={align}
-        alignOffset={alignOffset}
-        className="isolate z-50"
-        side={side}
-        sideOffset={sideOffset}
+    <ButtonGroupVariant value={undefined}>
+      <HoverCardPrimitive.Portal
+        container={use(PortalContainer)}
+        data-slot="hover-card-portal"
       >
-        <HoverCardPrimitive.Popup
-          className={cn(
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 w-64 origin-(--transform-origin) rounded-md border p-4 shadow-md outline-hidden ease-out",
-            className
-          )}
-          data-slot="hover-card-content"
-          {...props}
-        />
-      </HoverCardPrimitive.Positioner>
-    </HoverCardPrimitive.Portal>
+        <HoverCardPrimitive.Positioner
+          align={align}
+          alignOffset={alignOffset}
+          className="isolate z-50"
+          side={side}
+          sideOffset={sideOffset}
+        >
+          <HoverCardPrimitive.Popup
+            className={cn(
+              "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 w-64 origin-(--transform-origin) rounded-md border p-4 shadow-md outline-hidden ease-out",
+              className
+            )}
+            data-slot="hover-card-content"
+            {...props}
+          />
+        </HoverCardPrimitive.Positioner>
+      </HoverCardPrimitive.Portal>
+    </ButtonGroupVariant>
   );
 }
 

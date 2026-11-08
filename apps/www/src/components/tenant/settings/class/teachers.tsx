@@ -69,7 +69,6 @@ export function ClassTeachersDialog({
 }) {
   const classId = row.id;
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const id = useId();
   const assign = useMutation(classroom.teachers.assign).withOptimisticUpdate(
     assignTeacherChange
@@ -98,26 +97,17 @@ export function ClassTeachersDialog({
 
   return (
     <ResponsiveDialog
-      description={t("class-teachers-description")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={personId === undefined || isPending}
-            inert={isPending}
-            onClick={add}
-            type="button"
-          >
-            {t("class-teacher-add")}
-          </Button>
-        </>
+      action={
+        <Button
+          disabled={personId === undefined || isPending}
+          inert={isPending}
+          onClick={add}
+          type="button"
+        >
+          {t("class-teacher-add")}
+        </Button>
       }
+      description={t("class-teachers-description")}
       open={open}
       setOpen={setOpen}
       title={t("class-teachers")}
