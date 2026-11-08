@@ -87,8 +87,11 @@ export const tryoutStale = Failure.make({
   code: "TRYOUT_RESPONSE_STALE",
 });
 
-/** A typed answer only a grader decides: a text entry whose key accepts "Jakarta", as a place stores it. */
-const typed = Effect.all({
+/**
+ * A short answer whose key accepts "Jakarta", as a place stores it. No person grades a try-out, so an answer no
+ * accepted answer matches scores nothing.
+ */
+export const shortAnswer = Effect.all({
   interaction: Schema.decodeEffect(InteractionSchema)({
     id: "typed",
     kind: "textEntry",
@@ -103,6 +106,25 @@ const typed = Effect.all({
     },
     interaction: "typed",
     kind: "textEntry",
+  }),
+}).pipe(Effect.flatMap(encodePlacedQuestion), Effect.orDie);
+
+/** An essay, as a place stores it: the one answer of a try-out that waits for a grader, which decides it by its rubric. */
+const essay = Effect.all({
+  interaction: Schema.decodeEffect(InteractionSchema)({
+    id: "essay",
+    kind: "extendedText",
+    label: "Esai",
+  }),
+  key: Schema.decodeEffect(InteractionKeySchema)({
+    criteria: [
+      {
+        criterion: "Argument",
+        levels: [{ descriptor: "States a clear claim.", level: "1" }],
+      },
+    ],
+    interaction: "essay",
+    kind: "extendedText",
   }),
 }).pipe(Effect.flatMap(encodePlacedQuestion), Effect.orDie);
 
@@ -226,10 +248,10 @@ export const seedTryoutGate = Effect.gen(function* () {
     kind: { text: "Jakarta" },
     pending: { text: "Bandung" },
   };
-  /** The question a pick answers: a table for a partial answer, a typed answer for a grader's. */
+  /** The question a pick answers: a table for a partial answer, an essay for a grader's. */
   const frozen: Partial<Record<Pick, typeof seeded.table>> = {
     incomplete: seeded.table,
-    pending: yield* typed,
+    pending: yield* essay,
   };
   const patch = (change: (ctx: MutationCtx) => Promise<unknown>) =>
     Effect.promise(() => world.t.mutation(change)).pipe(Effect.asVoid);

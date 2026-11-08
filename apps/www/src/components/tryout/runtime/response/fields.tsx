@@ -26,7 +26,6 @@ import {
 } from "@/components/tryout/runtime/choice/surface";
 import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import {
-  type Entry,
   entryResponse,
   isEntry,
 } from "@/components/tryout/runtime/response/entry";
@@ -53,12 +52,29 @@ interface TryoutResponseFieldsProps {
  * other renders nothing.
  */
 export function TryoutResponseFields({ value }: TryoutResponseFieldsProps) {
-  const { interaction } = value;
+  const t = useTranslations("Tryouts");
+  const { id, interaction, locked, onChange, response } = value;
   if (interaction.kind === "matrix") {
     return <MatrixFields table={interaction} value={value} />;
   }
   if (isEntry(interaction)) {
-    return <EntryFields entry={interaction} value={value} />;
+    // School's field, with its Arabic keypad and the number's unit, saves once the learner pauses typing or leaves
+    // it, and stays read-only while the question is locked; a blank field clears the answer.
+    const text = typedText(response ?? NO_RESPONSE);
+    return (
+      <PaperLockProvider locked={locked}>
+        <span className="sr-only" id={`${id}-answer-label`}>
+          {t("answer")}
+        </span>
+        <SittingField
+          entry={interaction}
+          labelledBy={`${id}-answer-label`}
+          onType={(typed) => onChange(entryResponse(typed))}
+          saved={text}
+          text={text}
+        />
+      </PaperLockProvider>
+    );
   }
   if (interaction.kind !== "choice") {
     return null;
@@ -162,38 +178,6 @@ function MultipleChoiceFields({
         </TryoutSelectableMultipleChoice>
       ))}
     </fieldset>
-  );
-}
-
-/**
- * A short answer or a numeric answer: School's field, with its Arabic keypad and the number's unit, which saves
- * once the learner pauses typing or leaves the field, and stays read-only while the question is locked. A blank
- * field clears the answer.
- */
-function EntryFields({
-  entry,
-  value,
-}: {
-  entry: Entry;
-  value: TryoutResponseFieldsProps["value"];
-}) {
-  const t = useTranslations("Tryouts");
-  const { id, locked, onChange, response } = value;
-  const text = typedText(response ?? NO_RESPONSE);
-  const labelId = `${id}-answer-label`;
-  return (
-    <PaperLockProvider locked={locked}>
-      <span className="sr-only" id={labelId}>
-        {t("answer")}
-      </span>
-      <SittingField
-        entry={entry}
-        labelledBy={labelId}
-        onType={(typed) => onChange(entryResponse(typed))}
-        saved={text}
-        text={text}
-      />
-    </PaperLockProvider>
   );
 }
 

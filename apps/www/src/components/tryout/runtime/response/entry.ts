@@ -7,7 +7,7 @@ import {
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";
-import { Array as Arr, Match, Option, Str } from "effect";
+import { Array as Arr, Match, Option, String as Str } from "effect";
 
 /** A question the learner answers by typing: a short answer, or a number with its unit, as SNBT sets them. */
 export type Entry = Extract<
