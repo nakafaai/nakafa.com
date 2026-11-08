@@ -3,6 +3,7 @@ import {
   RotateLeft01Icon,
   RotateRight01Icon,
   Share08Icon,
+  Video01Icon,
   VolumeHighIcon,
 } from "@hugeicons/core-free-icons";
 import { growthOf } from "@repo/backend/confect/island/level";
@@ -25,6 +26,7 @@ import { Option } from "effect";
 import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { BuildBand, BuildToggle } from "@/components/island/build";
+import { ClipProvider, useRecordClip } from "@/components/island/clip";
 import { useWaterIsland } from "@/components/island/farm";
 import { useShareIsland } from "@/components/island/share";
 import { SkyProvider } from "@/components/island/sky";
@@ -53,6 +55,17 @@ function ShareItem() {
   return (
     <DropdownMenuItem icon={Share08Icon} onClick={share}>
       {t("share")}
+    </DropdownMenuItem>
+  );
+}
+
+/** Records a few seconds of the island as a video to share (ADR 0042, D20). */
+function ClipItem() {
+  const t = useTranslations("Island");
+  const record = useRecordClip(t("clip-file"));
+  return (
+    <DropdownMenuItem icon={Video01Icon} onClick={record}>
+      {t("clip")}
     </DropdownMenuItem>
   );
 }
@@ -103,6 +116,7 @@ function IslandFacts() {
  * An island in a visual card, drawn from the surrounding `IslandContext`: its
  * name and level, the island itself edge to edge, building as the owner's main
  * action, full screen and a menu that waters and shares the owner's island,
+ * records a clip of it,
  * turns it a quarter left or right (open while the reader turns, so each turn
  * takes one press) and switches its sound. The footer shows the owner what
  * they can spend and the next level, and a visitor the badges. The canvas loads
@@ -124,47 +138,50 @@ export function IslandFrame({
     <ToolsProvider>
       <SkyProvider>
         <SoundProvider>
-          <section className="motion-safe:[view-transition-name:island]">
-            <VisualCard>
-              <VisualCardHeader
-                description={t("level", { level })}
-                title={name === undefined ? t("title") : t("name", { name })}
-              />
-              <BuildBand />
-              <VisualCardBody className="aspect-square sm:aspect-video">
-                <Suspense fallback={null}>
-                  <IslandCanvas descend turn={turn} />
-                </Suspense>
-              </VisualCardBody>
-              <VisualCardActions>
-                {own ? <BuildToggle /> : null}
-                <VisualCardMenu>
-                  {own ? <WaterItem /> : null}
-                  {own ? <ShareItem /> : null}
-                  <DropdownMenuItem
-                    closeOnClick={false}
-                    icon={RotateLeft01Icon}
-                    onClick={() => setTurn((current) => (current + 3) % 4)}
-                  >
-                    {t("turn-left")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    closeOnClick={false}
-                    icon={RotateRight01Icon}
-                    onClick={() => setTurn((current) => (current + 1) % 4)}
-                  >
-                    {t("turn-right")}
-                  </DropdownMenuItem>
-                  <SoundItem />
-                </VisualCardMenu>
-              </VisualCardActions>
-              <VisualCardFooter>
-                <VisualCardFacts>
-                  <IslandFacts />
-                </VisualCardFacts>
-              </VisualCardFooter>
-            </VisualCard>
-          </section>
+          <ClipProvider>
+            <section className="motion-safe:[view-transition-name:island]">
+              <VisualCard>
+                <VisualCardHeader
+                  description={t("level", { level })}
+                  title={name === undefined ? t("title") : t("name", { name })}
+                />
+                <BuildBand />
+                <VisualCardBody className="aspect-square sm:aspect-video">
+                  <Suspense fallback={null}>
+                    <IslandCanvas descend turn={turn} />
+                  </Suspense>
+                </VisualCardBody>
+                <VisualCardActions>
+                  {own ? <BuildToggle /> : null}
+                  <VisualCardMenu>
+                    {own ? <WaterItem /> : null}
+                    {own ? <ShareItem /> : null}
+                    <ClipItem />
+                    <DropdownMenuItem
+                      closeOnClick={false}
+                      icon={RotateLeft01Icon}
+                      onClick={() => setTurn((current) => (current + 3) % 4)}
+                    >
+                      {t("turn-left")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      closeOnClick={false}
+                      icon={RotateRight01Icon}
+                      onClick={() => setTurn((current) => (current + 1) % 4)}
+                    >
+                      {t("turn-right")}
+                    </DropdownMenuItem>
+                    <SoundItem />
+                  </VisualCardMenu>
+                </VisualCardActions>
+                <VisualCardFooter>
+                  <VisualCardFacts>
+                    <IslandFacts />
+                  </VisualCardFacts>
+                </VisualCardFooter>
+              </VisualCard>
+            </section>
+          </ClipProvider>
         </SoundProvider>
       </SkyProvider>
     </ToolsProvider>

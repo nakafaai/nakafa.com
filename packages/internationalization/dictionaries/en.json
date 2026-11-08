@@ -4628,6 +4628,8 @@
     "badges": "Badges",
     "share": "Share",
     "share-title": "My island on Nakafa",
+    "clip": "Record a clip",
+    "clip-file": "nakafa-island",
     "visit-description": "{name}'s island, grown from learning on Nakafa.",
     "materials": "Garden",
     "materials-value": "{wood} wood, {petals} petals",

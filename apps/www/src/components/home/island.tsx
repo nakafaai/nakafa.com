@@ -18,6 +18,7 @@ import { Link } from "@tanstack/react-router";
 import { Option } from "effect";
 import { Suspense } from "react";
 import { useTranslations } from "use-intl";
+import { ClipProvider } from "@/components/island/clip";
 import { SkyProvider } from "@/components/island/sky";
 import { ToolsProvider } from "@/components/island/tools";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -98,41 +99,43 @@ export function HomeIsland({
       >
         <ToolsProvider>
           <SkyProvider>
-            <VisualCard>
-              <VisualCardHeader
-                description={t("level", { level: growth.level })}
-                title={name === undefined ? t("title") : t("name", { name })}
-              />
-              <VisualCardBody className="aspect-video">
-                <AfterPageRead>
-                  <Suspense fallback={null}>
-                    <IslandCanvas />
-                  </Suspense>
-                </AfterPageRead>
-              </VisualCardBody>
-              <VisualCardActions>
-                <Button
-                  render={
-                    <Link
-                      from={LOCALE_ROUTE}
-                      to="/$locale/island"
-                      viewTransition
-                    />
-                  }
-                >
-                  {t("enter")}
-                </Button>
-              </VisualCardActions>
-              <VisualCardFooter>
-                <p className="text-muted-foreground text-sm">
-                  {Option.match(growth.next, {
-                    onNone: () => t("enter-top"),
-                    onSome: (next) =>
-                      t("enter-next", { stars: next - shown.lifetime }),
-                  })}
-                </p>
-              </VisualCardFooter>
-            </VisualCard>
+            <ClipProvider>
+              <VisualCard>
+                <VisualCardHeader
+                  description={t("level", { level: growth.level })}
+                  title={name === undefined ? t("title") : t("name", { name })}
+                />
+                <VisualCardBody className="aspect-video">
+                  <AfterPageRead>
+                    <Suspense fallback={null}>
+                      <IslandCanvas />
+                    </Suspense>
+                  </AfterPageRead>
+                </VisualCardBody>
+                <VisualCardActions>
+                  <Button
+                    render={
+                      <Link
+                        from={LOCALE_ROUTE}
+                        to="/$locale/island"
+                        viewTransition
+                      />
+                    }
+                  >
+                    {t("enter")}
+                  </Button>
+                </VisualCardActions>
+                <VisualCardFooter>
+                  <p className="text-muted-foreground text-sm">
+                    {Option.match(growth.next, {
+                      onNone: () => t("enter-top"),
+                      onSome: (next) =>
+                        t("enter-next", { stars: next - shown.lifetime }),
+                    })}
+                  </p>
+                </VisualCardFooter>
+              </VisualCard>
+            </ClipProvider>
           </SkyProvider>
         </ToolsProvider>
       </IslandContext>
