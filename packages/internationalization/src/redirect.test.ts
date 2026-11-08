@@ -38,10 +38,10 @@ const decideSpelling = (address: string, isSchoolHost = false) =>
   decideSpellingRedirect({ isSchoolHost, url: new URL(address) });
 
 describe("root redirect", () => {
-  it("answers the root with the default locale and a 307 that varies", () => {
+  it("answers the root of a visitor with no Nakafa language in Indonesian, with a 307 that varies", () => {
     expect(decideRoot("https://nakafa.com/")).toStrictEqual(
       Option.some({
-        location: "/en",
+        location: "/id",
         status: 307,
         vary: "Accept-Language, Cookie",
       })
@@ -51,6 +51,8 @@ describe("root redirect", () => {
   it.each([
     ["id-ID,id;q=0.9", "/id"],
     ["de-DE,de;q=0.9", "/de"],
+    ["en-US,en;q=0.9", "/en"],
+    ["fr-FR,fr;q=0.9", "/id"],
   ])("answers the root for Accept-Language %s with %s", (header, location) => {
     expect(decideRoot("https://nakafa.com/", header)).toStrictEqual(
       Option.some({
@@ -63,7 +65,7 @@ describe("root redirect", () => {
 
   it("keeps the query on the root answer", () => {
     expect(rootLocationOf("https://nakafa.com/?utm=x")).toStrictEqual(
-      Option.some("/en?utm=x")
+      Option.some("/id?utm=x")
     );
   });
 

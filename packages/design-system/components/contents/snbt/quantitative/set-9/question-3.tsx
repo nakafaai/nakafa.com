@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ComponentProps, ReactNode } from "react";
 
 interface GraphProps {
@@ -27,7 +27,7 @@ const helperRightPoint = { x: 3, y: 0, z: 0 };
 const questionData = [
   {
     points: [topLeftPoint, topRightPoint],
-    color: getColor("INDIGO"),
+    color: PLOT_COLORS.violet,
     smooth: false,
     showPoints: false,
     labels: [
@@ -37,7 +37,7 @@ const questionData = [
   },
   {
     points: [bottomLeftPoint, bottomRightPoint],
-    color: getColor("INDIGO"),
+    color: PLOT_COLORS.violet,
     smooth: false,
     showPoints: false,
     labels: [
@@ -47,7 +47,7 @@ const questionData = [
   },
   {
     points: [topRightPoint, vertexPoint, bottomLeftPoint],
-    color: getColor("INDIGO"),
+    color: PLOT_COLORS.violet,
     smooth: false,
     showPoints: true,
     labels: [
@@ -61,7 +61,7 @@ const questionData = [
 const answerSegments = [
   {
     points: [helperLeftPoint, vertexPoint, helperRightPoint],
-    color: getColor("TEAL"),
+    color: PLOT_COLORS.teal,
     smooth: false,
     showPoints: false,
     labels: [

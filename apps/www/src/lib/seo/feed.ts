@@ -9,12 +9,11 @@ import { Array as Arr, DateTime, Effect, Order, Schema } from "effect";
 import { Feed, type Item } from "feed";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
-import { loadActiveContentIdentity } from "@/lib/content/published/active";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
-  type ContentReleasePin,
-  decodeContentReleasePin,
-} from "@/lib/content/published/release";
+  type ActiveContentReleaseId,
+  loadActiveContentIdentity,
+} from "@/lib/content/published/active";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { readCopy } from "@/lib/i18n/copy.server";
 import { getOgUrl } from "@/lib/seo/social";
 
@@ -90,9 +89,9 @@ export const readRssText = Effect.fn("www.rss.readText")(function* () {
 
 /** Reads the article and material routes of every locale from one active release. */
 const getFeedContentRoutes = Effect.fn("www.rss.readRoutes")(function* () {
-  // The feed reads Convex directly and stores nothing, so it pins the release
-  // as Convex holds it now. A stored pointer that still names the previous
-  // release would pin every read to a release that is gone.
+  // Every read is pinned to the release as Convex holds it now, and the content
+  // store answers each under that release or fails. A stored pointer that still
+  // names the previous release would pin every read to a release that is gone.
   const active = yield* loadActiveContentIdentity();
   if (!active) {
     return yield* new PublishedProjectionError({
@@ -110,12 +109,6 @@ const getFeedContentRoutes = Effect.fn("www.rss.readRoutes")(function* () {
       ]),
     { concurrency: LOCALES.length }
   );
-  const latest = yield* loadActiveContentIdentity();
-  yield* decodeContentReleasePin(latest?.releaseId, activeReleaseId, {
-    appLocale: AppLocaleSchema.make(DEFAULT_LOCALE),
-    publicPath: "rss.xml",
-  });
-
   return Arr.take(
     Arr.sortWith(
       Arr.flatten(Arr.flatten(routes)),
@@ -129,13 +122,13 @@ const getFeedContentRoutes = Effect.fn("www.rss.readRoutes")(function* () {
 /** Selects the signed published articles of one locale. */
 const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
   locale: Locale,
-  expectedActiveReleaseId: ContentReleasePin
+  release: ActiveContentReleaseId
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestArticles(
     locale,
     RSS_CONTENT_ROUTE_LIMIT,
-    expectedActiveReleaseId
+    release
   );
   return Arr.map(
     published.articles,
@@ -156,13 +149,13 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
 /** Selects the signed published materials of one locale. */
 const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   locale: Locale,
-  expectedActiveReleaseId: ContentReleasePin
+  release: ActiveContentReleaseId
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestMaterials(
     locale,
     RSS_CONTENT_ROUTE_LIMIT,
-    expectedActiveReleaseId
+    release
   );
   return Arr.map(
     published.materials,

@@ -6,6 +6,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
 import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
 import {
+  decodeContentRelease,
   decodeContentReleasePin,
   verifyContentReleasePin,
 } from "@/lib/content/published/release";
@@ -36,16 +37,18 @@ describe("content release pin", () => {
     ["no active release", null],
   ])("decodes %s", ([, actual]) =>
     Effect.gen(function* () {
-      expect(yield* decodeContentReleasePin(actual, undefined, identity)).toBe(
-        actual
-      );
+      expect(yield* decodeContentRelease(actual, identity)).toBe(actual);
     })
   );
 
   it.effect(
     "maps malformed release data to the material projection failure",
     () =>
-      decodeContentReleasePin("invalid release", undefined, identity).pipe(
+      decodeContentReleasePin(
+        "invalid release",
+        activeReleaseId,
+        identity
+      ).pipe(
         Effect.flip,
         Effect.map((error) =>
           expect(error).toMatchObject({
@@ -92,11 +95,9 @@ describe("content release pin", () => {
           activeReleaseId,
           identity
         );
-        yield* decodeContentReleasePin(
-          "invalid release",
-          undefined,
-          identity
-        ).pipe(Effect.flip);
+        yield* decodeContentRelease("invalid release", identity).pipe(
+          Effect.flip
+        );
 
         expect(expireActiveContentIdentityMock).not.toHaveBeenCalled();
       })

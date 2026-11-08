@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { Array as Arr, Effect, Exit } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { readRssText } from "@/lib/seo/feed";
 
@@ -141,21 +141,21 @@ describe("rss feed text", () => {
     })
   );
 
-  it.effect("fails when the release changes during the read", () =>
+  it.effect("pins every read to the release that Convex holds now", () =>
     Effect.gen(function* () {
-      loadActiveContentIdentityMock
-        .mockReturnValueOnce(
-          Effect.succeed({
-            manifestHash: `sha256:${"a".repeat(64)}`,
-            releaseId: RELEASE,
-            sequence: 1,
-          })
-        )
-        .mockReturnValueOnce(Effect.void);
+      yield* readRssText();
 
-      const exit = yield* Effect.exit(readRssText());
-
-      expect(Exit.isFailure(exit)).toBe(true);
+      expect(loadActiveContentIdentityMock).toHaveBeenCalledOnce();
+      expect(readPublishedLatestArticlesMock).toHaveBeenCalledWith(
+        "en",
+        100,
+        RELEASE
+      );
+      expect(readPublishedLatestMaterialsMock).toHaveBeenCalledWith(
+        "de",
+        100,
+        RELEASE
+      );
     })
   );
 });

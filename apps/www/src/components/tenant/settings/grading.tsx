@@ -5,6 +5,7 @@ import {
 } from "@confect/react";
 import {
   Archive02Icon,
+  Calendar03Icon,
   Delete02Icon,
   PencilEdit02Icon,
   Target02Icon,
@@ -12,7 +13,10 @@ import {
 import records from "@repo/backend/confect/_generated/refs/records";
 import { DEFAULT_GRADING_SCHEME } from "@repo/backend/confect/records/scheme";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
@@ -24,6 +28,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
+import { ConfirmSubject } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
@@ -259,6 +264,7 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
           <HugeIcons icon={PencilEdit02Icon} />
           {t("grading-edit")}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => dialogs.show("remove")}
           variant="destructive"
@@ -296,7 +302,12 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
         open={dialogs.isOpen("remove")}
         setOpen={dialogs.setOpen}
         title={t("grading-remove-title")}
-      />
+      >
+        <ConfirmSubject
+          icon={Calendar03Icon}
+          name={`${t("grading-kktp")} ${version.kktp}`}
+        />
+      </ResponsiveDialog>
     </>
   );
 }

@@ -1,11 +1,13 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Effect, Layer } from "effect";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
+import { activateTestRelease } from "@/test/active";
 import { testCurriculumRowJson, testProgramRoot } from "@/test/content-program";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const readQueryMock = vi.hoisted(() => vi.fn());
 vi.mock("@confect/js", async (importOriginal) => {
@@ -26,6 +28,18 @@ vi.mock("@confect/js", async (importOriginal) => {
         ).pipe(Layer.provide(HttpClient.layer(...args))),
     },
   };
+});
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease("release-program");
 });
 describe("published curriculum snapshot paths", () => {
   it.effect(

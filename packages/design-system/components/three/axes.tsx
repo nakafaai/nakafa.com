@@ -11,8 +11,8 @@ import {
   type AxisName,
 } from "@repo/design-system/components/three/names";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
-import { COLORS } from "@repo/design-system/lib/color";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { AXIS_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { type ComponentProps, useCallback, useMemo, useRef } from "react";
 import { Frustum, type Group, Matrix4, Vector2, Vector3 } from "three";
@@ -210,9 +210,9 @@ export function Axes({
     );
     return Arr.map(
       [
-        { name: "X" as const, color: COLORS.RED, geometry: geometry.x },
-        { name: "Y" as const, color: COLORS.GREEN, geometry: geometry.y },
-        { name: "Z" as const, color: COLORS.BLUE, geometry: geometry.z },
+        { name: "X" as const, color: AXIS_COLORS.x, geometry: geometry.x },
+        { name: "Y" as const, color: AXIS_COLORS.y, geometry: geometry.y },
+        { name: "Z" as const, color: AXIS_COLORS.z, geometry: geometry.z },
       ],
       ({ geometry: axis, ...identity }) => ({
         ...identity,

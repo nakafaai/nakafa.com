@@ -1,7 +1,5 @@
-import { Particles } from "@repo/design-system/components/ui/particles";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useNavigate } from "@tanstack/react-router";
-import { cn } from "cn";
 import {
   type ComponentProps,
   createContext,
@@ -12,16 +10,13 @@ import {
 } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { NinaHeldAttach } from "@/components/ai/attachment";
-import { ChatHeader } from "@/components/ai/chat/header";
-import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
-import { HomeTitle } from "@/components/ai/home/title";
-import { NinaInput } from "@/components/ai/input";
+import type { useChatAdmission } from "@/components/ai/chat/admission";
+import { useStartChat } from "@/components/ai/chat/start";
+import { NinaInput, NinaSuggestions } from "@/components/ai/input";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
-import { pageRowVariants } from "@/components/shared/content/width";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
-import { useCurrentLocale } from "@/lib/routing/link";
 
 /**
  * The send and the attach a learner pressed while the page's session loaded,
@@ -34,7 +29,7 @@ interface HeldSend {
   readonly holdAttach: (attach: boolean) => void;
 }
 
-/** Creates the held send of one new-chat page. */
+/** Creates the held send of one new chat. */
 function createHeldSendStore() {
   return createStore<HeldSend>()((set) => ({
     attach: false,
@@ -42,6 +37,51 @@ function createHeldSendStore() {
     hold: (message) => set({ held: message }),
     holdAttach: (attach) => set({ attach }),
   }));
+}
+
+/** What the surface decided about its new chat and the send it holds, for the variant that draws its composer. */
+const NewChatContext = createContext<{
+  readonly admission: Parameters<typeof useChatAdmission>[0];
+  readonly held: StoreApi<HeldSend>;
+  readonly holds: boolean;
+} | null>(null);
+
+/** Reads the surface's new chat, which every part of the composer renders inside. */
+function useNewChatContext() {
+  const value = use(NewChatContext);
+  if (value === null) {
+    // A part of the composer outside its new chat is a composition error at this seam.
+    throw new Error("A new-chat composer renders inside NewChat.");
+  }
+  return value;
+}
+
+/** Reads one part of the send held by the new chat. */
+function useHeldSend<Selected>(selector: (state: HeldSend) => Selected) {
+  return useStore(useNewChatContext().held, selector);
+}
+
+/** The composer as its variant draws it: the variant, the prompt on its way, and what the field does. */
+interface NewChatComposer {
+  readonly attachments: boolean;
+  readonly disabled: boolean;
+  readonly onAttachRequest?: ComponentProps<
+    typeof NinaInput
+  >["onAttachRequest"];
+  readonly onSubmit: ComponentProps<typeof NinaInput>["onSubmit"];
+  readonly prompt: ReturnType<typeof useStartChat>["prompt"];
+  readonly variant: "pending" | "signed-in" | "visitor";
+}
+
+const ComposerContext = createContext<NewChatComposer | null>(null);
+
+/** Reads the composer its variant drew. */
+function useComposer() {
+  const value = use(ComposerContext);
+  if (value === null) {
+    throw new Error("A new-chat composer part renders inside NewChat.");
+  }
+  return value;
 }
 
 /**
@@ -52,126 +92,105 @@ function isSessionUnsettled(hasSessionError: boolean) {
   return hasSignedInHint(document.cookie) && !hasSessionError;
 }
 
-const HeldSendContext = createContext<StoreApi<HeldSend> | null>(null);
-
-/** Reads one part of the send held on the new-chat page. */
-function useHeldSend<Selected>(selector: (state: HeldSend) => Selected) {
-  const store = use(HeldSendContext);
-  if (!store) {
-    // A composer outside its page is a composition error at this seam.
-    throw new Error("A new-chat composer renders inside ChatNew.");
-  }
-  return useStore(store, selector);
-}
-
 /**
- * Moves directly from the welcome screen into the final conversation layout. Only
- * a signed-in learner's composer reads Convex, so a visitor's composer loads no
- * admission code and opens no client. A visitor's composer sends to sign-in.
- * While the session loads the composer looks the same and holds a send, which
- * the signed-in composer then admits, or the visitor's sends to sign-in, so the
- * composer never dims and comes back. The server draws the visitor's composer,
- * and a page with the signed-in hint keeps it until its session starts, so that
- * composer holds an attach until the session settles: the signed-in composer
- * then opens its file picker, and a visitor's asks for sign-in.
+ * The one composer of a new chat with Nina, which the new-chat page and the sheet lay out their own way. It picks
+ * its variant once: a signed-in learner's composer reads Convex, so a visitor's and a loading session's load no
+ * admission code and open no client. A visitor's composer asks for sign-in. While the session loads the composer
+ * looks the same and, where the surface `holds`, as the page does, keeps a send and an attach for the composer that
+ * follows: the signed-in composer then admits the send and opens the file picker, and a visitor's asks for sign-in,
+ * so the composer never dims and comes back; elsewhere it waits disabled, as the sheet's does. `admission` is what
+ * the surface decides about the rest: what a finished admission does, what asking for sign-in does first, and whether
+ * the surface shows. The surface takes the composer's parts, `NewChatInput`, `NewChatSuggestions` and the prompt on
+ * its way (`useNewChatPrompt`), and places them in its own layout.
  */
-export function ChatNew({ children }: { children: ReactNode }) {
+export function NewChat({
+  admission,
+  children,
+  holds,
+}: {
+  admission: Parameters<typeof useChatAdmission>[0];
+  children: ReactNode;
+  holds: boolean;
+}) {
   const isSessionPending = useLiveSession((state) => state.isPending);
-  const [heldSend] = useState(createHeldSendStore);
+  const [held] = useState(createHeldSendStore);
+
   return (
-    <HeldSendContext value={heldSend}>
+    <NewChatContext value={{ admission, held, holds }}>
       <ConvexIsland
         fallback={
           isSessionPending ? (
-            <PendingChatNew>{children}</PendingChatNew>
+            <PendingComposer>{children}</PendingComposer>
           ) : (
-            <VisitorChatNew>{children}</VisitorChatNew>
+            <VisitorComposer>{children}</VisitorComposer>
           )
         }
       >
-        <SignedInChatNew>{children}</SignedInChatNew>
+        <SignedInComposer>{children}</SignedInComposer>
       </ConvexIsland>
-    </HeldSendContext>
+    </NewChatContext>
   );
+}
+
+/** The prompt on its way, which the surface shows in place of its welcome once there is one. */
+export function useNewChatPrompt() {
+  return useComposer().prompt;
 }
 
 /**
- * The welcome layout of a new chat, which every variant of the page shares. Its
- * title stands a fixed share of the page's height from the top, so a page that
- * arrives in parts on a slow connection never moves the title when the composer
- * and the cards below it come in.
+ * The composer's field, with what the surface adds inside it. A signed-in composer opens the file picker for an
+ * attach held while the session loaded, and takes the focus when the surface asks it to (`autoFocus`).
  */
-function NewChatLayout({
+export function NewChatInput({
+  autoFocus = false,
   children,
-  composer,
-  prompt,
 }: {
-  children: ReactNode;
-  composer: ReactNode;
-  prompt?: ComponentProps<typeof StartPrompt>["prompt"];
+  autoFocus?: boolean;
+  children?: ReactNode;
 }) {
+  const composer = useComposer();
+  const attach = useHeldSend((state) => state.attach);
+  const holdAttach = useHeldSend((state) => state.holdAttach);
+  const signedIn = composer.variant === "signed-in";
+
   return (
-    <div
-      className={cn(
-        "text-chat relative flex size-full min-w-0 flex-col overflow-hidden",
-        !prompt && "gap-4"
-      )}
+    <NinaInput
+      attachments={composer.attachments}
+      autoFocus={signedIn && autoFocus}
+      disabled={composer.disabled}
+      onAttachRequest={composer.onAttachRequest}
+      onSubmit={composer.onSubmit}
     >
-      {prompt ? (
-        <ChatHeader />
-      ) : (
-        <>
-          <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-          <div className="absolute inset-x-0 top-0">
-            <ChatHeader />
-          </div>
-        </>
-      )}
-      {prompt ? (
-        <StartPrompt
-          className={cn(pageRowVariants(), "py-6")}
-          prompt={prompt}
-        />
-      ) : (
-        <>
-          <div
-            aria-hidden="true"
-            className="shrink-0 basis-[max(4.5rem,calc(50%-15rem))]"
-          />
-          <div className="relative mx-auto w-full max-w-xl px-6">
-            <HomeTitle />
-          </div>
-        </>
-      )}
-      <div
-        className={cn(
-          pageRowVariants(),
-          "relative grid shrink-0",
-          prompt && "pb-4"
-        )}
-        key="composer"
-      >
-        {composer}
-      </div>
-      {prompt ? null : (
-        <div className="relative mx-auto w-full max-w-xl px-6">{children}</div>
-      )}
-    </div>
+      {signedIn && attach ? (
+        <NinaHeldAttach onOpen={() => holdAttach(false)} />
+      ) : null}
+      {children}
+    </NinaInput>
   );
 }
 
-/** A learner's composer, whose admission and submission run on the page's client. */
-function SignedInChatNew({ children }: { children: ReactNode }) {
-  const locale = useCurrentLocale();
-  const navigate = useNavigate();
-  const { disabled, prompt, submit } = useStartChat({
-    onComplete: (chatId) =>
-      navigate({ params: { id: chatId, locale }, to: "/$locale/chat/$id" }),
-  });
+/** The prompts Nina suggests, which a composer offers once it can answer and until a prompt is on its way. */
+export function NewChatSuggestions() {
+  const composer = useComposer();
+
+  if (composer.variant === "pending" || composer.prompt !== null) {
+    return null;
+  }
+  return (
+    <NinaSuggestions
+      disabled={composer.disabled}
+      onSubmit={composer.onSubmit}
+    />
+  );
+}
+
+/** A signed-in learner's composer, whose admission and submission run on the page's client. */
+function SignedInComposer({ children }: { children: ReactNode }) {
+  const { disabled, prompt, submit } = useStartChat(
+    useNewChatContext().admission
+  );
   const held = useHeldSend((state) => state.held);
   const hold = useHeldSend((state) => state.hold);
-  const attach = useHeldSend((state) => state.attach);
-  const holdAttach = useHeldSend((state) => state.holdAttach);
 
   // A send pressed while the session loaded is admitted once this composer mounts.
   useEffect(() => {
@@ -183,25 +202,30 @@ function SignedInChatNew({ children }: { children: ReactNode }) {
   }, [held, hold, submit]);
 
   return (
-    <NewChatLayout
-      composer={
-        <NinaInput disabled={disabled} onSubmit={submit}>
-          {attach ? <NinaHeldAttach onOpen={() => holdAttach(false)} /> : null}
-        </NinaInput>
-      }
-      prompt={prompt}
+    <ComposerContext
+      value={{
+        attachments: true,
+        disabled,
+        onSubmit: submit,
+        prompt,
+        variant: "signed-in",
+      }}
     >
       {children}
-    </NewChatLayout>
+    </ComposerContext>
   );
 }
 
 /**
- * A visitor's composer: its attach button and its send both ask for sign-in, and
- * so does a send or an attach held while the session loaded. Until a page with
- * the signed-in hint has settled its session, an attach is held instead.
+ * A visitor's composer: its attach button and its send both ask for sign-in, and so does a send or an attach held
+ * while the session loaded. Until a page with the signed-in hint has settled its session, a surface that holds keeps
+ * an attach instead.
  */
-function VisitorChatNew({ children }: { children: ReactNode }) {
+function VisitorComposer({ children }: { children: ReactNode }) {
+  const {
+    admission: { onSignIn },
+    holds,
+  } = useNewChatContext();
   const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const held = useHeldSend((state) => state.held);
@@ -211,24 +235,27 @@ function VisitorChatNew({ children }: { children: ReactNode }) {
   const hasSessionError = useLiveSession((state) => state.hasError);
 
   function signIn() {
+    onSignIn?.();
     navigate(authNavigation.readTarget());
     return false;
   }
 
   function requestAttach() {
-    if (isSessionUnsettled(hasSessionError)) {
+    if (holds && isSessionUnsettled(hasSessionError)) {
       holdAttach(true);
       return;
     }
     signIn();
   }
 
+  // A send or an attach held while the session loaded asks for sign-in once it settles without one.
   useEffect(() => {
     if ((held === null && !attach) || isSessionUnsettled(hasSessionError)) {
       return;
     }
     hold(null);
     holdAttach(false);
+    onSignIn?.();
     navigate(authNavigation.readTarget());
   }, [
     attach,
@@ -238,43 +265,49 @@ function VisitorChatNew({ children }: { children: ReactNode }) {
     hold,
     holdAttach,
     navigate,
+    onSignIn,
   ]);
 
   return (
-    <NewChatLayout
-      composer={
-        <NinaInput
-          attachments={false}
-          onAttachRequest={requestAttach}
-          onSubmit={signIn}
-        />
-      }
+    <ComposerContext
+      value={{
+        attachments: false,
+        disabled: false,
+        onAttachRequest: requestAttach,
+        onSubmit: signIn,
+        prompt: null,
+        variant: "visitor",
+      }}
     >
       {children}
-    </NewChatLayout>
+    </ComposerContext>
   );
 }
 
 /**
- * A composer while the session loads. It looks like the others and keeps the
- * draft, and its send is held for the composer that follows once the session
- * settles.
+ * A composer while the session loads. It looks like the others and keeps the draft: where the surface holds, its send
+ * waits for the composer that follows; elsewhere it waits disabled, offering neither sign-in nor a send.
  */
-function PendingChatNew({ children }: { children: ReactNode }) {
+function PendingComposer({ children }: { children: ReactNode }) {
+  const { holds } = useNewChatContext();
   const hold = useHeldSend((state) => state.hold);
+
   return (
-    <NewChatLayout
-      composer={
-        <NinaInput
-          attachments={false}
-          onSubmit={(message) => {
+    <ComposerContext
+      value={{
+        attachments: false,
+        disabled: !holds,
+        onSubmit: (message) => {
+          if (holds) {
             hold(message);
-            return false;
-          }}
-        />
-      }
+          }
+          return false;
+        },
+        prompt: null,
+        variant: "pending",
+      }}
     >
       {children}
-    </NewChatLayout>
+    </ComposerContext>
   );
 }

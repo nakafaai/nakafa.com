@@ -39,6 +39,7 @@ export const createPeriodChange: OptimisticUpdate<
 > = (localStore, { end, name, start, unitId }) => {
   const draft: Period = {
     end,
+    hold: null,
     id: Schema.decodeUnknownSync(Id("tenantPeriods"))(draftText()),
     name,
     start,

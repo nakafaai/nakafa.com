@@ -8,12 +8,13 @@ import {
 import { AnimatedExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/exhaust";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import { useMemo } from "react";
 import { Box3, Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
 
 const SPACE_COLORS = {
-  rocketAccent: getColor("ORANGE", 500),
+  rocketAccent: PLOT_COLORS.orange,
   rocketBody: getColor("ZINC", 100),
   rocketDark: getColor("SLATE", 600),
   rocketEngine: getColor("STONE", 600),

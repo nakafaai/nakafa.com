@@ -35,7 +35,7 @@ import {
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";

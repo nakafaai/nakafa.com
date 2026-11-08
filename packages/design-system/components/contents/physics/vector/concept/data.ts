@@ -1,5 +1,6 @@
 import type { CoordinateTuple as ScenePoint } from "@repo/design-system/components/three/frame";
 import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 
 export const CAMERA_POSITION = [0, 2.35, 5.5] satisfies ScenePoint;
@@ -20,16 +21,16 @@ export function getSceneColors(resolvedTheme: string | undefined) {
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    cable: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
+    cable: isDarkTheme ? getColor("ZINC") : PLOT_COLORS.slate,
     deck: isDarkTheme ? getColor("STONE") : getColor("ZINC"),
-    groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
-    leftVector: getColor("TEAL"),
-    load: getColor("AMBER"),
-    loadDetail: getColor("ORANGE"),
-    rightVector: getColor("VIOLET"),
+    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
+    leftVector: PLOT_COLORS.teal,
+    load: PLOT_COLORS.amber,
+    loadDetail: PLOT_COLORS.orange,
+    rightVector: PLOT_COLORS.violet,
     skyLight: getColor("ZINC", 100),
     text: isDarkTheme ? getColor("ZINC", 100) : getColor("ZINC", 900),
-    tower: isDarkTheme ? getColor("GRAY") : getColor("SLATE"),
+    tower: isDarkTheme ? getColor("GRAY") : PLOT_COLORS.slate,
     wheel: isDarkTheme ? getColor("ZINC", 950) : getColor("ZINC", 900),
   };
 }
