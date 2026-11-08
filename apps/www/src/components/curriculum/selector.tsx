@@ -34,12 +34,12 @@ type SavePreferredCurriculum = (
   args: SavePreferredCurriculumArgs
 ) => InvokeReturn<typeof learningPreferences.mutations.setPreferredCurriculum>;
 /** Expected failure when a background curriculum preference save fails. */
-class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPreferenceSaveError>()(
-  "CurriculumPreferenceSaveError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
+class CurriculumPreferenceSaveError extends Schema.TaggedError<
+  CurriculumPreferenceSaveError,
+  { readonly brand: unique symbol }
+>()("CurriculumPreferenceSaveError", {
+  cause: Schema.Unknown,
+}) {}
 
 /** The props of the selector and of its two variants. */
 interface CurriculumSelectorProps {

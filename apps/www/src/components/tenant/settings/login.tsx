@@ -16,10 +16,8 @@ import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { renameLoginChange } from "@/components/tenant/settings/accounts";
-import { saveSchool } from "@/components/tenant/settings/save";
 import type { Login } from "@/components/tenant/settings/state";
-
-const SOURCE = "components/tenant/settings/login";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**
  * The dialog that changes the login name a student signs in with on the school's host. The field starts from the
@@ -55,14 +53,14 @@ export function LoginRenameDialog({
     }
     setOpen(false);
     startTransition(() =>
-      saveSchool(
-        () =>
+      runSchoolWrite(
+        schoolCall(() =>
           rename({
             loginName: next.value,
             personId: login.person.id,
             slug,
-          }),
-        SOURCE
+          })
+        )
       )
     );
   };

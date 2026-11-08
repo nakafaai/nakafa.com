@@ -34,7 +34,10 @@ import { THREAD } from "@/e2e/support/transcript/message";
 type Socket = Parameters<Parameters<Page["routeWebSocket"]>[1]>[0];
 
 /** A stream was asked for before the page's connection read the chat. */
-class NoConnection extends Schema.TaggedError<NoConnection>()("NoConnection", {
+class NoConnection extends Schema.TaggedError<
+  NoConnection,
+  { readonly brand: unique symbol }
+>()("NoConnection", {
   message: Schema.String,
 }) {}
 

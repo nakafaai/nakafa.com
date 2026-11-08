@@ -1,11 +1,7 @@
 import { type ReactNode, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import {
-  type Choice,
-  heldBy,
-  withHeld,
-} from "@/components/exams/sitting/response";
+import { type Choice, heldBy, withHeld } from "@/components/player/response";
 
 /**
  * The options of one choice on a paper, under its name when the question holds two: the answer and the reason.

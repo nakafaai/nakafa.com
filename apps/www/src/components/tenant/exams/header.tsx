@@ -15,7 +15,6 @@ import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { OfflineNote } from "@/components/shared/offline";
 import { useTenant } from "@/components/tenant/context";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { ExamMenu, ExamMenuFrame } from "@/components/tenant/exams/menu";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { ExamPresence } from "@/components/tenant/exams/presence";
@@ -27,6 +26,7 @@ import {
 } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
+import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -55,11 +55,11 @@ export function ExamHeader() {
     if (Option.isNone(title)) {
       return;
     }
-    runExamAction(
-      sentAction(() => rename({ examId: exam.id, slug, title: title.value })),
+    runSchoolWrite(
+      schoolCall(() => rename({ examId: exam.id, slug, title: title.value })),
       {
-        onFailure: Fn.constVoid,
-        onSuccess: Fn.constVoid,
+        onFailed: Fn.constVoid,
+        onSaved: Fn.constVoid,
       }
     );
   }

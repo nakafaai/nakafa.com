@@ -165,10 +165,12 @@ export const NinaMemoryDraft = Schema.Struct({
  * `restore`, there is nothing to put back under that id for the learner.
  * `limit`: the learner made `MEMORY_WRITES_PER_MINUTE` writes in the last minute.
  */
-export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()(
-  "NinaMemoryRejected",
-  { reason: Schema.Literals(["empty", "missing", "limit"]) }
-) {}
+export class NinaMemoryRejected extends Schema.TaggedError<
+  NinaMemoryRejected,
+  { readonly brand: unique symbol }
+>()("NinaMemoryRejected", {
+  reason: Schema.Literals(["empty", "missing", "limit"]),
+}) {}
 
 /**
  * What a claim and a candidate say besides their kind. `text` is one short

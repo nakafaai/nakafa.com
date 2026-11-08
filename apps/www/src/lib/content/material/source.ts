@@ -71,13 +71,13 @@ const readMaterialNavigation = Effect.fn("NakafaMaterial.readNavigation")(
     });
   }
 );
-class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
-  "MaterialReadError",
-  {
-    cause: Schema.Unknown,
-    stage: Schema.Literals(["lesson", "navigation"]),
-  }
-) {}
+class MaterialReadError extends Schema.TaggedError<
+  MaterialReadError,
+  { readonly brand: unique symbol }
+>()("MaterialReadError", {
+  cause: Schema.Unknown,
+  stage: Schema.Literals(["lesson", "navigation"]),
+}) {}
 
 /** The lesson is read through the content store, so the page and its social
  * image share one read of Convex for each release. */

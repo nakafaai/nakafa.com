@@ -13,10 +13,10 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import type { PublicRuntimeRow } from "@repo/backend/content/publication/spec";
 import { Effect, Schema } from "effect";
-export class PublicRuntimeReadError extends Schema.TaggedError<PublicRuntimeReadError>()(
-  "PublicRuntimeReadError",
-  {}
-) {}
+export class PublicRuntimeReadError extends Schema.TaggedError<
+  PublicRuntimeReadError,
+  { readonly brand: unique symbol }
+>()("PublicRuntimeReadError", {}) {}
 /** Decodes one stored row into the exact Aksara public response. */
 export const decodePublicRuntimeRow = Effect.fn(
   "contentRelease.decodePublicRuntimeRow"

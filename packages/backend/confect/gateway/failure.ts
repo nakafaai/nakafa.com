@@ -8,44 +8,44 @@ export const GatewayType = Schema.String.check(
 );
 
 /** The deployment cannot call the gateway, such as a free, local, or self-hosted deployment. */
-export class GatewayConfigurationError extends Schema.TaggedError<GatewayConfigurationError>()(
-  "GatewayConfigurationError",
-  {
-    message: Schema.String,
-  }
-) {}
+export class GatewayConfigurationError extends Schema.TaggedError<
+  GatewayConfigurationError,
+  { readonly brand: unique symbol }
+>()("GatewayConfigurationError", {
+  message: Schema.String,
+}) {}
 
 /**
  * One classification of every error a model call can raise. It carries
  * routing facts only: never a message, cause, or payload.
  */
-export class GatewayFailure extends Schema.TaggedError<GatewayFailure>()(
-  "GatewayFailure",
-  {
-    reason: Schema.Literals([
-      "rate-limit",
-      "quota",
-      "auth",
-      "configuration",
-      "invalid",
-      "too-large",
-      "timeout",
-      "unavailable",
-      "network",
-      "interrupted",
-      "unknown",
-    ]),
-    status: Schema.optional(Schema.Finite),
-    retryAfter: Schema.optional(Seconds),
-    retryable: Schema.optional(Schema.Boolean),
-    /**
-     * The error's documented type, such as `invalid_request_error`. Named
-     * failures such as `unsupported_parameter` are its code, which is read only
-     * when the body names no type.
-     */
-    type: Schema.optional(GatewayType),
-  }
-) {}
+export class GatewayFailure extends Schema.TaggedError<
+  GatewayFailure,
+  { readonly brand: unique symbol }
+>()("GatewayFailure", {
+  reason: Schema.Literals([
+    "rate-limit",
+    "quota",
+    "auth",
+    "configuration",
+    "invalid",
+    "too-large",
+    "timeout",
+    "unavailable",
+    "network",
+    "interrupted",
+    "unknown",
+  ]),
+  status: Schema.optional(Schema.Finite),
+  retryAfter: Schema.optional(Seconds),
+  retryable: Schema.optional(Schema.Boolean),
+  /**
+   * The error's documented type, such as `invalid_request_error`. Named
+   * failures such as `unsupported_parameter` are its code, which is read only
+   * when the body names no type.
+   */
+  type: Schema.optional(GatewayType),
+}) {}
 
 /** The routing facts of a failure: the only part of it that a log names. */
 export function routingFacts({
