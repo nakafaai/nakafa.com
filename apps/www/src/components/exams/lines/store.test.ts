@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { HashMap, Option } from "effect";
 import { createLines } from "@/components/exams/lines/store";
 
 describe("createLines", () => {
@@ -51,5 +51,37 @@ describe("createLines", () => {
     expect(store.getState().lit).toEqual(Option.some("source-3"));
     store.getState().light(Option.none());
     expect(store.getState().lit).toEqual(Option.none());
+  });
+
+  it("registers each dot and column, forgets one as it leaves, and keeps the element that took its place", () => {
+    const store = createLines();
+    const first = document.createElement("button");
+    const second = document.createElement("button");
+    const list = document.createElement("ol");
+    store.getState().anchor("source-1", first);
+    store.getState().frame("sources", list);
+    expect(HashMap.get(store.getState().anchors, "source-1")).toEqual(
+      Option.some(first)
+    );
+    expect(HashMap.get(store.getState().columns, "sources")).toEqual(
+      Option.some(list)
+    );
+    // A remount registers its new dot before the old one leaves, so the old one's leave forgets nothing.
+    store.getState().anchor("source-1", second);
+    store.getState().unanchor("source-1", first);
+    expect(
+      Option.exists(
+        HashMap.get(store.getState().anchors, "source-1"),
+        (dot) => dot === second
+      )
+    ).toBe(true);
+    store.getState().unanchor("source-1", second);
+    store.getState().unframe("sources", list);
+    expect(HashMap.size(store.getState().anchors)).toBe(0);
+    expect(HashMap.size(store.getState().columns)).toBe(0);
+    // A column that another list took over keeps that list when the first one leaves.
+    store.getState().frame("targets", list);
+    store.getState().unframe("targets", document.createElement("ol"));
+    expect(HashMap.size(store.getState().columns)).toBe(1);
   });
 });
