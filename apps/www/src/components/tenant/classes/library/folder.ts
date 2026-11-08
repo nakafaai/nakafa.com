@@ -13,7 +13,7 @@ import {
   type Result,
   Schema,
 } from "effect";
-import { forumCall } from "@/components/tenant/classes/forum/call";
+import { schoolCall } from "@/components/tenant/write";
 import { changeLoaded } from "@/lib/data/loaded";
 
 /** One folder of a class library, as the library shows it. */
@@ -178,7 +178,7 @@ export const addLibraryFolder = Effect.fn("classroom.folders.add")(function* <
   const id = yield* Schema.decodeUnknownEffect(Id("classroomFolders"))(
     args.clientKey
   );
-  return yield* forumCall(() =>
+  return yield* schoolCall(() =>
     add(
       addFolderUpdate({
         author,

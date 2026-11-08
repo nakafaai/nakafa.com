@@ -1,21 +1,17 @@
-import { JsonTextSchema } from "@repo/utilities/json";
-import { Clock, Duration, Effect, Schema, String as Str } from "effect";
+import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
+import { Clock, Duration, Effect, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
 import { Base64Url, Hex } from "effect/encoding";
 
-/** A document the Convex CLI printed after it created a Better Auth row. */
-const CreatedDocument = Schema.fromJsonString(
-  Schema.Struct({ _creationTime: Schema.Finite, _id: Schema.String })
-);
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
-/**
- * What `adapter:findOne` answers for a user: the row, or null when no row matches.
- * The Convex CLI prints nothing for a null result, so empty output reads as null.
- */
-const FoundUser = Schema.fromJsonString(
-  Schema.NullOr(Schema.Struct({ _id: Schema.String }))
-);
+/** The document Better Auth's adapter answers after it created a row. */
+const CreatedDocument = Schema.Struct({
+  _creationTime: Schema.Finite,
+  _id: Schema.String,
+});
+/** What `adapter:findOne` answers for a user: the row, or null when no row matches. */
+const FoundUser = Schema.NullOr(Schema.Struct({ _id: Schema.String }));
+/** The Better Auth component, which owns every account row. */
+const BETTER_AUTH = "betterAuth";
 
 /**
  * Writes one session row for a Better Auth user, valid for `lifetime` from `now`.
@@ -33,39 +29,27 @@ const writeSession = Effect.fn("contentAcceptance.writeSession")(function* <
     readonly userId: string;
   }
 ) {
-  return yield* encodeArguments({
-    input: {
-      data: {
-        createdAt: session.now,
-        expiresAt: session.now + Duration.toMillis(session.lifetime),
-        token: session.token,
-        updatedAt: session.now,
-        userId: session.userId,
+  return yield* run(
+    "Learner session",
+    {
+      args: {
+        input: {
+          data: {
+            createdAt: session.now,
+            expiresAt: session.now + Duration.toMillis(session.lifetime),
+            token: session.token,
+            updatedAt: session.now,
+            userId: session.userId,
+          },
+          model: "session",
+        },
       },
-      model: "session",
+      component: BETTER_AUTH,
+      path: "adapter:create",
     },
-  }).pipe(
-    Effect.flatMap((args) =>
-      run(
-        "Learner session",
-        ["run", "--component", "betterAuth", "adapter:create", args],
-        [session.token]
-      )
-    ),
-    Effect.flatMap(Schema.decodeEffect(CreatedDocument))
-  );
+    [session.token]
+  ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(CreatedDocument)));
 });
-
-/**
- * Runs one Convex CLI command and returns what it printed. The runner owns
- * which deployment the command reaches, and keeps `sensitiveValues` out of
- * the errors it reports.
- */
-export type RunConvex<E, R> = (
-  operation: string,
-  args: readonly string[],
-  sensitiveValues?: readonly string[]
-) => Effect.Effect<string, E, R>;
 
 /**
  * Deletes one Better Auth row that this module created, by its id. It only
@@ -82,18 +66,13 @@ const removeRow = Effect.fn("contentAcceptance.removeLearnerRow")(function* <
   model: "session" | "user",
   id: string
 ) {
-  yield* encodeArguments({
-    input: { model, where: [{ field: "_id", operator: "eq", value: id }] },
+  yield* run(operation, {
+    args: {
+      input: { model, where: [{ field: "_id", operator: "eq", value: id }] },
+    },
+    component: BETTER_AUTH,
+    path: "adapter:deleteOne",
   }).pipe(
-    Effect.flatMap((args) =>
-      run(operation, [
-        "run",
-        "--component",
-        "betterAuth",
-        "adapter:deleteOne",
-        args,
-      ])
-    ),
     Effect.ignoreCause({ log: "Warn", message: `${operation} failed` }),
     Effect.annotateLogs({ id, model })
   );
@@ -132,20 +111,11 @@ export const createLearnerAccount = Effect.fn(
     name: "Acceptance Learner",
     updatedAt: now,
   };
-  const created = yield* encodeArguments({
-    input: { data: user, model: "user" },
-  }).pipe(
-    Effect.flatMap((args) =>
-      run("Learner account", [
-        "run",
-        "--component",
-        "betterAuth",
-        "adapter:create",
-        args,
-      ])
-    ),
-    Effect.flatMap(Schema.decodeEffect(CreatedDocument))
-  );
+  const created = yield* run("Learner account", {
+    args: { input: { data: user, model: "user" } },
+    component: BETTER_AUTH,
+    path: "adapter:create",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(CreatedDocument)));
   const removeAccount = removeRow(
     run,
     "Learner account removal",
@@ -164,15 +134,10 @@ export const createLearnerAccount = Effect.fn(
     "session",
     opened._id
   );
-  yield* encodeArguments({
-    doc: { ...user, ...created },
-    model: "user",
-  }).pipe(
-    Effect.flatMap((args) =>
-      run("Learner profile", ["run", "auth/lifecycle:onCreate", args])
-    ),
-    Effect.onError(() => Effect.andThen(removeSession, removeAccount))
-  );
+  yield* run("Learner profile", {
+    args: { doc: { ...user, ...created }, model: "user" },
+    path: "auth/lifecycle:onCreate",
+  }).pipe(Effect.onError(() => Effect.andThen(removeSession, removeAccount)));
   return { sessionId: opened._id, token, userId: created._id };
 });
 
@@ -190,24 +155,14 @@ export const openLearnerAccount = Effect.fn(
   lifetime: Duration.Duration,
   address: string
 ) {
-  const existing = yield* encodeArguments({
-    model: "user",
-    where: [{ field: "email", operator: "eq", value: address }],
-  }).pipe(
-    Effect.flatMap((args) =>
-      run("Learner account lookup", [
-        "run",
-        "--component",
-        "betterAuth",
-        "adapter:findOne",
-        args,
-      ])
-    ),
-    Effect.map((printed) =>
-      Str.isEmpty(Str.trim(printed)) ? "null" : printed
-    ),
-    Effect.flatMap(Schema.decodeEffect(FoundUser))
-  );
+  const existing = yield* run("Learner account lookup", {
+    args: {
+      model: "user",
+      where: [{ field: "email", operator: "eq", value: address }],
+    },
+    component: BETTER_AUTH,
+    path: "adapter:findOne",
+  }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(FoundUser)));
   if (existing === null) {
     return yield* createLearnerAccount(run, lifetime, address);
   }
