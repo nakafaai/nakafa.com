@@ -9,7 +9,6 @@ import {
   type SchoolPaidTierKey,
   type SchoolTierKey,
   schoolMonthlyAfterDiscount,
-  schoolPeriodTotal,
   schoolTiers,
 } from "@repo/backend/confect/billing/tiers";
 import {
@@ -19,15 +18,20 @@ import {
   CardHeader,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cva } from "class-variance-authority";
-import { Record as Rec } from "effect";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { useSchoolPeriod } from "@/components/marketing/school/period";
-import { SchoolAmount } from "@/components/marketing/school/price";
-import { formatStorage } from "@/lib/pricing/school";
+import { CurrencyText } from "@/components/marketing/about/pricing/currency";
+import { SchoolAmount } from "@/components/marketing/school/pricing/price";
+import { PricingCurrencySchema } from "@/lib/pricing/monthly";
+import { formatSchoolPrice, formatStorage } from "@/lib/pricing/school";
 import { Link } from "@/lib/routing/link";
+
+/** The longest period a school pays for at once, whose discount each paid card shows. */
+const LONGEST_PERIOD = 12;
 
 /** The ring of a plan's card: Pro, the plan most schools fit, stands out with the brand ring. */
 const planCardVariants = cva("md:row-span-4 md:grid md:grid-rows-subgrid", {
@@ -56,31 +60,34 @@ function PlanLine({
   );
 }
 
-/** A paid plan's price a month after the period's discount, and the invoice of the whole period under it. */
+/**
+ * A paid plan's price a month, and under it what a month costs when the school
+ * pays for the longest period at once, so the discount of a longer period shows
+ * in the card itself.
+ */
 function PaidPrice({ tier }: { tier: SchoolPaidTierKey }) {
   const t = useTranslations("SchoolSite");
-  const period = useSchoolPeriod((state) => state.period);
   const monthly = schoolTiers[tier].monthly;
 
   return (
     <>
       <p className="flex flex-wrap items-baseline gap-x-2 whitespace-nowrap">
         <span className="text-4xl font-semibold tracking-tight tabular-nums">
-          <SchoolAmount
-            amounts={Rec.map(monthly, (amount) =>
-              schoolMonthlyAfterDiscount(amount, period)
-            )}
-          />
+          <SchoolAmount amounts={monthly} />
         </span>
         <span className="text-muted-foreground">{t("plan-month")}</span>
       </p>
       <p className="text-muted-foreground text-sm text-pretty tabular-nums">
-        <SchoolAmount
-          amounts={Rec.map(monthly, (amount) =>
-            schoolPeriodTotal(amount, period)
-          )}
-        />{" "}
-        {t("plan-billed", { months: period })}
+        {Arr.map(PricingCurrencySchema.literals, (currency) => (
+          <CurrencyText currency={currency} key={currency}>
+            {t("plan-yearly", {
+              price: formatSchoolPrice(
+                currency,
+                schoolMonthlyAfterDiscount(monthly[currency], LONGEST_PERIOD)
+              ),
+            })}
+          </CurrencyText>
+        ))}
       </p>
     </>
   );
@@ -101,10 +108,10 @@ function TrialPrice() {
 }
 
 /**
- * One plan's card in four rows: its name and who it fits, its price, what it
- * holds, and its action. Every plan starts the free trial: a school opens on
- * Gratis and upgrades inside its settings, so Pro's action is the page's one
- * primary button.
+ * One plan's card in four rows: its name, its price, what it holds, and its
+ * action. Every plan starts the free trial: a school opens on Gratis and
+ * upgrades inside its settings, so Pro's action is the page's one primary
+ * button.
  */
 function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
   const t = useTranslations("SchoolSite");
@@ -117,7 +124,6 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
         <h2 className="text-xl font-medium tracking-tight">
           {t(`plan-${tier}`)}
         </h2>
-        <p className="text-muted-foreground">{t(`plan-${tier}-description`)}</p>
       </CardHeader>
       <CardContent className="grid content-start gap-1">
         {tier === "free" ? <TrialPrice /> : <PaidPrice tier={tier} />}
@@ -161,14 +167,20 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
 
 /**
  * The three School plans side by side from `md`, sharing four rows so their
- * prices, lists and actions line up, one under another on a phone. The prices
- * follow the page's billing period.
+ * prices, lists and actions line up, one under another on a phone. Nina drums
+ * on the top edge of Pro's card: the card is drawn over her, so its line cuts
+ * her body.
  */
 export function SchoolPlans() {
   return (
-    <div className="grid w-full gap-4 md:grid-cols-3 md:grid-rows-[auto_auto_1fr_auto] md:gap-y-6">
+    <div className="grid w-full gap-x-4 gap-y-18 md:grid-cols-3 md:grid-rows-[auto_auto_1fr_auto] md:gap-y-6">
       <SchoolPlanCard tier="free" />
-      <SchoolPlanCard tier="pro" />
+      <div className="relative grid md:row-span-4 md:grid-rows-subgrid">
+        <span className="absolute end-6 bottom-[calc(100%-0.5rem)]">
+          <Nina act="drumming" label="" lean="peek" size={72} />
+        </span>
+        <SchoolPlanCard tier="pro" />
+      </div>
       <SchoolPlanCard tier="max" />
     </div>
   );

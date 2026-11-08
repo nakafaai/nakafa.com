@@ -1,4 +1,5 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -11,6 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -25,6 +27,7 @@ import { Array as Arr, Option, Result, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ChoiceLabel } from "@/components/tenant/choice";
 import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { createClassChange } from "@/components/tenant/settings/class/changes";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -210,8 +213,10 @@ function ClassCohortSelect({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
+            <ChoiceLabel name="cohort" />
             {Arr.map(items, (item) => (
               <SelectItem key={item.value} value={item.value}>
+                <HugeIcons icon={UserGroupIcon} />
                 {item.label}
               </SelectItem>
             ))}

@@ -1,10 +1,7 @@
-import {
-  isSchoolLabel,
-  type TenantSlug,
-} from "@repo/backend/confect/tenancy/slug";
+import { isSchoolLabel, TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { SCHOOL_CELL_DOMAINS } from "@repo/site/domains";
 import { readHostname } from "@repo/utilities/http/host";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 
 /**
  * The domain of a local development server. Browsers resolve every
@@ -19,60 +16,62 @@ export const SCHOOL_DOMAINS = [
   LOCAL_DOMAIN,
 ];
 
-/** The single label in front of a domain, or none when the host is not one label under it. */
-function readLabel(hostname: string, domain: string): Option.Option<string> {
-  const suffix = `.${domain}`;
-  if (!hostname.endsWith(suffix)) {
-    return Option.none();
-  }
-  const label = hostname.slice(0, -suffix.length);
-  return label.includes(".") ? Option.none() : Option.some(label);
-}
-
-/** The school address in front of one school domain, or none when the label is not a school address. */
-function readSchoolLabel(
-  hostname: string,
-  domain: string
-): Option.Option<TenantSlug> {
-  return readLabel(hostname, domain).pipe(Option.filter(isSchoolLabel));
-}
-
-/**
- * The school address that a host names, such as `harapan` for
- * `harapan.nakafa.com`. A host outside the school domains names no school, and
- * neither does a label that the slug rules refuse, such as a reserved one.
- */
-export function readSchoolSlug(hostname: string): Option.Option<TenantSlug> {
-  return Arr.findFirst(SCHOOL_DOMAINS, (domain) =>
-    readSchoolLabel(hostname, domain)
-  );
-}
-
-/**
- * Whether a host sits under a production cell domain without naming a school.
- * The proxy redirects it to the main site, so `www` and every reserved label
- * reach the same place as before school hosts existed.
- */
-export function isRefusedSchoolHost(hostname: string) {
-  return (
-    Arr.some(Rec.values(SCHOOL_CELL_DOMAINS), (domain) =>
-      hostname.endsWith(`.${domain}`)
-    ) && Option.isNone(readSchoolSlug(hostname))
-  );
-}
-
 /** The label of the host that names Nakafa School itself, such as `school.nakafa.com`. */
-const SCHOOL_PRODUCT_LABEL = "school";
+const PRODUCT_LABEL = "school";
 
 /**
- * Whether a host names Nakafa School itself, such as `school.nakafa.com`: a
- * reserved label, so no school takes it, whose home is the School landing.
+ * What a host is to the web Worker, decided from its name alone, so a request
+ * never reads the database to find its school (ADR 0026):
+ *
+ * - `School`: one label under a school domain that names a school, such as
+ *   `harapan.nakafa.com` or `harapan.localhost`.
+ * - `Product`: the host of Nakafa School itself, `school.nakafa.com`.
+ * - `Refused`: any other host under a production cell domain, such as `www`, a
+ *   label the slug rules reserve or refuse (`isSchoolLabel`), or two labels. The
+ *   Worker moves its pages to the main site, unless the host is the deployment's
+ *   own address, which only the deployment knows (`readMainSiteRedirect`).
+ * - `Main`: the main site, a development server, and every host outside the
+ *   cell domains.
  */
-export function isSchoolProductHost(hostname: string) {
-  return Arr.some(
-    Rec.values(SCHOOL_CELL_DOMAINS),
-    (domain) => hostname === `${SCHOOL_PRODUCT_LABEL}.${domain}`
+const HostRole = Schema.TaggedUnion({
+  Main: {},
+  Product: {},
+  Refused: {},
+  School: { slug: TenantSlug },
+});
+
+type HostRole = typeof HostRole.Type;
+
+/** The school domain that a host sits one or more labels under, with the labels in front of it. */
+function splitHost(hostname: string) {
+  return Arr.findFirst(SCHOOL_DOMAINS, (domain) =>
+    hostname.endsWith(`.${domain}`)
+      ? Option.some({ domain, labels: hostname.slice(0, -domain.length - 1) })
+      : Option.none()
   );
+}
+
+/** Whether a domain is a production cell domain, where an unknown host is refused. */
+function isCellDomain(domain: string) {
+  return Arr.contains(Rec.values(SCHOOL_CELL_DOMAINS), domain);
+}
+
+/** The role of one hostname, as `HostRole` decides it. */
+export function readHostRole(hostname: string): HostRole {
+  return Option.match(splitHost(hostname), {
+    onNone: () => HostRole.cases.Main.make({}),
+    onSome: ({ domain, labels }) => {
+      if (isSchoolLabel(labels)) {
+        return HostRole.cases.School.make({ slug: labels });
+      }
+      if (!isCellDomain(domain)) {
+        return HostRole.cases.Main.make({});
+      }
+      return labels === PRODUCT_LABEL
+        ? HostRole.cases.Product.make({})
+        : HostRole.cases.Refused.make({});
+    },
+  });
 }
 
 /**
@@ -92,11 +91,28 @@ export function readRequestHost(headers: Headers) {
  * from its own address, names that address for every host, so only the header
  * tells the school hosts apart. A platform that builds the request URL from this
  * same header, as the deployed Worker does, gives production the same host here.
- * The port is dropped, and
- * a missing header or a value that is not a host names no host.
+ * The port is dropped, and a missing header or a value that is not a host names
+ * no host.
  */
 export function readRequestHostname(headers: Headers) {
   return Option.flatMap(readRequestHost(headers), readHostname);
+}
+
+/** The role of the host that the visitor asked for (`readRequestHostname`); no host is the main site. */
+export function readRequestHostRole(headers: Headers): HostRole {
+  return Option.match(readRequestHostname(headers), {
+    onNone: () => HostRole.cases.Main.make({}),
+    onSome: readHostRole,
+  });
+}
+
+/**
+ * The school address that a host names, such as `harapan` for
+ * `harapan.nakafa.com`, or none for any host that is not a school's.
+ */
+export function readSchoolSlug(hostname: string): Option.Option<TenantSlug> {
+  const role = readHostRole(hostname);
+  return role._tag === "School" ? Option.some(role.slug) : Option.none();
 }
 
 /**
@@ -106,4 +122,17 @@ export function readRequestHostname(headers: Headers) {
  */
 export function schoolOrigin(slug: TenantSlug) {
   return new URL(`https://${slug}.${SCHOOL_CELL_DOMAINS.us}`);
+}
+
+/**
+ * The school host of a school under the domain that a host sits under or is, such
+ * as `harapan.localhost` beside `localhost:3000`, or none for a host outside the
+ * school domains. The router maps a path of the school tree back to it.
+ */
+export function schoolHostBeside(hostname: string, slug: TenantSlug) {
+  return Arr.findFirst(SCHOOL_DOMAINS, (domain) =>
+    hostname === domain || hostname.endsWith(`.${domain}`)
+      ? Option.some(`${slug}.${domain}`)
+      : Option.none()
+  );
 }

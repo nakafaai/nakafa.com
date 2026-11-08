@@ -5,6 +5,7 @@ import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { SittingGroup } from "@repo/backend/confect/exams/sittings/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, pipe, Schema } from "effect";
+import { changeLoaded, withPage } from "@/lib/data/loaded";
 
 /**
  * The state that the rooms table filters by: every room, or the rooms in one of the sitting
@@ -66,21 +67,15 @@ export const roomGroups = (rooms: readonly (typeof RoomRow.Type)[]) =>
 export const cancelRoomChange: OptimisticUpdate<
   typeof exams.sittings.cancel
 > = (localStore, { sittingId, slug }) => {
-  for (const query of localStore.getAllQueries(exams.rooms.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        exams.rooms.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.filter(
-            query.value.value.page,
-            (room) => room.id !== sittingId
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, exams.rooms.list, (value, args) =>
+    args.slug === slug
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.filter(page, (room) => room.id !== sittingId)
+          )
+        )
+      : Option.none()
+  );
 };
 
 /**
@@ -90,18 +85,15 @@ export const cancelRoomChange: OptimisticUpdate<
 export const rescheduleRoomChange: OptimisticUpdate<
   typeof exams.sittings.reschedule
 > = (localStore, { closesAt, opensAt, room, sittingId, slug }) => {
-  for (const query of localStore.getAllQueries(exams.rooms.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        exams.rooms.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: Arr.map(query.value.value.page, (row) =>
-            row.id === sittingId ? { ...row, closesAt, opensAt, room } : row
-          ),
-        })
-      );
-    }
-  }
+  changeLoaded(localStore, exams.rooms.list, (value, args) =>
+    args.slug === slug
+      ? Option.some(
+          withPage(value, (page) =>
+            Arr.map(page, (row) =>
+              row.id === sittingId ? { ...row, closesAt, opensAt, room } : row
+            )
+          )
+        )
+      : Option.none()
+  );
 };

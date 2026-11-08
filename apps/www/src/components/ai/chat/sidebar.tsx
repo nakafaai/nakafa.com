@@ -44,7 +44,8 @@ import { ConvexIsland } from "@/components/providers/island";
 import { SidebarToggle } from "@/components/sidebar/toggle";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { useViewer } from "@/lib/identity/client";
-import { Link, useCurrentLocale } from "@/lib/routing/link";
+import { Link } from "@/lib/routing/link";
+import { chatTarget } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
@@ -206,7 +207,6 @@ function SidebarChatRows({
   showDrafts: boolean;
 }) {
   const t = useTranslations("Ai");
-  const locale = useCurrentLocale();
   const drafts = useAi((state) => state.chatDrafts);
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
@@ -234,9 +234,8 @@ function SidebarChatRows({
                 render={
                   <Link
                     activeOptions={EXACT_ACTIVE_OPTIONS}
-                    params={{ id: chat._id, locale }}
+                    {...chatTarget(chat._id)}
                     title={title}
-                    to="/$locale/chat/$id"
                   />
                 }
               >

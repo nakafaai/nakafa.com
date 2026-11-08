@@ -1,5 +1,6 @@
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { EditorArabicKeyboard } from "@repo/design-system/components/editor/arabic";
+import { barLine } from "@repo/design-system/components/editor/bar";
 import {
   DocumentLists,
   RichEditorBlocks,
@@ -88,12 +89,7 @@ function groupsKey(groups: readonly (typeof WrappedGroup.Type)[]) {
 
 /** The line that sets a group of controls off from the one before it. */
 function BarLine({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn("bg-border h-5 w-px shrink-0", className)}
-    />
-  );
+  return <span aria-hidden="true" className={cn(barLine(), className)} />;
 }
 
 /**
@@ -150,7 +146,7 @@ function WrappedTools({
  * Every control the width has room for stays in the row, and only the ones that truly do not
  * fit move behind a last control that opens them, so a writer never opens a menu for a control
  * that had room, and the line never wraps and never scrolls. They close when a control there
- * has acted and the caret is back in the text. A control that opens its own choices, such as
+ * has been pressed and the caret is back in the text. A control that opens its own choices, such as
  * the link field, keeps them open until the writer has chosen. Until the editor exists, every
  * control waits.
  */
@@ -175,15 +171,22 @@ function EditorBar({
     []
   );
   const [open, setOpen] = useState(false);
+  // Whether a control in the open groups has been pressed. Only that press closes them when the
+  // caret comes back to the text: a focus the text takes for another reason, such as a closing
+  // menu handing its focus back, leaves the groups open.
+  const acted = useRef(false);
 
   useEffect(() => {
     if (!(open && editor)) {
       return;
     }
+    acted.current = false;
 
-    /** Every control gives the caret back to the text when it acts. */
+    /** A control gives the caret back to the text when it acts, and the groups close then. */
     function close() {
-      setOpen(false);
+      if (acted.current) {
+        setOpen(false);
+      }
     }
 
     editor.on("focus", close);
@@ -258,6 +261,10 @@ function EditorBar({
               finalFocus={(closed) =>
                 closed === "keyboard" ? true : (editor?.view.dom ?? true)
               }
+              // A press reaches here from a control of the groups, a field or menu it opens included.
+              onClickCapture={() => {
+                acted.current = true;
+              }}
             >
               {Arr.map(groups, ({ name, tools }) =>
                 Option.match(
