@@ -12,7 +12,7 @@ import {
   GRAPH_POINT_SEGMENTS,
 } from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { COLORS } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getCos, getRadians, getSin } from "@repo/math/angles";
 import { createContext, use, useMemo } from "react";
 import { Vector3 } from "three";
@@ -71,7 +71,7 @@ function UnitCircleScene() {
     [angleInRadians]
   );
 
-  const circleColor = COLORS.PURPLE;
+  const circleColor = PLOT_COLORS.fuchsia;
 
   // Pre-calculate positions
   const pointPosition = useMemo(() => new Vector3(cos, sin, 0), [cos, sin]);
@@ -101,7 +101,7 @@ function UnitCircleScene() {
 
       {/* Angle arc */}
       <Line
-        color={COLORS.VIOLET}
+        color={PLOT_COLORS.violet}
         frustumCulled
         lineWidth={2}
         points={arcPoints}
@@ -116,7 +116,7 @@ function UnitCircleScene() {
 
       {/* Line from origin to point */}
       <Line
-        color={COLORS.ROSE}
+        color={PLOT_COLORS.pink}
         frustumCulled
         lineWidth={2}
         points={lineSegments.radius}
@@ -124,7 +124,7 @@ function UnitCircleScene() {
 
       {/* Sine line (vertical) */}
       <Line
-        color={COLORS.ORANGE}
+        color={PLOT_COLORS.orange}
         frustumCulled
         lineWidth={2}
         points={lineSegments.sine}
@@ -132,7 +132,7 @@ function UnitCircleScene() {
 
       {/* Cosine line (horizontal) */}
       <Line
-        color={COLORS.CYAN}
+        color={PLOT_COLORS.teal}
         frustumCulled
         lineWidth={2}
         points={lineSegments.cosine}
@@ -141,7 +141,7 @@ function UnitCircleScene() {
       <ThreeLabel
         anchorX="center"
         anchorY={sin < -EPSILON ? "bottom" : "top"}
-        color={COLORS.CYAN}
+        color={PLOT_COLORS.teal}
         fontSize={LABEL_FONT_SIZE}
         gap={0.1}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
@@ -152,7 +152,7 @@ function UnitCircleScene() {
       </ThreeLabel>
       <ThreeLabel
         anchorX={sineLabelDirection < 0 ? "right" : "left"}
-        color={COLORS.ORANGE}
+        color={PLOT_COLORS.orange}
         fontSize={LABEL_FONT_SIZE}
         gap={0.1}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}

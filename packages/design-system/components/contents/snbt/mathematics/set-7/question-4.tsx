@@ -2,7 +2,7 @@ import { LineEquationCard } from "@repo/design-system/components/contents/mathem
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
@@ -27,9 +27,9 @@ const CENTER = { x: 0, y: 0, z: 0 };
 const FLOOR_CENTER = { x: 0, y: -HALF, z: 0 };
 const MID_DISTANCE = { x: 0, y: -HALF / 2, z: 0 };
 
-const COLOR_CUBE = getColor("INDIGO");
-const COLOR_DIAGONAL = getColor("ROSE");
-const COLOR_DISTANCE = getColor("AMBER");
+const COLOR_CUBE = PLOT_COLORS.violet;
+const COLOR_DIAGONAL = PLOT_COLORS.pink;
+const COLOR_DISTANCE = PLOT_COLORS.amber;
 
 const cubeEdges = [
   [A, B],

@@ -1,5 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { createFileRoute, notFound, useMatch } from "@tanstack/react-router";
+import { createFileRoute, useMatch } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { type ReactElement, useState } from "react";
 import {
@@ -9,6 +9,7 @@ import {
 import { ClassShell } from "@/components/tenant/classes/shell";
 import type { ClassView } from "@/components/tenant/classes/view";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { guardSchoolPage } from "@/lib/tenant/guard";
 import { readClassAddress, readDiscussionNumber } from "@/lib/tenant/params";
 
 /**
@@ -25,19 +26,16 @@ const ForumSearch = Schema.Struct({
  * The forum of one class of the school: its channels, the messages of the channel the address names, or one numbered
  * discussion beside its channel, such as `/classes/fisika-x-1/forum/12` (ADR 0026). The class page is this route's
  * alone, so opening, switching and closing a discussion keep the page, its channel and its scroll mounted, and only
- * the pane beside it changes. A failed address to a class or to a discussion is not found for every viewer.
+ * the pane beside it changes. The School guard answers not found for an address that names no class, and the page for
+ * a discussion's address whose digits name none, since its child routes draw nothing of their own.
  */
 export const Route = createFileRoute("/school/$slug/classes/$classSlug/forum")({
   validateSearch: Schema.toStandardSchemaV1(ForumSearch),
-  beforeLoad: ({ params }) => {
-    const classAddress = readClassAddress(params.classSlug);
-    if (Option.isNone(classAddress)) {
-      throw notFound();
-    }
-    return { classAddress: classAddress.value };
-  },
+  ...guardSchoolPage({
+    reads: (params: { readonly classSlug: string }) =>
+      Option.all({ classAddress: readClassAddress(params.classSlug) }),
+  }),
   component: SchoolClassForumPage,
-  notFoundComponent: SchoolPageNotFound,
 });
 
 /** What the forum's address names: one discussion, else one channel, else the list of channels. */

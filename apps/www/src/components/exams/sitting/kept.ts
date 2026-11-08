@@ -8,13 +8,12 @@ import {
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { useEffect, useRef, useState } from "react";
-import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import {
-  useSendAnswer,
+  useAnswerLedger,
   useSendFinish,
 } from "@/components/exams/sitting/answer";
 import { readSittingDevice } from "@/components/exams/sitting/device";
-import { isStaleAnswer } from "@/components/exams/sitting/entry";
+import { answerRefusalOf } from "@/components/exams/sitting/entry";
 import { toastUnsentAnswers } from "@/components/exams/sitting/forget";
 import { keptAttempt, keptFinish } from "@/components/exams/sitting/keep";
 import type {
@@ -63,7 +62,7 @@ export function useResendKeptAnswers({
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
-  const send = useSendAnswer();
+  const ledgerOf = useAnswerLedger();
   const finish = useSendFinish();
   const resumed = useRef(false);
 
@@ -77,41 +76,19 @@ export function useResendKeptAnswers({
       return;
     }
     resumed.current = true;
+    const target = { attemptId, deviceId, sittingId, slug };
     Effect.runPromise(
-      keptAttempt(sittingId, attemptId)
-        .answersFor(Arr.map(paper.questions, (question) => question.id))
+      ledgerOf(target)
+        .resend(Arr.map(paper.questions, (question) => question.id))
         .pipe(
-          Effect.provide(keptStorage),
-          Effect.flatMap((kept) =>
-            Effect.forEach(kept, ({ answer, questionId }) =>
-              send(
-                {
-                  attemptId,
-                  deviceId,
-                  questionId,
-                  response: answer.response,
-                  sittingId,
-                  slug,
-                  version: answer.version,
-                },
-                answer.answeredAt
-              )
-            )
-          ),
-          Effect.map((failures) =>
-            Arr.filter(
-              Arr.getSomes(failures),
-              (failure) => !isStaleAnswer(failure)
-            )
-          ),
-          Effect.tap(sittingCallFailures),
-          Effect.flatMap((failures) =>
+          Effect.flatMap((told) =>
             resumeFinish(
               keptFinish(sittingId, attemptId),
-              Arr.isReadonlyArrayEmpty(failures),
-              finish({ attemptId, deviceId, sittingId, slug })
+              Arr.isReadonlyArrayEmpty(told),
+              finish(target)
             )
           ),
+          Effect.provide(keptStorage),
           Effect.catchTag("KeyValueStoreError", (error) =>
             reportClientException(error, {
               source: "components/exams/sitting/resend",
@@ -119,12 +96,15 @@ export function useResendKeptAnswers({
           )
         )
     );
-  }, [attemptId, deviceId, finish, locked, paper, send, sittingId, slug]);
+  }, [attemptId, deviceId, finish, ledgerOf, locked, paper, sittingId, slug]);
 }
 
-/** Sends each answer the browser holds for a closed attempt, and tells the student of any the server refuses. */
+/**
+ * Sends each answer the browser holds for a closed attempt, and tells the student once, with the toast of answers
+ * that may not have saved, when the server refuses any that it does not already hold.
+ */
 const sendClosedAnswers = Effect.fn("sitting.closed.send")(function* (
-  send: ReturnType<typeof useSendAnswer>,
+  ledgerOf: ReturnType<typeof useAnswerLedger>,
   attemptId: GenericId.GenericId<"examAttempts">,
   sittingId: GenericId.GenericId<"examSittings">,
   slug: TenantSlug
@@ -133,26 +113,24 @@ const sendClosedAnswers = Effect.fn("sitting.closed.send")(function* (
   if (Option.isNone(device)) {
     return;
   }
+  const ledger = ledgerOf({
+    attemptId,
+    deviceId: device.value,
+    sittingId,
+    slug,
+  });
   const { answers } = yield* keptAttempt(sittingId, attemptId).read();
   const failures = yield* Effect.forEach(
     Rec.toEntries(answers),
     ([questionId, answer]) =>
-      send(
-        {
-          attemptId,
-          deviceId: device.value,
-          questionId: Schema.decodeUnknownSync(Id("examQuestions"))(questionId),
-          response: answer.response,
-          sittingId,
-          slug,
-          version: answer.version,
-        },
-        answer.answeredAt
+      ledger.send(
+        Schema.decodeUnknownSync(Id("examQuestions"))(questionId),
+        answer
       )
   );
   const refused = Arr.filter(
     Arr.getSomes(failures),
-    (failure) => !isStaleAnswer(failure)
+    (failure) => answerRefusalOf(failure) !== "quiet"
   );
   if (Arr.isReadonlyArrayNonEmpty(refused)) {
     toastUnsentAnswers();
@@ -177,7 +155,7 @@ export function useSendClosedKept({
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
-  const send = useSendAnswer();
+  const ledgerOf = useAnswerLedger();
   const sent = useRef(false);
 
   useEffect(() => {
@@ -186,7 +164,7 @@ export function useSendClosedKept({
     }
     sent.current = true;
     Effect.runPromise(
-      sendClosedAnswers(send, attemptId, sittingId, slug).pipe(
+      sendClosedAnswers(ledgerOf, attemptId, sittingId, slug).pipe(
         Effect.provide(keptStorage),
         Effect.catchTag("KeyValueStoreError", (error) =>
           reportClientException(error, {
@@ -195,7 +173,7 @@ export function useSendClosedKept({
         )
       )
     );
-  }, [attemptId, enabled, send, sittingId, slug]);
+  }, [attemptId, enabled, ledgerOf, sittingId, slug]);
 }
 
 /**
@@ -217,10 +195,12 @@ export function useFinishAttempt({
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
-  const send = useSendAnswer();
+  const ledgerOf = useAnswerLedger();
   const finish = useSendFinish();
 
   return () => {
+    const target = { attemptId, deviceId, sittingId, slug };
+    const ledger = ledgerOf(target);
     const kept = Effect.runSync(
       keptAttempt(sittingId, attemptId)
         .answersFor(Arr.map(paper?.questions ?? [], (question) => question.id))
@@ -234,22 +214,11 @@ export function useFinishAttempt({
         )
     );
     Arr.forEach(kept, ({ answer, questionId }) => {
-      Effect.runPromise(
-        send(
-          {
-            attemptId,
-            deviceId,
-            questionId,
-            response: answer.response,
-            sittingId,
-            slug,
-            version: answer.version,
-          },
-          answer.answeredAt
-        )
+      Effect.runFork(
+        ledger.send(questionId, answer).pipe(Effect.provide(keptStorage))
       );
     });
-    Effect.runPromise(finish({ attemptId, deviceId, sittingId, slug }));
+    Effect.runPromise(finish(target));
   };
 }
 

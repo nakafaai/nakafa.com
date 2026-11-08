@@ -21,7 +21,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
-import { COLORS } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Effect } from "effect";
 import type { ReactNode } from "react";
 import { useFormatter } from "use-intl";
@@ -37,7 +37,11 @@ interface Props {
   })[];
 }
 
-const VECTOR_COLORS = [COLORS.ORANGE, COLORS.PURPLE, COLORS.AMBER];
+const VECTOR_COLORS = [
+  PLOT_COLORS.orange,
+  PLOT_COLORS.fuchsia,
+  PLOT_COLORS.amber,
+];
 const VECTOR_ARROWS = {
   forward: "end",
   backward: "start",

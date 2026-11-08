@@ -4,7 +4,8 @@ import {
   DeviceId,
 } from "@repo/backend/confect/exams/sittings/schema";
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
+import type { KeptRefusal } from "@/components/player/keep";
 
 /**
  * The reasons that a sitting call ends with, as the server names them. An entry, the paper, and an attempt's
@@ -115,7 +116,8 @@ const sentences: Record<SittingReason, typeof EntryMessage.Type | undefined> = {
 
 /**
  * The toast that an answer or a finish shows for each reason it refuses. Every reason has a line, and a reason
- * that refuses no answer or finish is `undefined`.
+ * that refuses no answer or finish is `undefined`. A stale answer shows none: the server holds that answer or a
+ * newer one, so the paper already shows what was saved.
  */
 const toasts: Record<SittingReason, ToastCopy | undefined> = {
   AttemptClosed: {
@@ -152,10 +154,7 @@ const toasts: Record<SittingReason, ToastCopy | undefined> = {
     title: "sitting-locked.title",
   },
   SittingNotOpen: undefined,
-  StaleAnswer: {
-    description: "sitting-stale-answer.description",
-    title: "sitting-stale-answer.title",
-  },
+  StaleAnswer: undefined,
 };
 
 /** The reason that a failed call names, or none when the error names no sitting reason. */
@@ -167,20 +166,25 @@ function reasonOf(error: unknown) {
 }
 
 /**
- * Whether a refused answer or finish is final, so the browser drops the answer that it keeps for it. The server
- * will not take such an answer later. A refusal for a lock is not final, because the lock lifts, and the next
- * visit to the paper sends the kept answer again. Any error that is not a refusal is not final either.
+ * How the player's kept answers read a refused answer (`KeptRefusal`). A stale answer is quiet: the server
+ * holds it or a newer one. A lock holds the answer, because the lock lifts and the next visit to the paper sends
+ * it again. A refusal with a toast is final, because the server will not take that answer later. Anything else,
+ * such as a call that never reached the server, failed, and the answer stays to go again.
  */
-export function isFinalRefusal(error: unknown): boolean {
-  return Option.exists(
-    reasonOf(error),
-    (reason) => toasts[reason] !== undefined && !Schema.is(LockReason)(reason)
-  );
-}
-
-/** Whether a refused answer is one that the server already holds, or that a newer answer took the place of. */
-export function isStaleAnswer(error: unknown): boolean {
-  return Option.contains(reasonOf(error), "StaleAnswer");
+export function answerRefusalOf(error: unknown): typeof KeptRefusal.Type {
+  return Option.match(reasonOf(error), {
+    onNone: () => "failed",
+    onSome: (reason) =>
+      Match.value(reason).pipe(
+        Match.when("StaleAnswer", () => "quiet" as const),
+        Match.when(Schema.is(LockReason), () => "held" as const),
+        Match.when(
+          (named) => toasts[named] !== undefined,
+          () => "final" as const
+        ),
+        Match.orElse(() => "failed" as const)
+      ),
+  });
 }
 
 /**
@@ -216,16 +220,18 @@ const GENERIC_FAILURE: ToastCopy = {
   title: "action-error.title",
 };
 
+/** The toast of one failed sitting call: its refusal's copy when it names one, and the generic copy otherwise. */
+export const failureCopyOf = (error: unknown): ToastCopy =>
+  Option.getOrElse(refusalCopyOf(error), () => GENERIC_FAILURE);
+
 /**
- * The one toast of a group of failed calls, such as the answers of a resent paper: the refusal copy of the
- * group's first failure when it names a refusal, and the generic copy otherwise. A group with no failure has none.
+ * The one toast of a group of failed calls, such as a proctor's action: the copy of the group's first failure
+ * (`failureCopyOf`). A group with no failure has none.
  */
 export function failureGroupCopyOf(
   errors: readonly unknown[]
 ): Option.Option<ToastCopy> {
-  return Option.map(Arr.head(errors), (first) =>
-    Option.getOrElse(refusalCopyOf(first), () => GENERIC_FAILURE)
-  );
+  return Option.map(Arr.head(errors), failureCopyOf);
 }
 
 /** The sentence that the screen shows for each refused reason of an entry. */

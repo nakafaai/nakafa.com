@@ -1,6 +1,7 @@
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
+import { ClockProvider } from "@/components/player/now";
 import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
@@ -13,7 +14,6 @@ import {
   useLearnerSet,
 } from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
-import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { readStaticData } from "@/lib/static/data";
@@ -132,9 +132,9 @@ function TryoutSetView({
         };
   return (
     // The clock starts again with the attempt, so its first render reads the browser's time.
-    <TryoutClockProvider
-      initialNow={route.now}
+    <ClockProvider
       key={view.binding?.attemptId ?? "catalog"}
+      renderedAt={route.now}
     >
       <TryoutSetPageClient
         binding={view.binding}
@@ -146,6 +146,6 @@ function TryoutSetView({
       >
         <TryoutAttemptReview binding={view.binding} />
       </TryoutSetPageClient>
-    </TryoutClockProvider>
+    </ClockProvider>
   );
 }

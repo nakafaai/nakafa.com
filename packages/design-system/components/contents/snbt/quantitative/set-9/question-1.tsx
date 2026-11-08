@@ -1,7 +1,7 @@
 import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { LineReadouts } from "@repo/design-system/components/contents/mathematics/line/readouts";
 import { VisualCardHeader } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -43,21 +43,21 @@ export function Graph({ title, description }: GraphProps) {
   const data = [
     {
       points: largeSquarePoints,
-      color: getColor("VIOLET"),
+      color: PLOT_COLORS.violet,
       lineWidth: 2,
       smooth: false,
       showPoints: false,
     },
     {
       points: circlePoints,
-      color: getColor("EMERALD"),
+      color: PLOT_COLORS.teal,
       lineWidth: 2,
       smooth: false,
       showPoints: false,
     },
     {
       points: smallSquarePoints,
-      color: getColor("ORANGE"),
+      color: PLOT_COLORS.orange,
       lineWidth: 2,
       smooth: false,
       showPoints: false,

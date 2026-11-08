@@ -8,7 +8,6 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, Effect, Option, Schema } from "effect";
 import { useRef } from "react";
-import { serverClockOffset } from "@/components/exams/sitting/clock";
 import {
   readSittingDevice,
   rememberSittingDevice,
@@ -20,6 +19,7 @@ import {
   entryRefusalMessage,
   sittingFailureMessage,
 } from "@/components/exams/sitting/entry";
+import { serverClockOffset } from "@/components/player/clock";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
