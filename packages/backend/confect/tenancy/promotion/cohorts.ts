@@ -48,7 +48,8 @@ export const cohortsApply = Effect.fn("tenancy.promotion.cohorts.apply")(
 
 /**
  * Deletes the cohorts that applying the promotion created, while none is in use (`cohortHold`): a removed teacher's
- * row does not count, and undo clears it with the cohort.
+ * row does not count, and undo clears it with the cohort. The promotion holds the cohorts it created, so no school
+ * deletes one before undo reads it, and while this step runs the promotion's own hold steps aside.
  */
 export const cohortsUndo = Effect.fn("tenancy.promotion.cohorts.undo")(
   function* (
@@ -56,25 +57,24 @@ export const cohortsUndo = Effect.fn("tenancy.promotion.cohorts.undo")(
     actor: typeof TenantActor.Type,
     _cursor: string | null
   ) {
-    const holds = yield* Effect.forEach(promotion.created, (entry) =>
-      cohortHold(entry.cohortId)
+    const reader = yield* DatabaseReader;
+    const cohorts = yield* Effect.forEach(promotion.created, (entry) =>
+      reader.table("tenantCohorts").get(entry.cohortId).pipe(Effect.orDie)
+    );
+    const holds = yield* Effect.forEach(cohorts, (cohort) =>
+      cohortHold(cohort)
     );
     if (Arr.some(holds, Option.isSome)) {
       return yield* new PromotionCohortOccupied();
     }
-    const reader = yield* DatabaseReader;
     yield* Effect.forEach(
-      promotion.created,
-      (entry) =>
+      cohorts,
+      (cohort) =>
         Effect.gen(function* () {
-          const cohort = yield* reader
-            .table("tenantCohorts")
-            .get(entry.cohortId)
-            .pipe(Effect.orDie);
           yield* clearRemovedHomeroom(actor, cohort);
           yield* (yield* DatabaseWriter)
             .table("tenantCohorts")
-            .delete(entry.cohortId)
+            .delete(cohort._id)
             .pipe(Effect.orDie);
           yield* promotionAuthority.record(actor, promotion, {
             step: "cohorts",
