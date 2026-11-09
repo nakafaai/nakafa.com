@@ -121,6 +121,7 @@ export function draftComment(
     ...comment,
     likeCount: 0,
     liked: false,
+    photos: [],
     replyCount: 0,
     replyToUser: parent === null ? null : parent.user,
     user: author,

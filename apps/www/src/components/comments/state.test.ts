@@ -30,6 +30,7 @@ function row(id: string, change: Partial<CommentRow> = {}): CommentRow {
     _id: commentId(id),
     likeCount: 0,
     liked: false,
+    photos: [],
     replyCount: 0,
     replyToUser: null,
     slug: "lesson",

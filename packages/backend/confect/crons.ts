@@ -3,6 +3,7 @@ import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import bucketInternal from "@repo/backend/confect/_generated/refs/bucket.server";
 import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
+import commentsInternal from "@repo/backend/confect/_generated/refs/comments.server";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
@@ -133,6 +134,14 @@ export default CronJobs.make()
       "delete unsent chat files",
       Duration.hours(24),
       classroomInternal.forum.files.sweep,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
+      "delete unposted comment photos",
+      Duration.hours(24),
+      commentsInternal.files.sweep,
       {}
     )
   )
