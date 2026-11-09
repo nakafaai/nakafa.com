@@ -95,6 +95,26 @@ describe("createSecurityHeaders", () => {
     expect(csp?.value).toContain("https://raw.githubusercontent.com");
   });
 
+  it("adds app-owned script and frame sources after the shared ones", () => {
+    const csp = Option.getOrUndefined(
+      Arr.findFirst(
+        createSecurityHeaders({
+          additionalFrameSources: ["https://*.doubleclick.net"],
+          additionalScriptSources: ["https://*.googlesyndication.com"],
+        }),
+        (header) => header.key === "Content-Security-Policy"
+      )
+    );
+
+    expect(csp?.value).toContain(
+      "https://cdn.jsdelivr.net https://*.googlesyndication.com;"
+    );
+    expect(csp?.value).toContain(
+      "https://www.youtube.com https://*.doubleclick.net;"
+    );
+    expect(createSecurityHeaders()[0]?.value).not.toContain("doubleclick");
+  });
+
   it("allows local storage images only for the app's selected loopback origin", () => {
     const sources = createLoopbackConnectSources(
       new URL("http://127.0.0.1:3212")

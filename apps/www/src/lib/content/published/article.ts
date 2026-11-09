@@ -1,6 +1,6 @@
 import "@tanstack/react-start/server-only";
 
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
@@ -46,7 +46,7 @@ export const readPublishedArticle = Effect.fn(
 export const renderArticleArtifact = Effect.fn(
   "NakafaContent.renderArticleArtifact"
 )(function* (data: PublishedArticleData) {
-  const body = yield* readRenderedBody(data.artifact);
+  const body = yield* readRenderedBody(data.artifact, Option.some("article"));
 
   return {
     activeReleaseId: data.activeReleaseId,

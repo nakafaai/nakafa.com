@@ -4041,6 +4041,7 @@
     "pro-feature-2": "{credits, number} credits every month to ask Nina",
     "pro-feature-3": "Full worked solutions for every practice test, including earlier attempts",
     "pro-feature-5": "Priority help when you need guidance",
+    "pro-feature-6": "Lessons and articles without ads",
     "pro-cta": "Get Pro",
     "offer-title": "Choose how to pay",
     "offer-description": "The monthly plan renews by itself, and a pass is paid once.",
@@ -4235,6 +4236,17 @@
     "load-error": "We could not load your choice, so sharing stays off while we retry.",
     "runtime-error": "Your choice was saved, but sharing stays as it was.",
     "save-error": "We could not save your choice, so sharing stays off."
+  },
+  "Ads": {
+    "label": "Advertisements",
+    "footer": "Pro has no ads.",
+    "why": "Why ads?",
+    "pro": "See Pro",
+    "note-title": "Why does Nakafa show ads?",
+    "note-description": "A short note from Nakafa's founder.",
+    "note-reason": "Nakafa exists so everyone can learn for free. Servers, Nina and new content cost money every month, so lessons and articles now carry ads. Practice tests and Nina stay ad-free.",
+    "note-pro": "If you want to learn without ads and help Nakafa keep growing, consider Pro.",
+    "note-signature": "Nabil, founder of Nakafa"
   },
   "SEO": {
     "subject": {
