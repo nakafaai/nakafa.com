@@ -7,18 +7,14 @@ import { LESSON_PATH } from "@/e2e/support/chat";
 
 /** The search button of the sidebar, in English. */
 const SEARCH = "Search content...";
-/**
- * The first subject group the command menu lists before a query, in English:
- * the subject menu holds the high school grades only.
- */
-const SUBJECT_GROUP = en.Subject["high-school"];
 
 /**
- * The search command of the learning shell names the subjects in its first
- * groups. The shell loads the subject messages with its own, so the menu shows
- * every label and the page reports no missing message.
+ * The palette opens on the subjects around the lesson on screen and each
+ * family's way in, read from the static index, and a query with a typo finds
+ * the subject first, with its path. Every label is a message the shell loads,
+ * so the page reports no missing message.
  */
-test("the shell's search command lists the subjects with their names", async ({
+test("the shell's palette suggests from the page and finds a subject through a typo", async ({
   page,
 }) => {
   const missing = MutableList.make<string>();
@@ -40,9 +36,27 @@ test("the shell's search command lists the subjects with their names", async ({
     .toBe(true);
   await search.click();
 
+  const palette = page.getByRole("dialog", { name: "Search" });
   await expect(
-    page.getByRole("dialog").getByText(SUBJECT_GROUP, { exact: true })
+    palette.getByText(en.Utils["search-near"], { exact: true })
   ).toBeVisible();
+  await expect(
+    palette.getByText(en.Utils["search-explore"], { exact: true })
+  ).toBeVisible();
+
+  await palette.getByRole("combobox").fill("mathematcs");
+  const first = palette.getByRole("option").first();
+  await expect(first).toContainText("Mathematics");
+  await expect(
+    palette.getByText(en.Utils["search-group-curricula"], { exact: true })
+  ).toBeVisible();
+  await expect(
+    palette.getByRole("option", { name: /Search lessons for "mathematcs"/u })
+  ).toBeVisible();
+
+  await page.keyboard.press("Enter");
+  await expect(palette).toBeHidden();
+  await expect(page).toHaveURL(/\/en\/curriculum\//u);
   expect(MutableList.toArray(missing)).toEqual([]);
 });
 
