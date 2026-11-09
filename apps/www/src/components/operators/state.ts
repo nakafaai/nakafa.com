@@ -1,13 +1,11 @@
+import { countryProfiles } from "@repo/backend/confect/country/registry";
 import {
   Contract,
   ContractModule,
 } from "@repo/backend/confect/tenancy/contract";
 import { OpenRequest } from "@repo/backend/confect/tenancy/provision.spec";
 import { TenantKind, UnitLevel } from "@repo/backend/confect/tenancy/schema";
-import {
-  countryDefaults,
-  StartCountry,
-} from "@repo/backend/confect/tenancy/start";
+import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Array as Arr, Schema } from "effect";
 
 /** What an operator types and chooses to open one school under a contract. */
@@ -48,7 +46,7 @@ const decodeRequest = Schema.decodeUnknownOption(OpenRequest);
  * settings once it is open.
  */
 export const openRequest = (form: typeof OpenForm.Type) => {
-  const defaults = countryDefaults[form.country];
+  const defaults = countryProfiles[form.country];
   const name = form.name.trim();
   return decodeRequest({
     contract: {
@@ -65,7 +63,7 @@ export const openRequest = (form: typeof OpenForm.Type) => {
     slug: form.slug,
     units: [
       {
-        contentLanguage: defaults.contentLanguage,
+        contentLanguage: defaults.locale,
         level: form.level,
         name,
         timeZone: Arr.headNonEmpty(defaults.zones),

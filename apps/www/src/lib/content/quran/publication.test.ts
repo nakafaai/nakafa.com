@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 // @vitest-environment node
 import { beforeEach, describe, expect, it, layer } from "@effect/vitest";
-import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
   createTestPublication,
@@ -323,7 +323,7 @@ describe("immutable Quran application reads", () => {
           expect(cached).toEqual(catalog);
         })
     );
-    test.effect.each(APP_LOCALE_CODES)(
+    test.effect.each(ACTIVE_APP_LOCALE_CODES)(
       "preserves %s source attribution, verses, and web navigation",
       (appLocale) =>
         Effect.gen(function* () {

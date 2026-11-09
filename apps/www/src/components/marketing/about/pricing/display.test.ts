@@ -13,6 +13,7 @@ describe("marketing/about/pricing-display", () => {
   it("names each price by the currency symbol of its own locale", () => {
     expect(getProMonthlyPricingFor("EUR").symbol).toBe("€");
     expect(getProMonthlyPricingFor("IDR").symbol).toBe("Rp");
+    expect(getProMonthlyPricingFor("MYR").symbol).toBe("RM");
     expect(getProMonthlyPricingFor("USD").symbol).toBe("$");
   });
 
@@ -27,6 +28,8 @@ describe("marketing/about/pricing-display", () => {
     expect(page(drinkKey("IDR"), { count: 1 })).toBe("iced milk coffee");
     expect(page(drinkKey("IDR"), { count: 3 })).toBe("iced milk coffees");
     expect(page(drinkKey("EUR"), { count: 1 })).toBe("takeaway coffee");
+    expect(page(drinkKey("MYR"), { count: 1 })).toBe("glass of teh tarik");
+    expect(page(drinkKey("MYR"), { count: 9 })).toBe("glasses of teh tarik");
     expect(page(drinkKey("USD"), { count: 1 })).toBe("latte");
     expect(page(drinkKey("USD"), { count: 2 })).toBe("lattes");
   });

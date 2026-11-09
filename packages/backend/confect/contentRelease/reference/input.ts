@@ -54,11 +54,16 @@ export const resolveReferenceInput = Effect.fn(
     if (Option.isNone(owner)) {
       return null;
     }
+    // An asset of a declared locale that Nakafa does not serve yet has no current page, as an unknown asset has none.
+    const { appLocale, family } = owner.value;
+    if (!Schema.is(ActiveAppLocaleSchema)(appLocale)) {
+      return null;
+    }
     return {
       ...input,
-      appLocale: owner.value.appLocale,
-      family: owner.value.family,
-      publicLocale: owner.value.appLocale,
+      appLocale,
+      family,
+      publicLocale: appLocale,
     } satisfies ActiveContentReferenceInput;
   }
   const appLocale = ActiveAppLocaleSchema.make(input.appLocale);

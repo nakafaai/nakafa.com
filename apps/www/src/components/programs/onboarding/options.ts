@@ -66,6 +66,10 @@ const regionMetadata = {
     icon: Globe02Icon,
     titleKey: "onboarding.region.international.title",
   },
+  malaysia: {
+    countryCode: "MY",
+    titleKey: "onboarding.region.malaysia.title",
+  },
   singapore: {
     countryCode: "SG",
     titleKey: "onboarding.region.singapore.title",

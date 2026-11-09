@@ -7,14 +7,12 @@ import {
   findAccount,
 } from "@repo/backend/confect/billing/accounts";
 import { schoolInvoice } from "@repo/backend/confect/billing/receipts";
-import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import {
   invoiceAccounts,
   issueSchoolInvoice,
   requestInvoiceSession,
   runningPlan,
   runningSchoolGrants,
-  schoolRail,
 } from "@repo/backend/confect/billing/school";
 import spec from "@repo/backend/confect/billing/school.spec";
 import {
@@ -26,6 +24,10 @@ import {
   schoolAccount,
   schoolTiers,
 } from "@repo/backend/confect/billing/tiers";
+import {
+  currencyOfCountry,
+  railOfCountry,
+} from "@repo/backend/confect/country/registry";
 import { schoolPoolMonthOf } from "@repo/backend/confect/credits/pool";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -81,7 +83,7 @@ const overview = FunctionImpl.make(
     const now = yield* Clock.currentTimeMillis;
     const grants = yield* runningSchoolGrants(tenant._id, now);
     const plan = yield* runningPlan(grants);
-    const rail = schoolRail(tenant.country);
+    const rail = railOfCountry(tenant.country);
     const account = yield* findAccount(
       { kind: "tenant", tenantId: tenant._id },
       rail
@@ -140,7 +142,7 @@ const overview = FunctionImpl.make(
       driveBytes: state.driveBytes,
       rail,
       currency: Option.match(account, {
-        onNone: () => billingCurrencyFor(tenant.country),
+        onNone: () => currencyOfCountry(tenant.country),
         onSome: (found) => found.currency,
       }),
       invoices: Arr.map(invoices, (invoice) => ({
@@ -167,7 +169,7 @@ const invoice = FunctionImpl.make(
     const { tenant } = yield* Member;
     const account = yield* findAccount(
       { kind: "tenant", tenantId: tenant._id },
-      schoolRail(tenant.country)
+      railOfCountry(tenant.country)
     );
     const found = yield* (yield* DatabaseReader)
       .table("billingInvoices")

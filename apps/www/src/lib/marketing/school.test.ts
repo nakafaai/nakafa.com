@@ -9,6 +9,7 @@ describe("lib/marketing/school", () => {
         offers: [
           { amount: 109, currency: "EUR" },
           { amount: 1_790_000, currency: "IDR" },
+          { amount: 449, currency: "MYR" },
           { amount: 109, currency: "USD" },
         ],
       },
@@ -17,6 +18,7 @@ describe("lib/marketing/school", () => {
         offers: [
           { amount: 499, currency: "EUR" },
           { amount: 7_990_000, currency: "IDR" },
+          { amount: 1990, currency: "MYR" },
           { amount: 499, currency: "USD" },
         ],
       },

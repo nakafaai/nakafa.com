@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option } from "effect";
 import {
   readPublishedTryoutExamPage,
@@ -25,7 +25,7 @@ import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
  */
 export const readSoleTrack = Effect.fn(
   "www.routing.publicHtml.tryoutSoleTrack"
-)(function* (appLocale: AppLocaleCode, groupPath: string) {
+)(function* (appLocale: ActiveAppLocaleCode, groupPath: string) {
   const page = yield* readPublishedTryoutGroupPage({
     appLocale,
     publicPath: groupPath,
@@ -42,7 +42,7 @@ export const readSoleTrack = Effect.fn(
  */
 export const readLocalizedSnbtSet = Effect.fn(
   "www.routing.publicHtml.tryoutSetLocalization"
-)(function* (appLocale: AppLocaleCode, year: string, set: string) {
+)(function* (appLocale: ActiveAppLocaleCode, year: string, set: string) {
   const track = yield* readSoleTrack(
     SOURCE_APP_LOCALE,
     `${SNBT_EXAM_PATH}/${year}`
@@ -84,7 +84,7 @@ function readExamRoute(pathname: string) {
  */
 const readExamEntryRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutExamEntry"
-)(function* (appLocale: AppLocaleCode, examPath: string) {
+)(function* (appLocale: ActiveAppLocaleCode, examPath: string) {
   const exam = yield* readPublishedTryoutExamPage({
     appLocale,
     publicPath: examPath,
@@ -106,7 +106,7 @@ const readExamEntryRedirect = Effect.fn(
 const readTracklessGroupRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutTracklessGroup"
 )(function* (input: {
-  readonly appLocale: AppLocaleCode;
+  readonly appLocale: ActiveAppLocaleCode;
   readonly groupPath: string;
   readonly section: string | undefined;
   readonly set: string;
@@ -139,7 +139,7 @@ const readTracklessGroupRedirect = Effect.fn(
 const readUngroupedTrackRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutUngroupedTrack"
 )(function* (input: {
-  readonly appLocale: AppLocaleCode;
+  readonly appLocale: ActiveAppLocaleCode;
   readonly below: readonly string[];
   readonly examPath: string;
   readonly segment: string;

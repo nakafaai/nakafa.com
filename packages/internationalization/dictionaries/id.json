@@ -1930,6 +1930,7 @@
     "country-description": "Ini menentukan mata uang, bahasa, dan tahun ajaran.",
     "country": {
       "ID": "Indonesia",
+      "MY": "Malaysia",
       "SG": "Singapura",
       "GB": "Inggris",
       "DE": "Jerman",
@@ -1975,6 +1976,22 @@
         "title": "SLB",
         "description": "Sekolah luar biasa"
       },
+      "my-sk": {
+        "title": "SK",
+        "description": "Sekolah dasar, Tahun 1 sampai 6"
+      },
+      "my-smk": {
+        "title": "SMK",
+        "description": "Sekolah menengah, Tingkatan 1 sampai 5"
+      },
+      "my-smka": {
+        "title": "SMKA",
+        "description": "Sekolah menengah agama, Tingkatan 1 sampai 5"
+      },
+      "my-form6": {
+        "title": "Tingkatan 6",
+        "description": "Pra-universitas, STPM"
+      },
       "other": {
         "title": "Lainnya",
         "description": "Jenis sekolah lain"
@@ -1990,6 +2007,10 @@
       "ma": "Menengah atas",
       "smk": "Kejuruan",
       "slb": "Pendidikan khusus",
+      "my-sk": "Dasar",
+      "my-smk": "Menengah",
+      "my-smka": "Menengah",
+      "my-form6": "Pra-universitas",
       "other": "Lainnya"
     },
     "unit-name": "{name} {level}",
@@ -2344,6 +2365,9 @@
       "region": {
         "indonesia": {
           "title": "Indonesia"
+        },
+        "malaysia": {
+          "title": "Malaysia"
         },
         "singapore": {
           "title": "Singapura"
@@ -4103,6 +4127,7 @@
     "drink-title": "Kira-kira {count} {item}",
     "drink-note": "Bedanya, yang ini kepakai sebulan penuh.",
     "drink-idr": "es kopi susu",
+    "drink-myr": "gelas teh tarik",
     "drink-eur": "kopi bungkus",
     "drink-usd": "latte",
     "per-day-title": "{price} sehari",
@@ -4632,7 +4657,7 @@
     "faq-added-question": "Bisakah menambah akun satu per satu?",
     "faq-added-answer": "Bisa. Tambah berapa pun mulai dari satu, masing-masing dengan 6 kredit AI per bulan dan Drive 200 MB. Akun tambahan masuk ke tagihan paketmu.",
     "faq-pay-question": "Bagaimana cara membayarnya?",
-    "faq-pay-answer": "Bayar di muka untuk 1, 3, 6, atau 12 bulan, dengan hemat 3% untuk 6 bulan dan 5% untuk 12 bulan. Sekolah di Indonesia membayar dalam rupiah, sekolah lain dalam dolar atau euro.",
+    "faq-pay-answer": "Bayar di muka untuk 1, 3, 6, atau 12 bulan, dengan hemat 3% untuk 6 bulan dan 5% untuk 12 bulan. Sekolah di Indonesia membayar dalam rupiah, sekolah di Malaysia dalam ringgit, sekolah lain dalam dolar atau euro.",
     "faq-tax-question": "Apakah harga sudah termasuk pajak?",
     "faq-tax-answer": "Belum. Semua harga sebelum pajak, dan tagihan menambahkan pajak yang berlaku.",
     "faq-credits-question": "Apa itu kredit AI?",

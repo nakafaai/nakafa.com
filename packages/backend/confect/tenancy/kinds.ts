@@ -1,5 +1,5 @@
 import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
@@ -129,7 +129,7 @@ export const unit = Kind.make("unit", "tenantUnits", {
   changes: [
     Schema.Struct({ type: Schema.Literal("unit.created") }),
     Schema.Struct({
-      contentLanguage: AppLocaleCodeSchema,
+      contentLanguage: ActiveAppLocaleCodeSchema,
       timeZone: TimeZone,
       type: Schema.Literal("unit.locale.set"),
     }),

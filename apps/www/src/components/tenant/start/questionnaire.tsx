@@ -40,6 +40,7 @@ import { StartNameQuestion } from "@/components/tenant/start/name";
 import { StartOpening } from "@/components/tenant/start/opening";
 import {
   levelsOf,
+  namesOwnLevels,
   resumeItem,
   START_ITEMS,
   type StartDraft,
@@ -156,7 +157,7 @@ function SchoolStartForm({ draft }: { draft: StartDraft }) {
       (level, school) =>
         unitName(
           draft?.country ?? "ID",
-          draft?.country === "ID"
+          namesOwnLevels(draft?.country ?? "ID")
             ? t(`level.${level}.title`)
             : t(`stage.${level}`),
           school,

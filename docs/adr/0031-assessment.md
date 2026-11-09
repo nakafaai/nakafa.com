@@ -8,6 +8,10 @@ Accepted on 13 October 2026 with owner decisions K1, K6, K7, K12, K14, K16, and
 K17. The owner approved decisions K1 to K20 on that day. This ADR supersedes ADR
 0003.
 
+Amended on 9 November 2026 by ADR 0046, which records the seam of wave B: one
+engine in `confect/assessment` with a paper port and a program port, the
+engine's four tables, and the order of the cutover.
+
 Amended on 18 October 2026: the release of a grade belongs to the Records module,
 which publishes `grade.released` (ADR 0027 and ADR 0033). The grading area here
 keeps the teacher's queue and the frozen results of finished attempts.

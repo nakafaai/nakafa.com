@@ -5,11 +5,11 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import {
   BillingCountry,
   BillingRail,
 } from "@repo/backend/confect/billing/schema";
+import { currencyOfCountry } from "@repo/backend/confect/country/registry";
 import { Space } from "@repo/backend/confect/space";
 import { Effect, Option, Schema } from "effect";
 
@@ -130,7 +130,7 @@ export const linkPolarCustomer = Effect.fn(
       owner,
       rail: "polar",
       country: input.country,
-      currency: billingCurrencyFor(input.country),
+      currency: currencyOfCountry(input.country),
     });
     yield* recordProviderCustomer(accountId, input.providerCustomerId);
     return "linked" as const;

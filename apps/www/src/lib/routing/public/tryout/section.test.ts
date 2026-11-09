@@ -83,6 +83,18 @@ describe("retired try-out redirects", () => {
         })
     );
 
+    it.effect("keeps a section that never took a new name where it is", () =>
+      Effect.gen(function* () {
+        serveCatalog([]);
+
+        expect(
+          yield* readTryoutRedirect(
+            "/en/try-out/indonesia/snbt/2027/utbk/set-1/quantitative-knowledge"
+          )
+        ).toBeNull();
+      })
+    );
+
     it.effect("waits until the active catalog serves the successor", () =>
       Effect.gen(function* () {
         serveCatalog([]);

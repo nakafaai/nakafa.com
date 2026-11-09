@@ -1930,6 +1930,7 @@
     "country-description": "Das legt Währung, Sprache und Schuljahr fest.",
     "country": {
       "ID": "Indonesien",
+      "MY": "Malaysia",
       "SG": "Singapur",
       "GB": "Vereinigtes Königreich",
       "DE": "Deutschland",
@@ -1975,6 +1976,22 @@
         "title": "SLB",
         "description": "Förderschule"
       },
+      "my-sk": {
+        "title": "SK",
+        "description": "Grundschule, Jahr 1 bis 6"
+      },
+      "my-smk": {
+        "title": "SMK",
+        "description": "Sekundarschule, Form 1 bis 5"
+      },
+      "my-smka": {
+        "title": "SMKA",
+        "description": "Religiöse Sekundarschule, Form 1 bis 5"
+      },
+      "my-form6": {
+        "title": "Form 6",
+        "description": "Studienvorbereitung, STPM"
+      },
       "other": {
         "title": "Andere",
         "description": "Eine andere Schulform"
@@ -1990,6 +2007,10 @@
       "ma": "Sekundarstufe II",
       "smk": "Berufsbildung",
       "slb": "Förderschule",
+      "my-sk": "Primarstufe",
+      "my-smk": "Sekundarstufe",
+      "my-smka": "Sekundarstufe",
+      "my-form6": "Studienvorbereitung",
       "other": "Andere"
     },
     "unit-name": "{level} {name}",
@@ -2344,6 +2365,9 @@
       "region": {
         "indonesia": {
           "title": "Indonesien"
+        },
+        "malaysia": {
+          "title": "Malaysia"
         },
         "singapore": {
           "title": "Singapur"
@@ -4103,6 +4127,7 @@
     "drink-title": "Etwa {count} {item}",
     "drink-note": "Der Unterschied: Das hier reicht einen ganzen Monat.",
     "drink-idr": "{count, plural, one {Eiskaffee mit Milch} other {Eiskaffees mit Milch}}",
+    "drink-myr": "{count, plural, one {Glas Teh Tarik} other {Gläser Teh Tarik}}",
     "drink-eur": "Kaffee zum Mitnehmen",
     "drink-usd": "{count, plural, one {Latte} other {Lattes}}",
     "per-day-title": "{price} am Tag",
@@ -4632,7 +4657,7 @@
     "faq-added-question": "Können wir Konten einzeln hinzufügen?",
     "faq-added-answer": "Ja. Füge ab einem Konto beliebig viele hinzu, jedes mit 6 KI-Credits im Monat und 200 MB Drive. Die Konten stehen auf der Rechnung deines Tarifs.",
     "faq-pay-question": "Wie bezahlen wir?",
-    "faq-pay-answer": "Im Voraus für 1, 3, 6 oder 12 Monate, mit 3 % Rabatt für 6 Monate und 5 % für 12 Monate. Schulen in Indonesien zahlen in Rupiah, andere in Dollar oder Euro.",
+    "faq-pay-answer": "Im Voraus für 1, 3, 6 oder 12 Monate, mit 3 % Rabatt für 6 Monate und 5 % für 12 Monate. Schulen in Indonesien zahlen in Rupiah, Schulen in Malaysia in Ringgit, andere in Dollar oder Euro.",
     "faq-tax-question": "Sind Steuern enthalten?",
     "faq-tax-answer": "Nein. Jeder Preis gilt vor Steuer, und die Rechnung fügt die geltende Steuer hinzu.",
     "faq-credits-question": "Was sind KI-Credits?",

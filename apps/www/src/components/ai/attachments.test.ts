@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
 import { Array as Arr, Effect } from "effect";
 import {
@@ -79,7 +79,7 @@ describe("file name split", () => {
 
 // Every language of the site is read, whichever languages that is.
 describe("reason of a file that was not attached", () => {
-  it.effect.each(APP_LOCALE_CODES)(
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
     "gives every reason its own short words, with the limit the code checks, in %s",
     (locale) =>
       Effect.gen(function* () {
@@ -100,7 +100,7 @@ describe("reason of a file that was not attached", () => {
       })
   );
 
-  it.effect.each(APP_LOCALE_CODES)(
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
     "keeps the count of files with its noun on one line, in %s",
     (locale) =>
       Effect.gen(function* () {

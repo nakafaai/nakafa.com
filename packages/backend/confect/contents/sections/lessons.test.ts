@@ -104,6 +104,22 @@ describe("section lessons", () => {
     });
   });
 
+  it("passes over a lesson of a declared locale Nakafa does not serve yet", async () => {
+    const { readAll, t } = setup();
+    await t.mutation(seedKnowledge);
+    await t.run(async (ctx) => {
+      const row = await ctx.db.query("contentIndex").first();
+      if (row === null) {
+        throw new Error("Expected a seeded lesson.");
+      }
+      const { _creationTime, _id, ...fields } = row;
+      await ctx.db.insert("contentIndex", { ...fields, appLocale: "ms" });
+    });
+    const { lessons, unchanged } = await readAll();
+    expect(lessons).toHaveLength(9);
+    expect(unchanged).toBe(1);
+  });
+
   it("names the version of a lesson by the signed facts of its source", async () => {
     const { readAll, t } = setup();
     await t.mutation(seedKnowledge);
