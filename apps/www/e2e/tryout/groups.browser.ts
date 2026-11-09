@@ -16,6 +16,8 @@ const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
+/** The class of a filled control, which no header control wears. */
+const FILLED = /bg-primary/u;
 /** The phone widths at which a set's name, status and menu read whole. */
 const PHONE_WIDTHS = [320, 360, 390, 430] as const;
 
@@ -135,7 +137,7 @@ for (const [href, names] of [
     for (const name of names) {
       const control = header.getByRole("combobox", { name });
       await expect(control).toBeVisible();
-      await expect(control).not.toHaveClass(/bg-primary/u);
+      await expect(control).not.toHaveClass(FILLED);
     }
   });
 }
@@ -155,7 +157,13 @@ test("a group's menu lists its exam's groups, each with its icon", async ({
   await expect(option.locator("svg").first()).toBeVisible();
 });
 
-/** On a phone a set's name, its status and its menu read whole, without scrolling sideways. */
+/**
+ * On a phone a set's name, its status and its menu read whole, without
+ * scrolling sideways: the card does not scroll, and every box drawn inside it
+ * stays within its edges. The boxes are measured, not each element's scroll
+ * size, because a visually hidden label is 1 px wide and reports its whole text
+ * as overflow in every engine.
+ */
 for (const width of PHONE_WIDTHS) {
   test(`the set table fits a ${width} px phone`, async ({ page }) => {
     await page.setViewportSize({ height: 800, width });
@@ -167,16 +175,25 @@ for (const width of PHONE_WIDTHS) {
     await expect(
       row.getByRole("button", { name: "More actions" })
     ).toBeInViewport();
-    const overflow = await card.evaluate((element) =>
-      Math.max(
-        ...Array.from(
-          element.querySelectorAll<HTMLElement>("*"),
-          (child) => child.scrollWidth - child.clientWidth
-        ),
-        element.scrollWidth - element.clientWidth
-      )
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    const fit = await card.evaluate((element) => {
+      const edges = element.getBoundingClientRect();
+      const spills = Array.from(
+        element.querySelectorAll<HTMLElement>("*"),
+        (child) => {
+          const box = child.getBoundingClientRect();
+          return box.width === 0
+            ? 0
+            : Math.max(box.right - edges.right, edges.left - box.left);
+        }
+      );
+      return {
+        scroll: element.scrollWidth - element.clientWidth,
+        spill: Math.max(0, ...spills),
+      };
+    });
+    expect(fit.scroll).toBeLessThanOrEqual(0);
+    // Half a pixel of a rounded edge is no spill.
+    expect(fit.spill).toBeLessThanOrEqual(0.5);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth

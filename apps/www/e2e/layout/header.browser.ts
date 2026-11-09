@@ -43,7 +43,6 @@ const DESKTOP_PX = 1024;
 const publicRoutes = [
   appRoutes.quranSurahId,
   appRoutes.quran,
-  appRoutes.tryout,
   "/en/try-out/indonesia",
   "/en/try-out/indonesia/snbt/2027/utbk",
   "/en/try-out/indonesia/snbt/2027/utbk/set-1",

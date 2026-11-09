@@ -94,17 +94,17 @@ export const arriveLocked = Effect.fn("NakafaE2E.arriveLockedTryoutPage")(
   }
 );
 
-/** Loads the try-out hub and waits until it is ready for the next click. */
-export const openHub = Effect.fn("NakafaE2E.openTryoutHub")(function* (
+/** Loads Indonesia's try-out page and waits until it is ready for the next click. */
+export const openCountry = Effect.fn("NakafaE2E.openTryoutCountry")(function* (
   page: Page
 ) {
   yield* Effect.promise(() =>
-    page.goto(appRoutes.tryout, { waitUntil: "domcontentloaded" })
+    page.goto(countryHref, { waitUntil: "domcontentloaded" })
   );
   yield* waitForCommittedAppRouter(
     page,
-    appRoutes.tryout,
-    appRoutes.tryout,
+    countryHref,
+    countryHref,
     readinessTimeoutMilliseconds
   );
   yield* Effect.promise(() =>
@@ -119,7 +119,7 @@ export const openHub = Effect.fn("NakafaE2E.openTryoutHub")(function* (
 });
 
 /**
- * Walks from the hub to the track, ending with the set links on screen: SNBT's
+ * Walks from Indonesia's page to the track, ending with the set links on screen: SNBT's
  * card opens its one track's set table, the first click.
  */
 export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (

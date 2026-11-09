@@ -146,5 +146,4 @@ describe("content/tryout/navigation", () => {
         }
       })
   );
-
 });

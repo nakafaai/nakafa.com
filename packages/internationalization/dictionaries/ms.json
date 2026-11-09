@@ -2553,7 +2553,6 @@
   },
   "Tryouts": {
     "title": "Percubaan apa yang kamu mahu hari ini?",
-    "hub-search-title": "Peperiksaan Percubaan Dalam Talian Percuma dengan Skor Segera",
     "metadata-description": "Peperiksaan percubaan bermasa, dimarkah sebaik sahaja kamu selesai. Percuma dan tanpa had di Nakafa.",
     "route-metadata-description": "Peperiksaan percubaan {name} bermasa, dimarkah sebaik sahaja kamu selesai. Percuma dan tanpa had di Nakafa.",
     "search-title": "Peperiksaan Percubaan {name} Percuma",
@@ -2562,7 +2561,6 @@
     "section-metadata-description": "Berlatih {section} daripada {exam} {set} di Nakafa: percubaan bermasa, dimarkah sebaik sahaja kamu selesai.",
     "country-selector-label": "Negara",
     "exam-selector-label": "Peperiksaan",
-    "open-country-cta": "Lihat peperiksaan",
     "open-exam-cta": "Lihat pilihan",
     "open-set-cta": "Lihat set",
     "list-empty": "Tiada percubaan yang dipaparkan sekarang.",

@@ -52,30 +52,28 @@ describe("contentRelease/tryout", () => {
       })
   );
 
-  it.effect(
-    "lists a group as a page once it offers a real choice",
-    () =>
-      Effect.gen(function* () {
-        const world = yield* tryoutWorld({ paired: true });
-        const page = yield* world.visitor.query(tryout.sitemapPage, {
-          appLocale: "id",
-          page: 0,
-        });
-        expect(Arr.sort(page?.paths ?? [], Order.String)).toEqual(
-          Arr.sort(
-            [
-              "try-out/indonesia-id",
-              "try-out/indonesia/snbt/2027-id",
-              "try-out/indonesia/snbt/2027/paired-id",
-              "try-out/indonesia/snbt/2027/utbk-id",
-              "try-out/indonesia/snbt/2027/utbk/set-1-id",
-              "try-out/indonesia/snbt/2027/utbk/set-1-id/section-a",
-              "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
-            ],
-            Order.String
-          )
-        );
-      })
+  it.effect("lists a group as a page once it offers a real choice", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld({ paired: true });
+      const page = yield* world.visitor.query(tryout.sitemapPage, {
+        appLocale: "id",
+        page: 0,
+      });
+      expect(Arr.sort(page?.paths ?? [], Order.String)).toEqual(
+        Arr.sort(
+          [
+            "try-out/indonesia-id",
+            "try-out/indonesia/snbt/2027-id",
+            "try-out/indonesia/snbt/2027/paired-id",
+            "try-out/indonesia/snbt/2027/utbk-id",
+            "try-out/indonesia/snbt/2027/utbk/set-1-id",
+            "try-out/indonesia/snbt/2027/utbk/set-1-id/section-a",
+            "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
+          ],
+          Order.String
+        )
+      );
+    })
   );
 
   it.effect("refuses reads before any release activates a snapshot", () =>

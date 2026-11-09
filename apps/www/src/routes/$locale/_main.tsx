@@ -11,6 +11,7 @@ import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
+import { TryoutEntryProvider } from "@/lib/tryout/entry";
 
 /**
  * The messages of the student shell and of the learn pages that the locale route
@@ -63,7 +64,8 @@ export const Route = createFileRoute("/$locale/_main")({
  */
 function MainLayout() {
   const { locale } = Route.useParams();
-  const { articleNavigation, messages, pageNavigation } = Route.useLoaderData();
+  const { articleNavigation, messages, pageNavigation, tryoutEntry } =
+    Route.useLoaderData();
   const localeData = localeRoute.useLoaderData();
   return (
     <IntlProvider
@@ -73,15 +75,20 @@ function MainLayout() {
       timeZone={localeTimeZone(locale)}
     >
       <PageProviders pageNavigation={pageNavigation}>
-        <SharedProviders>
-          <AppShell articleNavigation={articleNavigation}>
-            <div
-              className={cn(monospace, pageFrameVariants({ width: "column" }))}
-            >
-              <Outlet />
-            </div>
-          </AppShell>
-        </SharedProviders>
+        <TryoutEntryProvider entryPath={tryoutEntry}>
+          <SharedProviders>
+            <AppShell articleNavigation={articleNavigation}>
+              <div
+                className={cn(
+                  monospace,
+                  pageFrameVariants({ width: "column" })
+                )}
+              >
+                <Outlet />
+              </div>
+            </AppShell>
+          </SharedProviders>
+        </TryoutEntryProvider>
       </PageProviders>
     </IntlProvider>
   );

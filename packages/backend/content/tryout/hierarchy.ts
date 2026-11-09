@@ -140,7 +140,10 @@ export function isPublishedLanding(
   index: PublishedCatalogIndex,
   row: PublishedCatalogIndex["exams" | "groups"][number]
 ) {
-  return row.kind === "group" && readPublishedGroupEntry(index, row) === row.publicPath;
+  return (
+    row.kind === "group" &&
+    readPublishedGroupEntry(index, row) === row.publicPath
+  );
 }
 
 /** Resolves the country and exam a group belongs to, and its exam's groups in order. */

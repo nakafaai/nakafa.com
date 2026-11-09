@@ -1,8 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import en from "@repo/internationalization/dictionaries/en.json" with {
-  type: "json",
-};
 import {
   Array as Arr,
   Duration,
@@ -25,11 +22,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/iu;
 const QURAN_HEADING_PATTERN = /Al-Baqara/iu;
-/**
- * The hub's title, which names the try-out pages as people search for them
- * (`hub-search-title`), not as the header names the section.
- */
-const TRYOUT_TITLE_PATTERN = new RegExp(en.Tryouts["hub-search-title"], "u");
+/** One country's try-out page, which the landing's Try out link opens. */
+const TRYOUT_HREF_PATTERN = /^\/en\/try-out\/[^/.]+$/u;
 /**
  * A curriculum's page or one of its grades, which the homepage links: it links
  * no subject page of a grade.
@@ -50,16 +44,10 @@ const linkedHrefRetrySchedule = Schedule.spaced(
   })
 );
 
-const InstantMarkerSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("heading"),
-    text: Schema.optionalKey(Schema.RegExp),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("title"),
-    text: Schema.RegExp,
-  }),
-]);
+const InstantMarkerSchema = Schema.Struct({
+  kind: Schema.Literal("heading"),
+  text: Schema.optionalKey(Schema.RegExp),
+});
 
 const InstantShellSchema = Schema.Literals(["app", "marketing"]);
 
@@ -98,13 +86,8 @@ type NavigationResolve = (
   page: Page
 ) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
 
-/** Waits for the destination's own marker: the heading or the title its content brings. */
+/** Waits for the destination's own marker: the heading its content brings. */
 function expectMarker(page: Page, marker: NavigationTarget["marker"]) {
-  if (marker.kind === "title") {
-    return expect(page).toHaveTitle(marker.text, {
-      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-    });
-  }
   const headings = page.locator("h1:visible");
   const heading = marker.text
     ? headings.filter({ hasText: marker.text }).first()
@@ -340,16 +323,27 @@ const resolveQuran: NavigationResolve = Effect.fn("NakafaE2E.resolveQuran")(
     } satisfies NavigationTarget)
 );
 
+/**
+ * The landing's Try out link opens the locale's own country, never the address
+ * of Try out, whose redirect a press would pass through.
+ */
 const resolveTryout: NavigationResolve = Effect.fn("NakafaE2E.resolveTryout")(
-  () =>
-    Effect.succeed({
-      href: appRoutes.tryout,
-      marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
+  function* (page: Page) {
+    const sourceHref = "/en";
+    const href = yield* discoverLinkedHref(
+      page,
+      sourceHref,
+      TRYOUT_HREF_PATTERN
+    );
+    return {
+      href,
+      marker: { kind: "heading" },
       name: "tryout",
       shell: "app",
-      sourceHref: "/en",
+      sourceHref,
       sourceShell: "marketing",
-    } satisfies NavigationTarget)
+    } satisfies NavigationTarget;
+  }
 );
 
 const resolveCurriculum: NavigationResolve = Effect.fn(

@@ -2553,7 +2553,6 @@
   },
   "Tryouts": {
     "title": "Welchen Probetest möchtest du heute bearbeiten?",
-    "hub-search-title": "Kostenlose Online-Probetests mit Auswertung",
     "metadata-description": "Probetests mit Zeitlimit und sofortiger Auswertung. Kostenlos und unbegrenzt auf Nakafa.",
     "route-metadata-description": "Probetests für {name} mit Zeitlimit und sofortiger Auswertung. Kostenlos und unbegrenzt auf Nakafa.",
     "search-title": "Kostenloser Probetest {name}",
@@ -2562,7 +2561,6 @@
     "section-metadata-description": "Übe {section} aus {exam} {set} auf Nakafa: ein Probetest mit Zeitlimit und sofortiger Auswertung.",
     "country-selector-label": "Land",
     "exam-selector-label": "Prüfung",
-    "open-country-cta": "Prüfungen anzeigen",
     "open-exam-cta": "Optionen anzeigen",
     "open-set-cta": "Aufgabensätze anzeigen",
     "list-empty": "Zurzeit werden keine Probetests angezeigt.",

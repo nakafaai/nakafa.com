@@ -2,7 +2,8 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
-import { Link } from "@/lib/routing/link";
+import { Link, TargetLink } from "@/lib/routing/link";
+import { TRYOUT_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
@@ -36,13 +37,13 @@ export function Hero() {
           >
             {t("hero-start")}
           </Link>
-          <Link
+          <TargetLink
             activeOptions={EXACT_ACTIVE_OPTIONS}
             className={buttonVariants({ size: "lg", variant: "outline" })}
-            to="/$locale/try-out"
+            target={TRYOUT_TARGET}
           >
             {t("hero-tryout")}
-          </Link>
+          </TargetLink>
         </div>
         <div className="mt-6" id={HERO_NINA_ID}>
           <Nina act="reading" label="" size={240} whole />

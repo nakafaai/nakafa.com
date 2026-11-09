@@ -5,8 +5,10 @@ import { readStaticData } from "@/lib/static/data";
 /**
  * The address of "Try out", which is no page of its own: Indonesia and Germany
  * never share a page, so it opens one country's page, the locale's own country,
- * else the catalog's first. The sidebar links a learner straight to their last
- * choice, and the Worker answers a visitor's request the same way.
+ * else the catalog's first. Every link of the app opens that country itself
+ * (`useLinkDestination`), the sidebar a learner's last choice, and the Worker
+ * answers a request for the address the same way, so only an address written
+ * by hand reaches this loader in the browser.
  */
 export const Route = createFileRoute("/$locale/_main/try-out/")({
   loader: async ({ params }) => {

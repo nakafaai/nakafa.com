@@ -7,6 +7,7 @@ import { SharedProviders } from "@/components/providers/shared";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
+import { TryoutEntryProvider } from "@/lib/tryout/entry";
 
 /**
  * The messages of the marketing pages that the locale route does not carry. The
@@ -47,14 +48,14 @@ const localeRoute = getRouteApi("/$locale");
  */
 export const Route = createFileRoute("/$locale/_marketing")({
   loader: async ({ params }) => {
-    const [messages, { pageNavigation }] = await Promise.all([
+    const [messages, { pageNavigation, tryoutEntry }] = await Promise.all([
       readStaticData(readRouteMessages, {
         locale: params.locale,
         namespaces: MARKETING_NAMESPACES,
       }),
       readStaticData(readMarketingShellFn, { locale: params.locale }),
     ]);
-    return { messages, pageNavigation };
+    return { messages, pageNavigation, tryoutEntry };
   },
   component: MarketingLayout,
 });
@@ -62,21 +63,23 @@ export const Route = createFileRoute("/$locale/_marketing")({
 /** Renders the marketing subtree inside its site shell. */
 function MarketingLayout() {
   const { locale } = Route.useParams();
-  const { messages, pageNavigation } = Route.useLoaderData();
+  const { messages, pageNavigation, tryoutEntry } = Route.useLoaderData();
   const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
     <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
       <PageProviders pageNavigation={pageNavigation}>
-        <SharedProviders>
-          <main
-            className="flex min-h-screen w-full flex-1 flex-col"
-            data-marketing-page
-          >
-            <Header />
-            <Outlet />
-            <Footer pageNavigation={pageNavigation} />
-          </main>
-        </SharedProviders>
+        <TryoutEntryProvider entryPath={tryoutEntry}>
+          <SharedProviders>
+            <main
+              className="flex min-h-screen w-full flex-1 flex-col"
+              data-marketing-page
+            >
+              <Header />
+              <Outlet />
+              <Footer pageNavigation={pageNavigation} />
+            </main>
+          </SharedProviders>
+        </TryoutEntryProvider>
       </PageProviders>
     </IntlProvider>
   );

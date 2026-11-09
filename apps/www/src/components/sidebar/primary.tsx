@@ -26,6 +26,7 @@ import {
   useRouteMatched,
 } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
+import { useLinkDestination } from "@/lib/tryout/entry";
 import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 type PrimaryItem = ReturnType<typeof getPrimaryNavigationItems>[number];
@@ -86,7 +87,11 @@ function LearnerPrimaryMenuItem({ item }: { item: PrimaryItem }) {
   );
 }
 
-/** One shortcut row, which preloads the chat that the Ask Nina shortcut leads to on intent. */
+/**
+ * One shortcut row, which preloads the chat that the Ask Nina shortcut leads to
+ * on intent. Without a stored choice, Try out opens the locale's own country,
+ * and stays marked on every try-out page, as its own route is.
+ */
 function PrimaryLink({
   destination,
   item,
@@ -94,6 +99,7 @@ function PrimaryLink({
   destination: LinkTarget;
   item: PrimaryItem;
 }) {
+  const href = useLinkDestination(destination);
   const router = useRouter();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
@@ -103,7 +109,7 @@ function PrimaryLink({
   // Every other row preloads on intent through its link; the chat route also
   // warms on focus and pointer, because its link does not.
   const prefetchAskNina = isAskNina
-    ? () => router.preloadRoute(destination)
+    ? () => router.preloadRoute(href)
     : undefined;
   const isActive = useRouteMatched(destination.to, { exact: false });
 
@@ -113,7 +119,7 @@ function PrimaryLink({
       render={
         <Link
           activeOptions={EXACT_ACTIVE_OPTIONS}
-          {...destination}
+          {...href}
           onFocus={prefetchAskNina}
           onPointerEnter={prefetchAskNina}
           onTouchStart={prefetchAskNina}
