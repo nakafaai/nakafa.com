@@ -73,12 +73,12 @@ function countLabelsInView(card: Locator) {
   }, LINE_SCENE);
 }
 
-/** Proves playback still works: a reset from the band's menu replays the growth from its start. */
+/** Proves playback still works: the band's first view back replays the growth from its start. */
 const expectPlayback = Effect.fn("NakafaE2E.expectVisualPlayback")(function* (
   card: Locator
 ) {
   const scene = card.locator(BACTERIA_SCENE);
-  const reset = yield* revealMenuItem(card, MORE, en.Common.reset);
+  const reset = yield* revealMenuItem(card, MORE, en.Common["reset-view"]);
   yield* Effect.promise(async () => {
     await reset.click();
     const start = await scene.getAttribute("data-bacteria-count");
