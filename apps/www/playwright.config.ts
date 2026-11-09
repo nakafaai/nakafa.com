@@ -1,4 +1,10 @@
-import { defineConfig, devices, type Project } from "@playwright/test";
+import {
+  defineConfig,
+  devices,
+  type PlaywrightTestOptions,
+  type PlaywrightWorkerOptions,
+  type Project,
+} from "@playwright/test";
 import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
 import {
   Array as Arr,
@@ -144,6 +150,12 @@ const CHROMIUM_TESTS = [
   "**/settings/panel.browser.ts",
 ];
 
+/** What a project of this config sets: everything but its name and dependencies. */
+type ProjectShape = Omit<
+  Project<PlaywrightTestOptions, PlaywrightWorkerOptions>,
+  "dependencies" | "name"
+>;
+
 /** The engines that every UI suite runs in, which a proof job selects one of. */
 const ENGINES = ["chromium", "firefox", "webkit"] as const;
 type Engine = (typeof ENGINES)[number];
@@ -154,9 +166,9 @@ type Engine = (typeof ENGINES)[number];
  * suite already runs in every engine and device.
  */
 function inEngine(
-  project: Omit<Project, "dependencies" | "name">,
+  project: ProjectShape,
   engine: Exclude<Engine, "chromium">
-): Omit<Project, "dependencies" | "name"> {
+): ProjectShape {
   return {
     ...project,
     testIgnore: [
@@ -305,7 +317,7 @@ const PROJECTS = {
     use: devices["iPhone 15"],
     workers: 1,
   },
-} satisfies Record<string, Omit<Project, "dependencies" | "name">>;
+} satisfies Record<string, ProjectShape>;
 
 type ProjectName = keyof typeof PROJECTS;
 
@@ -369,8 +381,10 @@ function isEngine(value: string): value is Engine {
 
 /** The engine that a project runs in: its browser, its device's, or Chromium. */
 function projectEngine(name: ProjectName): string {
-  const use: Project["use"] = PROJECTS[name].use;
-  return use?.browserName ?? use?.defaultBrowserType ?? "chromium";
+  const project: ProjectShape = PROJECTS[name];
+  return (
+    project.use?.browserName ?? project.use?.defaultBrowserType ?? "chromium"
+  );
 }
 
 /**
