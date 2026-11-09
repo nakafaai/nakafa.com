@@ -4,6 +4,7 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
+import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { notFound, redirect } from "@tanstack/react-router";
@@ -19,19 +20,19 @@ import {
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { ChatInput, LocaleInput } from "@/lib/account/input";
-import { readHomeTrendingSubjects } from "@/lib/content/trending";
 import { readOptional, readRequired } from "@/lib/data/read.server";
+import { entryOf } from "@/lib/island/entry";
 
 /**
- * Home: the onboarding gate, the account name and the recently viewed subjects.
- * The gate's status and the page's reads go out together, so the screen waits on
- * one Convex round trip instead of three.
+ * Home: the onboarding gate, the account name, the learner's island and their
+ * week, and the last lesson they opened. The gate's status and the page's reads
+ * go out together, so the screen waits on one Convex round trip.
  */
 export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const [status, messages, account, recentRows, trending] =
+      const [status, messages, account, recentRows, own, week] =
         yield* Effect.all(
           [
             readRequired(onboarding.queries.getStatus, {}, token),
@@ -39,11 +40,11 @@ export const homeScreenHandler = accountHandler(
             readOptional(auth.queries.getCurrentUser, {}, token),
             readOptional(
               contents.queries.recent.getRecentlyViewed,
-              { locale, limit: 5 },
+              { locale, limit: 1 },
               token
             ),
-            // The icon families stay on the server: each list passes only the looks it shows.
-            readHomeTrendingSubjects(locale),
+            readOptional(island.queries.own, {}, token),
+            readOptional(island.queries.week, {}, token),
           ],
           { concurrency: "unbounded" }
         );
@@ -71,19 +72,19 @@ export const homeScreenHandler = accountHandler(
         locale,
         title: t("title"),
       };
-      const recentLooks = getMaterialLooks(recentRows ?? []);
+      const recent = recentRows ?? [];
       return {
+        island: entryOf(own, account?.appUser._id),
         name: Option.getOrUndefined(
           Option.map(
             Option.fromNullishOr(account),
             (user) => user.authUser.name
           )
         ),
-        recentLooks,
-        recentRows: recentRows ?? [],
+        recent,
+        recentLooks: getMaterialLooks(recent),
         seo,
-        trending,
-        trendingLooks: getMaterialLooks(trending, recentLooks),
+        week: week ?? undefined,
       };
     })
 );

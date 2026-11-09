@@ -38,14 +38,8 @@ import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { castRay } from "@/lib/island/ray";
-import { lightOf } from "@/lib/island/sky";
+import { hourOf, lightOf } from "@/lib/island/sky";
 import { CHUNKS, cellOf, isInside } from "@/lib/island/world";
-
-/** The hour of the learner's own clock, from 0 to 24. */
-function localHour() {
-  const now = DateTime.setZone(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
-  return DateTime.getPart(now, "hour") + DateTime.getPart(now, "minute") / 60;
-}
 
 /**
  * The island's world on the whole screen (ADR 0047, D1, D2 and D5): the canvas
@@ -187,7 +181,12 @@ function start(
     }
     lastWater = now;
     needsDraw = false;
-    painter.draw(orbit, lightOf(localHour(), weather), now / 1000, weather);
+    painter.draw(
+      orbit,
+      lightOf(hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal()), weather),
+      now / 1000,
+      weather
+    );
     canvas.dataset.drawn = "true";
     canvas.dataset.weather = weather;
   };

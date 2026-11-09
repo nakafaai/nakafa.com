@@ -69,6 +69,7 @@ describe("island/award", () => {
             badges: [],
             learned: "2026-11-08",
             lifetime: 5,
+            streak: 1,
             timeZone: "UTC",
             version: 0,
           },
@@ -91,11 +92,14 @@ describe("island/award", () => {
           _tag: "capped",
         });
         expect((yield* world.read()).grants).toHaveLength(6);
+        expect((yield* world.read()).islands[0]?.streak).toBe(1);
         vi.setSystemTime(NOW + DAY);
         expect(yield* world.grant(lesson("lesson-7"))).toMatchObject({
           _tag: "granted",
           stars: 5,
         });
+        // A lesson the next day carries the run of days on.
+        expect((yield* world.read()).islands[0]?.streak).toBe(2);
       })
   );
 
