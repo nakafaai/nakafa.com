@@ -13,17 +13,17 @@ export class SearchIndexUnavailable extends Schema.TaggedError<
 }) {}
 
 /**
- * Reads the static search index of a locale from the site's own assets, once,
+ * Reads the static search index of a locale from the assets of the host the
+ * page came from (a relative address resolves against the page), once,
  * when the reader opens the palette, and folds its words for every keystroke
  * after it. No search reads anything but this file.
  */
 export const readSearchIndex = Effect.fn("www.search.readIndex")(function* (
-  origin: string,
   locale: string
 ) {
   const client = yield* HttpClient.HttpClient;
   const response = yield* client
-    .get(new URL(searchIndexPath(locale), origin))
+    .get(searchIndexPath(locale))
     .pipe(
       Effect.mapError(() => new SearchIndexUnavailable({ reason: "fetch" }))
     );

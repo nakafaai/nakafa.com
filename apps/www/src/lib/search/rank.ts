@@ -24,12 +24,12 @@ const PreparedEntry = Schema.Struct({
   title: Schema.Array(TitleWord),
   trail: Schema.Array(TitleWord),
 });
-export type PreparedEntry = typeof PreparedEntry.Type;
+type PreparedEntry = typeof PreparedEntry.Type;
 
 /** One result: its entry and how well it answers the query. */
 export const SearchHit = Schema.Struct({
   entry: SearchEntry,
-  score: Schema.Number,
+  score: Schema.Finite,
 });
 export type SearchHit = typeof SearchHit.Type;
 
@@ -215,9 +215,9 @@ export function searchEntries(
 }
 
 /** One run of a title, and whether it is a word the query matched. */
-const TitlePart = Schema.Struct({
+export const TitlePart = Schema.Struct({
   hit: Schema.Boolean,
-  start: Schema.Number,
+  start: Schema.Finite,
   text: Schema.String,
 });
 export type TitlePart = typeof TitlePart.Type;

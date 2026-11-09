@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type { SearchEntry } from "@/lib/search/entry";
 import {
   classifyPath,
@@ -7,18 +7,23 @@ import {
   readPageEntry,
 } from "@/lib/search/page";
 
+/** Writes structured data as the JSON text a page carries. */
+const json = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 /** A page's HTML holding these structured data blocks, as the prerender writes them. */
 function page(...blocks: readonly string[]) {
-  return `<html><head>${blocks
-    .map((block) => `<script type="application/ld+json">${block}</script>`)
-    .join("")}</head><body></body></html>`;
+  const scripts = Arr.map(
+    blocks,
+    (block) => `<script type="application/ld+json">${block}</script>`
+  );
+  return `<html><head>${Arr.join(scripts, "")}</head><body></body></html>`;
 }
 
 /** A breadcrumb of these names and paths under the production origin. */
 function breadcrumb(...crumbs: readonly (readonly [string, string])[]) {
-  return JSON.stringify({
+  return json({
     "@type": "BreadcrumbList",
-    itemListElement: crumbs.map(([name, path], index) => ({
+    itemListElement: Arr.map(crumbs, ([name, path], index) => ({
       "@type": "ListItem",
       item: `https://nakafa.com${path}`,
       name,
@@ -56,7 +61,7 @@ describe("readPageEntry", () => {
   it("reads a lesson's title and trail, and the other curricula that teach it", () => {
     const html = page(
       '{"@type":"WebSite","name":"Nakafa"}',
-      `[${JSON.stringify({
+      `[${json({
         "@type": "LearningResource",
         educationalAlignment: [
           { educationalFramework: "Kurikulum Merdeka" },
@@ -117,7 +122,7 @@ describe("readPageEntry", () => {
 
   it("names a surah by its meaning and its number", () => {
     const html = page(
-      JSON.stringify({
+      json({
         "@type": "Chapter",
         alternateName: "The Cow",
         position: 2,

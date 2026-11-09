@@ -61,10 +61,17 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useLocation } from "@tanstack/react-router";
-import { Array as Arr, type Effect, Option, Predicate, Result } from "effect";
+import {
+  Array as Arr,
+  type Effect,
+  Option,
+  Predicate,
+  Result,
+  Schema,
+} from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import type { SearchEntry, SearchKind } from "@/lib/search/entry";
+import { SearchEntry, type SearchKind } from "@/lib/search/entry";
 import {
   groupHits,
   readExploreEntries,
@@ -75,7 +82,7 @@ import type {
   readSearchIndex,
   SearchIndexUnavailable,
 } from "@/lib/search/load";
-import { markTitle, searchEntries, type TitlePart } from "@/lib/search/rank";
+import { markTitle, searchEntries, TitlePart } from "@/lib/search/rank";
 
 /**
  * The icons each kind draws from, best known first. Every icon of a pool means
@@ -138,25 +145,36 @@ const KIND_ICONS: Readonly<
   tryout: [Timer01Icon, Timer02Icon, Clock01Icon, AlarmClockIcon],
 };
 
-/** One row of the palette: the page it opens, its title with the matched words, and the pages above it. */
-export interface PaletteRow {
-  readonly entry: Option.Option<SearchEntry>;
-  /** Where the row leads: a page of the index by its address, or the search page with the query. */
-  readonly go:
-    | { readonly _tag: "page"; readonly href: string }
-    | { readonly _tag: "search"; readonly query: string };
-  readonly icon: IconSvgElement | string;
-  readonly key: string;
-  readonly parts: readonly TitlePart[];
-  readonly trail: string;
-}
+/** An icon of the Hugeicons set, which a row draws when it has no flag. */
+const RowIcon = Schema.declare((input: unknown): input is IconSvgElement =>
+  Arr.isArray(input)
+);
+
+/**
+ * One row of the palette: the page it opens, its flag (a country code) or icon,
+ * its title with the matched words, and the pages above it. `go` leads to a page
+ * of the index by its address, or to the search page with the query.
+ */
+const PaletteRow = Schema.Struct({
+  entry: Schema.Option(SearchEntry),
+  go: Schema.Union([
+    Schema.TaggedStruct("page", { href: Schema.String }),
+    Schema.TaggedStruct("search", { query: Schema.String }),
+  ]),
+  icon: Schema.Union([Schema.String, RowIcon]),
+  key: Schema.String,
+  parts: Schema.Array(TitlePart),
+  trail: Schema.String,
+});
+export type PaletteRow = typeof PaletteRow.Type;
 
 /** One group of rows under its label. */
-export interface PaletteGroup {
-  readonly key: string;
-  readonly label: string;
-  readonly rows: readonly PaletteRow[];
-}
+const PaletteGroup = Schema.Struct({
+  items: Schema.Array(PaletteRow),
+  key: Schema.String,
+  label: Schema.String,
+});
+export type PaletteGroup = typeof PaletteGroup.Type;
 
 /** What reading the index settled with, while it is still on its way. */
 type IndexAnswer = Option.Option<
@@ -242,20 +260,20 @@ export function usePaletteGroups({
         {
           key: "recent",
           label: t("search-recent"),
-          rows: readRows("recent", ownRecent, ""),
+          items: readRows("recent", ownRecent, ""),
         },
         {
           key: "near",
           label: t("search-near"),
-          rows: readRows("near", near, ""),
+          items: readRows("near", near, ""),
         },
         {
           key: "explore",
           label: t("search-explore"),
-          rows: readRows("explore", readExploreEntries(entries), ""),
+          items: readRows("explore", readExploreEntries(entries), ""),
         },
       ],
-      ({ rows }) => rows.length > 0
+      ({ items }) => items.length > 0
     );
   }
 
@@ -263,7 +281,7 @@ export function usePaletteGroups({
     onNone: () => [],
     onSome: (index) => groupHits(searchEntries(index.prepared, query)),
   });
-  const full = {
+  const full: PaletteRow = {
     entry: Option.none(),
     go: { _tag: "search", query: query.trim() },
     icon: Search02Icon,
@@ -277,13 +295,13 @@ export function usePaletteGroups({
     ...Arr.map(found, ({ group, hits }) => ({
       key: group,
       label: labels[group],
-      rows: readRows(
+      items: readRows(
         group,
         Arr.map(hits, ({ entry }) => entry),
         query
       ),
     })),
-    { key: "full", label: tCommon("search"), rows: [full] },
+    { items: [full], key: "full", label: tCommon("search") },
   ];
 }
 

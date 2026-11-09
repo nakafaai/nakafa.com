@@ -51,9 +51,7 @@ type HitGroup = typeof HitGroup.Type;
  * Groups ranked results by family. A group comes in the place of its best
  * result, so the best answer always leads, and each group keeps its own best few.
  */
-export function groupHits(
-  hits: readonly (typeof SearchHit.Type)[]
-): readonly HitGroup[] {
+export function groupHits(hits: readonly SearchHit[]): readonly HitGroup[] {
   const shown = Arr.take(hits, RESULT_LIMIT);
   const groups = Arr.dedupe(
     Arr.map(shown, ({ entry }) => groupOfKind(entry.kind))
@@ -123,7 +121,7 @@ export function readNearEntries(
           place.kind === "curriculum"
             ? Option.some(listUnder(entries, place.path, "level"))
             : Option.none()
-      ).pipe(Option.filter(Arr.isReadonlyArrayNonEmpty))
+      ).pipe(Option.filter((near: readonly SearchEntry[]) => near.length > 0))
     )
   );
   return Option.getOrElse(near, () => []);

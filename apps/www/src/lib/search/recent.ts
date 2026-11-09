@@ -7,7 +7,7 @@ import type { SearchEntry } from "@/lib/search/entry";
 const RECENT_LIMIT = 5;
 
 /** The pages the reader opened from the palette, newest first, and how to add one. */
-export interface RecentStore {
+interface RecentStore {
   readonly entries: readonly SearchEntry[];
   readonly remember: (entry: SearchEntry) => void;
 }

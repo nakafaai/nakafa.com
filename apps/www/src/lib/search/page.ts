@@ -31,7 +31,7 @@ const Lesson = Schema.Struct({
 const Chapter = Schema.Struct({
   "@type": Schema.Literal("Chapter"),
   alternateName: Schema.String,
-  position: Schema.Number,
+  position: Schema.Finite,
 });
 
 /** The text of a structured data block: one node or a list of them. */
@@ -50,7 +50,7 @@ function readNodes(html: string): readonly unknown[] {
     Arr.fromIterable(html.matchAll(STRUCTURED_DATA)),
     (match) =>
       Option.match(
-        Schema.decodeUnknownOption(StructuredData)(
+        Schema.decodeOption(StructuredData)(
           match[0].slice(match[0].indexOf(">") + 1, -CLOSING_TAG.length)
         ),
         {

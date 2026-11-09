@@ -75,9 +75,7 @@ const SearchIndexContext = createContext<Promise<IndexAnswer> | null>(null);
 function SearchIndex({ children }: { children: ReactNode }) {
   const locale = useLocale();
   const [answer] = useState(() =>
-    Effect.runPromise(
-      Effect.result(readSearchIndex(window.location.origin, locale))
-    )
+    Effect.runPromise(Effect.result(readSearchIndex(locale)))
   );
   return <SearchIndexContext value={answer}>{children}</SearchIndexContext>;
 }
@@ -169,7 +167,7 @@ function SearchPalette({ answer }: { answer: Option.Option<IndexAnswer> }) {
         <SearchState answer={answer} />
         <CommandList>
           {(group: PaletteGroup) => (
-            <CommandGroup items={group.rows} key={group.key}>
+            <CommandGroup items={group.items} key={group.key}>
               <CommandGroupLabel>{group.label}</CommandGroupLabel>
               <CommandCollection>
                 {(row: PaletteRow) => (

@@ -1,12 +1,8 @@
-// @vitest-environment node
-
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { readSearchIndex } from "@/lib/search/load";
 import { INDONESIAN_ENTRIES } from "@/lib/search/test.entries";
-
-const ORIGIN = "https://nakafa.com";
 
 /** One fetch double for the whole file, provided to the module's own client. */
 const fetcher = vi.fn<typeof fetch>();
@@ -17,7 +13,7 @@ beforeEach(() => {
 
 /** Reads the Indonesian index through this file's fetch double. */
 function read() {
-  return readSearchIndex(ORIGIN, "id").pipe(
+  return readSearchIndex("id").pipe(
     Effect.provideService(FetchHttpClient.Fetch, fetcher)
   );
 }
@@ -30,7 +26,7 @@ describe("readSearchIndex", () => {
       );
       const index = yield* read();
       expect(String(fetcher.mock.calls[0]?.[0])).toBe(
-        `${ORIGIN}/search/id.json`
+        `${window.location.origin}/search/id.json`
       );
       expect(index.entries).toEqual(INDONESIAN_ENTRIES);
       expect(index.prepared).toHaveLength(INDONESIAN_ENTRIES.length);
