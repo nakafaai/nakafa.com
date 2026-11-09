@@ -1,12 +1,10 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { press } from "@/e2e/support/input";
+import { drawnIsland, openIsland } from "@/e2e/support/island";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
-
-/** The island page of the signed-in learner. */
-const ISLAND_PATH = "/en/island";
 
 /**
  * How far below the canvas's middle the island's front corner cell shows, in
@@ -18,9 +16,6 @@ const FRONT_CELL_BELOW_MIDDLE = 11;
 
 /** The grass block's button, whose name goes on with its price. */
 const GRASS = /^Grass/u;
-
-/** The island's canvas once its first frame has drawn. */
-const drawnIsland = (page: Page) => page.locator("canvas[data-drawn]");
 
 for (const viewport of [desktopViewport, touchViewport]) {
   for (const colorScheme of ["light", "dark"] as const) {
@@ -41,57 +36,66 @@ for (const viewport of [desktopViewport, touchViewport]) {
       await Effect.runPromise(
         withObservedPageErrors(
           page,
-          Effect.promise(async () => {
-            await page.goto(ISLAND_PATH);
-            const canvas = drawnIsland(page);
-            await expect(canvas).toBeVisible();
-            await press(
-              page.getByRole("button", { name: "Build" }),
-              viewport.hasTouch
-            );
-            const items = page.getByRole("toolbar", { name: "Items" });
-            await expect(items).toBeVisible();
-            await expect(
-              page.getByRole("button", { name: "Undo" })
-            ).toBeDisabled();
-            const grass = items.getByRole("button", { name: GRASS });
-            await press(grass, viewport.hasTouch);
-            await expect(grass).toHaveAttribute("aria-pressed", "true");
-            await testInfo.attach(
-              `island-build-${viewport.name}-${colorScheme}.png`,
-              {
-                body: await page.screenshot({ fullPage: true }),
-                contentType: "image/png",
-              }
-            );
-            const bounds = await canvas.boundingBox();
-            const columns = Number(await canvas.getAttribute("width"));
-            expect(bounds).not.toBeNull();
-            expect(columns).toBeGreaterThan(0);
-            const width = bounds?.width ?? 0;
-            const height = bounds?.height ?? 0;
-            await press(canvas, viewport.hasTouch, {
-              position: {
-                x: width / 2,
-                y: height / 2 + (FRONT_CELL_BELOW_MIDDLE * width) / columns,
-              },
-            });
-            await expect(
-              page.getByText("You need more Stars for this.")
-            ).toBeVisible();
-            await testInfo.attach(
-              `island-refused-${viewport.name}-${colorScheme}.png`,
-              {
-                body: await page.screenshot({ fullPage: true }),
-                contentType: "image/png",
-              }
-            );
-            await press(
-              page.getByRole("button", { name: "Done" }),
-              viewport.hasTouch
-            );
-            await expect(items).toBeHidden();
-          })
+          openIsland(page, viewport.hasTouch).pipe(
+            Effect.andThen(
+              Effect.promise(async () => {
+                const canvas = drawnIsland(page);
+                await press(
+                  page.getByRole("button", { name: "Build" }),
+                  viewport.hasTouch
+                );
+                const items = page.getByRole("toolbar", { name: "Items" });
+                await expect(items).toBeVisible();
+                await expect(
+                  page.getByRole("button", { name: "Undo" })
+                ).toBeDisabled();
+                const grass = items.getByRole("button", { name: GRASS });
+                await press(grass, viewport.hasTouch);
+                await expect(grass).toHaveAttribute("aria-pressed", "true");
+                // The open bar shrinks the frame, and until the canvas's buffer matches its new box
+                // the camera and the pointer belong to the old size, so a press lands on another cell.
+                await expect
+                  .poll(async () => {
+                    const box = await canvas.boundingBox();
+                    const across = Number(await canvas.getAttribute("width"));
+                    const down = Number(await canvas.getAttribute("height"));
+                    return (
+                      across > 0 &&
+                      (box?.width ?? 0) * down === (box?.height ?? 0) * across
+                    );
+                  })
+                  .toBe(true);
+                const bounds = await canvas.boundingBox();
+                const columns = Number(await canvas.getAttribute("width"));
+                expect(bounds).not.toBeNull();
+                expect(columns).toBeGreaterThan(0);
+                const width = bounds?.width ?? 0;
+                const height = bounds?.height ?? 0;
+                await press(canvas, viewport.hasTouch, {
+                  position: {
+                    x: width / 2,
+                    y: height / 2 + (FRONT_CELL_BELOW_MIDDLE * width) / columns,
+                  },
+                });
+                await expect(
+                  page.getByText("You need more Stars for this.")
+                ).toBeVisible();
+                // A full-page capture resizes the page for a moment, so it waits until the press is done.
+                await testInfo.attach(
+                  `island-refused-${viewport.name}-${colorScheme}.png`,
+                  {
+                    body: await page.screenshot({ fullPage: true }),
+                    contentType: "image/png",
+                  }
+                );
+                await press(
+                  page.getByRole("button", { name: "Done" }),
+                  viewport.hasTouch
+                );
+                await expect(items).toBeHidden();
+              })
+            )
+          )
         )
       );
       await context.close();

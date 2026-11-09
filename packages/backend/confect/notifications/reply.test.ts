@@ -1,4 +1,12 @@
 import { Ref } from "@confect/core";
+// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
+// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
+// file is collected, so no test pays it.
+import "@repo/backend/components/betterAuth/session";
+import "@repo/backend/convex/comments/mutations";
+import "@repo/backend/convex/notifications/deliver";
+import "@repo/backend/convex/notifications/inbox";
+import "@repo/backend/convex/notifications/personal";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -96,11 +104,11 @@ const subscribe = (t: Learners["t"], userId: Id<"users">) =>
 async function reply({ author, reader }: Learners) {
   const parentId = await author.client.mutation(
     api.comments.mutations.addComment,
-    { slug: SLUG, text: "Question" }
+    { uploads: [], slug: SLUG, text: "Question" }
   );
   const replyId = await reader.client.mutation(
     api.comments.mutations.addComment,
-    { parentId, slug: SLUG, text: "Answer" }
+    { uploads: [], parentId, slug: SLUG, text: "Answer" }
   );
   return { parentId, replyId };
 }
@@ -133,9 +141,10 @@ describe("notifications/reply", () => {
     const { author, t } = await createLearners();
     const parentId = await author.client.mutation(
       api.comments.mutations.addComment,
-      { slug: SLUG, text: "Question" }
+      { uploads: [], slug: SLUG, text: "Question" }
     );
     await author.client.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       parentId,
       slug: SLUG,
       text: "A follow-up",

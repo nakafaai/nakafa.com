@@ -123,3 +123,30 @@ export const FLOWERS: Sprite = {
     y: ["glow", 2],
   },
 };
+
+/** A firefly: a warm dot that blinks between a glow and a spark. */
+export const FIREFLY: Sprite = {
+  fps: 4,
+  frames: [
+    [".o.", "oyo", ".o."],
+    ["...", ".y.", "..."],
+  ],
+  key: {
+    o: ["glow", 1],
+    y: ["glow", 3],
+  },
+};
+
+/** A puff of chimney smoke as it rises: small, then round, then thinning out. */
+export const SMOKE: Sprite = {
+  fps: 0,
+  frames: [
+    [".c.", "cwc", ".c."],
+    [".ccc.", "ccwcc", "ccccc", ".ccc."],
+    [".c.c.", "c.c.c", ".c.c.", "..c.."],
+  ],
+  key: {
+    c: ["cloud", 1],
+    w: ["cloud", 3],
+  },
+};

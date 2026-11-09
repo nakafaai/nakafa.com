@@ -301,7 +301,7 @@ function MaterialPage() {
               publicPath={route.publicPath}
             />
             <MaterialPagination />
-            <FooterContent>
+            <FooterContent rule>
               <DeferredComments slug={route.contentKey} />
             </FooterContent>
             <SheetEntry contextTitle={metadata.title} />

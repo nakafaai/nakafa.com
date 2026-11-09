@@ -1,4 +1,4 @@
-import { useIntersection } from "@mantine/hooks";
+import { useIntersection, useMergedRef } from "@mantine/hooks";
 import { type ComponentProps, useEffect, useEffectEvent, useRef } from "react";
 
 /** The observer's threshold when no share is given: any part of the element on the screen. */
@@ -7,6 +7,7 @@ const ANY_PART_THRESHOLD = 0.1;
 export function Intersection({
   minimumRatio,
   onIntersect,
+  ref: callerRef,
   root = null,
   rootMargin = "400px",
   once = false,
@@ -32,11 +33,14 @@ export function Intersection({
   once?: boolean;
 } & ComponentProps<"div">) {
   // The observer reports the crossings that the callback tests, so a gradual entry reaches the share.
-  const { ref, entry } = useIntersection({
+  const { ref: observedRef, entry } = useIntersection({
     root,
     rootMargin,
     threshold: minimumRatio ?? ANY_PART_THRESHOLD,
   });
+  // A caller that also needs the element, such as a sketch drawing into it,
+  // gets it alongside the observer instead of replacing the observer's ref.
+  const ref = useMergedRef<HTMLDivElement>(observedRef, callerRef);
   const hasTriggered = useRef(false);
   const handleIntersect = useEffectEvent(onIntersect);
 
@@ -59,5 +63,5 @@ export function Intersection({
     handleIntersect();
   }, [entry, minimumRatio, once]);
 
-  return <div ref={ref} {...props} />;
+  return <div {...props} ref={ref} />;
 }
