@@ -1,6 +1,7 @@
 import {
   Array as Arr,
   Equal,
+  Match,
   MutableHashMap,
   Number as Num,
   Option,
@@ -17,6 +18,30 @@ const SpotSchema = Schema.Struct({
 /** Where a toy belongs. */
 type Spot = typeof SpotSchema.Type;
 
+/**
+ * What a place answers for a toy: the spot where it belongs, no room for it (`Missing`), or a part of the page that
+ * the browser has not drawn yet (`Waiting`), such as a part it skips while it is far from the screen, whose size the
+ * page does not know yet. A waiting toy stays as it is: hidden until its first place, or where it was last placed, so
+ * a toy never moves while a part far away takes its true size, and a toy a reader carried away never vanishes.
+ */
+const PlacementSchema = Schema.Union([
+  Schema.TaggedStruct("Placed", { spot: SpotSchema }),
+  Schema.TaggedStruct("Missing", {}),
+  Schema.TaggedStruct("Waiting", {}),
+]);
+
+/** What a place answers for a toy. */
+type Placement = typeof PlacementSchema.Type;
+
+/** The answer of a place that found where its toy belongs. */
+export const placed = (spot: Spot): Placement => ({ _tag: "Placed", spot });
+
+/** The answer of a place that has no room for its toy at this width, or no part to stand beside. */
+export const MISSING: Placement = { _tag: "Missing" };
+
+/** The answer of a place whose part the browser has not drawn yet. */
+export const WAITING: Placement = { _tag: "Waiting" };
+
 /** The box of an element in the page, measured from the top left corner of the layer. */
 const BoxSchema = Schema.Struct({
   bottom: Schema.Finite,
@@ -29,6 +54,12 @@ const BoxSchema = Schema.Struct({
 
 /** The box of an element in the page. */
 type Box = typeof BoxSchema.Type;
+
+/**
+ * The event a part with `content-visibility: auto` sends when the browser starts or stops drawing what it holds. It
+ * does not bubble, so the layer hears it on the way down.
+ */
+const DRAWN_CHANGE = "contentvisibilityautostatechange";
 
 /**
  * Where layout put an element, before any transform: its offsets summed up the
@@ -52,12 +83,10 @@ function layoutOrigin(el: HTMLElement): Pick<Box, "left" | "top"> {
 /**
  * Answers where a toy belongs at this width of the page, from the live layout:
  * `box` measures any element in the page. When there is no free room for the
- * toy at this width it answers nothing, and the toy is left out.
+ * toy at this width it answers `MISSING`, and the toy is left out; while its part
+ * is not drawn yet it answers `WAITING`, and the toy stays as it is.
  */
-export type Place = (
-  width: number,
-  box: (el: Element) => Box
-) => Option.Option<Spot>;
+export type Place = (width: number, box: (el: Element) => Box) => Placement;
 
 /**
  * Places toys over a whole page. The layer covers the page, so a toy can be
@@ -115,24 +144,32 @@ export function createScatter(rest: (el: HTMLElement) => void) {
     const spots = Arr.map(Arr.fromIterable(toys), ([el, place]) => ({
       el,
       drawn: el.offsetWidth,
-      spot: place(next, box),
+      placement: place(next, box),
     }));
-    Arr.forEach(spots, ({ drawn, el, spot }) => {
-      el.hidden = Option.isNone(spot);
-      if (Option.isSome(spot)) {
-        // A toy never reaches past the layer's right edge, so no place can make
-        // the page scroll sideways; a toy wider than the layer starts at its left.
-        const wide = spot.value.size ?? drawn;
-        const x = Num.clamp(spot.value.x, {
-          maximum: Num.max(0, next - wide),
-          minimum: 0,
-        });
-        el.style.left = `${Math.round(x)}px`;
-        el.style.top = `${Math.round(spot.value.y)}px`;
-        if (spot.value.size !== undefined) {
-          el.style.setProperty("--toy", `${Math.round(spot.value.size)}px`);
-        }
-      }
+    Arr.forEach(spots, ({ drawn, el, placement }) => {
+      Match.value(placement).pipe(
+        Match.tagsExhaustive({
+          Missing: () => {
+            el.hidden = true;
+          },
+          Placed: ({ spot }) => {
+            el.hidden = false;
+            // A toy never reaches past the layer's right edge, so no place can make
+            // the page scroll sideways; a toy wider than the layer starts at its left.
+            const wide = spot.size ?? drawn;
+            const x = Num.clamp(spot.x, {
+              maximum: Num.max(0, next - wide),
+              minimum: 0,
+            });
+            el.style.left = `${Math.round(x)}px`;
+            el.style.top = `${Math.round(spot.y)}px`;
+            if (spot.size !== undefined) {
+              el.style.setProperty("--toy", `${Math.round(spot.size)}px`);
+            }
+          },
+          Waiting: () => undefined,
+        })
+      );
       if (fresh) {
         rest(el);
       }
@@ -165,9 +202,12 @@ export function createScatter(rest: (el: HTMLElement) => void) {
       watching.observe(over);
       // Text measured before the fonts arrived is placed again once they have.
       document.fonts.ready.then(ask);
+      // A part the browser starts or stops drawing as it nears or leaves the screen places its waiting toys.
+      document.addEventListener(DRAWN_CHANGE, ask, { capture: true });
       ask();
       return () => {
         watching.disconnect();
+        document.removeEventListener(DRAWN_CHANGE, ask, { capture: true });
         cancelAnimationFrame(frame);
         frame = 0;
         layer = Option.none();
