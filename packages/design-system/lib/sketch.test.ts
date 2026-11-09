@@ -18,23 +18,25 @@ describe("loadP5", () => {
     })
   );
 
-  it.effect("loads the core with its drawing and accessibility addons once", () =>
-    Effect.gen(function* () {
-      const P5 = yield* loadP5();
-      const again = yield* loadP5();
+  it.effect(
+    "loads the core with its drawing and accessibility addons once",
+    () =>
+      Effect.gen(function* () {
+        const P5 = yield* loadP5();
+        const again = yield* loadP5();
 
-      expect(again).toBe(P5);
-      for (const method of [
-        "_addAccsOutput",
-        "describe",
-        "ellipse",
-        "fill",
-        "lerp",
-        "loop",
-        "noLoop",
-      ]) {
-        expect(method in P5.prototype).toBe(true);
-      }
-    })
+        expect(again).toBe(P5);
+        for (const method of [
+          "_addAccsOutput",
+          "describe",
+          "ellipse",
+          "fill",
+          "lerp",
+          "loop",
+          "noLoop",
+        ]) {
+          expect(method in P5.prototype).toBe(true);
+        }
+      })
   );
 });
