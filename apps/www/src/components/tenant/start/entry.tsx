@@ -17,7 +17,7 @@ import {
 import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Navigate } from "@tanstack/react-router";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Match, Option } from "effect";
 import {
   type FormEvent,
   useEffect,
@@ -188,17 +188,19 @@ function SchoolEntryLive() {
   if (!(isAnswered && QueryResult.isSuccess(status))) {
     return <EntryWaiting />;
   }
-  const entry = schoolEntryOf(
-    Option.map(Arr.head(memberships.results), ({ tenant }) => tenant.slug),
-    status.value.profile?.role
+  return Match.value(
+    schoolEntryOf(
+      Option.map(Arr.head(memberships.results), ({ tenant }) => tenant.slug),
+      status.value.profile?.role
+    )
+  ).pipe(
+    Match.tag("Enter", ({ slug }) => <EnterSchool slug={slug} />),
+    Match.tag("Join", ({ guardian }) => <SchoolJoin guardian={guardian} />),
+    Match.tag("Open", () => (
+      <Navigate params={{ locale }} replace to="/$locale/school/new" />
+    )),
+    Match.exhaustive
   );
-  if (entry._tag === "Enter") {
-    return <EnterSchool slug={entry.slug} />;
-  }
-  if (entry._tag === "Open") {
-    return <Navigate params={{ locale }} replace to="/$locale/school/new" />;
-  }
-  return <SchoolJoin guardian={entry.guardian} />;
 }
 
 /**

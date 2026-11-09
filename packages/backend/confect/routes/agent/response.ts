@@ -11,7 +11,7 @@ import type {
 import type { NakafaProblemDetails } from "@repo/contents/agent/schema/api";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { encodeJsonText } from "@repo/utilities/json";
-import { type Cause, Effect, Schema } from "effect";
+import { type Cause, Effect, Match, Schema } from "effect";
 
 const AgentProblemStatusSchema = Schema.Literals([
   400, 403, 404, 405, 406, 415, 422, 429, 500, 503,
@@ -85,46 +85,52 @@ export function agentFailureResponse(
   instance: string,
   requestId: string
 ) {
-  if (error._tag === "AgentRateLimitError") {
-    const retryAfter = Math.max(1, Math.ceil(error.retryAfterMs / 1000));
-    return problemResponse({
-      code: "RATE_LIMITED",
-      detail: "The client exceeded the bounded public read quota.",
-      headers: {
-        // An empty bucket: no read is left, and it is full again after the refill window.
-        ...agentQuotaHeaders(readAgentQuota(0)),
-        "Retry-After": retryAfter.toString(),
-      },
-      instance,
-      requestId,
-      resolution: "Wait for Retry-After, then retry with backoff.",
-      status: 429,
-      title: "Too many requests",
-      type: "rate-limited",
-    });
-  }
-  if (error._tag === "NakafaAgentInputError") {
-    return problemResponse({
-      code: "UNPROCESSABLE_REQUEST",
-      detail: typeof error.cause === "string" ? error.cause : error.message,
-      instance,
-      requestId,
-      resolution: error.message,
-      status: 422,
-      title: "Unprocessable request",
-      type: "unprocessable-request",
-    });
-  }
-  return problemResponse({
-    code: "SERVICE_UNAVAILABLE",
-    detail: error.message,
-    instance,
-    requestId,
-    resolution: "Retry the request later using the same documented inputs.",
-    status: 503,
-    title: "Service unavailable",
-    type: "service-unavailable",
-  });
+  return Match.value(error).pipe(
+    Match.tagsExhaustive({
+      AgentRateLimitError: ({ retryAfterMs }) =>
+        problemResponse({
+          code: "RATE_LIMITED",
+          detail: "The client exceeded the bounded public read quota.",
+          headers: {
+            // An empty bucket: no read is left, and it is full again after the refill window.
+            ...agentQuotaHeaders(readAgentQuota(0)),
+            "Retry-After": Math.max(
+              1,
+              Math.ceil(retryAfterMs / 1000)
+            ).toString(),
+          },
+          instance,
+          requestId,
+          resolution: "Wait for Retry-After, then retry with backoff.",
+          status: 429,
+          title: "Too many requests",
+          type: "rate-limited",
+        }),
+      NakafaAgentDataReadError: ({ message }) =>
+        problemResponse({
+          code: "SERVICE_UNAVAILABLE",
+          detail: message,
+          instance,
+          requestId,
+          resolution:
+            "Retry the request later using the same documented inputs.",
+          status: 503,
+          title: "Service unavailable",
+          type: "service-unavailable",
+        }),
+      NakafaAgentInputError: (input) =>
+        problemResponse({
+          code: "UNPROCESSABLE_REQUEST",
+          detail: typeof input.cause === "string" ? input.cause : input.message,
+          instance,
+          requestId,
+          resolution: input.message,
+          status: 422,
+          title: "Unprocessable request",
+          type: "unprocessable-request",
+        }),
+    })
+  );
 }
 
 /** Maps malformed HTTP parameters to a correctable public error. */

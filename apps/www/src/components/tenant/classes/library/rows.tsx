@@ -368,25 +368,20 @@ function LibraryRowMenu({ row }: { row: LibraryRow }) {
   const { can } = useClassScope();
   const manages = Arr.contains(can, "library.manage");
 
-  if (
-    row._tag === "upload" ||
-    (row._tag === "folder" && !isSavedFolder(row.folder))
-  ) {
-    return <RowCopy value={shownOf(row).title} />;
-  }
-  if (row._tag === "item") {
-    return manages ? (
-      <ManagerItemMenu item={row.item} />
-    ) : (
-      <ReaderItemMenu item={row.item} />
-    );
-  }
-  return manages ? (
-    <FolderRowMenu folder={row.folder}>
-      <LibraryOpen folder={row.folder} />
-    </FolderRowMenu>
-  ) : (
-    <FolderReaderMenu folder={row.folder} />
+  return Match.value(row).pipe(
+    Match.tag("item", ({ item }) =>
+      manages ? <ManagerItemMenu item={item} /> : <ReaderItemMenu item={item} />
+    ),
+    Match.when({ _tag: "folder", folder: isSavedFolder }, ({ folder }) =>
+      manages ? (
+        <FolderRowMenu folder={folder}>
+          <LibraryOpen folder={folder} />
+        </FolderRowMenu>
+      ) : (
+        <FolderReaderMenu folder={folder} />
+      )
+    ),
+    Match.orElse((kept) => <RowCopy value={shownOf(kept).title} />)
   );
 }
 
