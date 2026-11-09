@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { accountNotice } from "@repo/backend/confect/notifications/account";
 import { partsOf } from "@repo/backend/confect/notifications/detail";
 import { NotificationNotFound } from "@repo/backend/confect/notifications/errors";
 import {
@@ -17,9 +18,9 @@ import {
 } from "@repo/backend/confect/notifications/feed";
 import { heldSchools, holds } from "@repo/backend/confect/notifications/held";
 import spec from "@repo/backend/confect/notifications/inbox.spec";
-import { replyNotice } from "@repo/backend/confect/notifications/reply";
 import {
   type AccountRow,
+  isAccountRow,
   notificationView,
 } from "@repo/backend/confect/notifications/schema";
 import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
@@ -51,8 +52,8 @@ const scopedSchools = Effect.fn("notifications.inbox.scoped")(function* (
     : Arr.filter(schools, ({ tenant }) => tenant.slug === slug);
 });
 
-/** Marks one reply row read for the account it is addressed to. Any other account is refused. */
-const readReply = Effect.fn("notifications.inbox.readReply")(function* (
+/** Marks one row of an account read for the account it is addressed to. Any other account is refused. */
+const readAccountRow = Effect.fn("notifications.inbox.readAccount")(function* (
   row: AccountRow,
   userId: GenericId.GenericId<"users">
 ) {
@@ -60,14 +61,14 @@ const readReply = Effect.fn("notifications.inbox.readReply")(function* (
     return yield* new NotificationNotFound();
   }
   if (row.readAt !== undefined) {
-    return yield* replyNotice(row);
+    return yield* accountNotice(row);
   }
   const readAt = yield* Clock.currentTimeMillis;
   yield* (yield* DatabaseWriter)
     .table("notifications")
     .patch(row._id, { readAt })
     .pipe(Effect.orDie);
-  return yield* replyNotice({ ...row, readAt });
+  return yield* accountNotice({ ...row, readAt });
 });
 
 /** Marks one row read. A row of an unheld Person is refused like a missing row. */
@@ -87,8 +88,8 @@ const read = FunctionImpl.make(
           GetByIdFailure: () => new NotificationNotFound(),
         })
       );
-    if (row.changeType === "comment.replied") {
-      return yield* readReply(row, appUser._id);
+    if (isAccountRow(row)) {
+      return yield* readAccountRow(row, appUser._id);
     }
     const person = yield* reader
       .table("tenantPeople")
