@@ -3,7 +3,7 @@ import { parseMermaid } from "@repo/design-system/lib/mermaid/render";
 import { Array as Arr, Effect, Option, Predicate, Schema } from "effect";
 
 /** One Mermaid diagram of a prerendered page: the page and the chart it draws. */
-export const PageDiagramSchema = Schema.Struct({
+const PageDiagramSchema = Schema.Struct({
   chart: Schema.String,
   page: Schema.String,
 });
