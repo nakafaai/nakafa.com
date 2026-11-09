@@ -72,13 +72,23 @@ function digits(parameter: FormulaParameter) {
  * One slider: its rich label, or its name as math, its value, and the track
  * that moves it.
  */
-function ParameterSlider({ parameter }: { readonly parameter: FormulaParameter }) {
+function ParameterSlider({
+  parameter,
+}: {
+  readonly parameter: FormulaParameter;
+}) {
   const { labels, store } = useParameters();
   const value = useStore(store, (state) =>
-    Option.getOrElse(Rec.get(state.values, parameter.name), () => parameter.value)
+    Option.getOrElse(
+      Rec.get(state.values, parameter.name),
+      () => parameter.value
+    )
   );
   const move = useStore(store, (state) => state.move);
-  const name = Option.getOrElse(Rec.get(PARAMETER_NAMES, parameter.name), () => "");
+  const name = Option.getOrElse(
+    Rec.get(PARAMETER_NAMES, parameter.name),
+    () => ""
+  );
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between gap-4 text-sm">

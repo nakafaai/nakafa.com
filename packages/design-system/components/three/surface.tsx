@@ -1,8 +1,18 @@
 import { useThree } from "@react-three/fiber";
-import { gridMesh, type MeshGrid } from "@repo/design-system/lib/geometry/mesh";
+import {
+  gridMesh,
+  type MeshGrid,
+  meshGeometry,
+} from "@repo/design-system/lib/geometry/mesh";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { useEffect, useMemo } from "react";
-import { type ColorRepresentation, DoubleSide, Plane, Vector3 } from "three";
+import {
+  type ColorRepresentation,
+  DoubleSide,
+  MeshStandardMaterial,
+  Plane,
+  Vector3,
+} from "three";
 
 /** The six planes that keep a surface inside its frame box. */
 function frameClipping(min: Point3, max: Point3) {
@@ -36,23 +46,19 @@ export function Surface({
   useEffect(() => {
     gl.localClippingEnabled = true;
   }, [gl]);
-  const mesh = useMemo(() => gridMesh(grid), [grid]);
-  const clipping = useMemo(() => frameClipping(min, max), [min, max]);
-  return (
-    <mesh>
-      <bufferGeometry onUpdate={(geometry) => geometry.computeVertexNormals()}>
-        <bufferAttribute args={[mesh.positions, 3]} attach="attributes-position" />
-        <bufferAttribute args={[mesh.indices, 1]} attach="index" />
-      </bufferGeometry>
-      <meshStandardMaterial
-        clippingPlanes={clipping}
-        color={color}
-        metalness={0.05}
-        opacity={0.92}
-        roughness={0.55}
-        side={DoubleSide}
-        transparent
-      />
-    </mesh>
+  const geometry = useMemo(() => meshGeometry(gridMesh(grid)), [grid]);
+  const material = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        clippingPlanes: frameClipping(min, max),
+        color,
+        metalness: 0.05,
+        opacity: 0.92,
+        roughness: 0.55,
+        side: DoubleSide,
+        transparent: true,
+      }),
+    [color, max, min]
   );
+  return <mesh geometry={geometry} material={material} />;
 }

@@ -29,7 +29,12 @@ function FormulaShapeView({ shape }: { readonly shape: FormulaShape }) {
   }
   if (shape.kind === "surface") {
     return (
-      <Surface color={color} grid={shape.grid} max={shape.max} min={shape.min} />
+      <Surface
+        color={color}
+        grid={shape.grid}
+        max={shape.max}
+        min={shape.min}
+      />
     );
   }
   return <Solid color={color} faces={shape.faces} />;

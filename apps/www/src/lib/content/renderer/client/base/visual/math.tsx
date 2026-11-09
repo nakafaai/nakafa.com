@@ -47,15 +47,15 @@ export function MathVisual({ description, title, ...scene }: Props) {
             title={<span id={titleId}>{title}</span>}
           />
           <ParameterSliders />
-        <VisualCardBody
-          aria-describedby={descriptionId}
-          aria-labelledby={titleId}
-          className="relative m-0"
-          data-scene="math"
-          render={<figure />}
-        >
-          <DeferredMathScene {...scene} />
-        </VisualCardBody>
+          <VisualCardBody
+            aria-describedby={descriptionId}
+            aria-labelledby={titleId}
+            className="relative m-0"
+            data-scene="math"
+            render={<figure />}
+          >
+            <DeferredMathScene {...scene} />
+          </VisualCardBody>
           <CoordinateControls />
           <MathReadouts />
         </VisualCard>

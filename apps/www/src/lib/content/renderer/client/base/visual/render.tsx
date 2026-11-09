@@ -11,8 +11,6 @@ import {
 } from "@/lib/content/renderer/client/base/visual/formula";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
-import { FormulaShapes } from "@/lib/content/renderer/client/base/visual/shapes";
-import { useParameterValues } from "@/lib/content/renderer/client/base/visual/sliders";
 import type {
   PlaneObject,
   PlaneVisual,
@@ -20,6 +18,8 @@ import type {
   SpacePoint,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
+import { FormulaShapes } from "@/lib/content/renderer/client/base/visual/shapes";
+import { useParameterValues } from "@/lib/content/renderer/client/base/visual/sliders";
 import {
   projectVisualPoint,
   resolveVisualProjection,

@@ -124,4 +124,3 @@ describe("MathVisual normalization", () => {
     expect(sampled.z).toBeCloseTo(exact.z, 12);
   });
 });
-

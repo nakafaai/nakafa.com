@@ -1,6 +1,6 @@
 import { Line } from "@react-three/drei";
 import { fanMesh } from "@repo/design-system/lib/geometry/mesh";
-import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { type Point3, pointsKey } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { type ColorRepresentation, DoubleSide } from "three";
@@ -26,7 +26,10 @@ export function Region({
     <group>
       <mesh>
         <bufferGeometry>
-          <bufferAttribute args={[mesh.positions, 3]} attach="attributes-position" />
+          <bufferAttribute
+            args={[mesh.positions, 3]}
+            attach="attributes-position"
+          />
           <bufferAttribute args={[mesh.indices, 1]} attach="index" />
         </bufferGeometry>
         <meshBasicMaterial
@@ -40,13 +43,13 @@ export function Region({
           transparent
         />
       </mesh>
-      {Arr.map(boundary, (edge, index) => (
+      {Arr.map(boundary, (edge) => (
         <Line
           color={color}
           dashed={edge.strict}
           dashSize={0.18}
           gapSize={0.12}
-          key={index}
+          key={pointsKey(edge.points)}
           lineWidth={2}
           points={Arr.map(edge.points, ({ x, y, z }) => [x, y, z] as const)}
         />

@@ -4,6 +4,7 @@ import {
 } from "@repo/design-system/lib/geometry/point";
 import { triangulatePolygon } from "@repo/design-system/lib/geometry/polygon";
 import { Array as Arr, MutableList, Option, Schema } from "effect";
+import { BufferAttribute, BufferGeometry } from "three";
 
 /** One indexed triangle mesh, ready for a buffer geometry. */
 export const MeshArraysSchema = Schema.Struct({
@@ -34,7 +35,11 @@ export function fanMesh(shapes: readonly (readonly Point3[])[]): MeshArrays {
   let start = 0;
   for (const shape of shapes) {
     for (let corner = 1; corner < shape.length - 1; corner += 1) {
-      MutableList.appendAll(indices, [start, start + corner, start + corner + 1]);
+      MutableList.appendAll(indices, [
+        start,
+        start + corner,
+        start + corner + 1,
+      ]);
     }
     start += shape.length;
   }
@@ -88,4 +93,13 @@ export function faceMesh(faces: readonly (readonly Point3[])[]): MeshArrays {
     indices: new Uint32Array(MutableList.toArray(indices)),
     positions: flatten(Arr.flatten(faces)),
   };
+}
+
+/** Builds the buffer geometry of one mesh, with the vertex normals a lit material shades by. */
+export function meshGeometry(mesh: MeshArrays) {
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(mesh.positions, 3));
+  geometry.setIndex(new BufferAttribute(mesh.indices, 1));
+  geometry.computeVertexNormals();
+  return geometry;
 }

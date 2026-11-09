@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { faceMesh, fanMesh, gridMesh } from "@repo/design-system/lib/geometry/mesh";
+import {
+  faceMesh,
+  fanMesh,
+  gridMesh,
+  meshGeometry,
+} from "@repo/design-system/lib/geometry/mesh";
 import { Option } from "effect";
 
 const p = (x: number, y: number, z = 0) => ({ x, y, z });
@@ -41,5 +46,17 @@ describe("mesh arrays", () => {
 
     expect(mesh.indices.length).toBe(12);
     expect(Math.max(...mesh.indices)).toBe(7);
+  });
+
+  it("builds a buffer geometry with positions, indices and one normal per vertex", () => {
+    const geometry = meshGeometry(fanMesh([[p(0, 0), p(1, 0), p(0, 1)]]));
+
+    expect(geometry.getAttribute("position").count).toBe(3);
+    expect(Array.from(geometry.getIndex()?.array ?? [])).toStrictEqual([
+      0, 1, 2,
+    ]);
+    expect(Array.from(geometry.getAttribute("normal").array)).toStrictEqual([
+      0, 0, 1, 0, 0, 1, 0, 0, 1,
+    ]);
   });
 });

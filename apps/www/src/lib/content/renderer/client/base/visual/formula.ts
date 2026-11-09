@@ -1,4 +1,7 @@
-import { MathAppearanceSchema, SpacePointSchema } from "@nakafa/aksara-contracts/math/base";
+import {
+  MathAppearanceSchema,
+  SpacePointSchema,
+} from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import {
   type FormulaReadout,
@@ -30,8 +33,16 @@ const ShapeFields = { appearance: MathAppearanceSchema, id: Schema.String };
 
 /** One drawable piece of a formula object, already in scene units. */
 export const FormulaShapeSchema = Schema.Union([
-  Schema.Struct({ ...ShapeFields, kind: Schema.Literal("curve"), points: PointsSchema }),
-  Schema.Struct({ ...ShapeFields, kind: Schema.Literal("marker"), point: SpacePointSchema }),
+  Schema.Struct({
+    ...ShapeFields,
+    kind: Schema.Literal("curve"),
+    points: PointsSchema,
+  }),
+  Schema.Struct({
+    ...ShapeFields,
+    kind: Schema.Literal("marker"),
+    point: SpacePointSchema,
+  }),
   Schema.Struct({
     ...ShapeFields,
     boundary: Schema.Array(
@@ -51,7 +62,11 @@ export const FormulaShapeSchema = Schema.Union([
     max: SpacePointSchema,
     min: SpacePointSchema,
   }),
-  Schema.Struct({ ...ShapeFields, faces: Schema.Array(PointsSchema), kind: Schema.Literal("solid") }),
+  Schema.Struct({
+    ...ShapeFields,
+    faces: Schema.Array(PointsSchema),
+    kind: Schema.Literal("solid"),
+  }),
 ]);
 export type FormulaShape = typeof FormulaShapeSchema.Type;
 
@@ -119,7 +134,10 @@ function shapesOf(
   if (geometry.kind === "curves") {
     return Arr.map(geometry.branches, (branch, index) => ({
       ...fields,
-      id: geometry.branches.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
+      id:
+        geometry.branches.length === 1
+          ? object.id
+          : `${object.id}:part:${index + 1}`,
       kind: "curve" as const,
       points: Arr.map(branch, project),
     }));
@@ -127,7 +145,10 @@ function shapesOf(
   if (geometry.kind === "points") {
     return Arr.map(geometry.points, (point, index) => ({
       ...fields,
-      id: geometry.points.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
+      id:
+        geometry.points.length === 1
+          ? object.id
+          : `${object.id}:part:${index + 1}`,
       kind: "marker" as const,
       point: project(point),
     }));
@@ -147,7 +168,14 @@ function shapesOf(
   }
   if (geometry.kind === "grid") {
     const points = Arr.map(geometry.grid.points, Option.map(project));
-    return [{ ...fields, ...frame, grid: { ...geometry.grid, points }, kind: "surface" as const }];
+    return [
+      {
+        ...fields,
+        ...frame,
+        grid: { ...geometry.grid, points },
+        kind: "surface" as const,
+      },
+    ];
   }
   return [
     {
@@ -178,7 +206,8 @@ export function resolveFormulaShapes(
   const sampled =
     scene.space === "plane"
       ? Arr.map(Arr.filter(scene.objects, isPlaneFormula), (object) => {
-          const axis = object.kind === "function" ? (object.inputAxis ?? "x") : "x";
+          const axis =
+            object.kind === "function" ? (object.inputAxis ?? "x") : "x";
           const named = Arr.flatMap(labels, ({ at, objectId }) =>
             objectId === object.id && !isPlaneFormulaPoint(at) ? [at[axis]] : []
           );
@@ -188,8 +217,9 @@ export function resolveFormulaShapes(
           );
         })
       : Arr.map(Arr.filter(scene.objects, isSpaceFormula), (object) =>
-          Result.map(spaceFormulaGeometry(object, scene.frame, scope), (geometry) =>
-            shapesOf(object, geometry, project, frame)
+          Result.map(
+            spaceFormulaGeometry(object, scene.frame, scope),
+            (geometry) => shapesOf(object, geometry, project, frame)
           )
         );
   return Result.map(Result.all(sampled), Arr.flatten);
@@ -214,12 +244,16 @@ export function labelPoint(
 }
 
 /** The value of each readout at the sliders' current values, none where it is not finite. */
-export function readoutValues(readouts: readonly FormulaReadout[], scope: FormulaScope) {
+export function readoutValues(
+  readouts: readonly FormulaReadout[],
+  scope: FormulaScope
+) {
   return Arr.map(readouts, ({ formula, key }) => ({
     key,
     value: Result.match(compileText(formula), {
       onFailure: () => Option.none<number>(),
-      onSuccess: (evaluate) => Option.filter(Option.some(evaluate(scope)), Number.isFinite),
+      onSuccess: (evaluate) =>
+        Option.filter(Option.some(evaluate(scope)), Number.isFinite),
     }),
   }));
 }
