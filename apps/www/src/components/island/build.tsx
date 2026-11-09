@@ -148,13 +148,9 @@ function Picked() {
 /** The items the owner can place, each with its price, locked ones with the level that opens them. */
 function Inventory() {
   const t = useTranslations("Island");
-  const { owner } = useIsland();
+  const { level } = useIsland();
   const choice = useTools((state) => state.choice);
   const choose = useTools((state) => state.choose);
-  const level = Option.match(owner, {
-    onNone: () => 0,
-    onSome: (facts) => facts.level,
-  });
   return (
     <div
       aria-label={t("items")}
