@@ -152,7 +152,8 @@ system owns one hook for them: `useRequired(Context, part)` in
 `OutsideProvider` with the part's name when the context holds its default,
 `null` or `undefined`. A context whose provider may share `null` keeps its own
 marker and throws `OutsideProvider` itself. `raw-error` and `throw` never
-report the same statement: one inspects React modules and the other the rest.
+report the same statement: one inspects React modules and the other the rest
+(`scripts/check/errors.ts` and `scripts/check/failure.ts`).
 
 ### Constructions the engine recognizes
 

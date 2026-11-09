@@ -39,35 +39,6 @@ function isRouterSignal(node: ThrowStatement, signals: readonly string[]) {
   return Arr.contains(signals, expression.expression.text);
 }
 
-/** The platform's untyped error constructors, which a thrown failure replaces with a tagged error. */
-const PLATFORM_ERRORS = HashSet.make(
-  "AggregateError",
-  "Error",
-  "EvalError",
-  "RangeError",
-  "ReferenceError",
-  "SyntaxError",
-  "TypeError",
-  "URIError"
-);
-
-/**
- * The constructor that a throw statement builds a platform error with, as
- * `new Error(...)` or `Error(...)`, or nothing for any other operand.
- */
-function platformError(node: ThrowStatement): Option.Option<Identifier> {
-  const thrown = unwrapped(node.expression);
-  const callee =
-    isNewExpression(thrown) || isCallExpression(thrown)
-      ? thrown.expression
-      : undefined;
-  return callee !== undefined &&
-    isIdentifier(callee) &&
-    HashSet.has(PLATFORM_ERRORS, callee.text)
-    ? Option.some(callee)
-    : Option.none();
-}
-
 /** The Convex function builders whose options object holds a vanilla handler. */
 const CONVEX_BUILDERS = HashSet.make(
   "action",
@@ -205,9 +176,7 @@ const exemptThrows = Effect.fn("RepositoryPolicy.exemptThrows")(function* (
  * `convex/values`. Convex aborts the transaction with that error and returns it
  * to the caller as a typed application error, which a vanilla handler has no
  * Effect channel to replace. A throw in a callback that the handler contains is a
- * candidate, because the callback is its own nearest function. A throw that
- * builds a platform error is also a `raw-error` candidate while the constructor
- * is the global one, which a React module's scope reports.
+ * candidate, because the callback is its own nearest function.
  */
 export const failureCandidates = Effect.fn(
   "RepositoryPolicy.failureCandidates"
@@ -234,20 +203,15 @@ export const failureCandidates = Effect.fn(
     (specifier, imported) =>
       specifier === ROUTER_SPECIFIER && HashSet.has(ROUTER_SIGNALS, imported)
   );
-  const failures = Arr.filter(
-    throws,
-    (node) =>
-      !(
-        Arr.some(exempt, (entry) => entry === node) ||
-        isRouterSignal(node, signals)
-      )
-  );
-  return Arr.appendAll(
-    Arr.map(failures, (node) => candidate("throw", sourceFile, node)),
-    Arr.flatMap(failures, (node) =>
-      Arr.map(Option.toArray(platformError(node)), (callee) =>
-        candidate("raw-error", sourceFile, node, callee)
-      )
-    )
+  return Arr.map(
+    Arr.filter(
+      throws,
+      (node) =>
+        !(
+          Arr.some(exempt, (entry) => entry === node) ||
+          isRouterSignal(node, signals)
+        )
+    ),
+    (node) => candidate("throw", sourceFile, node)
   );
 });
