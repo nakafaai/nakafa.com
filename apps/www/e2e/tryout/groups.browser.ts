@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { groupHref, trackHref } from "@/e2e/support/tryout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** TKA's one grade today, in English. */
 const TKA_GRADE = "/en/try-out/indonesia/tka/senior-high-school";
@@ -18,7 +19,7 @@ for (const [href, exam, axis, group] of [
     page,
   }) => {
     await page.goto(href);
-    const header = page.locator("header").first();
+    const header = page.locator('[data-slot="page-header"]');
 
     await expect(header.getByRole("combobox", { name: "Exam" })).toContainText(
       exam
@@ -33,7 +34,11 @@ test("a group's menu lists its exam's groups, each with its icon", async ({
   page,
 }) => {
   await page.goto(TKA_GRADE);
-  await page.getByRole("combobox", { name: "Grade" }).click();
+  const trigger = page
+    .locator('[data-slot="page-header"]')
+    .getByRole("combobox", { name: "Grade" });
+  await waitUntilTakenOver(trigger);
+  await trigger.click();
   const option = page.getByRole("option", { name: "Senior High School" });
 
   await expect(page.getByRole("option")).toHaveCount(1);
