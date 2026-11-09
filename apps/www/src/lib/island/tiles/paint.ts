@@ -5,11 +5,11 @@ import { colorOf, type Ramp, type Tone } from "@/lib/island/palette";
 export const TILE = 16;
 
 /** One tile: 16 by 16 pixels of RGBA, transparent until painted. */
-export type Pixels = Uint8ClampedArray;
+export type Pixels = Uint8ClampedArray<ArrayBuffer>;
 
 /** A new, fully transparent tile. */
 export function blankTile(): Pixels {
-  return new Uint8ClampedArray(TILE * TILE * 4);
+  return new Uint8ClampedArray(new ArrayBuffer(TILE * TILE * 4));
 }
 
 /** Paints one pixel with a tone of a ramp; a pixel outside the tile wraps around, so patterns tile seamlessly. */

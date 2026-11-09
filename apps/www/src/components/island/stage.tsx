@@ -9,7 +9,11 @@ import {
 } from "effect";
 import { use, useState } from "react";
 import { createPainter, type Painter } from "@/components/island/draw";
-import { GameStoreContext, heldOf } from "@/components/island/store";
+import {
+  type GameStoreApi,
+  GameStoreContext,
+  heldOf,
+} from "@/components/island/store";
 import {
   clampOrbit,
   easeOrbit,
@@ -80,7 +84,7 @@ export function IslandStage({ size }: { size: number }) {
 function start(
   canvas: HTMLCanvasElement,
   painter: Painter,
-  store: NonNullable<ReturnType<typeof use<typeof GameStoreContext>>>,
+  store: GameStoreApi,
   size: number
 ) {
   let orbit: Orbit = openingOrbit(
@@ -276,7 +280,7 @@ function start(
       return;
     }
     const height = canvas.clientHeight;
-    const keys = {
+    const keys: Record<string, () => void> = {
       "+": () => move(zoomOrbit(goal, 0.85), true),
       "-": () => move(zoomOrbit(goal, 1.18), true),
       a: () => move(panOrbit(orbit, 24, 0, height)),

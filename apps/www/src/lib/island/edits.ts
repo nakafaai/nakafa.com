@@ -37,7 +37,7 @@ export function inverseOf(edits: readonly Edit[]) {
 export function chunksAround(x: number, z: number) {
   const cx = Math.floor(x / CHUNK);
   const cz = Math.floor(z / CHUNK);
-  const reach = (cell: number, chunk: number) => {
+  const reach = (cell: number, chunk: number): readonly number[] => {
     const local = cell - chunk * CHUNK;
     if (local === 0) {
       return [chunk - 1, chunk];

@@ -73,7 +73,9 @@ export function createGameStore(
       },
       assign: (slot, key) =>
         set((state) => ({
-          hotbar: Arr.replace(state.hotbar, slot, key),
+          hotbar: Arr.map(state.hotbar, (current, index) =>
+            index === slot ? key : current
+          ),
           slot,
           tool: "place",
         })),

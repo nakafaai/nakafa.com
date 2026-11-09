@@ -44,13 +44,14 @@ const CORNERS = [
   [0, 1],
 ] as const;
 
-/** A buffer of floats or indices that doubles as it fills. */
-function growing<T extends Float32Array | Uint32Array>(
-  make: (size: number) => T
-) {
+/** A buffer of numbers that doubles as it fills, made by `make` at any length. */
+function growing<
+  T extends Float32Array<ArrayBuffer> | Uint32Array<ArrayBuffer>,
+>(make: (size: number) => T) {
   let data = make(4096);
   let size = 0;
   return {
+    count: () => size,
     push(value: number) {
       if (size === data.length) {
         const next = make(data.length * 2);
@@ -60,8 +61,12 @@ function growing<T extends Float32Array | Uint32Array>(
       data[size] = value;
       size += 1;
     },
-    count: () => size,
-    take: () => data.slice(0, size),
+    /** The numbers pushed so far, in a buffer of their own length. */
+    take: () => {
+      const out = make(size);
+      out.set(data.subarray(0, size));
+      return out;
+    },
   };
 }
 

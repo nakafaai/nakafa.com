@@ -7,7 +7,8 @@ import { terrainOf } from "@/lib/island/terrain";
 import { cellOf, emptyCells, SPAN } from "@/lib/island/world";
 
 /** The number of quads in a draw list. */
-const quadsOf = (list: { indices: Uint32Array }) => list.indices.length / 6;
+const quadsOf = (list: ReturnType<typeof meshChunk>["solid"]) =>
+  list.indices.length / 6;
 
 describe("island/mesh", () => {
   it("draws all six faces of a lone block, and none of the faces two blocks share", () => {
