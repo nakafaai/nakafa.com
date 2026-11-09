@@ -141,7 +141,10 @@ const KIND_ICONS: Readonly<
 /** One row of the palette: the page it opens, its title with the matched words, and the pages above it. */
 export interface PaletteRow {
   readonly entry: Option.Option<SearchEntry>;
-  readonly href: string;
+  /** Where the row leads: a page of the index by its address, or the search page with the query. */
+  readonly go:
+    | { readonly _tag: "page"; readonly href: string }
+    | { readonly _tag: "search"; readonly query: string };
   readonly icon: IconSvgElement | string;
   readonly key: string;
   readonly parts: readonly TitlePart[];
@@ -177,7 +180,7 @@ function readRows(
   );
   return Arr.map(Arr.zip(entries, looks), ([entry, look]) => ({
     entry: Option.some(entry),
-    href: entry.path,
+    go: { _tag: "page", href: entry.path },
     icon: Predicate.isString(look) ? look : look.icon,
     key: `${group}:${entry.path}`,
     parts: markTitle(entry.title, query),
@@ -262,7 +265,7 @@ export function usePaletteGroups({
   });
   const full = {
     entry: Option.none(),
-    href: `/${locale}/search?${new URLSearchParams({ q: query.trim() })}`,
+    go: { _tag: "search", query: query.trim() },
     icon: Search02Icon,
     key: "full",
     parts: [

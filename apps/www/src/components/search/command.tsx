@@ -33,6 +33,7 @@ import {
   SearchRow,
   usePaletteGroups,
 } from "@/components/search/rows";
+import { SEARCH_TARGET } from "@/lib/routing/target";
 import { useSearch } from "@/lib/search/context";
 import type { SearchEntry } from "@/lib/search/entry";
 import {
@@ -47,6 +48,7 @@ import { createRecentStore } from "@/lib/search/recent";
  * It reads the index once, when it first opens, and nothing per keystroke.
  */
 export function SearchCommand() {
+  const locale = useLocale();
   const t = useTranslations("Utils");
   const tCommon = useTranslations("Common");
   const { open, setOpen } = useSearch((state) => ({
@@ -69,7 +71,7 @@ export function SearchCommand() {
         portalProps={{ keepMounted: true }}
         title={tCommon("search")}
       >
-        <SearchLocale key={useLocale()} />
+        <SearchLocale key={locale} />
       </CommandDialogPopup>
     </CommandDialog>
   );
@@ -121,7 +123,11 @@ function SearchPalette({ answer }: { answer: Option.Option<IndexAnswer> }) {
     Option.map(row.entry, (entry: SearchEntry) => remember(entry));
     startTransition(() => {
       setOpen(false);
-      navigate({ href: row.href });
+      if (row.go._tag === "page") {
+        navigate({ href: row.go.href });
+        return;
+      }
+      navigate({ ...SEARCH_TARGET, search: { q: row.go.query } });
     });
   }
 
