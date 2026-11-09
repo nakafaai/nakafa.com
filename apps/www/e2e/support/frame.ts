@@ -204,15 +204,24 @@ export function readFrameProblems(page: Page) {
           (bottom) =>
             `a list ends at ${Math.round(bottom)}, the screen at ${innerHeight}`
         );
-      const panes = Array.from(document.querySelectorAll("[data-pane-side]"))
+      // Everything at the right edge: a page's pane and a reading page's outline.
+      const edge =
+        '[data-pane-side],[data-slot="sidebar"][data-side="right"] [data-slot="sidebar-container"]';
+      const page = document.querySelector('[data-slot="page"]');
+      const panes = Array.from(document.querySelectorAll(edge))
         .filter(isDrawn)
         .flatMap((pane) => {
           const box = pane.getBoundingClientRect();
           return [
             (box.top !== 0 || box.bottom !== innerHeight) &&
               "a pane does not run the window's full height",
+            Math.abs(box.right - innerWidth) > tolerance &&
+              "a pane does not stand at the window's right edge",
             header.getBoundingClientRect().right > box.left + tolerance &&
               "the header runs under the pane",
+            page !== null &&
+              page.getBoundingClientRect().right > box.left + tolerance &&
+              "the page's body runs under the pane",
             Math.abs(
               (pane.querySelector("[data-pane-header]")?.getBoundingClientRect()
                 .bottom ?? header.getBoundingClientRect().bottom) -
