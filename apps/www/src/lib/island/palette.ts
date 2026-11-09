@@ -27,6 +27,20 @@ export const RAMPS = {
   bloom: ["#c28a1c", "#e8b52e", "#f5cf4a", "#fdec9a"],
   ink: ["#2a1e1a", "#3b2b25", "#4e3a31", "#634b40"],
   book: ["#8e2f2f", "#2f4e8e", "#3d7a3a", "#c28a1c"],
+  ginger: ["#7e3812", "#b35a1e", "#dd8a3a", "#f3b66c"],
+  ash: ["#45454e", "#6a6a75", "#9797a2", "#c9c9d1"],
+  coal: ["#1b191d", "#2c2a30", "#433f48", "#5f5a65"],
+  cream: ["#c2ab84", "#dcc9a3", "#eee1c3", "#fbf5e6"],
+  tan: ["#734f2e", "#9a6e43", "#bf915b", "#dbb582"],
+  rust: ["#5a2315", "#80351e", "#a64d2c", "#c86c43"],
+  sky: ["#1d4b95", "#2c6ec2", "#579fe6", "#9bcaf5"],
+  lime: ["#4a7712", "#70a51c", "#9ace30", "#c8ec6a"],
+  violet: ["#46287a", "#683ea6", "#8f66cc", "#bc9ae6"],
+  coral: ["#a43238", "#d4524e", "#f07b69", "#f9ab97"],
+  teal: ["#12585a", "#1d7f80", "#31a8a0", "#75d0c4"],
+  pink: ["#a3436b", "#cf658c", "#ec8fae", "#f8c1d3"],
+  olive: ["#47481b", "#696a28", "#8c8c3a", "#b1b156"],
+  sun: ["#b46d0c", "#df950f", "#f5bd29", "#fde279"],
 } as const;
 
 /** The name of one ramp of the palette. */

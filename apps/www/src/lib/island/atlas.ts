@@ -1,4 +1,9 @@
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, Record as Rec, Schema } from "effect";
+import { FAMILIES } from "@/lib/island/fauna/families";
+import { SPECIES } from "@/lib/island/fauna/species";
+import { FLORA } from "@/lib/island/flora/families";
+import { plantLookOf } from "@/lib/island/flora/plants";
 import {
   duckTile,
   henStepTile,
@@ -35,6 +40,7 @@ import {
   waterTile,
 } from "@/lib/island/tiles/nature";
 import { type Pixels, TILE } from "@/lib/island/tiles/paint";
+import { emptyShape, markBody, paintShape } from "@/lib/island/tiles/shape";
 
 /** Every tile the island draws, in atlas order (ADR 0047, D4). */
 export const TILE_NAMES = [
@@ -122,8 +128,8 @@ const PAINTERS = {
   bearStep: () => folkBottomTile("bear", true),
 } satisfies Record<TileName, (seed: number) => Pixels>;
 
-/** Tiles along one side of the atlas. */
-export const ATLAS_TILES = 8;
+/** Tiles along one side of the atlas: room for every block, sprite and species. */
+export const ATLAS_TILES = 32;
 
 /** The side of the atlas in pixels. */
 export const ATLAS_SIZE = ATLAS_TILES * TILE;
@@ -141,19 +147,61 @@ export function tilePixels(name: TileName) {
   return PAINTERS[name](TEXTURE_SEED + SLOTS[name] * 101);
 }
 
-/** The whole atlas as RGBA pixels, every tile in its slot, row by row. */
+/** The atlas slot of the first species; each species follows in the catalog's order (ADR 0047, D11). */
+export const SPECIES_SLOT = TILE_NAMES.length;
+
+/** The atlas slot of the first plant; each plant follows in the order of its id. */
+export const PLANT_SLOT = SPECIES_SLOT + SPECIES.length;
+
+/** One plant drawn by its family's shape in its own coat. */
+export function plantPixels(index: number) {
+  const look = plantLookOf(index);
+  const shape = emptyShape();
+  FLORA[look.family](shape);
+  return paintShape(shape, look.coat);
+}
+
+/** One species drawn by its family's shape in its own coat and pattern. */
+export function speciesPixels(index: number) {
+  const species = SPECIES[index];
+  const shape = emptyShape();
+  FAMILIES[species.family](shape, species.traits);
+  markBody(shape, species.pattern);
+  return paintShape(shape, species.coat);
+}
+
+/** Copies one tile into its slot of the atlas. */
+function placeTile(atlas: Uint8ClampedArray, tile: Pixels, slot: number) {
+  const left = (slot % ATLAS_TILES) * TILE;
+  const top = Math.floor(slot / ATLAS_TILES) * TILE;
+  for (let row = 0; row < TILE; row += 1) {
+    atlas.set(
+      tile.subarray(row * TILE * 4, (row + 1) * TILE * 4),
+      ((top + row) * ATLAS_SIZE + left) * 4
+    );
+  }
+}
+
+/** The whole atlas as RGBA pixels: every named tile in its slot, then every species, row by row. */
 export function atlasPixels() {
   const atlas = new Uint8ClampedArray(ATLAS_SIZE * ATLAS_SIZE * 4);
   for (const name of TILE_NAMES) {
-    const tile = tilePixels(name);
-    const left = (SLOTS[name] % ATLAS_TILES) * TILE;
-    const top = Math.floor(SLOTS[name] / ATLAS_TILES) * TILE;
-    for (let row = 0; row < TILE; row += 1) {
-      atlas.set(
-        tile.subarray(row * TILE * 4, (row + 1) * TILE * 4),
-        ((top + row) * ATLAS_SIZE + left) * 4
-      );
-    }
+    placeTile(atlas, tilePixels(name), SLOTS[name]);
   }
+  Arr.forEach(SPECIES, (_species, index) =>
+    placeTile(atlas, speciesPixels(index), SPECIES_SLOT + index)
+  );
+  Arr.forEach(PLANT_KEYS, (_plant, index) =>
+    placeTile(atlas, plantPixels(index), PLANT_SLOT + index)
+  );
   return atlas;
+}
+
+/** The atlas coordinate of a corner of the tile in a slot, inset a hair, mirrored across when `flip`. */
+export function slotUv(slot: number, u: number, v: number, flip: boolean) {
+  const across = flip ? 1 - u : u;
+  return [
+    ((slot % ATLAS_TILES) + 0.002 + across * 0.996) / ATLAS_TILES,
+    (Math.floor(slot / ATLAS_TILES) + 0.002 + v * 0.996) / ATLAS_TILES,
+  ] as const;
 }

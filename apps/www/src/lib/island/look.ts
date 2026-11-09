@@ -3,8 +3,20 @@ import {
   type BlockKey,
   idOf,
 } from "@repo/backend/confect/island/blocks";
-import { Schema } from "effect";
-import { SLOTS, TileName } from "@/lib/island/atlas";
+import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
+import { Array as Arr, Schema } from "effect";
+import { PLANT_SLOT, SLOTS, TileName } from "@/lib/island/atlas";
+
+/** A plant block, drawn from its own tile as a cross (ADR 0047, D11). */
+type PlantKey = (typeof PLANT_KEYS)[number];
+
+/** A built block, drawn from the named tiles of its faces. */
+type BuiltKey = Exclude<BlockKey, PlantKey>;
+
+/** Whether a block is a plant. */
+export function isPlant(key: BlockKey): key is PlantKey {
+  return Arr.contains(PLANT_KEYS, key);
+}
 
 /**
  * How a block is drawn (ADR 0047, D3): `solid` hides what is behind it,
@@ -62,10 +74,10 @@ const LOOKS = {
   },
   marble: plain("marble"),
   gold: plain("gold"),
-} satisfies Record<BlockKey, Faces>;
+} satisfies Record<BuiltKey, Faces>;
 
-/** The faces of one block. */
-export function looksOf(key: BlockKey): Faces {
+/** The faces of one built block. */
+export function looksOf(key: BuiltKey): Faces {
   return LOOKS[key];
 }
 
@@ -75,13 +87,23 @@ export function looksOf(key: BlockKey): Faces {
  */
 function tablesOf() {
   const tables = {
-    bottoms: new Uint8Array(256),
+    bottoms: new Uint16Array(256),
     glows: new Uint8Array(256),
     kinds: new Uint8Array(256),
-    sides: new Uint8Array(256),
-    tops: new Uint8Array(256),
+    sides: new Uint16Array(256),
+    tops: new Uint16Array(256),
   };
+  Arr.forEach(PLANT_KEYS, (key, index) => {
+    const id = idOf(key);
+    tables.kinds[id] = KIND.cross;
+    tables.tops[id] = PLANT_SLOT + index;
+    tables.sides[id] = PLANT_SLOT + index;
+    tables.bottoms[id] = PLANT_SLOT + index;
+  });
   for (const key of BLOCK_KEYS) {
+    if (isPlant(key)) {
+      continue;
+    }
     const id = idOf(key);
     const look: Faces = LOOKS[key];
     tables.kinds[id] = KIND[look.kind];

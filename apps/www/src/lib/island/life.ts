@@ -1,8 +1,9 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { footprintOf, HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option, Order, Schema } from "effect";
-import { ATLAS_TILES, SLOTS, TileName } from "@/lib/island/atlas";
+import { SLOTS, slotUv, TileName } from "@/lib/island/atlas";
 import { KIND, LOOK } from "@/lib/island/look";
+import { STRIDE } from "@/lib/island/mesh";
 import { unitOf } from "@/lib/island/noise";
 import { SCALE } from "@/lib/island/scale";
 import { TILE } from "@/lib/island/tiles/paint";
@@ -152,16 +153,6 @@ export function wander(
   };
 }
 
-/** The atlas coordinate of a sprite tile's corner, inset a hair, mirrored when `flip`. */
-function spriteUv(name: TileName, u: number, v: number, flip: boolean) {
-  const slot = SLOTS[name];
-  const across = flip ? 1 - u : u;
-  return [
-    ((slot % ATLAS_TILES) + 0.002 + across * 0.996) / ATLAS_TILES,
-    (Math.floor(slot / ATLAS_TILES) + 0.002 + v * 0.996) / ATLAS_TILES,
-  ] as const;
-}
-
 /** How fast Nina swims her loop, in cells a second. */
 const NINA_SPEED = 1.5;
 
@@ -201,7 +192,7 @@ function ninaVertices(size: number, time: number) {
     ([u, v]) => {
       const along = (u - 0.5) * SCALE.nina;
       const across = (v - 0.5) * SCALE.nina;
-      const [tu, tv] = spriteUv(name, u, v, false);
+      const [tu, tv] = slotUv(SLOTS[name], u, v, false);
       return [
         nina.x + ahead[0] * along - ahead[1] * across,
         SEA_LEVEL - 0.06,
@@ -289,7 +280,7 @@ function billboardOf(sprite: Sprite, right: readonly [number, number, number]) {
     ] as const,
     ([u, v]) => {
       const side = (u - 0.5) * sprite.size;
-      const [tu, tv] = spriteUv(sprite.name, u, v, sprite.flip);
+      const [tu, tv] = slotUv(SLOTS[sprite.name], u, v, sprite.flip);
       return [
         sprite.x + right[0] * side,
         sprite.y + (1 - v) * sprite.size,
@@ -306,15 +297,16 @@ function billboardOf(sprite: Sprite, right: readonly [number, number, number]) {
 
 /**
  * The island's life as quads in the chunk program's vertex layout: every
- * creature's sprites facing the camera turned by `yaw`, then Nina lying flat
- * on the sea, swimming her loop.
+ * creature's sprites facing the camera turned by `yaw`, the wild visitors'
+ * quads (`wild`), then Nina lying flat on the sea, swimming her loop.
  */
 export function herdQuads(
   cells: Cells,
   herd: readonly Animal[],
   size: number,
   yaw: number,
-  time: number
+  time: number,
+  wild: readonly number[] = []
 ) {
   const right = [Math.cos(yaw), 0, -Math.sin(yaw)] as const;
   const sprites = Arr.flatMap(herd, (animal, index) =>
@@ -322,13 +314,17 @@ export function herdQuads(
   );
   const vertices = new Float32Array(
     Arr.appendAll(
-      Arr.flatMap(sprites, (sprite) => billboardOf(sprite, right)),
+      Arr.appendAll(
+        Arr.flatMap(sprites, (sprite) => billboardOf(sprite, right)),
+        wild
+      ),
       ninaVertices(size, time)
     )
   );
+  const quads = sprites.length + wild.length / (4 * STRIDE) + 1;
   const indices = new Uint32Array(
     Arr.flatMap(
-      Arr.makeBy(sprites.length + 1, (quad) => quad),
+      Arr.makeBy(quads, (quad) => quad),
       (quad) => Arr.map([0, 1, 2, 0, 2, 3], (value) => value + quad * 4)
     )
   );

@@ -110,7 +110,7 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.getUniformLocation(chunkProgram, name);
       const weather = uploadWeather(gl);
       const outline = uploadOutline(gl);
-      const herd = uploadMoving(gl, 32);
+      const herd = uploadMoving(gl, 64);
       const outlineUniform = (name: string) =>
         gl.getUniformLocation(outlineProgram, name);
       const weatherUniform = (name: string) =>

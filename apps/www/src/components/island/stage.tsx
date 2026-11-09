@@ -42,6 +42,7 @@ import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
 import { hourOf, lightOf } from "@/lib/island/sky";
+import { roam, wildOf, wildVertices } from "@/lib/island/wild";
 import { CHUNKS } from "@/lib/island/world";
 
 /**
@@ -99,6 +100,13 @@ function start(
 
   let glow = glowOf(store.getState().cells);
   let herd = herdOf(store.getState().cells, store.getState().seed, size);
+  // The wild visitors change with the day, so the island meets new species as the days go by (ADR 0047, D11).
+  let wild = wildOf(
+    store.getState().cells,
+    store.getState().seed,
+    size,
+    Math.floor(DateTime.toEpochMillis(DateTime.nowUnsafe()) / 86_400_000)
+  );
   let lastLife = 0;
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();
@@ -203,7 +211,17 @@ function start(
     herd = Arr.map(herd, (animal, index) =>
       wander(cells, animal, seed, index, dt)
     );
-    painter.herd(herdQuads(cells, herd, size, orbit.yaw, now / 1000));
+    wild = Arr.map(wild, (creature) => roam(cells, creature, seed, dt));
+    painter.herd(
+      herdQuads(
+        cells,
+        herd,
+        size,
+        orbit.yaw,
+        now / 1000,
+        wildVertices(cells, wild, size, orbit.yaw, now / 1000)
+      )
+    );
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
     const minute = Math.floor(hour * 60) % (24 * 60);
     if (minute !== store.getState().minute) {
