@@ -27,10 +27,13 @@ function PopoverContent({
   return (
     <ButtonGroupVariant value={undefined}>
       <PopoverPrimitive.Portal container={use(PortalContainer)}>
+        {/* Fixed to the screen, so a page that scrolls under an open popover never pulls it off its trigger, which
+            mostly stands in a sticky header. */}
         <PopoverPrimitive.Positioner
           align={align}
           alignOffset={alignOffset}
           className="isolate z-50"
+          positionMethod="fixed"
           side={side}
           sideOffset={sideOffset}
         >

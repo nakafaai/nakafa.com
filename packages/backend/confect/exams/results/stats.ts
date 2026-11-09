@@ -3,11 +3,9 @@ import {
   chosenOptions,
   isAnswered,
 } from "@repo/backend/confect/assessment/response";
+import type { Verdict } from "@repo/backend/confect/assessment/verdict";
 import { letterScript } from "@repo/backend/confect/exams/letters";
-import type {
-  examResultValidator,
-  Verdict,
-} from "@repo/backend/confect/exams/results/schema";
+import type { examResultValidator } from "@repo/backend/confect/exams/results/schema";
 import { Array as Arr, Match } from "effect";
 
 /** The option IDs of a question's choices, in the order the choices list them. */

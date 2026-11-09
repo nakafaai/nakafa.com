@@ -252,7 +252,9 @@ function ResolvedTryoutSetPage({
           value={{
             entrySection,
             now,
-            player: finish && binding ? { finish, mode: binding.mode } : null,
+            // A page without an attempt runs and reviews nothing, so its view is never read.
+            finish: binding ? finish : null,
+            mode: binding?.mode ?? "list",
             runtime,
             view,
           }}
@@ -294,7 +296,10 @@ function TryoutInternalSet({
   value: {
     entrySection: SetEntrySection;
     now: number;
-    player: { finish: TryoutFinish; mode: PlayerMode } | null;
+    /** The finish of a live attempt; a page without one has none. */
+    finish: TryoutFinish | null;
+    /** The view the browser resolved for a page bound to an attempt, for its player and its review. */
+    mode: PlayerMode;
     runtime: LoadedRuntime | null;
     view: TryoutSetOverviewProps["value"];
   };
@@ -310,7 +315,8 @@ function TryoutInternalSet({
       value={{
         ...value.view,
         entrySection: value.entrySection,
-        player: value.player,
+        finish: value.finish,
+        mode: value.mode,
         runtimeState,
       }}
     >
