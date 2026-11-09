@@ -3762,16 +3762,16 @@
       "title": "Terima kasih, laporan terkirim."
     },
     "comment-paste-refused": {
-      "title": "Teksnya terlalu panjang untuk satu komentar."
+      "title": "Teksnya kepanjangan untuk komentar."
     },
     "comment-photo-refused": {
       "title": "Foto tidak ditambahkan."
     },
     "comment-photo-limit": {
-      "title": "Satu komentar memuat paling banyak empat foto."
+      "title": "Maksimal empat foto per komentar."
     },
     "comment-photo-fixed": {
-      "title": "Foto komentar yang sudah dikirim tidak bisa diubah."
+      "title": "Fotonya tidak bisa diubah lagi."
     },
     "island-refused-outside": {
       "title": "Itu tidak muat di pulaumu."
