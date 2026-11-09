@@ -123,7 +123,10 @@ function DemoWorkspace() {
   const result = useQuery(exams.exams.open, DEMO_EXAM);
 
   return (
-    <div className="bg-background ring-foreground/10 flex h-[min(46rem,85svh)] flex-col overflow-hidden rounded-xl shadow-xs ring-1">
+    <div
+      className="bg-background ring-foreground/10 flex h-[min(46rem,85svh)] flex-col overflow-hidden rounded-xl shadow-xs ring-1"
+      data-slot="editor-demo"
+    >
       {QueryResult.isSuccess(result) ? (
         <ExamProvider exam={result.value} gone={false} slug={DEMO_EXAM.slug}>
           <ExamDesk />
