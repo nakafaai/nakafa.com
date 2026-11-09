@@ -4,12 +4,16 @@ import {
   chosenOptions,
   type ExamResponse,
   markedCells,
+  NO_RESPONSE,
+  typedText,
 } from "@repo/backend/confect/assessment/response";
 import { partDirection, partLetter } from "@repo/backend/confect/exams/letters";
 import { LineWords } from "@repo/design-system/components/ui/line";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
+import { SittingField } from "@/components/exams/sitting/field";
+import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { ChoiceCheck, ChoiceRadio } from "@/components/player/choice";
 import {
   type Choice,
@@ -18,6 +22,10 @@ import {
   toggleOption,
 } from "@/components/player/response";
 import { ChoiceTable } from "@/components/player/table";
+import {
+  entryResponse,
+  isEntry,
+} from "@/components/tryout/runtime/response/entry";
 import { optionLabelId } from "@/components/tryout/runtime/response/id";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
 
@@ -36,13 +44,34 @@ interface TryoutResponseFieldsProps {
 
 /**
  * Renders the one interaction of a question as the learner answers it: a choice that takes one option as
- * radios, a choice that takes more as checks, and a matrix as one table with a row per statement. The 2.0
- * corpus compiles only these two kinds, so any other renders nothing.
+ * radios, a choice that takes more as checks, a matrix as one table with a row per statement, and a short
+ * answer or a numeric answer as the field School's paper types it in. A try-out sets no other kind, so any
+ * other renders nothing.
  */
 export function TryoutResponseFields({ value }: TryoutResponseFieldsProps) {
-  const { interaction } = value;
+  const t = useTranslations("Player");
+  const { id, interaction, locked, onChange, response } = value;
   if (interaction.kind === "matrix") {
     return <MatrixFields table={interaction} value={value} />;
+  }
+  if (isEntry(interaction)) {
+    // School's field, with its Arabic keypad and the number's unit, saves once the learner pauses typing or leaves
+    // it, and stays read-only while the question is locked; a blank field clears the answer.
+    const text = typedText(response ?? NO_RESPONSE);
+    return (
+      <PaperLockProvider locked={locked}>
+        <span className="sr-only" id={`${id}-answer-label`}>
+          {t("answer")}
+        </span>
+        <SittingField
+          entry={interaction}
+          labelledBy={`${id}-answer-label`}
+          onType={(typed) => onChange(entryResponse(typed))}
+          saved={text}
+          text={text}
+        />
+      </PaperLockProvider>
+    );
   }
   if (interaction.kind !== "choice") {
     return null;
