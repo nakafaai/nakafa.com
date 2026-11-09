@@ -1,4 +1,4 @@
-/** The most likes one pass removes from a deleted comment. */
+/** The most likes, or reports, one pass removes from a deleted comment. */
 export const COMMENT_LIKE_CLEANUP_BATCH_SIZE = 100;
 
 /**
