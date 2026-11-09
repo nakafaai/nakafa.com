@@ -30,8 +30,9 @@ signed and are in no publication, and the last point below says how they render.
 - Assessment items, the try-out and school exam items of ADR 0031, are not MDX
   code. Their body is an assessment document: a structured tree of paragraphs,
   headings, lists, tables, math written in LaTeX with MathML, and figures. A
-  figure is one of the published components (`MathVisual`, `NumberLine`,
-  `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. ADR
+  figure is a `MathVisual` scene, a `Chart` of values, a `Mermaid` diagram, or an
+  image with alternative text (contracts 7.0.0, which retired `NumberLine`,
+  `LineEquation` and `UnitCircle` as figures). ADR
   0031 says how the other figure kinds of the corpus change. Aksara still
   writes MDX, and its compiler produces the document. The renderer draws the
   document and runs no authored code. Nakafa items and school items share this

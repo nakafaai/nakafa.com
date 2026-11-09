@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { FigureAttrs } from "@nakafa/aksara-contracts/assessment/figure";
 import { Option } from "effect";
 import {
   draftOf,
@@ -19,57 +18,38 @@ const graph: FigureDraft = {
 const made = (draft: FigureDraft) => Option.getOrThrow(figureOf(draft));
 
 describe("exams/figure", () => {
-  it("makes a line through the ends of its range, in a frame that holds it and both axes", () => {
-    const figure = made({ ...graph, a: "2", b: "1", from: "1", to: "3" });
-    if (figure.component !== "MathVisual") {
-      throw new Error("A graph is a math visual.");
+  it("makes a graph of its plane: one function by default, fitted with the origin, under its name", () => {
+    const figure = made(graph);
+    if (figure.component !== "MathVisual" || figure.props.scene.space !== "plane") {
+      throw new Error("A graph is a math visual on a plane.");
     }
-    expect(figure.props.scene.objects[0]).toMatchObject({
-      kind: "line",
-      through: [
-        { x: 1, y: 3 },
-        { x: 3, y: 7 },
-      ],
+    expect(figure.props.scene.objects).toEqual([
+      {
+        appearance: "primary",
+        domain: { max: 2, min: -2 },
+        formula: "x^2",
+        id: "function-1",
+        kind: "function",
+      },
+    ]);
+    expect(figure.props.scene.frame).toEqual({
+      kind: "cartesian",
+      x: { max: 3, min: -3 },
+      y: { max: 5, min: -1 },
     });
-    expect(figure.props.scene.frame).toMatchObject({
-      x: { max: 4, min: -1 },
-      y: { max: 8, min: -1 },
-    });
+    expect(figure.props.title).toEqual([{ text: "Grafik", type: "text" }]);
   });
 
-  it("frames a parabola around its turning point when that falls in its range, and reads a decimal comma", () => {
-    const inside = made({
-      ...graph,
-      a: "1",
-      b: "0",
-      c: "-4,5",
-      curve: "quadratic",
-    });
-    if (inside.component !== "MathVisual") {
-      throw new Error("A graph is a math visual.");
-    }
-    expect(inside.props.scene.frame).toMatchObject({
-      y: { max: 21.5, min: -5.5 },
-    });
-    const beside = made({
-      ...graph,
-      a: "1",
-      curve: "quadratic",
-      from: "1",
-      to: "2",
-    });
-    if (beside.component !== "MathVisual") {
-      throw new Error("A graph is a math visual.");
-    }
-    expect(beside.props.scene.frame).toMatchObject({ y: { max: 5, min: -1 } });
-  });
-
-  it("refuses a graph with no name, a word for a number, and a range that runs backwards", () => {
+  it("refuses a graph with no name, a word for a number, a formula that does not read, and an empty plane", () => {
+    const [curve] = graph.shapes;
     expect(Option.isNone(figureOf({ ...graph, title: "" }))).toBe(true);
-    expect(Option.isNone(figureOf({ ...graph, a: "dua" }))).toBe(true);
-    expect(Option.isNone(figureOf({ ...graph, from: "5", to: "1" }))).toBe(
-      true
-    );
+    expect(
+      Option.isNone(figureOf({ ...graph, shapes: [{ ...curve, from: "dua" }] }))
+    ).toBe(true);
+    expect(
+      Option.isNone(figureOf({ ...graph, shapes: [{ ...curve, formula: "x +" }] }))
+    ).toBe(true);
+    expect(Option.isNone(figureOf({ ...graph, shapes: [] }))).toBe(true);
   });
 
   it("makes a chart of bars or of a line, and refuses values that do not match its labels", () => {
@@ -108,8 +88,14 @@ describe("exams/figure", () => {
 
   it("reads a figure back into the draft that made it, so a teacher edits what stands there", () => {
     const drafts: readonly FigureDraft[] = [
-      { ...graph, a: "2", b: "1", from: "1", to: "3" },
-      { ...graph, a: "2", b: "3", c: "1", curve: "quadratic" },
+      {
+        ...graph,
+        view: "manual",
+        xMax: "3",
+        xMin: "-3",
+        yMax: "5",
+        yMin: "-1",
+      },
       {
         ...emptyDraft("chart"),
         alt: "Nilai",
@@ -147,22 +133,12 @@ describe("exams/figure", () => {
     expect(Option.getOrThrow(draftOf(titled)).title).toBe("Grafik ");
   });
 
-  it("offers no draft for a figure a teacher cannot make here, and keeps a graph it cannot read as it stands", () => {
-    const circle: FigureAttrs = {
-      alt: "Lingkaran",
-      caption: null,
-      component: "UnitCircle",
-      props: {
-        description: [{ text: "Lingkaran", type: "text" }],
-        title: [{ text: "Lingkaran", type: "text" }],
-      },
-    };
-    expect(Option.isNone(draftOf(circle))).toBe(true);
+  it("offers no draft for a scene the builder cannot write, and keeps it as it stands", () => {
     const line = made(graph);
     if (line.component !== "MathVisual" || line.props.scene.space !== "plane") {
       throw new Error("A graph is a math visual on a plane.");
     }
-    const point = {
+    const curve = {
       ...line,
       props: {
         ...line.props,
@@ -171,17 +147,16 @@ describe("exams/figure", () => {
           objects: [
             {
               appearance: "primary",
-              at: { x: 0, y: 0 },
-              id: "dot",
-              kind: "point",
+              id: "loop",
+              kind: "parametric",
+              parameter: { max: 1, min: 0 },
+              x: "t",
+              y: "t",
             },
           ],
         },
       },
     } as const;
-    expect(Option.getOrThrow(draftOf(point))).toMatchObject({
-      kind: "graph",
-      title: "Grafik",
-    });
+    expect(Option.isNone(draftOf(curve))).toBe(true);
   });
 });
