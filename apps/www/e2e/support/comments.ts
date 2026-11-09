@@ -2,6 +2,9 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
+import { Effect } from "effect";
+import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The words of an empty composer, which also name its field. */
@@ -35,11 +38,32 @@ async function send(page: Page, field: Locator, text: string) {
 }
 
 /**
+ * Brings the comments at the foot of the page into the window, so their feed mounts. It scrolls the footer
+ * that holds them, which stays in the page, and not the comments' anchor, which React replaces while the
+ * feed loads: a scroll that waits on a replaced element fails.
+ */
+export async function scrollToComments(page: Page) {
+  await page.locator("footer:has(#comments)").scrollIntoViewIfNeeded();
+}
+
+/** Signs a learner in on one page and opens the lesson's comments there, with the feed mounted. */
+export const openComments = Effect.fn("NakafaE2E.openComments")(function* (
+  page: Page,
+  baseURL: string
+) {
+  yield* withObservedPageErrors(page, openChatPage(page, baseURL));
+  yield* Effect.promise(async () => {
+    await page.goto(LESSON_PATH);
+    await scrollToComments(page);
+  });
+});
+
+/**
  * Opens the comments at the foot of the page, presses the closed composer of the list, and posts a
  * comment, waiting until its row shows.
  */
 export async function postComment(page: Page, text: string) {
-  await page.locator("#comments").scrollIntoViewIfNeeded();
+  await scrollToComments(page);
   await page
     .getByRole("button", { name: PLACEHOLDER, exact: true })
     .first()

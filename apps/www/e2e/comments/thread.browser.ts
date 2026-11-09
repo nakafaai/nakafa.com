@@ -1,40 +1,22 @@
-import {
-  type BrowserContextOptions,
-  expect,
-  type Page,
-  test,
-} from "@playwright/test";
+import { type BrowserContextOptions, expect, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { DateTime, Effect } from "effect";
-import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
 import {
   commentRow,
   commentThread,
+  openComments,
   openComposer,
   openReplies,
   postComment,
   replyToComment,
 } from "@/e2e/support/comments";
 import { withBrowserContext } from "@/e2e/support/context";
-import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The line above a reply to a reply, in English. */
 const REPLYING_TO = /Replying to/u;
-
-/** Opens the lesson's comments in one learner's page, with the feed mounted. */
-const openComments = Effect.fn("NakafaE2E.openComments")(function* (
-  page: Page,
-  baseURL: string
-) {
-  yield* withObservedPageErrors(page, openChatPage(page, baseURL));
-  yield* Effect.promise(async () => {
-    await page.goto(LESSON_PATH);
-    await page.locator("#comments").scrollIntoViewIfNeeded();
-  });
-});
 
 test("a comment, a reply and a reply to that reply make one thread behind its toggle, a closed reply keeps its words, and a like and a delete show at once", async ({
   baseURL,

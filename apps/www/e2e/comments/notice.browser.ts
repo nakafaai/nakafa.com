@@ -8,10 +8,12 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { DateTime, Effect } from "effect";
-import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
-import { postComment, replyToComment } from "@/e2e/support/comments";
+import {
+  openComments,
+  postComment,
+  replyToComment,
+} from "@/e2e/support/comments";
 import { withBrowserContext } from "@/e2e/support/context";
-import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -34,18 +36,6 @@ async function openReplyMail(page: Page) {
   await expect(mail).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   return mail;
 }
-
-/** Opens the lesson's comments in one learner's page, with the feed mounted. */
-const openComments = Effect.fn("NakafaE2E.openNoticeComments")(function* (
-  page: Page,
-  baseURL: string
-) {
-  yield* withObservedPageErrors(page, openChatPage(page, baseURL));
-  yield* Effect.promise(async () => {
-    await page.goto(LESSON_PATH);
-    await page.locator("#comments").scrollIntoViewIfNeeded();
-  });
-});
 
 /**
  * A reply reaches the learner it answers: a row in the Nakafa inbox under the
@@ -112,8 +102,11 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
             await expect(mail).toBeChecked();
             await mail.click();
             await expect(mail).not.toBeChecked();
-            await author.reload();
-            await expect(await openReplyMail(author)).not.toBeChecked();
+            // A second page of the author reads the choice from the server. Opening it leaves the first
+            // page, which may still be sending the choice, in place, where a reload of it would end it.
+            const again = await authorContext.newPage();
+            await again.goto(INBOX);
+            await expect(await openReplyMail(again)).not.toBeChecked();
           });
         })
       )

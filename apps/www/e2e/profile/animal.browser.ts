@@ -29,11 +29,13 @@ const SIXTY_LETTERS = "Maria".repeat(12);
 const ONE_LETTER = "A";
 const OTHER_SCRIPT = "Наталья Петровна Иванова";
 /**
- * The avatar of one comment's author, which sits in the row that is the only
- * child of the comment's container. The thread and its composer sit beside the
- * row, not in it, so the row holds one avatar.
+ * The avatar of one comment's author, at the top of the column that opens the
+ * row, the only child of the comment's container. The column draws the thread's
+ * line under the avatar, and the thread and its composer sit beside the row, not
+ * in it, so the row holds one avatar.
  */
-const AUTHOR_AVATAR = ':scope > [data-slot="feed-row"] > [data-slot="avatar"]';
+const AUTHOR_AVATAR =
+  ':scope > [data-slot="feed-row"] > div > [data-slot="avatar"]';
 
 /** The name the sidebar footer shows for the account. */
 function sidebarName(page: Page, name: string) {
