@@ -7,6 +7,9 @@ const TKA_GRADE = "/en/try-out/indonesia/tka/senior-high-school";
 /** The Aufnahmeprüfung's one Studienkolleg and its one test, in English. */
 const DARMSTADT =
   "/en/try-out/germany/aufnahmepruefung/tu-darmstadt-studienkolleg/mathematics";
+/** The name of an exam card's link and of a subject card's link. */
+const EXAM_CARD = /^View options /u;
+const SUBJECT_CARD = /^View sets /u;
 
 /**
  * Every set table is at most two clicks from the hub: picking the exam is the
@@ -18,7 +21,7 @@ test("reaches every exam's set table in at most two clicks from the hub", async 
 }) => {
   await page.goto("/en/try-out");
   const main = page.locator("main");
-  const cards = main.getByRole("link", { name: /^View options /u });
+  const cards = main.getByRole("link", { name: EXAM_CARD });
   const entries = await cards.evaluateAll((links) =>
     links.map((link) => link.getAttribute("href") ?? "")
   );
@@ -26,7 +29,7 @@ test("reaches every exam's set table in at most two clicks from the hub", async 
 
   for (const entry of entries) {
     await page.goto(entry);
-    const subjects = main.getByRole("link", { name: /^View sets /u });
+    const subjects = main.getByRole("link", { name: SUBJECT_CARD });
     const tables =
       (await subjects.count()) === 0
         ? [entry]
@@ -44,9 +47,7 @@ test("draws every exam card of the hub with its artwork, never a gradient", asyn
   page,
 }) => {
   await page.goto("/en/try-out");
-  const cards = page
-    .locator("main")
-    .getByRole("link", { name: /^View options /u });
+  const cards = page.locator("main").getByRole("link", { name: EXAM_CARD });
 
   await expect(cards).toHaveCount(3);
   await expect(page.locator("main img")).toHaveCount(3);
