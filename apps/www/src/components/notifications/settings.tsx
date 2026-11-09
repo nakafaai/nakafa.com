@@ -78,15 +78,15 @@ type Row = ReturnType<typeof preferenceChoicesOf>[number];
 /** The columns of the switches. */
 const preferenceColumns = tableColumns<Row>();
 
-/** The switches of one relation, each kind in a row, and an empty cell for a channel the kind does not use. */
+/** The switches of the reader's relations, each kind in a row, and an empty cell for a channel the kind does not use. */
 export function PreferenceTable({
   off,
-  relation,
+  relations,
 }: {
   /** What this reader switched off. */
   off: readonly (typeof SwitchedOff.Type)[];
   /** How this reader relates to the notices the table lists. */
-  relation: typeof Relation.Type;
+  relations: readonly (typeof Relation.Type)[];
 }) {
   const t = useTranslations("Notifications");
   const channelColumn = (channel: typeof PreferenceChannel.Type) =>
@@ -143,7 +143,7 @@ export function PreferenceTable({
               </RowItems>
             )),
           ]}
-          data={preferenceChoicesOf(relation, off)}
+          data={preferenceChoicesOf(relations, off)}
           plain
           rowId={({ kind }) => kind}
         />

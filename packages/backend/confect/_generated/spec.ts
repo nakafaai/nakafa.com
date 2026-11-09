@@ -270,6 +270,8 @@ import tryouts_queries_catalog from "../tryouts/queries/catalog.spec";
 import tryouts_queries_history from "../tryouts/queries/history.spec";
 import tryouts_queries_runtime from "../tryouts/queries/runtime.spec";
 import tryouts_queries_sets from "../tryouts/queries/sets.spec";
+import tryouts_reminders_delivery from "../tryouts/reminders/delivery.spec";
+import tryouts_reminders_jobs from "../tryouts/reminders/jobs.spec";
 import users_mutations from "../users/mutations.spec";
 import users_queries from "../users/queries.spec";
 import vault_keys from "../vault/keys.spec";
@@ -311,7 +313,7 @@ const spec: Spec.Spec<{
   readonly spend: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "spend", never, GroupSpec.NamedAt<typeof spend_escrow, "escrow">>, "spend">;
   readonly tenancy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tenancy", never, GroupSpec.NamedAt<typeof tenancy_assignments, "assignments"> | GroupSpec.NamedAt<typeof tenancy_claims, "claims"> | GroupSpec.NamedAt<typeof tenancy_cohorts, "cohorts"> | GroupSpec.NamedAt<typeof tenancy_expiry, "expiry"> | GroupSpec.NamedAt<typeof tenancy_holders, "holders"> | GroupSpec.NamedAt<typeof tenancy_invites, "invites"> | GroupSpec.NamedAt<typeof tenancy_logo, "logo"> | GroupSpec.NamedAt<typeof tenancy_memberships, "memberships"> | GroupSpec.NamedAt<typeof tenancy_people, "people"> | GroupSpec.NamedAt<typeof tenancy_periods, "periods"> | GroupSpec.NamedAt<typeof tenancy_placements, "placements"> | GroupSpec.NamedAt<typeof tenancy_profile, "profile"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "promotion", never, GroupSpec.NamedAt<typeof tenancy_promotion_apply, "apply"> | GroupSpec.NamedAt<typeof tenancy_promotion_draft, "draft"> | GroupSpec.NamedAt<typeof tenancy_promotion_moves, "moves"> | GroupSpec.NamedAt<typeof tenancy_promotion_review, "review"> | GroupSpec.NamedAt<typeof tenancy_promotion_run, "run"> | GroupSpec.NamedAt<typeof tenancy_promotion_undo, "undo">>, "promotion"> | GroupSpec.NamedAt<typeof tenancy_provision, "provision"> | GroupSpec.NamedAt<typeof tenancy_roster, "roster"> | GroupSpec.NamedAt<typeof tenancy_seed, "seed"> | GroupSpec.NamedAt<typeof tenancy_settings, "settings"> | GroupSpec.NamedAt<typeof tenancy_setup, "setup"> | GroupSpec.NamedAt<typeof tenancy_start, "start"> | GroupSpec.NamedAt<typeof tenancy_units, "units"> | GroupSpec.NamedAt<typeof tenancy_viewer, "viewer">>, "tenancy">;
   readonly triggers: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "triggers", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof triggers_chats_cleanup, "cleanup">>, "chats"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof triggers_comments_cleanup, "cleanup">>, "comments">>, "triggers">;
-  readonly tryouts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tryouts", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "mutations", never, GroupSpec.NamedAt<typeof tryouts_mutations_access, "access"> | GroupSpec.NamedAt<typeof tryouts_mutations_attempts, "attempts"> | GroupSpec.NamedAt<typeof tryouts_mutations_expiry, "expiry"> | GroupSpec.NamedAt<typeof tryouts_mutations_responses, "responses"> | GroupSpec.NamedAt<typeof tryouts_mutations_sections, "sections">>, "mutations"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "queries", never, GroupSpec.NamedAt<typeof tryouts_queries_access, "access"> | GroupSpec.NamedAt<typeof tryouts_queries_attemptPage, "attemptPage"> | GroupSpec.NamedAt<typeof tryouts_queries_catalog, "catalog"> | GroupSpec.NamedAt<typeof tryouts_queries_history, "history"> | GroupSpec.NamedAt<typeof tryouts_queries_runtime, "runtime"> | GroupSpec.NamedAt<typeof tryouts_queries_sets, "sets">>, "queries">>, "tryouts">;
+  readonly tryouts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tryouts", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "mutations", never, GroupSpec.NamedAt<typeof tryouts_mutations_access, "access"> | GroupSpec.NamedAt<typeof tryouts_mutations_attempts, "attempts"> | GroupSpec.NamedAt<typeof tryouts_mutations_expiry, "expiry"> | GroupSpec.NamedAt<typeof tryouts_mutations_responses, "responses"> | GroupSpec.NamedAt<typeof tryouts_mutations_sections, "sections">>, "mutations"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "queries", never, GroupSpec.NamedAt<typeof tryouts_queries_access, "access"> | GroupSpec.NamedAt<typeof tryouts_queries_attemptPage, "attemptPage"> | GroupSpec.NamedAt<typeof tryouts_queries_catalog, "catalog"> | GroupSpec.NamedAt<typeof tryouts_queries_history, "history"> | GroupSpec.NamedAt<typeof tryouts_queries_runtime, "runtime"> | GroupSpec.NamedAt<typeof tryouts_queries_sets, "sets">>, "queries"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "reminders", never, GroupSpec.NamedAt<typeof tryouts_reminders_delivery, "delivery"> | GroupSpec.NamedAt<typeof tryouts_reminders_jobs, "jobs">>, "reminders">>, "tryouts">;
   readonly users: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "users", never, GroupSpec.NamedAt<typeof users_mutations, "mutations"> | GroupSpec.NamedAt<typeof users_queries, "queries">>, "users">;
   readonly vault: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "vault", never, GroupSpec.NamedAt<typeof vault_keys, "keys">>, "vault">;
 }> = Spec.fromGroups({
@@ -711,6 +713,10 @@ const spec: Spec.Spec<{
       ["history"]: tryouts_queries_history,
       ["runtime"]: tryouts_queries_runtime,
       ["sets"]: tryouts_queries_sets,
+    }),
+    ["reminders"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["delivery"]: tryouts_reminders_delivery,
+      ["jobs"]: tryouts_reminders_jobs,
     }),
   }),
   ["users"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
