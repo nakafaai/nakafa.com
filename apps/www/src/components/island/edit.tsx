@@ -6,7 +6,7 @@ import {
   type Operation,
 } from "@repo/backend/confect/island/build";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, Effect, Option, Result } from "effect";
+import { Array as Arr, Effect, Match, Option, Result } from "effect";
 import { useCue } from "@/components/island/sound";
 import { useToolStore } from "@/components/island/tools";
 import { useIsland } from "@/lib/island/context";
@@ -63,18 +63,22 @@ export function useEditIsland() {
             onFailure: (error) =>
               Effect.sync(() => {
                 tools.getState().forget();
-                if (error._tag === "IslandStale") {
-                  toast.error({
-                    description: "island-stale.description",
-                    title: "island-stale.title",
-                  });
-                } else if (error._tag === "BuildRefused") {
-                  toast.error({
-                    title: `island-refused-${error.reason}.title`,
-                  });
-                } else {
-                  captureException(error, { source: "island-edit" });
-                }
+                Match.value(error).pipe(
+                  Match.tag("IslandStale", () =>
+                    toast.error({
+                      description: "island-stale.description",
+                      title: "island-stale.title",
+                    })
+                  ),
+                  Match.tag("BuildRefused", (refused) =>
+                    toast.error({
+                      title: `island-refused-${refused.reason}.title`,
+                    })
+                  ),
+                  Match.orElse((failure) =>
+                    captureException(failure, { source: "island-edit" })
+                  )
+                );
               }),
             onSuccess: () => Effect.void,
           })

@@ -117,12 +117,20 @@ pinned commit of this repository.
 | Rule | Reports | Never reports, by construction |
 | --- | --- | --- |
 | `switch` | every `switch` statement | nothing |
+| `tag-chain` | the first `if` of a chain over one subject's `_tag`: an `if` that compares `x._tag` with a variant (also negated, or as a `\|\|` of such comparisons) whose `else` or next statement in the same list is an `if` over the same subject's `_tag` | one `if` over a tag; an `if` over another subject or property; a tag compared with something other than a string; a comparison joined with `&&` |
 | `assertion` | `x as T`, `<T>x`, `x!` | `as const`; `satisfies`; definite assignment (`let x!: T`); import and export aliases; framework configuration |
 | `throw` | a raw `throw` in product code | tests; framework configuration; React modules, where a hook throws for its error boundary; a `ConvexError` thrown in a Convex handler, as set out below; a throw inside a browser page function |
 | `new-promise` | `new Promise(...)` and `Promise.withResolvers()` on the global `Promise`, also through a global object such as `globalThis.Promise` | tests; framework configuration; a browser page function; a local class or binding named `Promise` |
 
 `switch` reports a `switch (typeof x)` once, as a switch, not also as a
 `typeof-object` comparison.
+
+`tag-chain` is the `switch` rule for `if`: both pick a branch by the value's
+variant, which `Match.tag`, `Match.tags` or `Match.tagsExhaustive` names, and
+an exhaustive match also fails to compile when a variant is added. A chain is
+reported once, at its first `if` (`scripts/check/dispatch.ts`). On 9 November
+71 `if` statements compared a `_tag`, and 8 of them started a chain; each now
+matches.
 
 `satisfies` is not an assertion: it checks a value and does not change its
 type. Of 781 uses measured, 491 check against a Schema-derived type, 104

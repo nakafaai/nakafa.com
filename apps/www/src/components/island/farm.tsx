@@ -5,7 +5,7 @@ import island from "@repo/backend/confect/_generated/refs/island";
 import { todayOf } from "@repo/backend/confect/island/day";
 import type { Placement } from "@repo/backend/confect/island/layout";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { DateTime, Effect, Option, Result } from "effect";
+import { DateTime, Effect, Match, Option, Result } from "effect";
 import { useCue } from "@/components/island/sound";
 import { useIsland } from "@/lib/island/context";
 import {
@@ -24,16 +24,18 @@ function farmFailed(
   error: Ref.Error<typeof island.mutations.water>,
   source: string
 ) {
-  if (error._tag === "FarmRefused") {
-    toast.error({ title: `island-farm-${error.reason}.title` });
-  } else if (error._tag === "IslandStale") {
-    toast.error({
-      description: "island-stale.description",
-      title: "island-stale.title",
-    });
-  } else {
-    captureException(error, { source });
-  }
+  Match.value(error).pipe(
+    Match.tag("FarmRefused", (refused) =>
+      toast.error({ title: `island-farm-${refused.reason}.title` })
+    ),
+    Match.tag("IslandStale", () =>
+      toast.error({
+        description: "island-stale.description",
+        title: "island-stale.title",
+      })
+    ),
+    Match.orElse((failure) => captureException(failure, { source }))
+  );
 }
 
 /**

@@ -8,7 +8,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
 import { createContext, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -324,58 +324,52 @@ function ClassBody({ klass }: { klass: Resolved }) {
   const view = useClassView();
   const { slug } = useClassScope();
 
-  if (view._tag === "home") {
-    // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
-    return <HomeFeed publishes={Arr.contains(klass.can, "post.publish")} />;
-  }
-  if (view._tag === "library") {
-    return (
-      <LibraryScope folderId={null}>
-        <LibraryList />
-      </LibraryScope>
-    );
-  }
-  if (view._tag === "folder") {
-    return (
-      <LibraryScope folderId={view.folderId}>
-        <LibraryList />
-      </LibraryScope>
-    );
-  }
-  if (view._tag === "tasks") {
-    return (
-      <PanesProvider>
-        <TaskList />
-      </PanesProvider>
-    );
-  }
-  if (view._tag === "people") {
-    return <PeopleList />;
-  }
-  if (view._tag === "grades") {
-    return (
-      <TableFiltersProvider>
-        <PanesProvider>
-          <ClassHeader>
-            <GradebookSearch />
-          </ClassHeader>
-          {/* The header's 4rem and the tabs' 3rem stand above the gradebook's panes. */}
-          <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
-            <ClassGradebook classId={klass.id} slug={slug} />
-          </div>
+  return Match.value(view).pipe(
+    Match.tagsExhaustive({
+      // The forum's views draw their own body (`ForumBody`), so none reaches here.
+      channel: () => null,
+      discussion: () => null,
+      folder: ({ folderId }) => (
+        <LibraryScope folderId={folderId}>
+          <LibraryList />
+        </LibraryScope>
+      ),
+      forum: () => null,
+      grades: () => (
+        <TableFiltersProvider>
+          <PanesProvider>
+            <ClassHeader>
+              <GradebookSearch />
+            </ClassHeader>
+            {/* The header's 4rem and the tabs' 3rem stand above the gradebook's panes. */}
+            <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
+              <ClassGradebook classId={klass.id} slug={slug} />
+            </div>
+          </PanesProvider>
+        </TableFiltersProvider>
+      ),
+      // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
+      home: () => (
+        <HomeFeed publishes={Arr.contains(klass.can, "post.publish")} />
+      ),
+      library: () => (
+        <LibraryScope folderId={null}>
+          <LibraryList />
+        </LibraryScope>
+      ),
+      people: () => <PeopleList />,
+      task: ({ task }) => (
+        <PanesProvider opened={Option.some(task)}>
+          <TaskList />
         </PanesProvider>
-      </TableFiltersProvider>
-    );
-  }
-  if (view._tag === "task") {
-    return (
-      <PanesProvider opened={Option.some(view.task)}>
-        <TaskList />
-      </PanesProvider>
-    );
-  }
-  // The forum's views draw their own body (`ForumBody`), so none reaches here.
-  return null;
+      ),
+      tasks: () => (
+        <PanesProvider>
+          <TaskList />
+        </PanesProvider>
+      ),
+    })
+  );
 }
 
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
