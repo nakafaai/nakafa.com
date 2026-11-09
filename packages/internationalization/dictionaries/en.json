@@ -2572,6 +2572,7 @@
     "result-short": "Result",
     "result-open": "Open your result, {correct} of {total} correct",
     "review-controls": "Attempt and view",
+    "verdict": "{state, select, correct {Correct} incorrect {Wrong} partial {Partly correct} pending {Waiting for its grade} other {Unanswered}}",
     "menu-history": "History",
     "attempt-menu-search-placeholder": "Search attempts...",
     "attempt-menu-empty": "No matching attempts found.",

@@ -2572,6 +2572,7 @@
     "result-short": "Ergebnis",
     "result-open": "Dein Ergebnis öffnen, {correct} von {total} richtig",
     "review-controls": "Versuch und Ansicht",
+    "verdict": "{state, select, correct {Richtig} incorrect {Falsch} partial {Teilweise richtig} pending {Wartet auf die Bewertung} other {Unbeantwortet}}",
     "menu-history": "Verlauf",
     "attempt-menu-search-placeholder": "Versuche suchen...",
     "attempt-menu-empty": "Keine passenden Versuche gefunden.",
