@@ -2678,6 +2678,8 @@
     "guest": "kamu",
     "week-title": "Minggu kamu",
     "streak": "{days, plural, =0 {Mulakan rentetan hari ini} other {# hari berturut-turut}}",
+    "tryout-earned": "Air pancut diperoleh",
+    "tryout-reward": "Try out 7 hari berturut-turut membuka air pancut",
     "week-summary": "{lessons} pelajaran, {sections} bahagian try out, {stars} Bintang minggu ini"
   },
   "Marketing": {
@@ -4653,6 +4655,9 @@
     "item-tree": "Pokok",
     "item-well": "Perigi",
     "item-lamp": "Tiang lampu",
+    "item-fountain": "Air pancut",
+    "streak-opens": "7 hari try out",
+    "streak-locked": "Buat try out 7 hari berturut-turut untuk membukanya",
     "notice-room": "Tak muat di sini. Cuba tempat yang rata dan lapang.",
     "season-spring": "Musim bunga",
     "season-summer": "Musim panas",

@@ -8,7 +8,7 @@ describe("island/entry", () => {
     expect(
       entryOf(
         {
-          badges: [],
+          badges: [{ at: 1, badge: "streak" }],
           lifetime: 420,
           shared: true,
           version: 3,
@@ -17,6 +17,7 @@ describe("island/entry", () => {
         "users-1"
       )
     ).toEqual({
+      badges: ["streak"],
       edits: [{ block: 5, x: 30, y: 9, z: 30 }],
       from: 400,
       level: 3,
@@ -31,6 +32,7 @@ describe("island/entry", () => {
 
   it("starts a learner with no island at level 1, and past the last level names no next one", () => {
     expect(entryOf(null, undefined)).toMatchObject({
+      badges: [],
       edits: [],
       level: 1,
       next: 150,

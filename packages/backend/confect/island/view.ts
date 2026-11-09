@@ -62,10 +62,14 @@ const WeekDay = Schema.Struct({
 
 /**
  * The learner's week as the home page tracks it: the seven days of this week
- * in their zone, Monday first, their run of days in a row, and today.
+ * in their zone, Monday first, their run of days in a row, today, and the
+ * week of try-outs that earns the Streak badge and its fountain (ADR 0047,
+ * D19): the try-out days in a row so far, and whether the badge is held.
  */
 export const Week = Schema.Struct({
   days: Schema.Array(WeekDay),
+  rewarded: Schema.Boolean,
   streak: Schema.Int,
   today: Schema.String,
+  tryouts: Schema.Int,
 });

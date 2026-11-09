@@ -1,14 +1,14 @@
 import type { Ref } from "@confect/core";
 import type island from "@repo/backend/confect/_generated/refs/island";
 import { growthOf } from "@repo/backend/confect/island/level";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { seedOf } from "@/lib/island/noise";
 
 /**
  * What the game and the home page open the learner's island with (ADR 0047,
- * D6 and D7): their level, the Stars that opened it and the next one, the side
- * of their footprint, the seed their terrain grows from, and their edits with
- * the version those stand at. A learner with no island yet starts at level 1
+ * D6, D7 and D19): their level, the Stars that opened it and the next one, the
+ * badges they hold, the side of their footprint, the seed their terrain grows
+ * from, and their edits with the version those stand at. A learner with no island yet starts at level 1
  * with nothing changed; a learner with no account read yet grows the shared
  * seed until it is known.
  */
@@ -18,6 +18,7 @@ export function entryOf(
 ) {
   const growth = growthOf(own?.lifetime ?? 0);
   return {
+    badges: Arr.map(own?.badges ?? [], (earned) => earned.badge),
     edits: own?.world ?? [],
     from: growth.from,
     level: growth.level,

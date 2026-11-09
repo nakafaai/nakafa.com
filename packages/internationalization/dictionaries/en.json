@@ -2678,6 +2678,8 @@
     "guest": "you",
     "week-title": "Your week",
     "streak": "{days, plural, =0 {Start a run today} one {# day in a row} other {# days in a row}}",
+    "tryout-earned": "Fountain earned",
+    "tryout-reward": "Try-outs 7 days in a row open the fountain",
     "week-summary": "{lessons, plural, one {# lesson} other {# lessons}}, {sections, plural, one {# try-out section} other {# try-out sections}}, {stars} Stars this week"
   },
   "Marketing": {
@@ -4653,6 +4655,9 @@
     "item-tree": "Tree",
     "item-well": "Well",
     "item-lamp": "Lamp post",
+    "item-fountain": "Fountain",
+    "streak-opens": "7 try-out days",
+    "streak-locked": "Do a try-out 7 days in a row to open it",
     "notice-room": "No room for that here. Try a flat, open spot.",
     "season-spring": "Spring",
     "season-summer": "Summer",

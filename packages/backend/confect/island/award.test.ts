@@ -154,7 +154,7 @@ describe("island/award", () => {
   );
 
   it.effect(
-    "earns Explorer on the seventh day of ten and Fighter on the tenth set",
+    "earns Explorer and Streak on the seventh day in a row and Fighter on the tenth set",
     () =>
       Effect.gen(function* () {
         const world = yield* learnerWorld();
@@ -171,7 +171,7 @@ describe("island/award", () => {
           [],
           [],
           [],
-          ["explorer"],
+          ["explorer", "streak"],
           [],
           [],
           ["fighter"],
@@ -179,8 +179,45 @@ describe("island/award", () => {
         const { islands } = yield* world.read();
         expect(islands[0]?.badges).toEqual([
           { at: NOW + 6 * DAY, badge: "explorer" },
+          { at: NOW + 6 * DAY, badge: "streak" },
           { at: NOW + 9 * DAY, badge: "fighter" },
         ]);
+      })
+  );
+
+  it.effect(
+    "earns Streak only after seven try-out days in a row: a missed day starts the run again, and lessons do not count",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* learnerWorld();
+        const tried = (day: number) => {
+          vi.setSystemTime(NOW + day * DAY);
+          return Effect.gen(function* () {
+            yield* world.grant(lesson(`read-${day}`));
+            const first = yield* world.grant(section(`set-${day}`, "1"));
+            const second = yield* world.grant(section(`set-${day}`, "2"));
+            return [first, second];
+          });
+        };
+        const days = [0, 1, 2, 4, 5, 6, 7, 8, 9];
+        const outcomes = yield* Effect.forEach(days, tried);
+        const streaks = Arr.map(outcomes, (pair) =>
+          Arr.flatMap(pair, (outcome) =>
+            outcome._tag === "granted"
+              ? Arr.filter(outcome.badges, (badge) => badge === "streak")
+              : []
+          )
+        );
+        expect(streaks).toEqual([[], [], [], [], [], [], [], [], []]);
+        const [last] = yield* tried(10);
+        assert(last?._tag === "granted");
+        expect(last.badges).toContain("streak");
+        const again = yield* tried(11);
+        expect(
+          Arr.flatMap(again, (outcome) =>
+            outcome._tag === "granted" ? outcome.badges : []
+          )
+        ).not.toContain("streak");
       })
   );
 

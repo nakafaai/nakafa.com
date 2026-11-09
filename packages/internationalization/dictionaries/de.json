@@ -2678,6 +2678,8 @@
     "guest": "du",
     "week-title": "Deine Woche",
     "streak": "{days, plural, =0 {Fang heute eine Serie an} one {# Tag am Stück} other {# Tage am Stück}}",
+    "tryout-earned": "Springbrunnen verdient",
+    "tryout-reward": "7 Tage am Stück Tests öffnen den Springbrunnen",
     "week-summary": "{lessons, plural, one {# Lektion} other {# Lektionen}}, {sections, plural, one {# Testabschnitt} other {# Testabschnitte}}, {stars} Sterne diese Woche"
   },
   "Marketing": {
@@ -4653,6 +4655,9 @@
     "item-tree": "Baum",
     "item-well": "Brunnen",
     "item-lamp": "Laterne",
+    "item-fountain": "Springbrunnen",
+    "streak-opens": "7 Testtage",
+    "streak-locked": "Mach 7 Tage am Stück einen Test, um ihn zu öffnen",
     "notice-room": "Hier ist kein Platz dafür. Probier eine flache, freie Stelle.",
     "season-spring": "Frühling",
     "season-summer": "Sommer",

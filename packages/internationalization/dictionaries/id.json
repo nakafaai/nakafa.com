@@ -2678,6 +2678,8 @@
     "guest": "kamu",
     "week-title": "Minggu kamu",
     "streak": "{days, plural, =0 {Mulai rangkaian hari ini} other {# hari berturut-turut}}",
+    "tryout-earned": "Air mancur didapat",
+    "tryout-reward": "Try out 7 hari berturut-turut membuka air mancur",
     "week-summary": "{lessons} materi, {sections} bagian try out, {stars} Bintang minggu ini"
   },
   "Marketing": {
@@ -4653,6 +4655,9 @@
     "item-tree": "Pohon",
     "item-well": "Sumur",
     "item-lamp": "Tiang lampu",
+    "item-fountain": "Air mancur",
+    "streak-opens": "7 hari try out",
+    "streak-locked": "Kerjakan try out 7 hari berturut-turut untuk membukanya",
     "notice-room": "Di sini nggak muat. Coba tempat yang datar dan lapang.",
     "season-spring": "Musim semi",
     "season-summer": "Musim panas",

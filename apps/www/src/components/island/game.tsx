@@ -1,6 +1,7 @@
 "use client";
 
 import { BLOCK_KEYS, isOpen } from "@repo/backend/confect/island/blocks";
+import type { Badge } from "@repo/backend/confect/island/schema";
 import type { Edit } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { useState } from "react";
@@ -33,6 +34,7 @@ function firstHotbar(level: number) {
  */
 export default function IslandGame({
   address,
+  badges,
   edits,
   level,
   onLeave,
@@ -43,6 +45,7 @@ export default function IslandGame({
   version,
 }: {
   address: string | null;
+  badges: readonly Badge[];
   edits: readonly Edit[];
   level: number;
   onLeave: () => void;
@@ -55,6 +58,7 @@ export default function IslandGame({
   const [store] = useState(() =>
     createGameStore({
       address,
+      badges,
       cells: worldOf(seed, size, edits),
       hotbar: firstHotbar(level),
       leave: onLeave,

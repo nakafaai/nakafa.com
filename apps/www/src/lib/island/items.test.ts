@@ -4,6 +4,7 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { Array as Arr, Result } from "effect";
 import {
   ITEM_KEYS,
+  isItemOpen,
   itemOpensAt,
   itemPlanOf,
   partsOf,
@@ -78,7 +79,22 @@ describe("island/items", () => {
     expect(turnOf(Math.PI / 2)).toBe(1);
     expect(turnOf(Math.PI)).toBe(2);
     expect(turnOf(-Math.PI / 2)).toBe(3);
-    expect(Arr.map(ITEM_KEYS, itemOpensAt)).toEqual([3, 1, 3, 4]);
+    expect(Arr.map(ITEM_KEYS, itemOpensAt)).toEqual([3, 1, 3, 4, 2]);
+  });
+
+  it("opens the fountain only once a week of try-outs earned its badge", () => {
+    expect(isItemOpen("well", 3, [])).toBe(true);
+    expect(isItemOpen("well", 2, ["streak"])).toBe(false);
+    expect(isItemOpen("fountain", 7, ["explorer"])).toBe(false);
+    expect(isItemOpen("fountain", 2, ["streak"])).toBe(true);
+    expect(isItemOpen("fountain", 1, ["streak"])).toBe(false);
+    const parts = partsOf("fountain", 0);
+    expect(parts).toHaveLength(16 + 8 + 3);
+    expect(Arr.filter(parts, (cell) => cell.x === 0 && cell.z === 0)).toEqual([
+      { block: "stone", x: 0, y: 0, z: 0 },
+      { block: "stone", x: 0, y: 1, z: 0 },
+      { block: "water", x: 0, y: 2, z: 0 },
+    ]);
   });
 
   it("plans an item on open flat ground as one batch from the ground up, and refuses it off the footprint, into a block, or over nothing", () => {

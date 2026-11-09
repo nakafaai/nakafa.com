@@ -6,6 +6,7 @@ import {
   BucketIcon,
   Cancel01Icon,
   CubeIcon,
+  DropletsIcon,
   FishingHookIcon,
   House03Icon,
   LanternIcon,
@@ -36,11 +37,17 @@ import { panelVariants } from "@/components/island/panel";
 import { type Shelf, useGame } from "@/components/island/store";
 import { SPECIES } from "@/lib/island/fauna/species";
 import { nextTierOf, tierOpensAt, upgradeOf } from "@/lib/island/home";
-import { ITEM_KEYS, itemOpensAt } from "@/lib/island/items";
+import {
+  ITEM_KEYS,
+  isItemOpen,
+  itemBadgeOf,
+  itemOpensAt,
+} from "@/lib/island/items";
 import { isPlant } from "@/lib/island/look";
 
 /** The icon of each ready-made item. */
 const ITEM_ICONS = {
+  fountain: DropletsIcon,
   house: House03Icon,
   lamp: LanternIcon,
   tree: PineTreeIcon,
@@ -94,18 +101,24 @@ function Lock() {
   );
 }
 
-/** One ready-made item: open ones go into the hand, locked ones show the level that opens them. */
+/**
+ * One ready-made item: open ones go into the hand, locked ones show what opens
+ * them, the badge it asks for (D19) once the level is reached, else the level.
+ */
 function ItemEntry({ item }: { item: (typeof ITEM_KEYS)[number] }) {
   const t = useTranslations("Island");
   const level = useGame((state) => state.level);
+  const badges = useGame((state) => state.badges);
   const hold = useGame((state) => state.hold);
-  const open = itemOpensAt(item) <= level;
+  const open = isItemOpen(item, level, badges);
+  const opens = itemOpensAt(item);
+  const waits = opens <= level && Option.isSome(itemBadgeOf(item));
+  const lockName = waits ? t("streak-locked") : t("locked", { level: opens });
+  const lockLabel = waits ? t("streak-opens") : t("level", { level: opens });
   return (
     <li>
       <button
-        aria-label={
-          open ? t(`item-${item}`) : t("locked", { level: itemOpensAt(item) })
-        }
+        aria-label={open ? t(`item-${item}`) : lockName}
         className={entryVariants({ state: open ? "open" : "locked" })}
         disabled={!open}
         onClick={() => hold(item)}
@@ -117,7 +130,7 @@ function ItemEntry({ item }: { item: (typeof ITEM_KEYS)[number] }) {
           {open ? null : <Lock />}
         </span>
         <span className="text-sm leading-tight text-balance hyphens-auto">
-          {open ? t(`item-${item}`) : t("level", { level: itemOpensAt(item) })}
+          {open ? t(`item-${item}`) : lockLabel}
         </span>
       </button>
     </li>

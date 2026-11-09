@@ -1,4 +1,5 @@
 import { type BlockKey, idOf } from "@repo/backend/confect/island/blocks";
+import type { Badge } from "@repo/backend/confect/island/schema";
 import { Array as Arr, HashSet, Schema } from "effect";
 import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
@@ -65,6 +66,8 @@ interface GameStore {
   apply: (edits: readonly Edit[]) => void;
   /** Puts a block into a hotbar slot. */
   assign: (slot: number, key: BlockKey) => void;
+  /** The badges the learner holds, which open their items (D19). */
+  badges: readonly Badge[];
   /** How many crops the learner harvested today. */
   basket: number;
   book: boolean;
@@ -151,6 +154,7 @@ interface GameStore {
 type GameSetup = Pick<
   GameStore,
   | "address"
+  | "badges"
   | "cells"
   | "hotbar"
   | "leave"

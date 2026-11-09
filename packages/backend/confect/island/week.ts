@@ -1,6 +1,9 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Array as Arr, DateTime } from "effect";
 
+/** The days in a row of try-outs that earn the Streak badge and its fountain (ADR 0047, D19). */
+export const STREAK_DAYS = 7;
+
 /** A day as an ISO date, read at midnight UTC so no zone moves it. */
 function dateOf(day: string) {
   return DateTime.makeUnsafe(`${day}T00:00:00Z`);

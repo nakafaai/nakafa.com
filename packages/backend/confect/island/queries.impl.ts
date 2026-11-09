@@ -4,6 +4,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { todayOf } from "@repo/backend/confect/island/day";
 import spec from "@repo/backend/confect/island/queries.spec";
+import { runOn, tryoutDays } from "@repo/backend/confect/island/run";
 import { DAY_GRANTS } from "@repo/backend/confect/island/schema";
 import { findIsland } from "@repo/backend/confect/island/store";
 import {
@@ -12,7 +13,7 @@ import {
 } from "@repo/backend/confect/island/view";
 import { streakOn, summaryOf, weekOf } from "@repo/backend/confect/island/week";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { Effect, Layer, Option } from "effect";
+import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** The signed-in learner's island, none before their first grant or visit. */
 const own = FunctionImpl.make(
@@ -59,8 +60,9 @@ const visit = FunctionImpl.make(
 
 /**
  * The signed-in learner's week (ADR 0047): the grants of each day of this
- * week in their zone, at most a day's count each, and their run of days. None
- * before their first grant or visit.
+ * week in their zone, at most a day's count each, their run of days, and
+ * their run of try-out days toward the Streak badge (D19). None before their
+ * first grant or visit.
  */
 const week = FunctionImpl.make(
   databaseSchema,
@@ -90,10 +92,13 @@ const week = FunctionImpl.make(
           Effect.map((grants) => summaryOf(day, grants))
         )
     );
+    const tried = yield* tryoutDays(island.userId, today);
     return {
       days,
+      rewarded: Arr.some(island.badges, (earned) => earned.badge === "streak"),
       streak: streakOn(island.learned, island.streak ?? 0, today),
       today,
+      tryouts: runOn(tried, today),
     };
   })
 );

@@ -81,7 +81,7 @@ export const grantAward = Effect.fn("island.grantAward")(function* (
   yield* writer.table("islandAwards").insert(grant).pipe(Effect.orDie);
   const badges = yield* completedBadges(
     grant,
-    today.length === 0,
+    today,
     Arr.map(island.badges, (earned) => earned.badge)
   );
   yield* writer

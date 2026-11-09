@@ -1,6 +1,7 @@
 import { BlockKey, idOf, opensAt } from "@repo/backend/confect/island/blocks";
+import type { Badge } from "@repo/backend/confect/island/schema";
 import { footprintOf } from "@repo/backend/confect/island/world";
-import { Array as Arr, Order, Result, Schema } from "effect";
+import { Array as Arr, Option, Order, Result, Schema } from "effect";
 import type { Edit } from "@/lib/island/edits";
 import { KIND, LOOK } from "@/lib/island/look";
 import { SCALE } from "@/lib/island/scale";
@@ -8,10 +9,17 @@ import { type Cells, cellOf, isInside } from "@/lib/island/world";
 
 /**
  * The ready-made things a learner places with one press (ADR 0047, D10): a
- * cottage, a tree, a well and a lamp post, each built of the same blocks the
- * learner builds with, at the world's one scale.
+ * cottage, a tree, a well, a lamp post, and the fountain a week of try-outs
+ * earns (D19), each built of the same blocks the learner builds with, at the
+ * world's one scale.
  */
-export const ItemKey = Schema.Literals(["house", "tree", "well", "lamp"]);
+export const ItemKey = Schema.Literals([
+  "house",
+  "tree",
+  "well",
+  "lamp",
+  "fountain",
+]);
 export type ItemKey = typeof ItemKey.Type;
 
 /** Every item, in the order the block book shows them. */
@@ -176,12 +184,49 @@ function lampParts() {
   );
 }
 
-/** Each item's parts, and the cell of them that stands on the anchor. */
+/**
+ * A fountain: a basin of cobblestone five blocks across round its water, and a
+ * stone column in the middle with water spilling from its top.
+ */
+function fountainParts() {
+  const basin = Arr.map(ringOf(5, 5), ({ x, z }) => part("cobble", x, 0, z));
+  const pool = Arr.map(ringOf(3, 3), ({ x, z }) =>
+    part("water", x + 1, 0, z + 1)
+  );
+  return Arr.appendAll(Arr.appendAll(basin, pool), [
+    part("stone", 2, 0, 2),
+    part("stone", 2, 1, 2),
+    part("water", 2, 2, 2),
+  ]);
+}
+
+/** Each item's parts, the cell of them that stands on the anchor, and the badge it asks for, if any. */
 const ITEMS = {
-  house: { origin: { x: 3, z: 3 }, parts: houseParts(COTTAGE) },
-  lamp: { origin: { x: 0, z: 0 }, parts: lampParts() },
-  tree: { origin: { x: 0, z: 0 }, parts: treeParts() },
-  well: { origin: { x: 1, z: 1 }, parts: wellParts() },
+  fountain: {
+    badge: Option.some<Badge>("streak"),
+    origin: { x: 2, z: 2 },
+    parts: fountainParts(),
+  },
+  house: {
+    badge: Option.none<Badge>(),
+    origin: { x: 3, z: 3 },
+    parts: houseParts(COTTAGE),
+  },
+  lamp: {
+    badge: Option.none<Badge>(),
+    origin: { x: 0, z: 0 },
+    parts: lampParts(),
+  },
+  tree: {
+    badge: Option.none<Badge>(),
+    origin: { x: 0, z: 0 },
+    parts: treeParts(),
+  },
+  well: {
+    badge: Option.none<Badge>(),
+    origin: { x: 1, z: 1 },
+    parts: wellParts(),
+  },
 };
 
 /**
@@ -208,6 +253,23 @@ export function partsOf(item: ItemKey, turn: number) {
 export function itemOpensAt(item: ItemKey) {
   return Arr.reduce(ITEMS[item].parts, 1, (level, cell) =>
     Math.max(level, opensAt(cell.block))
+  );
+}
+
+/** The badge an item asks for before it opens, none for an item the level alone opens. */
+export function itemBadgeOf(item: ItemKey) {
+  return ITEMS[item].badge;
+}
+
+/** Whether a learner at `level` holding `badges` may place an item: its level reached, and its badge held. */
+export function isItemOpen(
+  item: ItemKey,
+  level: number,
+  badges: readonly Badge[]
+) {
+  return (
+    itemOpensAt(item) <= level &&
+    Option.every(itemBadgeOf(item), (badge) => Arr.contains(badges, badge))
   );
 }
 

@@ -18,5 +18,5 @@ export default Table.make(() =>
 )
   .index("by_userId_and_key", ["userId", "key"])
   .index("by_userId_and_day", ["userId", "day"])
-  .index("by_userId_and_kind", ["userId", "kind"])
+  .index("by_userId_and_kind_and_day", ["userId", "kind", "day"])
   .index("by_userId_and_subject", ["userId", "subject"]);

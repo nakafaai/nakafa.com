@@ -190,7 +190,7 @@ describe("island queries and mutations", () => {
   );
 
   it.effect(
-    "tracks the learner's week in their zone: grants by day, the Stars, and the run of days",
+    "tracks the learner's week in their zone: grants by day, the Stars, the run of days and of try-out days",
     () =>
       Effect.gen(function* () {
         const world = yield* islandWorld();
@@ -232,6 +232,8 @@ describe("island queries and mutations", () => {
         const week = yield* world.owner.query(island.queries.week, {});
         expect(week?.today).toBe("2026-11-08");
         expect(week?.streak).toBe(3);
+        expect(week?.tryouts).toBe(1);
+        expect(week?.rewarded).toBe(false);
         expect(week?.days).toHaveLength(7);
         expect(week?.days[6]).toEqual({
           day: "2026-11-08",

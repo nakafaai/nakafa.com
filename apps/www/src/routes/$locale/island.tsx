@@ -66,6 +66,7 @@ function IslandPage() {
         <Suspense fallback={null}>
           <IslandGame
             address={screen.address}
+            badges={screen.badges}
             edits={screen.edits}
             level={screen.level}
             onLeave={() => {

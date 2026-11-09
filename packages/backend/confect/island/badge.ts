@@ -1,10 +1,16 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
+  runBack,
+  TRYOUT_KINDS,
+  tryoutDays,
+} from "@repo/backend/confect/island/run";
+import {
   type Badge,
   DAY_GRANTS,
   SubjectBadge,
 } from "@repo/backend/confect/island/schema";
+import { STREAK_DAYS } from "@repo/backend/confect/island/week";
 import {
   Array as Arr,
   DateTime,
@@ -54,7 +60,7 @@ const foughtEnough = Effect.fn("island.badge.fought")(function* (grant: Grant) {
   const database = yield* DatabaseReader;
   const sets = yield* database
     .table("islandAwards")
-    .index("by_userId_and_kind", (query) =>
+    .index("by_userId_and_kind_and_day", (query) =>
       query.eq("userId", grant.userId).eq("kind", "set")
     )
     .take(FIGHTER_SETS)
@@ -78,25 +84,43 @@ const studiedEnough = Effect.fn("island.badge.studied")(function* (
   return lessons.length >= SUBJECT_LESSONS;
 });
 
+/** Whether the owner tried a try-out on each of the last seven days, the grant's own day included. */
+const triedEnough = Effect.fn("island.badge.tried")(function* (grant: Grant) {
+  const days = yield* tryoutDays(grant.userId, grant.day);
+  return runBack(days, grant.day) >= STREAK_DAYS;
+});
+
+/** Whether a grant is a try-out's: a closed section or a finished set. */
+function isTryout(grant: Pick<Grant, "kind">) {
+  return Arr.contains(TRYOUT_KINDS, grant.kind);
+}
+
 /**
  * The badges the grant just written completes, leaving out those the island
- * already holds. A rule reads the ledger only when this grant can change its
- * answer: Explorer on the day's first grant, Fighter on a set, a subject badge
- * on a lesson of that subject.
+ * already holds. `before` is what the day held before this grant. A rule
+ * reads the ledger only when this grant can change its answer: Explorer on
+ * the day's first grant, Fighter on a set, Streak on the day's first try-out
+ * while it is not held, a subject badge on a lesson of that subject.
  */
 export const completedBadges = Effect.fn("island.badge.completed")(function* (
   grant: Grant,
-  firstOfDay: boolean,
+  before: readonly Pick<Grant, "kind">[],
   held: readonly Badge[]
 ) {
-  const explorer = firstOfDay && (yield* exploredEnough(grant));
+  const explorer = before.length === 0 && (yield* exploredEnough(grant));
   const fighter = grant.kind === "set" && (yield* foughtEnough(grant));
+  const streak =
+    isTryout(grant) &&
+    !Arr.some(before, isTryout) &&
+    !Arr.contains(held, "streak") &&
+    (yield* triedEnough(grant));
   const subject = Schema.decodeUnknownOption(SubjectBadge)(grant.subject);
   const studied =
     Option.isSome(subject) && (yield* studiedEnough(grant, subject.value));
   const earned: readonly Badge[] = [
     ...(explorer ? ["explorer" as const] : []),
     ...(fighter ? ["fighter" as const] : []),
+    ...(streak ? ["streak" as const] : []),
     ...(studied ? Option.toArray(subject) : []),
   ];
   return Arr.filter(earned, (badge) => !Arr.contains(held, badge));

@@ -1,7 +1,13 @@
 import type { Ref } from "@confect/core";
-import { Fire02Icon, StarIcon } from "@hugeicons/core-free-icons";
+import {
+  DropletsIcon,
+  Fire02Icon,
+  Medal01Icon,
+  StarIcon,
+} from "@hugeicons/core-free-icons";
 import type contents from "@repo/backend/confect/_generated/refs/contents";
 import type island from "@repo/backend/confect/_generated/refs/island";
+import { STREAK_DAYS } from "@repo/backend/confect/island/week";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { TileLook } from "@repo/design-system/lib/look";
 import { cva } from "class-variance-authority";
@@ -24,6 +30,16 @@ const dayVariants = cva(
     },
   }
 );
+
+/** One day of the try-out run toward the fountain: done, or still ahead. */
+const runVariants = cva("h-1.5 rounded-full", {
+  variants: {
+    done: { false: "bg-muted", true: "bg-sky-500" },
+  },
+});
+
+/** The days of the try-out run, first to seventh. */
+const RUN_DAYS = Arr.makeBy(STREAK_DAYS, (index) => index + 1);
 
 type Week = NonNullable<Ref.Returns<typeof island.queries.week>>;
 
@@ -60,9 +76,51 @@ function WeekDay({ day, today }: { day: Week["days"][number]; today: string }) {
 }
 
 /**
+ * The week of try-outs that earns the fountain and the Streak badge (ADR 0047,
+ * D19): the fountain, a mark for each of its seven days, done or ahead, and
+ * the days done; once earned, the badge.
+ */
+function TryoutRun({ week }: { week: Week | undefined }) {
+  const t = useTranslations("Home");
+  const rewarded = week?.rewarded ?? false;
+  const done = rewarded
+    ? STREAK_DAYS
+    : Math.min(week?.tryouts ?? 0, STREAK_DAYS);
+  return (
+    <div className="flex items-center gap-3">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+        <HugeIcons
+          className="size-5"
+          icon={rewarded ? Medal01Icon : DropletsIcon}
+        />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <p className="text-sm">
+          {rewarded ? t("tryout-earned") : t("tryout-reward")}
+        </p>
+        <ol aria-hidden="true" className="grid grid-cols-7 gap-1">
+          {Arr.map(RUN_DAYS, (day) => (
+            <RunMark done={day <= done} key={day} />
+          ))}
+        </ol>
+      </div>
+      <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+        {done}/{STREAK_DAYS}
+      </span>
+    </div>
+  );
+}
+
+/** One day of the try-out run. */
+function RunMark({ done }: { done: boolean }) {
+  return <li className={runVariants({ done })} />;
+}
+
+/**
  * The learner's week, compact under their island (ADR 0047): the run of days
- * in a row they learned, a mark for each day of this week, what they learned
- * this week and the Stars it gave, and the lesson to pick up again.
+ * in a row they learned, a mark for each day of this week, the try-out run
+ * toward the fountain, what they learned this week and the Stars it gave, and
+ * the lesson to pick up again.
  */
 export function HomeWeek({
   look,
@@ -93,6 +151,7 @@ export function HomeWeek({
           <WeekDay day={day} key={day.day} today={week?.today ?? ""} />
         ))}
       </ol>
+      <TryoutRun week={week} />
       <p className="text-muted-foreground text-sm">
         {t("week-summary", {
           lessons: total("lessons"),

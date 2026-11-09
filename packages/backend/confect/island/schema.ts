@@ -50,10 +50,11 @@ export const SubjectBadge = Schema.Literals([
   "biology",
 ]);
 
-/** Every badge an island can earn (ADR 0042, D11). */
+/** Every badge an island can earn (ADR 0042, D11, and ADR 0047, D19). */
 export const Badge = Schema.Literals([
   "explorer",
   "fighter",
+  "streak",
   ...SubjectBadge.literals,
 ]);
 export type Badge = typeof Badge.Type;
