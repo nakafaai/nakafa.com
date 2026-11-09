@@ -20,6 +20,7 @@ const messageNamespaceFlags = {
   DataTable: true,
   Document: true,
   Editor: true,
+  Emoji: true,
   Exams: true,
   Faq: true,
   Holy: true,
