@@ -15,7 +15,7 @@ import { Array as Arr, Effect, Layer, Option } from "effect";
 import {
   readFeaturedTryout,
   readTryoutCountryPage,
-  readTryoutExamPage,
+  readTryoutGroupPage,
   readTryoutHubPage,
   readTryoutMetadata,
   readTryoutSectionPage,
@@ -65,8 +65,10 @@ vi.mock("@/env", () => ({
 /** The routes of the fixture catalog in one app locale, as the fixture snapshot writes them. */
 const COUNTRY = (locale: string) => `try-out/indonesia-${locale}`;
 const EXAM = (locale: string) => `try-out/indonesia/snbt-${locale}`;
-const TRACK = (locale: string) => `try-out/indonesia/snbt/2027-${locale}`;
-const SET = (locale: string) => `try-out/indonesia/snbt/2027/set-1-${locale}`;
+const GROUP = (locale: string) => `try-out/indonesia/snbt/2027-${locale}`;
+const TRACK = (locale: string) => `try-out/indonesia/snbt/2027/utbk-${locale}`;
+const SET = (locale: string) =>
+  `try-out/indonesia/snbt/2027/utbk/set-1-${locale}`;
 const SECTION = (locale: string) => `${SET(locale)}/section-a`;
 
 beforeEach(() => {
@@ -86,7 +88,7 @@ describe("immutable try-out application catalog", () => {
             [
               readTryoutHubPage("en"),
               readTryoutCountryPage("en", COUNTRY("en")),
-              readTryoutExamPage("en", EXAM("en")),
+              readTryoutGroupPage("en", GROUP("en")),
               readTryoutTrackPage("en", TRACK("en")),
               readTryoutSetPage("en", SET("en")),
               readTryoutSectionPage("en", SECTION("en")),
@@ -106,7 +108,7 @@ describe("immutable try-out application catalog", () => {
         for (const ref of [
           refs.public.tryouts.queries.catalog.getHubPage,
           refs.public.tryouts.queries.catalog.getCountryPage,
-          refs.public.tryouts.queries.catalog.getExamPage,
+          refs.public.tryouts.queries.catalog.getGroupPage,
           refs.public.tryouts.queries.catalog.getTrackPage,
           refs.public.tryouts.queries.catalog.getSetPage,
           refs.public.tryouts.queries.catalog.getSectionPage,
@@ -131,7 +133,7 @@ describe("immutable try-out application catalog", () => {
           [
             readTryoutHubPage(locale),
             readTryoutCountryPage(locale, COUNTRY(locale)),
-            readTryoutExamPage(locale, EXAM(locale)),
+            readTryoutGroupPage(locale, GROUP(locale)),
             readTryoutTrackPage(locale, TRACK(locale)),
             readTryoutSetPage(locale, SET(locale)),
             readTryoutSectionPage(locale, SECTION(locale)),
@@ -144,13 +146,15 @@ describe("immutable try-out application catalog", () => {
         });
         expect(Option.getOrThrow(pages[1])).toMatchObject({
           country: { publicPath: COUNTRY(locale) },
-          exams: [{ publicPath: EXAM(locale) }],
+          exams: [{ entryPath: GROUP(locale), publicPath: EXAM(locale) }],
         });
         expect(pages[2]).toMatchObject({
           exam: { publicPath: EXAM(locale) },
+          group: { publicPath: GROUP(locale) },
           tracks: [{ publicPath: TRACK(locale) }],
         });
         expect(pages[3]).toMatchObject({
+          group: { publicPath: GROUP(locale) },
           track: { publicPath: TRACK(locale) },
         });
         expect(pages[4]).toMatchObject({

@@ -59,13 +59,14 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
     (document) => document.content_id
   );
 });
-/** Builds one public search document and excludes internal-entry sections. */
+/** Builds one public search document and excludes internal-entry sections and exams. */
 function toTryoutSearchDocument(
   entry: TryoutCatalogEntry,
   locale: ContentSearchInput["locale"]
 ): ContentSearchDocument[] {
   const { row } = entry;
-  if (row.publicPath === undefined) {
+  // An exam has no page of its own: a link to it lands on its first group.
+  if (row.publicPath === undefined || row.kind === "exam") {
     return [];
   }
   return [

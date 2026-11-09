@@ -1,4 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
+// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
+// file is collected, so no test pays it.
+import "@repo/backend/components/betterAuth/session";
+import "@repo/backend/convex/comments/mutations";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -28,6 +33,7 @@ describe("triggers/comments/comments", () => {
     });
     const slug = "en/articles/politics/cleanup";
     const parentId = await client.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Parent",
     });
@@ -98,15 +104,18 @@ describe("triggers/comments/comments", () => {
 
     const slug = "/en/articles/politics/thread";
     const rootId = await author.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Root comment",
     });
     const replyId = await replier.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Reply to the root",
       parentId: rootId,
     });
     const nestedId = await author.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Reply to the reply",
       parentId: replyId,
@@ -132,7 +141,7 @@ describe("triggers/comments/comments", () => {
     expect(state.root).toMatchObject({ replyCount: 0 });
   });
 
-  it("deletes a whole thread and the likes on its comments, a batch at a time", async () => {
+  it("deletes a whole thread and the likes and reports on its comments, a batch at a time", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
@@ -145,10 +154,11 @@ describe("triggers/comments/comments", () => {
     });
     const slug = "en/articles/politics/thread-batches";
     const rootId = await client.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug,
       text: "Root with a long thread",
     });
-    // More replies and likes than one batch holds, so each takes several passes.
+    // More replies, likes and reports than one batch holds, so each takes several passes.
     const members = COMMENT_REPLY_CLEANUP_BATCH_SIZE + 1;
     await t.mutation(async (ctx) => {
       for (let index = 0; index < members; index += 1) {
@@ -165,6 +175,12 @@ describe("triggers/comments/comments", () => {
           commentId: rootId,
           userId: author.userId,
         });
+        await ctx.db.insert("commentReports", {
+          commentId: rootId,
+          createdAt: NOW,
+          reason: "spam",
+          userId: author.userId,
+        });
       }
     });
     await client.mutation(api.comments.mutations.deleteComment, {
@@ -174,8 +190,9 @@ describe("triggers/comments/comments", () => {
     const state = await t.query(async (ctx) => ({
       comments: await ctx.db.query("comments").collect(),
       likes: await ctx.db.query("commentLikes").collect(),
+      reports: await ctx.db.query("commentReports").collect(),
     }));
-    expect(state).toEqual({ comments: [], likes: [] });
+    expect(state).toEqual({ comments: [], likes: [], reports: [] });
   });
 
   it("tolerates deleting a reply after its parent was removed", async () => {
@@ -204,10 +221,12 @@ describe("triggers/comments/comments", () => {
     });
 
     const parentId = await author.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug: "/en/articles/politics/deleted-parent",
       text: "Parent before delete",
     });
     const replyId = await replier.mutation(api.comments.mutations.addComment, {
+      uploads: [],
       slug: "/en/articles/politics/deleted-parent",
       text: "Reply after parent delete",
       parentId,

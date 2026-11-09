@@ -49,31 +49,6 @@ const LOCALIZED_ADDRESSES: readonly MovedAddress[] = [
     permanent: true,
     source: "/settings",
   },
-  {
-    destination: "/:locale/user/settings",
-    permanent: true,
-    source: "/user/settings/developers",
-  },
-  {
-    destination: "/:locale/onboarding",
-    permanent: true,
-    source: "/onboarding/focus",
-  },
-  {
-    destination: "/:locale/onboarding",
-    permanent: true,
-    source: "/onboarding/role",
-  },
-  {
-    destination: COMPANY_SOCIAL_PROFILES.discord,
-    permanent: false,
-    source: "/discord",
-  },
-  {
-    destination: COMPANY_SOCIAL_PROFILES.discord,
-    permanent: false,
-    source: "/community",
-  },
 ];
 
 /** The redirect of one moved address, with its locale filled in and its query kept. */

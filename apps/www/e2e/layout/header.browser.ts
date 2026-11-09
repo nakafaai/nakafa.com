@@ -45,9 +45,9 @@ const publicRoutes = [
   appRoutes.quran,
   appRoutes.tryout,
   "/en/try-out/indonesia",
-  "/en/try-out/indonesia/snbt",
   "/en/try-out/indonesia/snbt/2027",
-  "/en/try-out/indonesia/snbt/2027/set-1",
+  "/en/try-out/indonesia/snbt/2027/utbk",
+  "/en/try-out/indonesia/snbt/2027/utbk/set-1",
   "/en/curriculum",
   "/en/curriculum/merdeka",
   "/en/curriculum/merdeka/class-10",
@@ -56,8 +56,8 @@ const publicRoutes = [
   "/en/articles/politics/merah-putih-cabinet-analysis",
 ];
 
-/** The try-out page of an exam, which a phone reaches from a set page's folded path. */
-const EXAM_PAGE = /\/en\/try-out\/indonesia\/snbt$/u;
+/** The try-out page of an exam's group, which a phone reaches from a set page's folded path. */
+const GROUP_PAGE = /\/en\/try-out\/indonesia\/snbt\/2027$/u;
 
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = [
@@ -68,7 +68,7 @@ const learnerRoutes = [
   "/en/user/settings/memory",
   "/en/user/settings/subscriptions",
   "/en/notifications",
-  "/en/try-out/indonesia/tka/compulsory-mathematics/set-1",
+  "/en/try-out/indonesia/tka/senior-high-school/compulsory-mathematics/set-1",
 ];
 
 /** The pages of a school host that an Owner sees without an exam: the exams and every setting. */
@@ -470,7 +470,7 @@ test("a phone opens a folded ancestor of the path with a tap", async ({
   await Effect.runPromise(
     withObservedPageErrors(
       page,
-      openRoute(page, "/en/try-out/indonesia/snbt/2027/set-1", "denied")
+      openRoute(page, "/en/try-out/indonesia/snbt/2027/utbk/set-1", "denied")
     )
   );
   const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
@@ -479,10 +479,12 @@ test("a phone opens a folded ancestor of the path with a tap", async ({
   const ancestor = await Effect.runPromise(
     activateUntilVisible(
       breadcrumb.getByRole("button"),
-      page.getByRole("menu").locator('a[href="/en/try-out/indonesia/snbt"]'),
+      page
+        .getByRole("menu")
+        .locator('a[href="/en/try-out/indonesia/snbt/2027"]'),
       readinessTimeoutMilliseconds
     )
   );
   await ancestor.click();
-  await expect(page).toHaveURL(EXAM_PAGE);
+  await expect(page).toHaveURL(GROUP_PAGE);
 });

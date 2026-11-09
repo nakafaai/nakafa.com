@@ -5,12 +5,15 @@ import { Effect } from "effect";
 import { querySnapshotContentStore } from "@/lib/content/store/query";
 
 type TryoutExamPageArgs = Ref.Args<typeof tryouts.queries.catalog.getExamPage>;
+type TryoutGroupPageArgs = Ref.Args<
+  typeof tryouts.queries.catalog.getGroupPage
+>;
 type TryoutSectionPageArgs = Ref.Args<
   typeof tryouts.queries.catalog.getSectionPage
 >;
 
 /**
- * Reads one signed exam page with its tracks, or null when the exam is not live.
+ * Reads one signed exam with its groups, or null when the exam is not live.
  * The content store answers for the release, so the catalog and the routing
  * decisions share one read of each release.
  */
@@ -20,6 +23,21 @@ export const readPublishedTryoutExamPage = Effect.fn(
   return yield* querySnapshotContentStore(
     "assessment",
     tryouts.queries.catalog.getExamPage,
+    args
+  );
+});
+
+/**
+ * Reads one signed group page with its tracks, or null when the group is not live.
+ * The content store answers for the release, so the catalog and the routing
+ * decisions share one read of each release.
+ */
+export const readPublishedTryoutGroupPage = Effect.fn(
+  "www.tryouts.readGroupPage"
+)(function* (args: TryoutGroupPageArgs) {
+  return yield* querySnapshotContentStore(
+    "assessment",
+    tryouts.queries.catalog.getGroupPage,
     args
   );
 });

@@ -2,10 +2,11 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import commentsTable from "@repo/backend/confect/_generated/tables/comments";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { CommentPhotoView } from "@repo/backend/confect/comments/photo";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 const publicCommentUserValidator = Schema.Struct({
   _id: userDataValidator.fields._id,
@@ -15,11 +16,18 @@ const publicCommentUserValidator = Schema.Struct({
   picture: userDataValidator.fields.picture,
 });
 
-/** One comment as a list shows it: its stored fields, and whether the viewer liked it. */
+/**
+ * One comment as a list shows it: its stored fields, its photos with the addresses they are read at,
+ * and whether the viewer liked it.
+ */
 const commentRowValidator = Schema.Struct({
-  ...commentsTable.Doc.fields,
+  ...Struct.omit(commentsTable.Doc.fields, ["photos"]),
   liked: Schema.Boolean,
+  photos: Schema.Array(CommentPhotoView),
 });
+
+/** The order of a page's comments: the most liked first, or the newest first. */
+export const CommentSort = Schema.Literals(["top", "newest"]);
 const commentWithUserValidator = Schema.Struct({
   ...commentRowValidator.fields,
   user: Schema.NullOr(publicCommentUserValidator),
@@ -33,9 +41,10 @@ const CommentPlace = Schema.Struct({
 });
 
 /**
- * Reads the comments of a slug and of a profile, the replies of a thread, one comment,
- * and the page that holds it. A page of each list holds bounded rows, and each row says
- * whether the viewer liked it.
+ * Reads the comments of a slug, in either order, and of a profile, the replies of a thread,
+ * one comment, the page that holds it, and how many comments a slug holds. Anyone may read
+ * them, signed in or not. A page of each list holds bounded rows, and each row says whether
+ * the viewer liked it.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -64,10 +73,20 @@ export default GroupSpec.make()
       name: "getCommentsBySlug",
       args: () => ({
         slug: Schema.String,
+        sort: CommentSort,
       }),
       item: () => commentWithUserValidator,
       error: () => AuthFailure,
     }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "getCommentCount",
+      args: () => ({
+        slug: Schema.String,
+      }),
+      returns: () => Schema.Int,
+    })
   )
   .addFunction(
     FunctionSpec.publicPaginatedQuery({

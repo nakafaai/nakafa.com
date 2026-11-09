@@ -1,4 +1,22 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
+// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
+// file is collected, so no test pays it.
+import "@repo/backend/components/betterAuth/session";
+import "@repo/backend/convex/classroom/classes";
+import "@repo/backend/convex/classroom/forum/channels";
+import "@repo/backend/convex/classroom/teachers";
+import "@repo/backend/convex/tenancy/cohorts";
+import "@repo/backend/convex/tenancy/periods";
+import "@repo/backend/convex/tenancy/placements";
+import "@repo/backend/convex/classroom/forum/messages";
+import "@repo/backend/convex/classroom/tasks";
+import "@repo/backend/convex/comments/mutations";
+import "@repo/backend/convex/emails/digest/internal";
+import "@repo/backend/convex/notifications/fanout";
+import "@repo/backend/convex/notifications/sittings";
+import "@repo/backend/convex/notifications/tasks";
+import "@repo/backend/convex/records/grades";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -291,15 +309,23 @@ describe("notifications/mail", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* school;
-        const parentId = yield* fixture
-          .as("student")
-          .mutation(addComment, { slug: SLUG, text: "Pertanyaan" });
-        yield* fixture
-          .as("teacher")
-          .mutation(addComment, { parentId, slug: SLUG, text: "Jawaban" });
-        yield* fixture
-          .as("admin")
-          .mutation(addComment, { parentId, slug: SLUG, text: "Jawaban lain" });
+        const parentId = yield* fixture.as("student").mutation(addComment, {
+          uploads: [],
+          slug: SLUG,
+          text: "Pertanyaan",
+        });
+        yield* fixture.as("teacher").mutation(addComment, {
+          uploads: [],
+          parentId,
+          slug: SLUG,
+          text: "Jawaban",
+        });
+        yield* fixture.as("admin").mutation(addComment, {
+          uploads: [],
+          parentId,
+          slug: SLUG,
+          text: "Jawaban lain",
+        });
         expect(yield* swept(fixture)).toEqual([]);
         vi.setSystemTime(TENANCY_NOW + DAY);
         const mails = yield* swept(fixture);

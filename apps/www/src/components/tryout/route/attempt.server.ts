@@ -16,6 +16,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
   function* (input: {
     readonly country: string;
     readonly exam: string;
+    readonly group: string;
     readonly locale: Locale;
     readonly set: string;
     readonly track: string;
@@ -23,6 +24,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     const route = {
       country: input.country,
       exam: input.exam,
+      group: input.group,
       locale: input.locale,
       set: input.set,
       track: input.track,
@@ -45,7 +47,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    const exam = `${page.exam.title} ${page.track.title}`;
+    const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
     return {
       // Every exam has a Set 1, so the page names its exam too.
       head: {

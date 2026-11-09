@@ -23,6 +23,8 @@ export function playActions(set: StoreApi<VisualPlay>["setState"]) {
   return {
     /** Takes the scene back to its first view, and keeps it playing if it played. */
     resetView: () => set((current) => ({ view: current.view + 1 })),
+    /** Starts the scene moving by itself, as an animation does once it first shows. */
+    play: () => set({ playing: true }),
     /** Starts the scene moving by itself, or stops it. */
     togglePlaying: () => set((current) => ({ playing: !current.playing })),
   };

@@ -10,9 +10,10 @@ import { Array as Arr, Record as Rec, Tuple } from "effect";
 import { ARTICLE_CATEGORY_ICONS } from "@/components/articles/category";
 import {
   getTryoutExamIcons,
+  getTryoutGroupIcons,
   getTryoutSubjectIcons,
-  getTryoutTrackIcons,
   TRYOUT_EXAM_ICONS,
+  TRYOUT_GRADE_ICONS,
   TRYOUT_INSTITUTION_ICONS,
   TRYOUT_SUBJECT_ICONS,
   TRYOUT_YEAR_ICONS,
@@ -53,8 +54,9 @@ const LONGEST_LIST = 8;
 /** Every pool of icons that a list draws its tiles from, with the name of its owner. */
 const POOLS = [
   Tuple.make("the spare icons", SPARE_ICONS),
-  Tuple.make("the year tracks", TRYOUT_YEAR_ICONS),
-  Tuple.make("the institution tracks", TRYOUT_INSTITUTION_ICONS),
+  Tuple.make("the year groups", TRYOUT_YEAR_ICONS),
+  Tuple.make("the grade groups", TRYOUT_GRADE_ICONS),
+  Tuple.make("the institution groups", TRYOUT_INSTITUTION_ICONS),
   ...Arr.map(PRESENTED_MATERIAL_DOMAINS, (material) =>
     Tuple.make(`the lessons of ${material}`, getLessonIcons(material))
   ),
@@ -82,7 +84,7 @@ function ownIcon(pool: Arr.NonEmptyReadonlyArray<IconSvgElement>) {
  * pool is shorter than the longest list, because it is the one place that
  * reads every map of the product that names an icon for a key: the subjects
  * and their lessons and the spare icons (`@repo/contents`), the try-out exams,
- * subjects, years, and institutions, the curriculum navigation keys, which
+ * subjects, years, grades, and institutions, the curriculum navigation keys, which
  * also name the stages of the sidebar and the search palette, and the article
  * categories. Only `apps/www` imports all of them, and of its owners the
  * try-out catalog holds the most icons, so the rule sits with its lookups.
@@ -94,6 +96,7 @@ describe("icons of the product", () => {
       Rec.values(TRYOUT_EXAM_ICONS),
       Rec.values(TRYOUT_SUBJECT_ICONS),
       TRYOUT_YEAR_ICONS,
+      TRYOUT_GRADE_ICONS,
       TRYOUT_INSTITUTION_ICONS,
       SPARE_ICONS,
       Rec.values(CURRICULUM_NAVIGATION_ICONS),
@@ -130,28 +133,16 @@ describe("try-out icons", () => {
     expect(Arr.dedupe(icons)).toHaveLength(keys.length);
   });
 
-  it("gives a subject track the icon of its section", () => {
-    for (const key of TKA_SUBJECTS) {
-      expect(getTryoutTrackIcons("subject", key)).toEqual(
-        getTryoutSubjectIcons(key)
-      );
-    }
-  });
-
   it("reuses the icon of a curriculum subject for a subject that is one", () => {
     expect(getTryoutSubjectIcons("physics")).toEqual(
       getMaterialIcons("physics")
     );
   });
 
-  it("gives year tracks drawings of time and institution tracks buildings, whatever their key", () => {
-    expect(getTryoutTrackIcons("year", "2027")).toBe(TRYOUT_YEAR_ICONS);
-    expect(getTryoutTrackIcons("institution", "studienkolleg")).toBe(
-      TRYOUT_INSTITUTION_ICONS
-    );
-    expect(getTryoutTrackIcons("institution", "physics")).toBe(
-      TRYOUT_INSTITUTION_ICONS
-    );
+  it("gives the groups of an exam the icons of its axis: time for a year, schools for a grade, buildings for an institution", () => {
+    expect(getTryoutGroupIcons("year")).toBe(TRYOUT_YEAR_ICONS);
+    expect(getTryoutGroupIcons("grade")).toBe(TRYOUT_GRADE_ICONS);
+    expect(getTryoutGroupIcons("institution")).toBe(TRYOUT_INSTITUTION_ICONS);
   });
 
   it("offers the spare icons for an exam or a subject that it does not know, also under the name of an object method", () => {
@@ -159,7 +150,6 @@ describe("try-out icons", () => {
       expect(getTryoutExamIcons(key)).toBe(SPARE_ICONS);
       expect(getTryoutSubjectIcons(key)).toBe(SPARE_ICONS);
     }
-    expect(getTryoutTrackIcons("subject", "unknown-track")).toBe(SPARE_ICONS);
   });
 
   it("gives a set of sections that it does not know one icon each", () => {
@@ -174,10 +164,8 @@ describe("try-out icons", () => {
     expect(Arr.dedupe(icons)).toHaveLength(SNBT_SECTIONS.length);
   });
 
-  it("gives year tracks one drawing of time each, as many as the longest list", () => {
-    const years = Arr.makeBy(LONGEST_LIST, () =>
-      getTryoutTrackIcons("year", "2027")
-    );
+  it("gives year groups one drawing of time each, as many as the longest list", () => {
+    const years = Arr.makeBy(LONGEST_LIST, () => getTryoutGroupIcons("year"));
     const icons = iconsOf(years);
 
     expect(Arr.dedupe(icons)).toHaveLength(LONGEST_LIST);

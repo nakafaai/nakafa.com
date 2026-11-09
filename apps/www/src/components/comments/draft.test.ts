@@ -12,6 +12,7 @@ const root = {
   _id: commentId("root"),
   likeCount: 0,
   liked: false,
+  photos: [],
   replyCount: 0,
   replyToUser: null,
   slug: "lesson",

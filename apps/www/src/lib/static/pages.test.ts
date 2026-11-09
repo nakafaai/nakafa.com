@@ -24,9 +24,13 @@ vi.mock("@/lib/sitemap/entries", () => ({
 describe("pages the sitemap leaves out", () => {
   it("leaves out a try-out section, and no page above it or of another family", () => {
     expect(
-      isUnlistedPath("/en/try-out/indonesia/snbt/2027/set-1/general-reasoning")
+      isUnlistedPath(
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning"
+      )
     ).toBe(true);
-    expect(isUnlistedPath("/en/try-out/indonesia/snbt/2027/set-1")).toBe(false);
+    expect(isUnlistedPath("/en/try-out/indonesia/snbt/2027/utbk/set-1")).toBe(
+      false
+    );
     expect(isUnlistedPath("/en/subjects/a/b/c/d/e")).toBe(false);
   });
 });
@@ -47,7 +51,7 @@ describe("static page paths", () => {
         "/en/subjects/mathematics/algebra/linear",
         "/en/try-out",
         "/en/try-out/indonesia",
-        "/en/try-out/indonesia/snbt",
+        "/en/try-out/indonesia/snbt/2027",
         "/id/kurikulum/merdeka",
       ],
     });
@@ -65,28 +69,30 @@ describe("static page paths", () => {
       "/en/subjects/mathematics/algebra/linear",
       "/en/try-out",
       "/en/try-out/indonesia",
-      "/en/try-out/indonesia/snbt",
+      "/en/try-out/indonesia/snbt/2027",
       "/id/auth",
       "/id/kurikulum/merdeka",
     ]);
   });
 
-  it("leaves out the search screen and keeps every try-out track, set and section", () => {
+  it("leaves out the search screen and keeps every try-out group, track, set and section", () => {
     const paths = selectStaticPagePaths({
       locales: ["en"],
       sitemapPaths: [
         "/en/search",
         "/en/try-out/indonesia/snbt/2027",
-        "/en/try-out/indonesia/snbt/2027/set-1",
-        "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+        "/en/try-out/indonesia/snbt/2027/utbk",
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1",
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning",
       ],
     });
 
     expect(paths).toEqual([
       "/en/auth",
       "/en/try-out/indonesia/snbt/2027",
-      "/en/try-out/indonesia/snbt/2027/set-1",
-      "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+      "/en/try-out/indonesia/snbt/2027/utbk",
+      "/en/try-out/indonesia/snbt/2027/utbk/set-1",
+      "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning",
     ]);
   });
 

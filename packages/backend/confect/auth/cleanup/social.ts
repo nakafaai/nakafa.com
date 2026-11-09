@@ -4,7 +4,9 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   cleanupCommentLikes,
+  cleanupCommentReports,
   cleanupComments,
+  cleanupCommentUploads,
 } from "@repo/backend/confect/auth/cleanup/comments";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { deleteFile } from "@repo/backend/confect/bucket/file";
@@ -133,6 +135,12 @@ export const cleanupUserSocialData = Effect.fn(
     return true;
   }
   if (yield* cleanupCommentLikes(userId)) {
+    return true;
+  }
+  if (yield* cleanupCommentReports(userId)) {
+    return true;
+  }
+  if (yield* cleanupCommentUploads(userId)) {
     return true;
   }
   if (yield* cleanupReplyRows(userId)) {

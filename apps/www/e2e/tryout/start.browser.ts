@@ -23,7 +23,7 @@ const FRAMES_KEY = "nakafaStartFrames";
 const NAMES_KEY = "nakafaActionNames";
 
 /** The set of the sections below, whose start lands on its first section. */
-const SET_HREF = "/en/try-out/indonesia/snbt/2027/set-1";
+const SET_HREF = "/en/try-out/indonesia/snbt/2027/utbk/set-1";
 
 /** An address that names a running attempt. */
 const ATTEMPT_ADDRESS = /attemptId=/u;
@@ -43,17 +43,17 @@ const SCRIPTS = /\/assets\/.*\.js/u;
  */
 const SECTIONS = [
   {
-    href: "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+    href: "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning",
     messages: en,
     title: "General Reasoning",
   },
   {
-    href: "/id/try-out/indonesia/snbt/2027/set-1/penalaran-umum",
+    href: "/id/try-out/indonesia/snbt/2027/utbk/set-1/penalaran-umum",
     messages: id,
     title: "Penalaran Umum",
   },
   {
-    href: "/de/try-out/indonesien/snbt/2027/aufgabensatz-1/allgemeines-schlussfolgern",
+    href: "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1/allgemeines-schlussfolgern",
     messages: de,
     title: "Allgemeines Schlussfolgern",
   },

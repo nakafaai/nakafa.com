@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import {
   readTryoutCountryHandler,
-  readTryoutExamHandler,
+  readTryoutGroupHandler,
   readTryoutTrackHandler,
   readTryoutTrackListHandler,
 } from "@/components/tryout/route/catalog.server";
@@ -16,7 +16,7 @@ const catalog = vi.hoisted(() => ({
   getOgUrl: vi.fn(),
   readServerTranslator: vi.fn(),
   readTryoutCountryPage: vi.fn(),
-  readTryoutExamPage: vi.fn(),
+  readTryoutGroupPage: vi.fn(),
   readTryoutHubPage: vi.fn(),
   readTryoutMetadata: vi.fn(),
   readTryoutSetList: vi.fn(),
@@ -28,7 +28,7 @@ vi.mock("@tanstack/react-start/server", () => ({
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutCountryPage: catalog.readTryoutCountryPage,
-  readTryoutExamPage: catalog.readTryoutExamPage,
+  readTryoutGroupPage: catalog.readTryoutGroupPage,
   readTryoutHubPage: catalog.readTryoutHubPage,
   readTryoutMetadata: catalog.readTryoutMetadata,
   readTryoutSetList: catalog.readTryoutSetList,
@@ -49,8 +49,8 @@ vi.mock("@repo/internationalization/src/translator", () => ({
 }));
 
 const COUNTRY = "try-out/id";
-const EXAM = "try-out/id/snbt";
-const TRACK = "try-out/id/snbt/2027";
+const GROUP = "try-out/id/snbt/2027";
+const TRACK = "try-out/id/snbt/2027/utbk";
 
 const countryPage = { country: { countryKey: "id" }, exams: [] };
 const hub = { countries: [], sourceRevision: undefined };
@@ -73,7 +73,7 @@ beforeEach(() => {
   catalog.readTryoutCountryPage.mockReturnValue(
     Effect.succeedSome(countryPage)
   );
-  catalog.readTryoutExamPage.mockReturnValue(Effect.void);
+  catalog.readTryoutGroupPage.mockReturnValue(Effect.void);
   catalog.readTryoutTrackPage.mockReturnValue(Effect.void);
 });
 
@@ -90,15 +90,15 @@ describe("try-out catalog server functions", () => {
     );
   });
 
-  it("answers one exam through its server handler", async () => {
+  it("answers one group through its server handler", async () => {
     await expect(
-      readTryoutExamHandler({
-        data: { country: "id", exam: "snbt", locale: "en" },
+      readTryoutGroupHandler({
+        data: { country: "id", exam: "snbt", group: "2027", locale: "en" },
       })
     ).resolves.toEqual({ kind: "notFound" });
-    expect(catalog.readTryoutExamPage).toHaveBeenCalledExactlyOnceWith(
+    expect(catalog.readTryoutGroupPage).toHaveBeenCalledExactlyOnceWith(
       "en",
-      EXAM
+      GROUP
     );
   });
 
@@ -108,9 +108,10 @@ describe("try-out catalog server functions", () => {
         data: {
           country: "id",
           exam: "snbt",
+          group: "2027",
           locale: "en",
           search: { direction: "asc", sort: "order", status: "all" },
-          track: "2027",
+          track: "utbk",
         },
       })
     ).resolves.toEqual({ kind: "notFound" });

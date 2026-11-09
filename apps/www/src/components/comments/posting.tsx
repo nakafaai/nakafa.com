@@ -71,6 +71,7 @@ export function usePostComment() {
                 save({
                   slug: post.slug,
                   text: post.text,
+                  uploads: [],
                   ...(post.parent === null
                     ? {}
                     : { parentId: post.parent._id }),

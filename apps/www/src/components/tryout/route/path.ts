@@ -7,7 +7,10 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /** Route coordinates of an href; each one is optional because a href can omit any of them. */
 type TryoutHrefInput = Partial<
-  Pick<TryoutSectionRoute, "country" | "exam" | "section" | "set" | "track">
+  Pick<
+    TryoutSectionRoute,
+    "country" | "exam" | "group" | "section" | "set" | "track"
+  >
 >;
 
 const ATTEMPT_ID_PARAM = "attemptId";
@@ -28,12 +31,13 @@ type TryoutAttemptCapability = typeof TryoutAttemptCapabilitySchema.Type;
 export function getTryoutPublicPath({
   country,
   exam,
+  group,
   section,
   set,
   track,
 }: TryoutHrefInput) {
   const segments = Arr.filter(
-    ["try-out", country, exam, track, set, section],
+    ["try-out", country, exam, group, track, set, section],
     (segment): segment is string => Boolean(segment)
   );
 
@@ -52,19 +56,23 @@ export function getTryoutPublicPathHref(publicPath: string) {
 
 /**
  * The typed target of a try-out public path. Its segments after `try-out` name
- * the country, exam, track, set and section, in that order, so the depth of the
- * path picks the route. An empty segment, or a path of any other shape, names no
- * try-out page and has no target.
+ * the country, exam, group, track, set and section, in that order, so the depth
+ * of the path picks the route. An exam has no page of its own: a link to it
+ * lands on its first group, so an exam path has no target. An empty segment, or
+ * a path of any other shape, names no try-out page and has no target either.
  */
 export function getTryoutPublicPathTarget(
   publicPath: string
 ): Option.Option<LinkTarget> {
-  const [root, country, exam, track, set, section, ...rest] =
+  const [root, country, exam, group, track, set, section, ...rest] =
     publicPath.split("/");
   if (
     root !== "try-out" ||
     rest.length > 0 ||
-    Arr.some([country, exam, track, set, section], (segment) => segment === "")
+    Arr.some(
+      [country, exam, group, track, set, section],
+      (segment) => segment === ""
+    )
   ) {
     return Option.none();
   }
@@ -78,31 +86,34 @@ export function getTryoutPublicPathTarget(
       to: "/$locale/try-out/$country",
     } satisfies LinkTarget);
   }
+  if (group === undefined) {
+    return Option.none();
+  }
   if (track === undefined) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam },
-      to: "/$locale/try-out/$country/$exam",
+      params: { country, exam, group },
+      to: "/$locale/try-out/$country/$exam/$group",
     } satisfies LinkTarget);
   }
   if (set === undefined) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, track },
-      to: "/$locale/try-out/$country/$exam/$track",
+      params: { country, exam, group, track },
+      to: "/$locale/try-out/$country/$exam/$group/$track",
     } satisfies LinkTarget);
   }
   if (section === undefined) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, set, track },
-      to: "/$locale/try-out/$country/$exam/$track/$set",
+      params: { country, exam, group, set, track },
+      to: "/$locale/try-out/$country/$exam/$group/$track/$set",
     } satisfies LinkTarget);
   }
   return Option.some({
     from: LOCALE_ROUTE,
-    params: { country, exam, section, set, track },
-    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
+    params: { country, exam, group, section, set, track },
+    to: "/$locale/try-out/$country/$exam/$group/$track/$set/$section",
   } satisfies LinkTarget);
 }
 
@@ -115,12 +126,13 @@ function getTryoutAttemptTarget(
   publicPath: string,
   attemptId: string
 ): Option.Option<LinkTarget> {
-  const [root, country, exam, track, set, section, ...rest] =
+  const [root, country, exam, group, track, set, section, ...rest] =
     publicPath.split("/");
   if (
     root !== "try-out" ||
     !country ||
     !exam ||
+    !group ||
     !track ||
     !set ||
     rest.length > 0
@@ -130,16 +142,16 @@ function getTryoutAttemptTarget(
   if (!section) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, set, track },
+      params: { country, exam, group, set, track },
       search: { [ATTEMPT_ID_PARAM]: attemptId },
-      to: "/$locale/try-out/$country/$exam/$track/$set",
+      to: "/$locale/try-out/$country/$exam/$group/$track/$set",
     } satisfies LinkTarget);
   }
   return Option.some({
     from: LOCALE_ROUTE,
-    params: { country, exam, section, set, track },
+    params: { country, exam, group, section, set, track },
     search: { [ATTEMPT_ID_PARAM]: attemptId },
-    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
+    to: "/$locale/try-out/$country/$exam/$group/$track/$set/$section",
   } satisfies LinkTarget);
 }
 

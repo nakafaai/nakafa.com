@@ -15,9 +15,9 @@ function selectionIntegrity(message: string) {
 
 /**
  * Reads the set-local catalog a set or section page needs: the row at the path, the set it is or
- * belongs to, the set's sections in their authored order, and its track and exam, without reading the
- * rest of the locale. A set without its country, exam, or track is a broken snapshot. A path that
- * names no set or section has none.
+ * belongs to, the set's sections in their authored order, and its track, group, and exam, without
+ * reading the rest of the locale. A set without its country, exam, track, or group is a broken
+ * snapshot. A path that names no set or section has none.
  */
 export const readTryoutSetSelection = Effect.fn(
   "tryouts.catalog.readSetSelection"
@@ -79,8 +79,19 @@ export const readTryoutSetSelection = Effect.fn(
   if (Option.isNone(track)) {
     return yield* selectionIntegrity("A try-out set lost its track.");
   }
+  const group = yield* readCatalogNode(input.snapshotId, {
+    appLocale: input.appLocale,
+    countryKey: keys.countryKey,
+    examKey: keys.examKey,
+    groupKey: track.value.groupKey,
+    kind: "group",
+  });
+  if (Option.isNone(group)) {
+    return yield* selectionIntegrity("A try-out track lost its group.");
+  }
   return {
     exam: exam.value,
+    group: group.value,
     row: keys,
     sections,
     set,

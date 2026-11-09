@@ -414,16 +414,11 @@ decision K15 of 13 October 2026, restated in the School blueprint revision 11 of
   under 18 joins the school member's rule in `profileAccess`, and this section
   changes with it.
 - A comment shows no link to the profile of its author.
-- The retired address `/{locale}/user/{id}` and its `chat` tab answer 308 to the
-  username address, and only to the account that holds the id: the proxy reads
-  the session of the request, and any other request falls to route ownership
-  and is not found, so the redirect never shows the username of an account to
-  someone else. The id address is retired for good. The answer is permanent
-  even though the username it names can change, so a browser that kept it after
-  a rename lands on the old name, which is not found (or is the page of the
-  account that holds the name now). A profile has no Markdown version, so a
-  request for the retired address with `.md` or `.mdx` is not redirected and
-  ends as not found, as it does for anyone else.
+- The retired address `/{locale}/user/{id}` and its `chat` tab are not found for
+  everyone, the account that holds the id included. Until 8 November 2026 they
+  answered 308 to the username address for that account alone; in the 15 days
+  of Cloudflare request data the redirect answered no request, and neither
+  Google nor Bing showed the address, so the redirect was deleted.
 
 ### Naming The Accounts Made Before
 

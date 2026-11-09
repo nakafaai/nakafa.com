@@ -1,6 +1,7 @@
 import registeredFunctions from "../../confect/_generated/registeredFunctions/comments/queries";
 
 export const getComment = registeredFunctions.getComment;
+export const getCommentCount = registeredFunctions.getCommentCount;
 export const getCommentPlace = registeredFunctions.getCommentPlace;
 export const getCommentReplies = registeredFunctions.getCommentReplies;
 export const getCommentsBySlug = registeredFunctions.getCommentsBySlug;
