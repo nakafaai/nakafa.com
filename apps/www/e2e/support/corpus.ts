@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 
 /**
  * Public content routes the acceptance suite pins, keyed by locale.
@@ -66,4 +66,4 @@ export const pinnedRoutes = {
     en: "/en/try-out/indonesia/snbt/2027/utbk",
     id: "/id/try-out/indonesia/snbt/2027/utbk",
   },
-} satisfies Record<string, Record<AppLocaleCode, string>>;
+} satisfies Record<string, Record<ActiveAppLocaleCode, string>>;

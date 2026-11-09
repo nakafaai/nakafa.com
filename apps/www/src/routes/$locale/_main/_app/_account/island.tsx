@@ -31,21 +31,29 @@ export const Route = createFileRoute("/$locale/_main/_app/_account/island")({
  */
 const STARTER_ISLAND: Pick<
   NonNullable<Ref.Returns<typeof island.queries.own>>,
+  | "badges"
   | "layout"
   | "learned"
+  | "level"
   | "lifetime"
   | "materials"
+  | "size"
   | "stars"
   | "timeZone"
   | "version"
+  | "visibility"
   | "watered"
 > = {
+  badges: [],
   layout: STARTER_LAYOUT,
+  level: 1,
   lifetime: 0,
   materials: NO_MATERIALS,
+  size: growthOf(0).size,
   stars: 0,
   timeZone: "UTC",
   version: 0,
+  visibility: "private",
 };
 
 /**
@@ -54,7 +62,7 @@ const STARTER_ISLAND: Pick<
  * a learner whose first visit is opening it now, which is what that visit makes.
  */
 function IslandPage() {
-  const { island: preloaded, name } = Route.useLoaderData();
+  const { island: preloaded, name, username } = Route.useLoaderData();
   const live = usePreloadedQueryResult(island.queries.own, {}, preloaded);
   const shown =
     QueryResult.isSuccess(live) && live.value !== null
@@ -63,16 +71,20 @@ function IslandPage() {
   return (
     <IslandContext
       value={{
+        badges: shown.badges.length,
         layout: shown.layout,
+        level: shown.level,
         owner: Option.some({
           learned: Option.fromNullishOr(shown.learned),
-          level: growthOf(shown.lifetime).level,
+          lifetime: shown.lifetime,
           materials: shown.materials,
           stars: shown.stars,
+          username: Option.fromNullishOr(username),
           version: shown.version,
+          visibility: shown.visibility,
           watered: Option.fromNullishOr(shown.watered),
         }),
-        size: growthOf(shown.lifetime).size,
+        size: shown.size,
         timeZone: shown.timeZone,
       }}
     >
@@ -82,11 +94,7 @@ function IslandPage() {
           <LayoutMaterialContent>
             <IslandHeader />
             <LayoutContent className="py-6">
-              <IslandFrame
-                lifetime={shown.lifetime}
-                name={name}
-                stars={shown.stars}
-              />
+              <IslandFrame name={name} />
             </LayoutContent>
           </LayoutMaterialContent>
         </LayoutMaterial>

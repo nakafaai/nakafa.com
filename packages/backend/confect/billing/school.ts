@@ -19,16 +19,16 @@ import {
   SchoolOrder,
   schoolPeriod,
 } from "@repo/backend/confect/billing/quote";
-import {
-  billingCurrencyFor,
-  xenditTakesIndonesia,
-} from "@repo/backend/confect/billing/route";
-import type { BillingRail } from "@repo/backend/confect/billing/schema";
+import { xenditTakesIndonesia } from "@repo/backend/confect/billing/route";
 import {
   BillingRowMissing,
   SchoolPlanMissing,
   schoolPlanMissingCode,
 } from "@repo/backend/confect/billing/spec";
+import {
+  currencyOfCountry,
+  railOfCountry,
+} from "@repo/backend/confect/country/registry";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Clock, Duration, Effect, Option, Result } from "effect";
@@ -41,7 +41,7 @@ import { Array as Arr, Clock, Duration, Effect, Option, Result } from "effect";
 export const requestInvoiceSession = Effect.fn(
   "billing.school.requestInvoiceSession"
 )(function* (tenant: TenantsDoc, invoiceId: Docs["billingInvoices"]["_id"]) {
-  if (schoolRail(tenant.country) !== "xendit") {
+  if (railOfCountry(tenant.country) !== "xendit") {
     return;
   }
   if (!(yield* xenditTakesIndonesia().pipe(Effect.orDie))) {
@@ -63,19 +63,14 @@ const SCHOOL_GRANT_LIMIT = 64;
 /** The most open invoices of one school read at once. A school holds one whose period runs, and a few ended unpaid. */
 const OPEN_INVOICE_LIMIT = 16;
 
-/** The rail a school pays through, fixed when its account is made: Xendit in Indonesia, Polar seats elsewhere. */
-export function schoolRail(country: string): BillingRail {
-  return country === "ID" ? "xendit" : "polar";
-}
-
 /** The billing account of one school, made on first use in the school's country and currency. */
 export const ensureSchoolAccount = Effect.fn("billing.school.ensureAccount")(
   function* (tenant: TenantsDoc) {
     return yield* ensureAccount({
       owner: { kind: "tenant", tenantId: tenant._id },
-      rail: schoolRail(tenant.country),
+      rail: railOfCountry(tenant.country),
       country: tenant.country,
-      currency: billingCurrencyFor(tenant.country),
+      currency: currencyOfCountry(tenant.country),
     });
   }
 );

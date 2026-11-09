@@ -4,7 +4,6 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { scheduleSchoolProjection } from "@repo/backend/confect/billing/grants";
 import { nextInvoiceNumber } from "@repo/backend/confect/billing/numbering";
-import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import {
   applyInvoicePaid,
   ensureSchoolAccount,
@@ -14,6 +13,7 @@ import {
   InvoiceNotFound,
   TenantNotFound,
 } from "@repo/backend/confect/billing/spec";
+import { currencyOfCountry } from "@repo/backend/confect/country/registry";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { Clock, Duration, Effect, Option, Schema } from "effect";
@@ -181,7 +181,7 @@ export const issueContractInvoice = Effect.fn("billing.contracts.issueInvoice")(
     const number = yield* nextInvoiceNumber();
     const now = yield* Clock.currentTimeMillis;
     const total = contract.seats * contract.unitAmount;
-    const currency = billingCurrencyFor(tenant.country);
+    const currency = currencyOfCountry(tenant.country);
     const invoiceId = yield* (yield* DatabaseWriter)
       .table("billingInvoices")
       .insert({

@@ -8,6 +8,7 @@ import {
   projectVisualMeasure,
   projectVisualPoint,
   resolveVisualProjection,
+  sampleProjector,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 function plane(x: PlaneVisual["frame"]["x"], y = x): PlaneVisual {
@@ -108,5 +109,18 @@ describe("MathVisual normalization", () => {
       y: -5,
       z: -5,
     });
+  });
+
+  it("projects sampled points through the same map as authored points", () => {
+    const scene = plane({ min: -2, max: 8 }, { min: -1, max: 3 });
+    const projection = resolveVisualProjection(scene);
+    const project = sampleProjector(projection);
+    const point = { x: 3.25, y: -0.5, z: 0 };
+    const exact = projectVisualPoint(point, projection);
+    const sampled = project(point);
+
+    expect(sampled.x).toBeCloseTo(exact.x, 12);
+    expect(sampled.y).toBeCloseTo(exact.y, 12);
+    expect(sampled.z).toBeCloseTo(exact.z, 12);
   });
 });

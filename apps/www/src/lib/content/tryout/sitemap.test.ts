@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
 import { client } from "@repo/backend/test/client";
@@ -70,7 +70,7 @@ describe("published try-out sitemap", () => {
       expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
     })
   );
-  it.effect.each(APP_LOCALE_CODES)(
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
     "reads the complete %s route inventory",
     (locale) =>
       Effect.gen(function* () {

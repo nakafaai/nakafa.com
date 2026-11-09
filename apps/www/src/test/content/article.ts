@@ -6,7 +6,8 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
-  activeAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
+  ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
   ArticleRouteSlugSchema,
@@ -41,6 +42,9 @@ import {
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/published/article";
+
+/** The served locale a fixture of a release names, which every fixture of this file is in. */
+const servedLocale = Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema);
 
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema
@@ -79,7 +83,7 @@ export const makeArticleRuntimeSource = Effect.fn(
     (projection, index) =>
       Effect.gen(function* () {
         const artifact = yield* testSignedArtifact("politics", {
-          artifactLocale: activeAppLocaleCode(projection.appLocale),
+          artifactLocale: ArtifactLocaleSchema.make(projection.appLocale),
           contentKey: projection.contentKey,
         });
         const projectionHash = yield* hashContentProjection(projection);
@@ -113,7 +117,7 @@ export const makeArticleRuntimeSource = Effect.fn(
           publicPath: projection.publicPath,
           releaseId: signed.manifest.releaseId,
           routeJson: testRouteJson({
-            appLocale: projection.appLocale,
+            appLocale: servedLocale(projection.appLocale),
             contentKey: projection.contentKey,
             index,
             publicPath: projection.publicPath,

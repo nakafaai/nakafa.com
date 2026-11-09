@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
 import { readPublishedTryoutExamPage } from "@/lib/content/tryout/catalog";
 import { readRetiredSnbtProduct } from "@/lib/routing/public/tryout/product";
@@ -8,7 +8,7 @@ import {
   SOURCE_APP_LOCALE,
 } from "@/lib/routing/public/tryout/route";
 
-const decodeAppLocale = Schema.decodeUnknownOption(AppLocaleCodeSchema);
+const decodeAppLocale = Schema.decodeUnknownOption(ActiveAppLocaleCodeSchema);
 const RetiredPublicRouteInputSchema = Schema.Struct({
   hasAttemptCapability: Schema.Boolean,
   pathname: Schema.String,

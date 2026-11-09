@@ -3,8 +3,12 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { Polygon } from "@repo/design-system/components/three/polygon";
-import { Array as Arr } from "effect";
-import type { ComponentProps, ReactNode } from "react";
+import { Array as Arr, Option, Result } from "effect";
+import { type ComponentProps, type ReactNode, useMemo } from "react";
+import {
+  labelPoint,
+  resolveFormulaShapes,
+} from "@/lib/content/renderer/client/base/visual/formula";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
 import type {
@@ -14,6 +18,8 @@ import type {
   SpacePoint,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
+import { FormulaShapes } from "@/lib/content/renderer/client/base/visual/shapes";
+import { useParameterValues } from "@/lib/content/renderer/client/base/visual/sliders";
 import {
   projectVisualPoint,
   resolveVisualProjection,
@@ -69,8 +75,13 @@ function resolveArrow(position: "both" | "end" | "none", size: number) {
 
 /** All authored dimensions compose the same interactive Nakafa primitives. */
 export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
-  const projection = resolveVisualProjection(scene);
+  const projection = useMemo(() => resolveVisualProjection(scene), [scene]);
   const geometry = resolveVisualGeometry(scene, projection);
+  const scope = useParameterValues();
+  const formulas = useMemo(
+    () => resolveFormulaShapes(scene, projection, scope),
+    [scene, projection, scope]
+  );
   const view = resolveMathView(scene, projection);
   const origin = projectVisualPoint({ x: 0, y: 0, z: 0 }, projection);
   // Schema validation guarantees that each label has exactly one object owner.
@@ -79,7 +90,13 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
   const anchors = Arr.flatMap(objects, (object) =>
     Arr.flatMap(sceneLabels, (label) =>
       label.objectId === object.id
-        ? [{ ...label, appearance: object.appearance }]
+        ? Option.toArray(
+            Option.map(labelPoint(label.at, scope), (at) => ({
+              ...label,
+              appearance: object.appearance,
+              position: projectVisualPoint(at, projection),
+            }))
+          )
         : []
     )
   );
@@ -92,6 +109,20 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
       origin={origin}
       showOrigin={false}
     >
+      {Result.match(formulas, {
+        onFailure: (failure) => (
+          <ThreeLabel
+            anchorX="center"
+            anchorY="middle"
+            color={resolveMathAppearance("warning")}
+            fontSize="diagram"
+            position={pointTuple(origin)}
+          >
+            {failure.message}
+          </ThreeLabel>
+        ),
+        onSuccess: (shapes) => <FormulaShapes shapes={shapes} />,
+      })}
       {Arr.map(geometry.regions, (region) => (
         <Polygon
           color={resolveMathAppearance(region.appearance)}
@@ -124,7 +155,7 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
           fontSize="diagram"
           gap={0.15}
           key={label.key}
-          position={pointTuple(projectVisualPoint(label.at, projection))}
+          position={pointTuple(label.position)}
         >
           {labels[label.key]}
         </ThreeLabel>

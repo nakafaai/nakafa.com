@@ -1,5 +1,5 @@
 import {
-  type AppLocaleCode,
+  type ActiveAppLocaleCode,
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
@@ -19,7 +19,7 @@ import { NakafaAgentReadableContentRefSchema } from "@repo/contents/agent/schema
 import { Schema, Struct } from "effect";
 
 /** Builds one source-authenticated surah meaning for an exact app locale. */
-function makeNakafaQuranMeaningSchema<const Locale extends AppLocaleCode>(
+function makeNakafaQuranMeaningSchema<const Locale extends ActiveAppLocaleCode>(
   locale: Locale
 ) {
   return Schema.Struct({

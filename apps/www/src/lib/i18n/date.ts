@@ -1,4 +1,7 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type {
+  ActiveAppLocaleCode,
+  AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import {
   DEFAULT_LOCALE,
   decodeLocale,
@@ -26,7 +29,7 @@ const PUBLISHED_MONTH = new Intl.DateTimeFormat("en-US", {
  * differ in what stands between them. Both read the time zone of the viewer when
  * they are built.
  */
-function language(code: ActiveAppLocaleCode, separator: string) {
+function language(code: AppLocaleCode, separator: string) {
   return {
     day: new Intl.DateTimeFormat(code, {
       day: "numeric",
@@ -39,14 +42,15 @@ function language(code: ActiveAppLocaleCode, separator: string) {
 }
 
 /**
- * The words of every active locale. A new active locale fails the type check
- * here until it gets its words.
+ * The words of every declared locale. A new locale fails the type check here
+ * until it gets its words, so it has them before it is served.
  */
 const LANGUAGES = {
   de: language("de", " "),
   en: language("en", ", "),
   id: language("id", ", "),
-} satisfies Record<ActiveAppLocaleCode, ReturnType<typeof language>>;
+  ms: language("ms", ", "),
+} satisfies Record<AppLocaleCode, ReturnType<typeof language>>;
 
 /** The locale that dates are written in: an active app locale, else the canonical one. */
 function dateLocale(locale?: string | null): ActiveAppLocaleCode {

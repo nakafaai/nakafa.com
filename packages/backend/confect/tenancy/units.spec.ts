@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
@@ -22,7 +22,7 @@ import { Schema } from "effect";
 
 /** One unit of the school as its Admin reads it, with its national school number. */
 const UnitView = Schema.Struct({
-  contentLanguage: AppLocaleCodeSchema,
+  contentLanguage: ActiveAppLocaleCodeSchema,
   id: Id("tenantUnits"),
   level: UnitLevel,
   name: UnitName,
@@ -77,14 +77,14 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "setLocale",
       args: () => ({
-        contentLanguage: AppLocaleCodeSchema,
+        contentLanguage: ActiveAppLocaleCodeSchema,
         slug: TenantSlug,
         timeZone: NewTimeZone,
         unitId: Id("tenantUnits"),
       }),
       returns: () =>
         Schema.Struct({
-          contentLanguage: AppLocaleCodeSchema,
+          contentLanguage: ActiveAppLocaleCodeSchema,
           timeZone: TimeZone,
         }),
       error: () => AccessDenied,
@@ -94,7 +94,7 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "create",
       args: () => ({
-        contentLanguage: AppLocaleCodeSchema,
+        contentLanguage: ActiveAppLocaleCodeSchema,
         level: UnitLevel,
         name: UnitName,
         slug: TenantSlug,

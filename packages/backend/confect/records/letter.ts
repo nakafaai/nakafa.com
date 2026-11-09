@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
   CivilDate,
@@ -82,7 +82,7 @@ export const PrintableLetter = Schema.Struct({
   decision: DecisionNumber,
   hash: ReportHash,
   head: HeadName,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   nip: Schema.optionalKey(Nip),
   nisn: Nisn,
   npsn: Npsn,

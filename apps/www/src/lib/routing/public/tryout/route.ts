@@ -1,6 +1,6 @@
 import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Schema } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
@@ -12,7 +12,9 @@ export const SNBT_ROUTE_PATH = `${TRYOUT_ROOT}/${SNBT_ROUTE}`;
 export const SNBT_EXAM_PATH = "try-out/indonesia/snbt";
 /** Locale whose signed paths anchor the localized successors of retired SNBT URLs. */
 export const SOURCE_APP_LOCALE = "en";
-export const decodeAppLocale = Schema.decodeUnknownOption(AppLocaleCodeSchema);
+export const decodeAppLocale = Schema.decodeUnknownOption(
+  ActiveAppLocaleCodeSchema
+);
 
 /** Splits one public pathname into its non-empty segments. */
 export function readPathSegments(pathname: string) {
@@ -20,7 +22,10 @@ export function readPathSegments(pathname: string) {
 }
 
 /** Reads whether the active signed catalog serves one exact route in its own locale. */
-export function readActiveTryoutPath(appLocale: AppLocaleCode, path: string) {
+export function readActiveTryoutPath(
+  appLocale: ActiveAppLocaleCode,
+  path: string
+) {
   return readPublishedTryoutLocalizedPath({
     currentAppLocale: appLocale,
     publicPath: path,

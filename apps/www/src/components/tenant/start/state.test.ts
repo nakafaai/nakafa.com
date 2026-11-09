@@ -77,6 +77,9 @@ describe("school start state", () => {
   it("names units the way the school's country writes them", () => {
     const compose = (level: string, name: string) => `${name} ${level}`;
     expect(unitName("ID", "SMA", "Harapan", compose)).toBe("SMA Harapan");
+    expect(unitName("MY", "SMK", "Seri Bintang", compose)).toBe(
+      "SMK Seri Bintang"
+    );
     expect(unitName("GB", "Primary", "Harapan", compose)).toBe(
       "Harapan Primary"
     );

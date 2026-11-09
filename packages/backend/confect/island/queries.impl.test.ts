@@ -59,6 +59,7 @@ describe("island queries and mutations", () => {
           level: 1,
           lifetime: 0,
           materials: { petals: 0, wood: 0 },
+          size: 6,
           stars: 0,
           timeZone: "Asia/Jakarta",
           version: 0,
@@ -110,6 +111,7 @@ describe("island queries and mutations", () => {
           layout: STARTER_LAYOUT,
           level: 1,
           name: "Nabil",
+          size: 6,
           timeZone: "Asia/Jakarta",
           username: "nabil",
         });

@@ -13,6 +13,11 @@ import {
 import { type ReactNode, useId } from "react";
 
 import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/deferred";
+import { MathReadouts } from "@/lib/content/renderer/client/base/visual/readouts";
+import {
+  ParameterProvider,
+  ParameterSliders,
+} from "@/lib/content/renderer/client/base/visual/sliders";
 
 interface Props {
   readonly description: ReactNode;
@@ -23,28 +28,38 @@ interface Props {
 
 /** Renders one stable mathematical scene without content-specific components. */
 export function MathVisual({ description, title, ...scene }: Props) {
+  const readouts =
+    scene.scene.space === "plane" ? (scene.scene.readouts ?? []) : [];
   const identifier = useId();
   const descriptionId = `${identifier}-description`;
   const titleId = `${identifier}-title`;
 
   return (
     <CoordinateProvider>
-      <VisualCard>
-        <VisualCardHeader
-          description={<span id={descriptionId}>{description}</span>}
-          title={<span id={titleId}>{title}</span>}
-        />
-        <VisualCardBody
-          aria-describedby={descriptionId}
-          aria-labelledby={titleId}
-          className="relative m-0"
-          data-scene="math"
-          render={<figure />}
-        >
-          <DeferredMathScene {...scene} />
-        </VisualCardBody>
-        <CoordinateControls />
-      </VisualCard>
+      <ParameterProvider
+        labels={scene.labels ?? {}}
+        parameters={scene.scene.parameters ?? []}
+        readouts={readouts}
+      >
+        <VisualCard>
+          <VisualCardHeader
+            description={<span id={descriptionId}>{description}</span>}
+            title={<span id={titleId}>{title}</span>}
+          />
+          <ParameterSliders />
+          <VisualCardBody
+            aria-describedby={descriptionId}
+            aria-labelledby={titleId}
+            className="relative m-0"
+            data-scene="math"
+            render={<figure />}
+          >
+            <DeferredMathScene {...scene} />
+          </VisualCardBody>
+          <CoordinateControls />
+          <MathReadouts />
+        </VisualCard>
+      </ParameterProvider>
     </CoordinateProvider>
   );
 }

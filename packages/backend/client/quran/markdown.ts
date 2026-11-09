@@ -1,3 +1,4 @@
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { decodePublishedQuranSurah } from "@repo/backend/client/quran/catalog";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
@@ -64,7 +65,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
 )(function* (
   result: QuranMarkdown,
   expected: {
-    readonly appLocale: QuranMarkdown["appLocale"];
+    readonly appLocale: ActiveAppLocaleCode;
     readonly surahNumber: number;
     readonly verseLimit?: number;
   }
