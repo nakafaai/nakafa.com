@@ -1,5 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { StorageFull } from "@repo/backend/confect/bucket/errors";
 import {
   BuildRefused,
   Cell,
@@ -8,6 +10,7 @@ import {
 import {
   FarmRefused,
   IslandStale,
+  SnapshotRefused,
   Visibility,
 } from "@repo/backend/confect/island/schema";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
@@ -63,6 +66,27 @@ export default GroupSpec.make()
       args: () => ({ at: Cell, version: Schema.Int }),
       returns: () => Schema.Struct({ version: Schema.Int }),
       error: () => Schema.Union([AuthFailure, FarmRefused, IslandStale]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "reserveSnapshot",
+      args: () => ({ byteSize: Schema.Int.check(Schema.isGreaterThan(0)) }),
+      returns: () =>
+        Schema.Struct({ address: Schema.String, fileId: Id("bucketFiles") }),
+      error: () => Schema.Union([AuthFailure, SnapshotRefused, StorageFull]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "keepSnapshot",
+      args: () => ({ fileId: Id("bucketFiles") }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AuthFailure, SnapshotRefused]),
     })
       .middleware(Session)
       .middleware(Atomic)

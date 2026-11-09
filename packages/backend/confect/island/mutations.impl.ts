@@ -9,6 +9,10 @@ import { growthOf } from "@repo/backend/confect/island/level";
 import { addMaterials } from "@repo/backend/confect/island/material";
 import spec from "@repo/backend/confect/island/mutations.spec";
 import { FarmRefused, IslandStale } from "@repo/backend/confect/island/schema";
+import {
+  keepSnapshot as keepIslandSnapshot,
+  reserveSnapshot as reserveIslandSnapshot,
+} from "@repo/backend/confect/island/snapshot";
 import { ensureIsland } from "@repo/backend/confect/island/store";
 import { spendableOf } from "@repo/backend/confect/island/view";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
@@ -149,12 +153,42 @@ const harvest = FunctionImpl.make(
   })
 );
 
+/**
+ * Reserves the bytes of a new picture of the owner's island, taken as they
+ * share it, and answers the R2 address the browser uploads it to (ADR 0042, D20).
+ */
+const reserveSnapshot = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "reserveSnapshot",
+  Effect.fn("island.mutations.reserveSnapshot")(function* ({ byteSize }) {
+    const { appUser } = yield* requireAuth();
+    const island = yield* ensureIsland(appUser._id);
+    return yield* reserveIslandSnapshot(island, byteSize);
+  })
+);
+
+/** Keeps the uploaded picture as the island's snapshot, a visit's OpenGraph image (ADR 0042, D20). */
+const keepSnapshot = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "keepSnapshot",
+  Effect.fn("island.mutations.keepSnapshot")(function* ({ fileId }) {
+    const { appUser } = yield* requireAuth();
+    const island = yield* ensureIsland(appUser._id);
+    yield* keepIslandSnapshot(island, fileId);
+    return null;
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
   Layer.provide(share),
   Layer.provide(edit),
   Layer.provide(water),
   Layer.provide(harvest),
+  Layer.provide(reserveSnapshot),
+  Layer.provide(keepSnapshot),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize

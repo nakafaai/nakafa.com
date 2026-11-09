@@ -3792,7 +3792,7 @@
       "title": "Kamu perlukan lebih banyak Bintang untuk ini."
     },
     "island-refused-starter": {
-      "title": "Ini datang bersama pulau kamu, jadi ia kekal."
+      "title": "Ia datang bersama pulau kamu dan kekal."
     },
     "island-refused-missing": {
       "title": "Kepingan itu sudah tiada."
@@ -3804,7 +3804,8 @@
       "title": "Ia sudah berada di peringkat pertama."
     },
     "island-stale": {
-      "title": "Pulau kamu berubah di tempat lain, jadi kami muatkan semula."
+      "title": "Pulau kamu berubah di tempat lain.",
+      "description": "Kami muatkan yang terbaru, jadi cuba lagi."
     },
     "island-refused-grows": {
       "title": "Ia membesar apabila kamu menyiramnya."
@@ -3813,10 +3814,10 @@
       "title": "Ia sudah berakar, jadi alihkan sahaja."
     },
     "island-refused-materials": {
-      "title": "Kamu perlukan lebih banyak hasil kebun untuk ini."
+      "title": "Kamu perlukan lebih banyak hasil kebun."
     },
     "island-farm-unlearned": {
-      "title": "Belajar sesuatu hari ini, kemudian siram kebun kamu."
+      "title": "Belajar dahulu, kemudian siram."
     },
     "island-farm-watered": {
       "title": "Kebun kamu sudah disiram hari ini."
@@ -3829,6 +3830,9 @@
     },
     "island-farm-unripe": {
       "title": "Ia belum mengeluarkan hasil lagi."
+    },
+    "island-link-copied": {
+      "title": "Pautan ke pulau kamu sudah disalin."
     },
     "island-watered": {
       "title": "Kebun kamu sudah disiram."
@@ -4679,6 +4683,18 @@
     "item-lamp": "Lampu",
     "water": "Siram kebun",
     "harvest": "Tuai",
+    "sound": "Bunyi",
+    "enter": "Masuk",
+    "enter-next": "{stars} Bintang lagi untuk membesarkan pulau kamu ke tahap seterusnya.",
+    "enter-top": "Pulau kamu sudah sebesar mana-mana pulau boleh membesar.",
+    "earn-lesson": "+{stars} Bintang setiap pelajaran",
+    "earn-section": "+{stars} Bintang setiap bahagian",
+    "badges": "Lencana",
+    "share": "Kongsi",
+    "share-title": "Pulau saya di Nakafa",
+    "clip": "Rakam klip",
+    "clip-file": "nakafa-island",
+    "visit-description": "Pulau {name}, tumbuh daripada belajar di Nakafa.",
     "materials": "Kebun",
     "materials-value": "{wood} kayu, {petals} kelopak",
     "price-wood": "{stars} Bintang, {wood} kayu"
