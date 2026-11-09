@@ -1,4 +1,3 @@
-import { cast } from "@repo/mascot/seed";
 import { Array as Arr } from "effect";
 import { ToyAnimal } from "@/components/marketing/about/toys/animal";
 import { gap } from "@/components/marketing/about/toys/gap";
@@ -8,7 +7,10 @@ import {
 } from "@/components/marketing/about/toys/layer";
 import { NinaToy } from "@/components/marketing/about/toys/nina";
 import { within } from "@/components/marketing/about/toys/place";
-import { SCHOOL_TOY_HERD } from "@/components/marketing/school/features/cast";
+import {
+  SCHOOL_PRICING_HERD,
+  SCHOOL_TOY_HERD,
+} from "@/components/marketing/school/features/cast";
 import { SCHOOL_NINA_ID } from "@/components/marketing/school/hero/id";
 
 /**
@@ -37,15 +39,13 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     picture: <ToyAnimal herd={SCHOOL_TOY_HERD} index={index} />,
     place: within("hero", { dx: -28, dy: -28, minWidth, x, y }),
   })),
-  ...gap("tasks", 0.5, SCHOOL_TOY_HERD, [6, 7], ["backpack", "ruler"]),
+  ...gap("library", 0.5, SCHOOL_TOY_HERD, [6, 7], ["backpack", "book"]),
   ...gap("exams", 0.5, SCHOOL_TOY_HERD, [8, 9], ["hourglass", "calculator"]),
+  ...gap("insight", 0.5, SCHOOL_TOY_HERD, [16, 17], ["glasses", "bulb"]),
   ...gap("graduation", 0.5, SCHOOL_TOY_HERD, [10, 11], ["cap", "trophy"]),
   ...gap("faq", 0.5, SCHOOL_TOY_HERD, [12, 13], ["bubble", "magnifier"]),
   ...gap("closing", 0.5, SCHOOL_TOY_HERD, [14, 15], ["medal", "flag"]),
 ];
-
-/** The animals of the School pricing page's toys, from a cast of its own, since no person stands on that page. */
-const PRICING_HERD = cast("nakafa-school-pricing", 12);
 
 /**
  * The toys of the School pricing page: an animal in each top corner above the
@@ -54,19 +54,19 @@ const PRICING_HERD = cast("nakafa-school-pricing", 12);
 const PRICING_PLACEMENTS: readonly ToyPlacement[] = [
   {
     key: "plans-start",
-    picture: <ToyAnimal herd={PRICING_HERD} index={0} />,
+    picture: <ToyAnimal herd={SCHOOL_PRICING_HERD} index={0} />,
     place: within("plans", { dx: -28, dy: 96, minWidth: 1024, x: 0.08, y: 0 }),
   },
   {
     key: "plans-end",
-    picture: <ToyAnimal herd={PRICING_HERD} index={1} />,
+    picture: <ToyAnimal herd={SCHOOL_PRICING_HERD} index={1} />,
     place: within("plans", { dx: -28, dy: 132, minWidth: 1024, x: 0.92, y: 0 }),
   },
-  ...gap("compare", 0.5, PRICING_HERD, [2, 3], ["calculator", "clip"]),
-  ...gap("accounts", 0.5, PRICING_HERD, [4, 5], ["backpack", "pencil"]),
-  ...gap("addons", 0.5, PRICING_HERD, [6, 7], ["globe", "bulb"]),
-  ...gap("faq", 0.5, PRICING_HERD, [8, 9], ["bubble", "note"]),
-  ...gap("closing", 0.5, PRICING_HERD, [10, 11], ["medal", "flag"]),
+  ...gap("compare", 0.5, SCHOOL_PRICING_HERD, [2, 3], ["calculator", "clip"]),
+  ...gap("accounts", 0.5, SCHOOL_PRICING_HERD, [4, 5], ["backpack", "pencil"]),
+  ...gap("addons", 0.5, SCHOOL_PRICING_HERD, [6, 7], ["globe", "bulb"]),
+  ...gap("faq", 0.5, SCHOOL_PRICING_HERD, [8, 9], ["bubble", "note"]),
+  ...gap("closing", 0.5, SCHOOL_PRICING_HERD, [10, 11], ["medal", "flag"]),
 ];
 
 /** The layer of toys over the School pricing page. */

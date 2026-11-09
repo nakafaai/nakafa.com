@@ -3,7 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
-import { Auth } from "@/components/auth";
+import { Auth } from "@/components/auth/action";
 import { AuthLegal } from "@/components/auth/legal";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";
