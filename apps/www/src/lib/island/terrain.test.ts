@@ -1,8 +1,10 @@
 // @vitest-environment node
+
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
+import { SPAN } from "@repo/backend/confect/island/world";
 import { columnOf, terrainOf } from "@/lib/island/terrain";
-import { blockAt, SEA_LEVEL, SPAN } from "@/lib/island/world";
+import { blockAt, SEA_LEVEL } from "@/lib/island/world";
 
 /** How many cells of the world hold this block. */
 const countOf = (cells: Uint8Array, id: number) =>

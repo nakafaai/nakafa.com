@@ -3,7 +3,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
-import { dropSnapshot } from "@repo/backend/confect/island/snapshot";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow } from "effect";
 
@@ -11,7 +10,7 @@ const GRANT_BATCH_SIZE = 50;
 
 /**
  * Deletes one bounded batch of a deleted account's island ledger, then its
- * island with its snapshot (ADR 0042, D7, D20). Answers whether anything was deleted, so the cleanup
+ * island (ADR 0042, D7). Answers whether anything was deleted, so the cleanup
  * runs again until nothing of the island is left.
  */
 export const cleanupUserIsland = Effect.fn("auth.cleanup.cleanupUserIsland")(
@@ -35,7 +34,6 @@ export const cleanupUserIsland = Effect.fn("auth.cleanup.cleanupUserIsland")(
       .take(1)
       .pipe(Effect.orDie);
     for (const island of islands) {
-      yield* dropSnapshot(island);
       yield* writer.table("islands").delete(island._id);
     }
     return islands.length > 0;

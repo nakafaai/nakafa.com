@@ -14,10 +14,12 @@ import { readOptional } from "@/lib/data/read.server";
 import { seedOf } from "@/lib/island/noise";
 
 /**
- * The island game's screen (ADR 0047, D1): the learner's level and lifetime
- * Stars, the side of their footprint, the seed their terrain grows from, and a
- * head kept out of search. A learner with no island yet starts at level 1. The
- * island and the account go out together, so the game waits on one round trip.
+ * The island game's screen (ADR 0047, D1 and D6): the learner's level and
+ * lifetime Stars, the side of their footprint, the seed their terrain grows
+ * from, the cells they changed and the version of those edits, and a head
+ * kept out of search. A learner with no island yet starts at level 1 with
+ * nothing changed. The island and the account go out together, so the game
+ * waits on one round trip.
  */
 export const islandScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
@@ -31,8 +33,7 @@ export const islandScreenHandler = accountHandler(
         ],
         { concurrency: "unbounded" }
       );
-      const lifetime = own?.lifetime ?? 0;
-      const growth = growthOf(lifetime);
+      const growth = growthOf(own?.lifetime ?? 0);
       const t = createTranslator({ locale, messages, namespace: "Island" });
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}/island`,
@@ -42,12 +43,15 @@ export const islandScreenHandler = accountHandler(
         title: t("title"),
       };
       return {
+        edits: own?.world ?? [],
+        from: growth.from,
         level: growth.level,
-        lifetime,
+        lifetime: own?.lifetime ?? 0,
         next: Option.getOrUndefined(growth.next),
         seed: seedOf(account?.appUser._id ?? "island"),
         seo,
-        world: growth.world,
+        size: growth.size,
+        version: own?.version ?? 0,
       };
     })
 );

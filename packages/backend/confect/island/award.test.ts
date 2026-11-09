@@ -67,15 +67,13 @@ describe("island/award", () => {
         expect(islands).toMatchObject([
           {
             badges: [],
-            harvested: { petals: 0, wood: 0 },
             learned: "2026-11-08",
             lifetime: 5,
             timeZone: "UTC",
             version: 0,
-            visibility: "private",
           },
         ]);
-        expect(islands[0]?.layout.byteLength).toBe(20);
+        expect(islands[0]?.world.byteLength).toBe(0);
       })
   );
 

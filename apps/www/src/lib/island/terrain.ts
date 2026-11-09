@@ -1,4 +1,5 @@
 import { idOf } from "@repo/backend/confect/island/blocks";
+import { SPAN } from "@repo/backend/confect/island/world";
 import { smoothOf, unitOf } from "@/lib/island/noise";
 import {
   blockAt,
@@ -6,7 +7,6 @@ import {
   cellOf,
   emptyCells,
   SEA_LEVEL,
-  SPAN,
 } from "@/lib/island/world";
 
 const GRASS = idOf("grass");

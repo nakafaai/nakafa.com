@@ -1,14 +1,8 @@
 // @vitest-environment node
+
 import { describe, expect, it } from "@effect/vitest";
-import {
-  blockAt,
-  cellOf,
-  emptyCells,
-  footprintOf,
-  HEIGHT,
-  isInside,
-  SPAN,
-} from "@/lib/island/world";
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
+import { blockAt, cellOf, emptyCells, isInside } from "@/lib/island/world";
 
 describe("island/world", () => {
   it("indexes every cell once, rows of x, then z, then layers of y", () => {
@@ -27,10 +21,5 @@ describe("island/world", () => {
     expect(blockAt(cells, 3, HEIGHT, 5)).toBe(0);
     expect(isInside(SPAN, 0, 0)).toBe(false);
     expect(isInside(0, 0, -1)).toBe(false);
-  });
-
-  it("centers each footprint in the world", () => {
-    expect(footprintOf(16)).toEqual({ from: 24, to: 39 });
-    expect(footprintOf(SPAN)).toEqual({ from: 0, to: SPAN - 1 });
   });
 });

@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { IntlProvider } from "use-intl";
+import { RouteConvexProvider } from "@/components/providers/route";
 import { privateHead } from "@/lib/account/head";
 import { islandScreenFn } from "@/lib/account/island.functions";
 import { resolvePostAuthIntent } from "@/lib/auth/admission";
@@ -61,20 +62,29 @@ function IslandPage() {
   const router = useRouter();
   return (
     <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
-      <Suspense fallback={null}>
-        <IslandGame
-          level={screen.level}
-          onLeave={() => {
-            if (router.history.canGoBack()) {
-              router.history.back();
-              return;
-            }
-            router.navigate({ params: { locale }, to: "/$locale/home" });
-          }}
-          seed={screen.seed}
-          size={screen.world}
-        />
-      </Suspense>
+      <RouteConvexProvider>
+        <Suspense fallback={null}>
+          <IslandGame
+            edits={screen.edits}
+            level={screen.level}
+            onLeave={() => {
+              if (router.history.canGoBack()) {
+                router.history.back();
+                return;
+              }
+              router.navigate({ params: { locale }, to: "/$locale/home" });
+            }}
+            progress={{
+              from: screen.from,
+              lifetime: screen.lifetime,
+              ...(screen.next === undefined ? {} : { next: screen.next }),
+            }}
+            seed={screen.seed}
+            size={screen.size}
+            version={screen.version}
+          />
+        </Suspense>
+      </RouteConvexProvider>
     </IntlProvider>
   );
 }

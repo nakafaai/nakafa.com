@@ -1,3 +1,4 @@
+import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { ATLAS_TILES } from "@/lib/island/atlas";
 import { KIND, LOOK } from "@/lib/island/look";
@@ -6,9 +7,7 @@ import {
   type Cells,
   CHUNK,
   cellOf,
-  HEIGHT,
   isInside,
-  SPAN,
 } from "@/lib/island/world";
 
 /** Floats per vertex: position (3), atlas coordinate (2), face shade, sky light, block light. */

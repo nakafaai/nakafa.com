@@ -4640,6 +4640,10 @@
     "block-wool": "Wol",
     "block-bookshelf": "Rak buku",
     "block-marble": "Marmer",
-    "block-gold": "Emas"
+    "block-gold": "Emas",
+    "notice-refused": "Perubahan itu nggak tersimpan, jadi pulaumu kembali seperti tadi.",
+    "notice-stale": "Pulaumu berubah di tempat lain, jadi dimuat ulang dulu ya.",
+    "next": "{stars} Bintang lagi ke level {level}",
+    "top": "Semua blok sudah terbuka"
   }
 }
