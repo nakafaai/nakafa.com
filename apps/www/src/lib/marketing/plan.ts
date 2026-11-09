@@ -4,6 +4,7 @@ import {
   Coins01Icon,
   CustomerSupportIcon,
   LibraryIcon,
+  MegaphoneOffIcon,
   Quiz03Icon,
   SparklesIcon,
   Tick01Icon,
@@ -25,6 +26,7 @@ export const proPlanFeatures = [
   "pro-feature-2",
   "pro-feature-3",
   "pro-feature-5",
+  "pro-feature-6",
 ] as const;
 
 /**
@@ -42,6 +44,7 @@ export const planFeatureIcons = {
   "pro-feature-2": SparklesIcon,
   "pro-feature-3": BookOpen01Icon,
   "pro-feature-5": CustomerSupportIcon,
+  "pro-feature-6": MegaphoneOffIcon,
 } as const satisfies Record<
   (typeof freePlanFeatures)[number] | (typeof proPlanFeatures)[number],
   typeof Tick01Icon

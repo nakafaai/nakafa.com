@@ -4,6 +4,8 @@
 
 Accepted on 8 November 2026.
 
+Partly withdrawn on 9 November 2026. The owner judged the island not ready for learners: it drew small and still inside the lessons' visual frame, on the home page and on its own pages, instead of being a game with its own screen and art. Every learner-facing part was removed: the renderer, build mode, sound, sharing and visits (D12 and D14 to D20), the home frame and its four earning cards (D21), and the island's routes and words. The data stays as it is: the tables, the Stars ledger and its grants (D1 to D11, D13), so every Star a learner earns keeps counting. The game that replaces the renderer gets its own ADR.
+
 ## Context
 
 The owner confirmed the Nakafa Consumer plan on 8 November 2026 (tracker artifact `SM36LQgx3VKih6NUs4swRs`, section Pulau, goals W1 to W10, decisions D13 to D18, D26, D28). Gamification is the foundation of retention: every learner owns a small floating island that grows as they learn, decorates it block by block, farms over real days, and shares it so friends can visit. The world is called Pulau in Indonesian and Malay, Island in English, and Insel in German (D13). The goal is simply the nicest island, and a shared island doubles as marketing, so it has to be cute.
