@@ -33,6 +33,11 @@ function useNotificationSentence(notification: ListNotification) {
       ? t("comment-replied-gone")
       : t("comment-replied");
   }
+  if (notification.changeType === "tryout.reminder") {
+    return notification.set === null
+      ? t("tryout-reminder-gone")
+      : t("tryout-reminder");
+  }
   const { detail, exam, grade, missed } = notification;
   return Match.value(notification.changeType).pipe(
     Match.when("person.invited", () => t("person-invited")),

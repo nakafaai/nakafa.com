@@ -98,19 +98,18 @@ export const schedulePush = Effect.fn("notifications.schedule.push")(function* (
 
 /**
  * Schedules the push of one new row of an account, which no school holds. An
- * account that switched the push of a reply off, or with no browser subscribed, gets
- * none. A student's quiet hours run on the clock of Indonesia, because an account
- * keeps no zone of its own.
+ * account that switched the push of this kind off, or with no browser subscribed,
+ * gets none. A student's quiet hours run on the clock of Indonesia, because an
+ * account keeps no zone of its own.
  */
 export const scheduleAccountPush = Effect.fn(
   "notifications.schedule.accountPush"
 )(function* (
+  kind: typeof NoticeKind.Type,
   notificationId: GenericId.GenericId<"notifications">,
   userId: GenericId.GenericId<"users">
 ) {
-  if (
-    Option.isSome(yield* accountSwitchedOff(userId, "commentReply", "push"))
-  ) {
+  if (Option.isSome(yield* accountSwitchedOff(userId, kind, "push"))) {
     return;
   }
   if (Option.isNone(yield* firstSubscription(userId))) {
