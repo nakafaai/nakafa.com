@@ -71,7 +71,7 @@ function SlugComments() {
   const slug = useCommentsSlug();
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
-    { slug },
+    { slug, sort: "newest" },
     { initialNumItems: PAGE_SIZE }
   );
   const postComment = usePostComment();
