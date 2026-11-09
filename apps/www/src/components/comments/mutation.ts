@@ -3,7 +3,7 @@ import type { OptimisticUpdate } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Number as Num, Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   type CommentRow,
   changeComment,
@@ -44,25 +44,6 @@ function changeLists<Q extends CommentListRef>(
   }
 }
 
-/** Moves the loaded count of a slug's comments by a number of comments, once it is read. */
-function countSlug(
-  localStore: OptimisticLocalStore.OptimisticLocalStore,
-  slug: string,
-  delta: number
-) {
-  for (const query of localStore.getAllQueries(
-    comments.queries.getCommentCount
-  )) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
-      localStore.setQuery(
-        comments.queries.getCommentCount,
-        query.args,
-        Option.some(Num.max(query.value.value + delta, 0))
-      );
-    }
-  }
-}
-
 /** Changes the comment on every loaded list that holds it: the comments of a slug, a thread and a profile. */
 function changeEveryList(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
@@ -93,21 +74,6 @@ export const unlikeInLists: OptimisticUpdate<
   changeEveryList(localStore, commentId, unlikedComment);
 
 /**
- * The change that shows a comment's new text at once, marked edited now, on every loaded list. The server's
- * own moment replaces this one when it answers.
- */
-export function editInLists(
-  editedAt: number
-): OptimisticUpdate<typeof comments.mutations.editComment> {
-  return (localStore, { commentId, text }) =>
-    changeEveryList(localStore, commentId, (comment) => ({
-      ...comment,
-      editedAt,
-      text,
-    }));
-}
-
-/**
  * The change that shows a new top-level comment first in each loaded list of its
  * slug, while the server saves it. A list that is still loading its first page
  * takes no change, and the saved comment comes in with the page.
@@ -116,7 +82,6 @@ export function insertDraftComment(
   draft: CommentRow
 ): OptimisticUpdate<typeof comments.mutations.addComment> {
   return (localStore) => {
-    countSlug(localStore, draft.slug, 1);
     for (const query of localStore.getAllQueries(
       comments.queries.getCommentsBySlug
     )) {
@@ -148,7 +113,6 @@ export function insertDraftReply(
   threadId: Id<"comments">
 ): OptimisticUpdate<typeof comments.mutations.addComment> {
   return (localStore) => {
-    countSlug(localStore, draft.slug, 1);
     changeLists(localStore, comments.queries.getCommentsBySlug, (page) =>
       countReplies(page, threadId, 1)
     );
@@ -181,7 +145,7 @@ export function insertDraftReply(
 function loadedThreadOf(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   commentId: Id<"comments">
-): Option.Option<Pick<CommentRow, "replyCount" | "slug" | "threadId">> {
+): Option.Option<Pick<CommentRow, "threadId">> {
   const found = [
     ...Arr.flatMap(
       localStore.getAllQueries(comments.queries.getCommentReplies),
@@ -246,9 +210,4 @@ export const removeFromLists: OptimisticUpdate<
       countReplies(page, threadId, -removed.length)
     );
   }
-  countSlug(
-    localStore,
-    found.value.slug,
-    threadId === undefined ? -(1 + found.value.replyCount) : -removed.length
-  );
 };

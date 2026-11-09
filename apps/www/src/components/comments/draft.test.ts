@@ -1,13 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { HashSet, Option, Schema } from "effect";
-import {
-  createCommentDraft,
-  generationOf,
-  isThreadShown,
-  photosOf,
-  textOf,
-} from "@/components/comments/draft";
+import { HashSet, Schema } from "effect";
+import { createCommentDraft, textOf } from "@/components/comments/draft";
 import type { CommentRow } from "@/components/comments/state";
 
 const commentId = Schema.decodeUnknownSync(Id("comments"));
@@ -84,97 +78,5 @@ describe("the draft of a list of comments", () => {
     expect(textOf(draft.getState(), root._id)).toBe(
       "Ditolak lagi\n\nTulisan baru"
     );
-  });
-
-  it("keeps the photos of each composer, places each upload by its key, and takes photos out", () => {
-    const draft = createCommentDraft();
-    const photo = {
-      failed: false,
-      height: 0,
-      key: "one",
-      preview: "blob:one",
-      upload: Option.none(),
-      width: 0,
-    };
-    draft.getState().addPhotos("", [photo, { ...photo, key: "two" }]);
-    draft.getState().placePhoto("", "one", {
-      height: 600,
-      upload: Option.some(
-        Schema.decodeUnknownSync(Id("commentUploads"))("upload")
-      ),
-      width: 800,
-    });
-    draft.getState().placePhoto("", "two", { failed: true });
-
-    expect(photosOf(draft.getState(), "")).toMatchObject([
-      { height: 600, key: "one", width: 800 },
-      { failed: true, key: "two" },
-    ]);
-    draft.getState().removePhotos("", ["two"]);
-    expect(photosOf(draft.getState(), "")).toMatchObject([{ key: "one" }]);
-    expect(photosOf(draft.getState(), root._id)).toEqual([]);
-  });
-
-  it("answers one empty tray for every read of a composer without photos, so a store selector settles", () => {
-    const draft = createCommentDraft();
-    expect(photosOf(draft.getState(), "")).toBe(photosOf(draft.getState(), ""));
-    draft.getState().write("", "Teks");
-    expect(photosOf(draft.getState(), root._id)).toBe(
-      photosOf(draft.getState(), "")
-    );
-  });
-
-  it("empties a composer that sent, with a new editor, and starts one again for restored words", () => {
-    const draft = createCommentDraft();
-    draft.getState().write("", "Terkirim");
-    draft.getState().addPhotos("", [
-      {
-        failed: false,
-        height: 1,
-        key: "one",
-        preview: "blob:one",
-        upload: Option.none(),
-        width: 1,
-      },
-    ]);
-
-    draft.getState().clear("");
-    expect(textOf(draft.getState(), "")).toBe("");
-    expect(photosOf(draft.getState(), "")).toEqual([]);
-    expect(generationOf(draft.getState(), "")).toBe(1);
-
-    draft.getState().restore("", "Terkirim");
-    expect(generationOf(draft.getState(), "")).toBe(2);
-    expect(generationOf(draft.getState(), root._id)).toBe(0);
-  });
-
-  it("orders the list, edits one comment at a time, and shows a thread's replies once opened or answered", () => {
-    const draft = createCommentDraft();
-    expect(draft.getState().sort).toBe("top");
-    draft.getState().sortBy("newest");
-    expect(draft.getState().sort).toBe("newest");
-
-    draft.getState().edit(root._id);
-    expect(draft.getState().editing).toBe(root._id);
-    draft.getState().edit(null);
-    expect(draft.getState().editing).toBeNull();
-
-    const threaded = { ...root, replyCount: 2 };
-    const reply = { ...other, threadId: root._id };
-    expect(isThreadShown(draft.getState(), threaded)).toBe(false);
-    draft.getState().toggleThread(root._id);
-    expect(isThreadShown(draft.getState(), threaded)).toBe(true);
-    expect(isThreadShown(draft.getState(), reply)).toBe(false);
-    draft.getState().toggleThread(root._id);
-    expect(isThreadShown(draft.getState(), threaded)).toBe(false);
-
-    draft.getState().open(reply);
-    expect(isThreadShown(draft.getState(), root)).toBe(true);
-    expect(HashSet.has(draft.getState().expanded, root._id)).toBe(true);
-
-    const answered = createCommentDraft();
-    answered.getState().open(root);
-    expect(isThreadShown(answered.getState(), root)).toBe(true);
-    expect(isThreadShown(answered.getState(), other)).toBe(false);
   });
 });

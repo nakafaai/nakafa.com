@@ -1,10 +1,14 @@
 import { type BrowserContextOptions, expect, test } from "@playwright/test";
+import app from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { DateTime, Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
-import { postComment } from "@/e2e/support/comments";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+
+const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 
 /**
  * A signed-in learner's lesson load shows the account footer, and a comment posted
@@ -41,7 +45,21 @@ test("a signed-in lesson load shows the account and posts a comment", async ({
                 page.locator('[data-account="member"]').first()
               ).toBeVisible()
             );
-            yield* Effect.promise(() => postComment(page, text));
+            yield* Effect.promise(() =>
+              page.locator("#comments").scrollIntoViewIfNeeded()
+            );
+            yield* Effect.promise(() =>
+              page.getByPlaceholder(PLACEHOLDER).first().fill(text)
+            );
+            yield* Effect.promise(() =>
+              page
+                .getByRole("button", { name: app.Posts.post, exact: true })
+                .first()
+                .click()
+            );
+            yield* Effect.promise(() =>
+              expect(page.getByText(text, { exact: true })).toBeVisible()
+            );
           })
         );
       })

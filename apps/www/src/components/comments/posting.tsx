@@ -3,14 +3,12 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, DateTime, Effect, Schema, Struct } from "effect";
-import type { TrayPhoto } from "@/components/comments/draft";
+import { DateTime, Effect, Schema, Struct } from "effect";
 import {
   insertDraftComment,
   insertDraftReply,
 } from "@/components/comments/mutation";
 import { useCommentDraft } from "@/components/comments/provider";
-import { useCommentsSlug } from "@/components/comments/slug";
 import {
   type CommentAuthor,
   type CommentRow,
@@ -20,25 +18,15 @@ import {
 import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 
-/** The photos a post carries as its comment shows them before the server answers: each from this device. */
-const shownPhotos = (photos: readonly (typeof TrayPhoto.Type)[]) =>
-  Arr.map(photos, (photo) => ({
-    address: photo.preview,
-    height: photo.height,
-    thumbnail: photo.preview,
-    width: photo.width,
-  }));
-
 /**
- * Returns the function that posts a comment or a reply on the page's slug. The comment shows at once where
- * it will sit, with its photos from this device, and the page's count moves with it; the server answers after
- * it, and until then its row holds its actions back, because the server does not know its placeholder id. A
- * refused post takes the comment back out and shows its message, and the resolved value says whether the
- * server saved it, so the composer can give the words and the photos back.
+ * Returns the function that posts a comment or a reply. The comment shows at once
+ * where it will sit, and the server answers after it; until then its row holds its
+ * actions back, because the server does not know its placeholder id. A refused post shows its
+ * message, and the composer gives the text back, so the resolved value says whether
+ * the server saved it.
  */
 export function usePostComment() {
   const viewer = useViewer((state) => state.account);
-  const slug = useCommentsSlug();
   const addComment = useMutation(comments.mutations.addComment);
   const startSaving = useCommentDraft((draft) => draft.startSaving);
   const finishSaving = useCommentDraft((draft) => draft.finishSaving);
@@ -46,8 +34,7 @@ export function usePostComment() {
   return function postComment(post: {
     /** The comment the post answers, or none for a top-level comment. */
     readonly parent: CommentRow | null;
-    /** The uploaded photos the comment carries. */
-    readonly photos: readonly (typeof TrayPhoto.Type)[];
+    readonly slug: string;
     readonly text: string;
   }): Promise<boolean> {
     if (!viewer) {
@@ -59,7 +46,6 @@ export function usePostComment() {
       name: viewer.authUser.name,
       ...Struct.pick(viewer.appUser, ["mascot", "picture"]),
     };
-    const uploads = Arr.getSomes(Arr.map(post.photos, (photo) => photo.upload));
     return Effect.runPromise(
       randomUuid.pipe(
         // The placeholder id of a comment the server has not saved yet. The
@@ -71,8 +57,7 @@ export function usePostComment() {
           const draft = draftComment(author, post.parent, {
             _creationTime: DateTime.toEpochMillis(DateTime.nowUnsafe()),
             _id: id,
-            photos: shownPhotos(post.photos),
-            slug,
+            slug: post.slug,
             text: post.text,
           });
           const save = addComment.withOptimisticUpdate(
@@ -84,9 +69,9 @@ export function usePostComment() {
             Effect.andThen(
               Effect.tryPromise(() =>
                 save({
-                  slug,
+                  slug: post.slug,
                   text: post.text,
-                  uploads,
+                  uploads: [],
                   ...(post.parent === null
                     ? {}
                     : { parentId: post.parent._id }),
@@ -98,13 +83,7 @@ export function usePostComment() {
           );
         }),
         Effect.matchEffect({
-          onSuccess: () =>
-            Effect.sync(() => {
-              Arr.forEach(post.photos, (photo) =>
-                URL.revokeObjectURL(photo.preview)
-              );
-              return true;
-            }),
+          onSuccess: () => Effect.succeed(true),
           onFailure: (error) =>
             reportClientException(error, {
               source: "components/comments/posting",

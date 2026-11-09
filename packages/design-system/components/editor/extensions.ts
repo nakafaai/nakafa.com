@@ -29,7 +29,7 @@ import { Array as Arr, Function as Fn, String as Str } from "effect";
  * a paste is refused, `onRefuse` runs, because nothing else tells the reader why
  * nothing was inserted.
  */
-export const Limit = Extension.create<{ limit: number; onRefuse: () => void }>({
+const Limit = Extension.create<{ limit: number; onRefuse: () => void }>({
   addOptions: () => ({ limit: 0, onRefuse: Fn.constVoid }),
   addProseMirrorPlugins() {
     const { editor, options } = this;
@@ -89,7 +89,7 @@ function held(tokens: MarkdownToken[] | undefined) {
  * check box as plain text, which loses their marks, so the check box goes and
  * the words stay.
  */
-export const NumberedList = OrderedList.extend({
+const NumberedList = OrderedList.extend({
   markdownTokenizer: {
     level: "block",
     name: "orderedList",

@@ -8,20 +8,40 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { DateTime, Effect } from "effect";
-import {
-  openComments,
-  postComment,
-  replyToComment,
-} from "@/e2e/support/comments";
+import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 const INBOX = "/en/notifications";
 const REPLIED = app.Notifications["comment-replied"];
 const REPLY_MAIL = `${app.Notifications["kind-commentReply"]}, ${app.Notifications["channel-email"]}`;
 /** The address of a lesson that opens one of its comments. */
 const OPENS_COMMENT = /comment=/u;
+
+/** The row of one comment, found by its text. The row's container carries the comment's id. */
+function rowOf(page: Page, text: string) {
+  return page
+    .locator("div[id]")
+    .filter({ has: page.getByText(text, { exact: true }) });
+}
+
+/** Writes one comment into a composer of the list, the last one that is open. */
+async function post(page: Page, text: string) {
+  const composer = page
+    .locator("form")
+    .filter({ has: page.getByRole("textbox", { name: PLACEHOLDER }) })
+    .last();
+  await composer.getByRole("textbox", { name: PLACEHOLDER }).fill(text);
+  await composer
+    .getByRole("button", { name: app.Posts.post, exact: true })
+    .click();
+  await expect(rowOf(page, text)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+}
 
 /** Opens the Nakafa inbox's preferences, and answers the switch of a reply's mail. */
 async function openReplyMail(page: Page) {
@@ -36,6 +56,18 @@ async function openReplyMail(page: Page) {
   await expect(mail).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   return mail;
 }
+
+/** Opens the lesson's comments in one learner's page, with the feed mounted. */
+const openComments = Effect.fn("NakafaE2E.openNoticeComments")(function* (
+  page: Page,
+  baseURL: string
+) {
+  yield* withObservedPageErrors(page, openChatPage(page, baseURL));
+  yield* Effect.promise(async () => {
+    await page.goto(LESSON_PATH);
+    await page.locator("#comments").scrollIntoViewIfNeeded();
+  });
+});
 
 /**
  * A reply reaches the learner it answers: a row in the Nakafa inbox under the
@@ -65,11 +97,14 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
           const author = yield* Effect.promise(() => authorContext.newPage());
           const replier = yield* Effect.promise(() => replierContext.newPage());
           yield* openComments(author, origin);
-          yield* Effect.promise(() => postComment(author, question));
+          yield* Effect.promise(() => post(author, question));
           yield* openComments(replier, origin);
-          yield* Effect.promise(() =>
-            replyToComment(replier, question, answer)
-          );
+          yield* Effect.promise(async () => {
+            await rowOf(replier, question)
+              .getByRole("button", { name: app.Common.reply, exact: true })
+              .click();
+            await post(replier, answer);
+          });
 
           yield* Effect.promise(async () => {
             await author.goto(INBOX);
@@ -102,11 +137,8 @@ test("a reply to a comment reaches its author's inbox and opens the reply", asyn
             await expect(mail).toBeChecked();
             await mail.click();
             await expect(mail).not.toBeChecked();
-            // A second page of the author reads the choice from the server. Opening it leaves the first
-            // page, which may still be sending the choice, in place, where a reload of it would end it.
-            const again = await authorContext.newPage();
-            await again.goto(INBOX);
-            await expect(await openReplyMail(again)).not.toBeChecked();
+            await author.reload();
+            await expect(await openReplyMail(author)).not.toBeChecked();
           });
         })
       )
