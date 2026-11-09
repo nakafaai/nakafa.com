@@ -143,12 +143,10 @@ function shapesOf(
     }));
   }
   if (geometry.kind === "points") {
-    return Arr.map(geometry.points, (point, index) => ({
+    // A marker places one point, or none where its formulas are not finite.
+    return Arr.map(geometry.points, (point) => ({
       ...fields,
-      id:
-        geometry.points.length === 1
-          ? object.id
-          : `${object.id}:part:${index + 1}`,
+      id: object.id,
       kind: "marker" as const,
       point: project(point),
     }));
