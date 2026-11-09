@@ -112,6 +112,10 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
     if (Option.isNone(page) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
+    // A country with one exam is never a page: a link to it opens that exam's entry.
+    if (page.value.entryPath !== countryPath) {
+      return { entryPath: page.value.entryPath, kind: "entry" as const };
+    }
     const exams = yield* Effect.forEach(page.value.exams, (exam) =>
       withExamArtwork(input.locale, page.value.country.countryKey, exam)
     );
@@ -192,6 +196,14 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
     );
     if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
+    }
+    // A group with one track is never a page: a link to it opens that track's table.
+    const own = Arr.findFirst(
+      page.groups,
+      (group) => group.publicPath === groupPath
+    );
+    if (Option.isSome(own) && own.value.entryPath !== groupPath) {
+      return { entryPath: own.value.entryPath, kind: "entry" as const };
     }
     // A group's own name is a year, a grade or a Kolleg, so the page names its exam too.
     const name = `${page.exam.title} ${page.group.title}`;

@@ -1,5 +1,5 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/frame";
@@ -23,6 +23,13 @@ export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
     });
     if (route.kind === "notFound") {
       throw notFound();
+    }
+    // A level with one option is never a page, so even a link inside the app lands on its entry.
+    if (route.kind === "entry") {
+      throw redirect({
+        href: `/${params.locale}/${route.entryPath}`,
+        statusCode: 307,
+      });
     }
     return route;
   },

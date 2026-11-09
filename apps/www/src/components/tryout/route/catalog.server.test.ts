@@ -58,6 +58,7 @@ const TRACK = "try-out/id/snbt/2027/utbk";
 
 const countryPage = {
   country: { countryKey: "id" },
+  entryPath: COUNTRY,
   exams: [
     { examKey: "snbt", imageKey: "exam-a", publicPath: EXAM, title: "SNBT" },
     {
@@ -72,10 +73,11 @@ const countryPage = {
 const groups = [
   { entryPath: TRACK, groupKey: "2027", publicPath: GROUP, title: "2027" },
 ];
+/** A group that holds its track cards, so it is its own entry. */
 const groupPage = {
   exam: { examKey: "snbt", groupAxis: "year", title: "SNBT" },
   group: { groupKey: "2027", publicPath: GROUP, title: "2027" },
-  groups,
+  groups: [{ ...groups[0], entryPath: GROUP }],
   tracks: [],
 };
 const trackPage = {
@@ -197,6 +199,18 @@ describe("readTryoutCountryRoute", () => {
     })
   );
 
+  it.effect("sends a country with one exam to that exam's entry", () =>
+    Effect.gen(function* () {
+      catalog.readTryoutCountryPage.mockReturnValueOnce(
+        Effect.succeedSome({ ...countryPage, entryPath: TRACK })
+      );
+
+      expect(
+        yield* readTryoutCountryRoute({ country: "id", locale: "en" })
+      ).toEqual({ entryPath: TRACK, kind: "entry" });
+    })
+  );
+
   it.effect(
     "shows each exam with its card artwork where the catalog names one",
     () =>
@@ -237,6 +251,16 @@ describe("readTryoutGroupRoute", () => {
     })
   );
 
+  it.effect("sends a group with one track to that track's set table", () =>
+    Effect.gen(function* () {
+      catalog.readTryoutGroupPage.mockReturnValueOnce(
+        Effect.succeed({ ...groupPage, groups })
+      );
+
+      expect(yield* readGroup()).toEqual({ entryPath: TRACK, kind: "entry" });
+    })
+  );
+
   it.effect(
     "names a single year with its exam and offers a grade as the header's one choice",
     () =>
@@ -258,7 +282,7 @@ describe("readTryoutGroupRoute", () => {
         expect(yield* readGroup()).toMatchObject({
           groupOptions: [
             {
-              entryPath: TRACK,
+              entryPath: GROUP,
               groupKey: "2027",
               title: "2027",
               value: GROUP,

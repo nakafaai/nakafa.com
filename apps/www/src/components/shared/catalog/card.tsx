@@ -62,7 +62,7 @@ export function CatalogCard({ action, children, title }: CatalogCardProps) {
  * The choices of one grid take their `shift` from `getTileLooks` or
  * `getTileShifts`, so that no two tiles of the grid share a blend.
  */
-export function CatalogCardTile({
+function CatalogCardTile({
   children,
   seed,
   shift,

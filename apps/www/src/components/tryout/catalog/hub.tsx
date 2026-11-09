@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileLooks } from "@repo/design-system/lib/look";
-import { Array as Arr, Effect, Tuple } from "effect";
+import { Array as Arr, Effect, Schema, Tuple } from "effect";
 import { type RefObject, useImperativeHandle, useRef } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -23,12 +23,18 @@ type HubPageCountry = Ref.Returns<
   typeof tryouts.queries.catalog.getHubPage
 >["countries"][number];
 
-/** One country of the hub, its exams carrying the card artwork the server found for them. */
-type HubCountry = Omit<HubPageCountry, "exams"> & {
-  readonly exams: readonly (HubPageCountry["exams"][number] & {
-    readonly imageSrc?: string;
-  })[];
-};
+/** The card artwork the server found for an exam, when the catalog names one. */
+const ExamCardImageSchema = Schema.Struct({
+  imageSrc: Schema.optionalKey(Schema.String),
+});
+
+/** One exam card of the hub, with its artwork. */
+type HubExam = HubPageCountry["exams"][number] &
+  typeof ExamCardImageSchema.Type;
+
+/** One country of the hub, its exams carrying their card artwork. */
+type HubCountry = Omit<HubPageCountry, "exams"> &
+  Record<"exams", readonly HubExam[]>;
 
 type HubCountries = readonly HubCountry[];
 
@@ -43,6 +49,7 @@ interface TryoutHubClientProps {
  */
 export function TryoutHubClient({ page }: TryoutHubClientProps) {
   const savePick = useRef<((country: HubCountry) => void) | null>(null);
+  const tTryouts = useTranslations("Tryouts");
 
   if (page.countries.length === 0) {
     return <ComingSoon />;
@@ -50,10 +57,18 @@ export function TryoutHubClient({ page }: TryoutHubClientProps) {
 
   return (
     <>
-      <TryoutHubCountries
-        countries={page.countries}
-        onPick={(country) => savePick.current?.(country)}
-      />
+      <CatalogActionLabelContext value={tTryouts("open-exam-cta")}>
+        <div className="flex flex-col gap-10 pt-6 pb-24">
+          {Arr.map(page.countries, (country, index) => (
+            <TryoutHubCountry
+              country={country}
+              first={index === 0}
+              key={country.countryKey}
+              onPick={(picked) => savePick.current?.(picked)}
+            />
+          ))}
+        </div>
+      </CatalogActionLabelContext>
       <ConvexIsland>
         <TryoutHubPreference countries={page.countries} savePick={savePick} />
       </ConvexIsland>
@@ -99,37 +114,10 @@ function TryoutHubPreference({
 }
 
 /**
- * The hub's exams, under their countries: each country's flag and name, then
- * its exam cards, so picking an exam is the first click. A card wears the
- * exam's reviewed artwork, or a tile with the exam's own icon. A card reports
- * its pick only when the page passes `onPick`.
+ * One country of the hub: its flag and name over its exam cards, so picking an
+ * exam is the first click. A card wears the exam's reviewed artwork, or a tile
+ * with the exam's own icon, and reports its pick to the hub.
  */
-function TryoutHubCountries({
-  countries,
-  onPick,
-}: {
-  countries: HubCountries;
-  onPick?: (country: HubCountry) => void;
-}) {
-  const tTryouts = useTranslations("Tryouts");
-
-  return (
-    <CatalogActionLabelContext value={tTryouts("open-exam-cta")}>
-      <div className="flex flex-col gap-10 pt-6 pb-24">
-        {Arr.map(countries, (country, index) => (
-          <TryoutHubCountry
-            country={country}
-            first={index === 0}
-            key={country.countryKey}
-            onPick={onPick}
-          />
-        ))}
-      </div>
-    </CatalogActionLabelContext>
-  );
-}
-
-/** One country of the hub: its flag and name over its exam cards. */
 function TryoutHubCountry({
   country,
   first,
@@ -137,7 +125,7 @@ function TryoutHubCountry({
 }: {
   country: HubCountry;
   first: boolean;
-  onPick: ((country: HubCountry) => void) | undefined;
+  onPick: (country: HubCountry) => void;
 }) {
   const visuals = getTileLooks(
     Arr.map(
@@ -169,9 +157,7 @@ function TryoutHubCountry({
             action={(anchor) => (
               <TryoutPageLink
                 {...anchor}
-                onClick={
-                  onPick === undefined ? undefined : () => onPick(country)
-                }
+                onClick={() => onPick(country)}
                 publicPath={exam.entryPath}
               />
             )}

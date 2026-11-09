@@ -25,7 +25,7 @@ const CountryFixtureSchema = Schema.Struct({
   entryPath: Schema.String,
   publicPath: Schema.String,
 });
-export type CountryFixture = typeof CountryFixtureSchema.Type;
+type CountryFixture = typeof CountryFixtureSchema.Type;
 
 /** One signed group in one locale: its tracks in order. */
 const GroupFixtureSchema = Schema.Struct({
@@ -48,7 +48,8 @@ export type SectionFixture = typeof SectionFixtureSchema.Type;
 type CatalogMocks = Record<
   "exam" | "group" | "path" | "section",
   ReturnType<typeof vi.fn>
-> & { readonly country?: ReturnType<typeof vi.fn> };
+> &
+  Partial<Record<"country", ReturnType<typeof vi.fn>>>;
 
 /** Finds the row a read asks for: its locale and its path. */
 function findRow<Row extends { appLocale: AppLocaleCode; publicPath: string }>(

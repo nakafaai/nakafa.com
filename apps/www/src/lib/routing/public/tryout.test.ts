@@ -75,6 +75,34 @@ describe("retired try-out redirects", () => {
     })
   );
 
+  it.effect(
+    "enters a country with one exam at its entry, and moves a renamed exam for good",
+    () =>
+      Effect.gen(function* () {
+        serveTryoutCatalog(mocks, {
+          countries: [
+            {
+              appLocale: "en",
+              entryPath: "try-out/germany/aufnahmepruefung/kolleg/mathematics",
+              publicPath: "try-out/germany",
+            },
+          ],
+          routes: [{ en: "try-out/germany/aufnahmepruefung" }],
+        });
+        expect(yield* readTryoutRedirect("/en/try-out/germany")).toEqual({
+          destination:
+            "/en/try-out/germany/aufnahmepruefung/kolleg/mathematics",
+          status: 307,
+        });
+        expect(
+          yield* readTryoutRedirect("/en/try-out/germany/entrance-examination")
+        ).toEqual({
+          destination: "/en/try-out/germany/aufnahmepruefung",
+          status: 308,
+        });
+      })
+  );
+
   it.effect.each([
     "/en/try-out/indonesia/snbt/2027",
     "/en/try-out/indonesia/snbt/2027/utbk",
