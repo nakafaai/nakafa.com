@@ -5,6 +5,12 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
+/** How far one step of a reader's scroll moves the page while a shape is sought. */
+const REVEAL_STEP = 600;
+
+/** How long the page may be scrolled before a shape must stand on it. */
+const REVEAL_MILLISECONDS = 30_000;
+
 /** The fractions of the page's height that the reader scrolls to, top to bottom. */
 const SCROLL_POSITIONS = [0, 0.25, 0.5, 0.75, 1];
 
@@ -34,6 +40,23 @@ function movesOnlyOnScreen(shape: Locator) {
     const running = getComputedStyle(element).animationPlayState === "running";
     return onScreen === running;
   });
+}
+
+/** Scrolls down the page a screen at a time from the top until `shape` is visible, as a reader's scroll brings it. */
+async function revealByScrolling(page: Page, shape: Locator) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect
+    .poll(
+      async () => {
+        if (await shape.isVisible()) {
+          return true;
+        }
+        await page.mouse.wheel(0, REVEAL_STEP);
+        return false;
+      },
+      { timeout: REVEAL_MILLISECONDS }
+    )
+    .toBe(true);
 }
 
 /** Scrolls to a fraction of the page's scrollable height. */
@@ -77,6 +100,9 @@ test("home toys and loaders move while they are on screen and hold still out of 
               ];
 
               for (const shape of shapes) {
+                // A toy shows once the part beside it is drawn, as the reader nears it, so the page
+                // scrolls down the way a reader does until the shape stands on it.
+                yield* Effect.promise(() => revealByScrolling(page, shape));
                 yield* Effect.promise(() => shape.scrollIntoViewIfNeeded());
                 yield* Effect.promise(() =>
                   expect.poll(() => playState(shape)).toBe("running")
