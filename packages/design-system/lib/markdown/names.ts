@@ -120,9 +120,6 @@ export const mathematicsComponentNames = {
   quadraticEquationReadingRoomProblem: "QuadraticEquationReadingRoomProblem",
   scatterDiagram: "ScatterDiagram",
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
-  triangle: "Triangle",
-  unitCircle: "UnitCircle",
-  vectorChart: "VectorChart",
 } as const;
 
 /** Rich component names of the physics visuals; every lesson domain may use them. */

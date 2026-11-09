@@ -4,7 +4,6 @@ import {
   FunctionChart,
   HistogramChart,
   ScatterDiagram,
-  VectorChart,
 } from "@/lib/content/renderer/client/mathematics/charts";
 import { QuadraticEquationReadingRoomProblem } from "@/lib/content/renderer/client/mathematics/equation";
 import {
@@ -13,10 +12,6 @@ import {
   FunctionMachine,
   InverseFunctionIllustration,
 } from "@/lib/content/renderer/client/mathematics/function";
-import {
-  Triangle,
-  UnitCircle,
-} from "@/lib/content/renderer/client/mathematics/geometry";
 import {
   BacterialGrowth,
   FunctionExplorationVirusChart,
@@ -83,17 +78,5 @@ export const mathematicsRenderers = [
   {
     name: mathematicsComponentNames.sequenceConceptTableChairsAnimation,
     component: SequenceConceptTableChairsAnimation,
-  },
-  {
-    name: mathematicsComponentNames.triangle,
-    component: Triangle,
-  },
-  {
-    name: mathematicsComponentNames.unitCircle,
-    component: UnitCircle,
-  },
-  {
-    name: mathematicsComponentNames.vectorChart,
-    component: VectorChart,
   },
 ] satisfies readonly RendererImplementation[];

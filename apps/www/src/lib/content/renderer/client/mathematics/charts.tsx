@@ -34,11 +34,3 @@ export const ScatterDiagram = withHydrationBoundary(
     )
   )
 );
-
-export const VectorChart = withHydrationBoundary(
-  lazy(() =>
-    import(
-      "@repo/design-system/components/contents/mathematics/vector/chart"
-    ).then((module) => ({ default: module.VectorChart }))
-  )
-);
