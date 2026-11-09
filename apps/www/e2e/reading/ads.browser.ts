@@ -55,6 +55,13 @@ async function nearFirstPlace(page: Page) {
 /** The frame of the first ad place. */
 const firstFrame = (page: Page) => page.locator("[data-ad-slot] aside").first();
 
+/** The height the first ad place takes on the page. */
+const firstRoom = (page: Page) =>
+  page
+    .locator("[data-ad-slot]")
+    .first()
+    .evaluate((place) => place.getBoundingClientRect().height);
+
 /**
  * Moves the pointer until the first frame stands. The page listens for its
  * reader only once it has hydrated and settled (ADR 0039), so a gesture made
@@ -92,11 +99,15 @@ test("a visitor finds a frame between two sections that moves nothing and explai
         );
         expect(Arr.every(following, (tag) => tag === "H2")).toBe(true);
         expect(requests()).toBe(0);
+        // The HTML already holds the frame's room, so the frame fills it.
+        const room = await firstRoom(page);
+        expect(room).toBeGreaterThan(0);
 
         await nearFirstPlace(page);
         await readUntilFrame(page);
         const frame = firstFrame(page);
         await expect.poll(requests).toBe(1);
+        expect(await firstRoom(page)).toBe(room);
 
         await frame.scrollIntoViewIfNeeded();
         await expect(frame).toHaveAccessibleName("Advertisements");
@@ -161,6 +172,8 @@ test("a learner sees the frame on the free plan and loses it with Pro, without t
         await page.mouse.move(16, 8);
         await page.waitForTimeout(3000);
         await expect(firstFrame(page)).toHaveCount(0);
+        // The room a Pro learner never fills closes under the screen.
+        await expect.poll(() => firstRoom(page)).toBe(0);
         expect(requests()).toBe(before);
       });
     })

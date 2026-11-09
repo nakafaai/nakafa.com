@@ -8,10 +8,11 @@ import {
   useSyncExternalStore,
 } from "react";
 import { AdFrame } from "@/components/ads/frame";
+import { AdSpace } from "@/components/ads/space";
 import { SignedInIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 import { AD_CLIENT, AD_SLOTS, type AdUnit } from "@/lib/ads/account";
-import { loadAdScript, requestAd, untilUnfilled } from "@/lib/ads/script";
+import { loadAdScript, requestAd } from "@/lib/ads/script";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { useViewer } from "@/lib/identity/client";
 
@@ -26,12 +27,12 @@ function readSignedInHint() {
 }
 
 /**
- * Shows its frame only to a reader who should see ads. A visitor, whose browser
- * holds no signed-in hint, sees it at once. A hint waits for the page's session:
- * a session that fails to load shows nothing, since the reader may be on Pro, a
- * stale hint is a visitor, and a learner sees the frame only once the account
- * says the plan is free. A Pro learner never mounts the frame, so the ad script
- * never loads for them.
+ * Shows its frame only to a reader who should see ads, and keeps the frame's
+ * room while it decides. A visitor, whose browser holds no signed-in hint, sees
+ * it at once. A hint waits for the page's session: a session that fails to load
+ * shows nothing, since the reader may be on Pro, a stale hint is a visitor, and
+ * a learner sees the frame only once the account says the plan is free. A Pro
+ * learner never mounts the frame, so the ad script never loads for them.
  */
 export function AdAudience({ children }: { children: ReactNode }) {
   const hasHint = useSyncExternalStore(
@@ -49,80 +50,95 @@ function AccountAudience({ children }: { children: ReactNode }) {
     (state) => Option.isSome(state.client) && !state.isPending
   );
   const signedIn = useLiveSession((state) => state.sessionId !== null);
-  if (hasError || !settled) {
-    return null;
+  if (hasError) {
+    return <AdGap />;
+  }
+  if (!settled) {
+    return <AdSpace />;
   }
   if (!signedIn) {
     return children;
   }
   return (
-    <SignedInIsland>
+    <SignedInIsland fallback={<AdSpace />}>
       <PlanAudience>{children}</PlanAudience>
     </SignedInIsland>
   );
 }
 
-/** A learner's audience: the frame for the free plan, nothing for Pro or while the account loads. */
+/** A learner's audience: the frame for the free plan, the room while the account loads, and no frame for Pro. */
 function PlanAudience({ children }: { children: ReactNode }) {
   const plan = useViewer((state) => state.account?.appUser.plan);
-  return plan === "free" ? children : null;
+  if (plan === undefined) {
+    return <AdSpace />;
+  }
+  return plan === "free" ? children : <AdGap />;
 }
 
 /**
- * Puts one frame on the page without moving anything the reader sees. The frame
- * appears only while its place stands under the screen, so the text below it
- * moves out of sight. Once it stands, the ad script loads and the unit asks for
- * its ad once. When AdSense has no ad, or the script cannot load, the frame goes
- * again, also only while it stands under the screen.
+ * The room of a frame this reader never sees. It goes only while it stands
+ * under the screen, so the text below it moves out of sight; a room the reader
+ * already passed stays until they scroll back above it.
  */
-export function AdMount({ unit }: { unit: AdUnit }) {
-  const place = useRef<HTMLDivElement>(null);
-  const slot = useRef<HTMLModElement>(null);
-  const [stage, setStage] = useState<"waiting" | "standing" | "gone">(
-    "waiting"
-  );
+function AdGap() {
+  const space = useRef<HTMLDivElement>(null);
+  const [isGone, setGone] = useState(false);
 
   useEffect(() => {
-    const target = place.current;
-    const element = slot.current;
-    if (target === null || stage === "gone") {
+    const target = space.current;
+    if (target === null) {
       return;
     }
-    if (stage === "standing" && element === null) {
-      return;
-    }
-    const next =
-      element === null
-        ? untilBelowScreen(target).pipe(
-            Effect.andThen(Effect.sync(() => setStage("standing")))
-          )
-        : loadAdScript.pipe(
-            Effect.andThen(requestAd(element, window.location.hostname)),
-            Effect.andThen(untilUnfilled(element)),
-            // A script an ad blocker or the network stopped leaves the unit
-            // empty for good, as AdSense's own no-ad answer does.
-            Effect.catchTag("AdScriptFailed", () => Effect.void),
-            Effect.andThen(untilBelowScreen(target)),
-            Effect.andThen(Effect.sync(() => setStage("gone")))
-          );
-    const running = Effect.runFork(next);
+    const leaving = Effect.runFork(
+      untilBelowScreen(target).pipe(
+        Effect.andThen(Effect.sync(() => setGone(true)))
+      )
+    );
     return () => {
-      Effect.runFork(Fiber.interrupt(running));
+      Effect.runFork(Fiber.interrupt(leaving));
     };
-  }, [stage]);
+  }, []);
+
+  return isGone ? null : <AdSpace ref={space} />;
+}
+
+/**
+ * Puts one frame in the room its place holds, so nothing the reader sees moves.
+ * The ad script loads and the unit asks for its ad once. When AdSense has no ad,
+ * or the script cannot load, the frame stays as it stands, so the room never
+ * closes under the reader.
+ */
+export function AdMount({ unit }: { unit: AdUnit }) {
+  const slot = useRef<HTMLModElement>(null);
+
+  useEffect(() => {
+    const element = slot.current;
+    if (element === null) {
+      return;
+    }
+    const asking = Effect.runFork(
+      loadAdScript.pipe(
+        Effect.andThen(requestAd(element, window.location.hostname)),
+        // A script an ad blocker or the network stopped leaves the unit
+        // empty, as AdSense's own no-ad answer does.
+        Effect.catchTag("AdScriptFailed", () => Effect.void)
+      )
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(asking));
+    };
+  }, []);
 
   return (
-    <div ref={place}>
-      {stage === "standing" ? (
-        <AdFrame>
-          <ins
-            className="adsbygoogle block h-70 w-full"
-            data-ad-client={AD_CLIENT}
-            data-ad-slot={AD_SLOTS[unit]}
-            ref={slot}
-          />
-        </AdFrame>
-      ) : null}
-    </div>
+    <AdSpace>
+      <AdFrame>
+        <ins
+          className="adsbygoogle block w-full flex-1"
+          data-ad-client={AD_CLIENT}
+          data-ad-slot={AD_SLOTS[unit]}
+          ref={slot}
+        />
+      </AdFrame>
+    </AdSpace>
   );
 }

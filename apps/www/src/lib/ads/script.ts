@@ -18,9 +18,6 @@ const ASKED_ATTRIBUTE = "data-ad-asked";
 /** The attribute that asks AdSense for a test ad, which counts no impression and no click. */
 const TEST_ATTRIBUTE = "data-adtest";
 
-/** The attribute where AdSense answers whether a unit received an ad. */
-const STATUS_ATTRIBUTE = "data-ad-status";
-
 /** The ad script did not load: an ad blocker, the network, or the content policy stopped it. */
 export class AdScriptFailed extends Schema.TaggedError<
   AdScriptFailed,
@@ -115,19 +112,4 @@ export const requestAd = (unit: HTMLElement, hostname: string) =>
       unit.setAttribute(TEST_ATTRIBUTE, "on");
     }
     adQueue().push({});
-  });
-
-/** Completes once AdSense answers that it has no ad for the unit. */
-export const untilUnfilled = (unit: HTMLElement) =>
-  Effect.callback<void>((resume) => {
-    const check = () => {
-      if (unit.getAttribute(STATUS_ATTRIBUTE) === "unfilled") {
-        watcher.disconnect();
-        resume(Effect.void);
-      }
-    };
-    const watcher = new MutationObserver(check);
-    watcher.observe(unit, { attributeFilter: [STATUS_ATTRIBUTE] });
-    check();
-    return Effect.sync(() => watcher.disconnect());
   });

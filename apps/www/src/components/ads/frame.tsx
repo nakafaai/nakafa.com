@@ -26,18 +26,22 @@ import { Link } from "@/lib/routing/link";
  * footer is one row at every width: where it is narrow, as on a phone, the
  * buttons keep their icons and give their names to assistive technology and to
  * their tooltips. No line ties the ad to supporting Nakafa or asks anyone to
- * press it, and the rule and the band keep the buttons apart from the ad.
+ * press it, and the rule and the band keep the buttons apart from the ad. The
+ * frame fills the room its place holds, and the unit takes what the header and
+ * the footer leave.
  */
 export function AdFrame({ children }: { children: ReactNode }) {
   const t = useTranslations("Ads");
 
   return (
-    <aside aria-label={t("label")} className="my-8">
-      <Card className="gap-0 py-0" size="sm">
+    <aside aria-label={t("label")} className="h-full">
+      <Card className="h-full gap-0 py-0" size="sm">
         <CardHeader className="border-b pt-(--card-spacing)">
           <CardTitle>{t("label")}</CardTitle>
         </CardHeader>
-        <CardContent className="py-(--card-spacing)">{children}</CardContent>
+        <CardContent className="min-h-0 flex-1 py-(--card-spacing)">
+          {children}
+        </CardContent>
         <CardFooter className="bg-muted/20 @container/ad min-h-15 gap-4 border-t py-3">
           <p className="text-muted-foreground min-w-0 flex-1 text-sm">
             {t("footer")}
