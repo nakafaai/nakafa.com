@@ -3009,10 +3009,10 @@
     },
     "school-refusal-graduated": {
       "title": "Sudah tamat sekolah ini.",
-      "description": "Pelajar yang sudah tamat tidak boleh ditempatkan dalam kumpulan kelas lagi."
+      "description": "Pelajar yang tamat tidak boleh masuk kumpulan kelas lagi."
     },
     "school-refusal-not-operator": {
-      "title": "Hanya kakitangan Nakafa boleh melakukan ini.",
+      "title": "Hanya staf Nakafa boleh buat ini.",
       "description": "Log masuk dengan akaun operator."
     },
     "school-refusal-provision": {
@@ -3020,7 +3020,7 @@
       "description": "Semak alamat dan unit sekolah."
     },
     "school-refusal-webhook-limit": {
-      "title": "Satu klien memegang paling banyak sepuluh webhook.",
+      "title": "Satu klien boleh ada 10 webhook.",
       "description": "Batalkan webhook yang tidak diperlukan lagi."
     },
     "school-refusal-unit-limit": {
@@ -3028,7 +3028,7 @@
       "description": "Sesebuah organisasi memegang bilangan sekolah yang ditetapkan."
     },
     "school-refusal-address-member": {
-      "title": "Mereka sudah menjadi ahli sekolah ini.",
+      "title": "Mereka sudah ahli sekolah ini.",
       "description": "Tukar peranan mereka di bawah Peranan."
     },
     "school-refusal-already-placed": {
@@ -3048,7 +3048,7 @@
       "description": "Seorang guru memimpin satu kumpulan kelas dalam setiap penggal."
     },
     "school-refusal-cohort-has-homeroom": {
-      "title": "Kumpulan kelas ini sudah mempunyai guru.",
+      "title": "Kumpulan kelas ini sudah ada guru.",
       "description": "Buang guru semasa untuk memilih guru lain."
     },
     "exam-copying": {
@@ -3059,7 +3059,7 @@
       "description": "Buang satu soalan untuk menambah soalan lain."
     },
     "action-error": {
-      "title": "Kami tidak dapat menyelesaikan tindakan ini.",
+      "title": "Tindakan ini gagal diselesaikan.",
       "description": "Cuba lagi."
     },
     "exam-in-use": {
@@ -3091,11 +3091,11 @@
       "title": "Pautan disalin!"
     },
     "provider-error": {
-      "title": "Kami tidak dapat meneruskan dengan Google.",
+      "title": "Tidak dapat teruskan dengan Google.",
       "description": "Cuba lagi."
     },
     "checkout-error": {
-      "title": "Kami tidak dapat membuka pembayaran Pro.",
+      "title": "Pembayaran Pro tidak dapat dibuka.",
       "description": "Cuba lagi."
     },
     "invoice-error": {
@@ -3107,7 +3107,7 @@
       "description": "Cuba lagi."
     },
     "mode-error": {
-      "title": "Kami tidak dapat menyimpan paparan kamu.",
+      "title": "Paparan kamu tidak dapat disimpan.",
       "description": "Cuba lagi."
     },
     "tryout-attempt-not-in-progress": {
@@ -3115,36 +3115,36 @@
       "description": "Mulakan sesi baharu untuk terus berlatih."
     },
     "tryout-complete-part-error": {
-      "title": "Belum dapat menyelesaikan bahagian ini.",
+      "title": "Bahagian ini belum dapat ditamatkan.",
       "description": "Cuba lagi."
     },
     "tryout-preference-error": {
       "title": "Pilihan percubaan belum disimpan."
     },
     "tryout-start-error": {
-      "title": "Kami belum dapat memulakan percubaan.",
+      "title": "Percubaan belum dapat dimulakan.",
       "description": "Cuba lagi."
     },
     "tryout-start-part-error": {
-      "title": "Kami belum dapat memulakan bahagian ini.",
+      "title": "Bahagian ini belum dapat dimulakan.",
       "description": "Cuba lagi."
     },
     "tryout-submit-answer-error": {
-      "title": "Kami tidak dapat menyimpan jawapan kamu.",
+      "title": "Jawapan kamu tidak dapat disimpan.",
       "description": "Cuba lagi."
     },
     "tryout-flag-error": {
-      "title": "Kami tidak dapat menyimpan tanda kamu.",
+      "title": "Tanda kamu tidak dapat disimpan.",
       "description": "Cuba lagi."
     },
     "memory-limit": {
-      "title": "Tunggu sebentar sebelum menyimpan lagi."
+      "title": "Tunggu sekejap sebelum simpan lagi."
     },
     "memory-missing": {
       "title": "Memori ini sudah tiada."
     },
     "memory-too-long": {
-      "title": "Teks itu terlalu panjang untuk satu memori."
+      "title": "Terlalu panjang untuk satu memori."
     },
     "interpretation-error": {
       "title": "Tidak dapat memuatkan tafsiran ini.",
@@ -3155,15 +3155,15 @@
       "description": "Memuat semula halaman ini..."
     },
     "failure-account": {
-      "title": "Akaun ini belum boleh menggunakan Nina.",
+      "title": "Akaun ini belum boleh guna Nina.",
       "description": "Log masuk semula atau hubungi sokongan Nakafa jika masih berlaku."
     },
     "failure-admission": {
-      "title": "Nina tidak dapat menyimpan permintaan ini.",
+      "title": "Nina gagal menyimpan permintaan ini.",
       "description": "Cuba lagi."
     },
     "failure-attachment-failed": {
-      "title": "Nina tidak dapat membaca atau menyimpannya.",
+      "title": "Lampiran gagal dibaca atau disimpan.",
       "description": "Cuba muat naik lampiran itu sekali lagi."
     },
     "failure-attachment-invalid": {
@@ -3179,19 +3179,19 @@
       "description": "Jumlah dokumen dalam satu mesej paling banyak {size, number} MiB."
     },
     "failure-authentication": {
-      "title": "Kami tidak dapat mengesahkan sesi kamu.",
+      "title": "Sesi kamu tidak dapat disahkan.",
       "description": "Cuba lagi."
     },
     "failure-busy": {
-      "title": "Nina masih membalas dalam sembang ini.",
+      "title": "Nina masih membalas di sembang ini.",
       "description": "Tunggu jawapannya atau hentikannya sebelum menghantar lagi."
     },
     "failure-chat-access": {
-      "title": "Tiada kebenaran untuk menghantar dalam sembang ini.",
+      "title": "Kamu tidak boleh hantar di sini.",
       "description": "Mulakan sembang kamu sendiri untuk meneruskan."
     },
     "failure-connection": {
-      "title": "Kami tidak dapat mengesahkan permintaan ini.",
+      "title": "Permintaan tidak dapat disahkan.",
       "description": "Semak sambungan kamu dan cuba lagi."
     },
     "failure-context": {
@@ -3199,11 +3199,11 @@
       "description": "Nina tidak dapat membukanya, jadi hantar soalan kamu sekali lagi."
     },
     "failure-credits": {
-      "title": "Kredit tidak mencukupi untuk jawapan ini.",
-      "description": "Semak peruntukan kamu dan tarikh tetapan semula seterusnya dalam tetapan langganan."
+      "title": "Kredit kamu tidak cukup.",
+      "description": "Semak baki dan tarikh set semula dalam tetapan langganan."
     },
     "failure-message-size": {
-      "title": "Terlalu panjang untuk Nina dalam satu giliran.",
+      "title": "Terlalu panjang untuk satu giliran.",
       "description": "Pendekkannya, atau hantar bakinya dalam mesej baharu."
     },
     "failure-missing-chat": {
@@ -3227,7 +3227,7 @@
       "description": "Log masuk semula untuk meneruskan."
     },
     "admitted-elsewhere": {
-      "title": "Nina sedang menjawab dalam sembang baharu"
+      "title": "Nina menjawab dalam sembang baharu"
     },
     "sign-out-error": {
       "title": "Kami tidak dapat log keluar kamu.",
@@ -3246,7 +3246,7 @@
       "description": "Cuba lagi esok."
     },
     "school-login-account": {
-      "title": "Log masuk sekolah tidak boleh membuka sekolah.",
+      "title": "Akaun ini tidak boleh buka sekolah.",
       "description": "Log masuk dengan akaun kamu sendiri untuk membukanya."
     },
     "school-save-error": {
@@ -3267,11 +3267,11 @@
       "description": "Pilih nama lain untuk kumpulan kelas ini."
     },
     "school-refusal-class-subject-taken": {
-      "title": "Mata pelajaran ini sudah mempunyai kelas.",
+      "title": "Mata pelajaran ini sudah ada kelas.",
       "description": "Guna kelas aktif kumpulan kelas itu, atau arkibkannya dahulu."
     },
     "school-refusal-class-limit": {
-      "title": "Kumpulan kelas ini sudah mempunyai semua kelasnya.",
+      "title": "Kelas kumpulan ini sudah penuh.",
       "description": "Pulihkan kelas yang diarkibkan dan bukannya menambah yang baharu."
     },
     "school-refusal-class-address-empty": {
@@ -3283,7 +3283,7 @@
       "description": "Namakan semula kelas, kemudian cuba lagi."
     },
     "school-refusal-class-subject-required": {
-      "title": "Kelas di sini memerlukan mata pelajaran.",
+      "title": "Kelas di sini perlu mata pelajaran.",
       "description": "Tulis mata pelajaran, kemudian tambah sekali lagi."
     },
     "school-refusal-class-subject-not-allowed": {
@@ -3309,8 +3309,8 @@
       "description": "Tanya guru kamu langkah seterusnya."
     },
     "sitting-answers-unsent": {
-      "title": "Sebahagian jawapan mungkin tidak disimpan.",
-      "description": "Sebahagiannya mungkin tidak sampai ke peperiksaan, jadi beritahu pengawas kamu."
+      "title": "Sebahagian jawapan mungkin hilang.",
+      "description": "Ia mungkin tidak sampai, jadi beritahu pengawas kamu."
     },
     "sitting-attempt-closed": {
       "title": "Percubaan ini sudah ditutup.",
@@ -3341,7 +3341,7 @@
       "description": "Pilih dua tarikh, dan pastikan tarikh mula sebelum tarikh akhir."
     },
     "school-refusal-period-overlaps": {
-      "title": "Penggal ini bertindih dengan penggal lain.",
+      "title": "Penggal ini bertindih penggal lain.",
       "description": "Pilih tarikh yang tidak digunakan oleh penggal lain sekolah ini."
     },
     "school-refusal-period-active": {
@@ -3357,7 +3357,7 @@
       "description": "Arkibkan penggal ini dahulu, atau kekalkannya."
     },
     "school-refusal-period-in-use-cohorts": {
-      "title": "Penggal ini masih memegang kumpulan kelas.",
+      "title": "Penggal ini ada kumpulan kelas lagi.",
       "description": "Arkibkan penggal untuk mengekalkan kumpulan kelas dan markahnya."
     },
     "school-refusal-period-in-use-grades": {
@@ -3365,7 +3365,7 @@
       "description": "Arkibkan penggal untuk mengekalkan markahnya."
     },
     "school-refusal-period-in-use-graduations": {
-      "title": "Penggal ini mempunyai rekod tamat sekolah.",
+      "title": "Penggal ini ada rekod tamat sekolah.",
       "description": "Arkibkan penggal untuk mengekalkan rekod tamat sekolahnya."
     },
     "school-refusal-period-in-use-insight": {
@@ -3377,11 +3377,11 @@
       "description": "Arkibkan penggal untuk mengekalkan kelas dan markahnya."
     },
     "school-refusal-period-in-use-promotions": {
-      "title": "Kenaikan kelas menggunakan penggal ini.",
+      "title": "Kenaikan kelas guna penggal ini.",
       "description": "Arkibkan penggal untuk mengekalkan kenaikan kelasnya."
     },
     "school-refusal-cohort-name-taken": {
-      "title": "Nama kumpulan kelas ini sudah digunakan.",
+      "title": "Nama kumpulan ini sudah digunakan.",
       "description": "Pilih nama lain untuk penggal ini."
     },
     "school-refusal-cohort-grade": {
@@ -3389,35 +3389,35 @@
       "description": "Pilih tahun yang diajar oleh peringkat sekolah ini."
     },
     "school-refusal-cohort-limit": {
-      "title": "Tiada lagi kumpulan kelas yang muat dalam penggal ini.",
+      "title": "Tiada ruang untuk kumpulan lagi.",
       "description": "Tambah kumpulan kelas ke penggal lain."
     },
     "school-refusal-cohort-in-use-members": {
-      "title": "Kumpulan kelas ini masih memegang pelajar.",
+      "title": "Kumpulan ini masih ada pelajar.",
       "description": "Pindahkan pelajarnya keluar dahulu, atau arkibkan kumpulan kelas."
     },
     "school-refusal-cohort-in-use-promotions": {
-      "title": "Kenaikan kelas menggunakan kumpulan kelas ini.",
+      "title": "Kenaikan kelas guna kumpulan ini.",
       "description": "Arkibkan kumpulan kelas untuk mengekalkan kenaikan kelasnya."
     },
     "school-refusal-cohort-in-use-homeroom": {
-      "title": "Kumpulan kelas ini mempunyai guru kelas.",
+      "title": "Kumpulan ini ada guru kelas.",
       "description": "Buang guru itu dahulu, atau arkibkan kumpulan kelas."
     },
     "school-refusal-cohort-in-use-classes": {
-      "title": "Kumpulan kelas ini masih memegang kelas.",
+      "title": "Kumpulan ini masih ada kelas.",
       "description": "Arkibkan kumpulan kelas untuk mengekalkan kelas dan markahnya."
     },
     "school-refusal-cohort-in-use-sittings": {
-      "title": "Kumpulan kelas ini mempunyai sesi peperiksaan.",
+      "title": "Kumpulan ini ada sesi peperiksaan.",
       "description": "Arkibkan kumpulan kelas untuk mengekalkan sesi dan keputusannya."
     },
     "school-refusal-cohort-in-use-reports": {
-      "title": "Kumpulan kelas ini mempunyai kad laporan.",
+      "title": "Kumpulan ini ada kad laporan.",
       "description": "Arkibkan kumpulan kelas untuk mengekalkan kad laporannya."
     },
     "school-refusal-cohort-in-use-letters": {
-      "title": "Kumpulan kelas ini mempunyai surat tamat sekolah.",
+      "title": "Kumpulan ini ada surat kelulusan.",
       "description": "Arkibkan kumpulan kelas untuk mengekalkan suratnya."
     },
     "school-refusal-address-invited": {
@@ -3429,7 +3429,7 @@
       "description": "Guna alamat daripada domain yang diterima oleh sekolah ini."
     },
     "school-refusal-invite-pending": {
-      "title": "Orang ini mempunyai jemputan yang menunggu.",
+      "title": "Jemputan orang ini masih menunggu.",
       "description": "Hantar semula jemputan yang menunggu itu."
     },
     "school-refusal-invite-expired": {
@@ -3453,36 +3453,36 @@
       "description": "Minta pentadbir sekolah ini menyemak akses kamu."
     },
     "school-refusal-action-closed": {
-      "title": "Satu tindakan ditutup kepada klien API.",
+      "title": "Satu tindakan tertutup untuk API.",
       "description": "Buangnya daripada klien, kemudian cipta klien itu sekali lagi."
     },
     "school-refusal-draft-refused": {
-      "title": "Nina tidak boleh membuat draf ini sekarang.",
-      "description": "Hidupkan Nina untuk sekolah, atau tunggu sehingga kredit sekolah diperbaharui."
+      "title": "Nina tidak boleh buat draf sekarang.",
+      "description": "Hidupkan Nina untuk sekolah, atau tunggu kredit diperbaharui."
     },
     "school-refusal-promotion-state": {
       "title": "Penggal ini belum boleh dibuka.",
       "description": "Laksanakan kenaikan kelas ke dalam penggal ini dahulu."
     },
     "school-refusal-last-owner": {
-      "title": "Pemilik terakhir tidak boleh dibuang.",
+      "title": "Pemilik terakhir mesti kekal.",
       "description": "Berikan peranan pemilik kepada orang lain dahulu."
     },
     "school-refusal-grant-role": {
-      "title": "Peranan ini tidak boleh diberikan di sini.",
+      "title": "Peranan ini tidak boleh diberi.",
       "description": "Pilih peranan lain untuk orang ini."
     },
     "school-refusal-grant-scope": {
-      "title": "Pemilik hanya memegang seluruh sekolah.",
+      "title": "Pemilik hanya untuk seluruh sekolah.",
       "description": "Pilih seluruh sekolah sebagai liputan peranan ini."
     },
     "school-refusal-grant-limit": {
-      "title": "Orang ini sudah memegang cukup peranan.",
+      "title": "Orang ini sudah cukup peranan.",
       "description": "Buang satu peranan sebelum kamu memberikan yang lain."
     },
     "school-refusal-seat-limit": {
       "title": "Setiap akaun sedang digunakan.",
-      "description": "Tambah akaun dalam pengebilan untuk memberi akses kepada lebih ramai orang."
+      "description": "Tambah akaun dalam pengebilan supaya lebih ramai boleh masuk."
     },
     "school-refusal-plan-missing": {
       "title": "Belum ada pelan yang berjalan.",
@@ -3493,16 +3493,16 @@
       "description": "Jemput orang itu sekali lagi untuk memulihkan akses."
     },
     "school-refusal-person-kind": {
-      "title": "Peranan ini tidak sesuai untuk orang ini.",
+      "title": "Peranan ini tidak sesuai untuknya.",
       "description": "Pilih peranan yang sesuai dengan jenis orang ini."
     },
     "school-refusal-temporary-role": {
-      "title": "Peranan ini tidak boleh bersifat sementara.",
+      "title": "Peranan ini tidak boleh sementara.",
       "description": "Berikan pemilik dan pentadbir pemberian kekal."
     },
     "school-refusal-login-name-refused": {
       "title": "Nama log masuk ini tidak dibenarkan.",
-      "description": "Guna 3 hingga 32 aksara, a hingga z, 0 hingga 9, titik, garis bawah atau sempang."
+      "description": "Guna 3 hingga 32 aksara: a-z, 0-9, titik, garis bawah atau sempang."
     },
     "school-refusal-login-name-taken": {
       "title": "Nama log masuk ini sudah digunakan.",
@@ -3513,7 +3513,7 @@
       "description": "Tukar nama itu di halaman orang tersebut."
     },
     "school-refusal-login-missing": {
-      "title": "Orang ini belum mempunyai nama log masuk.",
+      "title": "Orang ini belum ada nama log masuk.",
       "description": "Berikan orang itu nama log masuk dahulu."
     },
     "school-refusal-person-not-placed": {
@@ -3525,7 +3525,7 @@
       "description": "Keluarkan kad log masuk untuk pelajar ini dahulu."
     },
     "school-refusal-card-role": {
-      "title": "Hanya pelajar mendapat kad log masuk.",
+      "title": "Kad log masuk untuk pelajar sahaja.",
       "description": "Kad dikeluarkan kepada pelajar sahaja."
     },
     "school-refusal-npsn-invalid": {
@@ -3541,11 +3541,11 @@
       "description": "Setiap soalan dipaparkan dalam peperiksaan semasa dia membacanya."
     },
     "import-done": {
-      "title": "Soalan kamu sudah ada dalam peperiksaan.",
+      "title": "Soalan kamu sudah dalam peperiksaan.",
       "description": "Setiap soalan mempunyai jawapan yang betul."
     },
     "import-keyless": {
-      "title": "Soalan kamu sudah ada dalam peperiksaan.",
+      "title": "Soalan kamu sudah dalam peperiksaan.",
       "description": "Tandakan jawapan betul yang tidak ditandakan oleh fail itu."
     },
     "import-mathtype": {
@@ -3602,10 +3602,10 @@
     },
     "forum-file-quota": {
       "title": "Fail tidak ditambah.",
-      "description": "Sembang sekolah ini sudah memegang semua fail yang boleh dimuatkan. Sembunyikan fail lama dahulu."
+      "description": "Sembang sekolah ini sudah penuh fail. Sembunyikan fail lama dahulu."
     },
     "school-refusal-report-closed": {
-      "title": "Kad laporan ini sudah ke peringkat seterusnya.",
+      "title": "Kad laporan ini sudah berubah.",
       "description": "Muat semula senarai untuk melihat statusnya."
     },
     "school-refusal-report-not-placed": {
@@ -3664,7 +3664,7 @@
       "description": "Surat dikeluarkan dengannya, jadi ia kekal seperti sedia ada."
     },
     "school-refusal-graduation-not-final": {
-      "title": "Kumpulan kelas ini tidak tamat sekolah.",
+      "title": "Kumpulan ini tidak tamat sekolah.",
       "description": "Hanya tahun terakhir sesebuah unit tamat sekolah."
     },
     "school-refusal-graduation-undecided": {
@@ -3680,7 +3680,7 @@
       "description": "Pilih masa mula yang belum berlalu, dan masa tamat selepasnya."
     },
     "school-refusal-scheme-not-later": {
-      "title": "Versi yang lebih baharu sudah disimpan.",
+      "title": "Versi lebih baharu sudah disimpan.",
       "description": "Muat semula halaman untuk melihatnya, kemudian simpan versi kamu."
     },
     "school-refusal-scheme-used": {
@@ -3701,10 +3701,10 @@
     },
     "library-storage-full": {
       "title": "Fail tidak ditambah.",
-      "description": "Storan sekolah penuh. Padam fail selama-lamanya untuk mengosongkan ruang."
+      "description": "Storan sekolah penuh. Padam fail terus untuk beri ruang."
     },
     "classroom-refusal-task-closed": {
-      "title": "Tugasan ini ditutup pada tarikh akhirnya.",
+      "title": "Tugasan ini sudah ditutup.",
       "description": "Ia tidak menerima kerja lagi."
     },
     "classroom-refusal-points-fixed": {
@@ -3724,7 +3724,7 @@
       "description": "Nyahsemat satu pengumuman dahulu."
     },
     "classroom-refusal-scheduled-limit": {
-      "title": "Tiada lagi siaran yang boleh menunggu.",
+      "title": "Tiada lagi siaran boleh menunggu.",
       "description": "Siarkan atau padam siaran yang menunggu dahulu."
     },
     "classroom-refusal-scheduled-past": {
@@ -3772,7 +3772,7 @@
       "description": "Padam satu folder dahulu."
     },
     "classroom-refusal-folder-cycle": {
-      "title": "Folder tidak boleh memegang dirinya sendiri.",
+      "title": "Folder tidak boleh memuat dirinya.",
       "description": "Pilih folder lain."
     },
     "classroom-refusal-file-size": {
@@ -3780,19 +3780,19 @@
       "description": "Pilih fail yang lebih kecil."
     },
     "comment-reported": {
-      "title": "Terima kasih, laporan sudah dihantar."
+      "title": "Terima kasih, laporan dihantar."
     },
     "comment-paste-refused": {
-      "title": "Teks ini terlalu panjang untuk satu komen."
+      "title": "Terlalu panjang untuk satu komen."
     },
     "comment-photo-refused": {
       "title": "Foto tidak ditambah."
     },
     "comment-photo-limit": {
-      "title": "Satu komen boleh ada empat foto sahaja."
+      "title": "Satu komen maksimum empat foto."
     },
     "comment-photo-fixed": {
-      "title": "Foto komen yang sudah dihantar kekal begitu."
+      "title": "Foto komen yang dihantar kekal."
     },
     "island-refused-outside": {
       "title": "Itu tidak muat di pulau kamu."
@@ -3807,35 +3807,35 @@
       "title": "Ada sesuatu di atasnya."
     },
     "island-refused-locked": {
-      "title": "Ini terbuka pada tahap yang lebih tinggi."
+      "title": "Ini terbuka pada tahap lebih tinggi."
     },
     "island-refused-unaffordable": {
-      "title": "Kamu perlukan lebih banyak Bintang untuk ini."
+      "title": "Kamu perlukan lebih banyak Bintang."
     },
     "island-refused-starter": {
-      "title": "Ia datang bersama pulau kamu dan kekal."
+      "title": "Ia datang bersama pulau dan kekal."
     },
     "island-refused-missing": {
       "title": "Kepingan itu sudah tiada."
     },
     "island-refused-top": {
-      "title": "Ia sudah berada di peringkat tertinggi."
+      "title": "Ia sudah di peringkat tertinggi."
     },
     "island-refused-bottom": {
-      "title": "Ia sudah berada di peringkat pertama."
+      "title": "Ia sudah di peringkat pertama."
     },
     "island-stale": {
       "title": "Pulau kamu berubah di tempat lain.",
       "description": "Kami muatkan yang terbaru, jadi cuba lagi."
     },
     "island-refused-grows": {
-      "title": "Ia membesar apabila kamu menyiramnya."
+      "title": "Ia membesar bila kamu siram."
     },
     "island-refused-rooted": {
-      "title": "Ia sudah berakar, jadi alihkan sahaja."
+      "title": "Ia sudah berakar, jadi alihkan."
     },
     "island-refused-materials": {
-      "title": "Kamu perlukan lebih banyak hasil kebun."
+      "title": "Kamu perlukan lebih hasil kebun."
     },
     "island-farm-unlearned": {
       "title": "Belajar dahulu, kemudian siram."
