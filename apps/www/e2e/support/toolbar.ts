@@ -55,11 +55,25 @@ export async function pressTool(page: Page, name: string) {
     .click();
 }
 
-/** Selects the `count` characters before the caret, as a teacher does with Shift and the left arrow. */
+/**
+ * Selects the `count` characters before the caret, as a teacher does with Shift and the left arrow, and holds until
+ * the page's selection is that long. Keys sent the moment the typing ends have come back with a shorter selection,
+ * the caret set back at the end of the typed word partway through (the runs of 8 Nov bolded "ji" and "i" of "uji"),
+ * so a short selection collapses to its end, the caret's place, and is made again.
+ */
 export async function selectBack(page: Page, count: number) {
-  for (let step = 0; step < count; step += 1) {
-    await page.keyboard.press("Shift+ArrowLeft");
-  }
+  await expect(async () => {
+    for (let step = 0; step < count; step += 1) {
+      await page.keyboard.press("Shift+ArrowLeft");
+    }
+    const selected = await page.evaluate(
+      () => window.getSelection()?.toString().length ?? 0
+    );
+    if (selected !== count) {
+      await page.keyboard.press("ArrowRight");
+    }
+    expect(selected, "the selection before the caret").toBe(count);
+  }).toPass({ timeout: readinessTimeoutMilliseconds });
 }
 
 /** The rows of the first table of a text, and the cells of its first row. */
