@@ -8,7 +8,7 @@ import { getTryoutLlmsText } from "@/lib/llms/tryout";
 /** The catalog's reads, whose answers each test chooses. */
 const catalog = vi.hoisted(() => ({
   country: vi.fn(),
-  exam: vi.fn(),
+  group: vi.fn(),
   hub: vi.fn(),
   set: vi.fn(),
   sets: vi.fn(),
@@ -16,7 +16,7 @@ const catalog = vi.hoisted(() => ({
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutCountryPage: catalog.country,
-  readTryoutExamPage: catalog.exam,
+  readTryoutGroupPage: catalog.group,
   readTryoutHubPage: catalog.hub,
   readTryoutSetList: catalog.sets,
   readTryoutSetPage: catalog.set,
@@ -33,13 +33,18 @@ const EXAM = {
   publicPath: "try-out/indonesia/snbt",
   title: "SNBT",
 };
-const TRACK = {
+const GROUP = {
+  groupKey: "2027",
   publicPath: "try-out/indonesia/snbt/2027",
-  title: "Year 2027",
+  title: "2027",
+};
+const TRACK = {
+  publicPath: "try-out/indonesia/snbt/2027/utbk",
+  title: "UTBK",
   trackKey: "2027",
 };
 const SET = {
-  publicPath: "try-out/indonesia/snbt/2027/set-1",
+  publicPath: "try-out/indonesia/snbt/2027/utbk/set-1",
   title: "Set 1",
 };
 
@@ -59,8 +64,9 @@ describe("try-out Markdown", () => {
     Effect.gen(function* () {
       expect(yield* text("subjects/physics")).toBeNull();
       expect(
-        yield* text("try-out/indonesia/snbt/2027/set-1/general-reasoning")
+        yield* text("try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning")
       ).toBeNull();
+      expect(yield* text("try-out/indonesia/snbt")).toBeNull();
     })
   );
 
@@ -78,40 +84,65 @@ describe("try-out Markdown", () => {
     })
   );
 
-  it.effect("lists a country's exams with what each says of itself", () =>
-    Effect.gen(function* () {
-      catalog.country
-        .mockReturnValueOnce(
-          Effect.succeedSome({
-            country: COUNTRY,
-            exams: [{ ...EXAM, description: "The entrance test." }],
-          })
-        )
-        .mockReturnValueOnce(Effect.succeedNone);
+  it.effect(
+    "lists a country's exams, each opening its first group, with what each says of itself",
+    () =>
+      Effect.gen(function* () {
+        catalog.country
+          .mockReturnValueOnce(
+            Effect.succeedSome({
+              country: COUNTRY,
+              exams: [
+                {
+                  ...EXAM,
+                  description: "The entrance test.",
+                  entryPath: GROUP.publicPath,
+                },
+              ],
+            })
+          )
+          .mockReturnValueOnce(Effect.succeedNone);
 
-      expect(yield* text("try-out/indonesia")).toContain(
-        `- [SNBT](${BASE_URL}/en/try-out/indonesia/snbt): The entrance test.`
-      );
-      expect(yield* text("try-out/nowhere")).toBeNull();
-    })
+        expect(yield* text("try-out/indonesia")).toContain(
+          `- [SNBT](${BASE_URL}/en/try-out/indonesia/snbt/2027): The entrance test.`
+        );
+        expect(yield* text("try-out/nowhere")).toBeNull();
+      })
   );
 
-  it.effect("lists an exam's tracks", () =>
+  it.effect("lists a group's tracks, named by its exam", () =>
     Effect.gen(function* () {
-      catalog.exam
+      catalog.group
         .mockReturnValueOnce(
           Effect.succeed({
             country: COUNTRY,
             exam: EXAM,
+            group: GROUP,
+            groups: [GROUP],
             tracks: [TRACK],
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            country: COUNTRY,
+            exam: EXAM,
+            group: { ...GROUP, description: "The sitting of 2027." },
+            groups: [GROUP],
+            tracks: [],
           })
         )
         .mockReturnValueOnce(Effect.succeed(null));
 
-      expect(yield* text("try-out/indonesia/snbt")).toContain(
-        `- [Year 2027](${BASE_URL}/en/try-out/indonesia/snbt/2027)`
+      const group = yield* text("try-out/indonesia/snbt/2027");
+
+      expect(group).toContain("# SNBT 2027");
+      expect(group).toContain(
+        `- [UTBK](${BASE_URL}/en/try-out/indonesia/snbt/2027/utbk)`
       );
-      expect(yield* text("try-out/indonesia/nothing")).toBeNull();
+      expect(yield* text("try-out/indonesia/snbt/2027")).toContain(
+        "The sitting of 2027."
+      );
+      expect(yield* text("try-out/indonesia/snbt/2030")).toBeNull();
     })
   );
 
@@ -119,7 +150,12 @@ describe("try-out Markdown", () => {
     Effect.gen(function* () {
       catalog.track
         .mockReturnValueOnce(
-          Effect.succeed({ country: COUNTRY, exam: EXAM, track: TRACK })
+          Effect.succeed({
+            country: COUNTRY,
+            exam: EXAM,
+            group: GROUP,
+            track: TRACK,
+          })
         )
         .mockReturnValueOnce(Effect.succeed(null));
       catalog.sets
@@ -128,15 +164,15 @@ describe("try-out Markdown", () => {
           windowOf([
             {
               ...SET,
-              publicPath: "try-out/indonesia/snbt/2027/set-2",
+              publicPath: "try-out/indonesia/snbt/2027/utbk/set-2",
               title: "Set 2",
             },
           ])
         );
 
-      const track = yield* text("try-out/indonesia/snbt/2027");
+      const track = yield* text("try-out/indonesia/snbt/2027/utbk");
 
-      expect(track).toContain("# SNBT Year 2027");
+      expect(track).toContain("# SNBT 2027 UTBK");
       expect(track).toContain("Set 1");
       expect(track).toContain("Set 2");
       expect(catalog.sets).toHaveBeenLastCalledWith(
@@ -144,7 +180,7 @@ describe("try-out Markdown", () => {
           paginationOpts: expect.objectContaining({ cursor: "next" }),
         })
       );
-      expect(yield* text("try-out/indonesia/snbt/2030")).toBeNull();
+      expect(yield* text("try-out/indonesia/snbt/2030/utbk")).toBeNull();
     })
   );
 
@@ -161,17 +197,18 @@ describe("try-out Markdown", () => {
                 title: "General Reasoning",
               },
             ],
+            group: GROUP,
             set: SET,
             track: TRACK,
           })
         )
         .mockReturnValueOnce(Effect.succeed(null));
 
-      const set = yield* text("try-out/indonesia/snbt/2027/set-1");
+      const set = yield* text("try-out/indonesia/snbt/2027/utbk/set-1");
 
-      expect(set).toContain("# SNBT Year 2027 Set 1");
+      expect(set).toContain("# SNBT 2027 UTBK Set 1");
       expect(set).toContain("- General Reasoning: 30 Questions, 30 min");
-      expect(yield* text("try-out/indonesia/snbt/2027/set-9")).toBeNull();
+      expect(yield* text("try-out/indonesia/snbt/2027/utbk/set-9")).toBeNull();
     })
   );
 
@@ -181,6 +218,7 @@ describe("try-out Markdown", () => {
         Effect.succeed({
           country: COUNTRY,
           exam: EXAM,
+          group: GROUP,
           track: { ...TRACK, description: "Its own words." },
         })
       );
@@ -188,16 +226,17 @@ describe("try-out Markdown", () => {
       catalog.set.mockReturnValueOnce(
         Effect.succeed({
           exam: EXAM,
+          group: GROUP,
           sections: [],
           set: { ...SET, description: "Its own set." },
           track: TRACK,
         })
       );
 
-      expect(yield* text("try-out/indonesia/snbt/2027")).toContain(
+      expect(yield* text("try-out/indonesia/snbt/2027/utbk")).toContain(
         "Its own words."
       );
-      expect(yield* text("try-out/indonesia/snbt/2027/set-1")).toContain(
+      expect(yield* text("try-out/indonesia/snbt/2027/utbk/set-1")).toContain(
         "Its own set."
       );
     })

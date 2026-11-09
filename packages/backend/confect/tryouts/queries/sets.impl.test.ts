@@ -227,7 +227,7 @@ describe("tryouts/queries/sets", () => {
             publishedScore: null,
             runningAttempt: {
               attemptId: running,
-              publicPath: "try-out/indonesia/snbt/2027/set-1-id",
+              publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id",
             },
             setKey: "set-1",
           },

@@ -51,9 +51,14 @@ const TryoutExamArtworkIdentitySchema = Schema.Struct({
       Schema.makeFilter(
         (publicPath) => {
           const segments = publicPath.split("/");
-          return segments.length === 3 && segments[0] === "try-out";
+          return (
+            (segments.length === 3 || segments.length === 4) &&
+            segments[0] === "try-out"
+          );
         },
-        { message: "Expected one localized try-out exam public path." }
+        {
+          message: "Expected one localized try-out exam or group public path.",
+        }
       )
     )
   ),
@@ -126,27 +131,22 @@ export function getTryoutCountryCatalogArtwork(
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }
 
-/** Resolves the reviewed year or subject artwork of one signed try-out track, for its card and its social image. */
+/** Resolves the reviewed artwork of one signed try-out track, SNBT's UTBK of 2027 or a TKA subject, for its card and its social image. */
 export function getTryoutTrackCatalogArtwork(
   locale: Locale,
   source: Pick<
     typeof CatalogTrackSchema.Type,
-    "countryKey" | "examKey" | "trackKey" | "trackKind"
+    "countryKey" | "examKey" | "trackKey"
   >
 ) {
   let identity: ArtworkIdentity | undefined;
   if (
     source.countryKey === "indonesia" &&
     source.examKey === "snbt" &&
-    source.trackKind === "year" &&
     source.trackKey === "2027"
   ) {
     identity = "tryout/indonesia/2027";
-  } else if (
-    source.countryKey === "indonesia" &&
-    source.examKey === "tka" &&
-    source.trackKind === "subject"
-  ) {
+  } else if (source.countryKey === "indonesia" && source.examKey === "tka") {
     identity = Option.getOrUndefined(
       HashMap.get(TKA_TRACK_ARTWORK_BY_TRACK_KEY, source.trackKey)
     );

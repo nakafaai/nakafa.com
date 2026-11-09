@@ -3,6 +3,7 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   buildTryoutCountryOptions,
   buildTryoutExamOptions,
+  buildTryoutGroupOptions,
 } from "@/components/tryout/catalog/options";
 
 describe("try-out catalog options", () => {
@@ -29,21 +30,43 @@ describe("try-out catalog options", () => {
     ]);
   });
 
-  it("projects the active localized exams without static source lookup", () => {
+  it("links each exam to its entry, the first of its groups", () => {
     expect(
       buildTryoutExamOptions([
         {
           description: "Ujian baru",
+          entryPath: "try-out/indonesia/ujian-baru/sma-ma-smk",
           examKey: "ujian-baru",
+          groupAxis: "grade",
           publicPath: PublicPathSchema.make("try-out/indonesia/ujian-baru"),
           title: "Ujian Baru",
         },
       ])
     ).toEqual([
       {
+        entryPath: "try-out/indonesia/ujian-baru/sma-ma-smk",
         examKey: "ujian-baru",
         title: "Ujian Baru",
         value: "try-out/indonesia/ujian-baru",
+      },
+    ]);
+  });
+
+  it("projects the groups of an exam, each to its own page", () => {
+    expect(
+      buildTryoutGroupOptions([
+        {
+          description: "Sekolah menengah atas",
+          groupKey: "senior-high-school",
+          publicPath: "try-out/indonesia/tka/sma-ma-smk",
+          title: "SMA/MA/SMK",
+        },
+      ])
+    ).toEqual([
+      {
+        groupKey: "senior-high-school",
+        title: "SMA/MA/SMK",
+        value: "try-out/indonesia/tka/sma-ma-smk",
       },
     ]);
   });

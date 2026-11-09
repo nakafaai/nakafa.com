@@ -23,8 +23,8 @@ export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale/school/pricing",
   "/$locale/try-out",
   "/$locale/try-out/$country",
-  "/$locale/try-out/$country/$exam",
-  "/$locale/try-out/$country/$exam/$track",
-  "/$locale/try-out/$country/$exam/$track/$set",
-  "/$locale/try-out/$country/$exam/$track/$set/$section",
+  "/$locale/try-out/$country/$exam/$group",
+  "/$locale/try-out/$country/$exam/$group/$track",
+  "/$locale/try-out/$country/$exam/$group/$track/$set",
+  "/$locale/try-out/$country/$exam/$group/$track/$set/$section",
 ] as const;

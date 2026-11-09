@@ -11,7 +11,6 @@ import { siteUrlKeys } from "@repo/site/keys";
 import { Effect, Option } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
-import { readProfileIdAddress } from "@/lib/profile/route";
 import { readMovedRedirect } from "@/lib/routing/moved";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
@@ -23,10 +22,9 @@ import {
 
 /**
  * The answer to a retired public address, as a Response, or none. The
- * successor keeps the Markdown suffix and the query string of the request. Only
- * a retired profile address depends on the session cookie, so only its answer
- * says so with `Vary`. The server entry asks this after the school gates and the
- * removed-address answer, and before the moved addresses.
+ * successor keeps the Markdown suffix and the query string of the request. The
+ * server entry asks this after the school gates and the removed-address answer,
+ * and before the moved addresses.
  */
 export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
   function* (request: Request) {
@@ -36,22 +34,19 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
     );
     const migration = yield* readPublicUrlMigrationRedirect({
       hasAttemptCapability: hasTryoutAttemptCapability(url.searchParams),
-      headers: request.headers,
-      markdown: markdownExtension !== "",
       method: request.method,
       pathname,
     });
     if (migration === null) {
       return Option.none();
     }
-    const headers = new Headers({
-      location: `${migration.destination}${markdownExtension}${url.search}`,
-    });
-    if (Option.isSome(readProfileIdAddress(pathname))) {
-      headers.set("vary", "Cookie");
-    }
     return Option.some(
-      new Response(null, { headers, status: migration.status })
+      new Response(null, {
+        headers: {
+          location: `${migration.destination}${markdownExtension}${url.search}`,
+        },
+        status: migration.status,
+      })
     );
   }
 );

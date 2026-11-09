@@ -52,7 +52,7 @@ describe("tryouts/mutations/attempts", () => {
         const world = yield* tryoutWorld();
         const started = yield* world.start();
         expect(started.navigation).toEqual({
-          publicPath: "try-out/indonesia/snbt/2027/set-1-id",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id",
         });
         const { attempt, placements, progress, scheduled, sections } =
           yield* readStart(world, started.attemptId);
@@ -67,14 +67,14 @@ describe("tryouts/mutations/attempts", () => {
           scoring: { kind: "raw" },
           sections: [
             {
-              publicPath: "try-out/indonesia/snbt/2027/set-1-id/section-a",
+              publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-a",
               questionCount: 2,
               sectionKey: "section-a",
               sectionOrder: 1,
               timeLimitSeconds: 600,
             },
             {
-              publicPath: "try-out/indonesia/snbt/2027/set-1-id/section-b",
+              publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
               questionCount: 1,
               sectionKey: "section-b",
               sectionOrder: 2,
@@ -82,7 +82,7 @@ describe("tryouts/mutations/attempts", () => {
             },
           ],
           setIdentity: "indonesia/snbt/2027/set-1",
-          setPublicPath: "try-out/indonesia/snbt/2027/set-1-id",
+          setPublicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id",
           status: "in-progress",
           totalQuestions: 3,
         });
@@ -193,7 +193,7 @@ describe("tryouts/mutations/attempts", () => {
           }
         );
         expect(started.navigation).toEqual({
-          publicPath: "try-out/indonesia/snbt/2027/set-1-id/section-b",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
         });
         expect(
           (yield* readStart(world, started.attemptId)).sections
@@ -236,10 +236,10 @@ describe("tryouts/mutations/attempts", () => {
             destinationSectionKey,
           });
         expect((yield* toSection("id", "section-b")).navigation).toEqual({
-          publicPath: "try-out/indonesia/snbt/2027/set-1-id/section-b",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
         });
         expect((yield* toSection("en", "section-b")).navigation).toEqual({
-          publicPath: "try-out/indonesia/snbt/2027/set-1-en/section-b",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-en/section-b",
         });
         expect(
           yield* toSection("id", "section-z").pipe(Effect.flip)
@@ -276,7 +276,7 @@ describe("tryouts/mutations/attempts", () => {
         const world = yield* tryoutWorld();
         yield* world.start();
         expect((yield* world.start({ locale: "en" })).navigation).toEqual({
-          publicPath: "try-out/indonesia/snbt/2027/set-1-en",
+          publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-en",
         });
         yield* world.replaceRow(
           "catalog",

@@ -1,5 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import {
   Array as Arr,
   Duration,
@@ -22,7 +25,11 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/iu;
 const QURAN_HEADING_PATTERN = /Al-Baqara/iu;
-const TRYOUT_TITLE_PATTERN = /Try out/iu;
+/**
+ * The hub's title, which names the try-out pages as people search for them
+ * (`hub-search-title`), not as the header names the section.
+ */
+const TRYOUT_TITLE_PATTERN = new RegExp(en.Tryouts["hub-search-title"], "u");
 /**
  * A curriculum's page or one of its grades, which the homepage links: it links
  * no subject page of a grade.

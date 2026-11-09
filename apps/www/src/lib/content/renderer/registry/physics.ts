@@ -32,10 +32,10 @@ import {
   InstantaneousVelocitySpeedLab,
   VelocitySpeedLab,
 } from "@/lib/content/renderer/client/physics/velocity";
-import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainRenderers = [
+/** Every physics visual, which any lesson in any domain may use. */
+export const physicsRenderers = [
   {
     name: physicsComponentNames.accelerationGraphCard,
     component: AccelerationGraphCard,
@@ -59,10 +59,6 @@ export const domainRenderers = [
   {
     name: physicsComponentNames.instantaneousVelocitySpeedLab,
     component: InstantaneousVelocitySpeedLab,
-  },
-  {
-    name: physicsComponentNames.lineEquation,
-    component: LineEquationServer,
   },
   {
     name: physicsComponentNames.measurementToolsLab,

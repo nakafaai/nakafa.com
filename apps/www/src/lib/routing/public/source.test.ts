@@ -347,7 +347,7 @@ describe("public HTML route rejection", () => {
           "/de/og",
           "/de/faecher",
           "/en/subjects/mathematics",
-          "/de/try-out/a/b/c/d/e/f",
+          "/de/try-out/a/b/c/d/e/f/g",
         ];
 
         for (const pathname of paths) {

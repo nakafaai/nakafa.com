@@ -20,6 +20,9 @@ const ProjectedHtmlRouteInputSchema = Schema.Struct({
 });
 type ProjectedHtmlRouteInput = typeof ProjectedHtmlRouteInputSchema.Type;
 
+/** A try-out set's path below its namespace: its country, exam, group, track and set. Its sections add one. */
+const TRYOUT_SET_SEGMENTS = 5;
+
 /** Resolves one material HTML route against a single active release snapshot. */
 const readProjectedMaterialRouteRejection = Effect.fn(
   "www.routing.publicHtml.materialRejection"
@@ -95,7 +98,8 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
   if (
     hasAttemptCapability &&
-    (pathSegments.length === 4 || pathSegments.length === 5)
+    (pathSegments.length === TRYOUT_SET_SEGMENTS ||
+      pathSegments.length === TRYOUT_SET_SEGMENTS + 1)
   ) {
     return null;
   }

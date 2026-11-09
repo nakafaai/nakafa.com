@@ -60,10 +60,10 @@ export const pinnedRoutes = {
     en: "/en/curriculum/merdeka/class-10/physics",
     id: "/id/kurikulum/merdeka/kelas-10/fisika",
   },
-  /** The SNBT track of 2027, whose country the German catalog names in German. */
+  /** The UTBK track of SNBT 2027, whose country the German catalog names in German. */
   track: {
-    de: "/de/try-out/indonesien/snbt/2027",
-    en: "/en/try-out/indonesia/snbt/2027",
-    id: "/id/try-out/indonesia/snbt/2027",
+    de: "/de/try-out/indonesien/snbt/2027/utbk",
+    en: "/en/try-out/indonesia/snbt/2027/utbk",
+    id: "/id/try-out/indonesia/snbt/2027/utbk",
   },
 } satisfies Record<string, Record<AppLocaleCode, string>>;

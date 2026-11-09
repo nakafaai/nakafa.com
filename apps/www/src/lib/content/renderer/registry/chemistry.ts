@@ -33,7 +33,8 @@ import {
 } from "@/lib/content/renderer/client/chemistry/reaction";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainRenderers = [
+/** Every chemistry visual, which any lesson in any domain may use. */
+export const chemistryRenderers = [
   {
     name: chemistryComponentNames.ancientAtomLab,
     component: AncientAtomLab,
