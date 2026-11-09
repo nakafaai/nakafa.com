@@ -7,7 +7,7 @@ import { Hex } from "effect/encoding";
 
 /** The snapshot ids that one release names, unless a test keeps a family's snapshot across releases. */
 type TestSnapshots = Partial<
-  Record<"assessment" | "program" | "quran", string | null>
+  Record<"assessment" | "program" | "quran", string>
 >;
 
 /** A snapshot id of one family under one release, distinct for every release and family. */
@@ -20,10 +20,9 @@ function testSnapshotId(releaseId: string, family: string) {
 function makeTestActiveIdentity(releaseId: string, snapshots: TestSnapshots) {
   const snapshotOf = (family: "assessment" | "program" | "quran") => {
     const kept = snapshots[family];
-    if (kept === undefined) {
-      return testSnapshotId(releaseId, family);
-    }
-    return kept === null ? null : Sha256HashSchema.make(kept);
+    return kept === undefined
+      ? testSnapshotId(releaseId, family)
+      : Sha256HashSchema.make(kept);
   };
   return {
     manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
