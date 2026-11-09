@@ -90,6 +90,7 @@
     "@rolldown/plugin-babel": "0.3.0",
     "@tailwindcss/vite": "4.3.5",
     "@tanstack/router-cli": "1.167.46",
+    "@types/jsdom": "30.0.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "6.2.1",

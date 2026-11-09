@@ -1,5 +1,8 @@
 import { layer as NodeServices } from "@effect/platform-node/NodeServices";
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ActiveAppLocaleCodeSchema,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
@@ -12,7 +15,11 @@ import {
   Path,
   Schema,
 } from "effect";
-import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
+import { readPublishedContent } from "@/lib/content/published/exchange";
+import {
+  getLlmsMarkdownText,
+  getPublishedMarkdownSource,
+} from "@/lib/llms/content/markdown";
 import { readTwinTitle } from "@/lib/llms/format";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 import { readOgCopy } from "@/lib/og/copy.server";
@@ -24,6 +31,7 @@ import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
 import { readRssText } from "@/lib/seo/feed";
 import { readManifestText } from "@/lib/seo/manifest";
 import { readSitemapFiles } from "@/lib/sitemap/files";
+import { checkDiagrams, readCharts } from "@/lib/static/diagram";
 import { readStaticPagePaths } from "@/lib/static/pages";
 import { PrerenderedPagesJson } from "@/lib/static/prerender";
 import {
@@ -133,6 +141,34 @@ const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
   return Option.some({ page, title: readTwinTitle(text.value) });
 });
 
+/**
+ * Lists the Mermaid diagrams of one prerendered page with a signed body, read
+ * from the content tree the page rendered. The content store answers each read
+ * from the prerender's own, so the check costs no Convex call.
+ */
+const readPageDiagrams = Effect.fn("www.static.pageDiagrams")(function* (
+  page: string
+) {
+  const { cleanSlug, locale } = splitPagePath(page);
+  const appLocale = yield* Schema.decodeUnknownEffect(
+    ActiveAppLocaleCodeSchema
+  )(locale);
+  const source = Option.fromNullishOr(
+    yield* getPublishedMarkdownSource({ cleanSlug, locale: appLocale })
+  );
+  if (Option.isNone(source)) {
+    return [];
+  }
+  const data = yield* readPublishedContent({
+    ...source.value,
+    appLocale: AppLocaleSchema.make(appLocale),
+  });
+  return Arr.map(
+    readCharts(data.artifact.payload.contentTree.children),
+    (chart) => ({ chart, page })
+  );
+});
+
 /** Lists the Markdown twins in llms.txt after the index, each by its title, so one file names every twin. */
 function buildLlmsText(twins: readonly MarkdownTwin[]) {
   const lines = Arr.map(
@@ -214,6 +250,13 @@ const main = Effect.fn("www.static.build")(function* (
     { concurrency: 8 }
   );
   const twinPages = Arr.getSomes(twins);
+  // Every diagram the pages draw parses, or the build stops before it deploys.
+  const diagrams = yield* Effect.forEach(
+    twinPages,
+    ({ page }) => readPageDiagrams(page),
+    { concurrency: 8 }
+  );
+  yield* checkDiagrams(Arr.flatten(diagrams));
   const textArtifacts = yield* readTextArtifacts(twinPages);
   yield* Effect.forEach(
     textArtifacts,
@@ -237,6 +280,7 @@ const main = Effect.fn("www.static.build")(function* (
       [
         `static text artifacts: ${textArtifacts.length}`,
         `markdown twins: ${twinPages.length} of ${pages.length} prerendered pages`,
+        `diagrams parsed: ${Arr.flatten(diagrams).length}`,
         `social image sources: ${sources.length}`,
         `social images written: ${images}`,
         `social images skipped (no published copy): ${sources.length - images}`,

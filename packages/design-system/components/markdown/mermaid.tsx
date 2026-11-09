@@ -9,7 +9,6 @@ import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
 import { createContext, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -76,25 +75,29 @@ function DiagramCard() {
   );
 }
 
-/** The diagram at its natural size, in the dialog that opens it. */
+/**
+ * The diagram in the dialog that opens it, filling the dialog's body. The
+ * body does not scroll, so this box is the one place a larger diagram does.
+ */
 function DialogDiagram() {
   const { chart, config, title } = useMermaidFigure();
 
   return (
     <Mermaid
       chart={chart}
-      className="bg-muted/40 h-[60dvh] rounded-lg p-4 text-base"
+      className="bg-muted/40 min-h-0 flex-1 basis-[60dvh] rounded-lg p-4 text-base"
       config={config}
-      fit="natural"
       label={title}
     />
   );
 }
 
 /**
- * Shows a diagram in a frame whose size never depends on the diagram: the
- * preview scales the diagram to fit, and the dialog shows it at its natural
- * size, so its labels keep the size the diagram gives them.
+ * Shows a diagram in a frame whose size never depends on the diagram, and in
+ * a dialog that gives it the whole screen. Both fit the diagram at a legible
+ * scale. The chart is drawn as written: authored content reaches here only
+ * after Aksara parsed it with the same Mermaid, and a model's chart is made
+ * safe by the markdown renderer before it arrives.
  */
 export function MermaidMdx({
   chart,
@@ -103,17 +106,16 @@ export function MermaidMdx({
   description,
   title,
 }: Props) {
-  const renderableChart = normalizeMermaidChart(chart);
   const [open, setOpen] = useState(false);
   const figure = useMemo(
     () => ({
-      chart: renderableChart,
+      chart,
       className,
       config,
       openDialog: () => setOpen(true),
       title,
     }),
-    [className, config, renderableChart, title]
+    [chart, className, config, title]
   );
 
   return (

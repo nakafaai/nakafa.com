@@ -9,7 +9,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { naturalSizeSvg } from "@repo/design-system/lib/mermaid/natural";
+import { legibleSvg } from "@repo/design-system/lib/mermaid/legible";
 import {
   type MermaidRenderConfig,
   renderMermaid,
@@ -17,26 +17,10 @@ import {
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { createStableId } from "@repo/utilities/id";
-import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Effect, Fiber } from "effect";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-
-/**
- * How a rendered diagram sits in its box. Auto margins center a smaller
- * diagram and let a larger one start at the edge, where it stays scrollable.
- */
-const diagramVariants = cva("flex [&>svg]:m-auto", {
-  variants: {
-    fit: {
-      /** Scales the diagram to fit the box; Mermaid's own max width keeps it from growing past its natural size. */
-      contain: "[&>svg]:size-full",
-      /** Keeps the diagram at its natural size: a larger one scrolls both ways, and a smaller one stays centred. */
-      natural: "overflow-auto",
-    },
-  },
-});
 
 /**
  * A piece of text from a diagram that cannot be drawn, such as the parser's
@@ -52,24 +36,20 @@ function FailureText({ children }: { children: string }) {
   );
 }
 
-type MermaidProps = VariantProps<typeof diagramVariants> & {
+interface MermaidProps {
   chart: string;
   className?: string;
   config?: MermaidRenderConfig | undefined;
   label: string;
-};
+}
 /**
  * Renders Mermaid chart markup with a cached last-good SVG fallback. The
  * caller sizes the box; the pending, error, and rendered states all fill it,
- * so the diagram never resizes its surroundings when it arrives.
+ * so the diagram never resizes its surroundings when it arrives. The diagram
+ * fits the box at a legible scale, centered by auto margins; a diagram larger
+ * than that starts at the box's edge, and the box is the one place it scrolls.
  */
-export function Mermaid({
-  chart,
-  className,
-  config,
-  fit = "contain",
-  label,
-}: MermaidProps) {
+export function Mermaid({ chart, className, config, label }: MermaidProps) {
   const t = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const componentId = useId();
@@ -180,14 +160,12 @@ export function Mermaid({
     );
   }
   // Always render the SVG if we have content (either current or last valid)
-  const svg =
-    fit === "natural" ? naturalSizeSvg(renderState.svg) : renderState.svg;
   return (
     <div
       aria-label={label}
-      className={cn(diagramVariants({ fit }), className)}
+      className={cn("flex overflow-auto [&>svg]:m-auto", className)}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid returns sanitized SVG in strict security mode.
-      dangerouslySetInnerHTML={{ __html: svg }}
+      dangerouslySetInnerHTML={{ __html: legibleSvg(renderState.svg) }}
       role="img"
     />
   );
