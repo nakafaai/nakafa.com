@@ -82,7 +82,7 @@ export const checkDiagrams = Effect.fn("www.static.diagrams")(function* (
       parseMermaid(chart).pipe(
         Effect.as(Option.none()),
         Effect.catchTag("MermaidRenderError", (error) =>
-          Effect.succeed(Option.some({ message: String(error.cause), page }))
+          Effect.succeedSome({ message: String(error.cause), page })
         )
       )
     )

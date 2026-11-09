@@ -10,6 +10,9 @@ const SHIFTING = `flowchart LR
   A["C with E(C) = 28"] -->|"times 1.8"| B["1.8C with E = 50.4"]
   B -->|"plus 32"| C["F = 1.8C + 32 with E(F) = 82.4"]`;
 
+/** How long a test that loads Mermaid may take: the first parse loads Mermaid and jsdom. */
+const LOAD_TIMEOUT = 60_000;
+
 /** One element of a content tree. */
 function element(
   name: string,
@@ -31,11 +34,15 @@ describe("diagrams of the release", () => {
     expect(readCharts(tree)).toEqual([SHIFTING, ""]);
   });
 
-  it.effect("passes every chart Mermaid parses", () =>
-    checkDiagrams([
-      { chart: SHIFTING, page: "/en/subject/high-school/12/mathematics" },
-      { chart: 'pie title Share\n  "a": 1', page: "/en/articles/politics" },
-    ])
+  it.effect(
+    "passes every chart Mermaid parses",
+    () =>
+      checkDiagrams([
+        { chart: SHIFTING, page: "/en/subject/high-school/12/mathematics" },
+        { chart: 'pie title Share\n  "a": 1', page: "/en/articles/politics" },
+      ]),
+    // The first parse loads Mermaid and jsdom, which takes seconds in Node.
+    LOAD_TIMEOUT
   );
 
   it.effect(
@@ -61,6 +68,7 @@ describe("diagrams of the release", () => {
         expect(error.message).toContain("/en/b: Error: Parse error on line 2");
         expect(error.message).toContain("/en/c: UnknownDiagramError");
         expect(Reflect.has(globalThis, "window")).toBe(false);
-      })
+      }),
+    LOAD_TIMEOUT
   );
 });
