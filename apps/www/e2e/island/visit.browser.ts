@@ -63,14 +63,16 @@ test("a learner shares their island, and a signed-out visitor opens it read only
     withObservedPageErrors(
       visit,
       Effect.promise(async () => {
-        // The snapshot uploads after the link is handed on, so the visit names it a moment later.
+        // The island opens to visitors and its snapshot uploads after the link is handed on, so the
+        // visit answers and names the snapshot a moment later. A page without the tag reads as none.
         await expect
           .poll(
             async () => {
               await visit.goto(address);
-              return visit
-                .locator('meta[property="og:image"]')
-                .getAttribute("content");
+              const image = visit.locator('meta[property="og:image"]');
+              return (await image.count()) > 0
+                ? image.getAttribute("content")
+                : "";
             },
             { timeout: readinessTimeoutMilliseconds }
           )
