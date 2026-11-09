@@ -3286,7 +3286,7 @@
     },
     "sitting-answers-unsent": {
       "title": "Vielleicht fehlen Antworten.",
-      "description": "Manche kamen vielleicht nicht mehr in der Prüfung an, also sag es deiner Aufsicht."
+      "description": "Manche kamen nicht mehr an, sag es also deiner Aufsicht."
     },
     "sitting-attempt-closed": {
       "title": "Dieser Versuch ist beendet.",
@@ -3661,7 +3661,7 @@
     },
     "school-refusal-scheme-used": {
       "title": "Diese Version bleibt, wie sie ist.",
-      "description": "Mit dieser Version wurden schon Noten bewertet. Lege stattdessen eine neue an."
+      "description": "Damit wurde schon bewertet, leg lieber eine neue an."
     },
     "school-roster-no-period": {
       "title": "Noch kein aktiver Zeitraum.",
@@ -3759,16 +3759,16 @@
       "title": "Danke, die Meldung wurde gesendet."
     },
     "comment-paste-refused": {
-      "title": "Der Text ist zu lang für einen Kommentar."
+      "title": "Das ist zu lang für einen Kommentar."
     },
     "comment-photo-refused": {
       "title": "Das Foto wurde nicht hinzugefügt."
     },
     "comment-photo-limit": {
-      "title": "Ein Kommentar enthält höchstens vier Fotos."
+      "title": "Höchstens vier Fotos pro Kommentar."
     },
     "comment-photo-fixed": {
-      "title": "Die Fotos eines gesendeten Kommentars bleiben, wie sie sind."
+      "title": "Die Fotos bleiben, wie sie sind."
     },
     "island-refused-outside": {
       "title": "Das passt nicht auf deine Insel."
