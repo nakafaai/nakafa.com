@@ -9,7 +9,12 @@ import {
 } from "@nakafa/aksara-contracts/tree";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Array as Arr, Effect, Predicate, Record as Rec } from "effect";
-import { createElement, Fragment, type ReactElement } from "react";
+import {
+  createElement,
+  Fragment,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { takesLocale } from "@/lib/content/renderer/locale";
 import { RendererImplementationMissing } from "@/lib/content/renderer/selection";
 
@@ -82,10 +87,13 @@ function renderElement(
 }
 
 /**
- * Renders the signed content tree as React elements with the resolved component
- * map. Nothing is evaluated: every node is data the verifier already authenticated.
- * A component the tree names without an implementation fails as the renderer's
- * missing-implementation error before any element is created.
+ * Renders the signed content tree with the resolved component map, as the blocks
+ * of its root fragment in order: text stays text, and every element becomes a
+ * React element. A page can then set its own parts between the blocks, such as
+ * an ad frame between two sections. Nothing is evaluated: every node is data the
+ * verifier already authenticated. A component the tree names without an
+ * implementation fails as the renderer's missing-implementation error before any
+ * element is created.
  */
 export const renderContentTree = Effect.fn("NakafaContent.renderContentTree")(
   function* (
@@ -104,6 +112,12 @@ export const renderContentTree = Effect.fn("NakafaContent.renderContentTree")(
         });
       }
     }
-    return renderElement(tree, components, locale);
+    return Arr.map(
+      tree.children,
+      (child): ReactNode =>
+        typeof child === "string"
+          ? child
+          : renderElement(child, components, locale)
+    );
   }
 );
