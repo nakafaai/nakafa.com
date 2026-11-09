@@ -86,7 +86,7 @@ function ParameterSlider({
   );
   const move = useStore(store, (state) => state.move);
   const name = Option.getOrElse(
-    Rec.get(PARAMETER_NAMES, parameter.name),
+    Rec.get<string, string>(PARAMETER_NAMES, parameter.name),
     () => ""
   );
   return (

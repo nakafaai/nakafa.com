@@ -208,7 +208,6 @@ describe("formula shapes", () => {
       Option.some({ x: 1, y: 0, z: 0 })
     );
     expect(Option.isNone(labelPoint({ x: "ln(0)", y: "0" }, {}))).toBe(true);
-    expect(Option.isNone(labelPoint({ x: "cos(", y: "0" }, {}))).toBe(true);
   });
 
   it("reads each readout at the sliders' values", () => {

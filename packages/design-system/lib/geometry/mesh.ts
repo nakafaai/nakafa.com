@@ -7,14 +7,14 @@ import { Array as Arr, MutableList, Option, Schema } from "effect";
 import { BufferAttribute, BufferGeometry } from "three";
 
 /** One indexed triangle mesh, ready for a buffer geometry. */
-export const MeshArraysSchema = Schema.Struct({
+const MeshArraysSchema = Schema.Struct({
   indices: Schema.instanceOf(Uint32Array),
   positions: Schema.instanceOf(Float32Array),
 });
-export type MeshArrays = typeof MeshArraysSchema.Type;
+type MeshArrays = typeof MeshArraysSchema.Type;
 
 /** A surface sampled on a grid, row by row, with nothing where it is undefined. */
-export const MeshGridSchema = Schema.Struct({
+const MeshGridSchema = Schema.Struct({
   columns: Schema.Int,
   points: Schema.Array(Schema.Option(Point3Schema)),
   rows: Schema.Int,

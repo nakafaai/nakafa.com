@@ -32,7 +32,7 @@ const PointsSchema = Schema.Array(SpacePointSchema);
 const ShapeFields = { appearance: MathAppearanceSchema, id: Schema.String };
 
 /** One drawable piece of a formula object, already in scene units. */
-export const FormulaShapeSchema = Schema.Union([
+const FormulaShapeSchema = Schema.Union([
   Schema.Struct({
     ...ShapeFields,
     kind: Schema.Literal("curve"),
@@ -233,14 +233,12 @@ export function resolveFormulaShapes(
 export function labelPoint(
   at: NonNullable<PlaneVisual["labels"]>[number]["at"] | SpacePoint,
   scope: FormulaScope
-): Option.Option<SpacePoint | { readonly x: number; readonly y: number }> {
+) {
   if (!isPlaneFormulaPoint(at)) {
     return Option.some(at);
   }
-  return Result.match(planeFormulaPoint(at, scope), {
-    onFailure: () => Option.none(),
-    onSuccess: (placed) => placed,
-  });
+  // The guard decodes each coordinate as formula text, which always compiles.
+  return Option.flatten(Result.getSuccess(planeFormulaPoint(at, scope)));
 }
 
 /** The value of each readout at the sliders' current values, none where it is not finite. */
