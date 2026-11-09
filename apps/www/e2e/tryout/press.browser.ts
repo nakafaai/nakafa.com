@@ -7,7 +7,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOverNow, waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A track whose table a learner reads live, and the set its first row opens. */
-const TRACK_HREF = "/en/try-out/indonesia/snbt/2027";
+const TRACK_HREF = "/en/try-out/indonesia/snbt/2027/utbk";
 const SET_HREF = `${TRACK_HREF}/set-1`;
 
 /**

@@ -2,7 +2,7 @@ import {
   type AppLocaleCode,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 
 export const TRYOUT_ROOT = "try-out";
@@ -27,14 +27,3 @@ export function readActiveTryoutPath(appLocale: AppLocaleCode, path: string) {
     targetAppLocale: appLocale,
   });
 }
-
-/** Localizes the canonical SNBT set of one year, or returns null when that set is not live. */
-export const readLocalizedSnbtSet = Effect.fn(
-  "www.routing.publicHtml.tryoutSetLocalization"
-)(function* (appLocale: AppLocaleCode, year: string, set: string) {
-  return yield* readPublishedTryoutLocalizedPath({
-    currentAppLocale: SOURCE_APP_LOCALE,
-    publicPath: `${SNBT_EXAM_PATH}/${year}/${set}`,
-    targetAppLocale: appLocale,
-  });
-});

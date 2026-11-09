@@ -13,6 +13,7 @@ export default {
 ["getHubPage"]: RegisteredConvexFunction.register({ ...definitions["getHubPage"], handler: forward(definitions["getHubPage"].handler) }),
 ["getCountryPage"]: RegisteredConvexFunction.register({ ...definitions["getCountryPage"], handler: forward(definitions["getCountryPage"].handler) }),
 ["getExamPage"]: RegisteredConvexFunction.register({ ...definitions["getExamPage"], handler: forward(definitions["getExamPage"].handler) }),
+["getGroupPage"]: RegisteredConvexFunction.register({ ...definitions["getGroupPage"], handler: forward(definitions["getGroupPage"].handler) }),
 ["getTrackPage"]: RegisteredConvexFunction.register({ ...definitions["getTrackPage"], handler: forward(definitions["getTrackPage"].handler) }),
 ["getSetPage"]: RegisteredConvexFunction.register({ ...definitions["getSetPage"], handler: forward(definitions["getSetPage"].handler) }),
 ["getSectionPage"]: RegisteredConvexFunction.register({ ...definitions["getSectionPage"], handler: forward(definitions["getSectionPage"].handler) }),

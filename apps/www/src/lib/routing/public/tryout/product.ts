@@ -6,10 +6,10 @@ import { Effect, Option, Schema } from "effect";
 import { readPublishedTryoutSectionPage } from "@/lib/content/tryout/catalog";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
+import { readLocalizedSnbtSet } from "@/lib/routing/public/tryout/group";
 import {
   decodeAppLocale,
   readActiveTryoutPath,
-  readLocalizedSnbtSet,
   readPathSegments,
   SNBT_EXAM_PATH,
   SNBT_ROUTE,

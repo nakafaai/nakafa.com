@@ -1,6 +1,6 @@
 import {
+  GroupAxisSchema,
   SectionVisibilitySchema,
-  TrackKindSchema,
 } from "@nakafa/aksara-contracts/assessment/catalog";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoringStrategyValidator } from "@repo/backend/confect/tryouts/score";
@@ -19,6 +19,18 @@ export const publicTryoutCountryWithExamCountValidator = Schema.Struct({
 export const publicTryoutExamValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
   examKey: tryoutRouteKeyValidator,
+  groupAxis: GroupAxisSchema,
+  publicPath: Schema.String,
+  title: Schema.String,
+});
+/** An exam of a country page, with its entry: the path of its first group, where a link to the exam lands. */
+export const publicTryoutCountryExamValidator = Schema.Struct({
+  ...publicTryoutExamValidator.fields,
+  entryPath: Schema.String,
+});
+export const publicTryoutGroupValidator = Schema.Struct({
+  description: Schema.optionalKey(Schema.String),
+  groupKey: tryoutRouteKeyValidator,
   publicPath: Schema.String,
   title: Schema.String,
 });
@@ -37,10 +49,10 @@ export const publicTryoutSetValidator = Schema.Struct({
 });
 export const publicTryoutTrackValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
+  groupKey: tryoutRouteKeyValidator,
   publicPath: Schema.String,
   title: Schema.String,
   trackKey: tryoutRouteKeyValidator,
-  trackKind: TrackKindSchema,
 });
 export const publicTryoutSectionValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),

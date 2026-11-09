@@ -6,11 +6,11 @@ import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const countryHref = `${appRoutes.tryout}/indonesia`;
-const examHref = `${countryHref}/snbt`;
-export const trackHref = `${examHref}/2027`;
+export const groupHref = `${countryHref}/snbt/2027`;
+export const trackHref = `${groupHref}/utbk`;
 export const setHref = `${trackHref}/set-1`;
 const SECTION_HREF_PATTERN =
-  /^\/en\/try-out\/indonesia\/snbt\/2027\/set-1\/[^/?]+(?:\?attemptId=[^&]+)?$/u;
+  /^\/en\/try-out\/indonesia\/snbt\/2027\/utbk\/set-1\/[^/?]+(?:\?attemptId=[^&]+)?$/u;
 
 /** The shell's lock attribute, which the lock store sets once a page hydrates. */
 export const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
@@ -124,8 +124,8 @@ export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (
   hasTouch: boolean
 ) {
   for (const [href, next] of [
-    [countryHref, examHref],
-    [examHref, trackHref],
+    [countryHref, groupHref],
+    [groupHref, trackHref],
     [trackHref, setHref],
   ] as const) {
     yield* activate(visibleLink(page, href, "main"), hasTouch);

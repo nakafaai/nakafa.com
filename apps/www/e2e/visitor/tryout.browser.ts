@@ -8,7 +8,7 @@ import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SESSION_READ = "/api/auth/get-session";
-const TRACK_PATH = "/en/try-out/indonesia/snbt/2027";
+const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
 
 /**
  * A visitor's try-out track opens no WebSocket and sends no session read. Its

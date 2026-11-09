@@ -25,15 +25,15 @@ function isRemovedPathname(pathname: string) {
 }
 
 /**
- * SNBT years whose track was retired, so their product URLs answer gone while
- * the signed exam has no track for them. A year is added only when its track is
+ * SNBT years that were retired, so their product URLs answer gone while the
+ * signed exam has no group for them. A year is added only when its track is
  * retired: a year that is not published yet stays a plain 404 and can still
  * redirect once it is published.
  */
 const RETIRED_SNBT_YEARS = HashSet.make("2026");
 
 /**
- * Reads whether one retired SNBT year has no track in the signed exam. Only a
+ * Reads whether one retired SNBT year has no group in the signed exam. Only a
  * year in RETIRED_SNBT_YEARS can answer gone, and an absent exam proves nothing
  * about a year, so it never answers gone.
  */
@@ -49,16 +49,13 @@ const readRetiredSnbtYear = Effect.fn("www.routing.publicHtml.retiredSnbtYear")(
     if (exam === null) {
       return false;
     }
-    return !Arr.some(
-      exam.tracks,
-      (track) => track.trackKind === "year" && track.trackKey === year
-    );
+    return !Arr.some(exam.groups, (group) => group.groupKey === year);
   }
 );
 
 /**
  * Answers whether one public URL is gone for good: the removed events page, or
- * a product URL of a retired SNBT year that the signed exam has no track for.
+ * a product URL of a retired SNBT year that the signed exam has no group for.
  * Try-out attempts skip the try-out answer, as they skip the try-out redirects.
  */
 export const readRetiredPublicRoute = Effect.fn(

@@ -39,6 +39,7 @@ export type LoadedRuntime = NonNullable<
 const TryoutSetRouteSchema = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
+  group: Schema.String,
   locale: AppLocaleCodeSchema,
   set: Schema.String,
   track: Schema.String,

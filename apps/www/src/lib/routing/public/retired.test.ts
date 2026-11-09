@@ -11,17 +11,16 @@ vi.mock("@/lib/content/tryout/path", () => ({
   readPublishedTryoutLocalizedPath: vi.fn(),
 }));
 
-/** Serves the signed SNBT exam with one year track per given year, or no exam at all. */
+/** Serves the signed SNBT exam with one year group per given year, or no exam at all. */
 function serveSnbtExam(years: readonly string[] | null) {
   readExamPageMock.mockReturnValue(
     Effect.succeed(
       years === null
         ? null
         : {
-            tracks: Arr.map(years, (year) => ({
+            groups: Arr.map(years, (year) => ({
+              groupKey: year,
               publicPath: `try-out/indonesia/snbt/${year}`,
-              trackKey: year,
-              trackKind: "year",
             })),
           }
     )
@@ -72,7 +71,7 @@ describe("retired SNBT product URLs", () => {
     "/en/try-out/snbt/2026-set-1",
     "/en/try-out/snbt/2026-set-1/part/english-language",
     "/de/try-out/snbt/2026-set-1",
-  ])("answers %s gone when the SNBT exam has no 2026 track", (pathname) =>
+  ])("answers %s gone when the SNBT exam has no 2026 group", (pathname) =>
     Effect.gen(function* () {
       serveSnbtExam(["2027"]);
 

@@ -59,10 +59,10 @@ describe("sitemap files", () => {
             { url: `${SITE_ORIGIN}/en/search` },
             { url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027` },
             {
-              url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/set-1`,
+              url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/utbk/set-1`,
             },
             {
-              url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/set-1/reading`,
+              url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/utbk/set-1/reading`,
             },
           ])
         );
@@ -71,7 +71,7 @@ describe("sitemap files", () => {
 
         expect(page?.text).toContain(`<loc>${SITE_ORIGIN}/en/quran/1</loc>`);
         expect(page?.text).toContain(
-          `<loc>${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/set-1</loc>`
+          `<loc>${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/utbk/set-1</loc>`
         );
         expect(page?.text).not.toContain("/en/search");
         expect(page?.text).not.toContain("set-1/reading");

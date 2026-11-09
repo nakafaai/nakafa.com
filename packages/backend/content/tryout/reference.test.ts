@@ -38,7 +38,7 @@ describe("content/tryout/reference", () => {
           })
         ).toMatchObject({
           description: "",
-          route: "try-out/indonesia/snbt/2027/set-1-id",
+          route: "try-out/indonesia/snbt/2027/utbk/set-1-id",
         });
         expect(
           yield* read(world, {

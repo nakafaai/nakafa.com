@@ -1,4 +1,3 @@
-import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { ClockProvider } from "@/components/player/now";
@@ -6,37 +5,39 @@ import { ConvexIsland } from "@/components/providers/island";
 import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
 import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
-import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
+import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import {
   useAttemptSignIn,
   useKeptLearnerRead,
-  useLearnerSet,
+  useLearnerSection,
 } from "@/components/tryout/route/live";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
-import { TryoutSetPageClient } from "@/components/tryout/set/client";
+import { TryoutSectionPageClient } from "@/components/tryout/section/client";
 import { readStaticData } from "@/lib/static/data";
 
 /**
- * One set of a track. Its catalog view is the same for every visitor, so the build
- * prerenders it, and every URL of the set is that page for every reader: no Worker
- * renders it. A signed-in learner's attempt, and the one a URL names with
- * `?attemptId`, are read in the browser once the session is known (`useLearnerSet`),
- * and a URL bound to an attempt answers for that attempt alone.
+ * One section of a set. Its catalog view is shared, so the build prerenders it and
+ * keeps its answer, and every URL of the section reads that answer: the Worker
+ * renders nothing personal. A signed-in learner's attempt through it, and the one a
+ * URL names with `?attemptId`, are read in the browser once the session is known
+ * (`useLearnerSection`), and a URL bound to an attempt answers for that attempt alone.
  */
 /** The read of a page without a Convex client: a visitor's. */
 const VISITOR = { kind: "visitor" } as const;
 
 export const Route = createFileRoute(
-  "/$locale/_main/try-out/$country/$exam/$track/$set/"
+  "/$locale/_main/try-out/$country/$exam/$group/$track/$set/$section/"
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
   loader: async ({ params }) => {
-    const route = await readStaticData(readTryoutSetFn, {
+    const route = await readStaticData(readTryoutSectionFn, {
       country: params.country,
       exam: params.exam,
+      group: params.group,
       locale: params.locale,
+      section: params.section,
       set: params.set,
       track: params.track,
     });
@@ -59,57 +60,62 @@ export const Route = createFileRoute(
             loaderData.head.indexable &&
             match.search.attemptId === undefined &&
             match.search.view === undefined,
-          jsonLd: makeBreadcrumbNodes(loaderData.head.breadcrumbs),
+          jsonLd: [],
           locale: params.locale,
           title: loaderData.head.title,
         }),
-  component: TryoutSetPage,
+  component: TryoutSectionPage,
 });
 
-function TryoutSetPage() {
-  const setPath = Route.useLoaderData({
-    select: (route) => route.page.set.publicPath,
+function TryoutSectionPage() {
+  const sectionPath = Route.useLoaderData({
+    select: (route) => route.sectionPath,
   });
   return (
-    // A visitor's page holds no Convex client, so it draws the set as every visitor sees it, which the
+    // A visitor's page holds no Convex client, so it draws the section as every visitor sees it, which the
     // build prerenders; a learner's page reads their attempt once it holds the client. A press belongs
-    // to its page, so the next set starts with none.
-    <TryoutPressProvider key={setPath}>
-      <ConvexIsland fallback={<TryoutSetVisitor />} keepsPress>
-        <TryoutSetLearner />
+    // to its page, so the next section never starts by itself.
+    <TryoutPressProvider key={sectionPath}>
+      <ConvexIsland fallback={<TryoutSectionVisitor />} keepsPress>
+        <TryoutSectionLearner />
       </ConvexIsland>
     </TryoutPressProvider>
   );
 }
 
-/** The set as every visitor sees it. An address bound to an attempt goes to sign-in. */
-function TryoutSetVisitor() {
+/** The section as every visitor sees it. An address bound to an attempt goes to sign-in. */
+function TryoutSectionVisitor() {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
-  useAttemptSignIn({ publicPath: route.page.set.publicPath, search });
-  return <TryoutSetView learner={VISITOR} />;
+  useAttemptSignIn({ publicPath: route.sectionPath, search });
+  return <TryoutSectionView learner={VISITOR} />;
 }
 
-/** A learner's set: their attempt through it, read in the browser (`useLearnerSet`). */
-function TryoutSetLearner() {
+/** A learner's section: their attempt through it, read in the browser (`useLearnerSection`). */
+function TryoutSectionLearner() {
   const route = Route.useLoaderData();
   const search = Route.useSearch();
   const learner = useKeptLearnerRead(
-    useLearnerSet({ page: route.page, search })
+    useLearnerSection({
+      page: route.page,
+      publicPath: route.sectionPath,
+      search,
+      setPath: route.setPath,
+    })
   );
   return (
     <>
       <ShellLockCarry pending={learner.kind === "pending"} />
-      <TryoutSetView learner={learner} />
+      <TryoutSectionView learner={learner} />
     </>
   );
 }
 
-/** Draws the set from the learner read: the attempt's page, or the catalog's while there is none. */
-function TryoutSetView({
+/** Draws the section from the learner read: the attempt's page, or the catalog's while there is none. */
+function TryoutSectionView({
   learner,
 }: {
-  readonly learner: ReturnType<typeof useLearnerSet>;
+  readonly learner: ReturnType<typeof useLearnerSection>;
 }) {
   const route = Route.useLoaderData();
   // A read that answered decides the shell's lock, so the first frame's lock can go.
@@ -128,7 +134,7 @@ function TryoutSetView({
           binding: null,
           content: null,
           page: route.page,
-          restartTarget: route.restartTarget,
+          setPath: route.setPath,
         };
   return (
     // The clock starts again with the attempt, so its first render reads the browser's time.
@@ -136,16 +142,16 @@ function TryoutSetView({
       key={view.binding?.attemptId ?? "catalog"}
       renderedAt={route.now}
     >
-      <TryoutSetPageClient
+      <TryoutSectionPageClient
         binding={view.binding}
         content={view.content}
         page={view.page}
         pending={learner.kind === "pending"}
-        restartTarget={view.restartTarget}
         route={route.route}
+        setPath={view.setPath}
       >
         <TryoutAttemptReview binding={view.binding} />
-      </TryoutSetPageClient>
+      </TryoutSectionPageClient>
     </ClockProvider>
   );
 }

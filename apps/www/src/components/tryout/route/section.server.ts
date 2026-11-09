@@ -16,6 +16,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
   function* (input: {
     readonly country: string;
     readonly exam: string;
+    readonly group: string;
     readonly locale: Locale;
     readonly section: string;
     readonly set: string;
@@ -24,6 +25,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
     const route = {
       country: input.country,
       exam: input.exam,
+      group: input.group,
       locale: input.locale,
       section: input.section,
       set: input.set,
@@ -47,7 +49,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
     if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    const exam = `${page.exam.title} ${page.track.title}`;
+    const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
     return {
       // Every set of an exam has the same sections, so the page names its set too. A section holds
       // little more than its set says, and search has left these unread, so the set stands for them.
@@ -78,6 +80,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       setPath: getTryoutPublicPath({
         country: input.country,
         exam: input.exam,
+        group: input.group,
         set: input.set,
         track: input.track,
       }),

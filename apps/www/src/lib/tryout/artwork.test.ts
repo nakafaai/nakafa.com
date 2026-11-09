@@ -68,6 +68,22 @@ describe("try-out artwork", () => {
     })
   );
 
+  it.effect("gives an exam's group the artwork of its exam", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* resolveTryoutExamArtwork({
+          countryKey: "indonesia",
+          examKey: "snbt",
+          appLocale: "de",
+          publicPath: "try-out/indonesien/snbt/2027",
+        })
+      ).toEqual({
+        cardImageSrc: "/open-graph/tryout/indonesia/en-snbt.png",
+        socialImageSrc: "/open-graph/tryout/indonesia/en-snbt.png",
+      });
+    })
+  );
+
   it.effect("answers the home social image for an exam without artwork", () =>
     Effect.gen(function* () {
       expect(
@@ -99,7 +115,6 @@ describe("try-out artwork", () => {
         countryKey: "indonesia",
         examKey: "snbt",
         trackKey: "2027",
-        trackKind: "year",
       })
     ).toBe("/open-graph/tryout/indonesia/en-2027.png");
     expect(
@@ -107,7 +122,6 @@ describe("try-out artwork", () => {
         countryKey: "indonesia",
         examKey: "tka",
         trackKey: "2027",
-        trackKind: "year",
       })
     ).toBeUndefined();
   });
@@ -121,7 +135,6 @@ describe("try-out artwork", () => {
             countryKey: "indonesia",
             examKey: "tka",
             trackKey,
-            trackKind: "subject",
           })
         ).toBe(`/open-graph/tryout/indonesia/tka/${locale}-${trackKey}.png`);
         expect(
@@ -129,7 +142,6 @@ describe("try-out artwork", () => {
             countryKey: "indonesia",
             examKey: "snbt",
             trackKey,
-            trackKind: "subject",
           })
         ).toBeUndefined();
       }
@@ -144,7 +156,6 @@ describe("try-out artwork", () => {
           countryKey: "indonesia",
           examKey: "tka",
           trackKey: "compulsory-mathematics",
-          trackKind: "subject",
         })
       ).toBe(
         `/open-graph/tryout/indonesia/tka/${locale}-compulsory-mathematics.png`
@@ -159,7 +170,6 @@ describe("try-out artwork", () => {
             countryKey: "indonesia",
             examKey: "tka",
             trackKey,
-            trackKind: "subject",
           })
         ).toBeUndefined();
       }
@@ -223,8 +233,8 @@ describe("try-out artwork", () => {
   it.effect.each([
     "try-out",
     "try-out/indonesien",
-    "try-out/indonesien/snbt/2027",
-  ])("rejects non-exam public path %s", (publicPath) =>
+    "try-out/indonesien/snbt/2027/utbk",
+  ])("rejects a public path that is no exam or group %s", (publicPath) =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
         resolveTryoutExamArtwork({
