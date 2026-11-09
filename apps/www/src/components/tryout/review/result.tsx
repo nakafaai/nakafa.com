@@ -162,27 +162,30 @@ export function TryoutResultFooter() {
 }
 
 /**
- * Opens the result in its sheet below the large breakpoint, where no pane stands, from the centre of a
- * footer: the result's name and how many answers were correct.
+ * Opens a pane's sheet below the large breakpoint, where no pane stands, from the centre of a footer: the
+ * pane's word and a count out of a total, such as a result's correct answers or a practice's checked
+ * questions, with `name` saying both to a screen reader.
  */
-export function TryoutResultOpener({
-  correct,
+export function TryoutPaneOpener({
+  count,
+  label,
+  name,
   onOpen,
   total,
 }: {
-  /** How many answers were correct. */
-  correct: number;
+  count: number;
+  /** The pane's one word, such as Result. */
+  label: string;
+  /** What the button does, in words, for a screen reader. */
+  name: string;
   onOpen: () => void;
-  /** How many questions the attempt held. */
   total: number;
 }) {
-  const t = useTranslations("Tryouts");
-
   return (
     <Button
       aria-haspopup="dialog"
       aria-keyshortcuts="G"
-      aria-label={t("result-open", { correct, total })}
+      aria-label={name}
       className="tabular-nums lg:hidden"
       onClick={onOpen}
       type="button"
@@ -190,9 +193,9 @@ export function TryoutResultOpener({
     >
       <HugeIcons icon={ChampionIcon} />
       <span>
-        {t("result-short")}{" "}
+        {label}{" "}
         <span className="font-mono">
-          {correct}
+          {count}
           <span className="text-muted-foreground">/{total}</span>
         </span>
       </span>
@@ -202,12 +205,18 @@ export function TryoutResultOpener({
 
 /** The review's result opener, in the player's footer, which opens the player's sheet. */
 export function TryoutReviewOpener() {
+  const t = useTranslations("Tryouts");
   const { score } = useTryoutReview();
   const open = usePlayer((state) => state.open);
 
   return (
-    <TryoutResultOpener
-      correct={score.totalCorrect}
+    <TryoutPaneOpener
+      count={score.totalCorrect}
+      label={t("result-short")}
+      name={t("result-open", {
+        correct: score.totalCorrect,
+        total: score.totalQuestions,
+      })}
       onOpen={() => open("navigator")}
       total={score.totalQuestions}
     />

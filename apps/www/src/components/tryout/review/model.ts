@@ -4,7 +4,6 @@ import type {
   PlayerReviewCellModel,
   PlayerVerdict,
 } from "@/components/player/model";
-import type { TryoutBody } from "@/components/tryout/content/body";
 import { isAnsweredQuestion } from "@/components/tryout/runtime/response/state";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 
@@ -20,14 +19,6 @@ export function verdictOfQuestion(
   }
   const grade = question.response?.grade;
   return grade === undefined ? "answered" : verdictOf(grade);
-}
-
-/**
- * Whether a reader may read a finished section whole: every question carries its key, which the backend
- * sends only to a reader who may read it. Any other reader sees the leading preview under the Pro offer.
- */
-export function readsWhole(bodies: readonly TryoutBody[]) {
-  return Arr.every(bodies, (body) => body.key !== undefined);
 }
 
 /**
