@@ -111,6 +111,7 @@ describe("islandScreenHandler", () => {
     ]);
     const screen = await islandScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
+      address: "nabil",
       edits: [{ block: 5, x: 30, y: 9, z: 30 }],
       from: 400,
       level: 3,
@@ -135,6 +136,7 @@ describe("islandScreenHandler", () => {
     ]);
     const first = await islandScreenHandler({ data: { locale: "id" } });
     expect(first).toMatchObject({
+      address: null,
       edits: [],
       level: 1,
       lifetime: 0,

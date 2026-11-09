@@ -32,6 +32,53 @@ const islandWorld = Effect.fn("test.island.world")(function* () {
 
 describe("island queries and mutations", () => {
   it.effect(
+    "lets anyone visit an island its owner shared by their address, and no other",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* islandWorld();
+        const visitor = client(world.t);
+        yield* Effect.promise(() =>
+          world.t.run(async (ctx) => {
+            const user = await ctx.db.query("users").first();
+            if (user !== null) {
+              await ctx.db.patch(user._id, { username: "fox" });
+            }
+          })
+        );
+        expect(
+          yield* visitor.query(island.queries.visit, { username: "fox" })
+        ).toBeNull();
+        yield* world.owner.mutation(island.mutations.open, {
+          timeZone: JAKARTA,
+        });
+        expect(
+          yield* visitor.query(island.queries.visit, { username: "fox" })
+        ).toBeNull();
+        yield* world.owner.mutation(island.mutations.share, { shared: true });
+        expect((yield* world.owner.query(island.queries.own, {}))?.shared).toBe(
+          true
+        );
+        const shared = yield* visitor.query(island.queries.visit, {
+          username: "fox",
+        });
+        expect(shared).toMatchObject({ badges: [], lifetime: 0, world: [] });
+        expect(typeof shared?.owner).toBe("string");
+        expect(
+          yield* visitor.query(island.queries.visit, { username: "nobody" })
+        ).toBeNull();
+        yield* world.owner.mutation(island.mutations.share, { shared: false });
+        expect(
+          yield* visitor.query(island.queries.visit, { username: "fox" })
+        ).toBeNull();
+        expect(
+          (yield* visitor
+            .mutation(island.mutations.share, { shared: true })
+            .pipe(Effect.flip))._tag
+        ).toBe("SessionRequired");
+      })
+  );
+
+  it.effect(
     "opens the learner's island with no cell changed and keeps its zone at theirs",
     () =>
       Effect.gen(function* () {
@@ -45,6 +92,7 @@ describe("island queries and mutations", () => {
         expect(yield* world.owner.query(island.queries.own, {})).toEqual({
           badges: [],
           lifetime: 0,
+          shared: false,
           version: 0,
           world: [],
         });

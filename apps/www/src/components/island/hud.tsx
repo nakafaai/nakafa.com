@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import {
   ArrowLeft01Icon,
   BookOpen01Icon,
@@ -9,6 +10,7 @@ import {
   FlowerIcon,
   FootprintsIcon,
   Leaf01Icon,
+  Link01Icon,
   Moon02Icon,
   PickaxeIcon,
   Redo02Icon,
@@ -19,9 +21,11 @@ import {
   VolumeHighIcon,
   VolumeOffIcon,
 } from "@hugeicons/core-free-icons";
+import island from "@repo/backend/confect/_generated/refs/island";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { IslandBook } from "@/components/island/book";
@@ -30,6 +34,7 @@ import { panelVariants } from "@/components/island/panel";
 import { useGame } from "@/components/island/store";
 import { SPECIES } from "@/lib/island/fauna/species";
 import { writeMuted } from "@/lib/island/settings";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 /** One square of the hotbar or the HUD's buttons, lit when it is held. */
 const slotVariants = cva(
@@ -149,6 +154,52 @@ function Hotbar() {
   );
 }
 
+/**
+ * Opens the learner's island to visitors and copies its address, or closes it
+ * again (ADR 0047, D18). Shown once the learner has a profile address.
+ */
+function ShareButton() {
+  const t = useTranslations("Island");
+  const locale = useCurrentLocale();
+  const address = useGame((state) => state.address);
+  const shared = useGame((state) => state.shared);
+  const setShared = useGame((state) => state.setShared);
+  const setNotice = useGame((state) => state.setNotice);
+  const share = useMutation(island.mutations.share);
+  if (address === null) {
+    return null;
+  }
+  return (
+    <HudButton
+      held={shared}
+      label={shared ? t("unshare") : t("share")}
+      onPress={() => {
+        const next = !shared;
+        setShared(next);
+        setNotice(next ? "shared" : "private");
+        Effect.runFork(
+          Effect.tryPromise(() => share({ shared: next })).pipe(
+            Effect.andThen(() =>
+              next
+                ? Effect.tryPromise(() =>
+                    navigator.clipboard.writeText(
+                      `${SITE_ORIGIN}/${locale}/island/${address}`
+                    )
+                  )
+                : Effect.void
+            ),
+            Effect.catchTag("UnknownError", () =>
+              Effect.sync(() => setShared(shared))
+            )
+          )
+        );
+      }}
+    >
+      <HugeIcons className="size-5" icon={Link01Icon} />
+    </HudButton>
+  );
+}
+
 /** Undo and redo, which walk the learner's own steps, and the sound switch. */
 function History() {
   const t = useTranslations("Island");
@@ -162,6 +213,7 @@ function History() {
         className: "pointer-events-auto flex gap-1 p-1.5",
       })}
     >
+      <ShareButton />
       <HudButton label={t("undo")} onPress={undo}>
         <HugeIcons className="size-5" icon={Undo02Icon} />
       </HudButton>

@@ -2,4 +2,5 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/is
 
 export const build = registeredFunctions.build;
 export const open = registeredFunctions.open;
+export const share = registeredFunctions.share;
 export const experimental_reuseContext = true;

@@ -65,6 +65,7 @@ function IslandPage() {
       <RouteConvexProvider>
         <Suspense fallback={null}>
           <IslandGame
+            address={screen.address}
             edits={screen.edits}
             level={screen.level}
             onLeave={() => {
@@ -80,6 +81,7 @@ function IslandPage() {
               ...(screen.next === undefined ? {} : { next: screen.next }),
             }}
             seed={screen.seed}
+            shared={screen.shared}
             size={screen.size}
             version={screen.version}
           />

@@ -23,6 +23,16 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
+      name: "share",
+      args: () => ({ shared: Schema.Boolean }),
+      returns: () => Schema.Null,
+      error: () => AuthFailure,
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
       name: "build",
       args: () => ({
         edits: Schema.Array(Edit).check(Schema.isMaxLength(BUILD_BATCH)),

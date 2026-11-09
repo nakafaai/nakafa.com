@@ -42,6 +42,7 @@ export const islandScreenHandler = accountHandler(
       };
       return {
         ...entryOf(own, account?.appUser._id),
+        address: account?.appUser.username ?? null,
         seo,
       };
     })

@@ -21,6 +21,8 @@ export type Tool =
 
 /** What the game tells the learner: a build the server refused, edits another device made first, or an item with no room where it was pressed. */
 export type Notice =
+  | "shared"
+  | "private"
   | "till"
   | "water"
   | "bite"
@@ -57,6 +59,8 @@ const HISTORY = 64;
 interface GameStore {
   /** Adds a catch, which the HUD shows and the field guide marks. */
   addCatch: (species: number) => void;
+  /** The learner's profile address, by which a shared island is visited; none until they choose one. */
+  address: string | null;
   /** Writes edits into the world as one step the learner can undo. */
   apply: (edits: readonly Edit[]) => void;
   /** Puts a block into a hotbar slot. */
@@ -122,11 +126,14 @@ interface GameStore {
   setMuted: (muted: boolean) => void;
   setNotice: (notice: Notice | null) => void;
   setQuery: (query: string) => void;
+  setShared: (shared: boolean) => void;
   setShelf: (shelf: Shelf) => void;
   setTool: (tool: Tool) => void;
   /** Records that the server took the first `count` pending edits, now at `version`. */
   settle: (count: number, version: number) => void;
   setWeather: (weather: Weather) => void;
+  /** Whether the learner opened their island to visitors (D18). */
+  shared: boolean;
   /** The book's open shelf. */
   shelf: Shelf;
   slot: number;
@@ -143,6 +150,7 @@ interface GameStore {
 /** What a game opens with: its world, hotbar, level, progress, the version of its edits, and the way out. */
 type GameSetup = Pick<
   GameStore,
+  | "address"
   | "cells"
   | "hotbar"
   | "leave"
@@ -151,6 +159,7 @@ type GameSetup = Pick<
   | "progress"
   | "season"
   | "seed"
+  | "shared"
   | "version"
 >;
 
@@ -234,6 +243,7 @@ export function createGameStore(setup: GameSetup) {
       revision: 0,
       setBook: (book) => set({ book }),
       setMinute: (minute) => set({ minute }),
+      setShared: (shared) => set({ shared }),
       setQuery: (query) => set({ query }),
       setShelf: (shelf) => set({ query: "", shelf }),
       setMuted: (muted) => set({ muted }),

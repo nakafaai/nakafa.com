@@ -4981,6 +4981,12 @@
     "home-0": "Cottage",
     "home-1": "Two-storey house",
     "home-2": "Manor",
-    "upgrade": "Upgrade your home to a {name}"
+    "upgrade": "Upgrade your home to a {name}",
+    "visit-title": "{name}'s island",
+    "visit-closed": "This island isn't open to visitors.",
+    "share": "Share your island",
+    "unshare": "Stop sharing your island",
+    "notice-shared": "Shared! Your island's link is copied, anyone with it can visit.",
+    "notice-private": "Your island is yours alone again."
   }
 }

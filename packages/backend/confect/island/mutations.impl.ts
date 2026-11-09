@@ -34,6 +34,23 @@ const open = FunctionImpl.make(
   })
 );
 
+/** Opens the learner's island to visitors by its address, or closes it again (ADR 0047, D18). */
+const share = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "share",
+  Effect.fn("island.mutations.share")(function* ({ shared }) {
+    const { appUser } = yield* requireAuth();
+    const island = yield* ensureIsland(appUser._id);
+    const writer = yield* DatabaseWriter;
+    yield* writer
+      .table("islands")
+      .patch(island._id, { shared })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
+
 /**
  * Builds a batch of the learner's edits with the rules the browser ran first
  * (ADR 0047, D6): a batch made against older edits is refused as stale, a
@@ -65,6 +82,7 @@ const build = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
+  Layer.provide(share),
   Layer.provide(build),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

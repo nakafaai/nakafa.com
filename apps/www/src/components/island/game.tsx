@@ -32,24 +32,29 @@ function firstHotbar(level: number) {
  * server's copy in step. Its code loads only when the learner enters.
  */
 export default function IslandGame({
+  address,
   edits,
   level,
   onLeave,
   progress,
   seed,
+  shared,
   size,
   version,
 }: {
+  address: string | null;
   edits: readonly Edit[];
   level: number;
   onLeave: () => void;
   progress: Progress;
   seed: number;
+  shared: boolean;
   size: number;
   version: number;
 }) {
   const [store] = useState(() =>
     createGameStore({
+      address,
       cells: worldOf(seed, size, edits),
       hotbar: firstHotbar(level),
       leave: onLeave,
@@ -58,6 +63,7 @@ export default function IslandGame({
       progress,
       season: seasonNow(),
       seed,
+      shared,
       version,
     })
   );

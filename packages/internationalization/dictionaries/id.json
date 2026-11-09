@@ -4981,6 +4981,12 @@
     "home-0": "Pondok",
     "home-1": "Rumah dua lantai",
     "home-2": "Rumah besar",
-    "upgrade": "Tingkatkan rumahmu jadi {name}"
+    "upgrade": "Tingkatkan rumahmu jadi {name}",
+    "visit-title": "Pulau {name}",
+    "visit-closed": "Pulau ini belum dibuka untuk pengunjung.",
+    "share": "Bagikan pulaumu",
+    "unshare": "Berhenti membagikan pulaumu",
+    "notice-shared": "Dibagikan! Link pulaumu sudah disalin, siapa pun yang punya link bisa berkunjung.",
+    "notice-private": "Pulaumu kembali jadi milikmu sendiri."
   }
 }

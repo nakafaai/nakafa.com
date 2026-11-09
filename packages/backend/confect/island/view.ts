@@ -12,6 +12,7 @@ import { Schema } from "effect";
 export const OwnIsland = Schema.Struct({
   badges: Schema.Array(EarnedBadge),
   lifetime: Schema.Finite,
+  shared: Schema.Boolean,
   version: Schema.Finite,
   world: Edits,
 });
@@ -21,7 +22,31 @@ export function toOwnIsland(island: Docs["islands"]) {
   return {
     badges: island.badges,
     lifetime: island.lifetime,
+    shared: island.shared === true,
     version: island.version,
+    world: island.world,
+  };
+}
+
+/**
+ * Another learner's island as a visitor sees it (ADR 0047, D18): its cells, the
+ * lifetime Stars its level and footprint read from, its badges, and the owner
+ * whose seed its terrain grows from. Nothing of the owner's account beyond
+ * the address the visitor already knows.
+ */
+export const VisitedIsland = Schema.Struct({
+  badges: Schema.Array(EarnedBadge),
+  lifetime: Schema.Finite,
+  owner: Schema.String,
+  world: Edits,
+});
+
+/** Projects a shared island for its visitors. */
+export function toVisitedIsland(island: Docs["islands"]) {
+  return {
+    badges: island.badges,
+    lifetime: island.lifetime,
+    owner: island.userId,
     world: island.world,
   };
 }

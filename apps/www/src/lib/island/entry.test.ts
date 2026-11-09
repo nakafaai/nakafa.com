@@ -10,6 +10,7 @@ describe("island/entry", () => {
         {
           badges: [],
           lifetime: 420,
+          shared: true,
           version: 3,
           world: [{ block: 5, x: 30, y: 9, z: 30 }],
         },
@@ -22,6 +23,7 @@ describe("island/entry", () => {
       lifetime: 420,
       next: 900,
       seed: seedOf("users-1"),
+      shared: true,
       size: 56,
       version: 3,
     });
@@ -33,12 +35,15 @@ describe("island/entry", () => {
       level: 1,
       next: 150,
       seed: seedOf("island"),
+      shared: false,
       size: 52,
       version: 0,
     });
     expect(
-      entryOf({ badges: [], lifetime: 9000, version: 0, world: [] }, "users-2")
-        .next
+      entryOf(
+        { badges: [], lifetime: 9000, shared: false, version: 0, world: [] },
+        "users-2"
+      ).next
     ).toBeUndefined();
   });
 });

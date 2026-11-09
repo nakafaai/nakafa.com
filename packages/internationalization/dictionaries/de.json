@@ -4981,6 +4981,12 @@
     "home-0": "Häuschen",
     "home-1": "Zweistöckiges Haus",
     "home-2": "Herrenhaus",
-    "upgrade": "Bau dein Zuhause zum {name} aus"
+    "upgrade": "Bau dein Zuhause zum {name} aus",
+    "visit-title": "Die Insel von {name}",
+    "visit-closed": "Diese Insel ist nicht für Besuch geöffnet.",
+    "share": "Teil deine Insel",
+    "unshare": "Hör auf, deine Insel zu teilen",
+    "notice-shared": "Geteilt! Der Link deiner Insel ist kopiert, alle mit dem Link können sie besuchen.",
+    "notice-private": "Deine Insel gehört wieder nur dir."
   }
 }

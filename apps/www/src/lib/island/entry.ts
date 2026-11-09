@@ -24,6 +24,7 @@ export function entryOf(
     lifetime: own?.lifetime ?? 0,
     next: Option.getOrUndefined(growth.next),
     seed: seedOf(owner ?? "island"),
+    shared: own?.shared ?? false,
     size: growth.size,
     version: own?.version ?? 0,
   };

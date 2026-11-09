@@ -6,7 +6,10 @@ import { todayOf } from "@repo/backend/confect/island/day";
 import spec from "@repo/backend/confect/island/queries.spec";
 import { DAY_GRANTS } from "@repo/backend/confect/island/schema";
 import { findIsland } from "@repo/backend/confect/island/store";
-import { toOwnIsland } from "@repo/backend/confect/island/view";
+import {
+  toOwnIsland,
+  toVisitedIsland,
+} from "@repo/backend/confect/island/view";
 import { streakOn, summaryOf, weekOf } from "@repo/backend/confect/island/week";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer, Option } from "effect";
@@ -23,6 +26,34 @@ const own = FunctionImpl.make(
     }
     const island = yield* findIsland(user.appUser._id);
     return Option.match(island, { onNone: () => null, onSome: toOwnIsland });
+  })
+);
+
+/**
+ * Another learner's island by their address (ADR 0047, D18): only an island
+ * its owner shared, and none for an address no one holds or an owner with no
+ * island yet. Anyone may visit, signed in or not.
+ */
+const visit = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "visit",
+  Effect.fn("island.queries.visit")(function* ({ username }) {
+    const database = yield* DatabaseReader;
+    const owner = yield* database
+      .table("users")
+      .index("by_username", (query) => query.eq("username", username))
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(owner)) {
+      return null;
+    }
+    const island = yield* findIsland(owner.value._id);
+    return Option.match(island, {
+      onNone: () => null,
+      onSome: (found) =>
+        found.shared === true ? toVisitedIsland(found) : null,
+    });
   })
 );
 
@@ -69,6 +100,7 @@ const week = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(own),
+  Layer.provide(visit),
   Layer.provide(week),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize
