@@ -8,6 +8,12 @@ import { LESSON_PATH } from "@/e2e/support/chat";
 /** The search button of the sidebar, in English. */
 const SEARCH = "Search content...";
 
+/** The last row of a query, which searches inside every lesson. */
+const FULL_SEARCH = /Search lessons for "mathematcs"/u;
+
+/** A curriculum page, where the subject the typo found lives. */
+const CURRICULUM_PAGE = /\/en\/curriculum\//u;
+
 /**
  * The palette opens on the subjects around the lesson on screen and each
  * family's way in, read from the static index, and a query with a typo finds
@@ -51,12 +57,12 @@ test("the shell's palette suggests from the page and finds a subject through a t
     palette.getByText(en.Utils["search-group-curricula"], { exact: true })
   ).toBeVisible();
   await expect(
-    palette.getByRole("option", { name: /Search lessons for "mathematcs"/u })
+    palette.getByRole("option", { name: FULL_SEARCH })
   ).toBeVisible();
 
   await page.keyboard.press("Enter");
   await expect(palette).toBeHidden();
-  await expect(page).toHaveURL(/\/en\/curriculum\//u);
+  await expect(page).toHaveURL(CURRICULUM_PAGE);
   expect(MutableList.toArray(missing)).toEqual([]);
 });
 
