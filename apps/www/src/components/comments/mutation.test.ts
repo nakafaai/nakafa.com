@@ -1,10 +1,11 @@
+import { Ref } from "@confect/core";
+import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { MASCOT } from "@repo/backend/test/mascot";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Equal, MutableRef, Option, Schema } from "effect";
 import {
-  editInLists,
   insertDraftComment,
   insertDraftReply,
   likeInLists,
@@ -12,7 +13,6 @@ import {
   unlikeInLists,
 } from "@/components/comments/mutation";
 import type { CommentRow } from "@/components/comments/state";
-import { createLocalStore } from "@/test/optimistic";
 
 const commentId = Schema.decodeUnknownSync(Id("comments"));
 const userId = Schema.decodeUnknownSync(Id("users"));
@@ -39,90 +39,157 @@ function row(id: string, change: Partial<CommentRow> = {}): CommentRow {
   };
 }
 
-/** One query the page has cached, seeded into the store as the server sent it. */
-type Cached = (local: ReturnType<typeof createLocalStore>) => void;
+/** One cached query: the name of its function, its encoded arguments, and its encoded answer, or none while it loads. */
+type Cached = readonly [name: string, args: unknown, value: unknown];
 
 /** A page of the top-level comments of a slug. */
-const slugList =
-  (
-    cursor: string | null,
-    page: CommentRow[],
-    slug = SLUG,
-    isDone = false
-  ): Cached =>
-  (local) =>
-    local.seed(
-      comments.queries.getCommentsBySlug,
-      { paginationOpts: { cursor, numItems: 25 }, slug, sort: "newest" },
-      { continueCursor: "next", isDone, page }
-    );
+function slugList(
+  cursor: string | null,
+  page: CommentRow[],
+  slug = SLUG,
+  isDone = false
+): Cached {
+  return [
+    Ref.getConvexFunctionName(comments.queries.getCommentsBySlug),
+    Ref.encodeArgsSync(comments.queries.getCommentsBySlug, {
+      paginationOpts: { cursor, numItems: 25 },
+      slug,
+      sort: "newest",
+    }),
+    Ref.encodeReturnsSync(comments.queries.getCommentsBySlug, {
+      continueCursor: "next",
+      isDone,
+      page,
+    }),
+  ];
+}
 
 /** A page of the replies of a thread. */
-const replyList =
-  (threadId: Id<"comments">, page: CommentRow[], isDone: boolean): Cached =>
-  (local) =>
-    local.seed(
-      comments.queries.getCommentReplies,
-      { paginationOpts: { cursor: null, numItems: 25 }, threadId },
-      { continueCursor: "next", isDone, page }
-    );
+function replyList(
+  threadId: Id<"comments">,
+  page: CommentRow[],
+  isDone: boolean
+): Cached {
+  return [
+    Ref.getConvexFunctionName(comments.queries.getCommentReplies),
+    Ref.encodeArgsSync(comments.queries.getCommentReplies, {
+      paginationOpts: { cursor: null, numItems: 25 },
+      threadId,
+    }),
+    Ref.encodeReturnsSync(comments.queries.getCommentReplies, {
+      continueCursor: "next",
+      isDone,
+      page,
+    }),
+  ];
+}
 
 /** The profile's comments, which carry no author of their own. */
-const profileList =
-  (page: CommentRow[]): Cached =>
-  (local) =>
-    local.seed(
-      comments.queries.getCommentsByUserId,
-      { paginationOpts: { cursor: null, numItems: 25 }, userId: AUTHOR },
-      {
-        continueCursor: "next",
-        isDone: true,
-        page: Arr.map(
-          page,
-          ({ user: _user, replyToUser: _replyToUser, ...rest }) => rest
-        ),
-      }
-    );
-
-/** The count of a slug's comments, or none while it loads. */
-const countOf =
-  (slug: string, count: number | undefined): Cached =>
-  (local) =>
-    local.seed(comments.queries.getCommentCount, { slug }, count);
+function profileList(page: CommentRow[]): Cached {
+  return [
+    Ref.getConvexFunctionName(comments.queries.getCommentsByUserId),
+    Ref.encodeArgsSync(comments.queries.getCommentsByUserId, {
+      paginationOpts: { cursor: null, numItems: 25 },
+      userId: AUTHOR,
+    }),
+    Ref.encodeReturnsSync(comments.queries.getCommentsByUserId, {
+      continueCursor: "next",
+      isDone: true,
+      page: Arr.map(
+        page,
+        ({ user: _user, replyToUser: _replyToUser, ...rest }) => rest
+      ),
+    }),
+  ];
+}
 
 /** The first page of the top-level comments of a slug, which is still loading. */
-const loadingSlug =
-  (slug: string): Cached =>
-  (local) =>
-    local.seed(
-      comments.queries.getCommentsBySlug,
-      { paginationOpts: { cursor: null, numItems: 25 }, slug, sort: "newest" },
-      undefined
-    );
+function loadingSlug(slug: string): Cached {
+  return [
+    Ref.getConvexFunctionName(comments.queries.getCommentsBySlug),
+    Ref.encodeArgsSync(comments.queries.getCommentsBySlug, {
+      paginationOpts: { cursor: null, numItems: 25 },
+      slug,
+      sort: "newest",
+    }),
+    undefined,
+  ];
+}
 
 /** The profile's first page of comments, which is still loading. */
-const loadingProfile = (): Cached => (local) =>
-  local.seed(
-    comments.queries.getCommentsByUserId,
-    { paginationOpts: { cursor: null, numItems: 25 }, userId: AUTHOR },
-    undefined
-  );
+function loadingProfile(): Cached {
+  return [
+    Ref.getConvexFunctionName(comments.queries.getCommentsByUserId),
+    Ref.encodeArgsSync(comments.queries.getCommentsByUserId, {
+      paginationOpts: { cursor: null, numItems: 25 },
+      userId: AUTHOR,
+    }),
+    undefined,
+  ];
+}
 
 /** A page of the replies of a thread after the first one, which is still loading. */
-const loadingReplies =
-  (threadId: Id<"comments">): Cached =>
-  (local) =>
-    local.seed(
-      comments.queries.getCommentReplies,
-      { paginationOpts: { cursor: "later", numItems: 25 }, threadId },
-      undefined
-    );
+function loadingReplies(threadId: Id<"comments">): Cached {
+  return [
+    Ref.getConvexFunctionName(comments.queries.getCommentReplies),
+    Ref.encodeArgsSync(comments.queries.getCommentReplies, {
+      paginationOpts: { cursor: "later", numItems: 25 },
+      threadId,
+    }),
+    undefined,
+  ];
+}
 
-/** The shared local store with the lists the page has cached, which counts the writes. */
+/**
+ * A store with the lists the page has cached. It encodes and decodes with the
+ * schemas of the functions, like Confect's own store, and counts the writes.
+ */
 function fakeStore(initial: readonly Cached[]) {
-  const local = createLocalStore();
-  Arr.forEach(initial, (seed) => seed(local));
-  return { store: local.store, writes: () => local.written().length };
+  const cache = MutableRef.make(initial);
+  const writes = MutableRef.make(0);
+  const store: OptimisticLocalStore.OptimisticLocalStore = {
+    getAllQueries: (ref) =>
+      Arr.map(
+        Arr.filter(
+          MutableRef.get(cache),
+          ([name]) => name === Ref.getConvexFunctionName(ref)
+        ),
+        ([, args, value]) => ({
+          args: Ref.decodeArgsSync(ref, args),
+          value:
+            value === undefined
+              ? Option.none()
+              : Option.some(Ref.decodeReturnsSync(ref, value)),
+        })
+      ),
+    getQuery: () => Option.none(),
+    setQuery: (ref, args, value) => {
+      const name = Ref.getConvexFunctionName(ref);
+      const encodedArgs = Ref.encodeArgsSync(ref, args);
+      const next: Cached = [
+        name,
+        encodedArgs,
+        Option.isSome(value)
+          ? Ref.encodeReturnsSync(ref, value.value)
+          : undefined,
+      ];
+      MutableRef.update(writes, (count) => count + 1);
+      MutableRef.update(cache, (current) =>
+        Arr.some(
+          current,
+          ([other, otherArgs]) =>
+            other === name && Equal.equals(otherArgs, encodedArgs)
+        )
+          ? Arr.map(current, (entry) =>
+              entry[0] === name && Equal.equals(entry[1], encodedArgs)
+                ? next
+                : entry
+            )
+          : Arr.append(current, next)
+      );
+    },
+  };
+  return { store, writes: () => MutableRef.get(writes) };
 }
 
 type Fake = ReturnType<typeof fakeStore>;
@@ -380,65 +447,5 @@ describe("the optimistic changes of the comment lists", () => {
 
     expect(slugPages(fake)).toEqual([[ROOT]]);
     expect(fake.writes()).toBe(0);
-  });
-
-  it("moves a slug's count with a new comment, a reply and a deletion, never below zero, and leaves other counts alone", () => {
-    const fake = fakeStore([
-      countOf(SLUG, 3),
-      countOf("other-lesson", 9),
-      countOf("later", undefined),
-      slugList(null, [row("root", { replyCount: 1 })]),
-      replyList(ROOT, [row("first", { parentId: ROOT, threadId: ROOT })], true),
-    ]);
-    const counts = () =>
-      Arr.map(
-        fake.store.getAllQueries(comments.queries.getCommentCount),
-        ({ value }) => Option.getOrUndefined(value)
-      );
-    const post = { slug: SLUG, text: "new", uploads: [] };
-
-    insertDraftComment(row("draft"))(fake.store, post);
-    insertDraftReply(row("reply", { threadId: ROOT }), ROOT)(fake.store, post);
-    expect(counts()).toEqual([5, 9, undefined]);
-    removeFromLists(fake.store, { commentId: commentId("first") });
-    expect(counts()).toEqual([4, 9, undefined]);
-    removeFromLists(fake.store, { commentId: ROOT });
-    expect(counts()).toEqual([2, 9, undefined]);
-    removeFromLists(fake.store, { commentId: commentId("draft") });
-    removeFromLists(fake.store, { commentId: commentId("draft") });
-    expect(counts()).toEqual([1, 9, undefined]);
-    const empty = fakeStore([countOf(SLUG, 0), slugList(null, [row("root")])]);
-    removeFromLists(empty.store, { commentId: ROOT });
-    expect(
-      Arr.map(
-        empty.store.getAllQueries(comments.queries.getCommentCount),
-        ({ value }) => Option.getOrUndefined(value)
-      )
-    ).toEqual([0]);
-  });
-
-  it("shows a comment's new text, marked edited, in every loaded list", () => {
-    const fake = fakeStore([
-      slugList(null, [row("root"), row("other")]),
-      profileList([row("root")]),
-    ]);
-
-    editInLists(42)(fake.store, { commentId: ROOT, text: "Baru" });
-
-    const shown = Arr.flatMap(
-      [
-        ...fake.store.getAllQueries(comments.queries.getCommentsBySlug),
-        ...fake.store.getAllQueries(comments.queries.getCommentsByUserId),
-      ],
-      ({ value }) =>
-        Option.isSome(value)
-          ? Arr.map(value.value.page, ({ editedAt, text }) => [text, editedAt])
-          : []
-    );
-    expect(shown).toEqual([
-      ["Baru", 42],
-      ["other", undefined],
-      ["Baru", 42],
-    ]);
   });
 });

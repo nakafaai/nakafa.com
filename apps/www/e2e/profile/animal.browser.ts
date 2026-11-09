@@ -13,7 +13,6 @@ import {
   sidebarAvatar,
 } from "@/e2e/support/avatar";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
-import { postComment } from "@/e2e/support/comments";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -29,13 +28,11 @@ const SIXTY_LETTERS = "Maria".repeat(12);
 const ONE_LETTER = "A";
 const OTHER_SCRIPT = "Наталья Петровна Иванова";
 /**
- * The avatar of one comment's author, at the top of the column that opens the
- * row, the only child of the comment's container. The column draws the thread's
- * line under the avatar, and the thread and its composer sit beside the row, not
- * in it, so the row holds one avatar.
+ * The avatar of one comment's author, which sits in the row that is the only
+ * child of the comment's container. The thread and its composer sit beside the
+ * row, not in it, so the row holds one avatar.
  */
-const AUTHOR_AVATAR =
-  ':scope > [data-slot="feed-row"] > div > [data-slot="avatar"]';
+const AUTHOR_AVATAR = ':scope > [data-slot="feed-row"] > [data-slot="avatar"]';
 
 /** The name the sidebar footer shows for the account. */
 function sidebarName(page: Page, name: string) {
@@ -142,6 +139,7 @@ test("a comment by a learner without a photo shows the animal of the learner", a
   baseURL,
   page,
 }) => {
+  const placeholder = app.Comments["add-comment-placeholder"];
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
@@ -156,7 +154,14 @@ test("a comment by a learner without a photo shows the animal of the learner", a
         await page.goto(LESSON_PATH);
         // The comments feed mounts once its anchor, at the foot of the lesson,
         // comes near the viewport.
-        await postComment(page, text);
+        await page.locator("#comments").scrollIntoViewIfNeeded();
+        const composer = page
+          .locator("form")
+          .filter({ has: page.getByRole("textbox", { name: placeholder }) });
+        await composer.getByRole("textbox", { name: placeholder }).fill(text);
+        await composer
+          .getByRole("button", { name: app.Posts.post, exact: true })
+          .click();
 
         const comment = page
           .locator("div[id]")
