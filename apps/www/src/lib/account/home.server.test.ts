@@ -6,13 +6,14 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import { isRedirect } from "@tanstack/react-router";
+import { isNotFound, isRedirect } from "@tanstack/react-router";
 import { Array as Arr, Deferred, Effect, Option } from "effect";
 import {
   chatScreenHandler,
   chatSidebarScreenHandler,
   homeScreenHandler,
   islandScreenHandler,
+  islandVisitHandler,
   notificationsScreenHandler,
   searchScreenHandler,
 } from "@/lib/account/home.server";
@@ -378,10 +379,14 @@ describe("islandScreenHandler", () => {
     const own = { layout: [], lifetime: 12, stars: 12 };
     answerQueries([
       [island.queries.own, own],
-      [auth.queries.getCurrentUser, { authUser: { name: "Nabil" } }],
+      [auth.queries.getCurrentUser, account],
     ]);
     const screen = await islandScreenHandler({ data: { locale: "en" } });
-    expect(screen).toMatchObject({ island: own, name: "Nabil" });
+    expect(screen).toMatchObject({
+      island: own,
+      name: "Nabil",
+      username: "nabil",
+    });
     expect(screen.seo).toMatchObject({
       canonicalPath: "/en/island",
       indexable: false,
@@ -398,6 +403,38 @@ describe("islandScreenHandler", () => {
     const screen = await islandScreenHandler({ data: { locale: "id" } });
     expect(screen.island).toBeUndefined();
     expect(screen.name).toBeUndefined();
+    expect(screen.username).toBeUndefined();
     expect(screen.seo.title).toBe("Pulau");
+  });
+});
+
+describe("islandVisitHandler", () => {
+  it("reads a shared island by its owner's username, without signing in, and keeps it out of search", async () => {
+    sessionWith(Option.none());
+    const visited = { badges: [], level: 2, name: "Nabil", username: "nabil" };
+    answerQueries([[island.queries.visit, visited]]);
+    const screen = await islandVisitHandler({
+      data: { locale: "en", username: "Nabil" },
+    });
+    expect(screen.island).toEqual(visited);
+    expect(screen.seo).toMatchObject({
+      canonicalPath: "/en/island/nabil",
+      indexable: false,
+      title: "Nabil's Island",
+    });
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      island.queries.visit,
+      { username: "nabil" },
+      undefined
+    );
+  });
+
+  it("answers not found for an island nobody may visit", async () => {
+    sessionWith(Option.some("token"));
+    answerQueries([[island.queries.visit, null]]);
+    const cause = await failureOf(
+      islandVisitHandler({ data: { locale: "id", username: "someone" } })
+    );
+    expect(isNotFound(cause)).toBe(true);
   });
 });

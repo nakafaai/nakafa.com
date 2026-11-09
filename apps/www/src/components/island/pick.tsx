@@ -53,7 +53,7 @@ function ring(width: number, depth: number, fits: boolean) {
  * item, moves the picked placement, or picks the placement it lands on.
  */
 export function IslandPicker() {
-  const { layout, owner, size } = useIsland();
+  const { layout, level, owner, size } = useIsland();
   const tools = useTools((state) => state);
   const edit = useEditIsland();
   const group = useRef<Group>(null);
@@ -68,7 +68,7 @@ export function IslandPicker() {
     Option.exists(owner, (facts) =>
       Result.isSuccess(
         applyOperations(layout, [operation], {
-          level: facts.level,
+          level,
           materials: facts.materials,
           size,
           stars: facts.stars,
