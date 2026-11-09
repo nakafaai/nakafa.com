@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
+import { countryProfiles } from "@repo/backend/confect/country/registry";
 import { answerFields } from "@repo/backend/confect/tenancy/start";
 import { Array as Arr, Match, Option } from "effect";
 
@@ -30,13 +30,16 @@ export type StartItem = (typeof START_ITEMS)[number];
 export const START_NAME_LIMIT = 120;
 
 /**
- * The levels a school in the country chooses from: Indonesia's own levels, or the
- * stages every other country shares, each kept as the level it stands for.
+ * The levels a school in the country chooses from, as the country registry
+ * names them: Indonesia's and Malaysia's own levels, or the stages every other
+ * country shares, each kept as the level it stands for.
  */
 export const levelsOf = (country: Country): readonly Level[] =>
-  country === "ID"
-    ? UnitLevel.literals
-    : ["paud", "sd", "smp", "sma", "smk", "slb", "other"];
+  countryProfiles[country].levels;
+
+/** Whether the country names its levels by their own names, such as SMA or SMK, rather than by a shared stage. */
+export const namesOwnLevels = (country: Country) =>
+  countryProfiles[country].levelNames === "national";
 
 /** The draft after one more answer, as the server's save writes it. */
 export const applyAnswer = (
@@ -110,16 +113,16 @@ export const typedSlug = (text: string) =>
   plain(text).replace(SPACES, "-").replace(NON_SLUG, "").slice(0, 63);
 
 /**
- * The name of one unit: Indonesia writes the level first, as in "SMA Harapan
- * Bangsa"; every other country follows the founder's language, which `compose`
- * writes.
+ * The name of one unit: a country with its own levels writes the level first,
+ * as in "SMA Harapan Bangsa" or "SMK Seri Bintang"; every other country follows
+ * the founder's language, which `compose` writes.
  */
 export const unitName = (
   country: Country,
   level: string,
   name: string,
   compose: (level: string, name: string) => string
-) => (country === "ID" ? `${level} ${name}` : compose(level, name));
+) => (namesOwnLevels(country) ? `${level} ${name}` : compose(level, name));
 
 /**
  * The opening's answers when the draft answers every question. A school with

@@ -8,7 +8,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
 import { SelectField } from "@/components/tenant/settings/select";
-import { levelsOf } from "@/components/tenant/start/state";
+import { levelsOf, namesOwnLevels } from "@/components/tenant/start/state";
 
 /** One level of a school, as the unit schema names it. */
 type Level = typeof UnitLevel.Type;
@@ -75,7 +75,10 @@ export function UnitLevelField({
     ? offered
     : Arr.append(offered, value);
   const items = Arr.map(levels, (level) => ({
-    label: Option.contains(country, "ID")
+    label: Option.exists(
+      country,
+      (code) => Schema.is(StartCountry)(code) && namesOwnLevels(code)
+    )
       ? start(`level.${level}.title`)
       : start(`stage.${level}`),
     value: level,

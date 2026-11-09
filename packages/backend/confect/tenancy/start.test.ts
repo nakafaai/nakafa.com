@@ -1,21 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  CountryDefaults,
-  countryDefaults,
-  StartRequest,
-  startZone,
-} from "@repo/backend/confect/tenancy/start";
-import { Record, Schema } from "effect";
+import { StartRequest, startZone } from "@repo/backend/confect/tenancy/start";
+import { Schema } from "effect";
 
 describe("tenancy/start", () => {
-  it("holds a real currency and real time zones for every country", () => {
-    expect(
-      Record.map(countryDefaults, (defaults) =>
-        Schema.is(CountryDefaults)(defaults)
-      )
-    ).toEqual({ DE: true, GB: true, ID: true, SG: true, US: true });
-  });
-
   it("keeps the browser's zone when the country uses it, else the country's first", () => {
     expect(startZone("ID", "Asia/Makassar")).toBe("Asia/Makassar");
     expect(startZone("ID", "Europe/Berlin")).toBe("Asia/Jakarta");

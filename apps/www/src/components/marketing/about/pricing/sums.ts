@@ -14,6 +14,9 @@ const DAYS_PER_MONTH = 30;
 /** Rupiah for one iced milk coffee, the price of a glass that the design reads. */
 const ICED_COFFEE_IDR = 23_000;
 
+/** Ringgit for one teh tarik at a mamak stall, the price of a glass that the design reads. */
+const TEH_TARIK_MYR = 2.5;
+
 /** Takeaway coffees that the euro price buys: the design's estimate, to check against local prices before release. */
 const TAKEAWAY_COFFEES_EUR = 3;
 
@@ -35,6 +38,9 @@ type PricingSums = typeof PricingSumsSchema.Type;
 function drinksFor(price: MonthlyPrice) {
   if (price.currency === "IDR") {
     return Math.floor(price.amount / ICED_COFFEE_IDR);
+  }
+  if (price.currency === "MYR") {
+    return Math.floor(price.amount / TEH_TARIK_MYR);
   }
   if (price.currency === "EUR") {
     return TAKEAWAY_COFFEES_EUR;
