@@ -10,8 +10,10 @@ const EXPONENT_ROUTE =
   "/en/subjects/mathematics/exponential-logarithm/basic-concept";
 /** The readout the card keeps on its body, the count of bacteria it shows. */
 const COUNT = "[data-bacteria-count]";
-/** The card's play button, found by its accessible name. */
-const PLAY = /play/iu;
+/** The card's pause button, which the playing sketch shows, found by its accessible name. */
+const PAUSE = /pause/iu;
+/** How long a paused dish must hold still: longer than a generation takes at 1x. */
+const HOLD_MILLISECONDS = 3000;
 
 const expectSketchPlays = Effect.fn("NakafaE2E.expectSketchPlays")(function* (
   page: Page
@@ -33,18 +35,29 @@ const expectSketchPlays = Effect.fn("NakafaE2E.expectSketchPlays")(function* (
       await expect(card.locator("canvas")).toHaveCount(1, { timeout: 1000 });
     }).toPass({ timeout: revealTimeoutMilliseconds })
   );
-  const before = yield* Effect.promise(() =>
+  const first = yield* Effect.promise(() =>
     card.locator(COUNT).getAttribute("data-bacteria-count")
   );
-  yield* Effect.promise(() =>
-    card.getByRole("button", { name: PLAY }).first().click()
-  );
-  // One generation passes while it plays, so the count it shows changes.
+  // A sketch is an animation: it grows without a press, so the count changes.
   yield* Effect.promise(() =>
     expect(card.locator(COUNT)).not.toHaveAttribute(
       "data-bacteria-count",
-      before ?? "",
+      first ?? "",
       { timeout: revealTimeoutMilliseconds }
+    )
+  );
+  // Pausing holds the dish where it stands.
+  yield* Effect.promise(() =>
+    card.getByRole("button", { name: PAUSE }).first().click()
+  );
+  const held = yield* Effect.promise(() =>
+    card.locator(COUNT).getAttribute("data-bacteria-count")
+  );
+  yield* Effect.promise(() => page.waitForTimeout(HOLD_MILLISECONDS));
+  yield* Effect.promise(() =>
+    expect(card.locator(COUNT)).toHaveAttribute(
+      "data-bacteria-count",
+      held ?? ""
     )
   );
 });
@@ -52,7 +65,7 @@ const expectSketchPlays = Effect.fn("NakafaE2E.expectSketchPlays")(function* (
 test.describe("lesson sketch", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
-  test("the bacterial growth sketch draws its dish and grows while it plays", async ({
+  test("the bacterial growth sketch draws its dish, grows by itself, and holds when paused", async ({
     page,
   }) => {
     await Effect.runPromise(

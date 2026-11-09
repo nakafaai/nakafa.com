@@ -1,5 +1,8 @@
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useStartVisualScene,
+  useVisualScene,
+} from "@repo/design-system/components/visual/card";
 import { loadP5, type SketchLoadError } from "@repo/design-system/lib/sketch";
 import { Effect, Exit } from "effect";
 import type p5 from "p5";
@@ -22,9 +25,10 @@ type P5Program<State> = (sketch: p5, read: () => State) => void;
 /**
  * Runs one p5 sketch inside a visual card's body. p5's modular core loads
  * with `import()` only once the card nears the screen, so no page carries it
- * in its first JavaScript. The sketch plays and pauses with the card's play
- * button, starts over when the learner resets the view, follows its box's
- * size, and is removed with the card.
+ * in its first JavaScript. A sketch is an animation, so the card starts playing
+ * it once it first draws; the card's play button pauses and resumes it, a reset
+ * of the view starts it over, it follows its box's size, and it goes with the
+ * card.
  */
 export function P5Sketch<State>({
   label,
@@ -40,6 +44,7 @@ export function P5Sketch<State>({
   const view = useVisualScene((card) => card.view, 0);
   const [loaded, setLoaded] = useState<Exit.Exit<typeof p5, SketchLoadError>>();
   const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const start = useStartVisualScene();
   const instance = useRef<p5>(undefined);
   const latest = useRef(state);
 
@@ -65,6 +70,9 @@ export function P5Sketch<State>({
     }
   });
 
+  // A sketch is an animation: once it first draws, the card starts playing it.
+  const startPlaying = useEffectEvent(() => start());
+
   useEffect(() => {
     if (!(loaded && Exit.isSuccess(loaded) && node)) {
       return;
@@ -75,6 +83,7 @@ export function P5Sketch<State>({
     );
     instance.current = sketch;
     keepPlaying(sketch);
+    startPlaying();
     const resize = new ResizeObserver(([entry]) => {
       if (entry) {
         sketch.resizeCanvas(entry.contentRect.width, entry.contentRect.height);
