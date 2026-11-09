@@ -4956,6 +4956,11 @@
     "plants": "Tumbuhan",
     "walk": "Jalan",
     "notice-path": "Tiada jalan ke sana. Cuba tempat yang boleh dicapai musangmu.",
-    "search": "Cari"
+    "search": "Cari",
+    "rod": "Joran",
+    "notice-far": "Baling ke air dekat musangmu.",
+    "notice-bite": "Ada yang makan umpan! Ketik sekarang!",
+    "notice-escaped": "Ikan terlepas. Baling lagi!",
+    "caught": "Kamu dapat {name}!"
   }
 }

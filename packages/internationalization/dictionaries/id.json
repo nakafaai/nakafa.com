@@ -4956,6 +4956,11 @@
     "plants": "Tanaman",
     "walk": "Jalan",
     "notice-path": "Nggak ada jalan ke sana. Coba tempat yang bisa dicapai rubahmu.",
-    "search": "Cari"
+    "search": "Cari",
+    "rod": "Pancingan",
+    "notice-far": "Lempar kail ke air dekat rubahmu.",
+    "notice-bite": "Ada yang makan umpan! Tap sekarang!",
+    "notice-escaped": "Ikannya kabur. Lempar lagi!",
+    "caught": "Kamu dapat {name}!"
   }
 }

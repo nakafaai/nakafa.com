@@ -39,6 +39,7 @@ const SEE_THROUGH = [
   "foxTop",
   "foxBottom",
   "foxStep",
+  "bobber",
 ];
 
 describe("island/atlas", () => {

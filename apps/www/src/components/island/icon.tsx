@@ -12,7 +12,12 @@ import {
 } from "@/lib/island/atlas";
 import { isPlant, looksOf } from "@/lib/island/look";
 import { TILE } from "@/lib/island/tiles/paint";
-import { feetTile, hammerTile, pickaxeTile } from "@/lib/island/tiles/tools";
+import {
+  feetTile,
+  hammerTile,
+  pickaxeTile,
+  rodTile,
+} from "@/lib/island/tiles/tools";
 
 /** The side of a block icon in art pixels. */
 const ICON = 26;
@@ -184,6 +189,9 @@ export function cursorOf(tool: Tool, block: BlockKey) {
   }
   if (tool === "item") {
     return `url(${cursorOnce("item", () => cursorUrlOf(hammerTile()))}) 2 2, copy`;
+  }
+  if (tool === "fish") {
+    return `url(${cursorOnce("fish", () => cursorUrlOf(rodTile()))}) 30 2, pointer`;
   }
   return `url(${cursorOnce("walk", () => cursorUrlOf(feetTile()))}) 16 16, pointer`;
 }

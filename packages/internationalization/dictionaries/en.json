@@ -4956,6 +4956,11 @@
     "plants": "Plants",
     "walk": "Walk",
     "notice-path": "No way leads there. Try a spot your fox can reach.",
-    "search": "Search"
+    "search": "Search",
+    "rod": "Fishing rod",
+    "notice-far": "Cast into the water near your fox.",
+    "notice-bite": "A bite! Tap now!",
+    "notice-escaped": "It got away. Cast again!",
+    "caught": "You caught a {name}!"
   }
 }

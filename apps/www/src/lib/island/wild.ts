@@ -299,3 +299,24 @@ export function wildVertices(
     );
   });
 }
+
+/** One upright quad of a tile standing at `at`, `size` blocks tall, facing a camera turned by `yaw`; a float on the water, say. */
+export function standingQuad(
+  slot: number,
+  at: readonly [number, number, number],
+  size: number,
+  yaw: number
+) {
+  const right = [Math.cos(yaw), -Math.sin(yaw)] as const;
+  const corner = (u: number, up: number) =>
+    [
+      at[0] + right[0] * (u - 0.5) * size,
+      at[1] + up * size,
+      at[2] + right[1] * (u - 0.5) * size,
+    ] as const;
+  return quadOf(
+    slot,
+    [corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1)],
+    false
+  );
+}
