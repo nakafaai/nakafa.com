@@ -3,6 +3,7 @@ import { cn } from "cn";
 import { Option } from "effect";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
+import { HomeIsland } from "@/components/home/island";
 import { HomeContinueLearning } from "@/components/home/recent";
 import { HomeTrending } from "@/components/home/trending";
 import { pageRowVariants } from "@/components/shared/page/width";
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/$locale/_main/_app/_account/home")({
 });
 
 function HomePage() {
-  const { name, recentLooks, recentRows, trending, trendingLooks } =
+  const { island, name, recentLooks, recentRows, trending, trendingLooks } =
     Route.useLoaderData();
 
   return (
@@ -25,6 +26,7 @@ function HomePage() {
       <div className={cn(pageRowVariants(), "py-24")}>
         <div className="relative flex flex-col gap-12">
           <HomeHeader name={Option.fromUndefinedOr(name)} />
+          <HomeIsland name={name} preloaded={island} />
           <HomeExplore />
           <HomeContinueLearning looks={recentLooks} subjects={recentRows} />
           <HomeTrending looks={trendingLooks} subjects={trending} />

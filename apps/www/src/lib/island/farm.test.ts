@@ -17,6 +17,7 @@ const UNLEARNED = {
   level: 1,
   lifetime: 20,
   materials: { petals: 0, wood: 0 },
+  size: 6,
   stars: 20,
   timeZone: "Asia/Jakarta",
   version: 3,
