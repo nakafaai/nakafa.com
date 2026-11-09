@@ -13,38 +13,14 @@ const RetiredPublicRouteInputSchema = Schema.Struct({
   hasAttemptCapability: Schema.Boolean,
   pathname: Schema.String,
 });
-/** Removed feature routes and files that have no successor, matched as whole pathnames. */
-const REMOVED_PATHNAMES = HashSet.make(
-  "/api/chat/finance",
-  "/sitemap-domain.xml"
-);
 
-/** Reads whether the segments after an app locale name a removed feature route. */
-function isRemovedLocalizedRoute(segments: readonly string[]) {
-  const [first, second] = segments;
-  if (first === "events") {
-    return segments.length === 1;
-  }
-  if (first === "finance") {
-    return (
-      segments.length === 1 || (segments.length === 3 && second === "chat")
-    );
-  }
-  if (first === "event") {
-    return segments.length === 3 && second === "try-out";
-  }
-  return false;
-}
-
-/** Reads whether one pathname is a removed feature route or file. */
+/** Reads whether one pathname is the removed events page of an app locale. */
 function isRemovedPathname(pathname: string) {
-  if (HashSet.has(REMOVED_PATHNAMES, pathname)) {
-    return true;
-  }
   const [localeSegment, ...rest] = readPathSegments(pathname);
   return (
     Option.isSome(decodeAppLocale(localeSegment)) &&
-    isRemovedLocalizedRoute(rest)
+    rest.length === 1 &&
+    rest[0] === "events"
   );
 }
 
@@ -78,10 +54,9 @@ const readRetiredSnbtYear = Effect.fn("www.routing.publicHtml.retiredSnbtYear")(
 );
 
 /**
- * Answers whether one public URL is gone for good: a removed feature route or
- * file, or a product URL of a retired SNBT year that the signed exam has no
- * group for. Try-out attempts skip the try-out answer, as they skip the try-out
- * redirects.
+ * Answers whether one public URL is gone for good: the removed events page, or
+ * a product URL of a retired SNBT year that the signed exam has no group for.
+ * Try-out attempts skip the try-out answer, as they skip the try-out redirects.
  */
 export const readRetiredPublicRoute = Effect.fn(
   "www.routing.publicHtml.retiredRoute"

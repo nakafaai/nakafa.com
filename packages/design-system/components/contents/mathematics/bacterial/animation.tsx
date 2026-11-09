@@ -34,7 +34,7 @@ import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { createContext, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
@@ -48,7 +48,7 @@ interface BacterialGrowthProps {
   initialCount?: number;
   /** The labels to use for the animation. */
   labels?: {
-    title?: string;
+    title?: ReactNode;
     bacterial?: string;
   };
   /** The maximum number of generations to display. @default 6 */

@@ -32,29 +32,25 @@ describe("removed public routes", () => {
     readExamPageMock.mockReset();
   });
 
-  it.effect.each([
-    "/en/event/try-out/ABC123",
-    "/en/events",
-    "/id/events",
-    "/de/finance",
-    "/en/finance/chat/chat-1",
-    "/api/chat/finance",
-    "/sitemap-domain.xml",
-  ])("answers %s gone without a successor", (pathname) =>
-    Effect.gen(function* () {
-      expect(
-        yield* readRetiredPublicRoute({ hasAttemptCapability: false, pathname })
-      ).toBe(true);
-      expect(readExamPageMock).not.toHaveBeenCalled();
-    })
+  it.effect.each(["/en/events", "/id/events"])(
+    "answers %s gone without a successor",
+    (pathname) =>
+      Effect.gen(function* () {
+        expect(
+          yield* readRetiredPublicRoute({
+            hasAttemptCapability: false,
+            pathname,
+          })
+        ).toBe(true);
+        expect(readExamPageMock).not.toHaveBeenCalled();
+      })
   );
 
   it.effect.each([
     "/sitemap/article_en_abc.xml",
     "/en/events/archive",
     "/fr/events",
-    "/en/finance/chat",
-    "/en/event/try-out",
+    "/events",
     "/en/subjects/mathematics",
   ])("keeps %s on its current answer", (pathname) =>
     Effect.gen(function* () {

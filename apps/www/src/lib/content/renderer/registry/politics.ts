@@ -15,7 +15,8 @@ import {
 import { NepotismStage } from "@/lib/content/renderer/client/politics/nepotism";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainRenderers = [
+/** Every politics visual, which any lesson in any domain may use. */
+export const politicsRenderers = [
   {
     name: politicsComponentNames.kimPlusElectabilityChart,
     component: KimPlusElectabilityChart,
