@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
@@ -17,7 +17,7 @@ type QuranEmbeddedProjection =
       }
     >["source"];
 const QuranProjectionInputSchema = Schema.Struct({
-  appLocale: AppLocaleCodeSchema,
+  appLocale: ActiveAppLocaleCodeSchema,
   includeTafsir: Schema.Boolean,
   ref: NakafaAgentContentRefSchema,
 });

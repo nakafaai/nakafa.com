@@ -1,7 +1,7 @@
 import type { EmailId } from "@convex-dev/resend";
 import type { WorkflowId } from "@convex-dev/workflow";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
 const commonFields = {
@@ -19,7 +19,7 @@ export const welcomeEmailIntentValidator = Schema.Union([
   }),
   Schema.Struct({
     ...commonFields,
-    locale: appLocaleValidator,
+    locale: ActiveAppLocaleCodeSchema,
     phase: Schema.Literal("scheduled"),
     workflowId: Schema.Opaque<WorkflowId>()(Schema.String),
   }),
@@ -34,7 +34,7 @@ export const welcomeIntentInputValidator = Schema.Union([
   Schema.Null,
   Schema.Struct({
     continueUrl: Schema.String,
-    locale: appLocaleValidator,
+    locale: ActiveAppLocaleCodeSchema,
     privacyPolicyUrl: Schema.String,
     termsOfServiceUrl: Schema.String,
   }),

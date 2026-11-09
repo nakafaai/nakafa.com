@@ -1,4 +1,4 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
 
 const LegalLabels = Schema.Struct({
@@ -20,4 +20,8 @@ export const legalLabels = {
     privacyPolicy: "Kebijakan Privasi",
     termsOfService: "Syarat dan Ketentuan",
   },
-} satisfies Record<ActiveAppLocaleCode, typeof LegalLabels.Type>;
+  ms: {
+    privacyPolicy: "Dasar Privasi",
+    termsOfService: "Terma Perkhidmatan",
+  },
+} satisfies Record<AppLocaleCode, typeof LegalLabels.Type>;

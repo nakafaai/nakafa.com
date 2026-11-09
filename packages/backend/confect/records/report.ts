@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ClassSubject } from "@repo/backend/confect/classroom/class";
 import { ReportHash } from "@repo/backend/confect/records/hash";
@@ -133,7 +133,7 @@ export const PrintableReport = Schema.Struct({
   approvedAt: Schema.Finite,
   cohort: Schema.String,
   hash: ReportHash,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   note: ReportNote,
   period: Schema.String,
   school: Schema.String,

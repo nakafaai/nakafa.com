@@ -1,6 +1,7 @@
 import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
@@ -40,7 +41,14 @@ const accountReadyEmailCopy = {
     footerReason: "Kami mengirim email ini karena kamu membuat akun Nakafa.",
     subject: "Akun Nakafa kamu sudah siap",
   },
-} satisfies Record<ActiveAppLocaleCode, AccountReadyEmailCopy>;
+  ms: {
+    body: "Akaun kamu sudah sedia. Terokai mata pelajaran atau mulakan percubaan bila-bila masa kamu bersedia.",
+    cta: "Teruskan belajar",
+    footerReason:
+      "Kami menghantar e-mel ini kerana kamu telah mencipta akaun Nakafa.",
+    subject: "Akaun Nakafa kamu sudah sedia",
+  },
+} satisfies Record<AppLocaleCode, AccountReadyEmailCopy>;
 
 /** Returns the reviewed product copy for one active app locale. */
 export function getAccountReadyEmailCopy(locale: ActiveAppLocaleCode) {

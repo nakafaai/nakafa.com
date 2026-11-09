@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 import {
@@ -75,7 +75,7 @@ function readRetiredSnbtSection(pathname: string) {
 
 /** Applies the retired section rename map of one locale and keeps every other key. */
 export function readSectionSuccessor(
-  appLocale: AppLocaleCode,
+  appLocale: ActiveAppLocaleCode,
   section: string
 ) {
   return Option.getOrElse(

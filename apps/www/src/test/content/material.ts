@@ -2,7 +2,8 @@ import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
-  activeAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
+  ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import {
@@ -33,6 +34,9 @@ import {
   Schema,
   Struct,
 } from "effect";
+
+/** The served locale a fixture of a release names, which every fixture of this file is in. */
+const servedLocale = Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema);
 
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema
@@ -70,7 +74,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
     (projection, index) =>
       Effect.gen(function* () {
         const artifact = yield* testSignedArtifact("mathematics", {
-          artifactLocale: activeAppLocaleCode(projection.appLocale),
+          artifactLocale: ArtifactLocaleSchema.make(projection.appLocale),
           contentKey: projection.contentKey,
         });
         const projectionHash = yield* hashContentProjection(projection);
@@ -107,7 +111,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
           publicPath: projection.publicPath,
           releaseId: signed.manifest.releaseId,
           routeJson: testRouteJson({
-            appLocale: projection.appLocale,
+            appLocale: servedLocale(projection.appLocale),
             contentKey: projection.contentKey,
             index,
             publicPath: projection.publicPath,

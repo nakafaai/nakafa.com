@@ -1,6 +1,6 @@
 import { QueryResult } from "@confect/react";
 import { SchoolIcon } from "@hugeicons/core-free-icons";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -127,8 +127,8 @@ export function UnitLanguageField({
   value,
 }: {
   id: string;
-  onChange: (language: typeof AppLocaleCodeSchema.Type) => void;
-  value: typeof AppLocaleCodeSchema.Type | null;
+  onChange: (language: typeof ActiveAppLocaleCodeSchema.Type) => void;
+  value: typeof ActiveAppLocaleCodeSchema.Type | null;
 }) {
   const common = useTranslations("Common");
   const t = useTranslations("SchoolSettings");
@@ -139,7 +139,9 @@ export function UnitLanguageField({
       <Select
         items={languageItems}
         onValueChange={(next) => {
-          const chosen = Schema.decodeUnknownOption(AppLocaleCodeSchema)(next);
+          const chosen = Schema.decodeUnknownOption(ActiveAppLocaleCodeSchema)(
+            next
+          );
           if (Option.isSome(chosen)) {
             onChange(chosen.value);
           }

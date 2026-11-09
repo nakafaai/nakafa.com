@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { NewCurrency, NewTimeZone } from "@repo/backend/confect/tenancy/locale";
 import {
   SchoolName,
@@ -43,7 +43,7 @@ const StartLevels = Schema.Array(UnitLevel).check(Schema.isUnique());
  * year starts.
  */
 export const CountryDefaults = Schema.Struct({
-  contentLanguage: AppLocaleCodeSchema,
+  contentLanguage: ActiveAppLocaleCodeSchema,
   currency: NewCurrency,
   yearStart: Schema.Int.check(Schema.isBetween({ maximum: 12, minimum: 1 })),
   zones: Schema.NonEmptyArray(NewTimeZone),

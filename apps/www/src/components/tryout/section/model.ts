@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Schema } from "effect";
 
@@ -27,7 +27,7 @@ const TryoutSectionRouteSchema = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
   group: Schema.String,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   section: Schema.String,
   set: Schema.String,
   track: Schema.String,

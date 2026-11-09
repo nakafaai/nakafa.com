@@ -3,7 +3,7 @@ import {
   PublicationDatesSchema,
   withPublicationDates,
 } from "@nakafa/aksara-contracts/date";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_ID } from "@repo/seo/jsonld/constants";
 import { CONTENT_LICENSE_URL } from "@repo/seo/license";
@@ -52,7 +52,7 @@ const ArticleSchema = withPublicationDates({
   description: Schema.optionalKey(TextSchema),
   headline: TextSchema,
   image: SiteUrlSchema,
-  inLanguage: AppLocaleCodeSchema,
+  inLanguage: ActiveAppLocaleCodeSchema,
   isAccessibleForFree: Schema.Literal(true),
   license: Schema.Literal(CONTENT_LICENSE_URL),
   publisher: PublisherSchema,
@@ -111,7 +111,7 @@ const ArticleJsonLdInputSchema = Schema.Struct({
   headline: Schema.String,
   /** Site path of the page's social image, which represents the content. */
   image: Schema.String,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   /** Canonical localized path of the page, such as `/id/materi/...`. */
   path: Schema.String,
   /** Visible ancestors from the site root; the page itself ends the trail. */

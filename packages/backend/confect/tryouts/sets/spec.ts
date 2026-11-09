@@ -1,7 +1,7 @@
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import {
@@ -14,7 +14,7 @@ import { Schema } from "effect";
 const trackIdentityValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
-  locale: appLocaleValidator,
+  locale: ActiveAppLocaleCodeSchema,
   trackKey: tryoutRouteKeyValidator,
 });
 export const listArgsValidator = Schema.Struct({

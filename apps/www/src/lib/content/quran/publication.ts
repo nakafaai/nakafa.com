@@ -1,6 +1,6 @@
 import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { decodePublishedQuranSource } from "@repo/backend/client/quran/publication";
@@ -41,7 +41,7 @@ export const readPublishedQuranCatalog = Effect.fn(
 export const readPublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.readPublishedMarkdown"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
-  const appLocale = AppLocaleSchema.make(locale);
+  const appLocale = ActiveAppLocaleSchema.make(locale);
   const result = yield* querySnapshotContentStore(
     "quran",
     contentRelease.quran.prose,
@@ -74,7 +74,7 @@ export const readPublishedQuranMarkdown = Effect.fn(
 export const readPublishedQuranView = Effect.fn(
   "NakafaQuran.readPublishedView"
 )(function* (locale: Locale, surahNumber: number) {
-  const appLocale = AppLocaleSchema.make(locale);
+  const appLocale = ActiveAppLocaleSchema.make(locale);
   const result = yield* querySnapshotContentStore(
     "quran",
     contentRelease.quran.page,

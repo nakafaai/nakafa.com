@@ -1,3 +1,4 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { readCanonicalSpelling } from "@repo/internationalization/src/pathnames";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Option, Schema } from "effect";
@@ -19,7 +20,8 @@ export const OPEN_GRAPH_LOCALES = {
   de: "de_DE",
   en: "en_US",
   id: "id_ID",
-} as const satisfies Record<Locale, string>;
+  ms: "ms_MY",
+} as const satisfies Record<AppLocaleCode, string>;
 export const SOCIAL_TWITTER_ACCOUNT = "@nabilfatih_";
 
 /** The Open Graph types that a page declares. */

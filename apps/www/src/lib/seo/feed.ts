@@ -1,4 +1,4 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   DEFAULT_LOCALE,
   LOCALES,
@@ -22,7 +22,7 @@ const RSS_CONTENT_ROUTE_LIMIT = 100;
 
 /** One feed entry, read from a signed article or material of one locale. */
 const FeedContentRouteSchema = Schema.Struct({
-  appLocale: AppLocaleSchema,
+  appLocale: ActiveAppLocaleSchema,
   authors: Schema.Array(Schema.Struct({ name: Schema.String })),
   dateModified: Schema.Finite,
   datePublished: Schema.Finite,
@@ -95,7 +95,7 @@ const getFeedContentRoutes = Effect.fn("www.rss.readRoutes")(function* () {
   const active = yield* loadActiveContentIdentity();
   if (!active) {
     return yield* new PublishedProjectionError({
-      appLocale: AppLocaleSchema.make(DEFAULT_LOCALE),
+      appLocale: ActiveAppLocaleSchema.make(DEFAULT_LOCALE),
       publicPath: "rss.xml",
     });
   }
@@ -124,7 +124,7 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
   locale: Locale,
   release: ActiveContentReleaseId
 ) {
-  const appLocale = AppLocaleSchema.make(locale);
+  const appLocale = ActiveAppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestArticles(
     locale,
     RSS_CONTENT_ROUTE_LIMIT,
@@ -151,7 +151,7 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   locale: Locale,
   release: ActiveContentReleaseId
 ) {
-  const appLocale = AppLocaleSchema.make(locale);
+  const appLocale = ActiveAppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestMaterials(
     locale,
     RSS_CONTENT_ROUTE_LIMIT,

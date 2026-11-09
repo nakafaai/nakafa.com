@@ -38,6 +38,15 @@ const loadMessagesByLocale = {
         with: { type: "json" },
       }),
     ]),
+  ms: () =>
+    Promise.all([
+      import("@repo/internationalization/dictionaries/ms.json", {
+        with: { type: "json" },
+      }),
+      import("@repo/internationalization/dictionaries/standalone/ms.json", {
+        with: { type: "json" },
+      }),
+    ]),
 } satisfies Record<AppLocaleCode, () => Promise<MessagesModules>>;
 
 /**
