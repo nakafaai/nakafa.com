@@ -4677,6 +4677,11 @@
     "water": "Siram kebun",
     "harvest": "Panen",
     "sound": "Suara",
+    "enter": "Masuk",
+    "enter-next": "{stars} Bintang lagi membuat pulaumu naik level.",
+    "enter-top": "Pulaumu sudah sebesar pulau bisa tumbuh.",
+    "earn-lesson": "+{stars} Bintang per materi",
+    "earn-section": "+{stars} Bintang per bagian",
     "materials": "Kebun",
     "materials-value": "{wood} kayu, {petals} kelopak",
     "price-wood": "{stars} Bintang, {wood} kayu"
