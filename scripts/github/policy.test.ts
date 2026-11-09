@@ -115,7 +115,7 @@ describe("GitHub Action policy", () => {
       `${setupUse.workflowPath} configures oven-sh/setup-bun no-cache as missing; approved ${cache}.`,
       ".github/workflows/example.yml has an unpinned external action actions/checkout.",
       ".github/workflows/example.yml has an unpinned external action actions/checkout@.",
-      "actions/download-artifact has 0 workflow usages; expected 3.",
+      "actions/download-artifact has 0 workflow usages; expected 5.",
     ]);
   });
 

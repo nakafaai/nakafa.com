@@ -1,6 +1,6 @@
 # Proves one exact head on GitHub-hosted runners, on demand, for the sessions and
 # the landing train that call `bun run proof`. It is a tool, not a required check:
-# no ruleset names it, and nothing waits for it to merge (docs/adr/0041-proof.md).
+# no ruleset names it, and nothing waits for it to merge (docs/adr/0048-proof.md).
 #
 # A proof is a production build of the head, served by the local production
 # server over the local Convex backend binary, with the inert environment of the
@@ -167,7 +167,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        engine: [chromium, firefox, webkit]
+        engine: [ chromium, firefox, webkit ]
         shard: ${{ fromJSON(needs.build.outputs.shards) }}
     env:
       ENGINE: ${{ matrix.engine }}
@@ -279,7 +279,7 @@ jobs:
 
   report:
     name: Report
-    needs: [build, specs]
+    needs: [ build, specs ]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10

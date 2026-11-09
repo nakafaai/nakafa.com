@@ -11,6 +11,7 @@
         "@effect/platform-node": "catalog:",
         "@effect/tsgo": "0.67.5",
         "@effect/vitest": "catalog:",
+        "@repo/backend": "workspace:*",
         "@repo/testing": "workspace:*",
         "@repo/utilities": "workspace:*",
         "@sigstore/bundle": "5.0.1",

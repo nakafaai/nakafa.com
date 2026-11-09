@@ -45,60 +45,62 @@ export const PROOF_SUITES = [
   "browser-timing",
 ] as const;
 
-/** What one machine proves: one engine, one shard of every suite, and the specs it may narrow to. */
-interface Shard {
-  readonly engine: Engine;
-  readonly shard: number;
-  readonly total: number;
-  readonly specs: readonly string[];
-  readonly output: string;
-}
+/** What one machine proves: one engine, one shard of every suite, the specs it may narrow to, and where it reports. */
+const Shard = Schema.Struct({
+  engine: Engine,
+  shard: Schema.Int,
+  total: Schema.Int,
+  specs: Schema.Array(Schema.String),
+  output: Schema.String,
+});
+type Shard = typeof Shard.Type;
 
 /**
  * Runs one suite's shard against the started app and returns its failing spec
  * files. A suite with nothing selected passes, and a suite that wrote no report
  * or failed without a failing spec fails as a whole.
  */
-const runSuite = Effect.fn("acceptance.runSuite")(
-  function* (root: string, input: Shard, suite: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const report = `${input.output}/${suite}.json`;
-    const child = yield* ChildProcess.make(
-      "bunx",
-      [
-        "--no-install",
-        "playwright",
-        "test",
-        `--shard=${input.shard}/${input.total}`,
-        "--pass-with-no-tests",
-        "--reporter=line,json",
-        ...input.specs,
-      ],
-      {
-        cwd: `${root}/apps/www`,
-        env: {
-          PLAYWRIGHT_ENGINE: input.engine,
-          PLAYWRIGHT_JSON_OUTPUT_FILE: report,
-          PLAYWRIGHT_SUITE: suite,
-        },
-        extendEnv: true,
-        stdin: "ignore",
-        stdout: "inherit",
-        stderr: "inherit",
-      }
-    );
-    const code = yield* child.exitCode;
-    if (!(yield* fs.exists(report))) {
-      return [`suite:${suite}`];
+const runSuite = Effect.fn("acceptance.runSuite")(function* (
+  root: string,
+  input: Shard,
+  suite: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const report = `${input.output}/${suite}.json`;
+  const child = yield* ChildProcess.make(
+    "bunx",
+    [
+      "--no-install",
+      "playwright",
+      "test",
+      `--shard=${input.shard}/${input.total}`,
+      "--pass-with-no-tests",
+      "--reporter=line,json",
+      ...input.specs,
+    ],
+    {
+      cwd: `${root}/apps/www`,
+      env: {
+        PLAYWRIGHT_ENGINE: input.engine,
+        PLAYWRIGHT_JSON_OUTPUT_FILE: report,
+        PLAYWRIGHT_SUITE: suite,
+      },
+      extendEnv: true,
+      stdin: "ignore",
+      stdout: "inherit",
+      stderr: "inherit",
     }
-    const failures = yield* reportFailures(
-      suite,
-      yield* fs.readFileString(report)
-    );
-    return code !== 0 && failures.length === 0 ? [`suite:${suite}`] : failures;
-  },
-  Effect.scoped
-);
+  );
+  const code = yield* child.exitCode;
+  if (!(yield* fs.exists(report))) {
+    return [`suite:${suite}`];
+  }
+  const failures = yield* reportFailures(
+    suite,
+    yield* fs.readFileString(report)
+  );
+  return code !== 0 && failures.length === 0 ? [`suite:${suite}`] : failures;
+}, Effect.scoped);
 
 /** Runs every suite of one engine's shard, one after another, and writes its result. */
 export const runShard = Effect.fn("acceptance.runShard")(function* (
@@ -195,37 +197,34 @@ const waitForApp = Effect.fn("acceptance.waitForApp")(function* <E>(
 });
 
 /** The exact head this checkout holds, which a local proof refuses to move. */
-const checkoutHead = Effect.fn("acceptance.checkoutHead")(
-  function* (root: string) {
-    const read = Effect.fn(function* (args: readonly string[]) {
-      const child = yield* ChildProcess.make("git", args, {
-        cwd: root,
-        stderr: "ignore",
-        stdin: "ignore",
-      });
-      const [text, code] = yield* Effect.all(
-        [
-          child.stdout.pipe(Stream.decodeText(), Stream.mkString),
-          child.exitCode,
-        ],
-        { concurrency: "unbounded" }
-      );
-      if (code !== 0) {
-        return yield* acceptanceRuntimeError(
-          `git ${Arr.join(args, " ")} exited with code ${code}.`
-        );
-      }
-      return text.trim();
-    }, Effect.scoped);
-    const status = yield* read(["status", "--porcelain"]);
-    if (status !== "") {
+const checkoutHead = Effect.fn("acceptance.checkoutHead")(function* (
+  root: string
+) {
+  const read = Effect.fn(function* (args: readonly string[]) {
+    const child = yield* ChildProcess.make("git", args, {
+      cwd: root,
+      stderr: "ignore",
+      stdin: "ignore",
+    });
+    const [text, code] = yield* Effect.all(
+      [child.stdout.pipe(Stream.decodeText(), Stream.mkString), child.exitCode],
+      { concurrency: "unbounded" }
+    );
+    if (code !== 0) {
       return yield* acceptanceRuntimeError(
-        "A local proof proves a committed head: commit or set aside the changes first."
+        `git ${Arr.join(args, " ")} exited with code ${code}.`
       );
     }
-    return yield* read(["rev-parse", "HEAD"]);
+    return text.trim();
+  }, Effect.scoped);
+  const status = yield* read(["status", "--porcelain"]);
+  if (status !== "") {
+    return yield* acceptanceRuntimeError(
+      "A local proof proves a committed head: commit or set aside the changes first."
+    );
   }
-);
+  return yield* read(["rev-parse", "HEAD"]);
+});
 
 /**
  * Proves this checkout's head on this machine, the local adapter of the proof

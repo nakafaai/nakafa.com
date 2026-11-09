@@ -6,9 +6,7 @@ export type Engine = typeof Engine.Type;
 export const ENGINES = Engine.literals;
 
 /** The exact commit a proof proves: a full lower-case SHA, never a branch name. */
-export const HeadSha = Schema.String.check(
-  Schema.isPattern(/^[0-9a-f]{40}$/u)
-);
+export const HeadSha = Schema.String.check(Schema.isPattern(/^[0-9a-f]{40}$/u));
 
 /** One spec file of the browser suites, as a path under `apps/www`. */
 export const SpecPath = Schema.String.check(

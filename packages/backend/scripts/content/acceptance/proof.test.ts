@@ -7,8 +7,18 @@ import {
   runShard,
   shardMode,
 } from "@repo/backend/scripts/content/acceptance/proof";
+import { ShardResultJson } from "@repo/backend/scripts/content/acceptance/result";
 import { nodePlatform } from "@repo/backend/test/platform";
-import { ConfigProvider, Effect, Fiber, FileSystem, Layer, Ref } from "effect";
+import {
+  Array as Arr,
+  ConfigProvider,
+  Effect,
+  Fiber,
+  FileSystem,
+  Layer,
+  Ref,
+  Schema,
+} from "effect";
 import { FetchHttpClient } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { TestClock, TestConsole } from "effect/testing";
@@ -32,8 +42,20 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", async (load) => ({
 const fetcher = vi.fn<typeof fetch>();
 const SHA = "b".repeat(40);
 
+/** What the fake Git answers: the head, the status, and an exit code that fails both. */
+const Git = Schema.Struct({
+  head: Schema.String,
+  status: Schema.String,
+  code: Schema.optionalKey(Schema.Int),
+});
+type Git = typeof Git.Type;
+
 /** How the fake Playwright answers one suite: its report and its exit code. */
-type Suite = { readonly report?: unknown; readonly code: number };
+const Suite = Schema.Struct({
+  report: Schema.optionalKey(Schema.Unknown),
+  code: Schema.Int,
+});
+type Suite = typeof Suite.Type;
 
 /**
  * A spawner where Playwright writes the scripted report of each suite and exits
@@ -42,7 +64,7 @@ type Suite = { readonly report?: unknown; readonly code: number };
  */
 const fakeProcesses = (
   suites: (suite: string, engine: string) => Suite,
-  git: { readonly head: string; readonly status: string; readonly code?: number },
+  git: Git,
   calls: Ref.Ref<readonly string[]>
 ) =>
   Layer.effect(
@@ -56,10 +78,10 @@ const fakeProcesses = (
             return yield* Effect.die("unexpected pipeline");
           }
           const env = command.options.env ?? {};
-          const args = command.args.map(String);
+          const args = Arr.map(command.args, String);
           yield* Ref.update(calls, (all) => [
             ...all,
-            [command.command, ...args].join(" "),
+            Arr.join([command.command, ...args], " "),
           ]);
           if (command.command === "git") {
             const text = args[0] === "status" ? git.status : git.head;
@@ -78,7 +100,9 @@ const fakeProcesses = (
           if (answer.report !== undefined) {
             yield* fs.writeFileString(
               String(env.PLAYWRIGHT_JSON_OUTPUT_FILE),
-              JSON.stringify(answer.report)
+              yield* Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown))(
+                answer.report
+              ).pipe(Effect.orDie)
             );
           }
           return yield* spawner.spawn(
@@ -95,7 +119,7 @@ const passing: Suite = { report: { suites: [], errors: [] }, code: 0 };
 const withProcesses = <A, E, R>(
   program: Effect.Effect<A, E, R>,
   suites: (suite: string, engine: string) => Suite,
-  git = { head: SHA, status: "" }
+  git: Git = { head: SHA, status: "" }
 ) =>
   Effect.gen(function* () {
     const calls = yield* Ref.make<readonly string[]>([]);
@@ -124,7 +148,9 @@ describe("proof shard", () => {
             if (suite === "chat") {
               return {
                 report: {
-                  suites: [{ specs: [{ file: "chat/send.browser.ts", ok: false }] }],
+                  suites: [
+                    { specs: [{ file: "chat/send.browser.ts", ok: false }] },
+                  ],
                   errors: [],
                 },
                 code: 1,
@@ -143,15 +169,21 @@ describe("proof shard", () => {
           engine: "firefox",
           shard: 2,
           passed: false,
-          failures: ["e2e/chat/send.browser.ts", "suite:timing", "suite:visual"],
+          failures: [
+            "e2e/chat/send.browser.ts",
+            "suite:timing",
+            "suite:visual",
+          ],
         });
         expect(calls).toHaveLength(PROOF_SUITES.length);
         expect(calls[0]).toBe(
           "bunx --no-install playwright test --shard=2/3 --pass-with-no-tests --reporter=line,json e2e/chat/send.browser.ts"
         );
-        expect(yield* fs.readFileString(`${output}/result.json`)).toBe(
-          JSON.stringify(value)
-        );
+        expect(
+          yield* fs
+            .readFileString(`${output}/result.json`)
+            .pipe(Effect.flatMap(Schema.decodeEffect(ShardResultJson)))
+        ).toEqual(value);
       }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
@@ -184,7 +216,9 @@ describe("proof shard", () => {
 
 const services = Layer.mergeAll(
   nodePlatform,
-  ConfigProvider.layer(ConfigProvider.fromEnvRecord({ ACCEPTANCE_PORT: "3176" }))
+  ConfigProvider.layer(
+    ConfigProvider.fromEnvRecord({ ACCEPTANCE_PORT: "3176" })
+  )
 );
 
 describe("local proof", () => {
@@ -220,10 +254,9 @@ describe("local proof", () => {
         expect(value.passed).toBe(false);
         expect(value.engines.webkit.failures).toEqual(["e2e/a.browser.ts"]);
         expect(value.engines.chromium.passed).toBe(true);
-        expect(mocks.run.mock.calls.map(([, operation]) => operation)).toEqual([
-          "build",
-          "start",
-        ]);
+        expect(
+          Arr.map(mocks.run.mock.calls, ([, operation]) => operation)
+        ).toEqual(["build", "start"]);
         expect(String(fetcher.mock.calls[0]?.[0])).toBe(
           "http://localhost:3176/llms.txt"
         );
@@ -342,12 +375,12 @@ describe("local proof", () => {
         }).pipe(Effect.provide(TestConsole.layer)),
         () => passing
       );
-      expect(lines.map(String).some((line) => line.includes(`"sha":"${SHA}"`))).toBe(
-        true
-      );
       expect(
-        (yield* proofMode.run(root, []).pipe(Effect.flip))._tag
-      ).toBe("SchemaError");
+        Arr.some(lines, (line) => String(line).includes(`"sha":"${SHA}"`))
+      ).toBe(true);
+      expect((yield* proofMode.run(root, []).pipe(Effect.flip))._tag).toBe(
+        "SchemaError"
+      );
     }).pipe(
       Effect.scoped,
       Effect.provideService(FetchHttpClient.Fetch, fetcher),

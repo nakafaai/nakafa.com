@@ -4,8 +4,8 @@ import { TrustedKeySchema } from "@nakafa/aksara-contracts/signature/trusted";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
-  prepareAcceptanceSource,
   exportRenderer,
+  prepareAcceptanceSource,
   publishAcceptanceSource,
 } from "@repo/backend/scripts/content/acceptance/publication";
 import source from "@repo/backend/scripts/content/acceptance/source.json" with {

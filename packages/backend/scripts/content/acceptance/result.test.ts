@@ -5,34 +5,39 @@ import {
   reportFailures,
   type ShardResult,
 } from "@repo/backend/scripts/content/acceptance/result";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const SHA = "a".repeat(40);
+
+const toJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
+const NESTED_REPORT = toJson({
+  suites: [
+    {
+      specs: [{ file: "home/page.browser.ts", ok: true }],
+      suites: [
+        {
+          specs: [
+            { file: "school/walk.browser.ts", ok: false },
+            { file: "school/walk.browser.ts", ok: false },
+          ],
+        },
+      ],
+    },
+    { specs: [{ file: "chat/send.browser.ts", ok: false }] },
+    {},
+  ],
+  errors: [],
+});
+
+const ERROR_REPORT = toJson({ suites: [], errors: [{ message: "x" }] });
 
 describe("proof results", () => {
   it.effect(
     "reads the failing spec files of nested suites, once each, under apps/www",
     () =>
       Effect.gen(function* () {
-        const report = JSON.stringify({
-          suites: [
-            {
-              specs: [{ file: "home/page.browser.ts", ok: true }],
-              suites: [
-                {
-                  specs: [
-                    { file: "school/walk.browser.ts", ok: false },
-                    { file: "school/walk.browser.ts", ok: false },
-                  ],
-                },
-              ],
-            },
-            { specs: [{ file: "chat/send.browser.ts", ok: false }] },
-            {},
-          ],
-          errors: [],
-        });
-        expect(yield* reportFailures("runtime", report)).toEqual([
+        expect(yield* reportFailures("runtime", NESTED_REPORT)).toEqual([
           "e2e/chat/send.browser.ts",
           "e2e/school/walk.browser.ts",
         ]);
@@ -41,8 +46,9 @@ describe("proof results", () => {
 
   it.effect("fails the whole suite for an error outside every test", () =>
     Effect.gen(function* () {
-      const report = JSON.stringify({ suites: [], errors: [{ message: "x" }] });
-      expect(yield* reportFailures("timing", report)).toEqual(["suite:timing"]);
+      expect(yield* reportFailures("timing", ERROR_REPORT)).toEqual([
+        "suite:timing",
+      ]);
     })
   );
 

@@ -18,6 +18,7 @@ import {
   HashSet,
   Option,
   Order,
+  Record as Rec,
   Schema,
   Stream,
 } from "effect";
@@ -70,6 +71,9 @@ const SNAPSHOT_FILES = [
   "backend/convex.json",
 ] as const;
 
+/** The name of a saved snapshot: its key. A partial copy carries a suffix. */
+const SNAPSHOT_NAME = /^[0-9a-f]{64}$/u;
+
 /** How many snapshots a store keeps: each holds one database of about 150 MB. */
 const SNAPSHOT_LIMIT = 3;
 
@@ -78,7 +82,7 @@ const workspaceDependencies = (
   manifest: typeof PackageManifest.Type
 ): readonly string[] =>
   Arr.map(
-    Arr.filter(Object.entries(manifest.dependencies ?? {}), ([, version]) =>
+    Arr.filter(Rec.toEntries(manifest.dependencies ?? {}), ([, version]) =>
       version.startsWith("workspace:")
     ),
     ([name]) => name
@@ -105,79 +109,79 @@ const reach = (
 };
 
 /** The folders of the backend package and of every workspace it depends on. */
-const backendFolders = Effect.fn("contentAcceptance.backendFolders")(
-  function* (root: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const { workspaces } = yield* fs
-      .readFileString(`${root}/package.json`)
-      .pipe(Effect.flatMap(Schema.decodeEffect(WorkspacePatterns)));
-    const folders = yield* Effect.forEach(workspaces.packages, (pattern) => {
-      const parent = pattern.slice(0, -2);
-      return fs
-        .readDirectory(`${root}/${parent}`)
-        .pipe(Effect.map(Arr.map((name) => `${parent}/${name}`)));
-    }).pipe(Effect.map(Arr.flatten));
-    const packages = yield* Effect.forEach(
-      folders,
-      Effect.fn(function* (folder) {
-        const path = `${root}/${folder}/package.json`;
-        if (!(yield* fs.exists(path))) {
-          return Option.none();
-        }
-        const manifest = yield* fs
-          .readFileString(path)
-          .pipe(Effect.flatMap(Schema.decodeEffect(PackageManifest)));
-        return Option.some({ folder, manifest });
-      })
-    ).pipe(Effect.map(Arr.getSomes));
-    const manifests = HashMap.fromIterable(
-      Arr.map(packages, ({ manifest }) => [manifest.name, manifest] as const)
-    );
-    const reached = reach(manifests, [BACKEND_PACKAGE], HashSet.empty());
-    return Arr.sort(
-      Arr.map(
-        Arr.filter(packages, ({ manifest }) =>
-          HashSet.has(reached, manifest.name)
-        ),
-        ({ folder }) => folder
+const backendFolders = Effect.fn("contentAcceptance.backendFolders")(function* (
+  root: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const { workspaces } = yield* fs
+    .readFileString(`${root}/package.json`)
+    .pipe(Effect.flatMap(Schema.decodeEffect(WorkspacePatterns)));
+  const folders = yield* Effect.forEach(workspaces.packages, (pattern) => {
+    const parent = pattern.slice(0, -2);
+    return fs
+      .readDirectory(`${root}/${parent}`)
+      .pipe(Effect.map(Arr.map((name) => `${parent}/${name}`)));
+  }).pipe(Effect.map(Arr.flatten));
+  const packages = yield* Effect.forEach(
+    folders,
+    Effect.fn(function* (folder) {
+      const path = `${root}/${folder}/package.json`;
+      if (!(yield* fs.exists(path))) {
+        return Option.none();
+      }
+      const manifest = yield* fs
+        .readFileString(path)
+        .pipe(Effect.flatMap(Schema.decodeEffect(PackageManifest)));
+      return Option.some({ folder, manifest });
+    })
+  ).pipe(Effect.map(Arr.getSomes));
+  const manifests = HashMap.fromIterable(
+    Arr.map(packages, ({ manifest }) => [manifest.name, manifest] as const)
+  );
+  const reached = reach(manifests, [BACKEND_PACKAGE], HashSet.empty());
+  return Arr.sort(
+    Arr.map(
+      Arr.filter(packages, ({ manifest }) =>
+        HashSet.has(reached, manifest.name)
       ),
-      Order.String
-    );
-  }
-);
+      ({ folder }) => folder
+    ),
+    Order.String
+  );
+});
 
 /** The files of the given paths that Git does not ignore, committed or not, in path order. */
-const gitFiles = Effect.fn("contentAcceptance.gitFiles")(
-  function* (root: string, paths: readonly string[]) {
-    const child = yield* ChildProcess.make(
-      "git",
-      [
-        "ls-files",
-        "-z",
-        "--cached",
-        "--others",
-        "--exclude-standard",
-        "--",
-        ...paths,
-      ],
-      { cwd: root, stderr: "ignore", stdin: "ignore" }
+const gitFiles = Effect.fn("contentAcceptance.gitFiles")(function* (
+  root: string,
+  paths: readonly string[]
+) {
+  const child = yield* ChildProcess.make(
+    "git",
+    [
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "--",
+      ...paths,
+    ],
+    { cwd: root, stderr: "ignore", stdin: "ignore" }
+  );
+  const [text, code] = yield* Effect.all(
+    [child.stdout.pipe(Stream.decodeText(), Stream.mkString), child.exitCode],
+    { concurrency: "unbounded" }
+  );
+  if (code !== 0) {
+    return yield* acceptanceRuntimeError(
+      `git ls-files exited with code ${code}, so the prepared runtime has no key.`
     );
-    const [text, code] = yield* Effect.all(
-      [child.stdout.pipe(Stream.decodeText(), Stream.mkString), child.exitCode],
-      { concurrency: "unbounded" }
-    );
-    if (code !== 0) {
-      return yield* acceptanceRuntimeError(
-        `git ls-files exited with code ${code}, so the prepared runtime has no key.`
-      );
-    }
-    return Arr.sort(
-      Arr.dedupe(Arr.filter(text.split("\0"), (path) => path !== "")),
-      Order.String
-    );
-  },
-  Effect.scoped
-);
+  }
+  return Arr.sort(
+    Arr.dedupe(Arr.filter(text.split("\0"), (path) => path !== "")),
+    Order.String
+  );
+}, Effect.scoped);
 
 /**
  * The key of the prepared runtime that this checkout would create: the SHA-256
@@ -233,10 +237,11 @@ export const snapshotStore = Config.NonEmptyString("ACCEPTANCE_SNAPSHOTS").pipe(
 );
 
 /** The reserved runtime directory that a restore fills. */
-interface Reservation {
-  readonly directory: string;
-  readonly directoryInode: bigint;
-}
+const Reservation = Schema.Struct({
+  directory: Schema.String,
+  directoryInode: Schema.BigInt,
+});
+type Reservation = typeof Reservation.Type;
 
 /**
  * Restores the prepared runtime of this key into the reserved directory, or
@@ -299,34 +304,35 @@ export const restorePrepared = Effect.fn("contentAcceptance.restorePrepared")(
 );
 
 /** Removes every snapshot of the store past the newest `SNAPSHOT_LIMIT`, so the disk keeps a few. */
-const evictSnapshots = Effect.fn("contentAcceptance.evictSnapshots")(
-  function* (store: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const names = yield* fs.readDirectory(store);
-    const dated = yield* Effect.forEach(
-      Arr.filter(names, (name) => /^[0-9a-f]{64}$/u.test(name)),
-      Effect.fn(function* (name) {
-        const info = yield* fs.stat(`${store}/${name}`);
-        const time = Option.getOrElse(
-          Option.map(info.mtime, (date) => date.getTime()),
-          () => 0
-        );
-        return { name, time };
-      })
-    );
-    const newestFirst = Arr.sort(
-      dated,
-      Order.flip(
-        Order.mapInput(Order.Number, (entry: { readonly time: number }) =>
-          entry.time
-        )
+const evictSnapshots = Effect.fn("contentAcceptance.evictSnapshots")(function* (
+  store: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const names = yield* fs.readDirectory(store);
+  const dated = yield* Effect.forEach(
+    Arr.filter(names, (name) => SNAPSHOT_NAME.test(name)),
+    Effect.fn(function* (name) {
+      const info = yield* fs.stat(`${store}/${name}`);
+      const time = Option.getOrElse(
+        Option.map(info.mtime, (date) => date.getTime()),
+        () => 0
+      );
+      return { name, time };
+    })
+  );
+  const newestFirst = Arr.sort(
+    dated,
+    Order.flip(
+      Order.mapInput(
+        Order.Number,
+        (entry: { readonly time: number }) => entry.time
       )
-    );
-    yield* Effect.forEach(Arr.drop(newestFirst, SNAPSHOT_LIMIT), ({ name }) =>
-      fs.remove(`${store}/${name}`, { recursive: true })
-    );
-  }
-);
+    )
+  );
+  yield* Effect.forEach(Arr.drop(newestFirst, SNAPSHOT_LIMIT), ({ name }) =>
+    fs.remove(`${store}/${name}`, { recursive: true })
+  );
+});
 
 /**
  * Saves a stopped prepared runtime under its key. It copies into a private
@@ -353,17 +359,21 @@ export const savePrepared = Effect.fn("contentAcceptance.savePrepared")(
       `${runtime.directory}/manifest.json`,
       `${partial}/manifest.json`
     );
-    yield* fs.rename(partial, target).pipe(
-      Effect.catchTag("PlatformError", (error) =>
-        fs.exists(target).pipe(
-          Effect.flatMap((saved) =>
-            saved
-              ? fs.remove(partial, { recursive: true })
-              : Effect.fail(error)
-          )
+    yield* fs
+      .rename(partial, target)
+      .pipe(
+        Effect.catchTag("PlatformError", (error) =>
+          fs
+            .exists(target)
+            .pipe(
+              Effect.flatMap((saved) =>
+                saved
+                  ? fs.remove(partial, { recursive: true })
+                  : Effect.fail(error)
+              )
+            )
         )
-      )
-    );
+      );
     yield* evictSnapshots(store);
   }
 );

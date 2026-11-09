@@ -45,7 +45,10 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
       );
     }
     const runtime = yield* initializeLocalRuntime(root);
-    yield* withLocalBackend(runtime, publishAcceptanceSource(runtime, renderer));
+    yield* withLocalBackend(
+      runtime,
+      publishAcceptanceSource(runtime, renderer)
+    );
     yield* savePrepared(store, key, runtime);
     yield* Effect.log(`Prepared the runtime ${key} and saved it to ${store}.`);
   }).pipe(

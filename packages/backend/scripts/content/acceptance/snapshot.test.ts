@@ -14,11 +14,15 @@ import {
 } from "@repo/backend/scripts/content/acceptance/snapshot";
 import { nodePlatform } from "@repo/backend/test/platform";
 import {
+  Array as Arr,
   ConfigProvider,
   Effect,
   FileSystem,
   Layer,
+  MutableHashSet,
   Option,
+  Order,
+  Record as Rec,
   Schema,
 } from "effect";
 import { ChildProcess } from "effect/process";
@@ -36,7 +40,9 @@ const git = Effect.fn("SnapshotTest.git")(function* (
   expect(yield* child.exitCode).toBe(0);
 }, Effect.scoped);
 
-const json = (value: unknown) => JSON.stringify(value);
+const json = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const LAST_SEGMENT = /\/[^/]+$/u;
+const KEY_TEXT = /^[0-9a-f]{64}$/u;
 
 /**
  * A checkout whose backend depends on two workspaces, one of them twice, and on
@@ -79,8 +85,8 @@ const checkout = Effect.fn("SnapshotTest.checkout")(function* () {
     "packages/design/button.tsx": "button 1\n",
     "packages/loose/notes.md": "notes\n",
   };
-  for (const [path, text] of Object.entries(files)) {
-    yield* fs.makeDirectory(`${root}/${path}`.replace(/\/[^/]+$/u, ""), {
+  for (const [path, text] of Rec.toEntries(files)) {
+    yield* fs.makeDirectory(`${root}/${path}`.replace(LAST_SEGMENT, ""), {
       recursive: true,
     });
     yield* fs.writeFileString(`${root}/${path}`, text);
@@ -103,7 +109,7 @@ describe("prepared runtime key", () => {
         const { root, renderer } = yield* checkout();
         const key = () => preparedKey(root, renderer, ORIGIN);
         const first = yield* key();
-        expect(first).toMatch(/^[0-9a-f]{64}$/u);
+        expect(first).toMatch(KEY_TEXT);
         expect(yield* key()).toBe(first);
 
         // Files outside the backend's workspaces, and files Git ignores, are no inputs.
@@ -112,7 +118,7 @@ describe("prepared runtime key", () => {
         yield* fs.writeFileString(`${root}/packages/backend/ignored.txt`, "x");
         expect(yield* key()).toBe(first);
 
-        const seen = new Set([first]);
+        const seen = MutableHashSet.make(first);
         const changes = [
           () => fs.writeFileString(`${root}/packages/backend/schema.ts`, "2\n"),
           () =>
@@ -130,11 +136,15 @@ describe("prepared runtime key", () => {
         for (const change of changes) {
           yield* change();
           const next = yield* key();
-          expect(seen.has(next)).toBe(false);
-          seen.add(next);
+          expect(MutableHashSet.has(seen, next)).toBe(false);
+          MutableHashSet.add(seen, next);
         }
-        const moved = yield* preparedKey(root, renderer, "http://localhost:3001");
-        expect(seen.has(moved)).toBe(false);
+        const moved = yield* preparedKey(
+          root,
+          renderer,
+          "http://localhost:3001"
+        );
+        expect(MutableHashSet.has(seen, moved)).toBe(false);
       }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
@@ -332,15 +342,18 @@ describe("prepared runtime snapshots", () => {
       const fs = yield* FileSystem.FileSystem;
       const runtime = yield* preparedRuntime();
       const store = yield* fs.makeTempDirectoryScoped({ prefix: "store-" });
-      const keys = ["a", "b", "c", "d"].map((letter) => letter.repeat(64));
-      for (const [index, key] of keys.entries()) {
-        yield* savePrepared(store, key, runtime);
-        yield* fs.utimes(`${store}/${key}`, index * 1000, index * 1000);
-      }
+      const keys = Arr.map(["a", "b", "c", "d"], (letter) => letter.repeat(64));
+      yield* Effect.forEach(keys, (key, index) =>
+        savePrepared(store, key, runtime).pipe(
+          Effect.andThen(
+            fs.utimes(`${store}/${key}`, index * 1000, index * 1000)
+          )
+        )
+      );
       yield* fs.writeFileString(`${store}/README`, "not a snapshot");
       yield* savePrepared(store, "e".repeat(64), runtime);
-      expect((yield* fs.readDirectory(store)).sort()).toEqual(
-        ["README", ...keys.slice(2), "e".repeat(64)].sort()
+      expect(Arr.sort(yield* fs.readDirectory(store), Order.String)).toEqual(
+        Arr.sort(["README", ...Arr.drop(keys, 2), "e".repeat(64)], Order.String)
       );
     }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
@@ -405,15 +418,13 @@ describe("prepared runtime snapshot edges", () => {
         const store = yield* fs.makeTempDirectoryScoped({ prefix: "store-" });
         const timeless = patchedFileSystem((real) => ({
           stat: (path) =>
-            real
-              .stat(path)
-              .pipe(
-                Effect.map((info) => ({
-                  ...info,
-                  ino: Option.none(),
-                  mtime: Option.none(),
-                }))
-              ),
+            real.stat(path).pipe(
+              Effect.map((info) => ({
+                ...info,
+                ino: Option.none(),
+                mtime: Option.none(),
+              }))
+            ),
         }));
         for (const key of ["a", "b", "c", "d"]) {
           yield* savePrepared(store, key.repeat(64), runtime).pipe(
