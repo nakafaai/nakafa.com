@@ -1,7 +1,7 @@
 import { eyeOf, FIELD_OF_VIEW, type Orbit } from "@/lib/island/camera";
 
 /** A 4 by 4 matrix in column-major order, as WebGL reads it. */
-export type Matrix = Float32Array;
+type Matrix = Float32Array;
 
 /** The product `a` times `b`. */
 export function multiply(a: Matrix, b: Matrix): Matrix {

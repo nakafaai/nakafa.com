@@ -45,8 +45,10 @@ export function chunksAround(x: number, z: number) {
     return local === CHUNK - 1 ? [chunk, chunk + 1] : [chunk];
   };
   const inside = (chunk: number) => chunk >= 0 && chunk < CHUNKS;
-  return Arr.flatMap(Arr.filter(reach(x, cx), inside), (column) =>
-    Arr.map(Arr.filter(reach(z, cz), inside), (row) => row * CHUNKS + column)
+  const columns: readonly number[] = Arr.filter(reach(x, cx), inside);
+  const rows: readonly number[] = Arr.filter(reach(z, cz), inside);
+  return Arr.flatMap(columns, (column) =>
+    Arr.map(rows, (row) => row * CHUNKS + column)
   );
 }
 

@@ -136,9 +136,10 @@ function History() {
  * name at the top left, undo and redo at the top right, and the hotbar at the
  * bottom. It lets every press it does not take fall through to the world.
  */
-export function IslandHud({ onLeave }: { onLeave: () => void }) {
+export function IslandHud() {
   const t = useTranslations("Island");
   const book = useGame((state) => state.book);
+  const leave = useGame((state) => state.leave);
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-[max(0.75rem,env(safe-area-inset-top))_max(0.75rem,env(safe-area-inset-right))_max(0.75rem,env(safe-area-inset-bottom))_max(0.75rem,env(safe-area-inset-left))]">
       <header className="flex items-start justify-between gap-3">
@@ -147,7 +148,7 @@ export function IslandHud({ onLeave }: { onLeave: () => void }) {
             className: "pointer-events-auto flex items-center gap-2 p-1.5 pr-3",
           })}
         >
-          <HudButton label={t("leave")} onPress={onLeave}>
+          <HudButton label={t("leave")} onPress={leave}>
             <HugeIcons className="size-5" icon={ArrowLeft01Icon} />
           </HudButton>
           <h1 className="text-sm font-semibold">{t("title")}</h1>

@@ -19,14 +19,8 @@ export const Light = Schema.Struct({
 export type Light = typeof Light.Type;
 
 /** The weather the island shows, from the owner's own weather (D8). */
-export const Weather = Schema.Literals([
-  "clear",
-  "clouds",
-  "rain",
-  "storm",
-  "snow",
-]);
-export type Weather = typeof Weather.Type;
+const Weather = Schema.Literals(["clear", "clouds", "rain", "storm", "snow"]);
+type Weather = typeof Weather.Type;
 
 /** A color written as `#rrggbb`, with each channel from 0 to 1. */
 function rgb(hex: string) {

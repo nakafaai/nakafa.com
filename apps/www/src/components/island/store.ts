@@ -31,6 +31,8 @@ interface GameStore {
   dirty: HashSet.HashSet<number>;
   future: readonly (readonly Edit[])[];
   hotbar: readonly BlockKey[];
+  /** Leaves the game for the page the learner came from. */
+  leave: () => void;
   /** The island's level, which opens blocks for building (D7). */
   level: number;
   past: readonly (readonly Edit[])[];
@@ -49,7 +51,8 @@ interface GameStore {
 export function createGameStore(
   cells: Cells,
   hotbar: readonly BlockKey[],
-  level: number
+  level: number,
+  leave: () => void
 ) {
   return createStore<GameStore>()((set, get) => {
     /** Writes edits and marks what they change, without touching history. */
@@ -85,6 +88,7 @@ export function createGameStore(
       dirty: HashSet.empty(),
       future: [],
       hotbar,
+      leave,
       level,
       past: [],
       redo: () => {

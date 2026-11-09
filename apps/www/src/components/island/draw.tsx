@@ -197,7 +197,7 @@ function uploadList(
 }
 
 /** The art pixel for a screen: a whole number of device pixels, so its short side spans about 270 art pixels. */
-export function artPixelOf(width: number, height: number) {
+function artPixelOf(width: number, height: number) {
   return Math.max(1, Math.round(Math.min(width, height) / 270));
 }
 

@@ -33,13 +33,13 @@ export default function IslandGame({
   size: number;
 }) {
   const [store] = useState(() =>
-    createGameStore(terrainOf(seed, size), firstHotbar(level), level)
+    createGameStore(terrainOf(seed, size), firstHotbar(level), level, onLeave)
   );
   return (
     <GameStoreContext value={store}>
       <div className="fixed inset-0 overflow-hidden bg-[#5aa7e6]">
         <IslandStage size={size} />
-        <IslandHud onLeave={onLeave} />
+        <IslandHud />
       </div>
     </GameStoreContext>
   );
