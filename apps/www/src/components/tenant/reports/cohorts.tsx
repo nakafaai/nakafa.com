@@ -51,6 +51,7 @@ const cohortColumns = tableColumns<CohortItem>();
  */
 export function ReportCohorts({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolReports");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohorts = useQuery(
     records.reports.cohorts,
@@ -73,11 +74,11 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
           </Link>
         </TableTitle>
       ),
-      header: t("cohort"),
+      header: tCommon("class-group"),
       id: "cohort",
     }),
     cohortColumns.values((cohort) => cohort.unit, {
-      header: t("unit"),
+      header: tCommon("unit"),
       id: "unit",
       options: namedOptions(
         Arr.dedupe(
@@ -90,7 +91,7 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
       ),
     }),
     cohortColumns.values((cohort) => cohort.period, {
-      header: t("period"),
+      header: tCommon("period"),
       id: "period",
       options: namedOptions(
         Arr.dedupe(
@@ -109,8 +110,11 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
 
   return (
     <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        <TableSearch placeholder={t("search-cohorts")} />
+      <SchoolHeader
+        items={[{ label: tCommon("report-cards") }]}
+        title={tCommon("report-cards")}
+      >
+        <TableSearch placeholder={tCommon("search-class-groups")} />
       </SchoolHeader>
       <TablePageBody>
         {QueryResult.isSuccess(cohorts) &&

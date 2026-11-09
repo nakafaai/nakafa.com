@@ -66,6 +66,7 @@ function FolderNameDialog({
   title: string;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const [edited, setEdited] = useState<string | null>(null);
   const name = edited ?? named;
@@ -94,9 +95,7 @@ function FolderNameDialog({
       <form id={id} onSubmit={submit}>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor={`${id}-name`}>
-              {t("library-folder-name")}
-            </FieldLabel>
+            <FieldLabel htmlFor={`${id}-name`}>{tCommon("name")}</FieldLabel>
             <Input
               dir="auto"
               id={`${id}-name`}
@@ -118,6 +117,7 @@ function FolderNameDialog({
  */
 export function NewFolder() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const parentId = useLibraryFolder();
   const viewer = useViewerQuery();
@@ -174,7 +174,7 @@ export function NewFolder() {
       </Tooltip>
       {opened === 0 ? null : (
         <FolderNameDialog
-          action={t("library-folder-create")}
+          action={tCommon("create")}
           description={t("library-new-folder-description")}
           key={opened}
           named=""
@@ -200,6 +200,7 @@ export function FolderRowMenu({
   folder: LibraryFolder;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const rename = useMutation(classroom.folders.rename);
   const move = useMutation(classroom.folders.move);
@@ -225,7 +226,7 @@ export function FolderRowMenu({
           icon={PencilEdit02Icon}
           onClick={() => dialogs.show("rename")}
         >
-          {t("library-folder-rename")}
+          {tCommon("rename")}
         </DropdownMenuItem>
         <MoveAndTrash
           onMove={() => dialogs.show("move")}
@@ -246,7 +247,7 @@ export function FolderRowMenu({
       </RowItems>
       {dialogs.kind === "rename" ? (
         <FolderNameDialog
-          action={t("library-folder-rename")}
+          action={tCommon("rename")}
           description={t("library-folder-rename-description")}
           key={dialogs.key}
           named={folder.name}
@@ -265,7 +266,7 @@ export function FolderRowMenu({
           }}
           open={dialogs.isOpen("rename")}
           setOpen={dialogs.setOpen}
-          title={t("library-folder-rename")}
+          title={tCommon("rename")}
         />
       ) : null}
       {dialogs.kind === "move" ? (

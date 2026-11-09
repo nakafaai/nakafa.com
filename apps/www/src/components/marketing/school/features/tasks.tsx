@@ -62,6 +62,7 @@ const taskColumns = tableColumns<DemoTask>();
  */
 function useDemoColumns() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
 
   return [
@@ -69,7 +70,7 @@ function useDemoColumns() {
       cell: (info) => (
         <TableTitle icon={TaskEdit01Icon}>{info.getValue()}</TableTitle>
       ),
-      header: t("demo-head-title"),
+      header: tCommon("title"),
       id: "title",
     }),
     taskColumns.days((task) => task.deadline, {
@@ -78,7 +79,7 @@ function useDemoColumns() {
           {format.dateTime(info.getValue(), "date", { timeZone: DEMO_ZONE })}
         </span>
       ),
-      header: t("demo-head-deadline"),
+      header: tCommon("deadline"),
       id: "deadline",
       timeZone: () => DEMO_ZONE,
     }),
@@ -88,7 +89,7 @@ function useDemoColumns() {
           {t("demo-task-handed", { done: info.getValue(), total: 30 })}
         </span>
       ),
-      header: t("demo-head-status"),
+      header: tCommon("status"),
       id: "handedIn",
     }),
     taskColumns.menu((info) => (

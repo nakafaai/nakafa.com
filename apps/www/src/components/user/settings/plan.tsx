@@ -56,12 +56,12 @@ export function UserSettingsPlan({ overview }: { overview: BillingOverview }) {
 /** Pro that this account holds without a subscription of its own. */
 function GrantedPlanCard() {
   const t = useTranslations("Auth");
-  const tPricing = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
 
   return (
     <CardSection
       description={t("plan-granted-description")}
-      title={tPricing("pro-title")}
+      title={tCommon("pro")}
     >
       <CardSectionFooter hint={t("plan-granted-footer")} />
     </CardSection>
@@ -78,7 +78,7 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
   const locale = useLocale();
   const format = useFormatter();
   const t = useTranslations("Auth");
-  const tPricing = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
 
   const handleExtend = () => {
     if (!isActiveLocale(locale)) {
@@ -97,7 +97,7 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
       description={t("plan-pass-description", {
         date: format.dateTime(endsAt, "billing"),
       })}
-      title={tPricing("pro-title")}
+      title={tCommon("pro")}
     >
       <CardSectionFooter hint={t("plan-pass-footer")}>
         <CardSectionActions>
@@ -128,7 +128,7 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
   const locale = useLocale();
   const format = useFormatter();
   const t = useTranslations("Auth");
-  const tPricing = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
   const { ending, pastDue, subscription } = state;
 
   const handleManage = () => {
@@ -144,7 +144,7 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
   return (
     <CardSection
       description={t(subscribedDescriptionKey({ ending, pastDue }))}
-      title={tPricing("pro-title")}
+      title={tCommon("pro")}
     >
       <CardContent>
         <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-sm whitespace-nowrap">
@@ -302,10 +302,11 @@ function EndDate({
 /** How the subscription bills: monthly, yearly, or a pass of some months, read from its offer in the catalog. */
 function BillingInterval({ offer }: { offer: BillingSubscription["offer"] }) {
   const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   const { interval, months } = billingOffer(offer);
 
   return Match.value(interval).pipe(
-    Match.when("month", () => t("billing-month")),
+    Match.when("month", () => tCommon("monthly")),
     Match.when("year", () => t("billing-year")),
     Match.when("pass", () => t("billing-pass", { months })),
     Match.exhaustive

@@ -275,7 +275,7 @@ export function ScheduleSitting({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-unit`}>{common("unit")}</FieldLabel>
           <Select
             items={unitItems}
             onValueChange={(key) => {

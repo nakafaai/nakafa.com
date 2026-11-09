@@ -101,9 +101,9 @@ function useGradebook() {
 
 /** The gradebook's search by student, in the class page's header; the note and state columns filter the lines. */
 export function GradebookSearch() {
-  const t = useTranslations("SchoolGrades");
+  const tCommon = useTranslations("Common");
 
-  return <TableSearch placeholder={t("search")} />;
+  return <TableSearch placeholder={tCommon("search-students")} />;
 }
 
 /**
@@ -122,6 +122,7 @@ export function ClassGradebook({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolGrades");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const args = isSettled ? { classId, slug } : "skip";
   const scheme = useQuery(records.grades.scheme, args);
@@ -161,21 +162,21 @@ export function ClassGradebook({
       cell: (info) => (
         <PaneOpen id={info.row.original.student.id}>{info.getValue()}</PaneOpen>
       ),
-      header: t("student"),
+      header: tCommon("student"),
       id: "student",
     }),
     lineColumns.text((line) => line.student.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("email"),
+      header: tCommon("email"),
       id: "email",
     }),
     lineColumns.number((line) => line.grade?.value ?? null, {
       cell: (info) => <GradeValueField line={info.row.original} />,
-      header: t("value"),
+      header: tCommon("grade"),
       id: "value",
     }),
     lineColumns.values(noteOf, {
-      header: t("note"),
+      header: tCommon("result"),
       id: "note",
       options: namedOptions(notes, GRADE_ICONS),
     }),
@@ -183,14 +184,14 @@ export function ClassGradebook({
       cell: (info) => (
         <TableStatus
           {...LINE_STATE_LOOKS[info.getValue()]}
-          label={t(`state-${info.getValue()}`)}
+          label={t(`state-label.${info.getValue()}`)}
         />
       ),
-      header: t("state"),
+      header: tCommon("state"),
       id: "state",
       options: Arr.map(["none", "draft", "released"] as const, (state) => ({
         icon: LINE_STATE_LOOKS[state].icon,
-        label: t(`state-${state}`),
+        label: t(`state-label.${state}`),
         value: state,
       })),
     }),
@@ -294,6 +295,7 @@ function GradeValueField({ line }: { line: SheetLine }) {
  */
 function GradeLineDetail({ lines }: { lines: readonly SheetLine[] }) {
   const t = useTranslations("SchoolGrades");
+  const tCommon = useTranslations("Common");
   const { scheme } = useGradebook();
   const open = usePanes((state) => state.open);
   const line = Option.flatMap(open, (id) =>
@@ -305,26 +307,26 @@ function GradeLineDetail({ lines }: { lines: readonly SheetLine[] }) {
     onSome: (found) => (
       <>
         <PaneHeader
-          description={t(`state-${stateOf(found)}`)}
+          description={t(`state-label.${stateOf(found)}`)}
           title={found.student.name}
         />
         <PaneBody>
           <PaneFacts>
-            <PaneFact label={t("value")}>
+            <PaneFact label={tCommon("grade")}>
               <GradeValueField line={found} />
             </PaneFact>
-            <PaneFact label={t("note")}>
+            <PaneFact label={tCommon("result")}>
               {found.grade === null
-                ? t("state-none")
+                ? t("state-label.none")
                 : (found.grade.band ?? t(`kktp-${found.grade.kktp}`))}
             </PaneFact>
-            <PaneFact label={t("state")}>
+            <PaneFact label={tCommon("state")}>
               <TableStatus
                 {...LINE_STATE_LOOKS[stateOf(found)]}
-                label={t(`state-${stateOf(found)}`)}
+                label={t(`state-label.${stateOf(found)}`)}
               />
             </PaneFact>
-            <PaneFact label={t("kktp")}>
+            <PaneFact label={tCommon("kktp")}>
               <span className="tabular-nums">{scheme.kktp}</span>
             </PaneFact>
           </PaneFacts>

@@ -105,7 +105,7 @@ export function CohortReports() {
 
 /** The page's header: the path back to the report cards and the class group's name, then the search; the status column filters the students by state. */
 function CohortReportsHeader() {
-  const t = useTranslations("SchoolReports");
+  const tCommon = useTranslations("Common");
   const args = useCohortArgs();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohort = useQuery(tenancy.cohorts.get, isSettled ? args : "skip");
@@ -115,7 +115,7 @@ function CohortReportsHeader() {
     <SchoolHeader
       items={[
         {
-          label: t("title"),
+          label: tCommon("report-cards"),
           target: {
             from: LOCALE_ROUTE,
             params: { slug: args.slug },
@@ -126,7 +126,7 @@ function CohortReportsHeader() {
       ]}
       {...(title === undefined ? {} : { title })}
     >
-      <TableSearch placeholder={t("search-students")} />
+      <TableSearch placeholder={tCommon("search-students")} />
     </SchoolHeader>
   );
 }
@@ -134,6 +134,7 @@ function CohortReportsHeader() {
 /** The students of the class group, read a page at a time, beside the open report; or the empty state. */
 function CohortReportsBody() {
   const t = useTranslations("SchoolReports");
+  const tCommon = useTranslations("Common");
   const formatZone = useFormatTimeZone();
   const timeZone = useSchoolTimeZone();
   const args = useCohortArgs();
@@ -149,28 +150,28 @@ function CohortReportsBody() {
       cell: (info) => (
         <PaneOpen id={info.row.original.student.id}>{info.getValue()}</PaneOpen>
       ),
-      header: t("student"),
+      header: tCommon("student"),
       id: "student",
     }),
     lineColumns.text((line) => line.student.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("email"),
+      header: tCommon("email"),
       id: "email",
     }),
     lineColumns.values(stateOf, {
       cell: (info) => (
         <TableStatus
           {...STATE_LOOKS[info.getValue()]}
-          label={t(`state-${info.getValue()}`)}
+          label={t(`state.${info.getValue()}`)}
         />
       ),
-      header: t("status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(
         ["none", "draft", "completed", "approved", "locked"] as const,
         (state) => ({
           icon: STATE_LOOKS[state].icon,
-          label: t(`state-${state}`),
+          label: t(`state.${state}`),
           value: state,
         })
       ),

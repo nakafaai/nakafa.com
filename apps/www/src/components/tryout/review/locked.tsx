@@ -45,7 +45,7 @@ export function TryoutReviewLocked({
   readonly total: number;
 }) {
   const t = useTranslations("Tryouts");
-  const tPricing = useTranslations("Pricing");
+  const tCommon = useTranslations("Common");
 
   return (
     <section
@@ -117,7 +117,7 @@ export function TryoutReviewLocked({
         <CardContent>
           <PricingPrice
             Price={StaticPrice}
-            period={tPricing("pro-period")}
+            period={tCommon("plan-month")}
             plan="pro"
           />
         </CardContent>

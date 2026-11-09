@@ -54,7 +54,7 @@ function EntryTitle({ entry }: { entry: DemoEntry }) {
   return (
     <span className="flex items-center gap-2 font-medium">
       <HugeIcons
-        aria-label={t(`demo-kind-${entry.kind}`)}
+        aria-label={t(`demo-kind.${entry.kind}`)}
         className="text-muted-foreground size-4 shrink-0"
         icon={KIND_ICONS[entry.kind]}
       />
@@ -70,26 +70,27 @@ function EntryTitle({ entry }: { entry: DemoEntry }) {
  */
 function useDemoColumns() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const teacher = t("demo-teacher");
   const author = (entry: DemoEntry) => (entry.by === "nina" ? "Nina" : teacher);
 
   return [
     libraryColumns.text((entry) => t(`demo-library-${entry.title}`), {
       cell: (info) => <EntryTitle entry={info.row.original} />,
-      header: t("demo-head-title"),
+      header: tCommon("title"),
       id: "title",
     }),
     libraryColumns.values((entry) => entry.kind, {
       cell: (info) => (
         <span className="text-muted-foreground">
-          {t(`demo-kind-${info.getValue()}`)}
+          {t(`demo-kind.${info.getValue()}`)}
         </span>
       ),
-      header: t("demo-head-type"),
+      header: tCommon("type"),
       id: "kind",
       options: Arr.map(["folder", "pdf", "image", "link"] as const, (kind) => ({
         icon: KIND_ICONS[kind],
-        label: t(`demo-kind-${kind}`),
+        label: t(`demo-kind.${kind}`),
         value: kind,
       })),
     }),
@@ -97,7 +98,7 @@ function useDemoColumns() {
       cell: (info) => (
         <span className="text-muted-foreground">{info.getValue()}</span>
       ),
-      header: t("demo-head-by"),
+      header: tCommon("added-by"),
       id: "author",
       options: namedOptions([teacher, "Nina"], PERSON_ICONS),
     }),

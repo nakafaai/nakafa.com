@@ -30,14 +30,17 @@ import { useAgeClock } from "@/components/user/ages";
  * inbox once the session settles, so the page commits at once and reads nothing on the server.
  */
 export function SchoolNotifications({ all }: { all: boolean }) {
-  const t = useTranslations("Notifications");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const scope = all ? {} : { slug };
   const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
 
   return (
     <PageFrame width="column">
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+      <SchoolHeader
+        items={[{ label: tCommon("notifications") }]}
+        title={tCommon("notifications")}
+      >
         {/* The school choice and the page's two buttons are one group of equal parts, ready and final from the first paint. */}
         <ButtonGroup>
           <InboxFilter all={all} />

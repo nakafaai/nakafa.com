@@ -150,13 +150,14 @@ export function TryoutFinishedFacts({
   readonly seconds?: number;
 }) {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   return (
     <dl className="flex w-full flex-col gap-1.5 text-sm">
       <TryoutFinishedFact
         label={t(
           score.scoreStatus === "provisional"
-            ? "score-label-estimated"
-            : "score-label-standard"
+            ? "score-label.estimated"
+            : "score-label.standard"
         )}
       >
         {score.publishedScore}
@@ -165,7 +166,7 @@ export function TryoutFinishedFacts({
         {score.totalCorrect} / {score.totalQuestions}
       </TryoutFinishedFact>
       {seconds === undefined ? null : (
-        <TryoutFinishedFact label={t("part-time-label")}>
+        <TryoutFinishedFact label={tCommon("time")}>
           {readClock(seconds)}
         </TryoutFinishedFact>
       )}

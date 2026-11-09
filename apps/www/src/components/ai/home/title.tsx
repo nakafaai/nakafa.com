@@ -6,7 +6,7 @@ interface Props {
 }
 
 export function HomeTitle({ className }: Props) {
-  const t = useTranslations("Home");
+  const tCommon = useTranslations("Common");
 
   return (
     <h1
@@ -15,7 +15,9 @@ export function HomeTitle({ className }: Props) {
         className
       )}
     >
-      <span className="hidden md:inline">{t("title")}</span>
+      <span className="hidden md:inline">
+        {tCommon("what-do-you-want-to-learn")}
+      </span>
       <span className="inline md:hidden">Nakafa</span>
     </h1>
   );

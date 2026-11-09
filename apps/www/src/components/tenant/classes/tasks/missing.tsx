@@ -27,6 +27,7 @@ const missingColumns = tableColumns<typeof MissingStudent.Type>();
  */
 export function TaskMissingTable({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const pagination = usePaginatedQuery(
     classroom.tasks.missing,
@@ -62,7 +63,7 @@ export function TaskMissingTable({ task }: { task: ClassTask }) {
                   {info.getValue()}
                 </span>
               ),
-              header: t("task-student"),
+              header: tCommon("student"),
               id: "name",
             }),
             missingColumns.menu((info) => (

@@ -106,13 +106,14 @@ export function ChoiceTable({
   readonly statements: readonly ChoiceTableStatement[];
 }) {
   const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const locked = disabled || onMark === undefined;
 
   return (
     <ChoiceTableContext value={{ columns, headerId: id, locked, onMark }}>
       <fieldset
-        aria-label={label ?? t("answer")}
+        aria-label={label ?? tCommon("answer")}
         className={tableFrameVariants({ className: "m-0 min-w-0 p-0" })}
         style={{
           gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns.length}, minmax(min(4.5rem, calc(50% / ${columns.length})), auto))`,

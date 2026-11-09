@@ -86,6 +86,7 @@ function PlayerPlace() {
  */
 function PlayerWindow() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   const [flagged, setFlagged] = useState<readonly string[]>(["q7"]);
   const questions = Arr.map(KEYS, (key) => ({
@@ -103,7 +104,7 @@ function PlayerWindow() {
   const interaction: Interaction = {
     id: INTERACTION_ID,
     kind: "choice",
-    label: t("demo-exam-answer"),
+    label: tCommon("answer"),
     maxChoices: 1,
     minChoices: 1,
     options: Arr.zipWith(OPTION_IDS, OPTION_MOMENTA, (id, momentum) => ({

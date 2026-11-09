@@ -48,6 +48,7 @@ export function SchoolGrantDialog({
 }) {
   const { role: viewerRole, slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const assign = useMutation(access.grants.assign).withOptimisticUpdate(
     assignGrantChange
@@ -118,7 +119,7 @@ export function SchoolGrantDialog({
           )}
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-role`}>{t("grant-role")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-role`}>{tCommon("role")}</FieldLabel>
           <SchoolRoleSelect
             id={`${id}-role`}
             onChoose={setRole}

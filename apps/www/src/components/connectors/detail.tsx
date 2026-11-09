@@ -161,6 +161,7 @@ export function ServiceActions() {
 /** Starts a connect, or brings a lost connection back. */
 function ConnectAction() {
   const t = useTranslations("Connectors");
+  const tCommon = useTranslations("Common");
   const { service, state } = useService();
   const { connect } = useConnectorActions();
   const [isConnecting, startConnecting] = useTransition();
@@ -176,7 +177,7 @@ function ConnectAction() {
         icon={again ? RefreshIcon : Add01Icon}
         isLoading={isConnecting}
       />
-      {t(again ? "reconnect" : "connect")}
+      {again ? t("reconnect") : tCommon("connect")}
     </Button>
   );
 }

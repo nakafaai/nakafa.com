@@ -90,6 +90,7 @@ interface ExamFooterProps {
  */
 export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { exam } = useExam();
   const active = useActiveQuestion();
   const pin = useExamSelection((state) => state.pin);
@@ -174,7 +175,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
       {pagesOpen && !grid ? (
         <div className="border-b">
           <ScrollArea
-            aria-label={t("pages")}
+            aria-label={tCommon("pages")}
             className="w-full"
             render={<nav />}
           >
@@ -217,7 +218,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
                 variant="ghost"
               >
                 <HugeIcons aria-hidden="true" icon={Layout01Icon} />
-                <span className="@max-sm/bar:sr-only">{t("pages")}</span>
+                <span className="@max-sm/bar:sr-only">{tCommon("pages")}</span>
               </Button>
               <PageCounter
                 current={current}
@@ -257,7 +258,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
                   disabled={!canFullscreen}
                   onClick={toggleFullscreen}
                   size="icon-sm"
-                  tooltip={t("fullscreen")}
+                  tooltip={tCommon("fullscreen")}
                   type="button"
                   variant="ghost"
                 />
@@ -265,7 +266,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
             >
               <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
             </TooltipTrigger>
-            <TooltipContent>{t("fullscreen")}</TooltipContent>
+            <TooltipContent>{tCommon("fullscreen")}</TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -286,6 +287,7 @@ function PageThumb({
   selected: boolean;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const saved = !isPlaceholderId(question.prompt);
 
   return (
@@ -296,7 +298,7 @@ function PageThumb({
       type="button"
     >
       <span className="sr-only">
-        {t("question", { number })}
+        {tCommon("question", { number })}
         {Option.match(questionGap(question), {
           onNone: () => null,
           onSome: (gap) => ` ${t(gap === "empty" ? "empty-part" : "no-key")}`,

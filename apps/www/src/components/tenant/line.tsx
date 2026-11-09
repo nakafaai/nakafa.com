@@ -40,7 +40,7 @@ export function LineDialog({
   title: string;
   type?: ComponentProps<typeof Input>["type"];
 }) {
-  const settings = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const id = useId();
   // The field holds what was typed, and the stored value until then.
   const [typed, setTyped] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export function LineDialog({
     <ResponsiveDialog
       action={
         <Button disabled={!canSave} onClick={save} type="button">
-          {action ?? settings("save")}
+          {action ?? tCommon("save")}
         </Button>
       }
       description={description}

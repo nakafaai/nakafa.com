@@ -20,22 +20,22 @@ export const statusLook = (status: TryoutProgress) =>
   Match.value(status).pipe(
     Match.when("in-progress", () => ({
       icon: PlayCircle02Icon,
-      label: "status-in-progress" as const,
+      label: "status.in-progress" as const,
       variant: "default" as const,
     })),
     Match.when("completed", () => ({
       icon: CheckmarkCircle02Icon,
-      label: "status-completed" as const,
+      label: "status.completed" as const,
       variant: "secondary" as const,
     })),
     Match.when("expired", () => ({
       icon: ClockAlertIcon,
-      label: "status-expired" as const,
+      label: "status.expired" as const,
       variant: "destructive" as const,
     })),
     Match.orElse(() => ({
       icon: CircleDashedIcon,
-      label: "status-not-started" as const,
+      label: "status.not-started" as const,
       variant: "muted" as const,
     }))
   );

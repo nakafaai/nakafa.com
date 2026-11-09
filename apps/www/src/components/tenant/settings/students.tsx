@@ -168,7 +168,7 @@ function SchoolLoginTable() {
       id: "login",
     }),
     loginColumns.text((login) => login.person.name, {
-      header: t("login-person"),
+      header: t("grant-person"),
       id: "person",
     }),
     loginColumns.days((login) => login.issuedAt, {
@@ -207,6 +207,7 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
   const { slug } = useTenant();
   const issueCard = useIssueCard();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const reissue = useMutation(identity.cards.reissue).withOptimisticUpdate(
     reissueCardChange
   );
@@ -220,7 +221,7 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
           icon={PencilEdit02Icon}
           onClick={() => dialogs.show("rename")}
         >
-          {t("person-rename")}
+          {tCommon("rename")}
         </DropdownMenuItem>
         <DropdownMenuItem icon={AtIcon} onClick={() => dialogs.show("login")}>
           {t("login-rename")}
@@ -353,7 +354,7 @@ function SchoolStudentDialog({
             }}
             type="button"
           >
-            {t("student-add-submit")}
+            {t("student-add")}
           </Button>
         </>
       }
@@ -364,13 +365,11 @@ function SchoolStudentDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-name`}>
-            {t("student-add-name")}
-          </FieldLabel>
+          <FieldLabel htmlFor={`${id}-name`}>{common("name")}</FieldLabel>
           <Input
             id={`${id}-name`}
             onChange={(event) => setName(event.target.value)}
-            placeholder={t("student-add-name-placeholder")}
+            placeholder={common("ayu-lestari")}
             value={name}
           />
         </Field>
@@ -381,7 +380,7 @@ function SchoolStudentDialog({
         />
         {units.length > 1 ? (
           <Field>
-            <FieldLabel htmlFor={`${id}-unit`}>{t("unit-choice")}</FieldLabel>
+            <FieldLabel htmlFor={`${id}-unit`}>{common("school")}</FieldLabel>
             <Select
               items={unitItems}
               onValueChange={setPickedUnit}

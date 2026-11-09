@@ -77,6 +77,7 @@ function PlanLine({
  */
 function PaidPrice({ tier }: { tier: SchoolPaidTierKey }) {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const monthly = schoolTiers[tier].monthly;
 
   return (
@@ -85,7 +86,7 @@ function PaidPrice({ tier }: { tier: SchoolPaidTierKey }) {
         <span className="text-4xl font-semibold tracking-tight tabular-nums">
           <SchoolAmount amounts={monthly} />
         </span>
-        <span className="text-muted-foreground">{t("plan-month")}</span>
+        <span className="text-muted-foreground">{tCommon("plan-month")}</span>
       </p>
       <p className="text-muted-foreground text-sm text-pretty tabular-nums">
         {Arr.map(PricingCurrencySchema.literals, (currency) => (
@@ -106,12 +107,13 @@ function PaidPrice({ tier }: { tier: SchoolPaidTierKey }) {
 /** The trial's price: free for its days, with no payment and no card. */
 function TrialPrice() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
 
   return (
     <>
       <p className="flex flex-wrap items-baseline gap-x-2 whitespace-nowrap">
         <span className="text-4xl font-semibold tracking-tight">
-          {t("plan-free-price")}
+          {tCommon("free")}
         </span>
         <span className="text-muted-foreground">
           {t("plan-trial-for", { days: SCHOOL_TRIAL_DAYS })}
@@ -137,7 +139,7 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
     <Card className={planCardVariants({ tier })} data-school-plan={tier}>
       <CardHeader className="md:mb-3">
         <h2 className="text-xl font-medium tracking-tight">
-          {t(`plan-${tier}`)}
+          {t(`plan.${tier}`)}
         </h2>
       </CardHeader>
       <CardContent className="grid content-start gap-1 md:mb-3">
@@ -172,8 +174,8 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
           to="/$locale/school/new"
         >
           {tier === "free"
-            ? t("plan-start")
-            : t("plan-choose", { plan: t(`plan-${tier}`) })}
+            ? t("hero-start")
+            : t("plan-choose", { plan: t(`plan.${tier}`) })}
         </Link>
       </CardFooter>
     </Card>

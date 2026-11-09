@@ -300,6 +300,7 @@ const exportAuditTrail = Effect.fn("tenant.audit.export")(
 function AuditExport() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const words = useEntryWords();
   const [isPending, startTransition] = useTransition();
 
@@ -319,7 +320,7 @@ function AuditExport() {
       }
     >
       <HugeIcons icon={Download01Icon} />
-      <span className="@max-sm/header:sr-only">{t("audit-export")}</span>
+      <span className="@max-sm/header:sr-only">{tCommon("export")}</span>
     </Button>
   );
 }

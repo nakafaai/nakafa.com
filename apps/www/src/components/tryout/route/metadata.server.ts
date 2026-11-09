@@ -193,7 +193,7 @@ export const readTryoutRouteLabels = Effect.fn("www.tryout.route.readLabels")(
     return {
       home: tCommon("home"),
       tryOut: tCommon("try-out"),
-      tryOutShort: tCommon("try-out-short"),
+      tryOutShort: tCommon("try-out"),
     } satisfies TryoutRouteLabels;
   }
 );

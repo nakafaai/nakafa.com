@@ -68,7 +68,7 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
   return (
     <>
       <PaneHeader
-        description={t(`state-${found.report?.state ?? "none"}`)}
+        description={t(`state.${found.report?.state ?? "none"}`)}
         title={found.student.name}
       />
       {found.report === null ? (
@@ -92,6 +92,7 @@ const subjectColumns =
 /** The body of a started report: its state and dates, the note, and under them the subjects it copies, a table from edge to edge of the pane. */
 function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
   const t = useTranslations("SchoolReports");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const detail = useQuery(records.reports.get, { reportId, slug });
 
@@ -109,7 +110,9 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
       <PaneBody>
         <div className="flex flex-col gap-6">
           <ReportFacts report={report} />
-          <p className="text-muted-foreground text-sm">{t("subjects-empty")}</p>
+          <p className="text-muted-foreground text-sm">
+            {tCommon("own-empty")}
+          </p>
         </div>
       </PaneBody>
     );
@@ -122,16 +125,16 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
           columns={[
             subjectColumns.text((subject) => subject.className, {
               cell: (info) => <span dir="auto">{info.getValue()}</span>,
-              header: t("subject"),
+              header: tCommon("school-subject"),
               id: "subject",
             }),
             subjectColumns.number((subject) => subject.value, {
-              header: t("grade"),
+              header: tCommon("grade"),
               id: "grade",
             }),
             subjectColumns.text(
               (subject) => subject.band ?? t(`kktp-${subject.kktp}`),
-              { header: t("result"), id: "result" }
+              { header: tCommon("result"), id: "result" }
             ),
             subjectColumns.menu((info) => (
               <RowCopy value={info.row.original.className} />
@@ -153,10 +156,11 @@ function ReportFacts({
   report: Ref.Returns<typeof records.reports.get>;
 }) {
   const t = useTranslations("SchoolReports");
+  const tCommon = useTranslations("Common");
 
   return (
     <PaneFacts>
-      <PaneFact label={t("status")}>{t(`state-${report.state}`)}</PaneFact>
+      <PaneFact label={tCommon("state")}>{t(`state.${report.state}`)}</PaneFact>
       {report.approvedAt === null ? null : (
         <PaneFact label={t("approved-at")}>
           <SchoolDateTime at={report.approvedAt} />

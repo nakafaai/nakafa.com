@@ -75,13 +75,13 @@ export const Route = createFileRoute("/$locale/_marketing/school/")({
       namespace: "Common",
     });
     return {
-      breadcrumb: { home: tCommon("home"), school: t("breadcrumb") },
+      breadcrumb: { home: tCommon("home"), school: tCommon("school") },
       description: t("metadata-description"),
       faqs: Arr.map(
         schoolLandingQuestions,
         (key): MarketingFaqItem => ({
-          answer: t(`faq-${key}-answer`),
-          question: t(`faq-${key}-question`),
+          answer: t(`faq.${key}.answer`),
+          question: t(`faq.${key}.question`),
         })
       ),
       inApp,

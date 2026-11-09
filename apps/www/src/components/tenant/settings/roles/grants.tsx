@@ -63,6 +63,7 @@ const grantColumns = tableColumns<GrantItem>();
  */
 export function SchoolGrantTable() {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const tSchool = useTranslations("School");
   const viewer = useViewerQuery();
   const { slug } = useTenant();
@@ -92,12 +93,12 @@ export function SchoolGrantTable() {
     }),
     grantColumns.text((grant) => grant.person.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("member-email"),
+      header: tCommon("email"),
       id: "email",
     }),
     grantColumns.values((grant) => grant.role.key, {
       cell: (info) => <RoleBadge role={info.getValue()} />,
-      header: t("grant-role"),
+      header: tCommon("role"),
       id: "role",
       options: Arr.map(BuiltinRole.literals, (role) => ({
         icon: roleIcon(role),
@@ -236,7 +237,7 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
             type="button"
             variant="destructive"
           >
-            {t("grant-revoke-confirm")}
+            {t("grant-revoke")}
           </Button>
         }
         description={t("grant-revoke-description")}

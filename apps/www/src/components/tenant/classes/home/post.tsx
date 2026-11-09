@@ -192,7 +192,7 @@ function PostActions({
                     )
                   }
                 >
-                  {t("post-restore")}
+                  {common("restore")}
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
@@ -209,7 +209,7 @@ function PostActions({
                     )
                   }
                 >
-                  {t("post-archive")}
+                  {common("archive")}
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
@@ -217,7 +217,7 @@ function PostActions({
                 onClick={() => setRemoving(true)}
                 variant="destructive"
               >
-                {t("post-remove")}
+                {common("remove")}
               </DropdownMenuItem>
             </>
           ) : null}
@@ -226,7 +226,7 @@ function PostActions({
       <ResponsiveDialog
         action={
           <Button onClick={confirm} variant="destructive">
-            {t("post-remove")}
+            {common("remove")}
           </Button>
         }
         description={t("post-remove-description")}
@@ -297,7 +297,7 @@ function PostEditor({ onDone, post }: { onDone: () => void; post: ClassPost }) {
           {common("cancel")}
         </Button>
         <Button size="sm" type="submit">
-          {t("message-save")}
+          {common("save")}
         </Button>
       </div>
     </form>

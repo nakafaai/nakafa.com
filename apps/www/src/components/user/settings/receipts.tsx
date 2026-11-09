@@ -34,10 +34,10 @@ const receiptColumns = tableColumns<Receipt>();
 
 /** What each kind of payment bought, with the icon its filter draws. */
 const PAYMENT_KINDS = {
-  credits: { icon: Coins01Icon, label: "payment-credits" },
-  cycle: { icon: RepeatIcon, label: "payment-cycle" },
-  invoice: { icon: Invoice01Icon, label: "payment-invoice" },
-  pass: { icon: Ticket01Icon, label: "payment-pass" },
+  credits: { icon: Coins01Icon, label: "payment.credits" },
+  cycle: { icon: RepeatIcon, label: "payment.cycle" },
+  invoice: { icon: Invoice01Icon, label: "payment.invoice" },
+  pass: { icon: Ticket01Icon, label: "payment.pass" },
 } as const;
 
 /**
@@ -66,7 +66,7 @@ export function Receipts() {
 
 /** Draws the invoice of a payment Nakafa sold, and saves it. */
 function InvoiceAction({ payment }: { payment: Receipt }) {
-  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const draw = useAction(billingRefs.receipts.download);
   const { download, isPending } = useInvoiceDownload();
@@ -82,7 +82,7 @@ function InvoiceAction({ payment }: { payment: Receipt }) {
           }
         }}
       >
-        {t("payment-download")}
+        {tCommon("download-invoice")}
       </DropdownMenuItem>
     </RowItems>
   );

@@ -50,7 +50,7 @@ export function SchoolPeriodRestore({
   period: Period;
   slug: TenantSlug;
 }) {
-  const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const restore = useMutation(tenancy.periods.restore).withOptimisticUpdate(
     restorePeriodChange
   );
@@ -68,7 +68,7 @@ export function SchoolPeriodRestore({
           )
         }
       >
-        {t("period-restore")}
+        {tCommon("restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>
   );
@@ -108,7 +108,7 @@ function usePeriodDelete(period: Period, slug: TenantSlug) {
         {period.name}
       </ResponsiveDialogSubject>
     ),
-    title: t("period-delete-title", { name: period.name }),
+    title: t("cohort-delete-title", { name: period.name }),
   };
 }
 
@@ -128,6 +128,7 @@ export function SchoolPeriodMenu({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const open = useMutation(tenancy.periods.open).withOptimisticUpdate(
     openPeriodChange
   );
@@ -179,7 +180,7 @@ export function SchoolPeriodMenu({
                 )
               }
             >
-              {t("period-archive")}
+              {tCommon("archive")}
             </DropdownMenuItem>
           ) : undefined
         }
@@ -188,7 +189,7 @@ export function SchoolPeriodMenu({
           icon={PencilEdit02Icon}
           onClick={() => dialogs.show("edit")}
         >
-          {t("period-edit")}
+          {tCommon("edit")}
         </DropdownMenuItem>
         {period.status === "planned" ? (
           <DropdownMenuItem
@@ -201,7 +202,7 @@ export function SchoolPeriodMenu({
               )
             }
           >
-            {t("period-open")}
+            {tCommon("open")}
           </DropdownMenuItem>
         ) : null}
       </ConfirmRowMenu>
@@ -218,9 +219,9 @@ export function SchoolPeriodMenu({
             )
           }
           open={dialogs.isOpen("edit")}
-          saveLabel={t("period-edit-save")}
+          saveLabel={tCommon("save")}
           setOpen={dialogs.setOpen}
-          title={t("period-edit")}
+          title={tCommon("edit")}
         />
       ) : null}
     </>
@@ -251,6 +252,7 @@ export function PeriodDialog({
   title: string;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const [nameChoice, setName] = useState<string | null>(null);
   const [startChoice, setStart] = useState<string | null>(null);
@@ -285,7 +287,7 @@ export function PeriodDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-name`}>{t("period-name")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-name`}>{tCommon("name")}</FieldLabel>
           <Input
             id={`${id}-name`}
             onChange={(event) => setName(event.target.value)}

@@ -143,7 +143,7 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
           image: getCurriculumRouteSocialImage(locale, program.key, route),
           labels: {
             home: homeLabel,
-            routeAction: tLearningPrograms("curriculum-route-action"),
+            routeAction: tCommon("view-options"),
             selector: tLearningPrograms("kind.school-curriculum"),
             subject: subjectLabel,
           },

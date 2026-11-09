@@ -54,9 +54,9 @@ export function NewPostPoll() {
             className="@2xl/header:hidden"
             icon={ChartBarLineIcon}
           />
-          <HeaderLabel>{t("post-new-poll")}</HeaderLabel>
+          <HeaderLabel>{t("poll-title")}</HeaderLabel>
         </TooltipTrigger>
-        <TooltipContent side="bottom">{t("post-new-poll")}</TooltipContent>
+        <TooltipContent side="bottom">{t("poll-title")}</TooltipContent>
       </Tooltip>
       <NewPoll
         onSend={(poll) => {

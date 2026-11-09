@@ -166,7 +166,7 @@ test("the Free plan's action opens home for a signed-in learner", async ({
               expect(action).toHaveAttribute("href", HOME)
             );
             yield* Effect.promise(() =>
-              expect(action).toHaveText(app.Pricing["free-cta"])
+              expect(action).toHaveText(app.Common["start-learning"])
             );
             // The page is static, so before React takes the link over a press
             // loads home as a new document; only React moves in the same one.

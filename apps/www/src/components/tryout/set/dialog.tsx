@@ -77,7 +77,7 @@ function getDialogCopy(
       description: props.directEntry
         ? t("restart-entry-dialog-description")
         : t("restart-dialog-description"),
-      primary: t("restart-cta"),
+      primary: t("action.restart-cta"),
       title: t("restart-dialog-title"),
     };
   }
@@ -86,7 +86,7 @@ function getDialogCopy(
     description: props.directEntry
       ? t("start-entry-dialog-description")
       : t("start-dialog-description"),
-    primary: t("start-cta"),
+    primary: t("action.start-cta"),
     title: t("start-dialog-title"),
   };
 }

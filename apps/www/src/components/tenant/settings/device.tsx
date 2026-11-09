@@ -81,7 +81,7 @@ export function SchoolDeviceDialog({
             type="button"
           >
             <HugeIcons icon={CommandLineIcon} />
-            {t("device-authorize")}
+            {common("connect")}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger

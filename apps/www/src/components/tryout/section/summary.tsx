@@ -63,7 +63,7 @@ function TryoutSectionMetrics({
   score: TryoutScoreResult | null;
   section: TryoutSummarySection;
 }) {
-  const tTryouts = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   const waiting = useFactsWaiting(pending);
 
   if (score) {
@@ -72,7 +72,7 @@ function TryoutSectionMetrics({
 
   return (
     <TryoutPartStats waiting={waiting}>
-      <TryoutPartStat label={tTryouts("part-questions-label")}>
+      <TryoutPartStat label={tCommon("exam-questions")}>
         <TryoutMetricNumber value={section.questionCount} />
       </TryoutPartStat>
 
@@ -88,11 +88,7 @@ function TryoutSectionMetrics({
  * beside a score, with the digits the caller composed.
  */
 function TryoutTimeLimitStat({ children }: { children: ReactNode }) {
-  const tTryouts = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
 
-  return (
-    <TryoutPartStat label={tTryouts("part-time-label")}>
-      {children}
-    </TryoutPartStat>
-  );
+  return <TryoutPartStat label={tCommon("time")}>{children}</TryoutPartStat>;
 }

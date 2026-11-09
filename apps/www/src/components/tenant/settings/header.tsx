@@ -15,13 +15,13 @@ export function SchoolSettingsHeader({ children }: { children?: ReactNode }) {
   const tenant = useTenant();
   const t = useTranslations("SchoolSettings");
   const section = getSchoolSettingsSection(tenant.slug, leafPath, tenant.reach);
-  const label = t(section.labelKey);
+  const label = t(`section.${section.labelKey}`);
 
   return (
     <SchoolHeader
       items={[
         {
-          label: t(section.group.key),
+          label: t(`group.${section.group.key}`),
           target: section.group.target,
         },
         { label },

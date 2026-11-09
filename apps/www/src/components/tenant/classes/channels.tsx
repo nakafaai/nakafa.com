@@ -192,7 +192,7 @@ function ChatPreview({ last }: { last: (typeof ChannelView.Type)["last"] }) {
   }
   const text =
     last.text === "" && last.media !== null
-      ? t(`chat-media-${last.media}`)
+      ? t(`chat-media.${last.media}`)
       : last.text;
   return last.mine
     ? t("chat-preview-mine", { text })

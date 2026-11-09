@@ -126,7 +126,7 @@ export function CodeBlockCopyButton({
   className,
   ...props
 }: CodeBlockCopyButtonProps) {
-  const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
   const code = useCodeSource((source) => source.code);
@@ -178,8 +178,8 @@ export function CodeBlockCopyButton({
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
-      title={t("copy-code")}
-      tooltip={t("copy-code")}
+      title={tCommon("copy-code")}
+      tooltip={tCommon("copy-code")}
       variant="ghost"
       {...props}
     >

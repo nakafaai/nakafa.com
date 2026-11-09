@@ -15,6 +15,7 @@ import { EmptyNina } from "@/components/state/nina";
  */
 export function ChatFailure({ kind }: { kind: "access" | "retry" }) {
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
 
   if (kind === "access") {
     return (
@@ -36,19 +37,19 @@ export function ChatFailure({ kind }: { kind: "access" | "retry" }) {
       action={<ChatRetryButton />}
       description={t("chat-failed-description")}
       scene={<EmptyNina act="typing" />}
-      title={t("chat-failed")}
+      title={tCommon("load-error-title")}
     />
   );
 }
 
 /** The retry of a failed read, disabled while the retry around it waits. */
 function ChatRetryButton() {
-  const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const { isPending, onRetry } = useChatRetry();
 
   return (
     <Button disabled={isPending} onClick={onRetry} size="sm" variant="outline">
-      {t("retry")}
+      {tCommon("retry")}
     </Button>
   );
 }

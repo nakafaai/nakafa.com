@@ -68,6 +68,7 @@ const mentionArg = (mention: typeof MentionView.Type) =>
  */
 export function ForumComposer() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { channelId, classId, discussion, slug } = useChannelScope();
   const send = useMutation(classroom.forum.messages.send);
   const reply = useMutation(classroom.forum.threads.reply);
@@ -273,7 +274,7 @@ export function ForumComposer() {
             className="rounded-full"
             disabled={!ready}
             size="icon"
-            tooltip={t("send-message")}
+            tooltip={tCommon("send")}
             type="submit"
             variant="secondary"
           >

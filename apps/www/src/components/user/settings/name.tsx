@@ -32,6 +32,7 @@ const formSchema = Schema.toStandardSchemaV1(
  */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
   const updateUserName = useUpdateUserNameMutation();
   const latestSave = useRef(0);
   const form = useForm({
@@ -84,7 +85,7 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-name-form">
-      <CardSection description={t("name-description")} title={t("name")}>
+      <CardSection description={t("name-description")} title={tCommon("name")}>
         <CardContent>
           <form.Field name="name">
             {(field) => {
@@ -94,7 +95,7 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel className="sr-only" htmlFor="user-settings-name">
-                    {t("name")}
+                    {tCommon("name")}
                   </FieldLabel>
                   <Input
                     aria-invalid={isInvalid}

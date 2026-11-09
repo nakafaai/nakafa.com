@@ -145,6 +145,7 @@ export function SchoolClientsSettings() {
 function SchoolClientTable() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     integrations.clients.list,
@@ -163,11 +164,11 @@ function SchoolClientTable() {
       cell: (info) => (
         <TableTitle icon={Key01Icon}>{info.getValue()}</TableTitle>
       ),
-      header: t("client-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     clientColumns.values(scopeName, {
-      header: t("client-scope"),
+      header: t("grant-scope"),
       id: "scope",
       options: QueryResult.isSuccess(viewer)
         ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
@@ -177,15 +178,15 @@ function SchoolClientTable() {
       cell: (info) => (
         <TableStatus
           icon={CLIENT_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`client-${info.getValue()}`)}
+          label={t(`client.${info.getValue()}`)}
           tone={CLIENT_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("client-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(IntegrationStatus.literals, (status) => ({
         icon: CLIENT_STATUS_LOOKS[status].icon,
-        label: t(`client-${status}`),
+        label: t(`client.${status}`),
         value: status,
       })),
     }),
@@ -275,7 +276,7 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
           onClick={() => dialogs.show("revoke")}
           variant="destructive"
         >
-          {t("client-revoke")}
+          {t("grant-revoke")}
         </DropdownMenuItem>
       </RowItems>
       <ResponsiveDialog
@@ -292,7 +293,7 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
             type="button"
             variant="destructive"
           >
-            {t("client-revoke-confirm")}
+            {t("grant-revoke")}
           </Button>
         }
         description={t("client-revoke-description")}

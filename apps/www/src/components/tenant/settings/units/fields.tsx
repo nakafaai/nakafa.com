@@ -30,16 +30,16 @@ export function UnitNameField({
   onChange: (name: string) => void;
   value: string;
 }) {
-  const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
 
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{t("unit-add-name")}</FieldLabel>
+      <FieldLabel htmlFor={id}>{tCommon("name")}</FieldLabel>
       <Input
         id={id}
         maxLength={160}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={t("unit-add-name-placeholder")}
+        placeholder={tCommon("sma-harapan-bangsa")}
         value={value}
       />
     </Field>
@@ -61,7 +61,6 @@ export function UnitLevelField({
   value: Level;
 }) {
   const common = useTranslations("Common");
-  const t = useTranslations("SchoolSettings");
   const start = useTranslations("SchoolStart");
   const viewer = useViewerQuery();
   const country = QueryResult.isSuccess(viewer)
@@ -88,7 +87,7 @@ export function UnitLevelField({
   return (
     <SelectField
       items={items}
-      label={t("unit-add-level")}
+      label={common("level")}
       menu={common("menu-level")}
       onChoose={(next) => {
         const level = Schema.decodeUnknownOption(UnitLevel)(next);

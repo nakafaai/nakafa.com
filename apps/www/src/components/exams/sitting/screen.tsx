@@ -37,6 +37,7 @@ export function StudentScreen({
   readonly attemptId: GenericId.GenericId<"examAttempts">;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const titleId = useId();
   const { slug, value } = useSittingData();
   const read = useQuery(exams.screens.screen, {
@@ -73,7 +74,7 @@ export function StudentScreen({
       <section aria-labelledby={titleId} className="grid gap-3">
         <p className="text-muted-foreground text-sm">{t("screen-title")}</p>
         <h3 className="font-medium" id={titleId}>
-          {t("question", { number: screen.number })}
+          {tCommon("question", { number: screen.number })}
         </h3>
         <SittingDocument document={prompt} />
         {Option.isSome(choice) ? (

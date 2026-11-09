@@ -38,7 +38,7 @@ export function SchoolClassRestore({
   row: SchoolClass;
   slug: TenantSlug;
 }) {
-  const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const restore = useMutation(classroom.classes.restore).withOptimisticUpdate(
     restoreClassChange
   );
@@ -53,7 +53,7 @@ export function SchoolClassRestore({
           )
         }
       >
-        {t("class-restore")}
+        {tCommon("restore")}
       </DropdownMenuItem>
     </RowItems>
   );
@@ -72,6 +72,8 @@ export function SchoolClassMenu({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
+  const tSubject = useTranslations("Subject");
   const archive = useMutation(classroom.classes.archive).withOptimisticUpdate(
     archiveClassChange
   );
@@ -100,7 +102,7 @@ export function SchoolClassMenu({
           icon={PencilEdit02Icon}
           onClick={() => dialogs.show("rename")}
         >
-          {t("class-rename")}
+          {tCommon("rename")}
         </DropdownMenuItem>
         {row.subject === undefined ? null : (
           <DropdownMenuItem
@@ -140,7 +142,7 @@ export function SchoolClassMenu({
             )
           }
         >
-          {t("class-archive")}
+          {tCommon("archive")}
         </DropdownMenuItem>
       </RowItems>
       {dialogs.kind === "subject" ? (
@@ -149,7 +151,7 @@ export function SchoolClassMenu({
           initial={row.subject ?? ""}
           isValid={Schema.is(ClassSubject)}
           key={dialogs.key}
-          label={t("class-subject")}
+          label={tCommon("school-subject")}
           onSave={(subject) =>
             startTransition(() =>
               runSchoolWrite(
@@ -160,7 +162,7 @@ export function SchoolClassMenu({
             )
           }
           open={dialogs.isOpen("subject")}
-          placeholder={t("class-subject-placeholder")}
+          placeholder={tSubject("physics")}
           setOpen={dialogs.setOpen}
           title={t("class-subject-change")}
         />
@@ -174,12 +176,12 @@ export function SchoolClassMenu({
       />
       {dialogs.kind === "rename" ? (
         <LineDialog
-          action={t("class-rename-save")}
+          action={tCommon("save")}
           description={t("class-rename-description")}
           initial={row.name}
           isValid={Schema.is(ClassName)}
           key={dialogs.key}
-          label={t("class-name")}
+          label={tCommon("name")}
           onSave={(name) =>
             startTransition(() =>
               runSchoolWrite(
@@ -190,7 +192,7 @@ export function SchoolClassMenu({
           open={dialogs.isOpen("rename")}
           placeholder={t("class-name-placeholder")}
           setOpen={dialogs.setOpen}
-          title={t("class-rename")}
+          title={tCommon("rename")}
         />
       ) : null}
     </>

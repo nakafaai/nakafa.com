@@ -14,6 +14,7 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
  */
 export function Hero() {
   const t = useTranslations("Landing");
+  const tCommon = useTranslations("Common");
 
   return (
     <section
@@ -34,7 +35,7 @@ export function Hero() {
             className={buttonVariants({ size: "lg" })}
             to="/$locale/curricula"
           >
-            {t("hero-start")}
+            {tCommon("start-learning")}
           </Link>
           <Link
             activeOptions={EXACT_ACTIVE_OPTIONS}

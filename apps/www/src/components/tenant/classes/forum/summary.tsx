@@ -65,6 +65,7 @@ export function ThreadSummary({
   message: ForumMessage;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   const { classSlug, slug } = useClassScope();
   const { channelId } = useChannelScope();
@@ -111,7 +112,7 @@ export function ThreadSummary({
           <span className="font-semibold">
             {discussion.replies === 0
               ? t("thread-empty")
-              : t("discussion-replies", { count: discussion.replies })}
+              : tCommon("replies", { count: discussion.replies })}
           </span>
           {discussion.lastReplyAt === null ? null : (
             <span className="text-muted-foreground text-xs font-normal">

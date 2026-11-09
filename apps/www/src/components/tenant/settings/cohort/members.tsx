@@ -46,6 +46,7 @@ export function SchoolCohortMembers({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.cohorts.members,
@@ -67,12 +68,12 @@ export function SchoolCohortMembers({
   const columns = [
     memberColumns.text((member) => member.name, {
       cell: (info) => <TableName>{info.getValue()}</TableName>,
-      header: t("member-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     memberColumns.text((member) => member.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("member-email"),
+      header: tCommon("email"),
       id: "email",
     }),
     memberColumns.text((member) => member.login ?? "", {

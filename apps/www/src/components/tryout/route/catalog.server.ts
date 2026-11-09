@@ -67,7 +67,7 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
 export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
   function* (input: { readonly country: string; readonly locale: Locale }) {
     const countryPath = getTryoutPublicPath({ country: input.country });
-    const [page, hub, head, labels, tTryouts] = yield* Effect.all(
+    const [page, hub, head, labels, tCommon] = yield* Effect.all(
       [
         readTryoutCountryPage(input.locale, countryPath),
         readTryoutHubPage(input.locale),
@@ -78,7 +78,7 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
         }),
         readTryoutRouteLabels(input.locale),
         Effect.promise(() =>
-          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+          readServerTranslator({ locale: input.locale, namespace: "Common" })
         ),
       ],
       { concurrency: "unbounded" }
@@ -107,7 +107,7 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       head: head.value,
       kind: "found" as const,
       labels,
-      selectorLabel: tTryouts("country-selector-label"),
+      selectorLabel: tCommon("country"),
     };
   }
 );

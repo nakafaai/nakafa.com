@@ -67,7 +67,7 @@ export function OperatorConsole() {
               <>
                 <TableSearch placeholder={t("search")} />
                 <Button onClick={() => setIsOpening(true)} type="button">
-                  {t("open")}
+                  {common("school-open")}
                 </Button>
               </>
             ),
@@ -92,6 +92,7 @@ export function OperatorConsole() {
  */
 function OperatorSchools() {
   const t = useTranslations("Operators");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     operators.tenants.list,
@@ -135,15 +136,15 @@ function OperatorSchools() {
           {info.getValue()}
         </TableTitle>
       ),
-      header: t("name"),
+      header: tCommon("school"),
       id: "name",
     }),
     schoolColumns.text((school) => school.slug, {
-      header: t("address"),
+      header: tCommon("address"),
       id: "slug",
     }),
     schoolColumns.values((school) => t(`kind.${school.kind}`), {
-      header: t("kind-label"),
+      header: tCommon("type"),
       id: "kind",
       options: namedOptions(
         Arr.dedupe(
@@ -154,7 +155,7 @@ function OperatorSchools() {
     }),
     schoolColumns.number((school) => school.unitCount, {
       align: "end",
-      header: t("units"),
+      header: tCommon("units"),
       id: "units",
     }),
     schoolColumns.values((school) => school.status, {
@@ -165,7 +166,7 @@ function OperatorSchools() {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("status-label"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(TenantStatus.literals, (status) => ({
         icon: STATUS_LOOKS[status].icon,

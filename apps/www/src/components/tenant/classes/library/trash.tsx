@@ -94,6 +94,7 @@ const trashColumns = tableColumns<TrashRow>();
  */
 export function LibraryTrash() {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const format = useFormatter();
@@ -131,27 +132,27 @@ export function LibraryTrash() {
       cell: (info) => (
         <span className="flex items-center gap-2 font-medium">
           <HugeIcons
-            aria-label={t(`library-kind-${shownOf(info.row.original).kind}`)}
+            aria-label={t(`library-kind.${shownOf(info.row.original).kind}`)}
             className="text-muted-foreground size-4 shrink-0"
             icon={KIND_ICONS[shownOf(info.row.original).kind]}
           />
           <span dir="auto">{info.getValue()}</span>
         </span>
       ),
-      header: t("library-title"),
+      header: tCommon("title"),
       id: "title",
     }),
     trashColumns.values((row) => shownOf(row).kind, {
       cell: (info) => (
         <span className="text-muted-foreground">
-          {t(`library-kind-${info.getValue()}`)}
+          {t(`library-kind.${info.getValue()}`)}
         </span>
       ),
-      header: t("library-type"),
+      header: tCommon("type"),
       id: "kind",
       options: Arr.map(["folder", "pdf", "image", "link"] as const, (kind) => ({
         icon: KIND_ICONS[kind],
-        label: t(`library-kind-${kind}`),
+        label: t(`library-kind.${kind}`),
         value: kind,
       })),
     }),
@@ -161,7 +162,7 @@ export function LibraryTrash() {
           {info.getValue()}
         </span>
       ),
-      header: t("library-added-by"),
+      header: tCommon("added-by"),
       id: "author",
       options: namedOptions(
         Arr.dedupe(Arr.map(rows, (row) => shownOf(row).author)),
@@ -203,6 +204,7 @@ export function LibraryTrash() {
 /** The menu of a trashed row: Restore, and Delete forever, which asks first. */
 function TrashRowMenu({ row }: { row: TrashRow }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classId, slug } = useClassScope();
   const restoreItem = useMutation(classroom.library.restore);
   const purgeItem = useMutation(classroom.library.purge);
@@ -257,7 +259,7 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
       title={t("library-purge-title")}
     >
       <DropdownMenuItem icon={RotateLeft01Icon} onClick={restore}>
-        {t("library-restore")}
+        {tCommon("restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>
   );

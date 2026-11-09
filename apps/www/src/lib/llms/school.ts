@@ -55,6 +55,7 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
 ) {
   const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
   const t = createTranslator({ locale, messages, namespace: "SchoolSite" });
+  const tCommon = createTranslator({ locale, messages, namespace: "Common" });
   const pricing = cleanSlug === "school/pricing";
   const url = `${BASE_URL}/${locale}/${cleanSlug}`;
   const questions = pricing ? schoolPricingQuestions : schoolLandingQuestions;
@@ -65,10 +66,10 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
       const price =
         tier === "free"
           ? t("plan-trial", { days: SCHOOL_TRIAL_DAYS })
-          : `${everyCurrency(locale, (currency) => plan.monthly[currency])} ${t("plan-month")}`;
+          : `${everyCurrency(locale, (currency) => plan.monthly[currency])} ${tCommon("plan-month")}`;
       return Arr.join(
         [
-          `### ${t(`plan-${tier}`)}`,
+          `### ${t(`plan.${tier}`)}`,
           `- ${price}`,
           `- ${t("plan-accounts", { count: plan.accounts })}`,
           `- ${t(plan.creditsRenew ? "plan-credits-month" : "plan-credits-once", { count: plan.credits })}`,
@@ -84,7 +85,7 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
     const totals = Arr.map(
       SchoolPaidTierKey.literals,
       (tier) =>
-        `${t(`plan-${tier}`)} ${everyCurrency(locale, (currency) => schoolPeriodTotal(schoolTiers[tier].monthly[currency], period))}`
+        `${t(`plan.${tier}`)} ${everyCurrency(locale, (currency) => schoolPeriodTotal(schoolTiers[tier].monthly[currency], period))}`
     );
     return `- ${t("period-option", { months: period })}${discount > 0 ? ` (${t("value-discount", { months: period, percent: discount })})` : ""}: ${Arr.join(totals, "; ")}`;
   });
@@ -105,7 +106,7 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
     `- ${t("addon-credits-title", { count: credits.credits })}: ${everyCurrency(locale, (currency) => credits.price[currency])} ${t("addon-once")}. ${t("addon-credits-text", { months: SCHOOL_CREDIT_PACK_MONTHS })}`,
     ...Arr.map(["drive", "driveLarge"] as const, (key) => {
       const addOn = schoolAddOns[key];
-      return `- ${t("addon-drive-title", { size: formatBytes(addOn.storageMegabytes * 1_000_000, locale) })}: ${everyCurrency(locale, (currency) => addOn.price[currency])} ${t("plan-month")}. ${t("addon-drive-text")}`;
+      return `- ${t("addon-drive-title", { size: formatBytes(addOn.storageMegabytes * 1_000_000, locale) })}: ${everyCurrency(locale, (currency) => addOn.price[currency])} ${tCommon("plan-month")}. ${t("addon-drive-text")}`;
     }),
     t("tax-note"),
   ];
@@ -130,7 +131,7 @@ export const getSchoolLlmsText = Effect.fn("www.llms.school.text")(function* (
       `## ${t("faq-title")}`,
       ...Arr.map(
         questions,
-        (key) => `### ${t(`faq-${key}-question`)}\n\n${t(`faq-${key}-answer`)}`
+        (key) => `### ${t(`faq.${key}.question`)}\n\n${t(`faq.${key}.answer`)}`
       ),
     ],
     "\n\n"

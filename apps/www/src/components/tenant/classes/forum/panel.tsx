@@ -68,7 +68,7 @@ export function EmojiPanel({
     (section) => ({
       emojis: section.emojis,
       key: section.category,
-      label: t(`emoji-${section.category}`),
+      label: t(`emoji.${section.category}`),
     })
   );
   const found = matchEmoji(emojis, query);
@@ -79,7 +79,7 @@ export function EmojiPanel({
       : Arr.match(found, {
           onEmpty: () => [],
           onNonEmpty: (held) => [
-            { emojis: held, key: "results", label: t("emoji-results") },
+            { emojis: held, key: "results", label: common("search-results") },
           ],
         });
   const shown = Arr.flatMap(sections, (section) => section.emojis);
@@ -163,7 +163,7 @@ export function EmojiPanel({
         ))}
       </div>
       <div
-        aria-label={t("emoji-list")}
+        aria-label={common("emoji")}
         className="h-56 overflow-y-auto overscroll-contain px-2 pb-2"
         id={`${id}-list`}
         ref={list}
@@ -254,7 +254,7 @@ function CategoryTab({
   onPress: () => void;
 }) {
   const t = useTranslations("Classroom");
-  const label = t(`emoji-${category}`);
+  const label = t(`emoji.${category}`);
 
   return (
     <Button

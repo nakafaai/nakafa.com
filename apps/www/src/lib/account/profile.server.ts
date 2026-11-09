@@ -90,12 +90,17 @@ export const profileChatHandler = accountHandler(
         messages: yield* messagesFor(locale),
         namespace: "Auth",
       });
+      const tCommon = createTranslator({
+        locale,
+        messages: yield* messagesFor(locale),
+        namespace: "Common",
+      });
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}${profileHref(Str.toLowerCase(username))}/chat`,
         description: t("chat-description"),
         indexable: false,
         locale,
-        title: t("chat"),
+        title: tCommon("chat"),
       };
       return { first, now, seo };
     })

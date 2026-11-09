@@ -84,7 +84,7 @@ export function ServiceFilter({
           value={Option.getOrElse(category, () => ALL)}
         >
           <DropdownMenuRadioItem icon={CATEGORY_ICONS[ALL]} value={ALL}>
-            {t("category-all")}
+            {common("all")}
           </DropdownMenuRadioItem>
           {Arr.map(directoryCategories(services), (shown) => (
             <DropdownMenuRadioItem
@@ -92,7 +92,7 @@ export function ServiceFilter({
               key={shown}
               value={shown}
             >
-              {t(`category-${shown}`)}
+              {t(`category.${shown}`)}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

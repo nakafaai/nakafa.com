@@ -129,7 +129,7 @@ function TableSketch({
         }))}
         disabled
         label={table.label}
-        statementLabel={t("statement-placeholder")}
+        statementLabel={t("placeholder.statement")}
         statements={Arr.map(table.statements, (statement) => ({
           id: statement.id,
           label: (

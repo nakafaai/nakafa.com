@@ -29,6 +29,7 @@ const REPORT_AVERAGE =
  */
 export function SchoolReports() {
   const t = useTranslations("SchoolSite");
+  const tCommon = useTranslations("Common");
   const tSubject = useTranslations("Subject");
   const format = useFormatter();
 
@@ -63,7 +64,7 @@ export function SchoolReports() {
               step: 5,
             })}
           >
-            <dt className="text-sm font-medium">{t("demo-report-average")}</dt>
+            <dt className="text-sm font-medium">{tCommon("average")}</dt>
             <dd className="text-sm font-medium tabular-nums">
               {format.number(REPORT_AVERAGE)}
             </dd>

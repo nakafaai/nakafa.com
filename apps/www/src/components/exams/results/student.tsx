@@ -39,11 +39,12 @@ function AnswerItem({
   readonly question: (typeof StudentResult.Type)["questions"][number];
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
 
   return (
     <li className="grid gap-1">
       <div className="flex justify-between gap-4">
-        <span>{t("question", { number: question.number })}</span>
+        <span>{tCommon("question", { number: question.number })}</span>
         <span>{t(verdictKeys[question.verdict])}</span>
       </div>
       <span className="text-muted-foreground">

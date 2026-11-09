@@ -136,6 +136,7 @@ function CohortGraduationBody() {
 /** The students of a graduating class group, read a page at a time, beside the open student; or the empty state. */
 function GraduationStudents() {
   const t = useTranslations("SchoolGraduation");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   const args = useCohortArgs();
   const pagination = usePaginatedQuery(records.graduations.sheet, args, {
@@ -154,7 +155,7 @@ function GraduationStudents() {
     }),
     lineColumns.text((line) => line.student.email ?? "", {
       cell: (info) => <TableText>{info.getValue()}</TableText>,
-      header: t("email"),
+      header: tCommon("email"),
       id: "email",
     }),
     lineColumns.number(averageOf, {
@@ -164,7 +165,7 @@ function GraduationStudents() {
         ) : (
           <span className="tabular-nums">{twoDecimals(info.getValue())}</span>
         ),
-      header: t("average"),
+      header: tCommon("average"),
       id: "average",
     }),
     lineColumns.values(letterStateOf, {
@@ -188,7 +189,7 @@ function GraduationStudents() {
           {(value) => (
             <TableStatus
               icon={READY_LOOKS[value].icon}
-              label={t(`ready-${value}`)}
+              label={t(`ready-label.${value}`)}
               tone={READY_LOOKS[value].tone}
             />
           )}
@@ -200,7 +201,7 @@ function GraduationStudents() {
         ["ready", "npsn", "decision", "nisn", "report"] as const,
         (value) => ({
           icon: READY_LOOKS[value].icon,
-          label: t(`ready-${value}`),
+          label: t(`ready-label.${value}`),
           value,
         })
       ),

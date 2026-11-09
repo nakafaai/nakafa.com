@@ -24,8 +24,8 @@ test("a learner renames themselves in settings: the new name shows before the se
     Effect.gen(function* () {
       const { changes } = yield* openChatPage(page, origin);
       const form = page.locator("#user-settings-name-form");
-      const field = form.getByRole("textbox", { name: app.Auth.name });
-      const save = form.getByRole("button", { name: app.Auth.save });
+      const field = form.getByRole("textbox", { name: app.Common.name });
+      const save = form.getByRole("button", { name: app.Common.save });
       const account = (name: string) =>
         page.locator('[data-sidebar="footer"]').getByRole("button", { name });
 

@@ -33,6 +33,7 @@ export function SchoolSecretDialog({
   title: string;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 1500 });
 
   return (
@@ -46,7 +47,7 @@ export function SchoolSecretDialog({
           }}
           type="button"
         >
-          {t("secret-copy")}
+          {tCommon("copy")}
         </Button>
       }
       description={description}

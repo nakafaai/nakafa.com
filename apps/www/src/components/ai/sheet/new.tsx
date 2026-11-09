@@ -63,14 +63,16 @@ function NewChatSurface() {
 
 /** Nina's welcome to a new chat. */
 function NewChatWelcome() {
-  const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
 
   return (
     <MessageScrollerItem className="flex flex-1" messageId="welcome">
       <Empty>
         <EmptyHeader>
           <EmptyNina act="cheering" />
-          <EmptyTitle className="text-chat">{t("new-chat-title")}</EmptyTitle>
+          <EmptyTitle className="text-chat">
+            {tCommon("what-do-you-want-to-learn")}
+          </EmptyTitle>
         </EmptyHeader>
       </Empty>
     </MessageScrollerItem>

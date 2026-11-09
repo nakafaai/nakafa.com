@@ -84,7 +84,7 @@ interface PointsFieldProps {
  * change. A value the teacher did not change saves nothing.
  */
 function PointsField({ editable, points, questionId }: PointsFieldProps) {
-  const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { exam, slug } = useExam();
   const id = useId();
   const save = useMutation(exams.questions.points).withOptimisticUpdate(
@@ -108,7 +108,7 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
 
   return (
     <Field orientation="horizontal">
-      <FieldLabel htmlFor={id}>{t("points")}</FieldLabel>
+      <FieldLabel htmlFor={id}>{tCommon("score-points")}</FieldLabel>
       <NumberField
         className="w-32"
         disabled={!editable}

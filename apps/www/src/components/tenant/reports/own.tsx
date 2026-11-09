@@ -68,6 +68,7 @@ export function SchoolOwnReports() {
 /** The table of the viewer's report cards, or the sentence of a viewer who has none locked yet. */
 function OwnReportTable() {
   const t = useTranslations("SchoolReports");
+  const tCommon = useTranslations("Common");
   const formatZone = useFormatTimeZone();
   const format = useFormatter();
   const locale = useLocale();
@@ -85,11 +86,11 @@ function OwnReportTable() {
       cell: (info) => (
         <TableTitle icon={UserGroupIcon}>{info.getValue()}</TableTitle>
       ),
-      header: t("cohort"),
+      header: tCommon("class-group"),
       id: "cohort",
     }),
     cardColumns.values((card) => card.period, {
-      header: t("period"),
+      header: tCommon("period"),
       id: "period",
       options: namedOptions(periods, PERIOD_ICONS),
     }),

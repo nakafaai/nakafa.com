@@ -99,7 +99,7 @@ function RetryCourses() {
 
 /** Opens the school's classes, because a course only fills a class that exists. */
 function OpenClasses() {
-  const t = useTranslations("Connectors");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
 
   return (
@@ -108,7 +108,7 @@ function OpenClasses() {
       params={{ slug }}
       to="/school/$slug/settings/classes"
     >
-      {t("courses-no-class-action")}
+      {tCommon("open-classrooms")}
     </Link>
   );
 }
@@ -132,6 +132,7 @@ const courseColumns = tableColumns<Course>();
  */
 function CourseTable({ preview }: { preview: Preview }) {
   const t = useTranslations("Connectors");
+  const tCommon = useTranslations("Common");
   const classOf = (course: Course) =>
     course.classId === null
       ? t("course-unlinked")
@@ -143,7 +144,7 @@ function CourseTable({ preview }: { preview: Preview }) {
             ),
             (klass) => klass.name
           ),
-          () => t("course-archived")
+          () => tCommon("archived")
         );
 
   if (Arr.isReadonlyArrayEmpty(preview.courses)) {
@@ -201,7 +202,7 @@ function CourseTable({ preview }: { preview: Preview }) {
                 {info.getValue()}
               </span>
             ),
-            header: t("course-class"),
+            header: tCommon("class"),
             id: "class",
             options: namedOptions(
               Arr.dedupe(Arr.map(preview.courses, classOf)),
@@ -212,7 +213,7 @@ function CourseTable({ preview }: { preview: Preview }) {
             cell: (info) => (
               <span className="text-muted-foreground">{info.getValue()}</span>
             ),
-            header: t("course-students"),
+            header: tCommon("pupils"),
             id: "students",
           }),
           courseColumns.menu(({ row: { original: course } }) => (
@@ -274,7 +275,7 @@ function CourseClass({
   return (
     <DropdownMenuSub>
       <DropdownMenuSubTrigger icon={Mortarboard01Icon}>
-        {t("course-class")}
+        {common("class")}
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="w-56" label={common("menu-class")}>
         <DropdownMenuRadioGroup
@@ -301,7 +302,7 @@ function CourseClass({
 
 /** Imports the students of a linked course into the class group of its class. */
 function CourseRosterImport({ courseId }: { courseId: string }) {
-  const t = useTranslations("Connectors");
+  const tCommon = useTranslations("Common");
   const { slug } = useTenant();
   const importRoster = useAction(connectors.classroom.importRoster);
   const [isImporting, startImporting] = useTransition();
@@ -322,7 +323,7 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
         )
       }
     >
-      {t("course-import")}
+      {tCommon("import-students")}
     </DropdownMenuItem>
   );
 }

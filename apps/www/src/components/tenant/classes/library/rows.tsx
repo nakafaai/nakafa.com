@@ -138,6 +138,7 @@ export function LibraryRows({
   pending: readonly LibraryUpload[];
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const formatZone = useFormatTimeZone();
   const format = useFormatter();
 
@@ -149,20 +150,20 @@ export function LibraryRows({
   const columns = [
     libraryColumns.text((row) => shownOf(row).title, {
       cell: (info) => <LibraryTitle row={info.row.original} />,
-      header: t("library-title"),
+      header: tCommon("title"),
       id: "title",
     }),
     libraryColumns.values((row) => shownOf(row).kind, {
       cell: (info) => (
         <span className="text-muted-foreground">
-          {t(`library-kind-${info.getValue()}`)}
+          {t(`library-kind.${info.getValue()}`)}
         </span>
       ),
-      header: t("library-type"),
+      header: tCommon("type"),
       id: "kind",
       options: Arr.map(["folder", "pdf", "image", "link"] as const, (kind) => ({
         icon: KIND_ICONS[kind],
-        label: t(`library-kind-${kind}`),
+        label: t(`library-kind.${kind}`),
         value: kind,
       })),
     }),
@@ -172,7 +173,7 @@ export function LibraryRows({
           {info.getValue()}
         </span>
       ),
-      header: t("library-added-by"),
+      header: tCommon("added-by"),
       id: "author",
       options: namedOptions(
         Arr.dedupe(Arr.map(rows, (row) => shownOf(row).author)),
@@ -303,7 +304,7 @@ function LibraryTitle({ row }: { row: LibraryRow }) {
       ref={ref}
     >
       <HugeIcons
-        aria-label={t(`library-kind-${shown.kind}`)}
+        aria-label={t(`library-kind.${shown.kind}`)}
         className="text-muted-foreground size-4 shrink-0"
         icon={KIND_ICONS[shown.kind]}
       />
@@ -389,7 +390,7 @@ function LibraryRowMenu({ row }: { row: LibraryRow }) {
 
 /** The menu item that opens a saved folder on its own page. */
 function LibraryOpen({ folder }: { folder: LibraryFolder }) {
-  const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const { classSlug, slug } = useClassScope();
 
   return (
@@ -397,7 +398,7 @@ function LibraryOpen({ folder }: { folder: LibraryFolder }) {
       icon={ArrowRight01Icon}
       render={<Link {...schoolClassFolderTarget(slug, classSlug, folder.id)} />}
     >
-      {t("library-open")}
+      {tCommon("open")}
     </DropdownMenuItem>
   );
 }

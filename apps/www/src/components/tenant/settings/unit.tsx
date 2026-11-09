@@ -31,7 +31,6 @@ export function SchoolUnitChoice({
   units: readonly { readonly id: UnitId; readonly name: string }[];
 }) {
   const common = useTranslations("Common");
-  const t = useTranslations("SchoolSettings");
   const items = Arr.map(units, (unit) => ({
     label: unit.name,
     value: unit.id,
@@ -49,7 +48,7 @@ export function SchoolUnitChoice({
       value={unitId}
     >
       <SelectTrigger
-        aria-label={t("unit-choice")}
+        aria-label={common("school")}
         className="w-auto max-w-28 sm:max-w-xs @max-sm/header:max-w-16 @max-xs/header:max-w-10"
       >
         <SelectValue />

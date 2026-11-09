@@ -18,8 +18,8 @@ export function TryoutScoreMetrics({ score }: { score: TryoutScoreResult }) {
   const tTryouts = useTranslations("Tryouts");
   const scoreLabel = tTryouts(
     score.scoreStatus === "provisional"
-      ? "score-label-estimated"
-      : "score-label-standard"
+      ? "score-label.estimated"
+      : "score-label.standard"
   );
 
   return (

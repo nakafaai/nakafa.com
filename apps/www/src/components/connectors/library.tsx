@@ -54,7 +54,7 @@ export function ServiceList({
     isShown(service, category, search, [
       t(service.key),
       t(`${service.key}-line`),
-      t(`holder-${holderOf(service)}`),
+      t(`holder.${holderOf(service)}`),
       service.provider,
     ])
   );

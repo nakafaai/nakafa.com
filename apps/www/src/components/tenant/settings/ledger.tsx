@@ -51,6 +51,7 @@ export function SchoolInvoices({
   billing: SchoolBilling;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const format = useFormatter();
   const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
@@ -81,13 +82,13 @@ export function SchoolInvoices({
             }),
             invoiceColumns.number((invoice) => invoice.accounts, {
               cell: (info) => format.number(info.getValue()),
-              header: t("invoice-accounts"),
+              header: tCommon("accounts"),
               id: "accounts",
             }),
             invoiceColumns.number((invoice) => invoice.total, {
               cell: (info) =>
                 formatMinorAmount(info.getValue(), info.row.original.currency),
-              header: t("invoice-total"),
+              header: tCommon("total"),
               id: "total",
             }),
             invoiceColumns.days((invoice) => invoice.dueAt, {
@@ -100,16 +101,16 @@ export function SchoolInvoices({
               cell: (info) => (
                 <TableStatus
                   {...INVOICE_LOOKS[info.getValue()]}
-                  label={t(`invoice-${info.getValue()}`)}
+                  label={t(`invoice.${info.getValue()}`)}
                 />
               ),
-              header: t("invoice-status"),
+              header: tCommon("state"),
               id: "status",
               options: Arr.map(
                 Rec.toEntries(INVOICE_LOOKS),
                 ([status, look]) => ({
                   icon: look.icon,
-                  label: t(`invoice-${status}`),
+                  label: t(`invoice.${status}`),
                   value: status,
                 })
               ),
@@ -139,7 +140,7 @@ function SchoolInvoiceMenu({
   invoice: SchoolBilling["invoices"][number];
   now: number;
 }) {
-  const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const { slug } = useTenant();
   const draw = useAction(billing.receipts.school);
@@ -157,7 +158,7 @@ function SchoolInvoiceMenu({
           }
         }}
       >
-        {t("invoice-download")}
+        {tCommon("download-invoice")}
       </DropdownMenuItem>
       {invoice.status === "open" && hasNumber ? (
         <SchoolInvoicePay

@@ -119,6 +119,7 @@ function SchoolInvitesBody() {
 /** The invites in a data table, or the table's empty state when there is none. */
 function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const formatZone = useFormatTimeZone();
   const tSchool = useTranslations("School");
   const timeZone = useSchoolTimeZone();
@@ -127,11 +128,11 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     // The name with the address after it, so the header's search finds an invitee by either; the cell shows the name.
     inviteColumns.text((invite) => `${invite.name} ${invite.email}`, {
       cell: (info) => <TableName>{info.row.original.name}</TableName>,
-      header: t("invite-name"),
+      header: tCommon("name"),
       id: "name",
     }),
     inviteColumns.text((invite) => invite.email, {
-      header: t("invite-email"),
+      header: tCommon("email"),
       id: "email",
     }),
     inviteColumns.list((invite) => invite.roles, {
@@ -140,7 +141,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
           {(role) => <RoleBadge role={role} />}
         </TableList>
       ),
-      header: t("invite-role"),
+      header: tCommon("role"),
       id: "role",
       options: Arr.map(
         Arr.dedupe(Arr.flatMap(invites, (invite) => invite.roles)),
@@ -162,7 +163,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
         ) : (
           <SchoolDateTime at={info.getValue()} />
         ),
-      header: t("invite-expires"),
+      header: tCommon("expires"),
       id: "expires",
       timeZone: () => Option.getOrElse(timeZone, formatZone),
     }),
@@ -200,6 +201,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
 function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
   );
@@ -277,7 +279,7 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
             }
           }}
         >
-          {t("invite-resend")}
+          {tCommon("send-again")}
         </DropdownMenuItem>
         {isExpired ? null : (
           <>
@@ -302,7 +304,7 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
               onClick={() => dialogs.show("revoke")}
               variant="destructive"
             >
-              {t("invite-revoke")}
+              {t("grant-revoke")}
             </DropdownMenuItem>
           </>
         )}
@@ -321,7 +323,7 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
             type="button"
             variant="destructive"
           >
-            {t("invite-revoke-confirm")}
+            {t("grant-revoke")}
           </Button>
         }
         description={t("invite-revoke-description")}
@@ -351,7 +353,7 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
           initial={invite.email}
           isValid={Schema.is(Email)}
           key={dialogs.key}
-          label={t("invite-email")}
+          label={tCommon("email")}
           onSave={readdressTo}
           open={dialogs.isOpen("readdress")}
           placeholder={t("invite-email-placeholder")}

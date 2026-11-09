@@ -25,10 +25,11 @@ export function CohortNameField({
   value: string;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
 
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{t("cohort-name")}</FieldLabel>
+      <FieldLabel htmlFor={id}>{tCommon("name")}</FieldLabel>
       <Input
         id={id}
         onChange={(event) => onChange(event.target.value)}

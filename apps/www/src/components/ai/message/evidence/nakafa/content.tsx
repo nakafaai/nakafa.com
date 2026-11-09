@@ -12,11 +12,11 @@ interface Props {
  * its title in two lines at most and its description in two smaller ones.
  */
 export function ContentPart({ message }: Props) {
-  const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const { description, title, url } = message.result;
 
   return (
-    <Step icon={nakafaIcons.content} label={t("nakafa-content")}>
+    <Step icon={nakafaIcons.content} label={tCommon("material")}>
       <a
         className="group/content focus-visible:ring-ring flex min-w-0 flex-col rounded-sm outline-none focus-visible:ring-2"
         href={url}

@@ -258,6 +258,7 @@ function FigureForm({
   readonly pending: PendingFigure;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const [draft, setDraft] = useState(pending.draft);
   const [open, setOpen] = useState(true);
@@ -289,7 +290,7 @@ function FigureForm({
     <ResponsiveDialog
       action={
         <Button disabled={Option.isNone(made)} onClick={save}>
-          {t("figure-save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("figure-description")}
@@ -303,7 +304,7 @@ function FigureForm({
       title={t(FIGURE_NAME[draft.kind])}
     >
       <FieldGroup>
-        <FigureField id={`${id}-title`} label={t("figure-name")}>
+        <FigureField id={`${id}-title`} label={tCommon("name")}>
           <Input
             dir="auto"
             id={`${id}-title`}

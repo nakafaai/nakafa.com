@@ -109,7 +109,7 @@ export function TenantAccountItems({
               icon={SchoolIcon}
               render={<TargetLink target={settings.value} />}
             >
-              {t("SchoolSettings.manage-settings")}
+              {t("Common.settings")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </>
@@ -130,7 +130,7 @@ export function TenantAccountItems({
             </a>
           )}
         >
-          {t("School.back-to-learning")}
+          {t("Common.back-to-nakafa")}
         </DropdownMenuItem>
       </DropdownMenuGroup>
     </>

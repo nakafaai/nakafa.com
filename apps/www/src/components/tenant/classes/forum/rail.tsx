@@ -228,7 +228,7 @@ function ChatFilters({ filter }: { filter: typeof ChatFilter.Type }) {
     >
       {Arr.map(CHAT_FILTERS, (value) => (
         <ToggleGroupItem key={value} value={value}>
-          {t(`chat-filter-${value}`)}
+          {t(`chat-filter-label.${value}`)}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>
@@ -237,7 +237,7 @@ function ChatFilters({ filter }: { filter: typeof ChatFilter.Type }) {
 
 /** Opens the archived chats, from under the list, as WhatsApp keeps them apart from its filters. */
 function ArchivedChats({ shown }: { shown: boolean }) {
-  const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const choose = useTableFilters((state) => state.choose);
 
   return (
@@ -249,7 +249,7 @@ function ArchivedChats({ shown }: { shown: boolean }) {
         variant={shown ? "secondary" : "ghost"}
       >
         <HugeIcons icon={Archive02Icon} />
-        {t("chat-filter-archived")}
+        {tCommon("archived")}
       </Button>
     </div>
   );

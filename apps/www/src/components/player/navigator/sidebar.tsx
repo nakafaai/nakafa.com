@@ -13,7 +13,7 @@ import { PaneHeader } from "@/components/shared/pane";
  * number in view. The page never moves for it.
  */
 export function PlayerSidebar({ children }: { children: ReactNode }) {
-  const t = useTranslations("Player");
+  const tCommon = useTranslations("Common");
   const current = usePlayer((state) => state.current);
   const column = useRef<HTMLDivElement>(null);
 
@@ -39,7 +39,7 @@ export function PlayerSidebar({ children }: { children: ReactNode }) {
       className="hidden h-full min-h-0 w-full min-w-0 flex-col lg:flex"
       data-player-sidebar=""
     >
-      <PaneHeader title={t("navigator")} />
+      <PaneHeader title={tCommon("exam-questions")} />
       <ScrollArea viewportClassName="relative" viewportRef={column}>
         <div className="flex flex-col gap-4 px-6 py-4">
           {children}

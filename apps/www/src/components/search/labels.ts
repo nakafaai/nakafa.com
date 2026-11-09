@@ -7,11 +7,10 @@ export function useSearchSectionLabels(): Record<
   string
 > {
   const tCommon = useTranslations("Common");
-  const tArticles = useTranslations("Articles");
   const tHoly = useTranslations("Holy");
 
   return {
-    articles: tArticles("articles"),
+    articles: tCommon("articles"),
     material: tCommon("material"),
     quran: tHoly("quran"),
     tryout: tCommon("try-out"),

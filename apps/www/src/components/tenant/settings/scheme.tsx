@@ -72,6 +72,7 @@ export function SchemeVersionDialog({
   editing: Option.Option<SchemeVersion>;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const { newest, ready } = use(SchemeVersionsContext);
   const { slug } = useTenant();
   const id = useId();
@@ -150,12 +151,12 @@ export function SchemeVersionDialog({
       )}
       open={open}
       setOpen={setOpen}
-      title={t(Option.isSome(editing) ? "grading-edit" : "grading-new")}
+      title={Option.isSome(editing) ? tCommon("edit") : t("grading-new")}
     >
       <FieldSet disabled={!ready}>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor={`${id}-kktp`}>{t("grading-kktp")}</FieldLabel>
+            <FieldLabel htmlFor={`${id}-kktp`}>{tCommon("kktp")}</FieldLabel>
             <NumberField
               id={`${id}-kktp`}
               max={100}
@@ -174,7 +175,7 @@ export function SchemeVersionDialog({
             <div className="flex items-end gap-3" key={band.key}>
               <Field className="min-w-0 flex-1">
                 <FieldLabel htmlFor={`${id}-${band.key}-label`}>
-                  {t("grading-band-label")}
+                  {tCommon("band")}
                 </FieldLabel>
                 <Input
                   id={`${id}-${band.key}-label`}

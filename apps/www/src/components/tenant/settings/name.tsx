@@ -38,6 +38,7 @@ export function SchoolNameCard({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const inputId = useId();
   const ruleId = useId();
   const rename = useMutation(tenancy.settings.setName).withOptimisticUpdate(
@@ -59,7 +60,7 @@ export function SchoolNameCard({
     <CardSection description={t("name-description")} title={t("name-title")}>
       <CardContent>
         <Field>
-          <FieldLabel htmlFor={inputId}>{t("name-label")}</FieldLabel>
+          <FieldLabel htmlFor={inputId}>{tCommon("name")}</FieldLabel>
           <Input
             aria-describedby={ruleId}
             aria-invalid={invalid}
@@ -68,7 +69,7 @@ export function SchoolNameCard({
             id={inputId}
             maxLength={120}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder={t("name-placeholder")}
+            placeholder={tCommon("harapan-bangsa")}
             value={draft}
           />
           <FieldDescription id={ruleId}>{t("name-invalid")}</FieldDescription>
@@ -87,7 +88,7 @@ export function SchoolNameCard({
             type="button"
             variant="outline"
           >
-            {t("save")}
+            {tCommon("save")}
           </Button>
         </CardSectionActions>
       </CardSectionFooter>

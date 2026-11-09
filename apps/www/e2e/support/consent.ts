@@ -92,6 +92,13 @@ const PROMPT_LABELS = {
   id: id.AnalyticsConsent,
 };
 
+/** The words that every page shares, in each language of the prompt, where its two choices live. */
+const CHOICE_LABELS = {
+  de: de.Common,
+  en: en.Common,
+  id: id.Common,
+};
+
 /** A language of the site whose usage-data prompt a test can answer. */
 export type PromptLocale = keyof typeof PROMPT_LABELS;
 
@@ -103,7 +110,7 @@ const promptButton = (
 ) =>
   page.getByRole("button", {
     exact: true,
-    name: PROMPT_LABELS[locale][choice],
+    name: CHOICE_LABELS[locale][choice],
   });
 
 /** Presses one button of the usage-data prompt and waits until the prompt is gone. */

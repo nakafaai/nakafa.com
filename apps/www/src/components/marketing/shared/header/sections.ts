@@ -39,7 +39,7 @@ export const HEADER_SECTIONS = [
   {
     groups: [
       {
-        label: "Marketing.explore",
+        label: "Common.explore",
         links: [
           {
             icon: Books02Icon,
@@ -78,7 +78,7 @@ export const HEADER_SECTIONS = [
           },
           {
             icon: Diamond02Icon,
-            label: "Marketing.pricing",
+            label: "Common.pricing",
             target: PRICING_TARGET,
           },
           {
@@ -103,7 +103,7 @@ export const HEADER_SECTIONS = [
         links: Arr.map(SCHOOL_FEATURES, (feature) => ({
           hash: feature.key,
           icon: feature.icon,
-          label: `Marketing.school-${feature.key}` as const,
+          label: `Marketing.feature.${feature.key}` as const,
           target: SCHOOL_TARGET,
         })),
         wide: true,
@@ -118,7 +118,7 @@ export const HEADER_SECTIONS = [
           },
           {
             icon: Diamond02Icon,
-            label: "Marketing.pricing",
+            label: "Common.pricing",
             target: SCHOOL_PRICING_TARGET,
           },
           {
@@ -136,7 +136,7 @@ export const HEADER_SECTIONS = [
       },
     ],
     key: "school",
-    label: "Marketing.school",
+    label: "Common.school",
   },
 ] as const;
 

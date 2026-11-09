@@ -146,7 +146,7 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
   yield* Effect.promise(() => page.goto(section.href, { waitUntil: "commit" }));
   const start = page.locator("main").getByRole("button", {
     exact: true,
-    name: section.messages.Tryouts["start-cta"],
+    name: section.messages.Tryouts.action["start-cta"],
   });
   yield* Effect.promise(() =>
     expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
@@ -325,7 +325,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
           await page.goto(SET_HREF, { waitUntil: "commit" });
           const start = page.locator("main").getByRole("button", {
             exact: true,
-            name: messages["start-cta"],
+            name: messages.action["start-cta"],
           });
           await expect(start).toBeEnabled({
             timeout: readinessTimeoutMilliseconds,
@@ -342,7 +342,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
           await expect(
             page.locator("main").getByRole("link", {
               exact: true,
-              name: messages["continue-cta"],
+              name: messages.action["continue-cta"],
             })
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         });
@@ -354,7 +354,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
           )
         );
         yield* Effect.sync(() => {
-          expect(names).toEqual([messages["continue-cta"]]);
+          expect(names).toEqual([messages.action["continue-cta"]]);
         });
       })
     )
@@ -395,7 +395,7 @@ test("a press while the learner read is pending starts the section it brings", a
           await page.goto(SET_HREF, { waitUntil: "commit" });
           const start = page.locator("main").getByRole("button", {
             exact: true,
-            name: messages["start-cta"],
+            name: messages.action["start-cta"],
           });
           await expect(start).toBeEnabled({
             timeout: readinessTimeoutMilliseconds,

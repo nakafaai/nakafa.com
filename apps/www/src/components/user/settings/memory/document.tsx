@@ -125,7 +125,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
       <header className="flex min-h-16 items-center gap-2 border-b px-4 py-2.5">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <input
-            aria-label={t("title")}
+            aria-label={common("title")}
             className="placeholder:text-muted-foreground hover:bg-muted focus-visible:bg-muted -mx-1.5 min-w-0 truncate rounded-sm bg-transparent px-1.5 py-0.5 font-semibold transition-colors ease-out outline-none"
             dir="auto"
             maxLength={MEMORY_TITLE_LIMIT}
@@ -184,7 +184,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               arabic: labels("arabic"),
               bold: labels("bold"),
               bullets: labels("bullets"),
-              code: labels("code"),
+              code: common("code"),
               codeBlock: labels("code-block"),
               divider: labels("divider"),
               heading1: labels("heading-1"),
@@ -192,20 +192,20 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               heading3: labels("heading-3"),
               highlight: labels("highlight"),
               italic: labels("italic"),
-              link: labels("link"),
+              link: common("link"),
               linkInvalid: labels("link-invalid"),
               linkPlaceholder: labels("link-placeholder"),
-              more: labels("more"),
+              more: common("more"),
               numbers: labels("numbers"),
               quote: labels("quote"),
-              redo: labels("redo"),
+              redo: common("redo"),
               strike: labels("strike"),
               style: labels("style"),
               styleMenu: labels("menu-style"),
               tasks: labels("tasks"),
               text: labels("text"),
               underline: labels("underline"),
-              undo: labels("undo"),
+              undo: common("undo"),
             }}
             limit={MEMORY_TEXT_LIMIT}
             onChange={(text) => write({ ...draft, text })}

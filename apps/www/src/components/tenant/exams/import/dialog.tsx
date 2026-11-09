@@ -37,6 +37,7 @@ export function ImportQuestions({
   open: boolean;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { exam, slug } = useExam();
   const importFile = useImportFile(slug);
   const importForm = useImportForm(slug);
@@ -58,7 +59,7 @@ export function ImportQuestions({
             Effect.runFork(importFile(exam.id, file));
           }}
         >
-          {t("import-submit")}
+          {tCommon("import")}
         </Button>
       }
       description={t("import-dialog-description")}

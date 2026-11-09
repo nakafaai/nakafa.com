@@ -123,7 +123,7 @@ export function SchoolClientCreateDialog({
           type="button"
         >
           <Spinner icon={Add01Icon} isLoading={isPending} />
-          {t("client-create")}
+          {common("create")}
         </Button>
       }
       description={t("client-add-description")}
@@ -133,7 +133,7 @@ export function SchoolClientCreateDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-name`}>{t("client-name")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-name`}>{common("name")}</FieldLabel>
           <Input
             id={`${id}-name`}
             onChange={(event) => setName(event.target.value)}
@@ -143,7 +143,7 @@ export function SchoolClientCreateDialog({
         </Field>
         <SelectField
           items={scopeItems}
-          label={t("client-scope")}
+          label={t("grant-scope")}
           menu={common("menu-scope")}
           onChoose={setScope}
           value={scope}
@@ -213,6 +213,7 @@ export function SchoolClientEditDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const id = useId();
   const update = useMutation(integrations.clients.update).withOptimisticUpdate(
     updateClientChange
@@ -255,7 +256,7 @@ export function SchoolClientEditDialog({
           onClick={save}
           type="button"
         >
-          {t("save")}
+          {tCommon("save")}
         </Button>
       }
       description={t("client-edit-description")}
@@ -265,7 +266,7 @@ export function SchoolClientEditDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-name`}>{t("client-name")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-name`}>{tCommon("name")}</FieldLabel>
           <Input
             dir="auto"
             id={`${id}-name`}

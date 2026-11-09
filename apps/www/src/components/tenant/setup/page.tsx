@@ -42,6 +42,7 @@ const nameOf = (locale: string, type: Intl.DisplayNamesType, code: string) =>
 export function SchoolSetup() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const state = useQuery(tenancy.setup.state, isSettled ? { slug } : "skip");
   const finish = useMutation(tenancy.setup.finish).withOptimisticUpdate(
@@ -101,7 +102,7 @@ export function SchoolSetup() {
           <SetupStep done={students}>
             <SetupText
               description={t("setup-students-description")}
-              title={t("setup-students")}
+              title={tCommon("pupils")}
             />
             <SetupOpen to="/school/$slug/settings/students" />
           </SetupStep>
@@ -122,7 +123,7 @@ export function SchoolSetup() {
           <SetupStep done={teachers}>
             <SetupText
               description={t("setup-teachers-description")}
-              title={t("setup-teachers")}
+              title={t("class-teachers")}
             />
             <SetupOpen to="/school/$slug/settings/invites" />
           </SetupStep>
@@ -145,7 +146,7 @@ export function SchoolSetup() {
           <SetupDefault>
             <SetupText
               description={t("setup-plan-description")}
-              title={t("setup-plan")}
+              title={tCommon("plan")}
             />
             <SetupOpen to="/school/$slug/settings/billing" />
           </SetupDefault>
@@ -246,7 +247,7 @@ function SetupOpen({
     | "/school/$slug/settings/units";
 }) {
   const { slug } = useTenant();
-  const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
 
   return (
     <ItemActions>
@@ -254,7 +255,7 @@ function SetupOpen({
         className={buttonVariants({ size: "sm", variant: "outline" })}
         target={{ from: LOCALE_ROUTE, params: { slug }, to }}
       >
-        {t("setup-open")}
+        {tCommon("open")}
       </TargetLink>
     </ItemActions>
   );
@@ -276,7 +277,7 @@ function SetupCountry() {
         onSome: ({ country, currency }) =>
           `${nameOf(locale, "region", country)}, ${nameOf(locale, "currency", currency)}`,
       })}
-      title={t("setup-country")}
+      title={t("locale-title")}
     />
   );
 }

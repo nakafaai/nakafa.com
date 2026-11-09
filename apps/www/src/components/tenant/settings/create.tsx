@@ -153,7 +153,7 @@ function SchoolUnitCreateForm({
             {t("unit-add-footer")}
           </p>
           <Button disabled={!ready} onClick={submit} type="button">
-            {t("unit-add-submit")}
+            {t("unit-add")}
           </Button>
         </>
       }

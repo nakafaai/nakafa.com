@@ -29,6 +29,7 @@ function AnswerItem({
   readonly question: (typeof AttemptResult.Type)["questions"][number];
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const { canGrade } = useResultsPaper();
   const shown = responseText(question, question.response);
 
@@ -36,7 +37,7 @@ function AnswerItem({
     <li className="grid gap-2 border-b pb-3 last:border-b-0">
       <div className="flex items-center justify-between gap-4">
         <span className="font-medium">
-          {t("question", { number: question.number })}
+          {tCommon("question", { number: question.number })}
         </span>
         <span className="text-muted-foreground text-sm">
           {t(verdictKeys[question.verdict])}
@@ -46,7 +47,7 @@ function AnswerItem({
         {shown === "" ? t("student-no-answer") : shown}
       </p>
       <div className="flex items-center justify-between gap-4 text-sm">
-        <span className="text-muted-foreground">{t("results-points")}</span>
+        <span className="text-muted-foreground">{tCommon("score-points")}</span>
         {canGrade ? (
           <GradeField
             answer={{

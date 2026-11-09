@@ -91,7 +91,7 @@ export function Footer({
                 className={linkItemVariants()}
                 href={COMPANY_IDENTITY.socialProfiles.discord}
               >
-                {t("About.community")}
+                {t("Common.community")}
               </a>
             </li>
             {pageNavigation ? (

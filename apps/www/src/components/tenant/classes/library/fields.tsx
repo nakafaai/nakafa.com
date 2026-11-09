@@ -139,12 +139,13 @@ export function LibraryDriveField({
   pending: boolean;
 }) {
   const t = useTranslations("Classroom");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
 
   return (
     <Field>
       {/* The button's own words name it, so the field's title is not its label. */}
-      <FieldTitle>{t("library-drive")}</FieldTitle>
+      <FieldTitle>{tCommon("drive")}</FieldTitle>
       {chosen ? (
         children
       ) : (

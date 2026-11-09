@@ -55,13 +55,14 @@ function CommentPhoto({
   single: boolean;
 }) {
   const t = useTranslations("Comments");
+  const tCommon = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const name = t("photo", { number: index + 1 });
 
   return (
     <>
       <button
-        aria-label={t("photo-open", { name })}
+        aria-label={tCommon("media-open", { name })}
         className="bg-muted focus-visible:ring-ring/50 block w-full cursor-pointer overflow-hidden rounded-xl outline-none focus-visible:ring-3"
         onClick={() => setOpen(true)}
         type="button"

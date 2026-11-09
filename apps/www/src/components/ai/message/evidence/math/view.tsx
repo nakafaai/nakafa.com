@@ -47,7 +47,7 @@ export function MathPart({ children, icon, message }: Props) {
         failed check keeps the name of its operation: the activity above it
         already says that the check failed. */}
         <StepLabel icon={message.status === "error" ? AlertCircleIcon : icon}>
-          {t(`math-${message.kind}`)}
+          {t(`math.${message.kind}`)}
         </StepLabel>
         <HugeIcons
           className={cn(

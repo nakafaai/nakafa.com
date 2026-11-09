@@ -15,8 +15,9 @@ interface Props {
 /** Renders one persisted Nakafa data envelope through its kind-specific UI. */
 export function NakafaPart({ message }: Props) {
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
 
-  const kind = getKindLabel(message.kind, t);
+  const kind = getKindLabel(message.kind, t, tCommon);
 
   // A step that runs shows its own icon, because the activity above it already turns.
   if (message.status === "loading") {
@@ -51,11 +52,12 @@ NakafaPart.displayName = "NakafaPart";
 /** Returns a localized label for one Nakafa data kind. */
 function getKindLabel(
   kind: NakafaDataPart["kind"],
-  t: ReturnType<typeof useTranslations>
+  t: ReturnType<typeof useTranslations<"Ai">>,
+  tCommon: ReturnType<typeof useTranslations<"Common">>
 ) {
   return Match.value(kind).pipe(
     Match.when("search", () => t("nakafa-search")),
-    Match.when("content", () => t("nakafa-content")),
+    Match.when("content", () => tCommon("material")),
     Match.when("quran", () => t("nakafa-quran")),
     Match.when("taxonomy", () => t("nakafa-taxonomy")),
     Match.exhaustive

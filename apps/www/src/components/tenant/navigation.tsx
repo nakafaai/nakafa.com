@@ -79,7 +79,7 @@ function TenantSchoolGroups() {
   const tGrades = useTranslations("SchoolGrades");
   const tGuardians = useTranslations("SchoolGuardians");
   const tInsight = useTranslations("SchoolInsight");
-  const tNotifications = useTranslations("Notifications");
+  const tCommon = useTranslations("Common");
   const tGraduation = useTranslations("SchoolGraduation");
   const tReports = useTranslations("SchoolReports");
   const tSettings = useTranslations("SchoolSettings");
@@ -96,10 +96,10 @@ function TenantSchoolGroups() {
               }) !== false
             }
             render={<Link params={{ slug }} to="/school/$slug/notifications" />}
-            tooltip={tNotifications("title")}
+            tooltip={tCommon("notifications")}
           >
             <HugeIcons icon={Notification01Icon} />
-            <span className="truncate">{tNotifications("title")}</span>
+            <span className="truncate">{tCommon("notifications")}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         {showsStudentHome(tenant, tenant.home) ? (
@@ -232,10 +232,10 @@ function TenantSchoolGroups() {
                 }) !== false
               }
               render={<Link params={{ slug }} to="/school/$slug/reports" />}
-              tooltip={tReports("title")}
+              tooltip={tCommon("report-cards")}
             >
               <HugeIcons icon={Certificate01Icon} />
-              <span className="truncate">{tReports("title")}</span>
+              <span className="truncate">{tCommon("report-cards")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}
@@ -264,10 +264,10 @@ function TenantSchoolGroups() {
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<TargetLink target={settings.value} />}
-              tooltip={tSettings("manage-settings")}
+              tooltip={tCommon("settings")}
             >
               <HugeIcons icon={Settings01Icon} />
-              <span className="truncate">{tSettings("manage-settings")}</span>
+              <span className="truncate">{tCommon("settings")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </TenantSidebarGroup>

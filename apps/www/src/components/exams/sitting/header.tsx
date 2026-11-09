@@ -43,6 +43,7 @@ export function SittingHeader({
   readonly examId: GenericId.GenericId<"exams">;
 }) {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const tenant = useTenant();
   const { value } = useSittingData();
   const mayProctor = useMayProctor();
@@ -77,7 +78,7 @@ export function SittingHeader({
           }}
           to="/school/$slug/exams/$exam/sittings/$sitting/results"
         >
-          {t("results-title")}
+          {tCommon("results")}
         </Link>
       ) : null}
       {mayProctor &&

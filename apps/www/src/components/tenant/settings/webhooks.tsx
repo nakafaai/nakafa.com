@@ -134,6 +134,7 @@ export function SchoolWebhooksSettings() {
 function SchoolWebhookTable() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     integrations.webhooks.list,
@@ -164,15 +165,15 @@ function SchoolWebhookTable() {
       cell: (info) => (
         <TableStatus
           icon={WEBHOOK_STATUS_LOOKS[info.getValue()].icon}
-          label={t(`client-${info.getValue()}`)}
+          label={t(`client.${info.getValue()}`)}
           tone={WEBHOOK_STATUS_LOOKS[info.getValue()].tone}
         />
       ),
-      header: t("client-status"),
+      header: tCommon("state"),
       id: "status",
       options: Arr.map(IntegrationStatus.literals, (status) => ({
         icon: WEBHOOK_STATUS_LOOKS[status].icon,
-        label: t(`client-${status}`),
+        label: t(`client.${status}`),
         value: status,
       })),
     }),
@@ -208,6 +209,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
   const { slug } = useTenant();
   const issueSecret = useIssueSecret();
   const t = useTranslations("SchoolSettings");
+  const tCommon = useTranslations("Common");
   const rotate = useMutation(integrations.webhooks.rotate);
   const revoke = useMutation(integrations.webhooks.revoke).withOptimisticUpdate(
     revokeWebhookChange
@@ -235,7 +237,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
               icon={PencilEdit02Icon}
               onClick={() => dialogs.show("edit")}
             >
-              {t("webhook-edit")}
+              {tCommon("edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={isPending}
@@ -257,7 +259,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
               onClick={() => dialogs.show("revoke")}
               variant="destructive"
             >
-              {t("client-revoke")}
+              {t("grant-revoke")}
             </DropdownMenuItem>
           </>
         ) : null}
@@ -274,7 +276,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
             type="button"
             variant="destructive"
           >
-            {t("client-revoke-confirm")}
+            {t("grant-revoke")}
           </Button>
         }
         description={t("webhook-revoke-description")}
