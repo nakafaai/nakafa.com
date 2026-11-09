@@ -2668,7 +2668,18 @@
     "search-error": "An error occurred while searching.",
     "search-title": "Search Learning Materials",
     "search-results": "Search results",
-    "search-description": "Search free learning materials, educational articles, practice exercises, and study resources. Find the topic you are studying."
+    "search-description": "Search free learning materials, educational articles, practice exercises, and study resources. Find the topic you are studying.",
+    "search-group-curricula": "Curricula",
+    "search-group-lessons": "Lessons",
+    "search-group-tryouts": "Try-outs",
+    "search-group-quran": "Quran",
+    "search-group-articles": "Articles",
+    "search-group-pages": "Pages",
+    "search-recent": "Recent",
+    "search-near": "For you",
+    "search-explore": "Explore",
+    "search-full": "Search lessons for \"{query}\"",
+    "search-unavailable": "Search isn't ready yet. Try the full search."
   },
   "Home": {
     "greeting": "Hi, {name}",

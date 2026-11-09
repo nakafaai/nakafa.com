@@ -2668,7 +2668,18 @@
     "search-error": "Bei der Suche ist ein Fehler aufgetreten.",
     "search-title": "Lernmaterialien durchsuchen",
     "search-results": "Suchergebnisse",
-    "search-description": "Durchsuche kostenlose Lernmaterialien, Bildungsartikel, Übungsaufgaben und Lernressourcen. Finde das Thema, das du gerade lernst."
+    "search-description": "Durchsuche kostenlose Lernmaterialien, Bildungsartikel, Übungsaufgaben und Lernressourcen. Finde das Thema, das du gerade lernst.",
+    "search-group-curricula": "Lehrpläne",
+    "search-group-lessons": "Lektionen",
+    "search-group-tryouts": "Probetests",
+    "search-group-quran": "Koran",
+    "search-group-articles": "Artikel",
+    "search-group-pages": "Seiten",
+    "search-recent": "Zuletzt",
+    "search-near": "Für dich",
+    "search-explore": "Entdecken",
+    "search-full": "Lektionen nach \"{query}\" durchsuchen",
+    "search-unavailable": "Die Suche ist noch nicht bereit. Probier die volle Suche."
   },
   "Home": {
     "greeting": "Hallo, {name}",

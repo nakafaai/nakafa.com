@@ -1,6 +1,6 @@
 import { layer as NodeServices } from "@effect/platform-node/NodeServices";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import { LOCALES } from "@repo/internationalization/src/locale";
+import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   Array as Arr,
@@ -10,8 +10,14 @@ import {
   FileSystem,
   Option,
   Path,
+  Record as Rec,
   Schema,
 } from "effect";
+import { readTryoutHubPage } from "@/components/tryout/catalog/source.server";
+import {
+  readRuntimeCurriculumCatalog,
+  readRuntimeCurriculumOptions,
+} from "@/lib/curriculum/model";
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { readTwinTitle } from "@/lib/llms/format";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
@@ -20,6 +26,8 @@ import {
   readSubjectMap,
   SubjectLocaleSchema,
 } from "@/lib/routing/public/subject";
+import { SearchIndexJson, searchIndexPath } from "@/lib/search/entry";
+import { readPageEntry } from "@/lib/search/page";
 import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
 import { readRssText } from "@/lib/seo/feed";
 import { readManifestText } from "@/lib/seo/manifest";
@@ -36,7 +44,8 @@ import { renderSocialImage } from "@/scripts/static/social";
 /**
  * Writes the static artifacts of the release into the client output: the sitemap
  * index and its pages, the RSS feed, llms.txt, the manifest, the Markdown twin of
- * every prerendered page that has a source, and every social image. Each file
+ * every prerendered page that has a source, the search index of every locale, and
+ * every social image. Each file
  * carries the bytes that the runtime answered for the same address, so the static
  * assets serve it without a Worker. `run.mjs` calls it after the client build.
  */
@@ -166,6 +175,69 @@ const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
   return [...sitemap, ...subjects, ...rest];
 });
 
+/**
+ * The country of each curriculum and try-out country of a locale, by the slug
+ * that ends its path. Both reads are keyed by their family's snapshot, so a
+ * deploy that keeps the snapshot reads neither again.
+ */
+const readSearchFlags = Effect.fn("www.static.searchFlags")(function* (
+  locale: Locale
+) {
+  const curricula = readRuntimeCurriculumOptions(
+    yield* readRuntimeCurriculumCatalog(locale)
+  );
+  const { countries } = yield* readTryoutHubPage(locale);
+  const rows = Arr.getSomes([
+    ...Arr.map(curricula, ({ countryCode, publicSlug }) =>
+      Option.map(
+        Option.fromNullishOr(countryCode),
+        (code) => [publicSlug, code] as const
+      )
+    ),
+    ...Arr.map(countries, ({ countryCode, publicPath }) =>
+      Option.map(
+        Arr.last(publicPath.split("/")),
+        (slug) => [slug, countryCode] as const
+      )
+    ),
+  ]);
+  return Rec.fromEntries(rows);
+});
+
+/**
+ * Writes the search index of each locale that has pages: one entry per
+ * prerendered page, read from the page's own breadcrumb, so the palette searches
+ * exactly the pages the build wrote, in the browser, with no read per keystroke.
+ */
+const writeSearchIndexes = Effect.fn("www.static.searchIndexes")(function* (
+  outDir: string,
+  pages: readonly string[]
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const locales = Arr.filter(LOCALES, (locale) =>
+    Arr.some(pages, (page) => splitPagePath(page).locale === locale)
+  );
+  return yield* Effect.forEach(locales, (locale) =>
+    Effect.gen(function* () {
+      const flags = yield* readSearchFlags(locale);
+      const entries = yield* Effect.forEach(
+        Arr.filter(pages, (page) => splitPagePath(page).locale === locale),
+        (page) =>
+          Effect.map(
+            fs.readFileString(path.join(outDir, page.slice(1), "index.html")),
+            (html) => readPageEntry({ flags, html, locale, path: page })
+          ),
+        { concurrency: 8 }
+      );
+      const index = { entries: Arr.getSomes(entries) };
+      const json = yield* Schema.encodeEffect(SearchIndexJson)(index);
+      yield* writeArtifact(outDir, searchIndexPath(locale).slice(1), json);
+      return `${locale} ${index.entries.length}`;
+    })
+  );
+});
+
 /** Renders one social image when its route names published content, and reports whether it did. */
 const writeSocialImage = Effect.fn("www.static.socialImage")(function* (
   outDir: string,
@@ -214,6 +286,7 @@ const main = Effect.fn("www.static.build")(function* (
     { concurrency: 8 }
   );
   const twinPages = Arr.getSomes(twins);
+  const searchIndexes = yield* writeSearchIndexes(outDir, pages);
   const textArtifacts = yield* readTextArtifacts(twinPages);
   yield* Effect.forEach(
     textArtifacts,
@@ -237,6 +310,7 @@ const main = Effect.fn("www.static.build")(function* (
       [
         `static text artifacts: ${textArtifacts.length}`,
         `markdown twins: ${twinPages.length} of ${pages.length} prerendered pages`,
+        `search entries: ${Arr.join(searchIndexes, ", ")}`,
         `social image sources: ${sources.length}`,
         `social images written: ${images}`,
         `social images skipped (no published copy): ${sources.length - images}`,

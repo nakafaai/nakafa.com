@@ -1,5 +1,4 @@
-import { FileIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
-import { useDebouncedValue } from "@mantine/hooks";
+import { InformationCircleIcon } from "@hugeicons/core-free-icons";
 import {
   Command,
   CommandCollection,
@@ -12,70 +11,40 @@ import {
   CommandItem,
   CommandList,
   CommandPanel,
-  CommandSeparator,
 } from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr, Option } from "effect";
-import type { ComponentProps, ReactElement } from "react";
-import { Fragment, useLayoutEffect, useTransition } from "react";
-import { useLocale, useTranslations } from "use-intl";
-import { getArticleCategoryIcons } from "@/components/articles/category";
-import { SearchExcerpt } from "@/components/search/excerpt";
-import { CommandKeys } from "@/components/search/keys";
-import { useSearchSectionLabels } from "@/components/search/labels";
-import { useArticleNavigation } from "@/components/search/navigation";
-import { holyMenu } from "@/components/sidebar/data/holy";
+import { Effect, Option, Result } from "effect";
 import {
-  getSubjectMenuHref,
-  getSubjectMenuTarget,
-  subjectMenu,
-} from "@/components/sidebar/data/subject";
-import { EmptyNina } from "@/components/state/nina";
-import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
-import { getErrorMessage } from "@/lib/failure";
-import type { LinkTarget } from "@/lib/routing/link";
-import { articleCategoryTarget, publicPathTarget } from "@/lib/routing/target";
-import type { ContentSearchResultItem } from "@/lib/search/answer";
+  Suspense,
+  use,
+  useDeferredValue,
+  useLayoutEffect,
+  useState,
+  useTransition,
+} from "react";
+import { useLocale, useTranslations } from "use-intl";
+import { useStore } from "zustand";
+import { CommandKeys } from "@/components/search/keys";
+import {
+  type PaletteGroup,
+  type PaletteRow,
+  SearchRow,
+  usePaletteGroups,
+} from "@/components/search/rows";
 import { useSearch } from "@/lib/search/context";
-import { useSearchQuery } from "@/lib/search/query";
-
-const DEBOUNCE_TIME = 500;
-
-type SearchCommandIcon = ComponentProps<typeof HugeIcons>["icon"];
-
-/** Props of the result list: the groups it renders, with navigation icons. */
-interface SearchListProps {
-  groups: {
-    items: (
-      | {
-          excerpt: string;
-          key: string;
-          publicPath: string;
-          label: string;
-          query: string;
-          type: "content";
-          value: string;
-        }
-      | {
-          icon: SearchCommandIcon;
-          key: string;
-          label: string;
-          target: LinkTarget;
-          type: "navigation";
-          value: string;
-        }
-    )[];
-    value: string;
-  }[];
-}
-
-type SearchCommandGroup = SearchListProps["groups"][number];
-type SearchCommandItem = SearchCommandGroup["items"][number];
+import type { SearchEntry } from "@/lib/search/entry";
+import {
+  readSearchIndex,
+  type SearchIndexUnavailable,
+} from "@/lib/search/load";
+import { createRecentStore } from "@/lib/search/recent";
 
 /**
- * Renders the global command menu used across the main app shell.
+ * The global command palette: every page Nakafa publishes in the reader's
+ * language, searched in the browser from one static index that the build wrote.
+ * It reads the index once, when it first opens, and nothing per keystroke.
  */
 export function SearchCommand() {
   const t = useTranslations("Utils");
@@ -100,62 +69,67 @@ export function SearchCommand() {
         portalProps={{ keepMounted: true }}
         title={tCommon("search")}
       >
-        <SearchMain />
+        <SearchLocale key={useLocale()} />
       </CommandDialogPopup>
     </CommandDialog>
   );
 }
 
-/** Coordinates debounced Convex content search inside the command dialog. */
-function SearchMain() {
+/** What reading the index of the locale settled with. */
+type IndexAnswer = Result.Result<
+  Effect.Success<ReturnType<typeof readSearchIndex>>,
+  SearchIndexUnavailable
+>;
+
+/** Starts reading the index of one locale, once, and shows the palette while it arrives. */
+function SearchLocale() {
+  const locale = useLocale();
+  const [answer] = useState(() =>
+    Effect.runPromise(
+      Effect.result(readSearchIndex(window.location.origin, locale))
+    )
+  );
+  return (
+    <Suspense fallback={<SearchPalette answer={Option.none()} />}>
+      <SearchSettled answer={answer} />
+    </Suspense>
+  );
+}
+
+/** The palette once the index has settled. */
+function SearchSettled({ answer }: { answer: Promise<IndexAnswer> }) {
+  return <SearchPalette answer={Option.some(use(answer))} />;
+}
+
+/** The search box, its groups of rows, and the keys at its foot. */
+function SearchPalette({ answer }: { answer: Option.Option<IndexAnswer> }) {
   const t = useTranslations("Utils");
   const tCommon = useTranslations("Common");
   const query = useSearch((state) => state.query);
   const setQuery = useSearch((state) => state.setQuery);
-  const articleNavigation = useArticleNavigation();
-  const defaultGroups = useDefaultSearchGroups(articleNavigation);
-  const sectionLabels = useSearchSectionLabels();
-  const [debouncedSearch] = useDebouncedValue(query, DEBOUNCE_TIME);
-  const currentSearch = query.trim();
-  const search = debouncedSearch.trim();
-  const isSearching = currentSearch.length > 0;
-  const isDebouncing = isSearching && currentSearch !== search;
+  const setOpen = useSearch((state) => state.setOpen);
+  const navigate = useNavigate();
+  const [recentStore] = useState(createRecentStore);
+  const remember = useStore(recentStore, (state) => state.remember);
+  const recent = useStore(recentStore, (state) => state.entries);
+  const searched = useDeferredValue(query);
+  const [isPending, startTransition] = useTransition();
+  const groups = usePaletteGroups({ answer, query: searched, recent });
 
-  const {
-    data: results = [],
-    isError,
-    error,
-    isLoading,
-  } = useSearchQuery({
-    enabled: Boolean(search),
-    query: search,
-  });
-
-  const hasError = isError;
-  const displayError = error ? getErrorMessage(error) : "";
-  const showLoading =
-    isSearching && !hasError && (isDebouncing || Boolean(isLoading));
-  const resultGroups = getResultGroups(results, sectionLabels, search);
-  let groups = defaultGroups;
-
-  if (isSearching && search) {
-    groups = resultGroups;
-  }
-
-  if (
-    hasError ||
-    showLoading ||
-    (isSearching && search && results.length === 0)
-  ) {
-    groups = [];
+  /** Opens a row's page, and remembers it when the row is a page of the index. */
+  function choose(row: PaletteRow) {
+    Option.map(row.entry, (entry: SearchEntry) => remember(entry));
+    startTransition(() => {
+      setOpen(false);
+      navigate({ href: row.href });
+    });
   }
 
   return (
     <Command
       filter={null}
       items={groups}
-      itemToStringValue={searchCommandItemToString}
-      key={isSearching ? "search" : "default"}
+      itemToStringValue={(row: PaletteRow) => row.key}
       loopFocus
       mode="none"
       onValueChange={setQuery}
@@ -166,232 +140,56 @@ function SearchMain() {
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <SearchEmpty
-          error={hasError ? displayError : ""}
-          isLoading={showLoading}
-          search={currentSearch}
-        />
-        <SearchList groups={groups} />
+        <SearchState answer={answer} />
+        <CommandList>
+          {(group: PaletteGroup) => (
+            <CommandGroup items={group.rows} key={group.key}>
+              <CommandGroupLabel>{group.label}</CommandGroupLabel>
+              <CommandCollection>
+                {(row: PaletteRow) => (
+                  <CommandItem
+                    disabled={isPending}
+                    key={row.key}
+                    onClick={() => choose(row)}
+                    value={row}
+                  >
+                    <SearchRow row={row} />
+                  </CommandItem>
+                )}
+              </CommandCollection>
+            </CommandGroup>
+          )}
+        </CommandList>
       </CommandPanel>
       <CommandKeys />
     </Command>
   );
 }
 
-function SearchEmpty({
-  error,
-  isLoading,
-  search,
-}: {
-  error: ReactElement | string;
-  isLoading: boolean;
-  search: string;
-}) {
+/**
+ * What the panel says over its rows: that the index is on its way, or that it
+ * could not be read. A query always keeps its last row, the full search, so a
+ * query that matches no page still leads somewhere.
+ */
+function SearchState({ answer }: { answer: Option.Option<IndexAnswer> }) {
   const t = useTranslations("Utils");
-
   return (
-    <CommandEmpty className="text-muted-foreground text-center text-sm not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-1 not-empty:p-7.5">
-      {!!error && (
-        <>
-          <HugeIcons className="size-4" icon={InformationCircleIcon} />
-          <div className="mt-1">{t("search-error")}</div>
-          <div className="mt-2 max-w-xs text-xs wrap-break-word">{error}</div>
-        </>
-      )}
-      {!error && isLoading && (
-        <>
-          <Spinner className="size-4" />
-          <p>{t("search-loading")}</p>
-        </>
-      )}
-      {!(error || isLoading) && !!search && (
-        <>
-          <EmptyNina act="searching" />
-          <p>{t("search-not-found")}</p>
-        </>
-      )}
+    <CommandEmpty className="text-muted-foreground text-center text-sm not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-2 not-empty:p-7.5">
+      {Option.match(answer, {
+        onNone: () => (
+          <>
+            <Spinner className="size-4" />
+            <p>{t("search-loading")}</p>
+          </>
+        ),
+        onSome: (settled) =>
+          Result.isFailure(settled) && (
+            <>
+              <HugeIcons className="size-4" icon={InformationCircleIcon} />
+              <p>{t("search-unavailable")}</p>
+            </>
+          ),
+      })}
     </CommandEmpty>
   );
-}
-
-function SearchList({ groups }: SearchListProps) {
-  const navigate = useNavigate();
-  const setOpen = useSearch((state) => state.setOpen);
-  const [isPending, startTransition] = useTransition();
-
-  function navigateTo(target: LinkTarget) {
-    startTransition(() => {
-      setOpen(false);
-      navigate(target);
-    });
-  }
-
-  /** Opens a navigation row at its target, and a content row at its public path. */
-  function navigateToItem(item: SearchCommandItem) {
-    if (item.type === "navigation") {
-      navigateTo(item.target);
-      return;
-    }
-    Option.map(publicPathTarget(item.publicPath), navigateTo);
-  }
-
-  return (
-    <CommandList>
-      {(group: SearchCommandGroup, index: number) => (
-        <Fragment key={group.value}>
-          <CommandGroup items={group.items}>
-            <CommandGroupLabel>{group.value}</CommandGroupLabel>
-            <CommandCollection>
-              {(item: SearchCommandItem) => (
-                <SearchListItem
-                  isPending={isPending}
-                  item={item}
-                  key={item.key}
-                  onClick={() => navigateToItem(item)}
-                />
-              )}
-            </CommandCollection>
-          </CommandGroup>
-          {index !== groups.length - 1 && <CommandSeparator className="my-2" />}
-        </Fragment>
-      )}
-    </CommandList>
-  );
-}
-
-/**
- * Renders one navigation or content result inside the command list. A content result's excerpt under its name is
- * the name's 14px text in the muted colour, as the fact under every list row's name is (`lib/row.ts`).
- */
-function SearchListItem({
-  isPending,
-  item,
-  onClick,
-}: {
-  isPending: boolean;
-  item: SearchCommandItem;
-  onClick: () => void;
-}) {
-  if (item.type === "content") {
-    return (
-      <CommandItem
-        className="group flex-col items-start"
-        disabled={isPending}
-        onClick={onClick}
-        value={item}
-      >
-        <div className="flex items-center gap-2">
-          <HugeIcons icon={FileIcon} />
-          <span className="line-clamp-1">{item.label}</span>
-        </div>
-        <SearchExcerpt
-          className="text-muted-foreground group-data-highlighted:text-accent-foreground group-data-highlighted:[&_mark]:text-accent-foreground line-clamp-3 text-sm"
-          excerpt={item.excerpt}
-          query={item.query}
-        />
-      </CommandItem>
-    );
-  }
-
-  return (
-    <CommandItem disabled={isPending} onClick={onClick} value={item}>
-      <HugeIcons icon={item.icon} />
-      <span className="line-clamp-1">{item.label}</span>
-    </CommandItem>
-  );
-}
-
-/** Builds localized default navigation groups shown before content search runs. */
-function useDefaultSearchGroups(
-  articleNavigation: readonly ArticleNavigationItem[]
-): SearchCommandGroup[] {
-  const tSubject = useTranslations("Subject");
-  const tArticles = useTranslations("Articles");
-  const tHoly = useTranslations("Holy");
-  const locale = useLocale();
-
-  const subjectGroups = Arr.map(subjectMenu, (item) => {
-    const groupTitle = tSubject(item.title);
-
-    return {
-      items: Arr.map(item.items, (subItem) => {
-        const label = tSubject(subItem.title, { grade: subItem.value });
-        const href = getSubjectMenuHref(subItem, locale);
-
-        return {
-          icon: subItem.icon,
-          key: href,
-          label,
-          target: getSubjectMenuTarget(subItem, locale),
-          type: "navigation" as const,
-          value: `${groupTitle} ${label}`,
-        };
-      }),
-      value: groupTitle,
-    };
-  });
-
-  return [
-    ...subjectGroups,
-    {
-      items: Arr.zipWith(
-        articleNavigation,
-        getArticleCategoryIcons(articleNavigation),
-        (item, icon): SearchCommandItem => ({
-          icon,
-          key: item.route,
-          label: item.title,
-          target: articleCategoryTarget(item.route),
-          type: "navigation",
-          value: `${tArticles("articles")} ${item.title}`,
-        })
-      ),
-      value: tArticles("articles"),
-    },
-    {
-      items: Arr.map(holyMenu, (item) => {
-        const label = tHoly(item.title);
-
-        return {
-          icon: item.icon,
-          key: `holy:${item.title}`,
-          label,
-          target: item.target,
-          type: "navigation" as const,
-          value: `${tHoly("holy")} ${label}`,
-        };
-      }),
-      value: tHoly("holy"),
-    },
-  ];
-}
-
-/** Groups flat Convex search results by section for command rendering. */
-function getResultGroups(
-  results: ContentSearchResultItem[],
-  sectionLabels: Record<ContentSearchResultItem["section"], string>,
-  query: string
-): SearchCommandGroup[] {
-  return Arr.map(
-    Arr.dedupe(Arr.map(results, (result) => result.section)),
-    (section) => ({
-      items: Arr.map(
-        Arr.filter(results, (result) => result.section === section),
-        (result): SearchCommandItem => ({
-          excerpt: result.excerpt,
-          key: result.content_id,
-          label: result.title,
-          publicPath: result.route,
-          query,
-          type: "content",
-          value: `${result.title} ${result.description} ${result.route}`,
-        })
-      ),
-      value: sectionLabels[section],
-    })
-  );
-}
-
-function searchCommandItemToString(item: SearchCommandItem) {
-  return item.value;
 }

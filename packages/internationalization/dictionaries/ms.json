@@ -2668,7 +2668,18 @@
     "search-error": "Ralat berlaku semasa mencari.",
     "search-title": "Cari Bahan Pembelajaran",
     "search-results": "Hasil carian",
-    "search-description": "Cari bahan pembelajaran percuma, artikel pendidikan, latihan dan sumber ulang kaji. Temui topik yang sedang kamu pelajari."
+    "search-description": "Cari bahan pembelajaran percuma, artikel pendidikan, latihan dan sumber ulang kaji. Temui topik yang sedang kamu pelajari.",
+    "search-group-curricula": "Kurikulum",
+    "search-group-lessons": "Pelajaran",
+    "search-group-tryouts": "Percubaan",
+    "search-group-quran": "Al-Quran",
+    "search-group-articles": "Artikel",
+    "search-group-pages": "Halaman",
+    "search-recent": "Terkini",
+    "search-near": "Untuk kamu",
+    "search-explore": "Teroka",
+    "search-full": "Cari \"{query}\" dalam pelajaran",
+    "search-unavailable": "Carian belum sedia. Cuba carian penuh."
   },
   "Home": {
     "greeting": "Hai, {name}",
