@@ -54,7 +54,7 @@ const readCurrentPublishedPage = Effect.fn(
 /** Evaluates one Page artifact already authenticated by its runtime exchange. */
 const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
   function* (data: PublishedPageData) {
-    const body = yield* readRenderedBody(data.artifact);
+    const body = yield* readRenderedBody(data.artifact, Option.none());
     return {
       artifactHash: data.artifact.artifactHash,
       body,

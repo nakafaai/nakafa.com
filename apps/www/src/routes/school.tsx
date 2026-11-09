@@ -1,9 +1,9 @@
-import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import {
   PRESS_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
 } from "@repo/design-system/hooks/press";
+import { DesignSystemProvider } from "@repo/design-system/providers/system";
 import { textDirection } from "@repo/internationalization/src/direction";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import {
