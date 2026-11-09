@@ -50,7 +50,8 @@ export function errorCandidates(
   sourceFile: SourceFile,
   runtime: readonly Node[]
 ) {
-  return Arr.flatMap(Arr.filter(runtime, isThrowStatement), (node) =>
+  const throws = Arr.filter(runtime, isThrowStatement);
+  return Arr.flatMap(throws, (node) =>
     Arr.map(Option.toArray(platformError(node)), (callee) =>
       candidate("raw-error", sourceFile, node, callee)
     )
