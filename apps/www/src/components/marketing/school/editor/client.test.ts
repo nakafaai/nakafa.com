@@ -3,7 +3,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { makeFunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { Effect, MutableRef } from "effect";
 import { createDemoBackend } from "@/components/marketing/school/editor/backend";
 import {
   DemoConvexClient,
@@ -82,10 +82,10 @@ describe("the demo's Convex client", () => {
     () =>
       Effect.gen(function* () {
         const { backend, client } = makeClient();
-        const updates: string[] = [];
+        const updates = MutableRef.make(0);
         const stop = client
           .watchQuery(OPEN, backend.examArgs)
-          .onUpdate(() => updates.push("exam"));
+          .onUpdate(() => MutableRef.increment(updates));
         const before = backend.exam();
 
         const saved = yield* Effect.promise(() =>
@@ -114,7 +114,7 @@ describe("the demo's Convex client", () => {
 
         expect(backend.exam().title).toBe("Biology");
         expect(saved).toEqual(expect.objectContaining({ id: "seedquestion1" }));
-        expect(updates).toEqual(["exam", "exam"]);
+        expect(MutableRef.get(updates)).toBe(2);
       })
   );
 
