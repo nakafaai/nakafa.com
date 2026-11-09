@@ -1,11 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { FigureAttrsSchema } from "@nakafa/aksara-contracts/assessment/figure";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   freeName,
   newSlider,
   type Plane,
-  planeOf,
   sceneOf,
 } from "@/components/tenant/exams/figure/plane";
 import {
@@ -24,35 +22,19 @@ const shape = (
 const plane = (shapes: readonly ShapeDraft[], fields: Partial<Plane> = {}) => ({
   shapes,
   sliders: [],
+  space: "plane" as const,
   view: "auto" as const,
   xMax: "5",
   xMin: "-5",
   yMax: "5",
   yMin: "-5",
+  zMax: "5",
+  zMin: "-5",
   ...fields,
 });
 
 /** The scene a plane makes, which the test expects to exist. */
 const made = (draft: Plane) => Option.getOrThrow(sceneOf(draft));
-
-/** A stored MathVisual figure of a scene and its labels, as the contract reads it. */
-const visual = (scene: unknown, labels: Record<string, unknown> = {}) => {
-  const figure = Schema.decodeUnknownSync(FigureAttrsSchema)({
-    alt: "Grafik",
-    caption: null,
-    component: "MathVisual",
-    props: {
-      description: [{ text: "Grafik", type: "text" }],
-      labels,
-      scene,
-      title: [{ text: "Grafik", type: "text" }],
-    },
-  });
-  if (figure.component !== "MathVisual") {
-    throw new Error("A stored graph is a math visual.");
-  }
-  return figure;
-};
 
 describe("exams/figure/plane", () => {
   it("names each new slider by the next free letter and stops once every letter is taken", () => {
@@ -172,237 +154,63 @@ describe("exams/figure/plane", () => {
     });
   });
 
-  it("reads a stored plane back into the builder, at the range it shows", () => {
-    const stored = visual(
+  it("builds space from points, segments, lines, rays, vectors and a surface, seen from the isometric corner", () => {
+    const { labels, scene } = made(
+      plane(
+        [
+          shape("point", { label: "P", x: "1", y: "2", z: "3" }),
+          shape("segment", { label: "s", z2: "1" }),
+          shape("vector"),
+          shape("function", {
+            formula: "x y",
+            from: "-1",
+            label: "f",
+            to: "1",
+          }),
+        ],
+        { space: "space" }
+      )
+    );
+    expect(scene).toMatchObject({
+      frame: {
+        kind: "cartesian",
+        x: { max: 4, min: -2 },
+        y: { max: 3, min: -2 },
+        z: { max: 4, min: -2 },
+      },
+      space: "space",
+      view: { kind: "isometric" },
+    });
+    expect(scene.labels).toEqual([
       {
-        frame: {
-          kind: "cartesian",
-          x: { max: 7, min: -3 },
-          y: { max: 5, min: -1 },
-        },
-        labels: [{ at: { x: 2, y: 0 }, key: "vertex", objectId: "vertex" }],
-        objects: [
-          {
-            appearance: "highlight",
-            at: { x: 2, y: 0 },
-            id: "vertex",
-            kind: "point",
-          },
-          {
-            appearance: "primary",
-            id: "moving",
-            kind: "marker",
-            x: "a",
-            y: "1",
-          },
-          {
-            appearance: "primary",
-            from: { x: 0, y: 0 },
-            id: "side",
-            kind: "segment",
-            to: { x: 1, y: 1 },
-          },
-          {
-            appearance: "primary",
-            from: { x: 0, y: 0 },
-            id: "arrow",
-            kind: "vector",
-            to: { x: 1, y: 1 },
-          },
-          {
-            appearance: "primary",
-            id: "slope",
-            kind: "line",
-            through: [
-              { x: 0, y: 0 },
-              { x: 1, y: 1 },
-            ],
-          },
-          {
-            appearance: "primary",
-            from: { x: 0, y: 0 },
-            id: "beam",
-            kind: "ray",
-            through: { x: 1, y: 0 },
-          },
-          {
-            appearance: "primary",
-            id: "shape",
-            kind: "polygon",
-            vertices: [
-              { x: 0, y: 0 },
-              { x: 1, y: 0 },
-              { x: 0, y: 1 },
-            ],
-          },
-          {
-            appearance: "primary",
-            center: { x: 0, y: 0 },
-            id: "ring",
-            kind: "circle",
-            radius: 1,
-          },
-          {
-            appearance: "primary",
-            center: { x: 0, y: 0 },
-            id: "turn",
-            kind: "arc",
-            radius: 1,
-            startDegrees: 30,
-            sweepDegrees: 60,
-          },
-          {
-            appearance: "primary",
-            domain: { max: 2, min: -2 },
-            formula: "x^2",
-            id: "f",
-            kind: "function",
-          },
-          {
-            appearance: "primary",
-            coefficients: { a: 1, b: 0, c: -1 },
-            domain: { max: 2, min: -2 },
-            id: "q",
-            inputAxis: "x",
-            kind: "quadratic",
-          },
-          {
-            appearance: "primary",
-            equation: "x^2 + y^2 = 4",
-            id: "round",
-            kind: "implicit",
-          },
-          {
-            appearance: "answer",
-            id: "zone",
-            inequalities: ["y >= 0", "y <= 1"],
-            kind: "region",
-          },
-        ],
-        parameters: [
-          { max: 2, min: 0, name: "a", step: 0.5, value: 1 },
-          { max: 2, min: 0, name: "b", value: 1 },
-        ],
-        space: "plane",
-        view: { kind: "fit" },
+        at: { x: 1, y: 2, z: 3 },
+        key: "point-1",
+        objectId: "point-1",
+        placement: "above-right",
       },
       {
-        vertex: [
-          { attrs: { latex: "V" }, type: "mathInline" },
-          { text: " top", type: "text" },
-        ],
-      }
-    );
-    const read = Option.getOrThrow(planeOf(stored));
-    expect(read).toMatchObject({
-      view: "manual",
-      xMax: "7",
-      xMin: "-3",
-      yMax: "5",
-      yMin: "-1",
-    });
-    expect(read.sliders).toEqual([
-      { id: "a", max: "2", min: "0", name: "a", step: "0.5", value: "1" },
-      { id: "b", max: "2", min: "0", name: "b", step: "", value: "1" },
+        at: { x: 1.5, y: 1, z: 0.5 },
+        key: "segment-1",
+        objectId: "segment-1",
+        placement: "above-right",
+      },
     ]);
-    expect(
-      Arr.map(read.shapes, ({ formula, id, kind, label }) => [
-        id,
-        kind,
-        formula,
-        label,
-      ])
-    ).toEqual([
-      ["vertex", "point", "", "V\\text{ top}"],
-      ["moving", "point", "", ""],
-      ["side", "segment", "", ""],
-      ["arrow", "vector", "", ""],
-      ["slope", "line", "", ""],
-      ["beam", "ray", "", ""],
-      ["shape", "polygon", "(0, 0) (1, 0) (0, 1)", ""],
-      ["ring", "circle", "", ""],
-      ["turn", "angle", "", ""],
-      ["f", "function", "x^2", ""],
-      ["q", "function", "1*x^2 + 0*x + -1", ""],
-      ["round", "equation", "x^2 + y^2 = 4", ""],
-      ["zone", "region", "y >= 0\ny <= 1", ""],
-    ]);
-    expect(read.shapes[8]).toMatchObject({ from: "30", r: "1", to: "90" });
-    expect(read.shapes[5]).toMatchObject({ x: "0", x2: "1", y: "0", y2: "0" });
+    expect(Object.keys(labels)).toEqual(["point-1", "segment-1"]);
   });
 
-  it("offers no plane for a space scene, readouts, or an object the builder does not write", () => {
-    const frame = {
+  it("keeps the z range a teacher types in space, and makes no scene of a kind only a plane draws", () => {
+    const point = [shape("point", { x: "1", y: "1", z: "1" })];
+    const { scene } = made(
+      plane(point, { space: "space", view: "manual", zMax: "2", zMin: "0" })
+    );
+    expect(scene.frame).toEqual({
       kind: "cartesian",
-      x: { max: 2, min: -2 },
-      y: { max: 2, min: -2 },
-    };
-    const scene = (objects: unknown[], extra = {}) => ({
-      frame,
-      objects,
-      space: "plane",
-      view: { kind: "fit" },
-      ...extra,
+      x: { max: 5, min: -5 },
+      y: { max: 5, min: -5 },
+      z: { max: 2, min: 0 },
     });
-    const point = {
-      appearance: "primary",
-      at: { x: 0, y: 0 },
-      id: "p",
-      kind: "point",
-    };
-    for (const stored of [
-      visual({
-        frame: { ...frame, z: { max: 2, min: -2 } },
-        objects: [{ ...point, at: { x: 0, y: 0, z: 0 } }],
-        space: "space",
-        view: { kind: "isometric" },
-      }),
-      visual(scene([point], { readouts: [{ formula: "1", key: "one" }] }), {
-        one: [{ text: "1", type: "text" }],
-      }),
-      visual(
-        scene([
-          {
-            appearance: "primary",
-            id: "c",
-            kind: "parametric",
-            parameter: { max: 1, min: 0 },
-            x: "t",
-            y: "t",
-          },
-        ])
-      ),
-      visual(
-        scene([
-          {
-            appearance: "primary",
-            formula: "y",
-            id: "f",
-            inputAxis: "y",
-            kind: "function",
-          },
-        ])
-      ),
-      visual(
-        scene([
-          { appearance: "primary", formula: "x", id: "f", kind: "function" },
-        ])
-      ),
-      visual(
-        scene([
-          {
-            appearance: "primary",
-            coefficients: { a: 1, b: 0, c: 0 },
-            domain: { max: 1, min: 0 },
-            id: "q",
-            inputAxis: "y",
-            kind: "quadratic",
-          },
-        ])
-      ),
-    ]) {
-      expect(Option.isNone(planeOf(stored))).toBe(true);
-    }
-    expect(Option.isSome(planeOf(visual(scene([point]))))).toBe(true);
+    expect(
+      Option.isNone(sceneOf(plane([shape("circle")], { space: "space" })))
+    ).toBe(true);
   });
 });

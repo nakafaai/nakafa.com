@@ -11,12 +11,9 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import {
-  PlaneDraft,
-  planeOf,
-  sceneOf,
-} from "@/components/tenant/exams/figure/plane";
+import { PlaneDraft, sceneOf } from "@/components/tenant/exams/figure/plane";
 import { newShape, numberOf } from "@/components/tenant/exams/figure/shapes";
+import { planeOf } from "@/components/tenant/exams/figure/stored";
 
 /** The figures a teacher makes: a graph on a plane, a chart of values, or a diagram. */
 export const FigureKind = Schema.Literals(["graph", "chart", "diagram"]);
@@ -52,6 +49,7 @@ export const emptyDraft = (kind: FigureKind): FigureDraft => ({
   mark: "bar",
   shapes: kind === "graph" ? [newShape("function", "function-1", 0)] : [],
   sliders: [],
+  space: "plane",
   title: "",
   values: "",
   view: "auto",
@@ -59,6 +57,8 @@ export const emptyDraft = (kind: FigureKind): FigureDraft => ({
   xMin: "-5",
   yMax: "5",
   yMin: "-5",
+  zMax: "5",
+  zMin: "-5",
 });
 
 /** Rich text of one line of plain words, as a figure's title and description hold it. */
@@ -140,7 +140,7 @@ const plainOf = (nodes: readonly InlineNode[]) =>
 
 /**
  * The draft of a figure already in a text, so the teacher edits what stands there. A figure the builder cannot
- * write, as a space scene or a curve a release brought in, has none, and its text stays as it is.
+ * write, as a solid or a parametric curve a release brought in, has none, and its text stays as it is.
  */
 export const draftOf = (attrs: FigureAttrs): Option.Option<FigureDraft> =>
   Match.value(attrs).pipe(

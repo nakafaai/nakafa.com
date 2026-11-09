@@ -46,6 +46,8 @@ const RANGE_EXAMPLE = {
   xMin: "-5",
   yMax: "5",
   yMin: "-5",
+  zMax: "5",
+  zMin: "-5",
 } as const;
 
 /** One end of the range the plane shows. */
@@ -77,24 +79,25 @@ function RangeInput({
 }
 
 /**
- * The range the plane shows: fitted around its objects and the origin, or the range the teacher types, which
- * starts from the fitted one.
+ * Whether the graph is a plane or space, and the range it shows: fitted around its objects and the origin, or
+ * the range the teacher types, which starts from the fitted one.
  */
 function ViewFields() {
   const t = useTranslations("Exams");
+  const space = useFigure((state) => state.draft.space);
   const view = useFigure((state) => state.draft.view);
   const figure = useFigure((state) => state.figure);
   const change = useFigure((state) => state.change);
   const id = useId();
 
-  /** Keeps the range the plane shows now, so typing starts from what the teacher sees. */
+  /** Keeps the range the graph shows now, so typing starts from what the teacher sees. */
   const fit = (auto: boolean) => {
     if (auto) {
       change({ view: "auto" });
       return;
     }
     const frame = Option.flatMap(figure, (attrs) =>
-      attrs.component === "MathVisual" && attrs.props.scene.space === "plane"
+      attrs.component === "MathVisual"
         ? Option.some(attrs.props.scene.frame)
         : Option.none()
     );
@@ -102,11 +105,14 @@ function ViewFields() {
       view: "manual",
       ...Option.match(frame, {
         onNone: () => ({}),
-        onSome: ({ x, y }) => ({
-          xMax: String(x.max),
-          xMin: String(x.min),
-          yMax: String(y.max),
-          yMin: String(y.min),
+        onSome: (axes) => ({
+          xMax: String(axes.x.max),
+          xMin: String(axes.x.min),
+          yMax: String(axes.y.max),
+          yMin: String(axes.y.min),
+          ...("z" in axes
+            ? { zMax: String(axes.z.max), zMin: String(axes.z.min) }
+            : {}),
         }),
       }),
     });
@@ -114,6 +120,16 @@ function ViewFields() {
 
   return (
     <FieldSet className="gap-3">
+      <Field orientation="horizontal">
+        <Switch
+          checked={space === "space"}
+          id={`${id}-space`}
+          onCheckedChange={(next) =>
+            change({ space: next ? "space" : "plane" })
+          }
+        />
+        <FieldLabel htmlFor={`${id}-space`}>{t("figure-space")}</FieldLabel>
+      </Field>
       <Field orientation="horizontal">
         <Switch checked={view === "auto"} id={id} onCheckedChange={fit} />
         <FieldLabel htmlFor={id}>{t("figure-fit")}</FieldLabel>
@@ -124,6 +140,12 @@ function ViewFields() {
           <RangeInput field="xMax" label={t("figure-to")} />
           <RangeInput field="yMin" label={t("figure-from-y")} />
           <RangeInput field="yMax" label={t("figure-to-y")} />
+          {space === "space" ? (
+            <>
+              <RangeInput field="zMin" label={t("figure-from-z")} />
+              <RangeInput field="zMax" label={t("figure-to-z")} />
+            </>
+          ) : null}
         </div>
       ) : null}
     </FieldSet>
@@ -131,9 +153,10 @@ function ViewFields() {
 }
 
 /**
- * The builder of a graph: the plane as the student reads it beside the objects on it. A teacher adds points,
- * segments, lines, rays, vectors, polygons, circles, angles, functions, equations, regions and sliders, edits each
- * one where it stands, and sees the plane follow every keystroke.
+ * The builder of a graph: the plane or the space as the student reads it beside the objects in it. A teacher adds
+ * points, segments, lines, rays, vectors, polygons, circles, angles, functions, equations, regions and sliders on a
+ * plane, and points, segments, lines, rays, vectors and surfaces in 3D, edits each one where it stands, and sees the
+ * graph follow every keystroke.
  */
 export function GraphBuilder() {
   return (

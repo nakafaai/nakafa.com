@@ -26,7 +26,7 @@ const add = async (page: Page, name: string) => {
   await page.getByRole("menuitem", { exact: true, name }).click();
 };
 
-test("a teacher builds a graph of a function, a slider, a labelled point and a vector, edits it, and the student reads it", async ({
+test("a teacher builds a graph of a function, a slider, a labelled point and a vector, turns it into space and back, edits it, and the student reads it", async ({
   baseURL,
   browser,
 }, testInfo) => {
@@ -106,6 +106,22 @@ test("a teacher builds a graph of a function, a slider, a labelled point and a v
   }
   await page.emulateMedia({ colorScheme: "light" });
   await page.setViewportSize({ height: 900, width: 1440 });
+
+  // The same objects stand in space: the point and the vector take z, and the function becomes a surface.
+  const space = dialog.getByRole("switch", { name: "3D" });
+  await space.click();
+  await expect(space).toBeChecked();
+  await expect(
+    point.getByRole("textbox", { exact: true, name: "z" })
+  ).toHaveValue("0");
+  await expect(save).toBeEnabled();
+  await expect(dialog.getByRole("figure")).toBeVisible();
+  await testInfo.attach("builder-1440-space", {
+    body: await page.screenshot(),
+    contentType: "image/png",
+  });
+  await space.click();
+  await expect(space).not.toBeChecked();
 
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toHaveCount(0);
