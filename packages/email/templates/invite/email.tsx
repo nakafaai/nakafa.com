@@ -20,6 +20,7 @@ const inviteEmailPreviewInput = {
   privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
   signInUrl: new URL(`${siteUrl.protocol}//harapan.${siteUrl.host}/`).href,
   termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
+  unsubscribeUrl: new URL("/en/unsubscribe?token=preview", SITE_ORIGIN).href,
 } satisfies InviteEmailInput;
 
 /** Renders the invitation to open one organisation on Nakafa for one supported locale. */
@@ -30,6 +31,7 @@ function InviteEmail(input: InviteEmailInput = inviteEmailPreviewInput) {
     privacyPolicyUrl,
     signInUrl,
     termsOfServiceUrl,
+    unsubscribeUrl,
   } = {
     ...inviteEmailPreviewInput,
     ...input,
@@ -41,6 +43,7 @@ function InviteEmail(input: InviteEmailInput = inviteEmailPreviewInput) {
       locale={locale}
       privacyPolicyUrl={privacyPolicyUrl}
       termsOfServiceUrl={termsOfServiceUrl}
+      unsubscribeUrl={unsubscribeUrl}
     />
   );
 }

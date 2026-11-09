@@ -11,6 +11,11 @@ import { Array as Arr, Effect } from "effect";
 
 const message = { html: "<p>Hi</p>", subject: "Hi", text: "Hi" };
 
+/** The one-click unsubscribe address a sender hands over with each message. */
+const UNSUBSCRIBE = {
+  post: "https://deployment.convex.site/email/unsubscribe?token=signed",
+};
+
 /** Fake timers keep the mail component from running anything the test did not start. */
 beforeEach(() => {
   vi.useFakeTimers();
@@ -30,11 +35,15 @@ describe("emails/client sendMail", () => {
         const refused = yield* fixture.run(
           Effect.gen(function* () {
             const ctx = yield* MutationCtx;
-            return yield* sendMail(ctx, {
-              ...message,
-              from: EMAIL_FROM,
-              to: loginAddress("raka"),
-            }).pipe(
+            return yield* sendMail(
+              ctx,
+              {
+                ...message,
+                from: EMAIL_FROM,
+                to: loginAddress("raka"),
+              },
+              UNSUBSCRIBE
+            ).pipe(
               Effect.flip,
               Effect.map((error) => ({ code: error.code, tag: error._tag }))
             );
@@ -57,11 +66,15 @@ describe("emails/client sendMail", () => {
         const refused = yield* fixture.run(
           Effect.gen(function* () {
             const ctx = yield* MutationCtx;
-            return yield* sendMail(ctx, {
-              ...message,
-              from: EMAIL_FROM,
-              to: ["guru@harapan.example.test", loginAddress("raka")],
-            }).pipe(
+            return yield* sendMail(
+              ctx,
+              {
+                ...message,
+                from: EMAIL_FROM,
+                to: ["guru@harapan.example.test", loginAddress("raka")],
+              },
+              UNSUBSCRIBE
+            ).pipe(
               Effect.flip,
               Effect.map((error) => error._tag)
             );
@@ -79,12 +92,16 @@ describe("emails/client sendMail", () => {
       const refused = yield* fixture.run(
         Effect.gen(function* () {
           const ctx = yield* MutationCtx;
-          return yield* sendMail(ctx, {
-            ...message,
-            cc: loginAddress("raka"),
-            from: EMAIL_FROM,
-            to: "guru@harapan.example.test",
-          }).pipe(
+          return yield* sendMail(
+            ctx,
+            {
+              ...message,
+              cc: loginAddress("raka"),
+              from: EMAIL_FROM,
+              to: "guru@harapan.example.test",
+            },
+            UNSUBSCRIBE
+          ).pipe(
             Effect.flip,
             Effect.map((error) => error._tag)
           );
@@ -102,12 +119,16 @@ describe("emails/client sendMail", () => {
       const refused = yield* fixture.run(
         Effect.gen(function* () {
           const ctx = yield* MutationCtx;
-          return yield* sendMail(ctx, {
-            ...message,
-            bcc: ["guru@harapan.example.test", loginAddress("raka")],
-            from: EMAIL_FROM,
-            to: "guru@harapan.example.test",
-          }).pipe(
+          return yield* sendMail(
+            ctx,
+            {
+              ...message,
+              bcc: ["guru@harapan.example.test", loginAddress("raka")],
+              from: EMAIL_FROM,
+              to: "guru@harapan.example.test",
+            },
+            UNSUBSCRIBE
+          ).pipe(
             Effect.flip,
             Effect.map((error) => error._tag)
           );
@@ -134,7 +155,11 @@ describe("emails/client sendMail", () => {
           Effect.gen(function* () {
             const ctx = yield* MutationCtx;
             return yield* Effect.forEach(forms, (to) =>
-              sendMail(ctx, { ...message, from: EMAIL_FROM, to }).pipe(
+              sendMail(
+                ctx,
+                { ...message, from: EMAIL_FROM, to },
+                UNSUBSCRIBE
+              ).pipe(
                 Effect.flip,
                 Effect.map((error) => error._tag)
               )
@@ -148,21 +173,37 @@ describe("emails/client sendMail", () => {
       })
   );
 
-  it.effect("hands a message to an ordinary address to the provider", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const send = vi.spyOn(resend, "sendEmail");
-      yield* fixture.run(
-        Effect.gen(function* () {
-          const ctx = yield* MutationCtx;
-          return yield* sendMail(ctx, {
-            ...message,
-            from: EMAIL_FROM,
-            to: "guru@harapan.example.test",
-          });
-        })
-      );
-      expect(send).toHaveBeenCalledOnce();
-    })
+  it.effect(
+    "hands a message to an ordinary address to the provider with its one-click unsubscribe",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const send = vi.spyOn(resend, "sendEmail");
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const ctx = yield* MutationCtx;
+            return yield* sendMail(
+              ctx,
+              {
+                ...message,
+                from: EMAIL_FROM,
+                to: "guru@harapan.example.test",
+              },
+              UNSUBSCRIBE
+            );
+          })
+        );
+        expect(send).toHaveBeenCalledOnce();
+        expect(send.mock.calls[0]?.[1]).toMatchObject({
+          headers: [
+            { name: "List-Unsubscribe", value: `<${UNSUBSCRIBE.post}>` },
+            {
+              name: "List-Unsubscribe-Post",
+              value: "List-Unsubscribe=One-Click",
+            },
+          ],
+          to: "guru@harapan.example.test",
+        });
+      })
   );
 });

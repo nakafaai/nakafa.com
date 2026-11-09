@@ -37,6 +37,7 @@ export const DigestEmailInputSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   privacyPolicyUrl: EmailUrlSchema,
   termsOfServiceUrl: EmailUrlSchema,
+  unsubscribeUrl: EmailUrlSchema,
 });
 export type DigestEmailInput = typeof DigestEmailInputSchema.Type;
 

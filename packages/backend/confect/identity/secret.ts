@@ -9,6 +9,7 @@ import { Hex } from "effect/encoding";
 /** Names what each hash is for, so the same secret never hashes a code for another purpose. */
 const CODE_HASH_LABEL = "nakafa/identity/card/v1:";
 const GUARDIAN_CODE_LABEL = "nakafa/identity/guardian-code/v1:";
+const UNSUBSCRIBE_LABEL = "nakafa/email/unsubscribe/v1:";
 const encoder = new TextEncoder();
 
 /**
@@ -80,5 +81,15 @@ export const hashGuardianCode = Effect.fn("identity.guardianCode.hash")(
     return yield* keyedHash(
       `${GUARDIAN_CODE_LABEL}${tenantId}:${email}:${code}`
     );
+  }
+);
+
+/**
+ * The keyed hash that signs an email's unsubscribe token, under its own purpose label, so a token signs nothing but
+ * the recipient it names and no code's hash ever matches it.
+ */
+export const signUnsubscribe = Effect.fn("identity.unsubscribe.sign")(
+  function* (payload: string) {
+    return yield* keyedHash(`${UNSUBSCRIBE_LABEL}${payload}`);
   }
 );

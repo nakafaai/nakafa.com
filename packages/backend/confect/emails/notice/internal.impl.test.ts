@@ -12,7 +12,14 @@ import {
 import { signedPages } from "@repo/backend/test/mail";
 import { MASCOT } from "@repo/backend/test/mascot";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
+
+/** The unsubscribe page a recipient's notice links, in the class's language. */
+const UNSUBSCRIBE_PAGE = /^http:\/\/localhost:3000\/id\/unsubscribe\?token=/u;
+
+/** The one-click address a recipient's notice names in its header. */
+const UNSUBSCRIBE_HEADER =
+  /^<https:\/\/example\.convex\.site\/email\/unsubscribe\?token=/u;
 
 const posts = refs.public.classroom.posts;
 const notice = refs.internal.emails.notice.internal;
@@ -87,20 +94,40 @@ describe("emails/notice/internal", () => {
             ...(yield* unreachable(fixture)),
           ],
         });
-        expect(input?.input).toMatchObject({
-          classUrl: "http://nf.localhost:3000/classes/fisika-x-1",
-          locale: "id",
-        });
         expect(input?.addresses).toHaveLength(2);
+        // Each recipient's notice carries their own unsubscribe page, in the class's language.
+        for (const address of input?.addresses ?? []) {
+          expect(address.input).toMatchObject({
+            classUrl: "http://nf.localhost:3000/classes/fisika-x-1",
+            locale: "id",
+            unsubscribeUrl: expect.stringMatching(UNSUBSCRIBE_PAGE),
+          });
+        }
         const send = vi.spyOn(resend, "sendEmail");
         yield* fixture.internal.mutation(notice.enqueue, {
-          addresses: input?.addresses ?? [],
-          html: "<p>Buka kelas</p>",
+          messages: Arr.map(input?.addresses ?? [], ({ email, personId }) => ({
+            email,
+            html: "<p>Buka kelas</p>",
+            personId,
+            subject: "Pengumuman baru di kelasmu",
+            text: "Buka kelas",
+          })),
           postId: posted.id,
-          subject: "Pengumuman baru di kelasmu",
-          text: "Buka kelas",
+          tenantId: fixture.tenants.nf,
         });
         expect(send).toHaveBeenCalledTimes(2);
+        expect(send.mock.calls[0]?.[1]).toMatchObject({
+          headers: [
+            {
+              name: "List-Unsubscribe",
+              value: expect.stringMatching(UNSUBSCRIBE_HEADER),
+            },
+            {
+              name: "List-Unsubscribe-Post",
+              value: "List-Unsubscribe=One-Click",
+            },
+          ],
+        });
         yield* fixture.as("teacher").mutation(posts.remove, {
           classId: forum.classId,
           postId: posted.id,
@@ -132,6 +159,40 @@ describe("emails/notice/internal", () => {
         expect(send.mock.calls[2]?.[1]).toMatchObject({
           subject: "Pengumuman baru di kelasmu",
         });
+      })
+  );
+
+  it.effect(
+    "sends no announcement to a member who switched this kind's email off",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        yield* fixture.run(signedPages);
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        const posted = yield* fixture.as("teacher").mutation(posts.publish, {
+          classId: forum.classId,
+          clientKey: "switched-post",
+          email: true,
+          poll: null,
+          slug: nf,
+          text: "Besok libur.",
+        });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("noticePreferences").insert({
+              channel: "email",
+              kind: "classAnnouncement",
+              personId: fixture.people.student.personId,
+              tenantId: fixture.tenants.nf,
+            })
+          )
+        );
+        const input = yield* fixture.internal.query(notice.readInput, {
+          postId: posted.id,
+          recipients: [fixture.people.student.personId],
+        });
+        expect(input?.addresses).toEqual([]);
       })
   );
 });
