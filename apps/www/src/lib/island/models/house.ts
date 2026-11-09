@@ -1,6 +1,6 @@
 import type { Shape } from "@/lib/island/voxel";
 
-/** The hut every island starts with: plank walls, a red roof, one door, one window. */
+/** The hut every island starts with: plank walls, a red roof, one door, one window that lights at night. */
 export const HUT: readonly Shape[] = [
   {
     _tag: "box",
@@ -32,7 +32,7 @@ export const HUT: readonly Shape[] = [
   { _tag: "box", from: [11, 1, 11], ramp: "wood", tone: 1, to: [11, 6, 11] },
   { _tag: "box", from: [7, 1, 11], ramp: "wood", tone: 0, to: [8, 4, 11] },
   { _tag: "box", from: [8, 2, 12], ramp: "glow", tone: 2, to: [8, 2, 12] },
-  { _tag: "box", from: [11, 3, 7], ramp: "slate", tone: 1, to: [11, 4, 8] },
+  { _tag: "box", from: [11, 3, 7], ramp: "pane", tone: 1, to: [11, 4, 8] },
   {
     _tag: "roof",
     axis: "x",
@@ -61,7 +61,7 @@ export const HUT: readonly Shape[] = [
   { _tag: "box", from: [7, 0, 13], ramp: "stone", tone: 2, to: [8, 0, 14] },
 ];
 
-/** The cottage: cream walls on a stone footing, a red tiled roof, a chimney, three windows. */
+/** The cottage: cream walls on a stone footing, a red tiled roof, a smoking chimney, windows that light at night. */
 export const COTTAGE: readonly Shape[] = [
   {
     _tag: "box",
@@ -86,8 +86,8 @@ export const COTTAGE: readonly Shape[] = [
   { _tag: "box", from: [2, 9, 2], ramp: "wood", tone: 2, to: [13, 9, 13] },
   { _tag: "box", from: [7, 2, 13], ramp: "wood", tone: 0, to: [8, 6, 13] },
   { _tag: "box", from: [8, 4, 14], ramp: "glow", tone: 2, to: [8, 4, 14] },
-  { _tag: "box", from: [4, 5, 13], ramp: "slate", tone: 1, to: [5, 7, 13] },
-  { _tag: "box", from: [10, 5, 13], ramp: "slate", tone: 1, to: [11, 7, 13] },
+  { _tag: "box", from: [4, 5, 13], ramp: "pane", tone: 1, to: [5, 7, 13] },
+  { _tag: "box", from: [10, 5, 13], ramp: "pane", tone: 1, to: [11, 7, 13] },
   {
     _tag: "box",
     from: [4, 4, 14],
@@ -104,7 +104,7 @@ export const COTTAGE: readonly Shape[] = [
     to: [11, 4, 14],
     jitter: 0.5,
   },
-  { _tag: "box", from: [13, 5, 6], ramp: "slate", tone: 1, to: [13, 7, 9] },
+  { _tag: "box", from: [13, 5, 6], ramp: "pane", tone: 1, to: [13, 7, 9] },
   {
     _tag: "roof",
     axis: "x",
@@ -130,7 +130,7 @@ export const COTTAGE: readonly Shape[] = [
     to: [15, 17, 15],
     tone: 1,
   },
-  { _tag: "box", from: [5, 11, 6], ramp: "slate", tone: 1, to: [5, 12, 9] },
+  { _tag: "box", from: [5, 11, 6], ramp: "pane", tone: 1, to: [5, 12, 9] },
   {
     _tag: "box",
     from: [10, 13, 3],
