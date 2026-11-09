@@ -4653,6 +4653,12 @@
     "item-tree": "Pohon",
     "item-well": "Sumur",
     "item-lamp": "Tiang lampu",
-    "notice-room": "Di sini nggak muat. Coba tempat yang datar dan lapang."
+    "notice-room": "Di sini nggak muat. Coba tempat yang datar dan lapang.",
+    "season-spring": "Musim semi",
+    "season-summer": "Musim panas",
+    "season-autumn": "Musim gugur",
+    "season-winter": "Musim dingin",
+    "season-wet": "Musim hujan",
+    "season-dry": "Musim kemarau"
   }
 }

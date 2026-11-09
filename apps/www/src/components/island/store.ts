@@ -4,6 +4,7 @@ import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
 import { applyEdits, type Edit, inverseOf } from "@/lib/island/edits";
 import type { ItemKey } from "@/lib/island/items";
+import type { Season } from "@/lib/island/season";
 import type { Weather } from "@/lib/island/sky";
 import type { Cells } from "@/lib/island/world";
 
@@ -71,6 +72,8 @@ interface GameStore {
    * it holds again, after it refused a batch. Undo then starts afresh.
    */
   rollback: () => void;
+  /** The learner's season, which paints the grass and the leaves (D8). */
+  season: Season;
   /** The seed the island's terrain and life grow from. */
   seed: number;
   setBook: (book: boolean) => void;
@@ -101,6 +104,7 @@ type GameSetup = Pick<
   | "level"
   | "muted"
   | "progress"
+  | "season"
   | "seed"
   | "version"
 >;
