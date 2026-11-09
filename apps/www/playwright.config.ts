@@ -149,6 +149,11 @@ const WEBKIT_TIMING_TESTS = [
   "**/reading/press.browser.ts",
 ];
 
+// Specs every engine must draw alike, such as an Arabic name level with the
+// Latin one beside it, which Chromium runs in the shared runtime and the visual
+// suite runs in WebKit and Firefox.
+const ENGINE_TESTS = ["**/quran/names.browser.ts"];
+
 /** The cores of this machine, which the local backend runs as many isolates on. */
 const CORES = navigator.hardwareConcurrency;
 
@@ -204,8 +209,12 @@ const PROJECTS = {
     testMatch: VISUAL_TESTS,
   },
   webkit: {
-    testMatch: WEBKIT_TESTS,
+    testMatch: [...WEBKIT_TESTS, ...ENGINE_TESTS],
     use: { browserName: "webkit" },
+  },
+  firefox: {
+    testMatch: ENGINE_TESTS,
+    use: { browserName: "firefox" },
   },
   "school-firefox": {
     testIgnore: [
@@ -285,7 +294,7 @@ const SUITES = {
   runtime: { projects: ["shared-runtime"], timing: false },
   learner: { projects: ["learner"], timing: false },
   chat: { projects: ["chat"], timing: false },
-  visual: { projects: ["visual", "webkit"], timing: false },
+  visual: { projects: ["visual", "webkit", "firefox"], timing: false },
   browsers: {
     projects: [
       "school-firefox",
