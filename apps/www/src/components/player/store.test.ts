@@ -38,6 +38,13 @@ describe("player store", () => {
     });
   });
 
+  it("reads a finished paper as a review", () => {
+    expect(
+      createPlayerStore({ keys: ["a"], mode: "list", review: true }).getState()
+        .review
+    ).toBe(true);
+  });
+
   it.effect("has no current question without questions", () =>
     Effect.gen(function* () {
       const store = createPlayerStore({ keys: [], mode: "list" });

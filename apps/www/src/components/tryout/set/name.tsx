@@ -20,8 +20,8 @@ import { hasSignedInHint } from "@/lib/auth/hint";
  * The name on a try-out action. The button hugs the one name it shows. No first paint knows a
  * learner's attempt, and a static page paints the same HTML for everyone, so a name that is `pending`
  * reads as it is for a visitor, and under a signed-in hint (`globals.css`) it shows what this browser
- * last read for the page, or keeps the room of `name` with nothing in it on a first visit, until the
- * learner read answers: a running attempt never reads Start. A session that could not be read answers
+ * last read for the page, or, on a first visit, its whole button keeps its room and draws nothing until
+ * the learner read answers: a running attempt never reads Start, and no button stands without a name. A session that could not be read answers
  * nothing, so the name then shows. Restart is the one name that folds to its icon in a narrow header:
  * it stands beside the attempt picker, and the set's title needs the room.
  */
@@ -107,18 +107,6 @@ function readKept(
       Effect.map(Option.getOrUndefined),
       Effect.orElseSucceed(() => undefined)
     )
-  );
-}
-
-/**
- * The name this browser kept for the page it is on. An inline script names a hard load's first paint,
- * but React draws a learner's page and a navigation's, where no inline script runs.
- */
-export function useKeptPageName() {
-  return useSyncExternalStore(
-    subscribeToNothing,
-    () => readKept(readKeptName(window.location.pathname)),
-    () => undefined
   );
 }
 

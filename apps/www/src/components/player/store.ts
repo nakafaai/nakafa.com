@@ -42,6 +42,11 @@ const PlayerStateSchema = Schema.Struct({
   pending: Schema.NullOr(Schema.String),
   /** Whether a jump or a focus holds `current` until the page moves away from its anchor. */
   pinned: Schema.Boolean,
+  /**
+   * Whether the player shows a finished paper to read, with nothing to answer, flag or finish: the last
+   * question then leads nowhere, where a running paper's leads to its finish.
+   */
+  review: Schema.Boolean,
   /** The view the server knows: the one it resolved, or the last one it saved. */
   saved: PlayerModeSchema,
 });
@@ -108,6 +113,7 @@ function jumpTo(previous: PlayerJump | null, key: string): PlayerJump {
 export function createPlayerStore(input: {
   keys: readonly string[];
   mode: PlayerMode;
+  review?: boolean;
 }) {
   return createStore<PlayerStore>()((set, get) => {
     /** Reveals a question now, or once the open overlay has finished closing. */
@@ -173,6 +179,7 @@ export function createPlayerStore(input: {
       overlay: "none",
       pending: null,
       pinned: false,
+      review: input.review ?? false,
       saved: input.mode,
       settle: () => {
         const { jump, pending } = get();
