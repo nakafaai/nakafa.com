@@ -21,6 +21,16 @@ const FILLED = /bg-primary/u;
 /** The phone widths at which a set's name, status and menu read whole. */
 const PHONE_WIDTHS = [320, 360, 390, 430] as const;
 
+/**
+ * Opens a page and lets it finish loading before a test leaves it. In Firefox
+ * and WebKit a page left while it was still loading navigated to its own
+ * address and interrupted the next one, so a walk across pages waits.
+ */
+async function visit(page: Page, href: string) {
+  await page.goto(href);
+  await page.waitForLoadState("networkidle");
+}
+
 /** The paths a page's card links of one kind open, in order. */
 function cardPaths(page: Page, name: RegExp) {
   return page
@@ -62,7 +72,7 @@ for (const [href, exams] of [
   test(`${href} shows its own exams alone, beside its country selector`, async ({
     page,
   }) => {
-    await page.goto(href);
+    await visit(page, href);
 
     expect(await cardPaths(page, EXAM_CARD)).toEqual(exams);
     await expect(
@@ -83,12 +93,12 @@ test("reaches every exam's set table in at most two clicks from its country", as
 }) => {
   const main = page.locator("main");
   for (const country of [INDONESIA, GERMANY]) {
-    await page.goto(country);
+    await visit(page, country);
     for (const entry of await cardPaths(page, EXAM_CARD)) {
-      await page.goto(entry);
+      await visit(page, entry);
       const subjects = await cardPaths(page, SUBJECT_CARD);
       for (const table of subjects.length === 0 ? [entry] : subjects) {
-        await page.goto(table);
+        await visit(page, table);
         await expect(main.getByRole("link", { name: "Set 1" })).toBeVisible();
       }
     }
@@ -103,11 +113,11 @@ test("reaches every exam's set table in at most two clicks from its country", as
 test("draws each exam card with its own design or its name on a plate", async ({
   page,
 }) => {
-  await page.goto(INDONESIA);
+  await visit(page, INDONESIA);
   await expect(page.locator("main img")).toHaveCount(2);
   await expect(page.locator('[data-slot="catalog-card-plate"]')).toHaveCount(0);
 
-  await page.goto(GERMANY);
+  await visit(page, GERMANY);
   await expect(page.locator("main img")).toHaveCount(0);
   await expect(
     page
@@ -130,7 +140,7 @@ for (const [href, names] of [
   [DARMSTADT, ["Exam", "Institution"]],
 ] as const) {
   test(`${href} keeps outline controls in its header`, async ({ page }) => {
-    await page.goto(href);
+    await visit(page, href);
     const header = page.locator('[data-slot="page-header"]');
 
     await expect(header.getByRole("combobox")).toHaveCount(names.length);
@@ -145,7 +155,7 @@ for (const [href, names] of [
 test("a group's menu lists its exam's groups, each with its icon", async ({
   page,
 }) => {
-  await page.goto(TKA_GRADE);
+  await visit(page, TKA_GRADE);
   const trigger = page
     .locator('[data-slot="page-header"]')
     .getByRole("combobox", { name: "Grade" });
@@ -167,7 +177,7 @@ test("a group's menu lists its exam's groups, each with its icon", async ({
 for (const width of PHONE_WIDTHS) {
   test(`the set table fits a ${width} px phone`, async ({ page }) => {
     await page.setViewportSize({ height: 800, width });
-    await page.goto(trackHref);
+    await visit(page, trackHref);
     const card = page.locator('[data-slot="table-card"]');
     const row = card.getByRole("row").filter({ hasText: "Set 1" });
 
@@ -211,7 +221,7 @@ for (const country of [
   test(`names the Aufnahmeprüfung by its own name on ${country}`, async ({
     page,
   }) => {
-    await page.goto(country);
+    await visit(page, country);
 
     await expect(
       page.locator("main").getByRole("heading", { name: "Aufnahmeprüfung" })
