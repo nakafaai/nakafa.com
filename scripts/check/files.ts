@@ -143,7 +143,7 @@ const runGit = Effect.fn("RepositoryPolicy.runGit")(
  * inside it. A folder outside a Git checkout has no ignore rules, so it ignores
  * nothing.
  */
-export const readIgnoredPaths = Effect.fn("RepositoryPolicy.readIgnoredPaths")(
+const readIgnoredPaths = Effect.fn("RepositoryPolicy.readIgnoredPaths")(
   function* (root: string) {
     const [inside] = yield* runGit(root, [
       "rev-parse",
