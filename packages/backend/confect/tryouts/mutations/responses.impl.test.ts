@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   seedTryoutGate,
+  shortAnswer,
   type TryoutGateWorld,
 } from "@repo/backend/test/tryout/gate";
 import { Array as Arr, Effect, Option } from "effect";
@@ -35,7 +36,7 @@ const readStored = (world: TryoutGateWorld) =>
 
 describe("tryouts/mutations/responses", () => {
   it.effect(
-    "counts an unmatched typed answer as answered while it awaits the grader, and a matched one as correct",
+    "counts an essay as answered while it awaits the grader, never correct",
     () =>
       Effect.gen(function* () {
         const world = yield* seedTryoutGate;
@@ -48,6 +49,36 @@ describe("tryouts/mutations/responses", () => {
           },
         ]);
         expect(pending.section).toMatchObject({
+          answeredCount: 1,
+          correctAnswers: 0,
+        });
+      })
+  );
+
+  it.effect(
+    "scores a short answer no accepted answer matches as nothing, since no person grades a try-out, and a matched one as correct",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        const question = yield* shortAnswer;
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            ctx.db.patch("tryoutAttemptPlacements", world.placementId, question)
+          )
+        );
+        yield* world.learner.mutation(tryouts.mutations.responses.save, {
+          placementId: world.placementId,
+          response: { text: "Bandung" },
+          version: 1,
+        });
+        const unmatched = yield* readStored(world);
+        expect(unmatched.responses).toMatchObject([
+          {
+            grade: { category: 0, ceiling: 1, status: "scored" },
+            response: { text: "Bandung" },
+          },
+        ]);
+        expect(unmatched.section).toMatchObject({
           answeredCount: 1,
           correctAnswers: 0,
         });
