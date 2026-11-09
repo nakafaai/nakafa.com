@@ -3759,7 +3759,7 @@
       "title": "Thanks, the report was sent."
     },
     "comment-paste-refused": {
-      "title": "The text is too long for one comment."
+      "title": "That is too long for one comment."
     },
     "comment-photo-refused": {
       "title": "The photo was not added."
@@ -3768,7 +3768,7 @@
       "title": "A comment holds four photos at most."
     },
     "comment-photo-fixed": {
-      "title": "The photos of a posted comment stay as they are."
+      "title": "A posted comment keeps its photos."
     },
     "island-refused-outside": {
       "title": "That does not fit on your island."
