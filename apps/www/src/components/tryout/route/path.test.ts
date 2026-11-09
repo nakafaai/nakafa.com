@@ -8,6 +8,8 @@ import {
   getTryoutHref,
   getTryoutPageHref,
   getTryoutPageTarget,
+  getTryoutPracticeAuthHref,
+  getTryoutPracticeTarget,
   getTryoutPublicPathHref,
   getTryoutPublicPathTarget,
   hasTryoutAttemptCapability,
@@ -191,5 +193,56 @@ describe("tryout route paths", () => {
         publicPath: "try-out/indonesia",
       })
     ).toBe("/try-out/indonesia?attemptId=attempt-1");
+  });
+});
+
+describe("getTryoutPracticeTarget", () => {
+  it("opens the practice of a set or a section, and of nothing else", () => {
+    expect(
+      getTryoutPracticeTarget("try-out/indonesia/snbt/2027/utbk/set-1")
+    ).toEqual(
+      Option.some({
+        from: "/$locale",
+        params: {
+          country: "indonesia",
+          exam: "snbt",
+          group: "2027",
+          set: "set-1",
+          track: "utbk",
+        },
+        search: { mode: "practice" },
+        to: "/$locale/try-out/$country/$exam/$group/$track/$set",
+      })
+    );
+    expect(
+      getTryoutPracticeTarget("try-out/indonesia/snbt/2027/utbk/set-1/verbal")
+    ).toEqual(
+      Option.some({
+        from: "/$locale",
+        params: {
+          country: "indonesia",
+          exam: "snbt",
+          group: "2027",
+          section: "verbal",
+          set: "set-1",
+          track: "utbk",
+        },
+        search: { mode: "practice" },
+        to: "/$locale/try-out/$country/$exam/$group/$track/$set/$section",
+      })
+    );
+    expect(getTryoutPracticeTarget("try-out/indonesia/snbt/2027/utbk")).toEqual(
+      Option.none()
+    );
+  });
+});
+
+describe("getTryoutPracticeAuthHref", () => {
+  it("signs in and comes back to the practice", () => {
+    expect(
+      getTryoutPracticeAuthHref("id", "try-out/indonesia/snbt/2027/utbk/set-1")
+    ).toBe(
+      `/id/auth?redirect=${encodeURIComponent("/id/try-out/indonesia/snbt/2027/utbk/set-1?mode=practice")}`
+    );
   });
 });

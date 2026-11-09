@@ -276,12 +276,15 @@ describe("Nina instructions", () => {
     }
   });
 
-  it("fails a focused turn whose question is no longer entitled", async () => {
+  it("keeps a focused turn for a learner who moves to the free plan, since every learner may ask about a finished section (D1)", async () => {
     const f = await createFocusTest();
     await f.focusTurn();
     await f.t.mutation((ctx) =>
       ctx.db.patch("users", f.identity.userId, { plan: "free" })
     );
-    expect(await instructionsFor(f)).toEqual({ failure: "unknown" });
+    expect(await instructionsFor(f)).toHaveProperty(
+      "instructions",
+      expect.stringContaining("# Focused Try-out Question")
+    );
   });
 });

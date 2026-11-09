@@ -2595,8 +2595,18 @@
     "time-limit-label": "Zeitlimit",
     "result-short": "Ergebnis",
     "result-open": "Dein Ergebnis öffnen, {correct} von {total} richtig",
-    "review-controls": "Versuch und Ansicht",
+    "attempt-controls": "Versuchsoptionen",
     "verdict": "{state, select, correct {Richtig} incorrect {Falsch} partial {Teilweise richtig} pending {Wartet auf die Bewertung} other {Unbeantwortet}}",
+    "practice-cta": "Üben",
+    "practice-title": "Übung: {title}",
+    "practice-pane": "Deine Übung",
+    "practice-description": "Die Fragen, die du geprüft hast, und wie jede ausging.",
+    "practice-footer": "Fang neu an, um jede Prüfung zu löschen.",
+    "practice-restart": "Neu anfangen",
+    "practice-checked-label": "Geprüft",
+    "practice-check": "Prüfen",
+    "practice-open": "Deine Übung öffnen, {checked} von {total} geprüft",
+    "practice-short": "Übung",
     "menu-history": "Verlauf",
     "attempt-menu-search-placeholder": "Versuche suchen...",
     "attempt-menu-empty": "Keine passenden Versuche gefunden.",
@@ -2979,6 +2989,10 @@
     "saved-description": "Suche, ändere oder lösche, was Nina behält."
   },
   "Toast": {
+    "practice-failed": {
+      "title": "Übung nicht aktualisiert.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
     "offline-move": {
       "title": "Du bist offline.",
       "description": "Verbinde dich wieder, um diese Seite zu öffnen."

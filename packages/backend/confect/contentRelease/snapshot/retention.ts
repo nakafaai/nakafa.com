@@ -7,20 +7,32 @@ import {
 import { Array as Arr, Effect, MutableHashSet, Option } from "effect";
 
 /**
- * Checks whether a try-out attempt still names one assessment snapshot. An
- * attempt freezes its paper and item versions from the snapshot and reads them
- * back for its review, so the snapshot stays while any attempt names it.
+ * Checks whether a try-out attempt or a practice session still names one
+ * assessment snapshot. Each freezes its item versions from the snapshot and
+ * reads them back, an attempt for its review and a session for its questions
+ * (ADR 0044), so the snapshot stays while either names it.
  */
-const hasAttemptReference = Effect.fn("contentRelease.hasAttemptReference")(
+const hasLearnerReference = Effect.fn("contentRelease.hasLearnerReference")(
   function* (snapshotId: string) {
-    const attempt = yield* (yield* DatabaseReader)
+    const database = yield* DatabaseReader;
+    const attempt = yield* database
       .table("tryoutAttempts")
       .index("by_assessmentSnapshotId", (query) =>
         query.eq("assessmentSnapshotId", snapshotId)
       )
       .first()
       .pipe(Effect.orDie);
-    return Option.isSome(attempt);
+    if (Option.isSome(attempt)) {
+      return true;
+    }
+    const session = yield* database
+      .table("practiceSessions")
+      .index("by_assessmentSnapshotId", (query) =>
+        query.eq("assessmentSnapshotId", snapshotId)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    return Option.isSome(session);
   }
 );
 
@@ -64,7 +76,7 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
 export const isSnapshotReferenced = Effect.fn(
   "contentRelease.isSnapshotReferenced"
 )(function* (family: ContentSnapshotKind, snapshotId: string) {
-  if (family === "assessment" && (yield* hasAttemptReference(snapshotId))) {
+  if (family === "assessment" && (yield* hasLearnerReference(snapshotId))) {
     return true;
   }
   const ids = yield* protectedReleases();
