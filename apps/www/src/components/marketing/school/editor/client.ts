@@ -77,6 +77,22 @@ export class DemoConvexClient extends ConvexReactClient {
     );
   }
 
+  /**
+   * Runs a change on the demo's backend and tells every watch to read again. A
+   * call the demo does not hold, such as any action, fails as one the demo
+   * cannot answer.
+   */
+  #call(reference: AnyReference, args: unknown): Promise<Answer> {
+    const name = getFunctionName(reference);
+    return Option.match(this.#backend.mutate(name, args), {
+      onNone: () => Promise.reject(new DemoUnavailable({ call: name })),
+      onSome: (value) => {
+        this.#changed();
+        return Promise.resolve(value);
+      },
+    });
+  }
+
   /** Drops every kept answer and tells every watch to read again. */
   #changed() {
     MutableHashMap.clear(this.#answers);
@@ -158,14 +174,7 @@ export class DemoConvexClient extends ConvexReactClient {
       sent
     );
     this.#changed();
-    const name = getFunctionName(mutation);
-    return Option.match(backend.mutate(name, sent), {
-      onNone: () => Promise.reject(new DemoUnavailable({ call: name })),
-      onSome: (value): Promise<Answer> => {
-        this.#changed();
-        return Promise.resolve(value);
-      },
-    });
+    return this.#call(mutation, sent);
   }
 
   override action<
@@ -174,10 +183,9 @@ export class DemoConvexClient extends ConvexReactClient {
       | FunctionReference_future<"action">,
   >(
     action: Action,
-    ..._args: OptionalRestArgs<Action>
+    ...args: OptionalRestArgs<Action>
   ): Promise<FunctionReturnType<Action>> {
-    return Promise.reject(
-      new DemoUnavailable({ call: getFunctionName(action) })
-    );
+    const [sent] = args;
+    return this.#call(action, sent ?? {});
   }
 }
