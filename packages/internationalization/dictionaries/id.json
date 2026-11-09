@@ -4688,6 +4688,7 @@
     "item-lamp": "Lampu",
     "water": "Siram kebun",
     "harvest": "Panen",
+    "sound": "Suara",
     "materials": "Kebun",
     "materials-value": "{wood} kayu, {petals} kelopak",
     "price-wood": "{stars} Bintang, {wood} kayu"

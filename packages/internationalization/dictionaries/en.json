@@ -4688,6 +4688,7 @@
     "item-lamp": "Lamp",
     "water": "Water the garden",
     "harvest": "Harvest",
+    "sound": "Sound",
     "materials": "Garden",
     "materials-value": "{wood} wood, {petals} petals",
     "price-wood": "{stars} Stars, {wood} wood"
