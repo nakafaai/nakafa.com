@@ -180,19 +180,12 @@ describe("try-out artwork", () => {
   );
 
   it.each(["en", "id", "de"] as const)(
-    "shares the Mathematics subject design with Germany's Darmstadt Mathematics, and only there, in %s",
+    "never lends another entity's art to Germany's Darmstadt Mathematics in %s",
     (locale) => {
       expect(
         getTryoutTrackCatalogArtwork(locale, {
           countryKey: "germany",
           examKey: "entrance-examination",
-          trackKey: "tu-darmstadt-mathematics",
-        })
-      ).toBe(`/open-graph/subject/${locale}-mathematics.png`);
-      expect(
-        getTryoutTrackCatalogArtwork(locale, {
-          countryKey: "germany",
-          examKey: "assessment-examination",
           trackKey: "tu-darmstadt-mathematics",
         })
       ).toBeUndefined();

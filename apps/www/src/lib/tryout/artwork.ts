@@ -24,14 +24,10 @@ const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
 
 /**
  * The reviewed artwork of each try-out track that has one, by its country, exam
- * and track keys, never its localized slugs. Germany's Mathematics shares the
- * owner's Mathematics subject design until it has its own.
+ * and track keys, never its localized slugs. A track wears only its own art:
+ * Germany's Mathematics has none yet, so it shows no image.
  */
 const TRACK_ARTWORK_BY_TRACK = HashMap.fromIterable<string, ArtworkIdentity>([
-  [
-    "germany/entrance-examination/tu-darmstadt-mathematics",
-    "subject/mathematics",
-  ],
   ["indonesia/snbt/2027", "tryout/indonesia/2027"],
   [
     "indonesia/tka/advanced-mathematics",
