@@ -103,7 +103,7 @@ finds the right data.
   site, still name that address.
 - A school page's status is decided by the proxy before the page streams, in
   `apps/www/src/lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
-  the proxy (`apps/www/src/lib/routing/public/profile.ts`). The gate reads one query,
+  the proxy (`apps/www/src/lib/profile/gate.ts`). The gate reads one query,
   `tenancy.profile.refusal` (`packages/backend/confect/tenancy/profile.impl.ts`),
   which decides the school's existence for a visitor: a school that no one has the
   address of is refused. Since 30 Oct 2026 a request that carries a session reads

@@ -156,12 +156,6 @@ describe("readMigrationResponse", () => {
     migration.read.mockReset();
   });
 
-  const migrationRequest = (address: string, cookie?: string) =>
-    new Request(
-      address,
-      cookie === undefined ? undefined : { headers: { cookie } }
-    );
-
   it.effect(
     "answers a retired try-out address with its status and the query of the request",
     () =>
@@ -172,7 +166,7 @@ describe("readMigrationResponse", () => {
 
         const found = Option.getOrThrow(
           yield* readMigrationResponse(
-            migrationRequest("https://nakafa.com/en/tryout/old?page=2")
+            new Request("https://nakafa.com/en/tryout/old?page=2")
           )
         );
 
@@ -181,38 +175,11 @@ describe("readMigrationResponse", () => {
           "/en/tryout/sets/exam?page=2"
         );
         expect(found.headers.get("vary")).toBeNull();
-        expect(migration.read.mock.calls[0]?.[0]).toMatchObject({
+        expect(migration.read.mock.calls[0]?.[0]).toEqual({
           hasAttemptCapability: false,
-          markdown: false,
           method: "GET",
           pathname: "/en/tryout/old",
         });
-      })
-  );
-
-  it.effect(
-    "answers a retired profile id with a permanent redirect for the session that asks",
-    () =>
-      Effect.gen(function* () {
-        migration.read.mockReturnValue(
-          Effect.succeed({ destination: "/en/@nabilfatih/chat", status: 308 })
-        );
-
-        const found = Option.getOrThrow(
-          yield* readMigrationResponse(
-            migrationRequest(
-              "https://nakafa.com/en/user/abc123/chat",
-              "session=1"
-            )
-          )
-        );
-
-        expect(found.status).toBe(308);
-        expect(found.headers.get("location")).toBe("/en/@nabilfatih/chat");
-        expect(found.headers.get("vary")).toBe("Cookie");
-        expect(migration.read.mock.calls[0]?.[0].headers.get("cookie")).toBe(
-          "session=1"
-        );
       })
   );
 
@@ -226,13 +193,12 @@ describe("readMigrationResponse", () => {
 
         const found = Option.getOrThrow(
           yield* readMigrationResponse(
-            migrationRequest("https://nakafa.com/de/articles/politics.md?x=1")
+            new Request("https://nakafa.com/de/articles/politics.md?x=1")
           )
         );
 
         expect(found.headers.get("location")).toBe("/de/politik.md?x=1");
         expect(migration.read.mock.calls[0]?.[0]).toMatchObject({
-          markdown: true,
           pathname: "/de/articles/politics",
         });
       })
@@ -245,7 +211,7 @@ describe("readMigrationResponse", () => {
       expect(
         Option.isNone(
           yield* readMigrationResponse(
-            migrationRequest("https://nakafa.com/en/curriculum")
+            new Request("https://nakafa.com/en/curriculum")
           )
         )
       ).toBe(true);
@@ -260,7 +226,7 @@ describe("readRemovedAddressNotFound", () => {
       Effect.gen(function* () {
         const locale = Option.getOrThrow(
           yield* readRemovedAddressNotFound(
-            request("https://nakafa.com/api/chat/finance", "id-ID")
+            request("https://nakafa.com/en/events", "id-ID")
           )
         );
 

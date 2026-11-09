@@ -175,7 +175,11 @@ test("a student sits a question of every template, the server scores each one, t
   );
   await closeSitting(teacher);
   await teacher.getByRole("link", { exact: true, name: "Results" }).click();
-  await teacher.getByRole("button", { exact: true, name: "Questions" }).click();
+  // The questions open from the header's Analysis menu.
+  await teacher.getByRole("button", { exact: true, name: "Analysis" }).click();
+  await teacher
+    .getByRole("menuitem", { exact: true, name: "Questions" })
+    .click();
   const questions = teacher.getByRole("dialog", { name: "Questions" });
   await questions.getByRole("combobox").click();
   await teacher
