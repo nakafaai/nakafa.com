@@ -4953,6 +4953,8 @@
     "block-taro": "Keladi",
     "block-monstera": "Monstera",
     "block-papaya": "Pokok betik",
-    "plants": "Tumbuhan"
+    "plants": "Tumbuhan",
+    "walk": "Jalan",
+    "notice-path": "Tiada jalan ke sana. Cuba tempat yang boleh dicapai musangmu."
   }
 }

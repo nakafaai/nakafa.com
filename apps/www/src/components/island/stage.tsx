@@ -1,5 +1,6 @@
 "use client";
 
+import { SPAN } from "@repo/backend/confect/island/world";
 import {
   Array as Arr,
   DateTime,
@@ -35,15 +36,16 @@ import {
   wheelZoomOf,
 } from "@/lib/island/gesture";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
-import { herdOf, herdQuads, wander } from "@/lib/island/life";
+import { type Animal, herdOf, herdQuads, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
+import { pathOf } from "@/lib/island/path";
 import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { roam, wildOf, wildVertices } from "@/lib/island/wild";
-import { CHUNKS } from "@/lib/island/world";
+import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The island's world on the whole screen (ADR 0047, D1, D2 and D5): the canvas
@@ -81,6 +83,9 @@ export function IslandStage({ size }: { size: number }) {
   );
 }
 
+/** How fast the learner's fox walks, in cells a second. */
+const WALK_SPEED = 3.2;
+
 /** Runs the game on one canvas until the returned cleanup stops it. */
 function start(
   canvas: HTMLCanvasElement,
@@ -108,6 +113,10 @@ function start(
     Math.floor(DateTime.toEpochMillis(DateTime.nowUnsafe()) / 86_400_000)
   );
   let lastLife = 0;
+  // The learner's own fox (ADR 0047, D12): it starts on the village square and walks where the learner sends it.
+  let walker = { x: SPAN / 2 + 0.5, z: SPAN / 2 + 2.5 };
+  let route = Arr.empty<readonly [number, number]>();
+  canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();
     const lighting = lightingOf(cells, glow);
@@ -155,6 +164,24 @@ function start(
     );
   };
 
+  /** Sends the fox along the shortest way to a column, or says no way leads there. */
+  const walkTo = (column: readonly [number, number]) => {
+    Option.match(
+      pathOf(
+        store.getState().cells,
+        [Math.floor(walker.x), Math.floor(walker.z)],
+        column
+      ),
+      {
+        onNone: () => store.getState().setNotice("path"),
+        onSome: (found) => {
+          route = found;
+          needsDraw = true;
+        },
+      }
+    );
+  };
+
   /**
    * Builds or digs at a point of the screen. With an item in hand it builds the
    * whole item there, its front to the camera, as one step undo takes back, or
@@ -163,6 +190,10 @@ function start(
   const act = (point: Point, remove: boolean) => {
     const state = store.getState();
     aim = Option.none();
+    if (state.tool === "walk" && !remove) {
+      Option.map(hitAt(point), (hit) => walkTo([hit.hit[0], hit.hit[2]]));
+      return;
+    }
     if (state.tool === "item" && !remove) {
       Option.map(hitAt(point), (hit) =>
         Result.match(
@@ -191,7 +222,9 @@ function start(
     frame = requestAnimationFrame(tick);
     const moving =
       Math.abs(goal.yaw - orbit.yaw) > 1e-3 ||
-      Math.abs(goal.distance - orbit.distance) > 1e-2;
+      Math.abs(goal.distance - orbit.distance) > 1e-2 ||
+      Math.abs(goal.target[0] - orbit.target[0]) > 1e-2 ||
+      Math.abs(goal.target[2] - orbit.target[2]) > 1e-2;
     if (moving) {
       orbit = easeOrbit(orbit, goal, 0.25);
       needsDraw = true;
@@ -200,7 +233,7 @@ function start(
     const falling =
       weather === "rain" || weather === "storm" || weather === "snow";
     const waterDue = now - lastWater > (falling ? 33 : 66);
-    if (!(needsDraw || waterDue) || document.hidden) {
+    if (!(needsDraw || waterDue || route.length > 0) || document.hidden) {
       return;
     }
     lastWater = now;
@@ -212,10 +245,46 @@ function start(
       wander(cells, animal, seed, index, dt)
     );
     wild = Arr.map(wild, (creature) => roam(cells, creature, seed, dt));
+    const next = Arr.head(route);
+    Option.map(next, ([cx, cz]) => {
+      const dx = cx + 0.5 - walker.x;
+      const dz = cz + 0.5 - walker.z;
+      const distance = Math.hypot(dx, dz);
+      const reach = WALK_SPEED * dt;
+      walker =
+        distance <= reach
+          ? { x: cx + 0.5, z: cz + 0.5 }
+          : {
+              x: walker.x + (dx / distance) * reach,
+              z: walker.z + (dz / distance) * reach,
+            };
+      if (distance <= reach) {
+        route = Arr.drop(route, 1);
+      }
+      // The camera keeps the walking fox in view.
+      goal = { ...goal, target: [walker.x, SEA_LEVEL + 1, walker.z] };
+      canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
+    });
+    canvas.dataset.walking = route.length > 0 ? "true" : "false";
+    const fox: Animal = {
+      kind: "fox",
+      rest: route.length > 0 ? 0 : 1,
+      steps: 0,
+      tx: Option.match(next, {
+        onNone: () => walker.x,
+        onSome: ([cx]) => cx + 0.5,
+      }),
+      tz: Option.match(next, {
+        onNone: () => walker.z,
+        onSome: ([, cz]) => cz + 0.5,
+      }),
+      x: walker.x,
+      z: walker.z,
+    };
     painter.herd(
       herdQuads(
         cells,
-        herd,
+        Arr.append(herd, fox),
         size,
         orbit.yaw,
         now / 1000,
@@ -339,6 +408,22 @@ function start(
     event.preventDefault();
     move(zoomOrbit(goal, wheelZoomOf(event.deltaY)), true);
   };
+  /** Walks the fox one cell, right (`across`) or away from the camera (`ahead` negative), as the camera faces. */
+  const step = (across: number, ahead: number) => {
+    const quarter = turnOf(orbit.yaw);
+    const [dx, dz] = [
+      [across, ahead],
+      [ahead, -across],
+      [-across, -ahead],
+      [-ahead, across],
+    ][quarter];
+    const last = Arr.last(route).pipe(
+      Option.getOrElse(
+        () => [Math.floor(walker.x), Math.floor(walker.z)] as const
+      )
+    );
+    walkTo([last[0] + dx, last[1] + dz]);
+  };
   const onKey = (event: KeyboardEvent) => {
     if (event.metaKey || event.ctrlKey || event.altKey) {
       return;
@@ -347,16 +432,16 @@ function start(
     const keys: Record<string, () => void> = {
       "+": () => move(zoomOrbit(goal, 0.85), true),
       "-": () => move(zoomOrbit(goal, 1.18), true),
-      a: () => move(panOrbit(orbit, 24, 0, height)),
+      a: () => step(-1, 0),
       arrowdown: () => move(panOrbit(orbit, 0, -24, height)),
       arrowleft: () => move(panOrbit(orbit, 24, 0, height)),
       arrowright: () => move(panOrbit(orbit, -24, 0, height)),
       arrowup: () => move(panOrbit(orbit, 0, 24, height)),
-      d: () => move(panOrbit(orbit, -24, 0, height)),
+      d: () => step(1, 0),
       e: () => move(turnOrbit(goal, -Math.PI / 4), true),
       q: () => move(turnOrbit(goal, Math.PI / 4), true),
-      s: () => move(panOrbit(orbit, 0, -24, height)),
-      w: () => move(panOrbit(orbit, 0, 24, height)),
+      s: () => step(0, 1),
+      w: () => step(0, -1),
     };
     const digit = Number.parseInt(event.key, 10);
     if (digit >= 1 && digit <= store.getState().hotbar.length) {

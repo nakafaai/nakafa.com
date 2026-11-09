@@ -22,8 +22,8 @@ const FOLK = ["cat", "rabbit", "bear"] as const;
  * where it stands and where it is going, how many steps it has taken, and how
  * long it still rests before it goes on.
  */
-const Animal = Schema.Struct({
-  kind: Schema.Literals(["hen", "duck", ...FOLK]),
+export const Animal = Schema.Struct({
+  kind: Schema.Literals(["hen", "duck", ...FOLK, "fox"]),
   rest: Schema.Finite,
   steps: Schema.Int,
   tx: Schema.Finite,
@@ -31,7 +31,7 @@ const Animal = Schema.Struct({
   x: Schema.Finite,
   z: Schema.Finite,
 });
-type Animal = typeof Animal.Type;
+export type Animal = typeof Animal.Type;
 
 /** The top block of a column and the cell over it, none for an empty column. */
 export function groundOf(cells: Cells, x: number, z: number) {
@@ -100,11 +100,12 @@ export function herdOf(cells: Cells, seed: number, size: number) {
   return Arr.appendAll(Arr.appendAll(pick("hen", 3), pick("duck", 2)), folk);
 }
 
-/** How fast each kind moves, in cells a second. */
+/** How fast each kind moves, in cells a second; the fox is the learner, who walks where they press. */
 const SPEED = {
   bear: 0.9,
   cat: 1.2,
   duck: 0.6,
+  fox: 3.2,
   hen: 1.1,
   rabbit: 1.3,
 } as const;

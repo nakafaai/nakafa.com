@@ -4953,6 +4953,8 @@
     "block-taro": "Talas",
     "block-monstera": "Janda bolong",
     "block-papaya": "Pohon pepaya",
-    "plants": "Tanaman"
+    "plants": "Tanaman",
+    "walk": "Jalan",
+    "notice-path": "Nggak ada jalan ke sana. Coba tempat yang bisa dicapai rubahmu."
   }
 }
