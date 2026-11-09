@@ -4986,7 +4986,7 @@
     "visit-closed": "This island isn't open to visitors.",
     "share": "Share your island",
     "unshare": "Stop sharing your island",
-    "notice-shared": "Shared! Your island's link is copied, anyone with it can visit.",
+    "notice-shared": "Link copied. Anyone with it can visit.",
     "notice-private": "Your island is yours alone again."
   }
 }
