@@ -5,6 +5,7 @@ import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
   prepareAcceptanceSource,
+  exportRenderer,
   publishAcceptanceSource,
 } from "@repo/backend/scripts/content/acceptance/publication";
 import source from "@repo/backend/scripts/content/acceptance/source.json" with {
@@ -63,7 +64,11 @@ describe("pinned Aksara acceptance publication", () => {
               ? fs.writeFileString(spec.stdoutPath, "test-real-renderer-output")
               : Effect.void
         );
-        yield* publishAcceptanceSource("/test/nakafa", runtime);
+        const renderer = yield* exportRenderer(
+          "/test/nakafa",
+          runtime.directory
+        );
+        yield* publishAcceptanceSource(runtime, renderer);
         expect(
           yield* fs.readFileString(`${runtime.directory}/renderer.json`)
         ).toBe("test-real-renderer-output");
