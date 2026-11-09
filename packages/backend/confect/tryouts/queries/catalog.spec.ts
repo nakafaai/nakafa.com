@@ -4,10 +4,10 @@ import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
   publicTryoutCountryExamValidator,
   publicTryoutCountryValidator,
+  publicTryoutCountryWithExamCountValidator,
   publicTryoutExamValidator,
   publicTryoutGroupChoiceValidator,
   publicTryoutGroupValidator,
-  publicTryoutHubCountryValidator,
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
@@ -72,7 +72,7 @@ export default GroupSpec.make()
       returns: () =>
         Schema.Struct({
           countries: Schema.mutable(
-            Schema.Array(publicTryoutHubCountryValidator)
+            Schema.Array(publicTryoutCountryWithExamCountValidator)
           ),
           sourceRevision: Schema.Union([Schema.String, Schema.Null]),
         }),
@@ -88,8 +88,6 @@ export default GroupSpec.make()
           Schema.Null,
           Schema.Struct({
             country: publicTryoutCountryValidator,
-            /** Where a link to the country lands: its own page, or its one exam's entry. */
-            entryPath: Schema.String,
             exams: Schema.mutable(
               Schema.Array(publicTryoutCountryExamValidator)
             ),

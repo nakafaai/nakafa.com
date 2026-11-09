@@ -12,6 +12,10 @@ export const publicTryoutCountryValidator = Schema.Struct({
   publicPath: Schema.String,
   title: Schema.String,
 });
+export const publicTryoutCountryWithExamCountValidator = Schema.Struct({
+  ...publicTryoutCountryValidator.fields,
+  examCount: Schema.Finite,
+});
 export const publicTryoutExamValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
   examKey: tryoutRouteKeyValidator,
@@ -20,17 +24,12 @@ export const publicTryoutExamValidator = Schema.Struct({
   title: Schema.String,
 });
 /**
- * An exam of the hub or a country page, with its entry: where a link to the exam
- * lands, its first group's entry (`readPublishedGroupEntry`).
+ * An exam of a country page, with its entry: where a link to the exam lands, its
+ * first group's entry (`readPublishedGroupEntry`).
  */
 export const publicTryoutCountryExamValidator = Schema.Struct({
   ...publicTryoutExamValidator.fields,
   entryPath: Schema.String,
-});
-/** A country of the hub with its exams in order, which the hub shows as cards. */
-export const publicTryoutHubCountryValidator = Schema.Struct({
-  ...publicTryoutCountryValidator.fields,
-  exams: Schema.Array(publicTryoutCountryExamValidator),
 });
 export const publicTryoutGroupValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),

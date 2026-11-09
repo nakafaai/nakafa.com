@@ -17,16 +17,17 @@ describe("contentRelease/tryout", () => {
         for (const appLocale of LOCALES) {
           expect(
             yield* world.visitor.query(tryout.sitemapCount, { appLocale })
-          ).toEqual({ pageCount: 1, routeCount: 3 });
+          ).toEqual({ pageCount: 1, routeCount: 4 });
           expect(
             yield* world.visitor.query(tryout.sitemapPage, {
               appLocale,
               page: 0,
             })
           ).toEqual({
-            // The country's one exam and the year's one track are entered
-            // straight away, so neither is a page of its own.
+            // The year's one track is entered straight away, so the year is
+            // not a page of its own; the country is always its exams' page.
             paths: [
+              `try-out/indonesia-${appLocale}`,
               `try-out/indonesia/snbt/2027/utbk-${appLocale}`,
               `try-out/indonesia/snbt/2027/utbk/set-1-${appLocale}`,
               `try-out/indonesia/snbt/2027/utbk/set-2-${appLocale}`,
@@ -37,7 +38,7 @@ describe("contentRelease/tryout", () => {
           ).toEqual({
             countries: [{ id: "indonesia", label: "Try-out" }],
             exams: [{ id: "snbt", label: "Try-out" }],
-            routeCount: 3,
+            routeCount: 4,
           });
         }
         for (const page of [-1, 1.5, 1]) {
@@ -52,10 +53,10 @@ describe("contentRelease/tryout", () => {
   );
 
   it.effect(
-    "lists a country and a group as pages once they offer a real choice",
+    "lists a group as a page once it offers a real choice",
     () =>
       Effect.gen(function* () {
-        const world = yield* tryoutWorld({ paired: true, twin: true });
+        const world = yield* tryoutWorld({ paired: true });
         const page = yield* world.visitor.query(tryout.sitemapPage, {
           appLocale: "id",
           page: 0,
@@ -70,7 +71,6 @@ describe("contentRelease/tryout", () => {
               "try-out/indonesia/snbt/2027/utbk/set-1-id",
               "try-out/indonesia/snbt/2027/utbk/set-1-id/section-a",
               "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
-              "try-out/indonesia/twin/senior/math-id",
             ],
             Order.String
           )

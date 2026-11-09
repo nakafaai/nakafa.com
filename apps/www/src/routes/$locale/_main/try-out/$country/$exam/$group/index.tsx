@@ -4,8 +4,12 @@ import { Option } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
+import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
 import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
-import { TryoutGroupSelector } from "@/components/tryout/catalog/selector";
+import {
+  TryoutExamSelector,
+  TryoutGroupSelector,
+} from "@/components/tryout/catalog/selector";
 import { readTryoutGroupFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
@@ -30,7 +34,7 @@ export const Route = createFileRoute(
     if (route.kind === "notFound") {
       throw notFound();
     }
-    // A level with one option is never a page, so even a link inside the app lands on its entry.
+    // A group with one track is never a page, so even a link inside the app lands on its set table.
     if (route.kind === "entry") {
       throw redirect({
         href: `/${params.locale}/${route.entryPath}`,
@@ -64,21 +68,30 @@ function TryoutGroupPage() {
       <LayoutMaterialContent>
         <BreadcrumbHeader
           value={{
-            action:
-              route.groupOptions.length > 0 ? (
-                <TryoutGroupSelector
-                  axis={route.page.exam.groupAxis}
-                  currentValue={route.page.group.publicPath}
-                  options={route.groupOptions}
+            action: (
+              <TryoutCatalogChoices>
+                <TryoutExamSelector
+                  currentValue={route.page.exam.publicPath}
+                  options={route.examOptions}
                 />
-              ) : undefined,
+                {route.groupOptions.length > 0 ? (
+                  <TryoutGroupSelector
+                    axis={route.page.exam.groupAxis}
+                    currentValue={route.page.group.publicPath}
+                    options={route.groupOptions}
+                  />
+                ) : null}
+              </TryoutCatalogChoices>
+            ),
             home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [
               {
                 label: route.labels.tryOut,
                 menuLabel: route.labels.tryOutShort,
-                target: Option.getOrUndefined(getTryoutCrumbTarget("try-out")),
+                target: Option.getOrUndefined(
+                  getTryoutCrumbTarget(route.countryPath)
+                ),
               },
               { label: route.name },
             ],

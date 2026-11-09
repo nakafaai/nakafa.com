@@ -40,6 +40,8 @@ interface ColumnSpec<TData extends RowData, TValue extends CellData> {
   >;
   readonly header: string;
   readonly id: string;
+  /** How the column stands on a phone, for a table whose rows must read whole there (`phoneColumn`). */
+  readonly phone?: "fit" | "hidden";
   /** Whether the cell holds more than one value's width, such as a room's state beside its seats. */
   readonly wide?: boolean;
 }
@@ -74,7 +76,7 @@ export type TableColumn<TData extends RowData> = AnyColumn<TData> & {
 /** The part every column of data shares: how it reads a row, draws its cell, and names its head. */
 function dataColumn<TData extends RowData, TValue extends CellData>(
   read: AccessorFn<TData, TValue>,
-  { align, cell, header, id, wide }: ColumnSpec<TData, TValue>,
+  { align, cell, header, id, phone, wide }: ColumnSpec<TData, TValue>,
   filter: HeadFilter
 ) {
   return {
@@ -85,6 +87,7 @@ function dataColumn<TData extends RowData, TValue extends CellData>(
       filter,
       title: header,
       ...(align === undefined ? {} : { align }),
+      ...(phone === undefined ? {} : { phone }),
       ...(wide === undefined ? {} : { wide }),
     },
     ...(cell === undefined ? {} : { cell }),

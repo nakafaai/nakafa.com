@@ -131,44 +131,16 @@ export function readPublishedGroupEntry(
 }
 
 /**
- * Where a link to one country lands, by the same rule: a country with a single
- * exam opens that exam's entry, and a country with more exams opens its own
- * page of exam cards.
- */
-export function readPublishedCountryEntry(
-  index: PublishedCatalogIndex,
-  country: CatalogCountry
-) {
-  const [exam, ...others] = sortCatalogRows(
-    Arr.filter(index.exams, (row) => row.countryKey === country.countryKey)
-  );
-  const group =
-    exam === undefined || others.length > 0
-      ? undefined
-      : Arr.head(readPublishedExamGroups(index, exam)).pipe(
-          Option.getOrUndefined
-        );
-  return group === undefined
-    ? country.publicPath
-    : readPublishedGroupEntry(index, group);
-}
-
-/**
- * Whether a link can land on one catalog row: an exam never, because a link
- * to it opens its entry, and a country or a group only when it is its own
- * entry. The sitemap, and so the static build, lists only these pages.
+ * Whether a link can land on one catalog row: an exam never, because a link to
+ * it opens its entry, and a group only when it is its own entry. A country is
+ * always its own page, the one page of its exams. The sitemap, and so the
+ * static build, lists only these pages.
  */
 export function isPublishedLanding(
   index: PublishedCatalogIndex,
-  row: PublishedCatalogIndex["countries" | "exams" | "groups"][number]
+  row: PublishedCatalogIndex["exams" | "groups"][number]
 ) {
-  if (row.kind === "exam") {
-    return false;
-  }
-  if (row.kind === "country") {
-    return readPublishedCountryEntry(index, row) === row.publicPath;
-  }
-  return readPublishedGroupEntry(index, row) === row.publicPath;
+  return row.kind === "group" && readPublishedGroupEntry(index, row) === row.publicPath;
 }
 
 /** Resolves the country and exam a group belongs to, and its exam's groups in order. */

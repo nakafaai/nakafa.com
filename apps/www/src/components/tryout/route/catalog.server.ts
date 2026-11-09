@@ -5,8 +5,10 @@ import { readServerTranslator } from "@repo/internationalization/src/translator"
 import { Array as Arr, Effect, Option } from "effect";
 import {
   buildTryoutCountryOptions,
+  buildTryoutExamOptions,
   buildTryoutGroupOptions,
   offersGroupChoice,
+  readLocaleCountry,
 } from "@/components/tryout/catalog/options";
 import {
   readTryoutCountryPage,
@@ -23,10 +25,9 @@ import {
 } from "@/components/tryout/route/metadata.server";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
-import { getAppSocialArtwork } from "@/lib/og/app";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { serverHandler } from "@/lib/server/fn";
 import {
+  getTryoutCountryPageArtwork,
   getTryoutTrackCatalogArtwork,
   resolveTryoutExamArtwork,
 } from "@/lib/tryout/artwork";
@@ -47,45 +48,21 @@ const withExamArtwork = Effect.fn("www.tryout.route.examArtwork")(function* <
 });
 
 /**
- * The hub: every country's exam cards and the breadcrumbs. Picking an exam is
- * the first click. A try-out catalog's revision is an authored date, not a
- * commit, so it names no source tree.
+ * The hub's address, which is no page of its own: Indonesia and Germany never
+ * share a page, so "Try out" opens one country's page, the locale's own
+ * country, else the catalog's first. A learner's last choice goes before this
+ * in the sidebar, which links straight to that country.
  */
 export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
   function* (locale: Locale) {
-    const [page, labels, tTryouts] = yield* Effect.all(
-      [
-        readTryoutHubPage(locale),
-        readTryoutRouteLabels(locale),
-        Effect.promise(() =>
-          readServerTranslator({ locale, namespace: "Tryouts" })
-        ),
-      ],
-      { concurrency: "unbounded" }
-    );
-    const countries = yield* Effect.forEach(page.countries, (country) =>
-      Effect.map(
-        Effect.forEach(country.exams, (exam) =>
-          withExamArtwork(locale, country.countryKey, exam)
-        ),
-        (exams) => ({ ...country, exams })
-      )
-    );
-    return {
-      breadcrumbs: createBreadcrumbItems(locale, [
-        { name: labels.home, path: "" },
-        { name: labels.tryOut, path: "/try-out" },
-      ]),
-      description: tTryouts("metadata-description"),
-      image: getAppSocialArtwork({
-        key: "try-out",
-        locale,
-        publicPath: "try-out",
+    const page = yield* readTryoutHubPage(locale);
+    return Option.match(readLocaleCountry(locale, page.countries), {
+      onNone: () => ({ kind: "notFound" as const }),
+      onSome: (country) => ({
+        entryPath: country.publicPath,
+        kind: "entry" as const,
       }),
-      labels,
-      page: { countries },
-      title: tTryouts("hub-search-title"),
-    };
+    });
   }
 );
 
@@ -112,10 +89,6 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
     if (Option.isNone(page) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    // A country with one exam is never a page: a link to it opens that exam's entry.
-    if (page.value.entryPath !== countryPath) {
-      return { entryPath: page.value.entryPath, kind: "entry" as const };
-    }
     const exams = yield* Effect.forEach(page.value.exams, (exam) =>
       withExamArtwork(input.locale, page.value.country.countryKey, exam)
     );
@@ -123,7 +96,15 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       countryOptions: buildTryoutCountryOptions(hub.countries),
       countryPath,
       exams,
-      head: head.value,
+      head: {
+        ...head.value,
+        // The country's own design is its page's social image, and never a card.
+        image:
+          getTryoutCountryPageArtwork(
+            input.locale,
+            page.value.country.countryKey
+          ) ?? head.value.image,
+      },
       kind: "found" as const,
       labels,
       selectorLabel: tTryouts("country-selector-label"),
@@ -132,8 +113,8 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
 );
 
 /**
- * The header of a group or a track page: the group choice, its one primary
- * control, when the exam offers one, and the exam's name in the breadcrumb.
+ * The header of a group or a track page: the group choice, beside the exam
+ * choice, when the exam offers one, and the exam's name in the breadcrumb.
  * Without a choice the crumb names the group as well, as in SNBT 2027. The
  * crumb links to the group's track cards only when the group has some.
  */
@@ -179,9 +160,11 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
       exam: input.exam,
       group: input.group,
     });
-    const [page, head, labels, tTryouts] = yield* Effect.all(
+    const countryPath = getTryoutPublicPath({ country: input.country });
+    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
       [
         readTryoutGroupPage(input.locale, groupPath),
+        readTryoutCountryPage(input.locale, countryPath),
         readTryoutRouteHead({
           kind: "group",
           locale: input.locale,
@@ -194,7 +177,7 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
       ],
       { concurrency: "unbounded" }
     );
-    if (!page || Option.isNone(head)) {
+    if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     // A group with one track is never a page: a link to it opens that track's table.
@@ -209,6 +192,8 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
     const name = `${page.exam.title} ${page.group.title}`;
     const header = readCatalogHeader(page);
     return {
+      countryPath,
+      examOptions: buildTryoutExamOptions(countryPage.value.exams),
       groupOptions: header.groupOptions,
       head: {
         ...head.value,
@@ -238,9 +223,11 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       group: input.group,
       track: input.track,
     });
-    const [page, head, labels, tTryouts] = yield* Effect.all(
+    const countryPath = getTryoutPublicPath({ country: input.country });
+    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
       [
         readTryoutTrackPage(input.locale, trackPath),
+        readTryoutCountryPage(input.locale, countryPath),
         readTryoutRouteHead({
           kind: "track",
           locale: input.locale,
@@ -253,7 +240,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       ],
       { concurrency: "unbounded" }
     );
-    if (!page || Option.isNone(head)) {
+    if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     // The set list needs the track's keys, so it follows the page here, on the
@@ -271,7 +258,9 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
     const header = readCatalogHeader(page);
     return {
+      countryPath,
       examCrumb: header.examCrumb,
+      examOptions: buildTryoutExamOptions(countryPage.value.exams),
       groupOptions: header.groupOptions,
       head: {
         ...head.value,

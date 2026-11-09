@@ -19,14 +19,6 @@ const ExamFixtureSchema = Schema.Struct({
 });
 export type ExamFixture = typeof ExamFixtureSchema.Type;
 
-/** One signed country in one locale: its entry, where a link to it lands. */
-const CountryFixtureSchema = Schema.Struct({
-  appLocale: AppLocaleCodeSchema,
-  entryPath: Schema.String,
-  publicPath: Schema.String,
-});
-type CountryFixture = typeof CountryFixtureSchema.Type;
-
 /** One signed group in one locale: its tracks in order. */
 const GroupFixtureSchema = Schema.Struct({
   appLocale: AppLocaleCodeSchema,
@@ -44,12 +36,11 @@ const SectionFixtureSchema = Schema.Struct({
 });
 export type SectionFixture = typeof SectionFixtureSchema.Type;
 
-/** The catalog reads that the routing rules call, each a test double; a rule that reads no country needs no country double. */
+/** The catalog reads that the routing rules call, each a test double. */
 type CatalogMocks = Record<
   "exam" | "group" | "path" | "section",
   ReturnType<typeof vi.fn>
-> &
-  Partial<Record<"country", ReturnType<typeof vi.fn>>>;
+>;
 
 /** Finds the row a read asks for: its locale and its path. */
 function findRow<Row extends { appLocale: AppLocaleCode; publicPath: string }>(
@@ -69,15 +60,13 @@ function findRow<Row extends { appLocale: AppLocaleCode; publicPath: string }>(
 export function serveTryoutCatalog(
   mocks: CatalogMocks,
   fixture: {
-    readonly countries?: readonly CountryFixture[];
     readonly exams?: readonly ExamFixture[];
     readonly groups?: readonly GroupFixture[];
     readonly routes?: readonly RouteIdentity[];
     readonly sections?: readonly SectionFixture[];
   }
 ) {
-  const { countries, exams, groups, routes, sections } = {
-    countries: [],
+  const { exams, groups, routes, sections } = {
     exams: [],
     groups: [],
     routes: [],
@@ -114,16 +103,6 @@ export function serveTryoutCatalog(
           ? tracks[0].publicPath
           : group.publicPath,
     });
-  mocks.country?.mockImplementation(
-    (input: { appLocale: AppLocaleCode; publicPath: string }) =>
-      Effect.succeed(
-        Option.getOrNull(
-          Option.map(findRow(countries, input), (country) => ({
-            entryPath: country.entryPath,
-          }))
-        )
-      )
-  );
   mocks.exam.mockImplementation(
     (input: { appLocale: AppLocaleCode; publicPath: string }) =>
       Effect.succeed(

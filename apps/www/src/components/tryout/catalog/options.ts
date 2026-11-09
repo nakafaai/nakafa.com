@@ -2,12 +2,17 @@ import type { Ref } from "@confect/core";
 import type { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
+  publicTryoutCountryExamValidator,
   publicTryoutCountryValidator,
+  publicTryoutExamValidator,
   publicTryoutGroupChoiceValidator,
 } from "@repo/backend/confect/tryouts/queries/model";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, HashMap, Option, Schema } from "effect";
 
 type TryoutHubPage = Ref.Returns<typeof tryouts.queries.catalog.getHubPage>;
+type TryoutCountryPage = NonNullable<
+  Ref.Returns<typeof tryouts.queries.catalog.getCountryPage>
+>;
 type TryoutGroupPage = NonNullable<
   Ref.Returns<typeof tryouts.queries.catalog.getGroupPage>
 >;
@@ -22,6 +27,17 @@ const TryoutCountrySelectorOptionSchema = Schema.Struct({
 
 export type TryoutCountrySelectorOption =
   typeof TryoutCountrySelectorOptionSchema.Type;
+
+/** One exam of the exam selector: its value is the exam's path, and its link lands on the exam's entry. */
+const TryoutExamSelectorOptionSchema = Schema.Struct({
+  entryPath: publicTryoutCountryExamValidator.fields.entryPath,
+  examKey: publicTryoutExamValidator.fields.examKey,
+  title: publicTryoutExamValidator.fields.title,
+  value: publicTryoutExamValidator.fields.publicPath,
+});
+
+export type TryoutExamSelectorOption =
+  typeof TryoutExamSelectorOptionSchema.Type;
 
 /** One group of the group selector: its value is the group's path, and choosing it lands on the group's entry. */
 const TryoutGroupSelectorOptionSchema = Schema.Struct({
@@ -47,6 +63,18 @@ export function buildTryoutCountryOptions(
   }));
 }
 
+/** Projects active exam rows into localized selector options. */
+export function buildTryoutExamOptions(
+  exams: TryoutCountryPage["exams"]
+): readonly TryoutExamSelectorOption[] {
+  return Arr.map(exams, (exam) => ({
+    entryPath: exam.entryPath,
+    examKey: exam.examKey,
+    title: exam.title,
+    value: exam.publicPath,
+  }));
+}
+
 /** Projects the groups of one exam into localized selector options. */
 export function buildTryoutGroupOptions(
   groups: TryoutGroupPage["groups"]
@@ -60,14 +88,37 @@ export function buildTryoutGroupOptions(
 }
 
 /**
- * Whether a page's header offers its exam's groups, the header's one primary
- * control. A learner picks their own grade or Studienkolleg, so that choice
- * shows even before a second option joins; one year is already in the exam's
- * name, as in SNBT 2027, so a single year shows no selector.
+ * Whether a page's header offers its exam's groups. A learner picks their own
+ * grade or Studienkolleg, so that choice shows even before a second option
+ * joins; one year is already in the exam's name, as in SNBT 2027, so a single
+ * year shows no selector.
  */
 export function offersGroupChoice(
   axis: typeof GroupAxisSchema.Type,
   groups: readonly unknown[]
 ) {
   return groups.length > 1 || axis !== "year";
+}
+
+/** The country each locale's readers live in, by the country code a catalog country carries. A locale of many countries, such as English, names none. */
+const LOCALE_COUNTRY_CODES = HashMap.make(
+  ["de", "DE"],
+  ["id", "ID"],
+  ["ms", "MY"]
+);
+
+/**
+ * The country whose page a locale's "Try out" opens: the locale's own country
+ * when the catalog holds it, else the catalog's first country. A learner's
+ * last choice goes before this, where the sidebar knows it.
+ */
+export function readLocaleCountry<
+  Country extends { readonly countryCode: string },
+>(locale: string, countries: readonly Country[]) {
+  return Option.orElse(
+    Option.flatMap(HashMap.get(LOCALE_COUNTRY_CODES, locale), (code) =>
+      Arr.findFirst(countries, (country) => country.countryCode === code)
+    ),
+    () => Arr.head(countries)
+  );
 }

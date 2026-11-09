@@ -141,12 +141,7 @@ describe("immutable try-out application catalog", () => {
           { concurrency: "unbounded" }
         );
         expect(pages[0]).toMatchObject({
-          countries: [
-            {
-              exams: [{ entryPath: TRACK(locale) }],
-              publicPath: COUNTRY(locale),
-            },
-          ],
+          countries: [{ publicPath: COUNTRY(locale) }],
           sourceRevision: FIXTURE_REVISION,
         });
         expect(Option.getOrThrow(pages[1])).toMatchObject({

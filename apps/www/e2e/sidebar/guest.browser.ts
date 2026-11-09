@@ -329,8 +329,8 @@ test("guest reaches authentication only when starting a public tryout", async ({
         );
         yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-        // The hub shows every exam under its country, and SNBT's card opens
-        // its one track's set table: the first click.
+        // The address of Try out opens Indonesia's page, the English reader's
+        // first country, and SNBT's card opens its one track's set table.
         const trackHref = "/en/try-out/indonesia/snbt/2027/utbk";
         const exam = page.getByRole("link", {
           exact: true,

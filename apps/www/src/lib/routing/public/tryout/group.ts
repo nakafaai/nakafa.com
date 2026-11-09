@@ -1,7 +1,6 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option } from "effect";
 import {
-  readPublishedTryoutCountryPage,
   readPublishedTryoutExamPage,
   readPublishedTryoutGroupPage,
 } from "@/lib/content/tryout/catalog";
@@ -123,33 +122,6 @@ const readGroupEntryRedirect = Effect.fn(
         ? null
         : temporaryRedirect(`/${appLocale}/${own.entryPath}`),
   });
-});
-
-/**
- * Answers a country's own address with a temporary redirect to its entry when
- * the country holds a single exam, which is then never a page of its own.
- */
-export const readCountryEntryRedirect = Effect.fn(
-  "www.routing.publicHtml.tryoutCountryEntry"
-)(function* (pathname: string) {
-  const [localeSegment, root, country, ...rest] = readPathSegments(pathname);
-  const appLocale = decodeAppLocale(localeSegment);
-  if (
-    Option.isNone(appLocale) ||
-    root !== TRYOUT_ROOT ||
-    country === undefined ||
-    rest.length > 0
-  ) {
-    return null;
-  }
-  const publicPath = `${TRYOUT_ROOT}/${country}`;
-  const page = yield* readPublishedTryoutCountryPage({
-    appLocale: appLocale.value,
-    publicPath,
-  });
-  return page === null || page.entryPath === publicPath
-    ? null
-    : temporaryRedirect(`/${appLocale.value}/${page.entryPath}`);
 });
 
 /**

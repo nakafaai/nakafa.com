@@ -199,8 +199,6 @@ export const makeAssessmentSnapshot = Effect.fn(
     readonly firstSectionKey?: string;
     /** Adds a second track without sets to the fixture group, so the group opens its track cards. */
     readonly paired?: boolean;
-    /** Adds a second exam with one group and one track to the fixture country, so the country opens its exam cards. */
-    readonly twin?: boolean;
     readonly renamed?: boolean;
     readonly scoring?: ScoringStrategy;
     readonly sets?: number;
@@ -305,7 +303,6 @@ export const makeAssessmentSnapshot = Effect.fn(
       entry: options.entry === true,
       paired: options.paired === true,
       renamed: options.renamed === true,
-      twin: options.twin === true,
       sections: Arr.map(sections, ({ id }) => id),
       sets: Arr.map(sets, ({ key, paper, paperHash }) => ({
         paper: { hash: paperHash, id: paper.id },
@@ -354,7 +351,6 @@ function makeCatalog(
     readonly entry: boolean;
     readonly paired: boolean;
     readonly renamed: boolean;
-    readonly twin: boolean;
     readonly sections: readonly string[];
     readonly sets: readonly Pick<CatalogSet, "paper" | "setKey">[];
   }
@@ -417,41 +413,6 @@ function makeCatalog(
               order: 2,
               publicPath: `try-out/indonesia/snbt/2027/paired-${appLocale}`,
               trackKey: "paired",
-            },
-          ]
-        : []),
-      ...(track.twin
-        ? [
-            {
-              ...base,
-              countryKey: FIXTURE_TRACK.countryKey,
-              examKey: "twin",
-              graph: graph(appLocale, "twin-exam"),
-              groupAxis: "grade",
-              kind: "exam",
-              order: 2,
-              publicPath: `try-out/indonesia/twin-${appLocale}`,
-            },
-            {
-              ...base,
-              countryKey: FIXTURE_TRACK.countryKey,
-              examKey: "twin",
-              graph: graph(appLocale, "twin-group"),
-              groupKey: "senior",
-              kind: "group",
-              order: 1,
-              publicPath: `try-out/indonesia/twin/senior-${appLocale}`,
-            },
-            {
-              ...base,
-              countryKey: FIXTURE_TRACK.countryKey,
-              examKey: "twin",
-              graph: graph(appLocale, "twin-track"),
-              groupKey: "senior",
-              kind: "track",
-              order: 1,
-              publicPath: `try-out/indonesia/twin/senior/math-${appLocale}`,
-              trackKey: "math",
             },
           ]
         : []),

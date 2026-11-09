@@ -3,7 +3,6 @@ import type { PublishedCatalog } from "@repo/backend/content/tryout/catalog";
 import {
   indexPublishedCatalog,
   type PublishedCatalogIndex,
-  readPublishedCountryEntry,
   readPublishedExamGroups,
   readPublishedGroupEntry,
   readPublishedGroupParents,
@@ -59,23 +58,19 @@ function toGroupChoices(
   }));
 }
 
-/**
- * Reads the localized hub of one catalog: every country with its exams, so the
- * hub shows the exam cards and picking an exam is the first click.
- */
+/** Reads the localized country-first hub of one catalog, with each country's exam count. */
 export const readPublishedHubPage = Effect.fn(
   "tryouts.catalog.readPublishedHubPage"
 )(function* (catalog: PublishedCatalog) {
   const index = yield* indexPublishedCatalog(catalog);
   return {
-    countries: yield* Effect.forEach(
-      sortCatalogRows(index.countries),
-      (country) =>
-        Effect.map(readCountryExams(index, country), (exams) => ({
-          ...toPublicCountry(country),
-          exams,
-        }))
-    ),
+    countries: Arr.map(sortCatalogRows(index.countries), (country) => ({
+      ...toPublicCountry(country),
+      examCount: Arr.countBy(
+        index.exams,
+        (exam) => exam.countryKey === country.countryKey
+      ),
+    })),
   };
 });
 
@@ -93,7 +88,6 @@ export const readPublishedCountryPage = Effect.fn(
   }
   return {
     country: toPublicCountry(country.value),
-    entryPath: readPublishedCountryEntry(index, country.value),
     exams: yield* readCountryExams(index, country.value),
   };
 });

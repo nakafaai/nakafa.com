@@ -5,9 +5,9 @@ import { fixtureSetPath } from "@repo/backend/test/assessment/snapshot";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Layer } from "effect";
 import {
-  readPublishedTryoutCountryPage,
   readPublishedTryoutExamPage,
   readPublishedTryoutGroupPage,
+  readPublishedTryoutHubPage,
   readPublishedTryoutSectionPage,
 } from "@/lib/content/tryout/catalog";
 import { resetTestRuntimeCache } from "@/test/store";
@@ -53,13 +53,9 @@ describe("published try-out pages for routing", () => {
         runtimeQueryMock.mockImplementation(world.visitor.query);
 
         expect(
-          yield* readPublishedTryoutCountryPage({
-            appLocale: "en",
-            publicPath: "try-out/indonesia-en",
-          })
+          yield* readPublishedTryoutHubPage({ appLocale: "en" })
         ).toMatchObject({
-          entryPath: "try-out/indonesia/snbt/2027/utbk-en",
-          exams: [{ examKey: "snbt" }],
+          countries: [{ countryKey: "indonesia", examCount: 1 }],
         });
         expect(
           yield* readPublishedTryoutExamPage({

@@ -136,6 +136,10 @@ const BEHAVIOUR_SCHOOL_TESTS = Arr.map(
 // Android, and iPad, and cover the viewport on iPhone, in Safari too.
 const WEBKIT_TESTS = ["**/visual/cards.browser.ts"];
 
+// The try-out catalog, whose header, cards and phone table the browsers suite
+// proves in Firefox and Safari too, as the runtime suite proves them in Chromium.
+const CATALOG_TESTS = ["**/tryout/groups.browser.ts"];
+
 // The School pages of the timing specs, which the browser timing suite runs in
 // the other four browsers.
 const SCHOOL_TIMING_TESTS = Arr.filter(TIMING_TESTS, (path) =>
@@ -225,6 +229,14 @@ const PROJECTS = {
     testMatch: SCHOOL_TESTS,
     use: devices["Desktop Safari"],
   },
+  "catalog-firefox": {
+    testMatch: CATALOG_TESTS,
+    use: devices["Desktop Firefox"],
+  },
+  "catalog-safari": {
+    testMatch: CATALOG_TESTS,
+    use: devices["Desktop Safari"],
+  },
   "school-android": {
     testIgnore: [...BEHAVIOUR_SCHOOL_TESTS, ...TIMING_TESTS],
     testMatch: SCHOOL_TESTS,
@@ -288,6 +300,8 @@ const SUITES = {
   visual: { projects: ["visual", "webkit"], timing: false },
   browsers: {
     projects: [
+      "catalog-firefox",
+      "catalog-safari",
       "school-firefox",
       "school-safari",
       "school-android",

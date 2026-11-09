@@ -26,15 +26,7 @@ describe("content/tryout/navigation", () => {
               countryCode: "ID",
               countryKey: "indonesia",
               description: "Try-out Indonesia",
-              exams: [
-                {
-                  entryPath: TRACK_PATH,
-                  examKey: "snbt",
-                  groupAxis: "year",
-                  publicPath: "try-out/indonesia/snbt-id",
-                  title: "Try-out",
-                },
-              ],
+              examCount: 1,
               publicPath: "try-out/indonesia-id",
               title: "Try-out",
             },
@@ -48,7 +40,6 @@ describe("content/tryout/navigation", () => {
           )
         ).toMatchObject({
           country: { countryKey: "indonesia" },
-          entryPath: TRACK_PATH,
           exams: [
             {
               entryPath: TRACK_PATH,
@@ -113,15 +104,16 @@ describe("content/tryout/navigation", () => {
   );
 
   it.effect(
-    "reaches every set table of an exam's first group in at most two clicks from the hub",
+    "reaches every set table of an exam's first group in at most two clicks from its country page",
     () =>
       Effect.gen(function* () {
         for (const paired of [false, true]) {
           const world = yield* tryoutWorld({ paired });
-          const hub = yield* world.visitor.query(catalog.getHubPage, {
+          const country = yield* world.visitor.query(catalog.getCountryPage, {
             appLocale: "id",
+            publicPath: "try-out/indonesia-id",
           });
-          const exams = Arr.flatMap(hub.countries, ({ exams }) => exams);
+          const exams = country?.exams ?? [];
           expect(exams).toHaveLength(1);
           for (const exam of exams) {
             // Click one opens the exam's entry. It is a set table, or the
@@ -155,27 +147,4 @@ describe("content/tryout/navigation", () => {
       })
   );
 
-  it.effect(
-    "opens a country with one exam at that exam's entry, and one with more exams at its own page",
-    () =>
-      Effect.gen(function* () {
-        for (const twin of [false, true]) {
-          const world = yield* tryoutWorld({ twin });
-          const country = yield* world.visitor.query(catalog.getCountryPage, {
-            appLocale: "id",
-            publicPath: "try-out/indonesia-id",
-          });
-          expect(country?.entryPath).toBe(
-            twin ? "try-out/indonesia-id" : TRACK_PATH
-          );
-          expect(
-            Arr.map(country?.exams ?? [], (exam) => exam.entryPath)
-          ).toEqual(
-            twin
-              ? [TRACK_PATH, "try-out/indonesia/twin/senior/math-id"]
-              : [TRACK_PATH]
-          );
-        }
-      })
-  );
 });

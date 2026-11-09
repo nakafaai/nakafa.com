@@ -7,7 +7,6 @@ const APP_ARTWORK_IDENTITIES = {
   pricing: "app/pricing",
   quran: "quran/index",
   school: "app/school",
-  "try-out": "tryout/index",
 } as const satisfies Readonly<Record<string, ArtworkIdentity | undefined>>;
 
 type AppArtworkKey = keyof typeof APP_ARTWORK_IDENTITIES;

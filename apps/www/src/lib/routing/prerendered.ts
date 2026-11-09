@@ -4,6 +4,7 @@
  * navigates in the browser and no Worker renders it. The sign-in page and the
  * try-out pages are here too: every reader gets the same static page, and the page
  * itself sends a signed-in reader on, or reads their attempt, in the browser.
+ * The address of "Try out" is no page: it opens one country's page.
  */
 export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale",
@@ -21,7 +22,6 @@ export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale/quran/$surah",
   "/$locale/school",
   "/$locale/school/pricing",
-  "/$locale/try-out",
   "/$locale/try-out/$country",
   "/$locale/try-out/$country/$exam/$group",
   "/$locale/try-out/$country/$exam/$group/$track",

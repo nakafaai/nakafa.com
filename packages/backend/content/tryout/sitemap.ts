@@ -15,8 +15,8 @@ import { Array as Arr, Effect } from "effect";
 
 /**
  * Lists the public paths of one locale's catalog in sitemap order. A row that a
- * link never lands on, an exam or a country or group with a single option, has
- * no page of its own (`isPublishedLanding`), so its path is not listed.
+ * link never lands on, an exam or a group with a single track, has no page of
+ * its own (`isPublishedLanding`), so its path is not listed.
  */
 export const listTryoutSitemapPaths = Effect.fn(
   "contentRelease.listTryoutSitemapPaths"
@@ -28,9 +28,7 @@ export const listTryoutSitemapPaths = Effect.fn(
         return [];
       }
       if (
-        (row.kind === "country" ||
-          row.kind === "exam" ||
-          row.kind === "group") &&
+        (row.kind === "exam" || row.kind === "group") &&
         !isPublishedLanding(index, row)
       ) {
         return [];

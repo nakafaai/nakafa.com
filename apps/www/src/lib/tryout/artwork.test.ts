@@ -3,6 +3,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
+  getTryoutCountryPageArtwork,
   getTryoutSectionArtwork,
   getTryoutTrackCatalogArtwork,
   resolveTryoutExamArtwork,
@@ -10,13 +11,13 @@ import {
 
 describe("try-out artwork", () => {
   it.effect.each(["en", "id", "de"] as const)(
-    "gives every exam card of the catalog its reviewed artwork in %s, so none falls back to a gradient",
+    "draws each exam card with that exam's own design, and the Aufnahmeprüfung with none yet, in %s",
     (appLocale) =>
       Effect.gen(function* () {
         for (const [countryKey, examKey, artwork] of [
-          ["germany", "entrance-examination", "germany/en-index"],
-          ["indonesia", "snbt", "indonesia/en-snbt"],
-          ["indonesia", "tka", "indonesia/en-tka"],
+          ["germany", "entrance-examination", undefined],
+          ["indonesia", "snbt", "/open-graph/tryout/indonesia/en-snbt.png"],
+          ["indonesia", "tka", "/open-graph/tryout/indonesia/en-tka.png"],
         ] as const) {
           expect(
             (yield* resolveTryoutExamArtwork({
@@ -25,9 +26,24 @@ describe("try-out artwork", () => {
               examKey,
               publicPath: `try-out/${countryKey}/${examKey}`,
             })).cardImageSrc
-          ).toBe(`/open-graph/tryout/${artwork}.png`);
+          ).toBe(artwork);
         }
       })
+  );
+
+  it.each(["en", "id", "de"] as const)(
+    "keeps a country's design for its own page's social image, and lends it to no card, in %s",
+    (locale) => {
+      expect(getTryoutCountryPageArtwork(locale, "germany")).toBe(
+        "/open-graph/tryout/germany/en-index.png"
+      );
+      expect(getTryoutCountryPageArtwork(locale, "indonesia")).toBe(
+        "/open-graph/tryout/indonesia/en-index.png"
+      );
+      expect(getTryoutCountryPageArtwork(locale, "malaysia")).toBeUndefined();
+      // An entity's design is no country page's image.
+      expect(getTryoutCountryPageArtwork(locale, "snbt")).toBeUndefined();
+    }
   );
 
   it.effect.each(["en", "id", "de"] as const)(

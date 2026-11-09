@@ -79,6 +79,24 @@ function CatalogCardTile({
 }
 
 /**
+ * Renders a catalog choice that has no reviewed artwork of its own, in the same
+ * 1200 by 630 frame: its own name, set on a quiet surface, rather than another
+ * entity's artwork or a borrowed tile.
+ */
+export function CatalogCardPlate({ title }: { title: string }) {
+  return (
+    <div
+      className="bg-muted text-foreground flex aspect-40/21 items-center justify-center border-b px-6"
+      data-slot="catalog-card-plate"
+    >
+      <span className="text-center text-2xl font-semibold tracking-tight text-balance">
+        {title}
+      </span>
+    </div>
+  );
+}
+
+/**
  * Renders what one card of a catalog grid draws: its reviewed artwork when
  * `visual` is the source of that artwork, or the tile that the grid gave it.
  * `getTileLooks` hands a grid the one or the other for each card, and a card

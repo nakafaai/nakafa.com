@@ -9,7 +9,11 @@ import { Option, Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
-import { TryoutGroupSelector } from "@/components/tryout/catalog/selector";
+import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
+import {
+  TryoutExamSelector,
+  TryoutGroupSelector,
+} from "@/components/tryout/catalog/selector";
 import {
   CATALOG_QUERY_DEFAULTS,
   CatalogQuery,
@@ -86,21 +90,30 @@ function TryoutTrackPage() {
       <LayoutMaterialContent className="flex min-h-0 flex-1 flex-col">
         <BreadcrumbHeader
           value={{
-            action:
-              route.groupOptions.length > 0 ? (
-                <TryoutGroupSelector
-                  axis={route.page.exam.groupAxis}
-                  currentValue={route.page.group.publicPath}
-                  options={route.groupOptions}
+            action: (
+              <TryoutCatalogChoices>
+                <TryoutExamSelector
+                  currentValue={route.page.exam.publicPath}
+                  options={route.examOptions}
                 />
-              ) : undefined,
+                {route.groupOptions.length > 0 ? (
+                  <TryoutGroupSelector
+                    axis={route.page.exam.groupAxis}
+                    currentValue={route.page.group.publicPath}
+                    options={route.groupOptions}
+                  />
+                ) : null}
+              </TryoutCatalogChoices>
+            ),
             home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [
               {
                 label: route.labels.tryOut,
                 menuLabel: route.labels.tryOutShort,
-                target: Option.getOrUndefined(getTryoutCrumbTarget("try-out")),
+                target: Option.getOrUndefined(
+                  getTryoutCrumbTarget(route.countryPath)
+                ),
               },
               {
                 label: route.examCrumb.label,
