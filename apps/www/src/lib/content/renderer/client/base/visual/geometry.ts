@@ -13,6 +13,10 @@ import {
   containsSpacePoint,
 } from "@/lib/content/renderer/client/base/visual/clip";
 import { resolvePlaneCurve } from "@/lib/content/renderer/client/base/visual/curve";
+import {
+  isPlaneFormula,
+  isSpaceFormula,
+} from "@/lib/content/renderer/client/base/visual/formula";
 import type {
   PlaneObject,
   PlanePoint,
@@ -110,6 +114,9 @@ function appendPlane(
   projection: VisualProjection,
   object: PlaneObject
 ) {
+  if (isPlaneFormula(object)) {
+    return;
+  }
   if (object.kind === "point") {
     if (containsPlanePoint(scene.frame, object.at)) {
       MutableList.append(geometry.markers, {
@@ -173,6 +180,9 @@ function appendSpace(
   projection: VisualProjection,
   object: SpaceObject
 ) {
+  if (isSpaceFormula(object)) {
+    return;
+  }
   if (object.kind === "point") {
     if (containsSpacePoint(scene.frame, object.at)) {
       MutableList.append(geometry.markers, {
@@ -214,7 +224,10 @@ function appendSpace(
     projection
   );
 }
-/** Resolves both scene dimensions into shared three-dimensional primitives. */
+/**
+ * Resolves both scene dimensions into shared three-dimensional primitives.
+ * Formula objects sample themselves in `formula.ts`, at the sliders' values.
+ */
 export function resolveVisualGeometry(
   scene: PlaneVisual | SpaceVisual,
   projection = resolveVisualProjection(scene)

@@ -153,3 +153,23 @@ export function projectVisualFrame(
   });
   return { x: project("x"), y: project("y"), z: project("z") };
 }
+/**
+ * Projects sampled points through the same map in plain numbers. A formula
+ * draws thousands of samples, so this reads the exact center and scale once
+ * and leaves exact decimals to the authored coordinates.
+ */
+export function sampleProjector(projection: VisualProjection) {
+  const scale =
+    BigDecimal.toNumberUnsafe(WORLD_EXTENT) /
+    BigDecimal.toNumberUnsafe(projection.extent);
+  const center = {
+    x: BigDecimal.toNumberUnsafe(projection.center.x),
+    y: BigDecimal.toNumberUnsafe(projection.center.y),
+    z: BigDecimal.toNumberUnsafe(projection.center.z),
+  };
+  return (point: SpacePoint): SpacePoint => ({
+    x: (point.x - center.x) * scale,
+    y: (point.y - center.y) * scale,
+    z: (point.z - center.z) * scale,
+  });
+}
