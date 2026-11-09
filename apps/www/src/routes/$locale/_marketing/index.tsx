@@ -1,6 +1,7 @@
 import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { makeCollectionPageNode, makeFaqPageNode } from "@repo/seo/jsonld/node";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { createTranslator } from "use-intl/core";
@@ -38,20 +39,12 @@ export const Route = createFileRoute("/$locale/_marketing/")({
     }
   },
   loader: async ({ params }) => {
-    // The subject menu carries its icons, and this file's loader sits in the first
-    // bundle of every public page, so only this page's loader reads them.
-    const [
-      { getSubjectMenuHref, subjectMenu },
-      curricula,
-      featuredTryout,
-      messages,
-    ] = await Promise.all([
-      import("@/components/sidebar/data/subject"),
+    const [curricula, featuredTryout, messages] = await Promise.all([
       readStaticData(readHomeCurriculaFn, { locale: params.locale }),
       readStaticData(readHomeTryout, { locale: params.locale }),
       readStaticData(readRouteMessages, {
         locale: params.locale,
-        namespaces: ["Landing", "Metadata", "Subject"],
+        namespaces: ["Landing", "Metadata"],
       }),
     ]);
     const t = createTranslator({
@@ -64,24 +57,13 @@ export const Route = createFileRoute("/$locale/_marketing/")({
       messages,
       namespace: "Landing",
     });
-    const tSubject = createTranslator({
-      locale: params.locale,
-      messages,
-      namespace: "Subject",
-    });
-    const collection = Arr.flatMap(subjectMenu, (category) =>
-      Arr.map(category.items, (item) => {
-        const name =
-          item.title === "grade"
-            ? `${tSubject(category.title)} ${tSubject("grade", { grade: item.value })}`
-            : `${tSubject(category.title)} ${tSubject(item.title)}`;
-        return {
-          description: tSubject("grade-description"),
-          name,
-          url: `${COMPANY_IDENTITY.url}/${params.locale}${getSubjectMenuHref(item, params.locale)}`,
-        };
-      })
-    );
+    // The collection is every curriculum of the signed catalog the page lists, so it names what a learner finds
+    // whatever curricula and grades the catalog holds, and never a list kept by hand.
+    const collection = Arr.map(curricula, (curriculum) => ({
+      name: curriculum.title,
+      url: new URL(`/${params.locale}/${curriculum.publicPath}`, SITE_ORIGIN)
+        .href,
+    }));
 
     /**
      * The ten questions of the home page, in the order the page asks them, the
