@@ -4,12 +4,14 @@ import {
   WorkHistoryIcon,
 } from "@hugeicons/core-free-icons";
 import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec";
+import { TRYOUT_ATTEMPT_WINDOW } from "@repo/backend/confect/tryouts/window";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   ResponsiveDialog,
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
+import { Duration } from "effect";
 import { useTranslations } from "use-intl";
 
 interface TryoutStartDialogProps {
@@ -54,6 +56,9 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
   );
 }
 
+/** The hours an attempt stays open, which the dialog's words name. */
+const WINDOW_HOURS = { hours: Duration.toHours(TRYOUT_ATTEMPT_WINDOW) };
+
 /** Selects localized dialog copy from the resolved access decision. */
 function getDialogCopy(
   props: Pick<
@@ -66,7 +71,7 @@ function getDialogCopy(
     return {
       description: props.directEntry
         ? t("free-entry-dialog-description")
-        : t("free-dialog-description"),
+        : t("free-dialog-description", WINDOW_HOURS),
       primary: t("free-cta"),
       title: t("free-dialog-title"),
     };
@@ -85,7 +90,7 @@ function getDialogCopy(
   return {
     description: props.directEntry
       ? t("start-entry-dialog-description")
-      : t("start-dialog-description"),
+      : t("start-dialog-description", WINDOW_HOURS),
     primary: t("start-cta"),
     title: t("start-dialog-title"),
   };
