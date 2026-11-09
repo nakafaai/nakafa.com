@@ -122,6 +122,7 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -138,6 +139,7 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, account],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -157,9 +159,11 @@ describe("homeScreenHandler", () => {
         contents.queries.recent.getRecentlyViewed,
         [{ content_id: "math-1", materialDomain: "mathematics" }],
       ],
+      [island.queries.own, { layout: [], lifetime: 30, stars: 30 }],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBe("Nabil");
+    expect(screen.island).toEqual({ layout: [], lifetime: 30, stars: 30 });
     expect(screen.recentRows).toEqual([
       { content_id: "math-1", materialDomain: "mathematics" },
     ]);
@@ -223,9 +227,11 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBeUndefined();
+    expect(screen.island).toBeUndefined();
   });
 });
 
