@@ -4976,6 +4976,11 @@
     "block-chili-sprout": "Chilispross",
     "block-carrot-sprout": "Karottenspross",
     "block-cassava-sprout": "Maniokspross",
-    "block-sweet-potato-sprout": "Süßkartoffelspross"
+    "block-sweet-potato-sprout": "Süßkartoffelspross",
+    "home-top": "Dein Herrenhaus ist das schönste Zuhause",
+    "home-0": "Häuschen",
+    "home-1": "Zweistöckiges Haus",
+    "home-2": "Herrenhaus",
+    "upgrade": "Bau dein Zuhause zum {name} aus"
   }
 }

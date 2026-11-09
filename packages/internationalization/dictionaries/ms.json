@@ -4976,6 +4976,11 @@
     "block-chili-sprout": "Tunas cili",
     "block-carrot-sprout": "Tunas lobak merah",
     "block-cassava-sprout": "Tunas ubi kayu",
-    "block-sweet-potato-sprout": "Tunas ubi keledek"
+    "block-sweet-potato-sprout": "Tunas ubi keledek",
+    "home-top": "Rumah agammu sudah paling hebat",
+    "home-0": "Pondok",
+    "home-1": "Rumah dua tingkat",
+    "home-2": "Rumah agam",
+    "upgrade": "Naik taraf rumahmu jadi {name}"
   }
 }

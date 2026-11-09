@@ -4976,6 +4976,11 @@
     "block-chili-sprout": "Chili sprout",
     "block-carrot-sprout": "Carrot sprout",
     "block-cassava-sprout": "Cassava sprout",
-    "block-sweet-potato-sprout": "Sweet potato sprout"
+    "block-sweet-potato-sprout": "Sweet potato sprout",
+    "home-top": "Your manor is as fine as a home gets",
+    "home-0": "Cottage",
+    "home-1": "Two-storey house",
+    "home-2": "Manor",
+    "upgrade": "Upgrade your home to a {name}"
   }
 }
