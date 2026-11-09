@@ -1,12 +1,17 @@
 import {
-  billingEuroTerritoryCodes,
   proMonthlyPrices,
   proYearlyPrices,
 } from "@repo/backend/confect/billing/catalog";
-import { Array as Arr, Function as Fn, HashSet, Schema } from "effect";
+import { currencyOfCountry } from "@repo/backend/confect/country/registry";
+import { Array as Arr, Function as Fn, Schema } from "effect";
 
 /** The currencies that the monthly pro price is shown in, as the Polar catalog names them. */
-export const PricingCurrencySchema = Schema.Literals(["EUR", "IDR", "USD"]);
+export const PricingCurrencySchema = Schema.Literals([
+  "EUR",
+  "IDR",
+  "MYR",
+  "USD",
+]);
 
 export type PricingCurrency = typeof PricingCurrencySchema.Type;
 
@@ -102,37 +107,31 @@ function makePricing<Currency extends PricingCurrency>(
 
 const eurPricing = makePricing("EUR", monthlyPriceOf("EUR", 2, "de-DE"));
 const idrPricing = makePricing("IDR", monthlyPriceOf("IDR", 0, "id-ID"));
+const myrPricing = makePricing("MYR", monthlyPriceOf("MYR", 2, "ms-MY"));
 const usdPricing = makePricing("USD", monthlyPriceOf("USD", 2, "en-US"));
 
 /** The monthly pro price of every currency, which the static page carries in full. */
 const pricingByCurrency = {
   EUR: eurPricing,
   IDR: idrPricing,
+  MYR: myrPricing,
   USD: usdPricing,
 } satisfies Record<PricingCurrency, unknown>;
 
 /** The pro price in every currency, rupiah first, as a price list states them. */
-export const proPricing = [idrPricing, usdPricing, eurPricing] as const;
+export const proPricing = [
+  idrPricing,
+  myrPricing,
+  usdPricing,
+  eurPricing,
+] as const;
 
 /** The monthly pro price of one currency, with its formatting. */
 export function getProMonthlyPricingFor(currency: PricingCurrency) {
   return pricingByCurrency[currency];
 }
 
-/** Selects the Polar catalog price, with its currency, for the request country. */
+/** Selects the catalog price, with its currency, for the request country, as the country registry bills it. */
 export function getProMonthlyPricing(countryCode: string | null) {
-  const normalizedCountryCode = countryCode?.toUpperCase();
-
-  if (normalizedCountryCode === "ID") {
-    return idrPricing;
-  }
-
-  if (
-    normalizedCountryCode &&
-    HashSet.has(billingEuroTerritoryCodes, normalizedCountryCode)
-  ) {
-    return eurPricing;
-  }
-
-  return usdPricing;
+  return pricingByCurrency[currencyOfCountry(countryCode?.toUpperCase() ?? "")];
 }

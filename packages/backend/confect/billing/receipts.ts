@@ -70,6 +70,7 @@ const lineDescription = (description: string, locale: ActiveAppLocaleCode) =>
 const MINOR_DIGITS = {
   EUR: 2,
   IDR: 0,
+  MYR: 2,
   USD: 2,
 } as const satisfies Record<BillingCurrency, number>;
 

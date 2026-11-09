@@ -255,7 +255,7 @@ export declare const api: {
         {},
         Array<{
           amount: number;
-          currency: "EUR" | "IDR" | "USD";
+          currency: "EUR" | "IDR" | "MYR" | "USD";
           id: Id<"billingPayments">;
           kind: "cycle" | "pass" | "invoice" | "credits";
           paidAt: number;
@@ -265,10 +265,10 @@ export declare const api: {
       proOffers: FunctionReference<
         "query",
         "public",
-        { currency: "EUR" | "IDR" | "USD" },
+        { currency: "EUR" | "IDR" | "MYR" | "USD" },
         Array<{
           amount: number;
-          currency: "EUR" | "IDR" | "USD";
+          currency: "EUR" | "IDR" | "MYR" | "USD";
           interval: "month" | "pass" | "year";
           months: number;
           offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
@@ -312,11 +312,11 @@ export declare const api: {
         { slug: string },
         {
           accounts: { limit: number; used: number };
-          currency: "EUR" | "IDR" | "USD";
+          currency: "EUR" | "IDR" | "MYR" | "USD";
           driveBytes: number;
           invoices: Array<{
             accounts: number;
-            currency: "EUR" | "IDR" | "USD";
+            currency: "EUR" | "IDR" | "MYR" | "USD";
             dueAt: number;
             number: string;
             paymentLink: string | null;
@@ -364,7 +364,7 @@ export declare const api: {
         "action",
         "public",
         {
-          currency: "EUR" | "IDR" | "USD";
+          currency: "EUR" | "IDR" | "MYR" | "USD";
           locale: "en" | "id" | "de";
           offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
           successUrl: string;
@@ -381,7 +381,7 @@ export declare const api: {
         "action",
         "public",
         {
-          currency: "EUR" | "IDR" | "USD";
+          currency: "EUR" | "IDR" | "MYR" | "USD";
           locale: "en" | "id" | "de";
           successUrl: string;
         },
@@ -11139,7 +11139,7 @@ export declare const api: {
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
               | {
-                  currency: "EUR" | "IDR" | "USD";
+                  currency: "EUR" | "IDR" | "MYR" | "USD";
                   number: string;
                   total: number;
                   type: "billing.invoice.issued";
@@ -11170,6 +11170,10 @@ export declare const api: {
                     | "ma"
                     | "smk"
                     | "slb"
+                    | "my-sk"
+                    | "my-smk"
+                    | "my-smka"
+                    | "my-form6"
                     | "other";
                   type: "unit.level.set";
                 }
@@ -11957,6 +11961,7 @@ export declare const api: {
               focus?: "learning" | "tryout";
               region?:
                 | "indonesia"
+                | "malaysia"
                 | "singapore"
                 | "united-kingdom"
                 | "germany"
@@ -11975,6 +11980,7 @@ export declare const api: {
             focus: "learning" | "tryout";
             region:
               | "indonesia"
+              | "malaysia"
               | "singapore"
               | "united-kingdom"
               | "germany"
@@ -12000,6 +12006,7 @@ export declare const api: {
                 kind: "region";
                 value:
                   | "indonesia"
+                  | "malaysia"
                   | "singapore"
                   | "united-kingdom"
                   | "germany"
@@ -12013,6 +12020,7 @@ export declare const api: {
           focus?: "learning" | "tryout";
           region?:
             | "indonesia"
+            | "malaysia"
             | "singapore"
             | "united-kingdom"
             | "germany"
@@ -12037,6 +12045,7 @@ export declare const api: {
               focus?: "learning" | "tryout";
               region?:
                 | "indonesia"
+                | "malaysia"
                 | "singapore"
                 | "united-kingdom"
                 | "germany"
@@ -12123,6 +12132,10 @@ export declare const api: {
               | "ma"
               | "smk"
               | "slb"
+              | "my-sk"
+              | "my-smk"
+              | "my-smka"
+              | "my-form6"
               | "other";
             name: string;
             npsn?: string;
@@ -14406,7 +14419,7 @@ export declare const api: {
         "public",
         {},
         {
-          country?: "ID" | "SG" | "GB" | "DE" | "US";
+          country?: "ID" | "MY" | "SG" | "GB" | "DE" | "US";
           levels?: Array<
             | "paud"
             | "sd"
@@ -14417,6 +14430,10 @@ export declare const api: {
             | "ma"
             | "smk"
             | "slb"
+            | "my-sk"
+            | "my-smk"
+            | "my-smka"
+            | "my-form6"
             | "other"
           >;
           name?: string;
@@ -14430,7 +14447,7 @@ export declare const api: {
         "mutation",
         "public",
         {
-          country: "ID" | "SG" | "GB" | "DE" | "US";
+          country: "ID" | "MY" | "SG" | "GB" | "DE" | "US";
           name: string;
           role: "principal" | "teacher" | "admin" | "foundation";
           size: "s" | "m" | "l" | "xl";
@@ -14447,6 +14464,10 @@ export declare const api: {
               | "ma"
               | "smk"
               | "slb"
+              | "my-sk"
+              | "my-smk"
+              | "my-smka"
+              | "my-form6"
               | "other";
             name: string;
           }>;
@@ -14459,7 +14480,10 @@ export declare const api: {
         {
           answer:
             | { kind: "name"; name: string; slug: string }
-            | { kind: "country"; value: "ID" | "SG" | "GB" | "DE" | "US" }
+            | {
+                kind: "country";
+                value: "ID" | "MY" | "SG" | "GB" | "DE" | "US";
+              }
             | {
                 kind: "levels";
                 value: Array<
@@ -14472,6 +14496,10 @@ export declare const api: {
                   | "ma"
                   | "smk"
                   | "slb"
+                  | "my-sk"
+                  | "my-smk"
+                  | "my-smka"
+                  | "my-form6"
                   | "other"
                 >;
               }
@@ -14482,7 +14510,7 @@ export declare const api: {
             | { kind: "size"; value: "s" | "m" | "l" | "xl" };
         },
         {
-          country?: "ID" | "SG" | "GB" | "DE" | "US";
+          country?: "ID" | "MY" | "SG" | "GB" | "DE" | "US";
           levels?: Array<
             | "paud"
             | "sd"
@@ -14493,6 +14521,10 @@ export declare const api: {
             | "ma"
             | "smk"
             | "slb"
+            | "my-sk"
+            | "my-smk"
+            | "my-smka"
+            | "my-form6"
             | "other"
           >;
           name?: string;
@@ -14525,6 +14557,10 @@ export declare const api: {
             | "ma"
             | "smk"
             | "slb"
+            | "my-sk"
+            | "my-smk"
+            | "my-smka"
+            | "my-form6"
             | "other";
           name: string;
           slug: string;
@@ -14543,6 +14579,10 @@ export declare const api: {
             | "ma"
             | "smk"
             | "slb"
+            | "my-sk"
+            | "my-smk"
+            | "my-smka"
+            | "my-form6"
             | "other";
           name: string;
           npsn: string | null;
@@ -14564,6 +14604,10 @@ export declare const api: {
             | "ma"
             | "smk"
             | "slb"
+            | "my-sk"
+            | "my-smk"
+            | "my-smka"
+            | "my-form6"
             | "other";
           name: string;
           slug: string;
@@ -14580,6 +14624,10 @@ export declare const api: {
             | "ma"
             | "smk"
             | "slb"
+            | "my-sk"
+            | "my-smk"
+            | "my-smka"
+            | "my-form6"
             | "other";
           name: string;
         }
@@ -14601,6 +14649,10 @@ export declare const api: {
             | "ma"
             | "smk"
             | "slb"
+            | "my-sk"
+            | "my-smk"
+            | "my-smka"
+            | "my-form6"
             | "other";
           name: string;
           npsn: string | null;
@@ -14706,6 +14758,10 @@ export declare const api: {
               | "ma"
               | "smk"
               | "slb"
+              | "my-sk"
+              | "my-smk"
+              | "my-smka"
+              | "my-form6"
               | "other";
             name: string;
             status: "active" | "archived";
@@ -16674,7 +16730,7 @@ export declare const internal: {
         "action",
         "internal",
         {
-          currency: "EUR" | "IDR" | "USD";
+          currency: "EUR" | "IDR" | "MYR" | "USD";
           orderId: string;
           rail: "polar" | "xendit";
           refundableAmount: number;
@@ -19965,6 +20021,7 @@ export declare const internal: {
               focus?: "learning" | "tryout";
               region?:
                 | "indonesia"
+                | "malaysia"
                 | "singapore"
                 | "united-kingdom"
                 | "germany"
@@ -20582,6 +20639,7 @@ export declare const internal: {
             focus?: "learning" | "tryout";
             region?:
               | "indonesia"
+              | "malaysia"
               | "singapore"
               | "united-kingdom"
               | "germany"
@@ -21245,6 +21303,10 @@ export declare const internal: {
               | "ma"
               | "smk"
               | "slb"
+              | "my-sk"
+              | "my-smk"
+              | "my-smka"
+              | "my-form6"
               | "other";
             name: string;
             npsn?: string;

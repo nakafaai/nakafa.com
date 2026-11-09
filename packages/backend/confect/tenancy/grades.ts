@@ -7,8 +7,9 @@ import { Array as Arr, Option } from "effect";
 
 /**
  * The national grade range of each unit level, its first and its last grade: SD and MI teach 1 to 6, SMP and MTs 7
- * to 9, and SMA, MA, and SMK 10 to 12. The last grade is the one whose students graduate. PAUD, SLB, and other follow
- * no national range.
+ * to 9, and SMA, MA, and SMK 10 to 12. A Malaysian SK teaches Tahun 1 to 6, an SMK and an SMKA Tingkatan 1 to 5 (SPM),
+ * and a Form 6 college Tingkatan 6 (STPM). The last grade is the one whose students graduate. PAUD, SLB, and other
+ * follow no national range.
  */
 const LEVEL_GRADES: Record<
   typeof UnitLevel.Type,
@@ -17,6 +18,10 @@ const LEVEL_GRADES: Record<
   ma: [10, 12],
   mi: [1, 6],
   mts: [7, 9],
+  "my-form6": [6, 6],
+  "my-sk": [1, 6],
+  "my-smk": [1, 5],
+  "my-smka": [1, 5],
   other: undefined,
   paud: undefined,
   sd: [1, 6],

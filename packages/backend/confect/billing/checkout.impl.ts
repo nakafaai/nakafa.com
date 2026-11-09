@@ -15,11 +15,9 @@ import { admitCheckoutProgram } from "@repo/backend/confect/billing/checkout";
 import spec from "@repo/backend/confect/billing/checkout.spec";
 import { hasActiveProGrant } from "@repo/backend/confect/billing/grants";
 import { proHoldingOf } from "@repo/backend/confect/billing/holding";
-import {
-  billingCurrencyFor,
-  UNKNOWN_COUNTRY,
-} from "@repo/backend/confect/billing/route";
+import { UNKNOWN_COUNTRY } from "@repo/backend/confect/billing/route";
 import { checkoutSessionIoError } from "@repo/backend/confect/billing/spec";
+import { currencyOfCountry } from "@repo/backend/confect/country/registry";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import { Clock, Effect, flow, Layer } from "effect";
 
@@ -43,7 +41,7 @@ const openAccount = FunctionImpl.make(
       owner: { kind: "personal", userId: args.userId },
       rail: "polar",
       country: UNKNOWN_COUNTRY,
-      currency: billingCurrencyFor(UNKNOWN_COUNTRY),
+      currency: currencyOfCountry(UNKNOWN_COUNTRY),
     });
     // The account was just ensured, so reading it back always finds the row.
     const account = yield* reader

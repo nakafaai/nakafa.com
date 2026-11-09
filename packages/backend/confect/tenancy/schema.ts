@@ -59,6 +59,10 @@ export const UnitLevel = Schema.Literals([
   "ma",
   "smk",
   "slb",
+  "my-sk",
+  "my-smk",
+  "my-smka",
+  "my-form6",
   "other",
 ]);
 /** An archived unit stays readable and refuses every write. */

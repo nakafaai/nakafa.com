@@ -32,7 +32,7 @@ test("the language menu replaces the route in the chosen locale in place", async
           .getByRole("button", { exact: true, name: "Language" });
         const german = page.getByRole("menuitem", {
           exact: true,
-          name: "Deutsch (Deutschland)",
+          name: "Deutsch",
         });
         yield* activateUntilVisible(
           languageButton,

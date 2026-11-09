@@ -1,5 +1,4 @@
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import { NewCurrency, NewTimeZone } from "@repo/backend/confect/tenancy/locale";
+import { countryProfiles } from "@repo/backend/confect/country/registry";
 import {
   SchoolName,
   TenantName,
@@ -13,7 +12,14 @@ import { Array as Arr, Match, Option, Schema } from "effect";
  * The countries an account can open a school in by itself. A school in another
  * country opens through Nakafa staff with a contract (K9).
  */
-export const StartCountry = Schema.Literals(["ID", "SG", "GB", "DE", "US"]);
+export const StartCountry = Schema.Literals([
+  "ID",
+  "MY",
+  "SG",
+  "GB",
+  "DE",
+  "US",
+]);
 
 /**
  * The role the founder takes besides Owner, so the school's home fits them from
@@ -37,70 +43,6 @@ export const SchoolSize = Schema.Literals(["s", "m", "l", "xl"]);
 const StartLevels = Schema.Array(UnitLevel).check(Schema.isUnique());
 
 /**
- * What a new school takes from its country: the currency of its plan, the default
- * language of its school's pages (stored as `contentLanguage`), the zones its
- * schools keep time in with the first as the default, and the month its school
- * year starts.
- */
-export const CountryDefaults = Schema.Struct({
-  contentLanguage: ActiveAppLocaleCodeSchema,
-  currency: NewCurrency,
-  yearStart: Schema.Int.check(Schema.isBetween({ maximum: 12, minimum: 1 })),
-  zones: Schema.NonEmptyArray(NewTimeZone),
-});
-
-/**
- * Each country's defaults, read where a school is opened and tested once for its rules.
- * The page language of DE, GB and ID is the language whose registry entry names that
- * country (`packages/internationalization/data/lang.ts`). The values stay explicit here:
- * that registry lives in a package of the web runtime, which the Convex backend does not
- * depend on.
- */
-export const countryDefaults = {
-  DE: {
-    contentLanguage: "de",
-    currency: "EUR",
-    yearStart: 8,
-    zones: ["Europe/Berlin"],
-  },
-  GB: {
-    contentLanguage: "en",
-    currency: "GBP",
-    yearStart: 9,
-    zones: ["Europe/London"],
-  },
-  ID: {
-    contentLanguage: "id",
-    currency: "IDR",
-    yearStart: 7,
-    zones: ["Asia/Jakarta", "Asia/Pontianak", "Asia/Makassar", "Asia/Jayapura"],
-  },
-  SG: {
-    contentLanguage: "en",
-    currency: "SGD",
-    yearStart: 1,
-    zones: ["Asia/Singapore"],
-  },
-  US: {
-    contentLanguage: "en",
-    currency: "USD",
-    yearStart: 8,
-    zones: [
-      "America/New_York",
-      "America/Chicago",
-      "America/Denver",
-      "America/Phoenix",
-      "America/Los_Angeles",
-      "America/Anchorage",
-      "Pacific/Honolulu",
-    ],
-  },
-} as const satisfies Record<
-  typeof StartCountry.Type,
-  typeof CountryDefaults.Type
->;
-
-/**
  * The zone a new school keeps time in: the browser's own zone when the country
  * uses it, such as `Asia/Makassar` for a school in Makassar, else the country's
  * first zone. The Owner changes it in the school's settings.
@@ -109,7 +51,7 @@ export const startZone = (
   country: typeof StartCountry.Type,
   browserZone: string
 ) => {
-  const { zones } = countryDefaults[country];
+  const { zones } = countryProfiles[country];
   return Option.getOrElse(
     Arr.findFirst(zones, (zone) => zone === browserZone),
     () => Arr.headNonEmpty(zones)

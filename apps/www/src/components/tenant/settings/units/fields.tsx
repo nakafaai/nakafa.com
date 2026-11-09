@@ -1,23 +1,14 @@
 import { QueryResult } from "@confect/react";
 import { SchoolIcon } from "@hugeicons/core-free-icons";
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
-import { CountryFlagIcon } from "@/components/shared/flag";
 import { useViewerQuery } from "@/components/tenant/context";
-import { languageItems } from "@/components/tenant/settings/choices";
-import { levelsOf } from "@/components/tenant/start/state";
+import { SelectField } from "@/components/tenant/settings/select";
+import { levelsOf, namesOwnLevels } from "@/components/tenant/start/state";
 
 /** One level of a school, as the unit schema names it. */
 type Level = typeof UnitLevel.Type;
@@ -63,11 +54,9 @@ export function UnitNameField({
  * opens before, every level is offered under its generic name.
  */
 export function UnitLevelField({
-  id,
   onChange,
   value,
 }: {
-  id: string;
   onChange: (level: Level) => void;
   value: Level;
 }) {
@@ -86,83 +75,28 @@ export function UnitLevelField({
     ? offered
     : Arr.append(offered, value);
   const items = Arr.map(levels, (level) => ({
-    label: Option.contains(country, "ID")
+    label: Option.exists(
+      country,
+      (code) => Schema.is(StartCountry)(code) && namesOwnLevels(code)
+    )
       ? start(`level.${level}.title`)
       : start(`stage.${level}`),
     value: level,
+    icon: SchoolIcon,
   }));
 
   return (
-    <Field>
-      <FieldLabel htmlFor={id}>{t("unit-add-level")}</FieldLabel>
-      <Select
-        items={items}
-        onValueChange={(next) => {
-          const level = Schema.decodeUnknownOption(UnitLevel)(next);
-          if (Option.isSome(level)) {
-            onChange(level.value);
-          }
-        }}
-        value={value}
-      >
-        <SelectTrigger className="w-full" id={id}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent label={common("menu-level")}>
-          {Arr.map(items, (item) => (
-            <SelectItem icon={SchoolIcon} key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Field>
-  );
-}
-
-/** The language of a unit's pages, each language with its flag, as the dialogs that add and edit a unit ask for it. */
-export function UnitLanguageField({
-  id,
-  onChange,
-  value,
-}: {
-  id: string;
-  onChange: (language: typeof ActiveAppLocaleCodeSchema.Type) => void;
-  value: typeof ActiveAppLocaleCodeSchema.Type | null;
-}) {
-  const common = useTranslations("Common");
-  const t = useTranslations("SchoolSettings");
-
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{t("unit-page-language")}</FieldLabel>
-      <Select
-        items={languageItems}
-        onValueChange={(next) => {
-          const chosen = Schema.decodeUnknownOption(ActiveAppLocaleCodeSchema)(
-            next
-          );
-          if (Option.isSome(chosen)) {
-            onChange(chosen.value);
-          }
-        }}
-        value={value}
-      >
-        <SelectTrigger className="w-full" id={id}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent label={common("menu-language")}>
-          {Arr.map(languageItems, (item) => (
-            <SelectItem
-              icon={<CountryFlagIcon countryCode={item.countryCode} />}
-              key={item.value}
-              value={item.value}
-            >
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Field>
+    <SelectField
+      items={items}
+      label={t("unit-add-level")}
+      menu={common("menu-level")}
+      onChoose={(next) => {
+        const level = Schema.decodeUnknownOption(UnitLevel)(next);
+        if (Option.isSome(level)) {
+          onChange(level.value);
+        }
+      }}
+      value={value}
+    />
   );
 }

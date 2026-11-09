@@ -1,6 +1,6 @@
 import { useMutation } from "@confect/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
-import type { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   Npsn,
@@ -15,11 +15,14 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
-import { timeZoneItems } from "@/components/tenant/settings/choices";
+import {
+  languageItems,
+  timeZoneItems,
+} from "@/components/tenant/settings/choices";
 import {
   editUnitChange,
   setNpsnChange,
@@ -28,7 +31,6 @@ import {
 import { SelectField } from "@/components/tenant/settings/select";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
-  UnitLanguageField,
   UnitLevelField,
   UnitNameField,
 } from "@/components/tenant/settings/units/fields";
@@ -171,7 +173,7 @@ export function UnitEditDialog({
           onChange={setName}
           value={nameText ?? unit.name}
         />
-        <UnitLevelField id={`${id}-level`} onChange={setLevel} value={level} />
+        <UnitLevelField onChange={setLevel} value={level} />
         <SelectField
           items={Arr.map(timeZoneItems, (item) => ({
             ...item,
@@ -182,9 +184,18 @@ export function UnitEditDialog({
           onChoose={setTimeZone}
           value={timeZone}
         />
-        <UnitLanguageField
-          id={`${id}-language`}
-          onChange={setContentLanguage}
+        <SelectField
+          items={languageItems}
+          label={t("unit-page-language")}
+          menu={common("menu-language")}
+          onChoose={(next) => {
+            const chosen = Schema.decodeUnknownOption(
+              ActiveAppLocaleCodeSchema
+            )(next);
+            if (Option.isSome(chosen)) {
+              setContentLanguage(chosen.value);
+            }
+          }}
           value={contentLanguage}
         />
         <Field>

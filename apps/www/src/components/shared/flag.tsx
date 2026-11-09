@@ -28,10 +28,20 @@ function parseFlagSource(source: string) {
   };
 }
 
+/**
+ * The Jalur Gemilang in its official proportion of 1:2: fourteen stripes, the
+ * canton half the width and eight stripes high, and the fourteen-point Federal
+ * Star beside the crescent. The flag package draws every country at 3:2, which
+ * would distort a flag the Emblems and Names Act 1963 protects.
+ */
+const MALAYSIA_FLAG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 684 342"><path fill="#FFF" d="M0 0h684v342H0z"/><path fill="#c00" d="M0 0.0h684v24.4H0zM0 48.9h684v24.4H0zM0 97.7h684v24.4H0zM0 146.6h684v24.4H0zM0 195.4h684v24.4H0zM0 244.3h684v24.4H0zM0 293.1h684v24.4H0z"/><path fill="#006" d="M0 0h342v195.4H0z"/><g transform="translate(42.75 0)" fill="#fc0"><path d="M153.3 42.1C122.6 30.7 88.5 46.3 77.1 77s4.2 64.8 34.9 76.2c13.3 5 28 5 41.4 0-30.7 24.5-75.4 19.6-100-11.1s-19.6-75.4 11.1-100c26-20.7 62.9-20.7 88.8 0z"/><path d="M180.0 51.7L185.1 75.3L200.0 56.3L194.3 79.7L216.0 69.0L200.7 87.7L224.8 87.5L203.0 97.7L224.8 108.0L200.7 107.7L216.0 126.4L194.3 115.7L200.0 139.2L185.1 120.1L180.0 143.7L174.9 120.1L160.0 139.2L165.7 115.7L144.0 126.4L159.3 107.7L135.2 108.0L157.0 97.7L135.2 87.5L159.3 87.7L144.0 69.0L165.7 79.7L160.0 56.3L174.9 75.3z"/></g></svg>';
+
 const flagSources = {
   DE: parseFlagSource(deFlag),
   GB: parseFlagSource(gbFlag),
   ID: parseFlagSource(idFlag),
+  MY: parseFlagSource(MALAYSIA_FLAG),
   SG: parseFlagSource(sgFlag),
   US: parseFlagSource(usFlag),
 };

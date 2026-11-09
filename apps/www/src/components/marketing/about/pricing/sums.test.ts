@@ -43,6 +43,16 @@ describe("marketing/about/pricing-sums", () => {
     expect(sums.answersPerMonth).toBe(200);
   });
 
+  it("gives the ringgit price its glasses of teh tarik and its price per day", () => {
+    const sums = pricingSums(getProMonthlyPricing("MY").price);
+
+    expect(sums.drinks).toBe(9);
+    expect(sums.pricePerDay).toBeCloseTo(
+      getProMonthlyPricing("MY").price.amount / 30,
+      10
+    );
+  });
+
   it("gives the dollar price its lattes and its price per day", () => {
     const sums = pricingSums(getProMonthlyPricing(null).price);
 

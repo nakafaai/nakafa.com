@@ -18,14 +18,12 @@ import {
   polarStateOf,
   polarSubscriptionState,
 } from "@repo/backend/confect/billing/polar/subscription";
-import {
-  ensureSchoolAccount,
-  schoolRail,
-} from "@repo/backend/confect/billing/school";
+import { ensureSchoolAccount } from "@repo/backend/confect/billing/school";
 import {
   applySubscriptionState,
   type BillingSubscriptionState,
 } from "@repo/backend/confect/billing/subscriptions";
+import { railOfCountry } from "@repo/backend/confect/country/registry";
 import { Clock, Effect, Match, Option } from "effect";
 
 /**
@@ -71,7 +69,7 @@ const applySchoolState = Effect.fn("billing.polar.applySchool")(function* (
           Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
           Effect.orDie
         );
-  if (tenant === null || schoolRail(tenant.country) !== "polar") {
+  if (tenant === null || railOfCountry(tenant.country) !== "polar") {
     yield* Effect.logError("Polar School subscription names no Polar school", {
       subscriptionId: subscription.id,
     });

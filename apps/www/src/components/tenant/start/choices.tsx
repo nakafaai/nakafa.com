@@ -28,7 +28,7 @@ import {
   StartLevelOption,
   StartOption,
 } from "@/components/tenant/start/option";
-import { levelsOf } from "@/components/tenant/start/state";
+import { levelsOf, namesOwnLevels } from "@/components/tenant/start/state";
 
 /** The icon of each role a founder can take. */
 const roleIcons = {
@@ -104,7 +104,7 @@ export function StartLevelsQuestion() {
             }}
             value={level}
           >
-            {country === "ID" ? (
+            {namesOwnLevels(country) ? (
               <StartLevelOption
                 description={t(`level.${level}.description`)}
                 title={t(`level.${level}.title`)}

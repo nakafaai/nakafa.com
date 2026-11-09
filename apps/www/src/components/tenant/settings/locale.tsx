@@ -1,12 +1,10 @@
 import { useMutation } from "@confect/react";
 import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { countryProfiles } from "@repo/backend/confect/country/registry";
 import { NewCurrency } from "@repo/backend/confect/tenancy/locale";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import {
-  countryDefaults,
-  StartCountry,
-} from "@repo/backend/confect/tenancy/start";
+import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";
 import {
@@ -122,7 +120,7 @@ export function SchoolLocaleCard({
               onChoose={(value) => {
                 setNextCountry(value);
                 if (Schema.is(StartCountry)(value)) {
-                  setNextCurrency(countryDefaults[value].currency);
+                  setNextCurrency(countryProfiles[value].currency);
                 }
               }}
               value={nextCountry}
