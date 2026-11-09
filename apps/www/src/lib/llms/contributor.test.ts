@@ -4,11 +4,11 @@ import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { contributors } from "@/lib/data/contributor";
 import { BASE_URL } from "@/lib/llms/constants";
-import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 import {
   getContributorLlmsText,
   isContributorLlmsRoute,
 } from "@/lib/llms/contributor";
+import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 
 describe("contributors Markdown", () => {
   it("owns only the contributors route", () => {
