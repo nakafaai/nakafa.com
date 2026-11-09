@@ -91,7 +91,7 @@ function DatePicker({
                 DateTime.toDateUtc(
                   DateTime.makeUnsafe(`${value}T00:00:00.000Z`)
                 ),
-                { dateStyle: "medium", timeZone: "UTC" }
+                "calendar"
               )
             : placeholder}
         </span>

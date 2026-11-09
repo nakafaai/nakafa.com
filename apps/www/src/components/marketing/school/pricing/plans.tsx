@@ -21,6 +21,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { formatBytes } from "@repo/internationalization/src/formats";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -29,7 +30,7 @@ import { CurrencyText } from "@/components/marketing/about/pricing/currency";
 import { SCHOOL_PRICING_HERD } from "@/components/marketing/school/features/cast";
 import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import { PricingCurrencySchema } from "@/lib/pricing/monthly";
-import { formatSchoolPrice, formatStorage } from "@/lib/pricing/school";
+import { formatSchoolPrice } from "@/lib/pricing/school";
 import { Link } from "@/lib/routing/link";
 
 /** The longest period a school pays for at once, whose discount each paid card shows. */
@@ -154,7 +155,7 @@ function SchoolPlanCard({ tier }: { tier: SchoolTierKey }) {
           </PlanLine>
           <PlanLine icon={CloudServerIcon}>
             {t("plan-storage", {
-              size: formatStorage(plan.storageMegabytes, locale),
+              size: formatBytes(plan.storageMegabytes * 1_000_000, locale),
             })}
           </PlanLine>
           <PlanLine icon={CheckmarkBadge01Icon}>

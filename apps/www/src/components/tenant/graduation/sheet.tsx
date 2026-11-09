@@ -142,11 +142,7 @@ function GraduationStudents() {
     initialNumItems: PAGE_SIZE,
   });
 
-  const twoDecimals = (value: number) =>
-    format.number(value, {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
-    });
+  const twoDecimals = (value: number) => format.number(value, "score");
 
   const columns = [
     lineColumns.text((line) => line.student.name, {

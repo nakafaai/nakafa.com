@@ -8,6 +8,7 @@ import {
   DEFAULT_LOCALE,
   decodeLocale,
 } from "@repo/internationalization/src/locale";
+import { readStandaloneMessages } from "@repo/internationalization/src/messages";
 import {
   createRootRoute,
   type ErrorComponentProps,
@@ -37,7 +38,6 @@ import { signedInHintScript } from "@/lib/auth/hint";
 import { STALE_CHUNK_SCRIPT } from "@/lib/chunks/stale";
 import { PLACEMENT_PREPAINT_SCRIPT } from "@/lib/content/material/prepaint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
-import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { KEPT_ACCOUNT_SCRIPT } from "@/lib/identity/prepaint";
 import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";

@@ -18,6 +18,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { formatAge } from "@repo/internationalization/src/formats";
 import { Array as Arr, Effect, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -29,7 +30,6 @@ import { readChatTitle } from "@/components/ai/chat/title";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";
 import { SignedInIsland } from "@/components/providers/island";
-import { formatAge } from "@/components/user/age";
 import { useAgeClock, useAgeNow } from "@/components/user/ages";
 import type { AgeClock } from "@/components/user/clock";
 import {

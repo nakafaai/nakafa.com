@@ -335,7 +335,7 @@ export const OBSOLETE_DEPENDENCIES = {
   "@effect/sql": IN_EFFECT,
   "@effect/workflow": IN_EFFECT,
   "date-fns":
-    "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/src/lib/i18n/date.ts does",
+    "useFormatter or formatterOf with a FORMATS name from packages/internationalization/src/formats.ts, and DateTime and Duration from effect",
   nanoid: "randomUuid from @repo/utilities/uuid",
   next: "TanStack Start and TanStack Router, which the www app runs on",
 };

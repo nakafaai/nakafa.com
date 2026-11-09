@@ -75,10 +75,7 @@ function useDemoColumns() {
     taskColumns.days((task) => task.deadline, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeZone: DEMO_ZONE }
-          )}
+          {format.dateTime(info.getValue(), "date", { timeZone: DEMO_ZONE })}
         </span>
       ),
       header: t("demo-head-deadline"),

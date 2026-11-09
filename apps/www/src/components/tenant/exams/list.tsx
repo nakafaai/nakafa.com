@@ -7,7 +7,7 @@ import { Calendar03Icon, TaskEdit01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, DateTime, Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
@@ -183,10 +183,7 @@ function ExamListRows({
     examColumns.days((exam) => exam.createdAt, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium" }
-          )}
+          {format.dateTime(info.getValue(), "date")}
         </span>
       ),
       header: t("created-column"),

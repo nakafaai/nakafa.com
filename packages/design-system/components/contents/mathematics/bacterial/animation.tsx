@@ -18,7 +18,7 @@ import {
   createBacteriaStore,
   shownGeneration,
 } from "@repo/design-system/components/contents/mathematics/bacterial/store";
-import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+
 import {
   useVisualScene,
   VisualCard,
@@ -223,14 +223,14 @@ function BacteriaFacts() {
             // aria-atomic makes a screen reader announce the count with its
             // subject, which is visually hidden because the label already shows it.
             <span aria-atomic="true" aria-live="polite">
-              {format.number(frame.bacteriaCount, MATH_NUMBER_OPTIONS)}
+              {format.number(frame.bacteriaCount, "math")}
               <span className="sr-only"> {t("bacteria")}</span>
             </span>
           }
         />
         <VisualFact
           label={t("time")}
-          value={`${format.number(generation * settings.timeInterval, MATH_NUMBER_OPTIONS)} ${settings.timeUnit}`}
+          value={`${format.number(generation * settings.timeInterval, "math")} ${settings.timeUnit}`}
         />
       </VisualCardFacts>
     </VisualCardFooter>

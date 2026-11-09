@@ -1,4 +1,3 @@
-import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
 import {
   VisualCardFacts,
   VisualCardFooter,
@@ -32,7 +31,7 @@ export function MathReadouts() {
             label={labels[key]}
             value={Option.match(value, {
               onNone: () => "-",
-              onSome: (number) => format.number(number, MATH_NUMBER_OPTIONS),
+              onSome: (number) => format.number(number, "math"),
             })}
           />
         ))}

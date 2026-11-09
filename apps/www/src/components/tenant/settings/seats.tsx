@@ -12,10 +12,10 @@ import {
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr, Option, Schema } from "effect";
 import { useState, useTransition } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
-import { formatCount, formatMinorAmount } from "@/lib/billing/plan";
+import { formatMinorAmount } from "@/lib/billing/plan";
 import type { SchoolBilling } from "@/lib/billing/school";
 import { isActiveLocale } from "@/lib/i18n/active";
 
@@ -42,6 +42,7 @@ export function SchoolSeatsDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
+  const format = useFormatter();
   const { slug } = useTenant();
   const [offer, setOffer] = useState<PolarSeatOffer>("school.seat.month");
   const [isPending, startPaying] = useTransition();
@@ -79,7 +80,7 @@ export function SchoolSeatsDialog({
         </Button>
       }
       description={t("billing-seats-description", {
-        seats: formatCount(seats, locale),
+        seats: format.number(seats),
       })}
       open={open}
       setOpen={setOpen}

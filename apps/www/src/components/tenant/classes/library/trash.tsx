@@ -15,7 +15,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/responsive-dialog";
-import { Array as Arr, DateTime, Match } from "effect";
+import { Array as Arr, Match } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
@@ -171,10 +171,7 @@ export function LibraryTrash() {
     trashColumns.days((row) => shownOf(row).trashedAt, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium" }
-          )}
+          {format.dateTime(info.getValue(), "date")}
         </span>
       ),
       header: t("library-trashed"),

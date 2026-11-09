@@ -21,7 +21,7 @@ import {
   ResponsiveDialog,
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
-import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { startTransition } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -157,10 +157,7 @@ function GradingTable({
     versionColumns.days((row) => row.effectiveFrom, {
       cell: (info) => (
         <span className="font-medium tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeStyle: "short" }
-          )}
+          {format.dateTime(info.getValue(), "dateTime")}
         </span>
       ),
       header: t("grading-effective"),

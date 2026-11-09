@@ -6,7 +6,7 @@ import { Meter } from "@repo/design-system/components/ui/meter";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { CurrencyText } from "@/components/marketing/about/pricing/currency";
 import {
   CardSection,
@@ -18,8 +18,6 @@ import {
   type BillingOverview,
   creditFooterKey,
   creditPeriodKey,
-  formatBillingDate,
-  formatCount,
   usedPercent,
 } from "@/lib/billing/plan";
 import { topUpPriceText } from "@/lib/billing/topup";
@@ -41,6 +39,7 @@ export function UserSettingsCredits({
 }) {
   const billing = useBillingNavigation();
   const locale = useLocale();
+  const format = useFormatter();
   const t = useTranslations("Auth");
   const { credits, plan } = overview;
   const isPro = plan === "pro";
@@ -66,14 +65,14 @@ export function UserSettingsCredits({
         <CreditUsage
           period={t(creditPeriodKey(overview))}
           resets={t("credits-resets", {
-            date: formatBillingDate(period.resetAt, locale),
+            date: format.dateTime(period.resetAt, "billing"),
           })}
           used={t("credits-used", { percent })}
         >
           <Meter
             label={t("credits-left", {
-              left: formatCount(period.balance, locale),
-              total: formatCount(period.allowance, locale),
+              left: format.number(period.balance),
+              total: format.number(period.allowance),
             })}
             percent={percent}
           />
@@ -84,7 +83,7 @@ export function UserSettingsCredits({
           <CreditUsage
             period={t("top-up-balance")}
             resets={t("top-up-expires", {
-              date: formatBillingDate(expiresAt, locale),
+              date: format.dateTime(expiresAt, "billing"),
             })}
             used={t("top-up-left", { count: credits.lots.balance })}
           />

@@ -5,7 +5,7 @@ import {
   type Interval,
   intervalSeparator,
 } from "@repo/design-system/components/contents/mathematics/interval";
-import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+
 import {
   positionOf,
   type SegmentBounds,
@@ -270,8 +270,7 @@ function NumberLineFacts() {
   const t = useTranslations("Common");
   const format = useFormatter();
   const locale = useLocale();
-  const formatNumber = (value: number) =>
-    format.number(value, MATH_NUMBER_OPTIONS);
+  const formatNumber = (value: number) => format.number(value, "math");
   const separator = intervalSeparator(locale);
 
   return (

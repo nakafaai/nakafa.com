@@ -14,7 +14,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Match } from "effect";
 import { useState } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { ProOfferDialog } from "@/components/billing/offers";
 import {
   CardSection,
@@ -28,7 +28,6 @@ import {
   type BillingOverview,
   type BillingSubscription,
   cancelPlanChange,
-  formatBillingDate,
   type PlanState,
   planStateOf,
   providerNameOf,
@@ -77,6 +76,7 @@ function GrantedPlanCard() {
 function PassPlanCard({ endsAt }: { endsAt: number }) {
   const billing = useBillingNavigation();
   const locale = useLocale();
+  const format = useFormatter();
   const t = useTranslations("Auth");
   const tPricing = useTranslations("Pricing");
 
@@ -95,7 +95,7 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
   return (
     <CardSection
       description={t("plan-pass-description", {
-        date: formatBillingDate(endsAt, locale),
+        date: format.dateTime(endsAt, "billing"),
       })}
       title={tPricing("pro-title")}
     >
@@ -126,6 +126,7 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
 function SubscribedPlanCard({ state }: { state: SubscribedState }) {
   const billing = useBillingNavigation();
   const locale = useLocale();
+  const format = useFormatter();
   const t = useTranslations("Auth");
   const tPricing = useTranslations("Pricing");
   const { ending, pastDue, subscription } = state;
@@ -148,7 +149,7 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
       <CardContent>
         <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-sm whitespace-nowrap">
           <dt className="text-muted-foreground">{t("period-start")}</dt>
-          <dd>{formatBillingDate(subscription.currentPeriodStart, locale)}</dd>
+          <dd>{format.dateTime(subscription.currentPeriodStart, "billing")}</dd>
           <EndDate ending={ending} subscription={subscription} />
           <dt className="text-muted-foreground">{t("billing-interval")}</dt>
           <dd>
@@ -193,7 +194,7 @@ function XenditPlanFooter({
   subscription: BillingSubscription;
 }) {
   const t = useTranslations("Auth");
-  const locale = useLocale();
+  const format = useFormatter();
   const [isConfirming, setIsConfirming] = useState(false);
   const cancelPlan = useMutation(
     billing.xendit.cancel.cancelPlan
@@ -248,9 +249,9 @@ function XenditPlanFooter({
           </Button>
         }
         description={t("plan-cancel-description", {
-          date: formatBillingDate(
+          date: format.dateTime(
             subscription.currentPeriodEnd ?? subscription.currentPeriodStart,
-            locale
+            "billing"
           ),
         })}
         open={isConfirming}
@@ -282,7 +283,7 @@ function EndDate({
   ending: boolean;
   subscription: BillingSubscription;
 }) {
-  const locale = useLocale();
+  const format = useFormatter();
   const t = useTranslations("Auth");
 
   if (subscription.currentPeriodEnd === null) {
@@ -293,7 +294,7 @@ function EndDate({
       <dt className="text-muted-foreground">
         {t(ending ? "ends-on" : "renews-on")}
       </dt>
-      <dd>{formatBillingDate(subscription.currentPeriodEnd, locale)}</dd>
+      <dd>{format.dateTime(subscription.currentPeriodEnd, "billing")}</dd>
     </>
   );
 }

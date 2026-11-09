@@ -31,14 +31,7 @@ import {
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import {
-  Array as Arr,
-  Clock,
-  DateTime,
-  Effect,
-  Schema,
-  String as Str,
-} from "effect";
+import { Array as Arr, Clock, Effect, Schema, String as Str } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { PostMenuTrigger } from "@/components/tenant/classes/home/more";
@@ -64,10 +57,7 @@ export function PostRow({ post }: { post: ClassPost }) {
   const format = useFormatter();
   const { can } = useClassScope();
   const [editing, setEditing] = useState(false);
-  const written = format.dateTime(
-    DateTime.toDateUtc(DateTime.makeUnsafe(post.createdAt)),
-    { dateStyle: "medium", timeStyle: "short" }
-  );
+  const written = format.dateTime(post.createdAt, "dateTime");
 
   return (
     <Item data-slot="post" render={<li />} variant="outline">

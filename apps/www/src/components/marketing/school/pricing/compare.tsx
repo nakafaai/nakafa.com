@@ -12,12 +12,12 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { formatBytes } from "@repo/internationalization/src/formats";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Match, Option, Result } from "effect";
 import { useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { SchoolAmount } from "@/components/marketing/school/pricing/price";
-import { formatStorage } from "@/lib/pricing/school";
 
 /** The rows of every group, one line each; the capacity and billing rows differ by plan, the rest are in every plan. */
 const COMPARE_GROUPS = [
@@ -119,7 +119,9 @@ function CompareValue({ row, tier }: { row: CompareRow; tier: SchoolTierKey }) {
         count: plan.credits,
       })
     ),
-    Match.when("storage", () => formatStorage(plan.storageMegabytes, locale)),
+    Match.when("storage", () =>
+      formatBytes(plan.storageMegabytes * 1_000_000, locale)
+    ),
     Match.when("added", () =>
       free ? (
         <Unavailable />

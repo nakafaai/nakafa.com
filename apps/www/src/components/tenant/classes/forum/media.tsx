@@ -10,19 +10,17 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { formatBytes } from "@repo/internationalization/src/formats";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useState } from "react";
-import { useFormatter, useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { documentCard } from "@/components/tenant/classes/forum/chips";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { photoRatio } from "@/components/tenant/classes/forum/photo";
 
 /** One file of a message. */
 type ForumFile = ForumMessage["attachments"][number];
-
-/** The bytes of one megabyte. */
-const BYTES_IN_MEGABYTE = 1024 * 1024;
 
 /** The photos of a message: one at its own shape, and several in equal squares, as a chat's album. */
 const photoGrid = cva("grid w-full max-w-sm gap-1", {
@@ -157,8 +155,7 @@ function MessagePhoto({
 /** One document of a message: its name and size, which open it in a new tab. */
 function MessageDocument({ document }: { document: ForumFile }) {
   const t = useTranslations("Classroom");
-  const format = useFormatter();
-  const megabytes = document.byteSize / BYTES_IN_MEGABYTE;
+  const locale = useLocale();
 
   return (
     <Attachment className={documentCard()}>
@@ -182,11 +179,7 @@ function MessageDocument({ document }: { document: ForumFile }) {
       <AttachmentContent>
         <AttachmentTitle dir="auto">{document.name}</AttachmentTitle>
         <AttachmentDescription>
-          {format.number(megabytes < 1 ? megabytes * 1000 : megabytes, {
-            maximumFractionDigits: megabytes < 1 ? 0 : 1,
-            style: "unit",
-            unit: megabytes < 1 ? "kilobyte" : "megabyte",
-          })}
+          {formatBytes(document.byteSize, locale)}
         </AttachmentDescription>
       </AttachmentContent>
     </Attachment>

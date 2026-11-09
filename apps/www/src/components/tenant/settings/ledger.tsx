@@ -11,8 +11,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { BILLING_TIME_ZONE } from "@repo/internationalization/src/formats";
 import { Array as Arr, DateTime, Record as Rec } from "effect";
-import { useLocale, useTranslations } from "use-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useInvoiceDownload } from "@/components/billing/invoice";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -20,12 +21,7 @@ import { RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
-import {
-  BILLING_TIME_ZONE,
-  formatBillingDate,
-  formatCount,
-  formatMinorAmount,
-} from "@/lib/billing/plan";
+import { formatMinorAmount } from "@/lib/billing/plan";
 import {
   invoiceStanding,
   type SchoolBilling,
@@ -55,7 +51,7 @@ export function SchoolInvoices({
   billing: SchoolBilling;
 }) {
   const t = useTranslations("SchoolSettings");
-  const locale = useLocale();
+  const format = useFormatter();
   const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
   return (
@@ -73,18 +69,18 @@ export function SchoolInvoices({
             invoiceColumns.days((invoice) => invoice.periodStart, {
               cell: (info) =>
                 t("billing-term-dates", {
-                  end: formatBillingDate(
+                  end: format.dateTime(
                     info.row.original.periodEnd - 1,
-                    locale
+                    "billing"
                   ),
-                  start: formatBillingDate(info.getValue(), locale),
+                  start: format.dateTime(info.getValue(), "billing"),
                 }),
               header: t("invoice-term"),
               id: "term",
               timeZone: () => BILLING_TIME_ZONE,
             }),
             invoiceColumns.number((invoice) => invoice.accounts, {
-              cell: (info) => formatCount(info.getValue(), locale),
+              cell: (info) => format.number(info.getValue()),
               header: t("invoice-accounts"),
               id: "accounts",
             }),
@@ -95,7 +91,7 @@ export function SchoolInvoices({
               id: "total",
             }),
             invoiceColumns.days((invoice) => invoice.dueAt, {
-              cell: (info) => formatBillingDate(info.getValue(), locale),
+              cell: (info) => format.dateTime(info.getValue(), "billing"),
               header: t("invoice-due"),
               id: "due",
               timeZone: () => BILLING_TIME_ZONE,

@@ -3,9 +3,9 @@ import {
   decodeLocale,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
+import { readStandaloneMessages } from "@repo/internationalization/src/messages";
 import { isNotFound, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
-import { readStandaloneMessages } from "@/lib/i18n/standalone";
 import { readRequestHostRole } from "@/lib/routing/school/host";
 
 /**

@@ -1,8 +1,7 @@
-import { TRIG_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/trig";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import type { Locale } from "@repo/internationalization/src/locale";
-import { type ReactNode, useMemo } from "react";
-import { useTranslations } from "use-intl";
+import { String as Str } from "effect";
+import type { ReactNode } from "react";
+import { useFormatter, useTranslations } from "use-intl";
 import {
   LESSON_SECTION_ID,
   LESSON_SUBJECTS,
@@ -28,28 +27,27 @@ import {
   FeatureText,
   FeatureTitle,
 } from "@/components/marketing/shared/feature";
-import { decimalSeparators } from "@/lib/marketing/decimal";
 
 /**
  * The lessons row: a short talk with Nina and the row's title on one side, and
  * the lesson window on the other, with one lesson of each subject on its tab.
  */
-export function Lesson({ locale }: { readonly locale: Locale }) {
+export function Lesson() {
   const t = useTranslations("Landing");
   const tCommon = useTranslations("Common");
   const tSubject = useTranslations("Subject");
-  const decimalSeparator = decimalSeparators[locale];
-  const numberFormat = useMemo(
-    () => new Intl.NumberFormat(locale, TRIG_NUMBER_OPTIONS),
-    [locale]
-  );
+  const format = useFormatter();
+  // The physics visuals write the decimal mark that the locale writes in its own numbers.
+  const decimalSeparator = Str.includes(",")(format.number(0.5, "math"))
+    ? "comma"
+    : "dot";
   // Each card and its lab read their labels from the same builder, so the card and the lab agree.
   const placeholders: Record<LessonId, ReactNode> = {
     atom: <AtomPlaceholder labels={getAtomLabels(t)} />,
     cell: <CellPlaceholder labels={getCellLabels(t)} />,
     circle: (
       <CirclePlaceholder
-        formatNumber={(value) => numberFormat.format(value)}
+        formatNumber={(value) => format.number(value, "trig")}
         labels={{
           onAxis: tCommon("on-axis"),
           quadrant: tCommon("quadrant"),

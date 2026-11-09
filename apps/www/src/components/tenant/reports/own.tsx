@@ -11,7 +11,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
@@ -96,10 +96,7 @@ function OwnReportTable() {
     cardColumns.days((card) => card.approvedAt, {
       cell: (info) => (
         <span className="tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium" }
-          )}
+          {format.dateTime(info.getValue(), "date")}
         </span>
       ),
       header: t("approved-at"),

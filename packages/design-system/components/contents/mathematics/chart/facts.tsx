@@ -1,6 +1,6 @@
 import { useChartData } from "@repo/design-system/components/contents/mathematics/chart/context";
 import { summarizeSeries } from "@repo/design-system/components/contents/mathematics/chart/summary";
-import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+
 import { VisualCardFacts } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Option } from "effect";
@@ -22,8 +22,7 @@ export function ChartSummaryFacts() {
   }
 
   const { highest, lowest, mean, range } = summary.value;
-  const formatNumber = (value: number) =>
-    format.number(value, MATH_NUMBER_OPTIONS);
+  const formatNumber = (value: number) => format.number(value, "math");
 
   return (
     <VisualCardFacts>

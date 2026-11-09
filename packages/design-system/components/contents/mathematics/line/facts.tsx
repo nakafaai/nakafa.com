@@ -4,7 +4,7 @@ import {
 } from "@repo/design-system/components/contents/mathematics/interval";
 import { summarizeLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import type { ResolvedLine } from "@repo/design-system/components/contents/mathematics/line/spec";
-import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardFacts } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
@@ -36,8 +36,7 @@ export function LineFacts({
   }
 
   const { count, x, y, z } = summary.value;
-  const formatNumber = (value: number) =>
-    format.number(value, MATH_NUMBER_OPTIONS);
+  const formatNumber = (value: number) => format.number(value, "math");
 
   return (
     <VisualCardFacts>
@@ -57,10 +56,7 @@ export function LineFacts({
               <InlineMath math={formatInterval(z, formatNumber, separator)} />
             }
           />
-          <VisualFact
-            label={linesLabel}
-            value={format.number(count, MATH_NUMBER_OPTIONS)}
-          />
+          <VisualFact label={linesLabel} value={format.number(count, "math")} />
         </>
       ) : null}
     </VisualCardFacts>

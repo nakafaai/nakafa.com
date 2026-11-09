@@ -1,7 +1,6 @@
 import {
   formatTrigRatioMath,
   QUADRANT_NUMERALS,
-  TRIG_NUMBER_OPTIONS,
   UNIT_CIRCLE_DEFAULT_ANGLE,
 } from "@repo/design-system/components/contents/mathematics/trig";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -181,7 +180,7 @@ function Content() {
   function formatRatio(value: number, exactValue?: string) {
     return formatTrigRatioMath(
       value,
-      (approximation) => format.number(approximation, TRIG_NUMBER_OPTIONS),
+      (approximation) => format.number(approximation, "trig"),
       exactValue
     );
   }
@@ -231,7 +230,7 @@ function Content() {
           />
           <VisualFact
             label={t("radian")}
-            value={format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}
+            value={format.number(getRadians(angleValue), "trig")}
           />
           <VisualFact
             label={<InlineMath math="\sin\theta" />}

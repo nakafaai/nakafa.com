@@ -20,7 +20,7 @@ import {
   TaskStanding as Standing,
   standingOf,
 } from "@repo/backend/confect/classroom/tasks/schema";
-import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
+import { Array as Arr, Option, Result, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -233,10 +233,7 @@ function useTaskColumns(categories: readonly string[]) {
     taskColumns.days((task) => task.deadline, {
       cell: (info) => (
         <span className="text-muted-foreground tabular-nums">
-          {format.dateTime(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
-            { dateStyle: "medium", timeStyle: "short", timeZone }
-          )}
+          {format.dateTime(info.getValue(), "dateTime", { timeZone })}
         </span>
       ),
       header: t("task-deadline"),
