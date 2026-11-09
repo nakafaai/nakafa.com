@@ -7,8 +7,8 @@ const SCHOOL_SEED = "nakafa-school";
 /** How many places of the cast the landing's demos take, each person at a place of their own. */
 const SCHOOL_PEOPLE = 21;
 
-/** How many animals the landing's toys take: six around the hero's title, and two where each of five parts begins. */
-const SCHOOL_TOYS = 16;
+/** How many animals the landing's toys take: six around the hero's title, and two where each of six centred parts begins. */
+const SCHOOL_TOYS = 18;
 
 /**
  * The animals of the School landing, from one cast: the people of its demos
@@ -18,6 +18,18 @@ const SCHOOL_CAST = cast(SCHOOL_SEED, SCHOOL_PEOPLE + SCHOOL_TOYS);
 
 /** The animals of the landing's toys, after its people. */
 export const SCHOOL_TOY_HERD = Arr.drop(SCHOOL_CAST, SCHOOL_PEOPLE);
+
+/**
+ * How many animals the School pricing page takes: two in the top corners of its plans, two where each of its five
+ * later parts begins, and one over each plan card that Nina does not stand behind.
+ */
+const SCHOOL_PRICING_COUNT = 14;
+
+/** The animals of the School pricing page, from a cast of its own, since no person stands on that page. */
+export const SCHOOL_PRICING_HERD = cast(
+  "nakafa-school-pricing",
+  SCHOOL_PRICING_COUNT
+);
 
 /** One person of a demo: their name and the animal at their place in the cast. */
 function person(name: string, place: number) {

@@ -9,6 +9,7 @@ import {
   testSignedArtifact,
 } from "@repo/backend/test/content/proof";
 import { Effect } from "effect";
+import { createElement, Fragment } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   renderSignedArtifact,
@@ -58,7 +59,9 @@ describe("authenticated artifact rendering", () => {
         );
 
         expect(rendered.artifact).toEqual(artifact);
-        const markup = renderToStaticMarkup(rendered.element);
+        const markup = renderToStaticMarkup(
+          createElement(Fragment, null, ...rendered.blocks)
+        );
         expect(markup).toContain("Authenticated <strong");
         expect(markup).toContain(">lesson</strong> body.");
       })

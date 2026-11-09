@@ -145,20 +145,16 @@ jobs:
       # A build that finished drops the entries it did not use, such as the answers of an
       # earlier release, so the store holds one build's reads. A failed or cancelled deploy
       # drops nothing and keeps what it added: each entry is one answer of Convex, so the
-      # next deploy does not read it again.
+      # next deploy does not read it again. A deploy whose Worker did not build keeps
+      # everything it restored (`keepShelfEntries` in apps/www/src/lib/content/store/shelf.ts).
       - name: Keep only the reads this build used
         id: kept
         if: always() && steps.release.outputs.id != ''
+        working-directory: apps/www
         env:
           JOB_STATUS: ${{ job.status }}
-        run: |
-          [ -f .cache/reads/.restored ] || exit 0
-          if [ "$JOB_STATUS" = "success" ] && [ -n "$(find .cache/reads -type f ! -name .restored ! -newer .cache/reads/.restored -print -delete)" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-          if [ -n "$(find .cache/reads -type f -newer .cache/reads/.restored -print -quit)" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+          NAKAFA_BUILD_STORE_DIRECTORY: ${{ github.workspace }}/.cache/reads
+        run: bun scripts/static/keep.ts
 
       - name: Keep the reads for the next deploy
         if: always() && steps.kept.outputs.changed == 'true'

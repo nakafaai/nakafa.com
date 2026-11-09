@@ -51,7 +51,7 @@ export function SchoolParents() {
   const tSubject = useTranslations("Subject");
 
   return (
-    <FeatureRow id="parents" layout="end">
+    <FeatureRow id="parents">
       <SchoolFeatureText feature="parents">
         <Nina act="waving" label="" size={88} whole />
       </SchoolFeatureText>

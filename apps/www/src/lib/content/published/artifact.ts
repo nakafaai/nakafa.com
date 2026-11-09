@@ -27,7 +27,7 @@ export const renderVerifiedArtifact = Effect.fn(
 )(function* (input: { readonly artifact: SignedContentArtifact }) {
   const { payload } = input.artifact;
   const components = yield* resolveRendererComponents(payload);
-  const element = yield* renderContentTree(
+  const blocks = yield* renderContentTree(
     components,
     payload.contentKey,
     payload.rendererDomain,
@@ -37,7 +37,7 @@ export const renderVerifiedArtifact = Effect.fn(
 
   return {
     artifact: input.artifact,
-    element,
+    blocks,
   };
 });
 

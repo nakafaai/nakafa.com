@@ -377,6 +377,7 @@ describe("test ownership policy", () => {
           ...sharedPackageFiles('{"name":"@nakafa/typescript-config"}\n'),
           "apps/web/tsconfig.json":
             '{"extends":"@nakafa/typescript-config/base.json"}\n',
+          "docs/two-words.md": "# Notes\n",
         });
         yield* writeFixtures(owner, {
           "packages/typescript-config/base.json":
@@ -390,8 +391,10 @@ describe("test ownership policy", () => {
           ],
           stdout: [],
         });
-        // The repository that owns the check has no other owner to compare with.
-        assert.strictEqual((yield* checkFixture(root, root)).status, 0);
+        // The repository that owns the check has no other owner to compare with, and judges its own path names.
+        assert.deepStrictEqual((yield* checkFixture(root, root)).stderr, [
+          "docs/two-words.md: two-words.md names more than one word. Name every file and folder with one domain word, and group a longer capability under its own folder.\n",
+        ]);
         // An owner whose configuration declares no plugins has no decisions to compare.
         const plain = path.join(owner, "plain");
         yield* writeFixtures(plain, {

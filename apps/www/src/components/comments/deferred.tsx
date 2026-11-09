@@ -9,7 +9,7 @@ import { SignedInIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 
 const LazyComments = lazy(() =>
-  import("@/components/comments").then((module) => ({
+  import("@/components/comments/section").then((module) => ({
     default: module.Comments,
   }))
 );

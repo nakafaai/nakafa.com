@@ -108,7 +108,7 @@ export function SchoolTasks() {
   const columns = useDemoColumns();
 
   return (
-    <FeatureRow id="tasks" layout="stack">
+    <FeatureRow id="tasks" layout="end">
       <SchoolFeatureText feature="tasks">
         <Nina act="writing" label="" size={88} whole />
       </SchoolFeatureText>
