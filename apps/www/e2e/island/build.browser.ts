@@ -52,13 +52,19 @@ for (const viewport of [desktopViewport, touchViewport]) {
                 const grass = items.getByRole("button", { name: GRASS });
                 await press(grass, viewport.hasTouch);
                 await expect(grass).toHaveAttribute("aria-pressed", "true");
-                await testInfo.attach(
-                  `island-build-${viewport.name}-${colorScheme}.png`,
-                  {
-                    body: await page.screenshot({ fullPage: true }),
-                    contentType: "image/png",
-                  }
-                );
+                // The open bar shrinks the frame, and until the canvas's buffer matches its new box
+                // the camera and the pointer belong to the old size, so a press lands on another cell.
+                await expect
+                  .poll(async () => {
+                    const box = await canvas.boundingBox();
+                    const across = Number(await canvas.getAttribute("width"));
+                    const down = Number(await canvas.getAttribute("height"));
+                    return (
+                      across > 0 &&
+                      (box?.width ?? 0) * down === (box?.height ?? 0) * across
+                    );
+                  })
+                  .toBe(true);
                 const bounds = await canvas.boundingBox();
                 const columns = Number(await canvas.getAttribute("width"));
                 expect(bounds).not.toBeNull();
@@ -74,6 +80,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
                 await expect(
                   page.getByText("You need more Stars for this.")
                 ).toBeVisible();
+                // A full-page capture resizes the page for a moment, so it waits until the press is done.
                 await testInfo.attach(
                   `island-refused-${viewport.name}-${colorScheme}.png`,
                   {
