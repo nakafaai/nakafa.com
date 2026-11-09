@@ -133,8 +133,12 @@ const BEHAVIOUR_SCHOOL_TESTS = Arr.map(
 );
 
 // The visual cards take the whole screen through the Fullscreen API on desktop,
-// Android, and iPad, and cover the viewport on iPhone, in Safari too.
-const WEBKIT_TESTS = ["**/visual/cards.browser.ts"];
+// Android, and iPad, and cover the viewport on iPhone, and the outline follows the
+// reader down and up a lesson, in Safari too.
+const WEBKIT_TESTS = [
+  "**/visual/cards.browser.ts",
+  "**/reading/outline.browser.ts",
+];
 
 // The School pages of the timing specs, which the browser timing suite runs in
 // the other four browsers.
