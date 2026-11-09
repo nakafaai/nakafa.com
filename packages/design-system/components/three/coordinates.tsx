@@ -11,6 +11,7 @@ import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
@@ -24,7 +25,6 @@ import {
   createContext,
   type ReactNode,
   Suspense,
-  use,
   useMemo,
 } from "react";
 
@@ -94,12 +94,7 @@ const CoordinateSceneContext = createContext<CoordinateScene | null>(null);
 
 /** Selects the configuration of the surrounding coordinate scene. */
 function useCoordinateScene() {
-  const scene = use(CoordinateSceneContext);
-  if (scene === null) {
-    // A missing scene is a programmer composition error at this React seam.
-    throw new Error("Coordinate scene parts require CoordinateSystem.");
-  }
-  return scene;
+  return useRequired(CoordinateSceneContext, "useCoordinateScene");
 }
 
 /** The scene's camera, with the controls that orbit and frame it. */

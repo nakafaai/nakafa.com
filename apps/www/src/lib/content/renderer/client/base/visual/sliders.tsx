@@ -7,8 +7,9 @@ import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
 import { PARAMETER_NAMES } from "@repo/design-system/components/three/names";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import { VisualCardToolbar } from "@repo/design-system/components/visual/card";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { useStore } from "zustand";
 import {
   createParameterStore,
@@ -49,12 +50,7 @@ export function ParameterProvider({
 
 /** Reads the scene's sliders, their store, and the rich labels they show. */
 export function useParameters() {
-  const value = use(ParameterContext);
-  if (!value) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("Sliders require ParameterProvider.");
-  }
-  return value;
+  return useRequired(ParameterContext, "useParameters");
 }
 
 /** The current value of every slider, the scope its formulas sample with. */

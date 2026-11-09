@@ -12,8 +12,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Record as Rec, Schema } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { FacetValues } from "@/components/shared/table/filter";
 
@@ -72,11 +73,7 @@ export function TableFiltersProvider({ children }: { children: ReactNode }) {
 
 /** Reads one selected slice of the page's filters. */
 export function useTableFilters<T>(selector: (state: TableFilters) => T) {
-  const store = use(FiltersContext);
-
-  if (store === null) {
-    throw new Error("useTableFilters must be used within TableFiltersProvider");
-  }
+  const store = useRequired(FiltersContext, "useTableFilters");
 
   return useStore(store, selector);
 }

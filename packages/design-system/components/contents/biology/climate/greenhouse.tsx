@@ -21,10 +21,11 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
-import { createContext, Suspense, use, useMemo, useRef, useState } from "react";
+import { createContext, Suspense, useMemo, useRef, useState } from "react";
 import { type Group, SRGBColorSpace } from "three";
 import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
@@ -74,12 +75,7 @@ function GreenhouseProvider({
 
 /** Reads the colors and the gas-level store of the surrounding lab. */
 function useGreenhouse() {
-  const greenhouse = use(GreenhouseContext);
-  if (!greenhouse) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useGreenhouse must be used within GreenhouseProvider");
-  }
-  return greenhouse;
+  return useRequired(GreenhouseContext, "useGreenhouse");
 }
 
 /** Reads the gas level the slider of the surrounding lab sets. */

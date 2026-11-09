@@ -7,13 +7,13 @@ import {
   objectZIndex,
   projectToOverlay,
 } from "@repo/design-system/components/three/overlay/project";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, MutableHashMap, Option } from "effect";
 import {
   type CSSProperties,
   createContext,
   type ReactNode,
   type RefCallback,
-  use,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -72,11 +72,7 @@ const SceneOverlayContext = createContext<SceneOverlayStore | null>(null);
 
 /** Reads the overlay store, which only a SceneOverlayProvider gives. */
 function useSceneOverlayStore(): SceneOverlayStore {
-  const store = use(SceneOverlayContext);
-  if (store === null) {
-    throw new Error("Scene labels must render inside a SceneOverlayProvider.");
-  }
-  return store;
+  return useRequired(SceneOverlayContext, "useSceneOverlayStore");
 }
 
 /**

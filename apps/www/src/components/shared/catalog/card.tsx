@@ -6,15 +6,11 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Predicate } from "effect";
-import {
-  type ComponentProps,
-  type ReactElement,
-  type ReactNode,
-  use,
-} from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { toCardArtwork } from "@/lib/og/artwork";
 
@@ -32,12 +28,7 @@ interface CatalogCardProps {
 
 /** Renders one image or tile catalog choice with the action its grid names. */
 export function CatalogCard({ action, children, title }: CatalogCardProps) {
-  const actionLabel = use(CatalogActionLabelContext);
-  if (actionLabel === null) {
-    throw new Error(
-      "CatalogCard must be used within CatalogActionLabelContext"
-    );
-  }
+  const actionLabel = useRequired(CatalogActionLabelContext, "CatalogCard");
   return (
     <Card className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]">
       {children}

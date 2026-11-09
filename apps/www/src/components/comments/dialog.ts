@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 
 /** The question a comment's menu opened, if any: its deletion for its learner, a report for anyone else. */
 export type CommentDialog = "delete" | "report" | null;
@@ -11,11 +12,7 @@ export const CommentDialogContext = createContext<{
 
 /** Reads whether one question of the surrounding menu is open, and closes it. */
 export function useCommentDialog(name: Exclude<CommentDialog, null>) {
-  const context = use(CommentDialogContext);
-  if (context === null) {
-    // A question outside its menu is a composition error at this seam.
-    throw new Error("A comment's question renders inside its CommentMenu.");
-  }
+  const context = useRequired(CommentDialogContext, "useCommentDialog");
   return {
     onOpenChange: (open: boolean) => context.setDialog(open ? name : null),
     open: context.dialog === name,

@@ -11,6 +11,7 @@ import { marked } from "@repo/design-system/components/nina/mark";
 import { paint, sameFigure } from "@repo/design-system/components/nina/paint";
 import { Picture } from "@repo/design-system/components/ui/picture";
 import { usePageSettled } from "@repo/design-system/components/ui/settled";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { scene } from "@repo/mascot/nina/figure";
@@ -28,7 +29,6 @@ import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
 import {
   createContext,
-  use,
   useEffect,
   useEffectEvent,
   useMemo,
@@ -48,12 +48,7 @@ const LiveContext = createContext<LiveProps | null>(null);
 
 /** Selects the Nina on screen from the surrounding Live. */
 function useLive() {
-  const live = use(LiveContext);
-  if (live === null) {
-    // A missing Nina is a programmer composition error at this React seam.
-    throw new Error("Nina's parts require Live.");
-  }
-  return live;
+  return useRequired(LiveContext, "useLive");
 }
 
 /** A thing that she picks up arrives with a small pop, not from nowhere. */

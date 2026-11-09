@@ -13,6 +13,7 @@ import {
   EndpointRing,
 } from "@repo/design-system/components/three/endpoint";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
 import {
   type LineEndpoints,
@@ -34,7 +35,6 @@ import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  use,
   useMemo,
 } from "react";
 import {
@@ -180,12 +180,7 @@ const EquationLineContext = createContext<EquationLineValues | null>(null);
 
 /** Selects the line of the surrounding equation. */
 function useEquationLine() {
-  const line = use(EquationLineContext);
-  if (line === null) {
-    // A missing equation is a programmer composition error at this React seam.
-    throw new Error("The equation line requires LineEquation.");
-  }
-  return line;
+  return useRequired(EquationLineContext, "useEquationLine");
 }
 
 /** The line through the equation's points, with open endpoints drawn as rings. */

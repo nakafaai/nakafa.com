@@ -2,10 +2,10 @@ import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
 import {
   createContext,
-  use,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -110,10 +110,7 @@ export function ExamEditor({
  * boundary of its own, and a boundary around the workspace would take the teacher's writing off the screen.
  */
 function ExamRead({ examId, slug }: { examId: Id<"exams">; slug: TenantSlug }) {
-  const read = use(ExamReadContext);
-  if (read === null) {
-    throw new Error("ExamRead must be used within the exam editor");
-  }
+  const read = useRequired(ExamReadContext, "ExamRead");
   // The exam needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const result = useQuery(
@@ -133,10 +130,7 @@ function ExamRead({ examId, slug }: { examId: Id<"exams">; slug: TenantSlug }) {
  * the editor closes, so a later visit to the same exam reads it as it stands.
  */
 function useCreatedExam(examId: Id<"exams">) {
-  const store = use(CreatedExamsContext);
-  if (store === null) {
-    throw new Error("useCreatedExam must be used within the exam pages");
-  }
+  const store = useRequired(CreatedExamsContext, "useCreatedExam");
   const held = useStore(store, (state) =>
     state.held?.id === examId ? state.held : undefined
   );

@@ -1,5 +1,6 @@
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import type { Connection } from "@/components/connectors/optimistic";
 import type { ConnectSearch } from "@/components/connectors/outcome";
 
@@ -24,11 +25,5 @@ export const ConnectorActionsContext = createContext<ConnectorActions | null>(
 
 /** Reads the connector actions of the page around the caller. */
 export function useConnectorActions() {
-  const actions = use(ConnectorActionsContext);
-
-  if (actions === null) {
-    throw new Error("useConnectorActions must be used within a connector page");
-  }
-
-  return actions;
+  return useRequired(ConnectorActionsContext, "useConnectorActions");
 }

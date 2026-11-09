@@ -2,7 +2,8 @@ import type {
   ChemicalReactionTypeId,
   ChemicalReactionTypeSceneColors,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -57,14 +58,10 @@ export function ChemicalReactionTypeSceneProvider({
 
 /** Reads the colors and the reaction type store of the surrounding lab. */
 export function useChemicalReactionTypeScene() {
-  const scene = use(ChemicalReactionTypeSceneContext);
-  if (!scene) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useChemicalReactionTypeScene must be used within ChemicalReactionTypeSceneProvider"
-    );
-  }
-  return scene;
+  return useRequired(
+    ChemicalReactionTypeSceneContext,
+    "useChemicalReactionTypeScene"
+  );
 }
 
 /** Selects one part of the surrounding lab's reaction type, so a reader reruns only for it. */

@@ -1,4 +1,5 @@
 import type { Id } from "@repo/backend/confect/_generated/id";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { createContext, type ReactNode, use, useState } from "react";
 import type { StoreApi } from "zustand";
 import {
@@ -30,12 +31,7 @@ export function LibraryScope({
 
 /** Reads the uploads of the class page around the caller. */
 export function useLibraryUploads() {
-  const uploads = use(UploadsContext);
-  if (uploads === null) {
-    // A library outside its class page is a composition error at this seam.
-    throw new Error("useLibraryUploads must be used within a class page");
-  }
-  return uploads;
+  return useRequired(UploadsContext, "useLibraryUploads");
 }
 
 /** Reads the folder the page around the caller shows, which is none at the top of the library. */

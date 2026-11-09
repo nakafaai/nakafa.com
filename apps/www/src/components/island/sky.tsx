@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { DateTime, Effect, Fiber, Option } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { useIsland } from "@/lib/island/context";
 import {
   createSkyStore,
@@ -68,9 +69,5 @@ export function SkyProvider({ children }: { children: ReactNode }) {
 
 /** The sky store of the surrounding island canvas, which frames read as they draw. */
 export function useSkyStore() {
-  const store = use(SkyContext);
-  if (!store) {
-    throw new Error("useSkyStore must be used within SkyProvider");
-  }
-  return store;
+  return useRequired(SkyContext, "useSkyStore");
 }

@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 /**
@@ -11,11 +12,5 @@ export const ArticleNavigationContext = createContext<
 
 /** Reads the article navigation that the command search lists before a search. */
 export function useArticleNavigation() {
-  const navigation = use(ArticleNavigationContext);
-  if (navigation === null) {
-    throw new Error(
-      "useArticleNavigation must be used within DeferredSearchCommand"
-    );
-  }
-  return navigation;
+  return useRequired(ArticleNavigationContext, "useArticleNavigation");
 }

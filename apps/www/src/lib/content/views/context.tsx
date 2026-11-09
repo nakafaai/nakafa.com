@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, type ReactNode, use, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -21,9 +22,6 @@ export function ContentViewsProvider({ children }: { children: ReactNode }) {
 export function useContentViews<T>(
   selector: (state: ContentViewsStore) => T
 ): T {
-  const ctx = use(ContentViewsContext);
-  if (!ctx) {
-    throw new Error("useContentViews must be used within ContentViewsProvider");
-  }
+  const ctx = useRequired(ContentViewsContext, "useContentViews");
   return useStore(ctx, useShallow(selector));
 }

@@ -16,6 +16,7 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import {
   Array as Arr,
@@ -26,7 +27,7 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { createContext, use, useId, useState } from "react";
+import { createContext, useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
@@ -63,13 +64,7 @@ const OpenTaskContext = createContext<ClassTask | null>(null);
 
 /** Reads the task the pane around the caller shows. */
 function useOpenTask() {
-  const task = use(OpenTaskContext);
-
-  if (task === null) {
-    throw new Error("useOpenTask must be used within an open task");
-  }
-
-  return task;
+  return useRequired(OpenTaskContext, "useOpenTask");
 }
 
 /**

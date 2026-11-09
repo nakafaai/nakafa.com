@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/editor/picture";
 import { editorSelection } from "@repo/design-system/components/editor/selection";
 import { TableBar } from "@repo/design-system/components/editor/table";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { Node } from "@tiptap/pm/model";
 import type { Transaction } from "@tiptap/pm/state";
 import { cn } from "cn";
@@ -21,7 +22,6 @@ import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  use,
   useEffect,
   useMemo,
   useRef,
@@ -84,13 +84,7 @@ export function ExamDocumentWiringProvider({
 
 /** Reads the wiring of the rich text. It throws outside an owner, which always provides it. */
 function useDocumentWiring() {
-  const wiring = use(ExamDocumentWiringContext);
-  if (wiring === null) {
-    throw new Error(
-      "useDocumentWiring must be used within ExamText or OptionRow"
-    );
-  }
-  return wiring;
+  return useRequired(ExamDocumentWiringContext, "useDocumentWiring");
 }
 
 /** The props of one rich text of the exam editor, which the prompt, the notes and each option share. */

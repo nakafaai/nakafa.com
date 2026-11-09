@@ -1,4 +1,5 @@
-import { type ReactNode, use, useLayoutEffect, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { type ReactNode, useLayoutEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { AuthSessionContext } from "@/components/auth/context";
 import { followSignedInHint } from "@/lib/auth/hint";
@@ -37,13 +38,7 @@ export function useSignedInHint(session: StoreApi<AuthSession>) {
 
 /** Returns the session store and rejects a missing app provider. */
 export function useAuthSessionStore() {
-  const store = use(AuthSessionContext);
-  if (!store) {
-    throw new TypeError(
-      "useAuthSession must be used within AuthSessionProvider"
-    );
-  }
-  return store;
+  return useRequired(AuthSessionContext, "useAuthSessionStore");
 }
 
 /** Selects one part of the shared session. */

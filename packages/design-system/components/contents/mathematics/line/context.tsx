@@ -2,7 +2,8 @@
 
 import type { LineSceneConfig } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { CoordinateProvider } from "@repo/design-system/components/three/controls";
-import { createContext, type ReactNode, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode } from "react";
 
 const LineSceneContext = createContext<LineSceneConfig | null>(null);
 
@@ -23,10 +24,5 @@ export function LineEquationProvider({
 
 /** Reads the scene configuration of the surrounding line-equation card. */
 export function useLineScene() {
-  const config = use(LineSceneContext);
-  if (!config) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useLineScene must be used within LineEquationProvider");
-  }
-  return config;
+  return useRequired(LineSceneContext, "useLineScene");
 }

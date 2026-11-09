@@ -1,11 +1,12 @@
 import { useMutation } from "@confect/react";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
-import { createContext, Suspense, use } from "react";
+import { createContext, Suspense } from "react";
 import { useLocale } from "use-intl";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";
@@ -102,11 +103,7 @@ const RowPostContext = createContext<ListPost | null>(null);
 
 /** Reads the post of the row around a like toggle. */
 function useRowPost() {
-  const post = use(RowPostContext);
-  if (post === null) {
-    throw new Error("useRowPost must be used within RowPostContext");
-  }
-  return post;
+  return useRequired(RowPostContext, "useRowPost");
 }
 
 /** A visitor's like toggle: it asks for sign-in, and changes nothing. */

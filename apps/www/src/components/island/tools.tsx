@@ -1,4 +1,5 @@
-import { createContext, type ReactNode, use, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { createToolStore, type ToolStore } from "@/lib/island/tools";
@@ -13,11 +14,7 @@ export function ToolsProvider({ children }: { children: ReactNode }) {
 
 /** The store of the surrounding frame's build tools, for event handlers that read it as they run. */
 export function useToolStore() {
-  const store = use(ToolsContext);
-  if (!store) {
-    throw new Error("useToolStore must be used within ToolsProvider");
-  }
-  return store;
+  return useRequired(ToolsContext, "useToolStore");
 }
 
 /** Reads part of the surrounding frame's build tools and follows its changes. */

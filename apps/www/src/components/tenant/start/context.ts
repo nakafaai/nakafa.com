@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import { type StoreApi, useStore } from "zustand";
 import type { StartAnswer, StartDraft } from "@/components/tenant/start/state";
 import type { TypedName } from "@/components/tenant/start/typed";
@@ -21,11 +22,7 @@ export const StartContext = createContext<StartValue | null>(null);
 
 /** Reads the questionnaire. It throws outside the form, which always provides it. */
 export function useStart() {
-  const start = use(StartContext);
-  if (start === null) {
-    throw new Error("useStart must be used within SchoolStart");
-  }
-  return start;
+  return useRequired(StartContext, "useStart");
 }
 
 /** Reads one part of the name and address the founder types. It throws outside the form. */

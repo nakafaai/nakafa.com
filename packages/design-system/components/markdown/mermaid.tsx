@@ -9,9 +9,10 @@ import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
-import { createContext, use, useMemo, useState } from "react";
+import { createContext, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 
 interface Props {
@@ -31,12 +32,7 @@ const MermaidFigureContext = createContext<MermaidFigure | null>(null);
 
 /** Selects the figure of the surrounding diagram. */
 function useMermaidFigure() {
-  const figure = use(MermaidFigureContext);
-  if (figure === null) {
-    // A missing diagram is a programmer composition error at this React seam.
-    throw new Error("Diagram parts require MermaidMdx.");
-  }
-  return figure;
+  return useRequired(MermaidFigureContext, "useMermaidFigure");
 }
 
 /** The diagram in its card, with the controls that open it and copy its source. */

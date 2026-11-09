@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { DateTime } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import {
   type CommentDraft,
@@ -30,22 +31,14 @@ export function CommentsProvider({ children }: { children: ReactNode }) {
 
 /** The moment the ages of the comments count from, which the timer moves forward. */
 export function useCommentsNow() {
-  const clock = use(ClockContext);
-
-  if (!clock) {
-    throw new Error("useCommentsNow must be used within CommentsProvider");
-  }
+  const clock = useRequired(ClockContext, "useCommentsNow");
 
   return useAgeNow(clock);
 }
 
 /** Reads one selected part of what the list is writing. */
 export function useCommentDraft<T>(selector: (draft: CommentDraft) => T) {
-  const store = use(DraftContext);
-
-  if (!store) {
-    throw new Error("useCommentDraft must be used within CommentsProvider");
-  }
+  const store = useRequired(DraftContext, "useCommentDraft");
 
   return useStore(store, selector);
 }

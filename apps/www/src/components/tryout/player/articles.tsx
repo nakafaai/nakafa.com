@@ -1,5 +1,5 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Result } from "effect";
-import { use } from "react";
 import { PlayerQuestionFlag } from "@/components/player/flag";
 import { readQuestionIds } from "@/components/player/ids";
 import {
@@ -29,11 +29,8 @@ export function TryoutArticles({
   locked: boolean;
   runtime: TryoutSectionRuntime;
 }) {
-  const value = use(TryoutContentContext);
+  const value = useRequired(TryoutContentContext, "TryoutArticles");
   const flag = useTryoutFlag();
-  if (value === null) {
-    throw new Error("TryoutArticles must be used within TryoutContentContext");
-  }
   // The page read sends the bodies with the runtime, so a question without its body is a broken read
   // for the route's error boundary, never a player without its questions.
   const joined = Result.getOrThrow(

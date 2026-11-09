@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import {
   Array as Arr,
@@ -81,11 +82,7 @@ export function ExamDraftsProvider({
 
 /** Reads the page's drafts. It throws outside a page that provides them. */
 function useExamDrafts() {
-  const drafts = use(ExamDraftsContext);
-  if (drafts === null) {
-    throw new Error("useExamDrafts must be used within ExamDraftsProvider");
-  }
-  return drafts;
+  return useRequired(ExamDraftsContext, "useExamDrafts");
 }
 
 /**

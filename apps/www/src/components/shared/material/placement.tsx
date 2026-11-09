@@ -1,8 +1,8 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
 import {
   createContext,
   type ReactNode,
-  use,
   useLayoutEffect,
   useState,
 } from "react";
@@ -80,13 +80,7 @@ export function MaterialPlacementProvider({
 
 /** Reads the provider's value and rejects a missing provider. */
 function usePlacementContext() {
-  const value = use(PlacementContext);
-  if (!value) {
-    throw new Error(
-      "useMaterialNavigation must be used within a MaterialPlacementProvider"
-    );
-  }
-  return value;
+  return useRequired(PlacementContext, "usePlacementContext");
 }
 
 /** The lesson's navigation under the placement of the reader's address. */

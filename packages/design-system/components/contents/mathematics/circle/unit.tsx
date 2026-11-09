@@ -27,6 +27,7 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { lazy } from "@repo/design-system/lib/lazy";
 import {
   getCos,
@@ -36,7 +37,7 @@ import {
   getTan,
 } from "@repo/math/angles";
 import { Option } from "effect";
-import { createContext, type ReactNode, Suspense, use, useState } from "react";
+import { createContext, type ReactNode, Suspense, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
@@ -106,12 +107,7 @@ function UnitCircleProvider({
 
 /** Reads the configuration of the surrounding unit-circle card. */
 function useUnitCircle() {
-  const config = use(UnitCircleContext);
-  if (!config) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useUnitCircle must be used within UnitCircleProvider");
-  }
-  return config;
+  return useRequired(UnitCircleContext, "useUnitCircle");
 }
 
 /** The visual card that holds a unit circle's header, its controls, and its values. */

@@ -3,6 +3,7 @@ import {
   DiscussionNumber,
   MessageView,
 } from "@repo/backend/confect/classroom/forum/message";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Option, Schema } from "effect";
 import { createContext, use } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
@@ -57,11 +58,7 @@ export const OpeningContext = createContext<StoreApi<OpeningStore> | null>(
 
 /** Reads one slice of the forum's pressed thread. */
 export function useOpening<T>(selector: (state: OpeningStore) => T) {
-  const store = use(OpeningContext);
-
-  if (store === null) {
-    throw new Error("useOpening must be used within a forum");
-  }
+  const store = useRequired(OpeningContext, "useOpening");
 
   return useStore(store, selector);
 }

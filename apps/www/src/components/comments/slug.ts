@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 
 /**
  * The slug whose comments the page shows. The deferred comments provide it above
@@ -8,9 +9,5 @@ export const CommentsSlugContext = createContext<string | null>(null);
 
 /** Reads the slug whose comments the list shows. */
 export function useCommentsSlug() {
-  const slug = use(CommentsSlugContext);
-  if (slug === null) {
-    throw new Error("useCommentsSlug must be used within DeferredComments");
-  }
-  return slug;
+  return useRequired(CommentsSlugContext, "useCommentsSlug");
 }

@@ -1,5 +1,6 @@
-import { Match, Schema } from "effect";
+import { Array as Arr, Match, Schema } from "effect";
 import type { Identifier, Node, SourceFile } from "tsrs/ast";
+import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
 import {
   isConfiguration,
   isReactModule,
@@ -29,6 +30,7 @@ export const Rule = Schema.Literals([
   "object-helper",
   "promise",
   "random",
+  "raw-error",
   "react-lazy",
   "switch",
   "throw",
@@ -42,9 +44,10 @@ export const Rule = Schema.Literals([
  * framework configuration (`code`); code outside framework configuration and
  * React modules, tests included (`logic`); the domain code of the strict
  * Confect and script folders, tests excluded (`domain`); product code, which is
- * outside framework configuration, React modules, and tests (`product`); and
+ * outside framework configuration, React modules, and tests (`product`);
  * source code, which is outside framework configuration and tests, React modules
- * included (`source`).
+ * included (`source`); and the React modules of that source code outside the
+ * registry's component sets, which keep their upstream's parts (`react`).
  */
 const RuleScope = Schema.Literals([
   "every",
@@ -53,6 +56,7 @@ const RuleScope = Schema.Literals([
   "domain",
   "product",
   "source",
+  "react",
 ]);
 
 /** One rule's scope and the Effect-native replacement it names. */
@@ -152,6 +156,11 @@ export const RULES = {
       "compose Effects with Effect.fn, wrapping a Promise SDK once in Effect.tryPromise, instead of async functions or await.",
     scope: "domain",
   },
+  "raw-error": {
+    message:
+      "throw a Schema.TaggedError or Data.TaggedError that names the failure instead of a platform Error in a React module; a part that reads its provider's context calls useRequired from @repo/design-system/hooks/required, which throws OutsideProvider with the part's name.",
+    scope: "react",
+  },
   "react-lazy": {
     message:
       "import lazy from @repo/design-system/lib/lazy instead of react: a chunk that fails with no network waits for it there, where React's would throw the page away.",
@@ -220,6 +229,18 @@ export function covers(
     Match.when(
       "source",
       () => !(isConfiguration(file, sourceFile) || TEST_PATTERN.test(file))
+    ),
+    Match.when(
+      "react",
+      () =>
+        isReactModule(file, sourceFile) &&
+        !(
+          isConfiguration(file, sourceFile) ||
+          TEST_PATTERN.test(file) ||
+          Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
+            file.startsWith(directory)
+          )
+        )
     ),
     Match.exhaustive
   );

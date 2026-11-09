@@ -1,11 +1,11 @@
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { DateTime, Effect, Fiber } from "effect";
 import {
   createContext,
   type PropsWithChildren,
-  use,
   useLayoutEffect,
   useRef,
   useState,
@@ -284,9 +284,6 @@ export type ChatPaging = ReturnType<typeof useChatState>["paging"];
 
 /** Selects one part of the conversation's state and actions. */
 export function useChat<T>(selector: (state: ChatContextValue) => T) {
-  const value = use(ChatContext);
-  if (!value) {
-    throw new Error("useChat must be used within ChatProvider");
-  }
+  const value = useRequired(ChatContext, "useChat");
   return selector(value);
 }

@@ -3,6 +3,7 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { SidebarScope } from "@repo/design-system/components/ui/sidebar-scope";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { useHydrated } from "@tanstack/react-router";
 import { Effect } from "effect";
 import {
@@ -126,12 +127,7 @@ export function LockableShell({
 
 /** Reads the lock count setter of the nearest shell. */
 function useShellLocks() {
-  const setLocks = use(ShellLocksContext);
-  if (!setLocks) {
-    throw new Error("useShellLocks must be used within a LockableShell");
-  }
-
-  return setLocks;
+  return useRequired(ShellLocksContext, "useShellLocks");
 }
 
 /**

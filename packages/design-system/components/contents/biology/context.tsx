@@ -1,6 +1,7 @@
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { createContext, type ReactNode, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -48,12 +49,7 @@ export function BiologyLabProvider({
 }
 
 function useBiologyLab() {
-  const lab = use(BiologyLabContext);
-  if (!lab) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useBiologyLab must be used within BiologyLabProvider");
-  }
-  return lab;
+  return useRequired(BiologyLabContext, "useBiologyLab");
 }
 
 /** Reads the scene colors of the surrounding biology lab. */

@@ -18,15 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  createContext,
-  startTransition,
-  use,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { createContext, startTransition, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
@@ -50,13 +44,7 @@ const CreateDialogContext = createContext<{
 
 /** Reads the dialog's open state. It throws outside the dialog, which always provides it. */
 function useCreateDialog() {
-  const dialog = use(CreateDialogContext);
-  if (dialog === null) {
-    throw new Error(
-      "useCreateDialog must be used within SchoolUnitCreateDialog"
-    );
-  }
-  return dialog;
+  return useRequired(CreateDialogContext, "useCreateDialog");
 }
 
 /**

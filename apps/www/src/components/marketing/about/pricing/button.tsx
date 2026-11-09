@@ -3,13 +3,13 @@ import { useMounted } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useEarlyPress } from "@repo/design-system/hooks/press";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
 import {
   createContext,
   Suspense,
-  use,
   useEffect,
   useEffectEvent,
   useState,
@@ -35,13 +35,7 @@ const PricingButtonVariantContext = createContext<PricingButtonVariant | null>(
 
 /** Reads the emphasis of the Pro action around a variant of it. */
 export function usePricingButtonVariant() {
-  const variant = use(PricingButtonVariantContext);
-  if (variant === null) {
-    throw new Error(
-      "usePricingButtonVariant must be used within PricingButton"
-    );
-  }
-  return variant;
+  return useRequired(PricingButtonVariantContext, "usePricingButtonVariant");
 }
 
 /** Whether the Pro action was pressed before the page knew what the press should do. */
@@ -49,10 +43,7 @@ const PricingPressContext = createContext<StoreApi<boolean> | null>(null);
 
 /** Reads the press the Pro action holds, and the two ways it changes. */
 export function usePricingPress() {
-  const store = use(PricingPressContext);
-  if (store === null) {
-    throw new Error("usePricingPress must be used within PricingButton");
-  }
+  const store = useRequired(PricingPressContext, "usePricingPress");
   return {
     hold: () => store.setState(true, true),
     isHeld: useStore(store),

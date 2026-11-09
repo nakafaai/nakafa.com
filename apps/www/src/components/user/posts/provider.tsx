@@ -1,4 +1,5 @@
-import { createContext, type ReactNode, use, useMemo, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useMemo, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import { useAgeNow } from "@/components/user/ages";
 import type { AgeClock } from "@/components/user/clock";
@@ -22,11 +23,7 @@ export function PostDraftProvider({ children }: { children: ReactNode }) {
 
 /** Reads one selected part of the words the composer holds. */
 export function usePostDraft<T>(selector: (draft: PostDraft) => T) {
-  const store = use(DraftContext);
-
-  if (!store) {
-    throw new Error("usePostDraft must be used within PostDraftProvider");
-  }
+  const store = useRequired(DraftContext, "usePostDraft");
 
   return useStore(store, selector);
 }
@@ -66,13 +63,7 @@ export function PostsProvider({
 
 /** Reads the profile's posts value, which the provider above the list gives. */
 export function usePostsContext() {
-  const value = use(PostsContext);
-
-  if (!value) {
-    throw new Error("usePostsContext must be used within PostsProvider");
-  }
-
-  return value;
+  return useRequired(PostsContext, "usePostsContext");
 }
 
 /** The moment the ages of the posts count from, which the timer moves forward. */

@@ -14,6 +14,7 @@ import {
   PickerTrigger,
 } from "@repo/design-system/components/ui/picker";
 import { selectTriggerVariants } from "@repo/design-system/components/ui/select";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -81,11 +82,7 @@ const PickerCohortContext = createContext<CohortDetail["id"] | null>(null);
 
 /** Reads the field of the picker. It throws outside a picker, which always provides it. */
 function usePickerField() {
-  const field = use(PickerFieldContext);
-  if (field === null) {
-    throw new Error("usePickerField must be used within a school picker");
-  }
-  return field;
+  return useRequired(PickerFieldContext, "usePickerField");
 }
 
 /**
@@ -177,10 +174,7 @@ export function SchoolTeacherPicker({
 /** The picker's list of teachers, read a page at a time. */
 function SchoolTeacherSelect() {
   const { slug } = useTenant();
-  const cohortId = use(PickerCohortContext);
-  if (cohortId === null) {
-    throw new Error("SchoolTeacherSelect must be used within a teacher picker");
-  }
+  const cohortId = useRequired(PickerCohortContext, "SchoolTeacherSelect");
   const { search, setTyped, typed } = usePickerSearch();
   const pagination = usePaginatedQuery(
     tenancy.people.teachers,

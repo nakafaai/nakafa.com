@@ -9,6 +9,7 @@ import { documentSizeGuard } from "@repo/design-system/components/editor/size";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
@@ -16,7 +17,6 @@ import {
   createContext,
   Fragment,
   type ReactNode,
-  use,
   useEffect,
   useRef,
   useState,
@@ -267,10 +267,7 @@ export function OptionRemove({
   readonly name: string;
   readonly onRemove: () => void;
 }) {
-  const row = use(OptionRowContext);
-  if (row === null) {
-    throw new Error("OptionRemove must be used within OptionRow");
-  }
+  const row = useRequired(OptionRowContext, "OptionRemove");
 
   return (
     <LineMark>

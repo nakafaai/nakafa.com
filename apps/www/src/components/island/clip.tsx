@@ -1,12 +1,7 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Effect, Option } from "effect";
 import { delay } from "motion";
-import {
-  createContext,
-  type ReactNode,
-  type RefObject,
-  use,
-  useRef,
-} from "react";
+import { createContext, type ReactNode, type RefObject, useRef } from "react";
 import { RAMPS } from "@/lib/island/palette";
 
 const ClipContext = createContext<RefObject<HTMLCanvasElement | null> | null>(
@@ -32,11 +27,7 @@ export function ClipProvider({ children }: { children: ReactNode }) {
 
 /** The slot the frame's island canvas keeps itself in. */
 export function useClipCanvas() {
-  const canvas = use(ClipContext);
-  if (!canvas) {
-    throw new Error("useClipCanvas must be used within ClipProvider");
-  }
-  return canvas;
+  return useRequired(ClipContext, "useClipCanvas");
 }
 
 /**

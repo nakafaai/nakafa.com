@@ -1,8 +1,9 @@
 import type { Placement } from "@repo/backend/confect/island/layout";
 import type { Materials } from "@repo/backend/confect/island/material";
 import type { Visibility } from "@repo/backend/confect/island/schema";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { Option } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 /**
  * The island a frame shows: its placements, level, badges earned, the side of
@@ -33,9 +34,5 @@ export const IslandContext = createContext<{
 
 /** Returns the island of the surrounding frame and rejects a missing provider. */
 export function useIsland() {
-  const island = use(IslandContext);
-  if (!island) {
-    throw new Error("useIsland must be used within IslandContext");
-  }
-  return island;
+  return useRequired(IslandContext, "useIsland");
 }

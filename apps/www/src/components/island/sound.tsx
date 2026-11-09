@@ -1,11 +1,11 @@
 import { readLocalStorageValue } from "@mantine/hooks";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Effect, Option, Schema } from "effect";
 import {
   createContext,
   type ReactNode,
   Suspense,
-  use,
   useEffect,
   useState,
 } from "react";
@@ -87,11 +87,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
 
 /** The sound store of the surrounding frame, for the audio and the switch. */
 export function useSoundStore() {
-  const store = use(SoundContext);
-  if (!store) {
-    throw new Error("useSoundStore must be used within SoundProvider");
-  }
-  return store;
+  return useRequired(SoundContext, "useSoundStore");
 }
 
 /** Plays a cue for a press, when sound is on. */

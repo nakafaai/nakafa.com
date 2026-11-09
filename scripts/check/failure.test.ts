@@ -73,12 +73,12 @@ export function other(cause: unknown) {
             {
               file: "apps/www/src/components/guard.tsx",
               sourceText:
-                'export function useCard() { if (!ready) throw new Error("outside provider"); return ready; }\n',
+                'export function useCard() { if (!ready) throw new OutsideProvider({ part: "useCard" }); return ready; }\n',
             },
             {
               file: "apps/www/src/[locale]/page.tsx",
               sourceText:
-                'export default function Page() { throw new Error("no page"); }\n',
+                "export default function Page() { throw new PageMissing(); }\n",
             },
             {
               file: "apps/www/src/api/route.ts",
@@ -93,12 +93,12 @@ export function other(cause: unknown) {
             {
               file: "apps/www/src/lib/client.ts",
               sourceText:
-                '"use client";\nexport const read = () => { throw new Error("client"); };\n',
+                '"use client";\nexport const read = () => { throw new ClientFailure(); };\n',
             },
             {
               file: "apps/www/src/lib/hook.ts",
               sourceText:
-                'import { useState } from "react";\nexport const read = () => { throw new Error("hook"); };\n',
+                'import { useState } from "react";\nexport const read = () => { throw new HookFailure(); };\n',
             },
             {
               file: "apps/www/vite.config.ts",
@@ -480,6 +480,91 @@ export const named = mutation(options, () => {
 });
 `),
           ["4 throw"]
+        );
+      })
+  );
+});
+
+describe("platform errors in React modules", () => {
+  it.effect("reports a platform error that a React module throws", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { use } from "react";
+import { OutsideProvider } from "@repo/design-system/hooks/required";
+export function useReader() {
+  const value = use(ReaderContext);
+  if (value === null) {
+    throw new Error("missing");
+  }
+  if (value.closed) {
+    throw Error("closed");
+  }
+  if (value.broken) {
+    throw (new TypeError("broken"));
+  }
+  if (value.gone) {
+    throw new OutsideProvider({ part: "useReader" });
+  }
+  throw value.cause;
+}
+`,
+          "apps/www/src/components/reader.tsx"
+        ),
+        ["6 raw-error", "9 raw-error", "12 raw-error"]
+      );
+    })
+  );
+
+  it.effect("leaves an error constructor that the module declares", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `function Error(part: string) {
+  return new OutsideProvider({ part });
+}
+export function Reader() {
+  throw Error("Reader");
+}
+`,
+          "apps/www/src/components/reader.tsx"
+        ),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "keeps configuration, tests, the registry's component sets, and other modules to their own scope",
+    () =>
+      Effect.gen(function* () {
+        const thrown = `import { use } from "react";
+export function useReader() {
+  throw new Error("missing");
+}
+`;
+        assert.deepStrictEqual(
+          yield* fileFindings([
+            {
+              file: "apps/www/src/components/reader.test.ts",
+              sourceText: thrown,
+            },
+            { file: "apps/www/vite.config.ts", sourceText: thrown },
+            {
+              file: "packages/design-system/components/ui/reader.tsx",
+              sourceText: thrown,
+            },
+            {
+              file: "packages/design-system/components/evilcharts/reader.tsx",
+              sourceText: thrown,
+            },
+            {
+              file: "apps/www/src/lib/reader.ts",
+              sourceText:
+                'export function read() {\n  throw new Error("missing");\n}\n',
+            },
+          ]),
+          ["apps/www/src/lib/reader.ts:2 throw"]
         );
       })
   );

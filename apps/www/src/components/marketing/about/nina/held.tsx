@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 /**
  * What a signed-in learner pressed before the live composer loaded: the send,
@@ -13,11 +14,7 @@ export const HeldPromptContext = createContext<{
 } | null>(null);
 
 function useHeld() {
-  const value = use(HeldPromptContext);
-  if (value === null) {
-    throw new Error("The held prompt must be read within HeldPromptContext");
-  }
-  return value;
+  return useRequired(HeldPromptContext, "useHeld");
 }
 
 /** Reads the send held for the live composer around it. */

@@ -119,6 +119,7 @@ pinned commit of this repository.
 | `switch` | every `switch` statement | nothing |
 | `assertion` | `x as T`, `<T>x`, `x!` | `as const`; `satisfies`; definite assignment (`let x!: T`); import and export aliases; framework configuration |
 | `throw` | a raw `throw` in product code | tests; framework configuration; React modules, where a hook throws for its error boundary; a `ConvexError` thrown in a Convex handler, as set out below; a throw inside a browser page function |
+| `raw-error` | a `throw` in a React module that builds a platform error (`new Error(...)`, `Error(...)`, or `TypeError`, `RangeError` and the other global error constructors) | tests; framework configuration; the registry's component sets in `packages/design-system/components/ui` and `evilcharts`; a local binding of the constructor's name; a throw inside a browser page function |
 | `new-promise` | `new Promise(...)` and `Promise.withResolvers()` on the global `Promise`, also through a global object such as `globalThis.Promise` | tests; framework configuration; a browser page function; a local class or binding named `Promise` |
 
 `switch` reports a `switch (typeof x)` once, as a switch, not also as a
@@ -140,6 +141,18 @@ Scopes name the modules a rule inspects:
 | `domain` | the Confect and script folders, tests excluded |
 | `product` | every module except framework configuration, React modules, and tests |
 | `source` | every module except framework configuration and tests; React modules included |
+| `react` | the React modules of `source`, except the registry's component sets |
+
+A React module may throw during render, because React gives a render no other
+channel to its error boundary, but what it throws is a tagged error that names
+the failure. The 181 platform errors measured on 9 November were nearly all
+context guards, a part read outside the provider of its context, so the design
+system owns one hook for them: `useRequired(Context, part)` in
+`packages/design-system/hooks/required.ts` reads the context and throws
+`OutsideProvider` with the part's name when the context holds its default,
+`null` or `undefined`. A context whose provider may share `null` keeps its own
+marker and throws `OutsideProvider` itself. `raw-error` and `throw` never
+report the same statement: one inspects React modules and the other the rest.
 
 ### Constructions the engine recognizes
 
