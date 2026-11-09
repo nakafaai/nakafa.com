@@ -23,10 +23,15 @@ export const DISTANCE = { far: 120, near: 10 } as const;
 /** The lowest and highest tilt, from almost level to almost straight down. */
 export const PITCH = { high: 1.35, low: 0.32 } as const;
 
-/** The camera an island of this footprint side opens with: its whole island in view from the south-east. */
-export function openingOrbit(size: number): Orbit {
+/**
+ * The camera an island of this footprint side opens with, on a screen of this
+ * aspect (width over height): its whole island in view from the south-east,
+ * farther back on a narrow screen so the island fits across it.
+ */
+export function openingOrbit(size: number, aspect: number): Orbit {
+  const across = Math.atan(Math.tan(FIELD_OF_VIEW / 2) * Math.min(1, aspect));
   return {
-    distance: Math.min(DISTANCE.far, size * 1.35 + 12),
+    distance: Math.min(DISTANCE.far, (size * 0.62) / Math.tan(across) + 6),
     pitch: 0.72,
     target: [SPAN / 2, SEA_LEVEL + 1, SPAN / 2],
     yaw: Math.PI / 4,

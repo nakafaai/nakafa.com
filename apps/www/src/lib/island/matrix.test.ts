@@ -33,7 +33,7 @@ describe("island/matrix", () => {
   });
 
   it("looks from the eye at the target, which lands in the middle of the screen", () => {
-    const orbit = openingOrbit(24);
+    const orbit = openingOrbit(24, 1.5);
     const clip = viewProjectionOf(orbit, 1);
     const [x, y, , w] = Arr.map(
       [0, 1, 2, 3],
@@ -48,7 +48,7 @@ describe("island/matrix", () => {
   });
 
   it("casts the middle of the screen straight at the target", () => {
-    const orbit = openingOrbit(24);
+    const orbit = openingOrbit(24, 1.5);
     const ray = rayThrough(orbit, 1.5, 0, 0);
     const toTarget = normalize([
       orbit.target[0] - ray.origin[0],

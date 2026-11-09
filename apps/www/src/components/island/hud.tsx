@@ -19,10 +19,12 @@ import { useGame } from "@/components/island/store";
 
 /** One square of the hotbar or the HUD's buttons, lit when it is held. */
 const slotVariants = cva(
-  "relative grid size-11 shrink-0 place-items-center border-2 p-1.5 transition-transform outline-none active:translate-y-px sm:size-12",
+  "relative grid size-9 shrink-0 place-items-center border-2 p-1 transition-transform outline-none active:translate-y-px sm:size-12 sm:p-1.5",
   {
-    defaultVariants: { held: false },
+    defaultVariants: { held: false, screen: "every" },
     variants: {
+      /** Slots 7 to 9 only fit a wide screen; a phone keeps six blocks at hand. */
+      screen: { every: "", wide: "max-sm:hidden" },
       held: {
         false:
           "border-[#7a4a26] bg-[#e9c992] hover:bg-[#f0d6a6] focus-visible:border-[#fff3c4]",
@@ -38,17 +40,19 @@ function HudButton({
   held = false,
   label,
   onPress,
+  screen = "every",
 }: {
   children: ReactNode;
   held?: boolean;
   label: string;
   onPress: () => void;
+  screen?: "every" | "wide";
 }) {
   return (
     <button
       aria-label={label}
       aria-pressed={held}
-      className={slotVariants({ held })}
+      className={slotVariants({ held, screen })}
       onClick={onPress}
       title={label}
       type="button"
@@ -57,9 +61,6 @@ function HudButton({
     </button>
   );
 }
-
-/** The nine slots of the hotbar, numbered from 0 as keys 1 to 9 pick them. */
-const SLOTS = Arr.makeBy(9, (number) => number);
 
 /** The hotbar: nine blocks, the pickaxe and the block book, along the bottom of the screen. */
 function Hotbar() {
@@ -78,19 +79,23 @@ function Hotbar() {
           "pointer-events-auto flex max-w-full gap-1 overflow-x-auto p-1.5 [scrollbar-width:none]",
       })}
     >
-      {Arr.map(SLOTS, (number) => (
-        <HudButton
-          held={tool === "place" && slot === number}
-          key={number}
-          label={t(`block-${hotbar[number]}`)}
-          onPress={() => choose(number)}
-        >
-          <BlockIcon block={hotbar[number]} />
-          <span className="absolute top-0 left-0.5 font-mono text-[10px] leading-none text-[#7a4a26]">
-            {number + 1}
-          </span>
-        </HudButton>
-      ))}
+      {Arr.map(
+        Arr.makeBy(hotbar.length, (number) => number),
+        (number) => (
+          <HudButton
+            held={tool === "place" && slot === number}
+            key={number}
+            label={t(`block-${hotbar[number]}`)}
+            onPress={() => choose(number)}
+            screen={number < 6 ? "every" : "wide"}
+          >
+            <BlockIcon block={hotbar[number]} />
+            <span className="absolute top-0 left-0.5 font-mono text-[10px] leading-none text-[#7a4a26]">
+              {number + 1}
+            </span>
+          </HudButton>
+        )
+      )}
       <HudButton
         held={tool === "remove"}
         label={t("pickaxe")}

@@ -15,9 +15,10 @@ import { SPAN } from "@/lib/island/world";
 
 describe("island/camera", () => {
   it("opens over the middle of the island, farther for a wider one", () => {
-    const small = openingOrbit(16);
+    const small = openingOrbit(16, 1.5);
     expect(small.target).toEqual([SPAN / 2, 9, SPAN / 2]);
-    expect(openingOrbit(64).distance).toBeGreaterThan(small.distance);
+    expect(openingOrbit(64, 1.5).distance).toBeGreaterThan(small.distance);
+    expect(openingOrbit(16, 0.5).distance).toBeGreaterThan(small.distance);
     const eye = eyeOf(small);
     expect(eye[1]).toBeGreaterThan(small.target[1]);
     expect(Math.hypot(eye[0] - 32, eye[1] - 9, eye[2] - 32)).toBeCloseTo(
@@ -38,7 +39,7 @@ describe("island/camera", () => {
       target: [0, 32, SPAN],
       yaw: 7,
     });
-    expect(zoomOrbit(openingOrbit(16), 100).distance).toBe(DISTANCE.far);
+    expect(zoomOrbit(openingOrbit(16, 1.5), 100).distance).toBe(DISTANCE.far);
   });
 
   it("drags the ground with the finger: right moves the view left, down moves it away", () => {
@@ -56,7 +57,7 @@ describe("island/camera", () => {
   });
 
   it("turns and tilts, and eases the short way round", () => {
-    const orbit = openingOrbit(24);
+    const orbit = openingOrbit(24, 1.5);
     const turned = turnOrbit(orbit, 0.5, 0.1);
     expect(turned.yaw).toBeCloseTo(orbit.yaw + 0.5);
     expect(turned.pitch).toBeCloseTo(orbit.pitch + 0.1);

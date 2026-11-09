@@ -83,7 +83,10 @@ function start(
   store: NonNullable<ReturnType<typeof use<typeof GameStoreContext>>>,
   size: number
 ) {
-  let orbit: Orbit = openingOrbit(size);
+  let orbit: Orbit = openingOrbit(
+    size,
+    canvas.clientWidth / Math.max(1, canvas.clientHeight)
+  );
   let goal: Orbit = orbit;
   let needsDraw = true;
   let frame = 0;
@@ -288,7 +291,7 @@ function start(
       w: () => move(panOrbit(orbit, 0, 24, height)),
     };
     const digit = Number.parseInt(event.key, 10);
-    if (digit >= 1 && digit <= 9) {
+    if (digit >= 1 && digit <= store.getState().hotbar.length) {
       store.getState().choose(digit - 1);
       return;
     }

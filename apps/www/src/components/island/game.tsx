@@ -1,24 +1,20 @@
 "use client";
 
-import type { BlockKey } from "@repo/backend/confect/island/blocks";
+import { BLOCK_KEYS, isOpen } from "@repo/backend/confect/island/blocks";
+import { Array as Arr } from "effect";
 import { useState } from "react";
 import { IslandHud } from "@/components/island/hud";
 import { IslandStage } from "@/components/island/stage";
 import { createGameStore, GameStoreContext } from "@/components/island/store";
 import { terrainOf } from "@/lib/island/terrain";
 
-/** The blocks in the hotbar of a new game: the first level's shelf. */
-const FIRST_HOTBAR: readonly BlockKey[] = [
-  "grass",
-  "dirt",
-  "sand",
-  "log",
-  "planks",
-  "leaves",
-  "flowers",
-  "stone",
-  "glass",
-];
+/** The hotbar a game opens with: the first nine blocks the island's level opens. */
+function firstHotbar(level: number) {
+  return Arr.take(
+    Arr.filter(BLOCK_KEYS, (block) => isOpen(block, level)),
+    9
+  );
+}
 
 /**
  * The island game on the whole screen (ADR 0047): the world generated from the
@@ -37,7 +33,7 @@ export default function IslandGame({
   size: number;
 }) {
   const [store] = useState(() =>
-    createGameStore(terrainOf(seed, size), FIRST_HOTBAR, level)
+    createGameStore(terrainOf(seed, size), firstHotbar(level), level)
   );
   return (
     <GameStoreContext value={store}>

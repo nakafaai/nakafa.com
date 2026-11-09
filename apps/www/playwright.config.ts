@@ -53,9 +53,10 @@ const TIMING_TESTS = [
   "**/school/walk.browser.ts",
 ];
 
-// The visual cards, scenes and marketing pages.
+// The visual cards, scenes, marketing pages and the island game.
 const VISUAL_TESTS = [
   "**/visual/**/*.browser.ts",
+  "**/island/**/*.browser.ts",
   "**/scene/**/*.browser.ts",
   "**/marketing/**/*.browser.ts",
   "**/consent/**/*.browser.ts",
@@ -133,8 +134,12 @@ const BEHAVIOUR_SCHOOL_TESTS = Arr.map(
 );
 
 // The visual cards take the whole screen through the Fullscreen API on desktop,
-// Android, and iPad, and cover the viewport on iPhone, in Safari too.
-const WEBKIT_TESTS = ["**/visual/cards.browser.ts"];
+// Android, and iPad, and cover the viewport on iPhone, in Safari too. The island
+// game draws its own WebGL2 world, which Safari must draw and play as Chrome does.
+const WEBKIT_TESTS = [
+  "**/visual/cards.browser.ts",
+  "**/island/**/*.browser.ts",
+];
 
 // The School pages of the timing specs, which the browser timing suite runs in
 // the other four browsers.

@@ -1,4 +1,4 @@
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   ATLAS_SIZE,
   ATLAS_TILES,
@@ -95,7 +95,7 @@ void main() {
  * sea's surface, and under it the sea floor, so the open sea looks as deep as
  * the water inside the world. `uv` is the atlas point the floor takes its color from.
  */
-function seaRing(y: number, uv: readonly [number, number]) {
+function seaRing(y: number, uv: readonly [number, number], sky: number) {
   const far = 600;
   const quads = [
     [-far, -far, SPAN + far, 0],
@@ -105,24 +105,24 @@ function seaRing(y: number, uv: readonly [number, number]) {
   ] as const;
   const vertices = new Float32Array(quads.length * 4 * STRIDE);
   const indices = new Uint32Array(quads.length * 6);
-  for (const [index, [x0, z0, x1, z1]] of quads.entries()) {
+  Arr.forEach(quads, ([x0, z0, x1, z1], index) => {
     const corners = [
       [x0, z0],
       [x0, z1],
       [x1, z1],
       [x1, z0],
     ] as const;
-    for (const [corner, [x, z]] of corners.entries()) {
+    Arr.forEach(corners, ([x, z], corner) => {
       vertices.set(
-        [x, y, z, uv[0], uv[1], 1, 1, 0],
+        [x, y, z, uv[0], uv[1], 1, sky, 0],
         (index * 4 + corner) * STRIDE
       );
-    }
+    });
     indices.set(
-      [0, 1, 2, 0, 2, 3].map((value) => value + index * 4),
+      Arr.map([0, 1, 2, 0, 2, 3], (value) => value + index * 4),
       index * 6
     );
-  }
+  });
   return { indices, vertices };
 }
 
@@ -250,18 +250,22 @@ export function createPainter(canvas: HTMLCanvasElement) {
         height: 1,
         width: 1,
       };
-      const chunks = Array.from({ length: CHUNKS * CHUNKS }, () => ({
+      const chunks = Arr.makeBy(CHUNKS * CHUNKS, () => ({
         solid: Option.none<ReturnType<typeof uploadList>>(),
         water: Option.none<ReturnType<typeof uploadList>>(),
       }));
-      const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0]));
+      const sea = uploadList(gl, seaRing(SEA_LEVEL - 0.125, [0, 0], 1));
       const sandSlot = SLOTS.sand;
       const floor = uploadList(
         gl,
-        seaRing(SEA_LEVEL - 5, [
-          ((sandSlot % ATLAS_TILES) + 0.5) / ATLAS_TILES,
-          (Math.floor(sandSlot / ATLAS_TILES) + 0.5) / ATLAS_TILES,
-        ])
+        seaRing(
+          SEA_LEVEL - 5,
+          [
+            ((sandSlot % ATLAS_TILES) + 0.5) / ATLAS_TILES,
+            (Math.floor(sandSlot / ATLAS_TILES) + 0.5) / ATLAS_TILES,
+          ],
+          0.35
+        )
       );
       const uniform = (name: string) =>
         gl.getUniformLocation(chunkProgram, name);

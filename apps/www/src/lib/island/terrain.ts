@@ -22,7 +22,7 @@ const FLOWERS = idOf("flowers");
 const MIDDLE = SPAN / 2;
 
 /** The open meadow kept clear of trees around the middle, in cells. */
-const MEADOW = 4.5;
+const MEADOW = 5.5;
 
 /**
  * The column at (x, z): the top cell of its ground and whether that ground is
@@ -124,7 +124,7 @@ function plantAt(
     return;
   }
   const roll = unitOf(seed + 4, x, 0, z);
-  if (roll < 0.06 && isClearForTree(meadows, cells, x, top, z)) {
+  if (roll < 0.035 && isClearForTree(meadows, cells, x, top, z)) {
     growTree(cells, seed, x, top, z);
   } else if (roll > 0.9 && blockAt(cells, x, top + 1, z) === 0) {
     cells[cellOf(x, top + 1, z)] = FLOWERS;
