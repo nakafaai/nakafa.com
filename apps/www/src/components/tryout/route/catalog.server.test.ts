@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import {
   readTryoutCountryRoute,
-  readTryoutExamRoute,
+  readTryoutGroupRoute,
   readTryoutHubHandler,
   readTryoutHubRoute,
   readTryoutTrackRoute,
@@ -15,11 +15,12 @@ import {
 const catalog = vi.hoisted(() => ({
   buildTryoutCountryOptions: vi.fn(),
   buildTryoutExamOptions: vi.fn(),
+  buildTryoutGroupOptions: vi.fn(),
   getAppSocialArtwork: vi.fn(),
   getOgUrl: vi.fn(),
   readServerTranslator: vi.fn(),
   readTryoutCountryPage: vi.fn(),
-  readTryoutExamPage: vi.fn(),
+  readTryoutGroupPage: vi.fn(),
   readTryoutHubPage: vi.fn(),
   readTryoutMetadata: vi.fn(),
   readTryoutSetList: vi.fn(),
@@ -33,10 +34,11 @@ vi.mock("@tanstack/react-start/server", () => ({
 vi.mock("@/components/tryout/catalog/options", () => ({
   buildTryoutCountryOptions: catalog.buildTryoutCountryOptions,
   buildTryoutExamOptions: catalog.buildTryoutExamOptions,
+  buildTryoutGroupOptions: catalog.buildTryoutGroupOptions,
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutCountryPage: catalog.readTryoutCountryPage,
-  readTryoutExamPage: catalog.readTryoutExamPage,
+  readTryoutGroupPage: catalog.readTryoutGroupPage,
   readTryoutHubPage: catalog.readTryoutHubPage,
   readTryoutMetadata: catalog.readTryoutMetadata,
   readTryoutSetList: catalog.readTryoutSetList,
@@ -49,7 +51,8 @@ vi.mock("@/lib/seo/social", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/seo/social")>()),
   getOgUrl: catalog.getOgUrl,
 }));
-vi.mock("@/lib/tryout/artwork", () => ({
+vi.mock("@/lib/tryout/artwork", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/tryout/artwork")>()),
   resolveTryoutExamArtwork: catalog.resolveTryoutExamArtwork,
 }));
 vi.mock("@repo/internationalization/src/translator", () => ({
@@ -58,7 +61,8 @@ vi.mock("@repo/internationalization/src/translator", () => ({
 
 const COUNTRY = "try-out/id";
 const EXAM = "try-out/id/snbt";
-const TRACK = "try-out/id/snbt/2027";
+const GROUP = "try-out/id/snbt/2027";
+const TRACK = "try-out/id/snbt/2027/utbk";
 
 const countryPage = {
   country: { countryKey: "id" },
@@ -73,12 +77,20 @@ const countryPage = {
   ],
   sourceRevision: "2026-10-02",
 };
-const examPage = { exam: { examKey: "snbt" }, publicPath: EXAM };
+const groups = [{ groupKey: "2027", publicPath: GROUP, title: "2027" }];
+const groupPage = {
+  exam: { examKey: "snbt", groupAxis: "year", title: "SNBT" },
+  group: { groupKey: "2027", publicPath: GROUP, title: "2027" },
+  groups,
+  tracks: [],
+};
 const trackPage = {
   country: { countryKey: "id" },
-  exam: { examKey: "snbt", title: "SNBT" },
+  exam: { examKey: "snbt", groupAxis: "year", title: "SNBT" },
+  group: { groupKey: "2027", publicPath: GROUP, title: "2027" },
+  groups,
   publicPath: TRACK,
-  track: { title: "Year 2027", trackKey: "2027" },
+  track: { title: "UTBK", trackKey: "2027" },
 };
 const hub = {
   countries: [{ publicPath: COUNTRY, title: "Indonesia" }],
@@ -95,7 +107,7 @@ const publishedRoute = {
   canonicalPath: COUNTRY,
   description: "Country",
   publicPath: COUNTRY,
-  socialImageIdentity: undefined,
+  socialImageIdentity: null,
   title: "Indonesia",
 };
 
@@ -117,11 +129,12 @@ beforeEach(() => {
   catalog.getAppSocialArtwork.mockReturnValue("og-app");
   catalog.buildTryoutCountryOptions.mockReturnValue([]);
   catalog.buildTryoutExamOptions.mockReturnValue([]);
+  catalog.buildTryoutGroupOptions.mockReturnValue([]);
   catalog.readTryoutHubPage.mockReturnValue(Effect.succeed(hub));
   catalog.readTryoutCountryPage.mockReturnValue(
     Effect.succeedSome(countryPage)
   );
-  catalog.readTryoutExamPage.mockReturnValue(Effect.succeed(examPage));
+  catalog.readTryoutGroupPage.mockReturnValue(Effect.succeed(groupPage));
   catalog.readTryoutTrackPage.mockReturnValue(Effect.succeed(trackPage));
   catalog.resolveTryoutExamArtwork.mockImplementation(({ examKey }) =>
     Effect.succeed({
@@ -195,64 +208,51 @@ describe("readTryoutCountryRoute", () => {
   );
 });
 
-describe("readTryoutExamRoute", () => {
-  it.effect("answers not found when the exam or its country is missing", () =>
-    Effect.gen(function* () {
-      catalog.readTryoutExamPage.mockReturnValueOnce(Effect.void);
-      expect(
-        yield* readTryoutExamRoute({
-          country: "id",
-          exam: "snbt",
-          locale: "en",
-        })
-      ).toEqual({ kind: "notFound" });
+/** Reads the group route of the fixture address. */
+const readGroup = () =>
+  readTryoutGroupRoute({
+    country: "id",
+    exam: "snbt",
+    group: "2027",
+    locale: "en",
+  });
 
-      catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
-      expect(
-        yield* readTryoutExamRoute({
-          country: "id",
-          exam: "snbt",
-          locale: "en",
-        })
-      ).toEqual({ kind: "notFound" });
-    })
+describe("readTryoutGroupRoute", () => {
+  it.effect(
+    "answers not found when the group, its country or its head is missing",
+    () =>
+      Effect.gen(function* () {
+        catalog.readTryoutGroupPage.mockReturnValueOnce(Effect.void);
+        expect(yield* readGroup()).toEqual({ kind: "notFound" });
+
+        catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
+        expect(yield* readGroup()).toEqual({ kind: "notFound" });
+
+        publishRoute(undefined);
+        expect(yield* readGroup()).toEqual({ kind: "notFound" });
+      })
   );
 
-  it.effect("answers not found when the exam has no head", () =>
-    Effect.gen(function* () {
-      publishRoute(undefined);
+  it.effect(
+    "names the group by its exam and builds both selectors from the country's exams and the exam's groups",
+    () =>
+      Effect.gen(function* () {
+        const route = yield* readGroup();
 
-      expect(
-        yield* readTryoutExamRoute({
-          country: "id",
-          exam: "snbt",
-          locale: "en",
-        })
-      ).toEqual({ kind: "notFound" });
-    })
-  );
-
-  it.effect("builds the exam selector from the exams of its country", () =>
-    Effect.gen(function* () {
-      publishRoute({
-        ...publishedRoute,
-        socialImageIdentity: { examKey: "snbt", imageKey: "exam-a" },
-      });
-      const route = yield* readTryoutExamRoute({
-        country: "id",
-        exam: "snbt",
-        locale: "en",
-      });
-
-      expect(route).toMatchObject({
-        countryPath: "try-out/id",
-        examPath: EXAM,
-        kind: "found",
-      });
-      expect(catalog.buildTryoutExamOptions).toHaveBeenCalledExactlyOnceWith(
-        countryPage.exams
-      );
-    })
+        expect(route).toMatchObject({
+          countryPath: "try-out/id",
+          head: { title: "search-title SNBT 2027" },
+          kind: "found",
+          name: "SNBT 2027",
+          page: groupPage,
+        });
+        expect(catalog.buildTryoutExamOptions).toHaveBeenCalledExactlyOnceWith(
+          countryPage.exams
+        );
+        expect(catalog.buildTryoutGroupOptions).toHaveBeenCalledExactlyOnceWith(
+          groups
+        );
+      })
   );
 });
 
@@ -268,9 +268,10 @@ const readTrack = () =>
   readTryoutTrackRoute({
     country: "id",
     exam: "snbt",
+    group: "2027",
     locale: "en",
     search: TRACK_SEARCH,
-    track: "2027",
+    track: "utbk",
   });
 
 describe("readTryoutTrackRoute", () => {
@@ -285,6 +286,34 @@ describe("readTryoutTrackRoute", () => {
         head: { description: "Written for it." },
       });
     })
+  );
+
+  it.effect(
+    "shares a track's reviewed artwork as its social image, and the generated image otherwise",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* readTrack()).toMatchObject({
+          head: { image: "og-url" },
+        });
+
+        catalog.readTryoutTrackPage.mockReturnValueOnce(
+          Effect.succeed({
+            ...trackPage,
+            country: { countryKey: "indonesia" },
+            exam: { examKey: "tka", groupAxis: "grade", title: "TKA" },
+            track: {
+              title: "Compulsory Mathematics",
+              trackKey: "compulsory-mathematics",
+            },
+          })
+        );
+        expect(yield* readTrack()).toMatchObject({
+          head: {
+            image:
+              "/open-graph/tryout/indonesia/tka/en-compulsory-mathematics.png",
+          },
+        });
+      })
   );
 
   it.effect(
@@ -303,16 +332,16 @@ describe("readTryoutTrackRoute", () => {
   );
 
   it.effect(
-    "builds the track page with its exam, its selector and its set list",
+    "builds the track page with its exam and group, its selectors and its set list",
     () =>
       Effect.gen(function* () {
         const route = yield* readTrack();
 
         expect(route).toMatchObject({
-          examPath: EXAM,
+          countryPath: "try-out/id",
           head: {
             description: "track-metadata-description",
-            title: "search-title SNBT Year 2027",
+            title: "search-title SNBT 2027 UTBK",
           },
           kind: "found",
           list: { result: { isDone: true, page: [] } },

@@ -4,10 +4,11 @@ import { Effect, Option } from "effect";
 import {
   buildTryoutCountryOptions,
   buildTryoutExamOptions,
+  buildTryoutGroupOptions,
 } from "@/components/tryout/catalog/options";
 import {
   readTryoutCountryPage,
-  readTryoutExamPage,
+  readTryoutGroupPage,
   readTryoutHubPage,
   readTryoutSetList,
   readTryoutTrackPage,
@@ -23,7 +24,10 @@ import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { serverHandler } from "@/lib/server/fn";
-import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
+import {
+  getTryoutTrackCatalogArtwork,
+  resolveTryoutExamArtwork,
+} from "@/lib/tryout/artwork";
 
 /**
  * The hub: the country-first catalog and its breadcrumbs. A try-out catalog's
@@ -108,26 +112,39 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
   }
 );
 
-/** An exam page: its tracks and the exam selector of its country. */
-export const readTryoutExamRoute = Effect.fn("www.tryout.route.readExam")(
+/** The exam and group selectors of a group or a track page, from its country's exams and its exam's groups. */
+function readSelectors(
+  exams: Parameters<typeof buildTryoutExamOptions>[0],
+  groups: Parameters<typeof buildTryoutGroupOptions>[0]
+) {
+  return {
+    examOptions: buildTryoutExamOptions(exams),
+    groupOptions: buildTryoutGroupOptions(groups),
+  };
+}
+
+/** A group page: its tracks, and the exam and group selectors of its header. */
+export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
   function* (input: {
     readonly country: string;
     readonly exam: string;
+    readonly group: string;
     readonly locale: Locale;
   }) {
     const countryPath = getTryoutPublicPath({ country: input.country });
-    const examPath = getTryoutPublicPath({
+    const groupPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
+      group: input.group,
     });
     const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
       [
-        readTryoutExamPage(input.locale, examPath),
+        readTryoutGroupPage(input.locale, groupPath),
         readTryoutCountryPage(input.locale, countryPath),
         readTryoutRouteHead({
-          kind: "exam",
+          kind: "group",
           locale: input.locale,
-          publicPath: examPath,
+          publicPath: groupPath,
         }),
         readTryoutRouteLabels(input.locale),
         Effect.promise(() =>
@@ -139,36 +156,38 @@ export const readTryoutExamRoute = Effect.fn("www.tryout.route.readExam")(
     if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
+    // A group's own name is a year, a grade or a Kolleg, so the page names its exam too.
+    const name = `${page.exam.title} ${page.group.title}`;
     return {
-      countryPath: getTryoutPublicPath({ country: input.country }),
-      exam: page,
-      examOptions: buildTryoutExamOptions(countryPage.value.exams),
-      examPath,
-      head: head.value,
+      ...readSelectors(countryPage.value.exams, page.groups),
+      countryPath,
+      head: {
+        ...head.value,
+        title: tTryouts("search-title", { name }),
+      },
       kind: "found" as const,
       labels,
-      selectorLabel: tTryouts("exam-selector-label"),
+      name,
+      page,
     };
   }
 );
 
-/** A track page: its title and the exam selector. Its set list is read after it. */
+/** A track page: its title and the exam and group selectors. Its set list is read after it. */
 export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
   function* (input: {
     readonly country: string;
     readonly exam: string;
+    readonly group: string;
     readonly locale: Locale;
     readonly search: CatalogQuery;
     readonly track: string;
   }) {
     const countryPath = getTryoutPublicPath({ country: input.country });
-    const examPath = getTryoutPublicPath({
-      country: input.country,
-      exam: input.exam,
-    });
     const trackPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
+      group: input.group,
       track: input.track,
     });
     const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
@@ -201,24 +220,29 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
         trackKey: page.track.trackKey,
       },
     });
-    const exam = `${page.exam.title} ${page.track.title}`;
+    // A track's own name is a subject or a test, so the page names its exam and group too.
+    const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
     return {
-      countryPath: getTryoutPublicPath({ country: input.country }),
-      examOptions: buildTryoutExamOptions(countryPage.value.exams),
-      examPath,
-      // Every exam has a Year 2027, so the page names its exam too.
+      ...readSelectors(countryPage.value.exams, page.groups),
+      countryPath,
       head: {
         ...head.value,
         description:
           page.track.description ??
           tTryouts("track-metadata-description", { exam }),
+        // A track with reviewed artwork shares it, as its card in the exam's list shows it.
+        image:
+          getTryoutTrackCatalogArtwork(input.locale, {
+            countryKey: page.country.countryKey,
+            examKey: page.exam.examKey,
+            trackKey: page.track.trackKey,
+          }) ?? head.value.image,
         title: tTryouts("search-title", { name: exam }),
       },
       kind: "found" as const,
       labels,
       list,
       page,
-      selectorLabel: tTryouts("exam-selector-label"),
     };
   }
 );
@@ -255,8 +279,8 @@ export const readTryoutHubHandler = serverHandler(
 /** One country page, or the not-found decision when the catalog has none. */
 export const readTryoutCountryHandler = serverHandler(readTryoutCountryRoute);
 
-/** One exam page, or the not-found decision when the catalog has none. */
-export const readTryoutExamHandler = serverHandler(readTryoutExamRoute);
+/** One group page, or the not-found decision when the catalog has none. */
+export const readTryoutGroupHandler = serverHandler(readTryoutGroupRoute);
 
 /** One track page, or the not-found decision when the catalog has none. */
 export const readTryoutTrackHandler = serverHandler(readTryoutTrackRoute);

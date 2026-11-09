@@ -48,7 +48,6 @@ export function getMassConservationSceneColors(
     cap: PLOT_COLORS.teal,
     escapedGas: PLOT_COLORS.violet,
     glass: getColor("SLATE", 300),
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
     product: PLOT_COLORS.amber,
     sulfur: PLOT_COLORS.orange,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,

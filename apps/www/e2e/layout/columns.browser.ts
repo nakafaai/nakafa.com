@@ -14,7 +14,7 @@ const columnRoutes = [
   "/en/articles",
   "/en/articles/politics",
 ];
-const tryoutSetRoute = "/en/try-out/indonesia/snbt/2027/set-1";
+const tryoutSetRoute = "/en/try-out/indonesia/snbt/2027/utbk/set-1";
 
 const visit = Effect.fn("NakafaE2E.visitLayoutRoute")(function* (
   page: Page,

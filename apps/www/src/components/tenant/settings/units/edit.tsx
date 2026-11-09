@@ -1,6 +1,6 @@
 import { useMutation } from "@confect/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
-import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   Npsn,
@@ -43,7 +43,7 @@ function useUnitDraft(unit: Unit) {
   const [levelChoice, setLevel] = useState<typeof UnitLevel.Type | null>(null);
   const [zoneChoice, setTimeZone] = useState<string | null>(null);
   const [languageChoice, setContentLanguage] = useState<
-    typeof AppLocaleCodeSchema.Type | null
+    typeof ActiveAppLocaleCodeSchema.Type | null
   >(null);
   const [npsnText, setNpsnText] = useState<string | null>(null);
   const name = (nameText ?? unit.name).trim();

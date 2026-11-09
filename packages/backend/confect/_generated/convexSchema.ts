@@ -43,7 +43,10 @@ import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
 import classroomThreads from "./tables/classroomThreads";
 import classroomUploads from "./tables/classroomUploads";
+import commentCounts from "./tables/commentCounts";
 import commentLikes from "./tables/commentLikes";
+import commentReports from "./tables/commentReports";
+import commentUploads from "./tables/commentUploads";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorEvents from "./tables/connectorEvents";
@@ -111,6 +114,8 @@ import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import islandAwards from "./tables/islandAwards";
+import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
@@ -219,7 +224,10 @@ export default $defineSchema({
   classroomTasks: $Table.tableDefinition(classroomTasks),
   classroomThreads: $Table.tableDefinition(classroomThreads),
   classroomUploads: $Table.tableDefinition(classroomUploads),
+  commentCounts: $Table.tableDefinition(commentCounts),
   commentLikes: $Table.tableDefinition(commentLikes),
+  commentReports: $Table.tableDefinition(commentReports),
+  commentUploads: $Table.tableDefinition(commentUploads),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),
   connectorEvents: $Table.tableDefinition(connectorEvents),
@@ -287,6 +295,8 @@ export default $defineSchema({
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
+  islandAwards: $Table.tableDefinition(islandAwards),
+  islands: $Table.tableDefinition(islands),
   journalCursors: $Table.tableDefinition(journalCursors),
   journalEntries: $Table.tableDefinition(journalEntries),
   learningEngagementQueue: $Table.tableDefinition(learningEngagementQueue),

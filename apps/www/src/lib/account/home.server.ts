@@ -4,10 +4,11 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
+import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { notFound, redirect } from "@tanstack/react-router";
-import { Clock, Effect, Option, Schema } from "effect";
+import { Clock, Effect, Option, Schema, String as Str } from "effect";
 import { createTranslator } from "use-intl/core";
 import { getMaterialLooks } from "@/components/home/look";
 import {
@@ -18,7 +19,7 @@ import {
   redirectToAuth,
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
-import type { ChatInput, LocaleInput } from "@/lib/account/input";
+import type { ChatInput, LocaleInput, ProfileInput } from "@/lib/account/input";
 import { readHomeTrendingSubjects } from "@/lib/content/trending";
 import { readOptional, readRequired } from "@/lib/data/read.server";
 
@@ -31,7 +32,7 @@ export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const [status, messages, account, recentRows, trending] =
+      const [status, messages, account, recentRows, trending, own] =
         yield* Effect.all(
           [
             readRequired(onboarding.queries.getStatus, {}, token),
@@ -44,6 +45,7 @@ export const homeScreenHandler = accountHandler(
             ),
             // The icon families stay on the server: each list passes only the looks it shows.
             readHomeTrendingSubjects(locale),
+            readOptional(island.queries.own, {}, token),
           ],
           { concurrency: "unbounded" }
         );
@@ -73,6 +75,7 @@ export const homeScreenHandler = accountHandler(
       };
       const recentLooks = getMaterialLooks(recentRows ?? []);
       return {
+        island: own ?? undefined,
         name: Option.getOrUndefined(
           Option.map(
             Option.fromNullishOr(account),
@@ -204,5 +207,87 @@ export const notificationsScreenHandler = accountHandler(
         title: t("title"),
       };
       return { first, now, seo };
+    })
+);
+
+/**
+ * The owner's island page: the island as it stands, none before the owner's
+ * first visit opens it, the account's name for its title and its username for
+ * the island's link (ADR 0042). The
+ * island and the account go out together, so the page waits on one round trip.
+ */
+export const islandScreenHandler = accountHandler(
+  ({ locale }: typeof LocaleInput.Type) =>
+    Effect.gen(function* () {
+      const token = yield* admitAccount(locale);
+      const [own, messages, account] = yield* Effect.all(
+        [
+          readOptional(island.queries.own, {}, token),
+          messagesFor(locale),
+          readOptional(auth.queries.getCurrentUser, {}, token),
+        ],
+        { concurrency: "unbounded" }
+      );
+      const t = createTranslator({ locale, messages, namespace: "Island" });
+      const seo: ScreenSeo = {
+        canonicalPath: `/${locale}/island`,
+        description: t("description"),
+        indexable: false,
+        locale,
+        title: t("title"),
+      };
+      return {
+        island: own ?? undefined,
+        name: Option.getOrUndefined(
+          Option.map(
+            Option.fromNullishOr(account),
+            (user) => user.authUser.name
+          )
+        ),
+        seo,
+        username: Option.getOrUndefined(
+          Option.map(
+            Option.fromNullishOr(account),
+            (user) => user.appUser.username
+          )
+        ),
+      };
+    })
+);
+
+/**
+ * A visit to a learner's shared island (ADR 0042, D20): the island as its
+ * owner shares it, without their Stars or materials, and its title. A private
+ * island, a School member's island and a name nobody holds all end as not
+ * found, so a visit never tells which. Visits stay out of search results.
+ */
+export const islandVisitHandler = accountHandler(
+  ({ locale, username }: typeof ProfileInput.Type) =>
+    Effect.gen(function* () {
+      const token = yield* readToken();
+      const [visited, messages] = yield* Effect.all(
+        [
+          readOptional(
+            island.queries.visit,
+            { username: Str.toLowerCase(username) },
+            token
+          ),
+          messagesFor(locale),
+        ],
+        { concurrency: "unbounded" }
+      );
+      const found = Option.fromNullishOr(visited);
+      if (Option.isNone(found)) {
+        return yield* Effect.die(notFound());
+      }
+      const t = createTranslator({ locale, messages, namespace: "Island" });
+      const seo: ScreenSeo = {
+        canonicalPath: `/${locale}/island/${found.value.username}`,
+        description: t("visit-description", { name: found.value.name }),
+        indexable: false,
+        locale,
+        title: t("name", { name: found.value.name }),
+      };
+      return { island: found.value, seo };
     })
 );

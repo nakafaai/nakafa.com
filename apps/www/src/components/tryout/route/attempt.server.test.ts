@@ -22,7 +22,7 @@ vi.mock("@/components/tryout/route/metadata.server", () => ({
   readTryoutRouteHead: mocks.readTryoutRouteHead,
 }));
 
-const SET = "try-out/id/snbt/2027/set-1";
+const SET = "try-out/id/snbt/2027/utbk/set-1";
 const head = {
   canonicalPath: `/en/${SET}`,
   description: "Set 1",
@@ -33,16 +33,18 @@ const head = {
 const address = {
   country: "id",
   exam: "snbt",
+  group: "2027",
   locale: "en",
   set: "set-1",
-  track: "2027",
+  track: "utbk",
 } as const;
 const catalogSet = {
   entrySection: { sectionKey: "section-1" },
   exam: { title: "SNBT" },
+  group: { title: "2027" },
   set: { publicPath: SET, title: "Set 1" },
   sections: [{ publicPath: `${SET}/section-1` }],
-  track: { title: "Year 2027" },
+  track: { title: "UTBK" },
 };
 
 beforeEach(() => {
@@ -58,7 +60,7 @@ describe("readTryoutSetRoute", () => {
         head: {
           ...head,
           description: "set-metadata-description",
-          title: "search-title SNBT Year 2027 Set 1",
+          title: "search-title SNBT 2027 UTBK Set 1",
         },
         kind: "catalog",
         page: catalogSet,

@@ -51,7 +51,7 @@ export function TryoutCountryPageClient({
         {Arr.map(Arr.zip(page.exams, visuals), ([exam, visual], index) => (
           <CatalogCard
             action={(anchor) => (
-              <TryoutPageLink {...anchor} publicPath={exam.publicPath} />
+              <TryoutPageLink {...anchor} publicPath={exam.entryPath} />
             )}
             key={exam.examKey}
             title={exam.title}

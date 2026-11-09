@@ -1,5 +1,6 @@
 import type {
   CatalogCountrySchema,
+  CatalogSectionSchema,
   CatalogTrackSchema,
 } from "@nakafa/aksara-contracts/assessment/catalog";
 import { KebabKeySchema } from "@nakafa/aksara-contracts/assessment/identity";
@@ -21,13 +22,24 @@ const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
   ["indonesia", "tryout/indonesia/index"],
 ]);
 
-const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
+/** The reviewed artwork of each TKA subject track, by its stable key, never its localized slug. */
+const TKA_TRACK_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
   (typeof CatalogTrackSchema.Type)["trackKey"],
   ArtworkIdentity
 >([
-  ["compulsory-mathematics", "subject/mathematics"],
-  ["english-language", "subject/english-language"],
-  ["indonesian-language", "subject/indonesian-language"],
+  ["compulsory-mathematics", "tryout/indonesia/tka/compulsory-mathematics"],
+  ["english-language", "tryout/indonesia/tka/english-language"],
+  ["indonesian-language", "tryout/indonesia/tka/indonesian-language"],
+]);
+
+/** The reviewed artwork of each SNBT section that has one, by its stable key, never its localized slug. */
+const SNBT_SECTION_ARTWORK_BY_SECTION_KEY = HashMap.fromIterable<
+  (typeof CatalogSectionSchema.Type)["sectionKey"],
+  ArtworkIdentity
+>([
+  ["general-reasoning", "tryout/indonesia/snbt/general-reasoning"],
+  ["mathematical-reasoning", "tryout/indonesia/snbt/mathematical-reasoning"],
+  ["quantitative-knowledge", "tryout/indonesia/snbt/quantitative-knowledge"],
 ]);
 
 const TryoutExamArtworkIdentitySchema = Schema.Struct({
@@ -39,9 +51,14 @@ const TryoutExamArtworkIdentitySchema = Schema.Struct({
       Schema.makeFilter(
         (publicPath) => {
           const segments = publicPath.split("/");
-          return segments.length === 3 && segments[0] === "try-out";
+          return (
+            (segments.length === 3 || segments.length === 4) &&
+            segments[0] === "try-out"
+          );
         },
-        { message: "Expected one localized try-out exam public path." }
+        {
+          message: "Expected one localized try-out exam or group public path.",
+        }
       )
     )
   ),
@@ -114,32 +131,44 @@ export function getTryoutCountryCatalogArtwork(
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }
 
-/** Resolves subject or year artwork for one signed try-out track. */
+/** Resolves the reviewed artwork of one signed try-out track, SNBT's UTBK of 2027 or a TKA subject, for its card and its social image. */
 export function getTryoutTrackCatalogArtwork(
   locale: Locale,
   source: Pick<
     typeof CatalogTrackSchema.Type,
-    "countryKey" | "examKey" | "trackKey" | "trackKind"
+    "countryKey" | "examKey" | "trackKey"
   >
 ) {
   let identity: ArtworkIdentity | undefined;
   if (
     source.countryKey === "indonesia" &&
     source.examKey === "snbt" &&
-    source.trackKind === "year" &&
     source.trackKey === "2027"
   ) {
     identity = "tryout/indonesia/2027";
-  } else if (
-    source.countryKey === "indonesia" &&
-    source.examKey === "tka" &&
-    source.trackKind === "subject"
-  ) {
+  } else if (source.countryKey === "indonesia" && source.examKey === "tka") {
     identity = Option.getOrUndefined(
-      HashMap.get(TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY, source.trackKey)
+      HashMap.get(TKA_TRACK_ARTWORK_BY_TRACK_KEY, source.trackKey)
     );
   }
 
+  return identity ? resolveStaticArtwork(identity, locale) : undefined;
+}
+
+/** Resolves the reviewed artwork of one signed try-out section, for its social image. */
+export function getTryoutSectionArtwork(
+  locale: Locale,
+  source: Pick<
+    typeof CatalogSectionSchema.Type,
+    "countryKey" | "examKey" | "sectionKey"
+  >
+) {
+  if (source.countryKey !== "indonesia" || source.examKey !== "snbt") {
+    return;
+  }
+  const identity = Option.getOrUndefined(
+    HashMap.get(SNBT_SECTION_ARTWORK_BY_SECTION_KEY, source.sectionKey)
+  );
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }
 

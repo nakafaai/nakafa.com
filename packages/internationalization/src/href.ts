@@ -1,10 +1,10 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import {
   toCanonicalPath,
   toPublicPath,
 } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { Locale } from "use-intl/core";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//u;
@@ -47,15 +47,13 @@ export function normalizeLocalizedInternalHref(href: string) {
 }
 
 /**
- * Splits a pathname at the app locale that leads it, when one does. The public
+ * Splits a pathname at the served locale that leads it, when one does. The public
  * segments are the non-empty segments after that locale, or every non-empty
  * segment when the pathname has no leading locale.
  */
 export function splitLocalePathname(pathname: string) {
   const segments = Arr.filter(pathname.split("/"), Boolean);
-  const locale = Option.getOrUndefined(
-    Schema.decodeUnknownOption(AppLocaleCodeSchema)(segments[0])
-  );
+  const locale = Option.getOrUndefined(decodeLocale(segments[0]));
 
   return {
     locale,

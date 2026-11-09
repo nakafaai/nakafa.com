@@ -19,7 +19,7 @@ vi.mock("@/components/tryout/route/metadata.server", () => ({
   readTryoutRouteHead: mocks.readTryoutRouteHead,
 }));
 
-const SET = "try-out/id/snbt/2027/set-1";
+const SET = "try-out/id/snbt/2027/utbk/set-1";
 const SECTION = `${SET}/section-1`;
 const head = {
   canonicalPath: `/en/${SECTION}`,
@@ -31,16 +31,18 @@ const head = {
 const address = {
   country: "id",
   exam: "snbt",
+  group: "2027",
   locale: "en",
   section: "section-1",
   set: "set-1",
-  track: "2027",
+  track: "utbk",
 } as const;
 const catalogSection = {
   exam: { title: "SNBT" },
-  section: { publicPath: SECTION, title: "Section 1" },
-  set: { publicPath: SET, title: "Set 1" },
-  track: { title: "Year 2027" },
+  group: { title: "2027" },
+  section: { publicPath: SECTION, sectionKey: "section-1", title: "Section 1" },
+  set: { countryKey: "id", examKey: "snbt", publicPath: SET, title: "Set 1" },
+  track: { title: "UTBK" },
 };
 
 beforeEach(() => {
@@ -59,7 +61,7 @@ describe("readTryoutSectionRoute", () => {
             ...head,
             description: "section-metadata-description",
             indexable: false,
-            title: ["Section 1", "Set 1", "SNBT Year 2027"],
+            title: ["Section 1", "Set 1", "SNBT 2027 UTBK"],
           },
           kind: "catalog",
           page: catalogSection,
@@ -71,6 +73,29 @@ describe("readTryoutSectionRoute", () => {
           "en",
           SECTION
         );
+      })
+  );
+
+  it.effect(
+    "shares the reviewed artwork of an SNBT section as its social image",
+    () =>
+      Effect.gen(function* () {
+        mocks.readTryoutSectionPage.mockReturnValueOnce(
+          Effect.succeed({
+            ...catalogSection,
+            section: {
+              ...catalogSection.section,
+              sectionKey: "general-reasoning",
+            },
+            set: { ...catalogSection.set, countryKey: "indonesia" },
+          })
+        );
+
+        expect(yield* readTryoutSectionRoute(address)).toMatchObject({
+          head: {
+            image: "/open-graph/tryout/indonesia/snbt/en-general-reasoning.png",
+          },
+        });
       })
   );
 

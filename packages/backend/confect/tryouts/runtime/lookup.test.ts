@@ -12,7 +12,7 @@ import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 const identity = { ...FIXTURE_TRACK, setKey: "set-1" };
-const setPath = "try-out/indonesia/snbt/2027/set-1-id";
+const setPath = "try-out/indonesia/snbt/2027/utbk/set-1-id";
 const LOCALES = ["en", "de", "id"] as const;
 
 describe("locale-neutral attempt ownership", () => {

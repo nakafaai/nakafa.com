@@ -3,14 +3,17 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
+import island from "@repo/backend/confect/_generated/refs/island";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import { isRedirect } from "@tanstack/react-router";
+import { isNotFound, isRedirect } from "@tanstack/react-router";
 import { Array as Arr, Deferred, Effect, Option } from "effect";
 import {
   chatScreenHandler,
   chatSidebarScreenHandler,
   homeScreenHandler,
+  islandScreenHandler,
+  islandVisitHandler,
   notificationsScreenHandler,
   searchScreenHandler,
 } from "@/lib/account/home.server";
@@ -120,6 +123,7 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -136,6 +140,7 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, account],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -155,9 +160,11 @@ describe("homeScreenHandler", () => {
         contents.queries.recent.getRecentlyViewed,
         [{ content_id: "math-1", materialDomain: "mathematics" }],
       ],
+      [island.queries.own, { layout: [], lifetime: 30, stars: 30 }],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBe("Nabil");
+    expect(screen.island).toEqual({ layout: [], lifetime: 30, stars: 30 });
     expect(screen.recentRows).toEqual([
       { content_id: "math-1", materialDomain: "mathematics" },
     ]);
@@ -221,9 +228,11 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
+      [island.queries.own, null],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBeUndefined();
+    expect(screen.island).toBeUndefined();
   });
 });
 
@@ -353,5 +362,79 @@ describe("notificationsScreenHandler", () => {
       canonicalPath: "/en",
       indexable: false,
     });
+  });
+});
+
+describe("islandScreenHandler", () => {
+  it("sends a visitor to sign-in", async () => {
+    sessionWith(Option.none());
+    const cause = await failureOf(
+      islandScreenHandler({ data: { locale: "en" } })
+    );
+    expect(isRedirect(cause)).toBe(true);
+  });
+
+  it("reads the owner's island, their name and a noindex head", async () => {
+    sessionWith(Option.some("token"));
+    const own = { layout: [], lifetime: 12, stars: 12 };
+    answerQueries([
+      [island.queries.own, own],
+      [auth.queries.getCurrentUser, account],
+    ]);
+    const screen = await islandScreenHandler({ data: { locale: "en" } });
+    expect(screen).toMatchObject({
+      island: own,
+      name: "Nabil",
+      username: "nabil",
+    });
+    expect(screen.seo).toMatchObject({
+      canonicalPath: "/en/island",
+      indexable: false,
+      title: "Island",
+    });
+  });
+
+  it("reads no island before the owner's first visit opens one", async () => {
+    sessionWith(Option.some("token"));
+    answerQueries([
+      [island.queries.own, null],
+      [auth.queries.getCurrentUser, null],
+    ]);
+    const screen = await islandScreenHandler({ data: { locale: "id" } });
+    expect(screen.island).toBeUndefined();
+    expect(screen.name).toBeUndefined();
+    expect(screen.username).toBeUndefined();
+    expect(screen.seo.title).toBe("Pulau");
+  });
+});
+
+describe("islandVisitHandler", () => {
+  it("reads a shared island by its owner's username, without signing in, and keeps it out of search", async () => {
+    sessionWith(Option.none());
+    const visited = { badges: [], level: 2, name: "Nabil", username: "nabil" };
+    answerQueries([[island.queries.visit, visited]]);
+    const screen = await islandVisitHandler({
+      data: { locale: "en", username: "Nabil" },
+    });
+    expect(screen.island).toEqual(visited);
+    expect(screen.seo).toMatchObject({
+      canonicalPath: "/en/island/nabil",
+      indexable: false,
+      title: "Nabil's Island",
+    });
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      island.queries.visit,
+      { username: "nabil" },
+      undefined
+    );
+  });
+
+  it("answers not found for an island nobody may visit", async () => {
+    sessionWith(Option.some("token"));
+    answerQueries([[island.queries.visit, null]]);
+    const cause = await failureOf(
+      islandVisitHandler({ data: { locale: "id", username: "someone" } })
+    );
+    expect(isNotFound(cause)).toBe(true);
   });
 });

@@ -43,7 +43,10 @@ export type ClassroomTalliesDoc = Document.Document<typeof schemaDefinition, "cl
 export type ClassroomTasksDoc = Document.Document<typeof schemaDefinition, "classroomTasks">;
 export type ClassroomThreadsDoc = Document.Document<typeof schemaDefinition, "classroomThreads">;
 export type ClassroomUploadsDoc = Document.Document<typeof schemaDefinition, "classroomUploads">;
+export type CommentCountsDoc = Document.Document<typeof schemaDefinition, "commentCounts">;
 export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
+export type CommentReportsDoc = Document.Document<typeof schemaDefinition, "commentReports">;
+export type CommentUploadsDoc = Document.Document<typeof schemaDefinition, "commentUploads">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ConnectorConnectionsDoc = Document.Document<typeof schemaDefinition, "connectorConnections">;
 export type ConnectorEventsDoc = Document.Document<typeof schemaDefinition, "connectorEvents">;
@@ -111,6 +114,8 @@ export type IntegrationWebhooksDoc = Document.Document<typeof schemaDefinition, 
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
+export type IslandAwardsDoc = Document.Document<typeof schemaDefinition, "islandAwards">;
+export type IslandsDoc = Document.Document<typeof schemaDefinition, "islands">;
 export type JournalCursorsDoc = Document.Document<typeof schemaDefinition, "journalCursors">;
 export type JournalEntriesDoc = Document.Document<typeof schemaDefinition, "journalEntries">;
 export type LearningEngagementQueueDoc = Document.Document<typeof schemaDefinition, "learningEngagementQueue">;
@@ -219,7 +224,10 @@ export interface Docs {
   classroomTasks: ClassroomTasksDoc;
   classroomThreads: ClassroomThreadsDoc;
   classroomUploads: ClassroomUploadsDoc;
+  commentCounts: CommentCountsDoc;
   commentLikes: CommentLikesDoc;
+  commentReports: CommentReportsDoc;
+  commentUploads: CommentUploadsDoc;
   comments: CommentsDoc;
   connectorConnections: ConnectorConnectionsDoc;
   connectorEvents: ConnectorEventsDoc;
@@ -287,6 +295,8 @@ export interface Docs {
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
+  islandAwards: IslandAwardsDoc;
+  islands: IslandsDoc;
   journalCursors: JournalCursorsDoc;
   journalEntries: JournalEntriesDoc;
   learningEngagementQueue: LearningEngagementQueueDoc;

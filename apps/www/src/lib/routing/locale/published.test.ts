@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { Array as Arr, Effect, Option } from "effect";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import { previewIdProjection, previewProjection } from "@/test/manifest";
 import {
@@ -12,6 +13,8 @@ import {
   readTestPublishedRoute,
   testProgramSubject,
 } from "@/test/published/program";
+
+const servedLocale = Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema);
 
 const publishedMocks = vi.hoisted(() => ({
   articleCategory: vi.fn(),
@@ -154,9 +157,9 @@ describe("published localized route ownership", () => {
     ({ current, target }) =>
       Effect.gen(function* () {
         const href = yield* readPublishedLocalizedHref({
-          currentLocale: current.appLocale,
+          currentLocale: servedLocale(current.appLocale),
           hash: "#latest",
-          locale: target.appLocale,
+          locale: servedLocale(target.appLocale),
           publicPath: current.parentPath,
           search: "?cursor=source&manifest=source&release=source&source=locale",
         });
@@ -170,9 +173,9 @@ describe("published localized route ownership", () => {
     ({ current, target }) =>
       Effect.gen(function* () {
         const href = yield* readPublishedLocalizedHref({
-          currentLocale: current.appLocale,
+          currentLocale: servedLocale(current.appLocale),
           hash: "#references",
-          locale: target.appLocale,
+          locale: servedLocale(target.appLocale),
           publicPath: current.publicPath,
           search: "?source=locale",
         });

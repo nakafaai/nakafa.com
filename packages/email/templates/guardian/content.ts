@@ -36,11 +36,18 @@ const guardianCodeCopy = {
     subject: "Your Nakafa sign-in code",
   },
   id: {
-    body: "Masukkan kode ini di halaman masuk orang tua sekolah Anda. Kode berlaku lima menit.",
-    ignore: "Jika Anda tidak meminta kode, abaikan email ini.",
+    body: "Masukkan kode ini di halaman masuk orang tua di sekolahmu. Kodenya berlaku lima menit.",
+    ignore: "Kalau kamu tidak meminta kode, abaikan saja email ini.",
     reason:
       "Kami mengirim email ini karena kode masuk orang tua diminta dengan alamat ini.",
-    subject: "Kode masuk Nakafa Anda",
+    subject: "Kode masuk Nakafa kamu",
+  },
+  ms: {
+    body: "Masukkan kod ini di halaman log masuk ibu bapa sekolah kamu. Kod ini sah selama lima minit.",
+    ignore: "Jika kamu tidak meminta kod, abaikan e-mel ini.",
+    reason:
+      "Kami menghantar e-mel ini kerana kod log masuk ibu bapa telah diminta dengan alamat ini.",
+    subject: "Kod log masuk Nakafa kamu",
   },
 };
 

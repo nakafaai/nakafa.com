@@ -188,6 +188,7 @@ function WaterMolecule({ colors }: { colors: ConstantCompositionSceneColors }) {
           key={bond.id}
           lineWidth={BOND_LINE_WIDTH}
           points={[bond.start, bond.end]}
+          toneMapped={false}
         />
       ))}
       {Arr.map(WATER_ATOMS, (atomData) => (

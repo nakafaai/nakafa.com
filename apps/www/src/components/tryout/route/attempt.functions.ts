@@ -6,6 +6,7 @@ import { Schema } from "effect";
 const SetInput = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
+  group: Schema.String,
   locale: LocaleSchema,
   set: Schema.String,
   track: Schema.String,
@@ -15,6 +16,7 @@ const SetInput = Schema.Struct({
 const SectionInput = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
+  group: Schema.String,
   locale: LocaleSchema,
   section: Schema.String,
   set: Schema.String,

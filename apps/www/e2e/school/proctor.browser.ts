@@ -90,7 +90,7 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
     student.getByRole("heading", { name: "Question 1" })
   ).toBeVisible();
 
-  // The Proctor finds the rooms of the exam, and moves and cancels none of them.
+  // The Proctor finds the rooms of the exam. Their menus leave out moving and cancelling, which the server refuses a Proctor.
   const proctor = await proctorContext.newPage();
   await proctor.goto(address(`/exams/${sitting.examId}`));
   const upcoming = proctor.getByRole("row", { name: UPCOMING_ROW });
@@ -98,12 +98,13 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   const menu = upcoming.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(menu);
   await menu.click();
+  await expect(proctor.getByRole("menu")).toBeVisible();
   await expect(
     proctor.getByRole("menuitem", { name: "Reschedule" })
-  ).toBeDisabled();
+  ).toHaveCount(0);
   await expect(
     proctor.getByRole("menuitem", { name: "Cancel room" })
-  ).toBeDisabled();
+  ).toHaveCount(0);
   await proctor.keyboard.press("Escape");
 
   // The Proctor opens the room that is open now.
@@ -137,10 +138,11 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
       .getByRole("dialog", { name: "Join this room" })
       .getByText(sitting.token, { exact: true })
   ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
+  // The room's dialog has an action, Change token, so its footer's way out is Cancel (ResponsiveDialog).
   await proctor
     .getByRole("dialog", { name: "Join this room" })
     .locator('[data-slot="dialog-footer"]')
-    .getByRole("button", { exact: true, name: "Close" })
+    .getByRole("button", { exact: true, name: "Cancel" })
     .click();
 
   // The Proctor locks the student's attempt, and unlocks it again.

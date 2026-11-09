@@ -1,0 +1,152 @@
+import type { Sprite } from "@/lib/island/sprite";
+
+/** A white duck paddling to the right, its tail flicking between frames. */
+export const DUCK: Sprite = {
+  fps: 3,
+  frames: [
+    [
+      "....kkk...",
+      "...kwwwk..",
+      "...kwkwbb.",
+      "...kwwwbk.",
+      ".kk.kwwk..",
+      "kwwkwwwwk.",
+      "ksswwwwsk.",
+      ".kkkkkkk..",
+    ],
+    [
+      "....kkk...",
+      "...kwwwk..",
+      "...kwkwbb.",
+      "...kwwwbk.",
+      "kk..kwwk..",
+      "kwwkwwwwk.",
+      ".sswwwwsk.",
+      ".kkkkkkk..",
+    ],
+  ],
+  key: {
+    b: ["glow", 1],
+    k: ["ink", 1],
+    s: ["feather", 1],
+    w: ["feather", 3],
+  },
+};
+
+/** A small orange fish swimming to the right, its tail beating between frames. */
+export const FISH: Sprite = {
+  fps: 4,
+  frames: [
+    ["o.ooo..", ".oooodo", "o.ooo.."],
+    [".oooo..", "ooooodo", ".oooo.."],
+  ],
+  key: {
+    d: ["ink", 1],
+    o: ["fur", 2],
+  },
+};
+
+/**
+ * Nina peeking out of the water: her hammer head with an eye at each end, two
+ * small bumps on top, a pale face and one smile, as the mascot draws her.
+ */
+export const NINA_PEEK: Sprite = {
+  fps: 2,
+  frames: [
+    [
+      "...kk....kk...",
+      "..knnk..knnk..",
+      ".knnnnnnnnnnk.",
+      "kfkknnnnnnkkfk",
+      "kffknnnnnnkffk",
+      ".kkknffffnkkk.",
+      "...knfkkfnk...",
+      "...kffffffk...",
+    ],
+    [
+      "...kk....kk...",
+      "..knnk..knnk..",
+      ".knnnnnnnnnnk.",
+      "kffknnnnnnkffk",
+      "kfkknnnnnnkkfk",
+      ".kkknffffnkkk.",
+      "...knfkkfnk...",
+      "...kffffffk...",
+    ],
+  ],
+  key: {
+    f: ["nina", 3],
+    k: ["ink", 1],
+    n: ["nina", 2],
+  },
+};
+
+/** A little bed of flowers that sways in the wind between frames. */
+/** Flowers on their first day: stems with closed buds that open once watered (ADR 0042, D13). */
+export const BUDS: Sprite = {
+  fps: 1,
+  frames: [
+    [
+      "..b....b.",
+      ".gbg..gb.",
+      "..g.b..g.",
+      ".g.gbg.g.",
+      "gg.gg.gg.",
+      ".ggg.ggg.",
+    ],
+    [
+      "...b...b.",
+      "..gbg.gb.",
+      "..g..b.g.",
+      ".g.gbg.g.",
+      "gg.gg.gg.",
+      ".ggg.ggg.",
+    ],
+  ],
+  key: {
+    b: ["petal", 0],
+    g: ["leaf", 2],
+  },
+};
+
+export const FLOWERS: Sprite = {
+  fps: 1,
+  frames: [
+    [".p...y..", "pcp.yoy.", ".p.g.y.p", ".g.g..pcp", "gg.gg.gp.", ".ggg.ggg."],
+    ["..p..y..", ".pcpyoy.", "..pg.y.p", ".g.g.pcp.", "gg.gg.gp.", ".ggg.ggg."],
+  ],
+  key: {
+    c: ["glow", 3],
+    g: ["leaf", 2],
+    o: ["glow", 1],
+    p: ["petal", 2],
+    y: ["glow", 2],
+  },
+};
+
+/** A firefly: a warm dot that blinks between a glow and a spark. */
+export const FIREFLY: Sprite = {
+  fps: 4,
+  frames: [
+    [".o.", "oyo", ".o."],
+    ["...", ".y.", "..."],
+  ],
+  key: {
+    o: ["glow", 1],
+    y: ["glow", 3],
+  },
+};
+
+/** A puff of chimney smoke as it rises: small, then round, then thinning out. */
+export const SMOKE: Sprite = {
+  fps: 0,
+  frames: [
+    [".c.", "cwc", ".c."],
+    [".ccc.", "ccwcc", "ccccc", ".ccc."],
+    [".c.c.", "c.c.c", ".c.c.", "..c.."],
+  ],
+  key: {
+    c: ["cloud", 1],
+    w: ["cloud", 3],
+  },
+};

@@ -2,7 +2,7 @@ import { EvilIcon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ArticleCategory } from "@nakafa/aksara-contracts/projection/article";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
-import { getTileIcon, getTileLooks } from "@repo/design-system/lib/look";
+import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Option, Record as Rec, Tuple } from "effect";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
@@ -42,9 +42,4 @@ export function getArticleCategoryIcons(
     ),
     ({ icon }) => icon
   );
-}
-
-/** The icon of one category on its own, such as the header of its page. */
-export function getArticleCategoryIcon(category: ArticleCategory) {
-  return getTileIcon(readCategoryIcons(category), category);
 }

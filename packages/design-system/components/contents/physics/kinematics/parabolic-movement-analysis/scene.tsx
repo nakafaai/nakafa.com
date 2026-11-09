@@ -159,6 +159,7 @@ function Trajectory({ motion }: { motion: ProjectileMotionState }) {
       <meshBasicMaterial
         color={motion.scenario.color}
         opacity={0.82}
+        toneMapped={false}
         transparent
       />
     </mesh>
@@ -181,6 +182,7 @@ function GhostBalls({ motion }: { motion: ProjectileMotionState }) {
                 color={PIRATE_COLORS.ghostHalo}
                 depthWrite={false}
                 opacity={0.48}
+                toneMapped={false}
                 transparent
               />
             </mesh>
@@ -190,6 +192,7 @@ function GhostBalls({ motion }: { motion: ProjectileMotionState }) {
                 color={motion.scenario.color}
                 depthWrite={false}
                 opacity={0.95}
+                toneMapped={false}
                 transparent
               />
             </mesh>

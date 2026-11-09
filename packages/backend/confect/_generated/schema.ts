@@ -42,7 +42,10 @@ import classroomTallies from "./tables/classroomTallies";
 import classroomTasks from "./tables/classroomTasks";
 import classroomThreads from "./tables/classroomThreads";
 import classroomUploads from "./tables/classroomUploads";
+import commentCounts from "./tables/commentCounts";
 import commentLikes from "./tables/commentLikes";
+import commentReports from "./tables/commentReports";
+import commentUploads from "./tables/commentUploads";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorEvents from "./tables/connectorEvents";
@@ -110,6 +113,8 @@ import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import islandAwards from "./tables/islandAwards";
+import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
@@ -218,7 +223,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classroomTasks: typeof classroomTasks;
   readonly classroomThreads: typeof classroomThreads;
   readonly classroomUploads: typeof classroomUploads;
+  readonly commentCounts: typeof commentCounts;
   readonly commentLikes: typeof commentLikes;
+  readonly commentReports: typeof commentReports;
+  readonly commentUploads: typeof commentUploads;
   readonly comments: typeof comments;
   readonly connectorConnections: typeof connectorConnections;
   readonly connectorEvents: typeof connectorEvents;
@@ -286,6 +294,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
+  readonly islandAwards: typeof islandAwards;
+  readonly islands: typeof islands;
   readonly journalCursors: typeof journalCursors;
   readonly journalEntries: typeof journalEntries;
   readonly learningEngagementQueue: typeof learningEngagementQueue;
@@ -393,7 +403,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classroomTasks,
   classroomThreads,
   classroomUploads,
+  commentCounts,
   commentLikes,
+  commentReports,
+  commentUploads,
   comments,
   connectorConnections,
   connectorEvents,
@@ -461,6 +474,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
+  islandAwards,
+  islands,
   journalCursors,
   journalEntries,
   learningEngagementQueue,

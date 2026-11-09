@@ -142,6 +142,8 @@ describe("public route ownership", () => {
     ["de", "school/pricing"],
     ["de", "chat/new"],
     ["de", "comment/fabricated"],
+    ["en", "island"],
+    ["en", "island/nabil"],
     ["de", "user/settings/learning"],
     ["de", "user/settings/subscriptions"],
     ["de", "user/settings/memory"],
@@ -153,7 +155,10 @@ describe("public route ownership", () => {
     ["de", "lehrplaene/merdeka/klasse-10"],
     ["de", "faecher/mathematik/geometrie"],
     ["en", `verify/${"a".repeat(64)}`],
-    ["de", "try-out/deutschland/abitur/mathematik/set-1/section-1"],
+    [
+      "de",
+      "try-out/deutschland/aufnahmepruefung/studienkolleg-der-tu-darmstadt/mathematik/aufgabensatz-1/abschnitt-1",
+    ],
   ] as const)("accepts the %s application path %s", (locale, publicPath) => {
     expect(isApplicationRoutePath(locale, publicPath)).toBe(true);
   });
@@ -172,6 +177,7 @@ describe("public route ownership", () => {
     ["de", "chat/id/fabricated"],
     ["de", "comment"],
     ["de", "comment/id/fabricated"],
+    ["en", "island/nabil/fabricated"],
     ["de", "onboarding/focus"],
     ["de", "onboarding/role"],
     ["de", "onboarding/fabricated"],
@@ -193,7 +199,7 @@ describe("public route ownership", () => {
     ["de", "og"],
     ["de", "faecher"],
     ["en", "subjects/mathematics"],
-    ["de", "try-out/a/b/c/d/e/f"],
+    ["de", "try-out/a/b/c/d/e/f/g"],
   ] as const)("rejects the %s application path %s", (locale, publicPath) => {
     expect(isApplicationRoutePath(locale, publicPath)).toBe(false);
   });

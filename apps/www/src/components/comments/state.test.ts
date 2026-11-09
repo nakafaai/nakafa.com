@@ -30,6 +30,7 @@ function row(id: string, change: Partial<CommentRow> = {}): CommentRow {
     _id: commentId(id),
     likeCount: 0,
     liked: false,
+    photos: [],
     replyCount: 0,
     replyToUser: null,
     slug: "lesson",
@@ -121,6 +122,7 @@ describe("comment optimistic state", () => {
     const draft = draftComment(user, null, {
       _creationTime: 42,
       _id: commentId("draft"),
+      photos: [],
       slug: "lesson",
       text: "Halo.",
     });
@@ -151,12 +153,14 @@ describe("comment optimistic state", () => {
     const replyToTop = draftComment(user, top, {
       _creationTime: 1,
       _id: commentId("to-top"),
+      photos: [],
       slug: "lesson",
       text: "Balasan.",
     });
     const replyToReply = draftComment(user, first, {
       _creationTime: 2,
       _id: commentId("to-reply"),
+      photos: [],
       slug: "lesson",
       text: "Balasan lagi.",
     });

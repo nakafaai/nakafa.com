@@ -5,22 +5,16 @@ import {
   type Page,
 } from "@playwright/test";
 import { Array as Arr, Effect, MutableHashSet, MutableList } from "effect";
+import {
+  expectSteady,
+  expectSteadyReloads,
+  POPUPS,
+  recordSteadiness,
+  takeFlickers,
+  takeMoves,
+} from "@/e2e/support/flicker";
 import { readRawKeys } from "@/e2e/support/keys";
-import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { readTallRows } from "@/e2e/support/wraps";
-
-/** Everything that opens over a page. */
-const POPUPS = Arr.join(
-  [
-    '[data-slot="dialog-content"]',
-    '[data-slot="sheet-popup"]',
-    '[data-slot="drawer-content"]',
-    '[data-slot="popover-content"]',
-    '[data-slot="dropdown-menu-content"]',
-    '[data-slot="select-content"]',
-  ],
-  ","
-);
 
 /** The most pages one walk opens, past the routes a school has, so a walk always ends. */
 const PAGE_LIMIT = 90;
@@ -30,95 +24,6 @@ const PRESS_MILLISECONDS = 620;
 
 /** How long a press waits for a control the page may have taken away. */
 const PRESS_TIMEOUT_MILLISECONDS = 2000;
-
-/** The page global that holds what moved since the walk last read it. */
-const MOVES = "nakafaMoves";
-
-/**
- * What a reader's eye follows: a move of one of these is a shift, whatever the browser reports. A menu or
- * a dialog stands in a portal, outside them, so a popup that opens moves none of them.
- */
-const WATCHED = Arr.join(
-  [
-    '[data-slot="page-header"] a',
-    '[data-slot="page-header"] button',
-    '[data-slot="sidebar-content"] a',
-    "main h1",
-    "main h2",
-    "main th",
-    "main a",
-    "main button",
-    "main input",
-    "main p",
-  ],
-  ","
-);
-
-/**
- * Records every frame, before the page's scripts run, each watched element that moved more than a
- * pixel from the frame before with no animation running. Firefox and WebKit report no layout shift
- * entries, so this is how a shift shows in them. The page serializes this function.
- */
-function recordMoves({ key, watched }: { key: string; watched: string }) {
-  // Under this a font's or a column's rounding shows: 1.5 to 4.6 px measured in WebKit and Firefox.
-  const NOTICED = 5;
-  const moves: string[] = [];
-  Reflect.set(window, key, moves);
-  const places = new WeakMap<Element, { x: number; y: number }>();
-  // The page serializes this function, so its helpers live inside it.
-  const isShown = (item: Element, box: DOMRect) =>
-    box.height !== 0 &&
-    box.top <= window.innerHeight &&
-    box.bottom >= 0 &&
-    item.checkVisibility({
-      opacityProperty: true,
-      visibilityProperty: true,
-    });
-  // A table that scrolls moves its cells, which a press on a far column does and no reader calls a shift.
-  // A cell sticky to a side holds its place through that scroll, so the scroller's distance is not part of its place.
-  const scrolledBy = (item: Element) => {
-    let scrolled = 0;
-    let pinned = false;
-    for (let node: Element | null = item; node; node = node.parentElement) {
-      scrolled += pinned || node === item ? 0 : node.scrollLeft;
-      const style = getComputedStyle(node);
-      pinned ||=
-        style.position === "sticky" &&
-        (style.left !== "auto" || style.right !== "auto");
-    }
-    return scrolled;
-  };
-  const follow = () => {
-    const still = document.getAnimations().length === 0;
-    for (const item of document.querySelectorAll(watched)) {
-      const box = item.getBoundingClientRect();
-      if (!isShown(item, box)) {
-        continue;
-      }
-      const x = box.x + scrolledBy(item);
-      const before = places.get(item);
-      places.set(item, { x, y: box.y });
-      const across = Math.abs((before?.x ?? x) - x);
-      const down = Math.abs((before?.y ?? box.y) - box.y);
-      if (still && Math.max(across, down) > NOTICED) {
-        moves.push(
-          `"${item.textContent?.trim().slice(0, 24)}" ${across.toFixed(1)} across ${down.toFixed(1)} down`
-        );
-      }
-    }
-    requestAnimationFrame(follow);
-  };
-  requestAnimationFrame(follow);
-}
-
-/** Takes what moved since the last read. */
-const takeMoves = (page: Page) =>
-  page.evaluate((key) => {
-    const moves = Reflect.get(window, key);
-    return Array.isArray(moves)
-      ? moves.splice(0).map((move) => String(move))
-      : [];
-  }, MOVES);
 
 /** WebKit's words for a request the page left behind as it moved on, which fails nothing a reader sees. */
 export const LEFT_BEHIND = /due to access control checks/u;
@@ -419,14 +324,15 @@ const pressTriggers = async (
  * Opens every page a role reaches from the school's home, each kind once and `seeds` besides, and
  * presses every control that opens something. Every miss of the defect bar that a machine can read
  * stands as a soft failure, so one run names them all: a page that moves as it loads or scrolls
- * sideways, a raw key, a page error, controls that touch, a popup that moves, cuts or holds nothing.
+ * sideways, a page that moves, blanks or falls back on a hard reload or a step back and forward, a raw
+ * key, a page error, controls that touch, a popup that moves, cuts or holds nothing.
  */
 export const walkSchool = async (
   context: BrowserContext,
   origin: string,
   seeds: readonly string[]
 ) => {
-  await context.addInitScript(recordMoves, { key: MOVES, watched: WATCHED });
+  await recordSteadiness(context);
   const page = await context.newPage();
   const errors = MutableList.make<string>();
   page.on("pageerror", (error) => {
@@ -466,15 +372,8 @@ export const walkSchool = async (
       .soft(await Effect.runPromise(readRawKeys(page)), `${shape}: no raw key`)
       .toEqual([]);
     expect.soft(facts.sideways, `${shape}: never scrolls sideways`).toBe(0);
-    expect
-      .soft(await takeMoves(page), `${shape}: holds still as it loads`)
-      .toEqual([]);
-    expect
-      .soft(
-        await Effect.runPromise(readCumulativeLayoutShift(page)),
-        `${shape}: moves nothing as it loads`
-      )
-      .toBe(0);
+    await expectSteady(page, `${shape} as it loads`);
+    await expectSteadyReloads(page, shape, MutableHashSet.size(opened) > 1);
     MutableList.appendAll(
       queue,
       Arr.filter(
@@ -488,6 +387,12 @@ export const walkSchool = async (
     await pressTriggers(page, address, pressed);
     expect
       .soft(await takeMoves(page), `${shape}: holds still under its popups`)
+      .toEqual([]);
+    expect
+      .soft(
+        await takeFlickers(page),
+        `${shape}: never blanks or falls back under its popups`
+      )
       .toEqual([]);
   }
   expect.soft(MutableList.toArray(errors), "no page error").toEqual([]);

@@ -1,6 +1,7 @@
 import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
@@ -46,7 +47,14 @@ const noticeEmailCopy = {
       "Kami mengirim email ini karena gurumu memilih mengirim pengumuman ini juga lewat email.",
     subject: "Pengumuman baru di kelasmu",
   },
-} satisfies Record<ActiveAppLocaleCode, typeof NoticeEmailCopySchema.Type>;
+  ms: {
+    body: "Ada pengumuman baharu dalam kelas kamu di Nakafa. Buka kelas untuk membacanya.",
+    cta: "Buka kelas",
+    footerReason:
+      "Kami menghantar e-mel ini kerana guru kamu memilih untuk turut menghantar pengumuman ini melalui e-mel.",
+    subject: "Pengumuman baharu dalam kelas kamu",
+  },
+} satisfies Record<AppLocaleCode, typeof NoticeEmailCopySchema.Type>;
 
 /** Returns the reviewed copy of a notice email for one active app locale. */
 export function getNoticeEmailCopy(locale: ActiveAppLocaleCode) {

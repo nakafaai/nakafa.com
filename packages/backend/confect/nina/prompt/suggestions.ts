@@ -1,6 +1,6 @@
 import {
   ActiveAppLocaleCodeSchema,
-  type ActiveAppLocaleCode as Locale,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { Schema } from "effect";
@@ -51,7 +51,19 @@ const localeInstructions = {
       - Ask Nina to explain the steps more slowly in Indonesian.
     `,
   },
-} satisfies Record<Locale, typeof LocaleInstructionSchema.Type>;
+  ms: {
+    language:
+      "Malaysian Malay (Bahasa Melayu as written in Malaysia, not Indonesian)",
+    example: `
+      ## Selepas Nina menyelesaikan soalan algebra:
+      - "Beri saya satu lagi soalan yang serupa untuk berlatih"
+      - "Bagaimana saya tahu kaedah mana yang perlu digunakan?"
+      - "Apa yang berlaku jika saya menukar nombor ini?"
+      - "Tunjukkan di mana ini digunakan dalam kehidupan sebenar"
+      - "Terangkan langkahnya dengan lebih perlahan"
+    `,
+  },
+} satisfies Record<AppLocaleCode, typeof LocaleInstructionSchema.Type>;
 
 /** Builds follow-up suggestion instructions for the active conversation locale. */
 export function nakafaSuggestions({ locale }: Params) {
@@ -70,6 +82,7 @@ export function nakafaSuggestions({ locale }: Params) {
       # Communication Style
 
       Use conversational language that real students actually use.
+      Write casually, the way a student talks to a tutor they know: aku in Indonesian, ich and du in German, never formal.
       All suggestions must be from the student's perspective:
       - Ask Nina questions.
       - Make requests to Nina.

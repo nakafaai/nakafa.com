@@ -13,6 +13,7 @@ import chats from "@repo/backend/confect/_generated/refs/chats";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import comments from "@repo/backend/confect/_generated/refs/comments";
+import commentsInternal from "@repo/backend/confect/_generated/refs/comments.server";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import consents from "@repo/backend/confect/_generated/refs/consents";
@@ -34,6 +35,7 @@ import insight from "@repo/backend/confect/_generated/refs/insight";
 import insightInternal from "@repo/backend/confect/_generated/refs/insight.server";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
+import island from "@repo/backend/confect/_generated/refs/island";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
@@ -144,6 +146,7 @@ const domainModules = {
   identity,
   insight,
   integrations,
+  island,
   journal,
   learningPreferences,
   nina,
@@ -164,6 +167,7 @@ const internalModules = {
   billing: billingInternal,
   bucket: bucketInternal,
   classroom: classroomInternal,
+  comments: commentsInternal,
   connectors: connectorsInternal,
   contentRelease: contentReleaseInternal,
   contents: contentsInternal,

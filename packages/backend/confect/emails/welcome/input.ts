@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   type PageCatalogInput,
@@ -18,7 +18,11 @@ import { Effect, flow } from "effect";
 /** Resolves locale-exact legal and continuation links from signed content. */
 export const resolveWelcomeEmailLinks = Effect.fn(
   "emails.welcome.resolveLinks"
-)(function* (catalog: PageCatalogInput, locale: AppLocaleCode, siteUrl: URL) {
+)(function* (
+  catalog: PageCatalogInput,
+  locale: ActiveAppLocaleCode,
+  siteUrl: URL
+) {
   const legal = yield* resolveLegalLinks(catalog, locale, siteUrl);
   return { continueUrl: new URL(`/${locale}/home`, siteUrl).href, ...legal };
 });

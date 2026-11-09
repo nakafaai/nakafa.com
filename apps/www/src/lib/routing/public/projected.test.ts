@@ -176,8 +176,8 @@ describe("projected public html route rejection", () => {
   it.effect("requires signed ownership for public set and section routes", () =>
     Effect.gen(function* () {
       const paths = [
-        "/en/try-out/indonesia/snbt/2027/set-1",
-        "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1",
+        "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning",
       ];
       yield* Effect.forEach(paths, (pathname, index) =>
         Effect.gen(function* () {
@@ -205,8 +205,8 @@ describe("projected public html route rejection", () => {
     () =>
       Effect.gen(function* () {
         const paths = [
-          "/en/try-out/indonesia/snbt/2027/set-1",
-          "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+          "/en/try-out/indonesia/snbt/2027/utbk/set-1",
+          "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning",
         ];
         for (const pathname of paths) {
           const rejection = yield* readRejection(pathname, true);
@@ -223,8 +223,8 @@ describe("projected public html route rejection", () => {
           "subjects/mathematics/function-composition-inverse-function/function-concept",
         ],
         [
-          "/de/try-out/indonesien/snbt/2027/aufgabensatz-1/quantitatives-wissen",
-          "try-out/indonesien/snbt/2027/aufgabensatz-1/quantitatives-wissen",
+          "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1/quantitatives-wissen",
+          "try-out/indonesien/snbt/2027/utbk/aufgabensatz-1/quantitatives-wissen",
         ],
       ] as const;
       for (const [pathname, publicPath] of paths) {

@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 import {
@@ -44,7 +44,7 @@ function isRetiredSectionLocale(
 
 /** Reads one retired SNBT section URL as its retired and successor routes. */
 function readRetiredSnbtSection(pathname: string) {
-  const [appLocale, root, country, exam, track, set, section, ...rest] =
+  const [appLocale, root, country, exam, group, track, set, section, ...rest] =
     readPathSegments(pathname);
   if (
     !(
@@ -52,6 +52,7 @@ function readRetiredSnbtSection(pathname: string) {
       root === TRYOUT_ROOT &&
       exam === SNBT_ROUTE &&
       country &&
+      group &&
       track &&
       set &&
       section &&
@@ -64,7 +65,7 @@ function readRetiredSnbtSection(pathname: string) {
   if (Option.isNone(successor)) {
     return null;
   }
-  const setPath = Arr.join([root, country, exam, track, set], "/");
+  const setPath = Arr.join([root, country, exam, group, track, set], "/");
   return {
     appLocale,
     previousPath: `${setPath}/${section}`,
@@ -74,7 +75,7 @@ function readRetiredSnbtSection(pathname: string) {
 
 /** Applies the retired section rename map of one locale and keeps every other key. */
 export function readSectionSuccessor(
-  appLocale: AppLocaleCode,
+  appLocale: ActiveAppLocaleCode,
   section: string
 ) {
   return Option.getOrElse(

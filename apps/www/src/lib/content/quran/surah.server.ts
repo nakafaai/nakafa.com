@@ -7,6 +7,7 @@ import { createTranslator } from "use-intl/core";
 import {
   getQuranPagination,
   getQuranSurahName,
+  toQuranIndexSurahs,
 } from "@/lib/content/quran/navigation";
 import {
   readPublishedQuranCatalog,
@@ -113,6 +114,7 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
     snapshotId: view.snapshotId,
     surah: data.surah,
     surahNumber,
+    surahs: toQuranIndexSurahs(catalog.surahs, locale),
     tafsirAccess: view.tafsirAccess,
     title,
     translationNotesLabel: t("translation-notes"),

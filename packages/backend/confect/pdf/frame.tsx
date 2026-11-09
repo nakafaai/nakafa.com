@@ -1,4 +1,7 @@
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { NAKAFA_MARK } from "@repo/backend/confect/pdf/mark";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { SITE_ORIGIN } from "@repo/seo/origin";
@@ -41,7 +44,8 @@ const PAGE_WORDS = {
   de: { of: "von", page: "Seite" },
   en: { of: "of", page: "Page" },
   id: { of: "dari", page: "Halaman" },
-} as const;
+  ms: { of: "daripada", page: "Halaman" },
+} as const satisfies Record<AppLocaleCode, Record<string, string>>;
 
 /** Where a reader of any document reaches Nakafa. */
 const CONTACT = `${new URL(SITE_ORIGIN).host}, ${COMPANY_IDENTITY.email}`;

@@ -900,12 +900,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -944,12 +957,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -999,12 +1025,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1059,12 +1098,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -1178,6 +1230,13 @@ export declare const api: {
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -1193,12 +1252,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1245,6 +1317,13 @@ export declare const api: {
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1275,6 +1354,13 @@ export declare const api: {
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -1290,12 +1376,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1357,12 +1456,25 @@ export declare const api: {
                 thumbnail: string | null;
                 width: number | null;
               }>;
-              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+              author: {
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              };
               clientKey: string;
               createdAt: number;
               discussion: {
                 lastReplyAt: number | null;
                 number: number;
+                repliers: Array<{
+                  id: Id<"tenantPeople">;
+                  mascot: string;
+                  name: string;
+                  nina: boolean;
+                  photo: string | null;
+                }>;
                 replies: number;
                 title: string;
                 unread: boolean;
@@ -1412,12 +1524,25 @@ export declare const api: {
               thumbnail: string | null;
               width: number | null;
             }>;
-            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
+            author: {
+              id: Id<"tenantPeople">;
+              mascot: string;
+              name: string;
+              nina: boolean;
+              photo: string | null;
+            };
             clientKey: string;
             createdAt: number;
             discussion: {
               lastReplyAt: number | null;
               number: number;
+              repliers: Array<{
+                id: Id<"tenantPeople">;
+                mascot: string;
+                name: string;
+                nina: boolean;
+                photo: string | null;
+              }>;
               replies: number;
               title: string;
               unread: boolean;
@@ -2288,11 +2413,44 @@ export declare const api: {
     };
   };
   comments: {
+    files: {
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          fileId: Id<"bucketFiles">;
+          height: number;
+          thumbnailId: Id<"bucketFiles"> | null;
+          width: number;
+        },
+        Id<"commentUploads">
+      >;
+      reserve: FunctionReference<
+        "mutation",
+        "public",
+        {
+          byteSize: number;
+          contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
+        },
+        { address: string; fileId: Id<"bucketFiles"> }
+      >;
+      withdraw: FunctionReference<
+        "mutation",
+        "public",
+        { uploadId: Id<"commentUploads"> },
+        null
+      >;
+    };
     mutations: {
       addComment: FunctionReference<
         "mutation",
         "public",
-        { parentId?: Id<"comments">; slug: string; text: string },
+        {
+          parentId?: Id<"comments">;
+          slug: string;
+          text: string;
+          uploads: Array<Id<"commentUploads">>;
+        },
         Id<"comments">
       >;
       deleteComment: FunctionReference<
@@ -2301,10 +2459,25 @@ export declare const api: {
         { commentId: Id<"comments"> },
         null
       >;
+      editComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments">; text: string },
+        null
+      >;
       likeComment: FunctionReference<
         "mutation",
         "public",
         { commentId: Id<"comments"> },
+        null
+      >;
+      reportComment: FunctionReference<
+        "mutation",
+        "public",
+        {
+          commentId: Id<"comments">;
+          reason: "spam" | "harassment" | "misleading" | "other";
+        },
         null
       >;
       unlikeComment: FunctionReference<
@@ -2322,9 +2495,16 @@ export declare const api: {
         {
           _creationTime: number;
           _id: Id<"comments">;
+          editedAt?: number;
           likeCount: number;
           liked: boolean;
           parentId?: Id<"comments">;
+          photos: Array<{
+            address: string | null;
+            height: number;
+            thumbnail: string | null;
+            width: number;
+          }>;
           replyCount: number;
           replyToUser: {
             _id: Id<"users">;
@@ -2347,11 +2527,17 @@ export declare const api: {
           userId: Id<"users">;
         } | null
       >;
+      getCommentCount: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        number
+      >;
       getCommentPlace: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; commentId: string },
-        { appLocale: "en" | "id" | "de"; publicPath: string } | null
+        { appLocale: "en" | "id" | "de" | "ms"; commentId: string },
+        { appLocale: "en" | "id" | "de" | "ms"; publicPath: string } | null
       >;
       getCommentReplies: FunctionReference<
         "query",
@@ -2373,9 +2559,16 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
+            editedAt?: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
+            photos: Array<{
+              address: string | null;
+              height: number;
+              thumbnail: string | null;
+              width: number;
+            }>;
             replyCount: number;
             replyToUser: {
               _id: Id<"users">;
@@ -2414,6 +2607,7 @@ export declare const api: {
             numItems: number;
           };
           slug: string;
+          sort: "top" | "newest";
         },
         {
           continueCursor: string;
@@ -2421,9 +2615,16 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
+            editedAt?: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
+            photos: Array<{
+              address: string | null;
+              height: number;
+              thumbnail: string | null;
+              width: number;
+            }>;
             replyCount: number;
             replyToUser: {
               _id: Id<"users">;
@@ -2469,9 +2670,16 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
+            editedAt?: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
+            photos: Array<{
+              address: string | null;
+              height: number;
+              thumbnail: string | null;
+              width: number;
+            }>;
             replyCount: number;
             replyToUserId?: Id<"users">;
             slug: string;
@@ -2737,7 +2945,7 @@ export declare const api: {
       bucket: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; bucket: string },
+        { appLocale: "en" | "id" | "de" | "ms"; bucket: string },
         {
           activeReleaseId: string | null;
           articles: Array<{
@@ -2760,7 +2968,7 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           expectedManifestHash: string | null;
           expectedReleaseId: string | null;
           paginationOpts: {
@@ -2807,21 +3015,25 @@ export declare const api: {
       delivery: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; publicPath: string },
+        { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
         {
+          delivery: {
+            artifactHash: string;
+            projectionHash: string;
+            sourcePath: string;
+          } | null;
           model: {
-            activeAppLocales: Array<"en" | "id" | "de">;
+            activeAppLocales: Array<"en" | "id" | "de" | "ms">;
             activeReleaseId: string;
             alternateJson: Array<string>;
             projectionJson: string | null;
           };
-          runtimeJson: string | null;
         }
       >;
       latest: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; limit: number },
+        { appLocale: "en" | "id" | "de" | "ms"; limit: number },
         {
           activeReleaseId: string | null;
           articles: Array<{
@@ -2843,7 +3055,11 @@ export declare const api: {
       listing: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; category: string; limit: number },
+        {
+          appLocale: "en" | "id" | "de" | "ms";
+          category: string;
+          limit: number;
+        },
         {
           activeReleaseId: string | null;
           articles: Array<{
@@ -2866,7 +3082,7 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           category: string;
           expectedManifestHash: string | null;
           expectedReleaseId: string | null;
@@ -2887,8 +3103,8 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
-              appLocale: "en" | "id" | "de";
-              artifactLocale: "en" | "id" | "de";
+              appLocale: "en" | "id" | "de" | "ms";
+              artifactLocale: "en" | "id" | "de" | "ms";
               contentKey: string;
               family: "article";
               projectionHash: string;
@@ -2922,12 +3138,12 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           expectedActiveReleaseId?: string | null;
           publicPath: string;
         },
         {
-          activeAppLocales: Array<"en" | "id" | "de">;
+          activeAppLocales: Array<"en" | "id" | "de" | "ms">;
           activeReleaseId: string;
           alternateJson: Array<string>;
           projectionJson: string | null;
@@ -2936,7 +3152,7 @@ export declare const api: {
       sitemapBuckets: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de" },
+        { appLocale: "en" | "id" | "de" | "ms" },
         {
           activeReleaseId: string | null;
           articleCount: number;
@@ -2947,7 +3163,7 @@ export declare const api: {
       sitemapPage: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; bucket: string },
+        { appLocale: "en" | "id" | "de" | "ms"; bucket: string },
         { routes: Array<{ lastModified?: string; publicPath: string }> } | null
       >;
     };
@@ -2955,7 +3171,7 @@ export declare const api: {
       bucket: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; bucket: string },
+        { appLocale: "en" | "id" | "de" | "ms"; bucket: string },
         {
           activeReleaseId: string | null;
           managed: boolean;
@@ -2973,7 +3189,7 @@ export declare const api: {
       latest: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; limit: number },
+        { appLocale: "en" | "id" | "de" | "ms"; limit: number },
         {
           activeReleaseId: string | null;
           managed: boolean;
@@ -2991,11 +3207,16 @@ export declare const api: {
       lesson: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; publicPath: string },
+        { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
         {
+          delivery: {
+            artifactHash: string;
+            projectionHash: string;
+            sourcePath: string;
+          } | null;
           materialKey: string | null;
           model: {
-            activeAppLocales: Array<"en" | "id" | "de">;
+            activeAppLocales: Array<"en" | "id" | "de" | "ms">;
             activeManifestHash: string | null;
             activeReleaseId: string | null;
             alternateJson: Array<string>;
@@ -3017,14 +3238,13 @@ export declare const api: {
             sourcePath: string | null;
             sourceRevision: string | null;
           };
-          runtimeJson: string | null;
         }
       >;
       navigation: FunctionReference<
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           expectedActiveReleaseId: string;
           materialKey: string;
         },
@@ -3038,12 +3258,12 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           expectedActiveReleaseId?: string | null;
           publicPath: string;
         },
         {
-          activeAppLocales: Array<"en" | "id" | "de">;
+          activeAppLocales: Array<"en" | "id" | "de" | "ms">;
           activeManifestHash: string | null;
           activeReleaseId: string | null;
           alternateJson: Array<string>;
@@ -3071,7 +3291,7 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           expectedManifestHash: string | null;
           expectedReleaseId: string | null;
           paginationOpts: {
@@ -3101,7 +3321,7 @@ export declare const api: {
       sitemapBuckets: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de" },
+        { appLocale: "en" | "id" | "de" | "ms" },
         {
           activeReleaseId: string | null;
           buckets: Array<string>;
@@ -3112,7 +3332,7 @@ export declare const api: {
       sitemapPage: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; bucket: Array<string> },
+        { appLocale: "en" | "id" | "de" | "ms"; bucket: Array<string> },
         null | {
           routes: Array<{
             contentKey: string;
@@ -3127,7 +3347,7 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           family: "article" | "material" | "page";
           publicPath: string;
         },
@@ -3152,7 +3372,7 @@ export declare const api: {
       catalog: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de" },
+        { appLocale: "en" | "id" | "de" | "ms" },
         {
           activeManifestHash: string | null;
           activeReleaseId: string | null;
@@ -3166,14 +3386,14 @@ export declare const api: {
       path: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; publicPath: string },
+        { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
         { managed: boolean; routeJson: string | null }
       >;
       placements: FunctionReference<
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           contentKey: string;
           expectedActiveReleaseId?: string | null;
           materialKey: string;
@@ -3191,7 +3411,7 @@ export declare const api: {
       route: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; publicPath: string },
+        { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
         {
           activeManifestHash: string | null;
           activeReleaseId: string | null;
@@ -3211,19 +3431,19 @@ export declare const api: {
       sitemapBuckets: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de" },
+        { appLocale: "en" | "id" | "de" | "ms" },
         { buckets: Array<string>; managed: boolean; routeCount: number }
       >;
       sitemapPage: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; bucket: string },
+        { appLocale: "en" | "id" | "de" | "ms"; bucket: string },
         null | { routes: Array<{ publicPath: string }> }
       >;
       subjects: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de" },
+        { appLocale: "en" | "id" | "de" | "ms" },
         { managed: boolean; routeJson: Array<string> }
       >;
     };
@@ -3248,11 +3468,11 @@ export declare const api: {
       page: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; surahNumber: number },
+        { appLocale: "en" | "id" | "de" | "ms"; surahNumber: number },
         {
           activeManifestHash: string | null;
           activeReleaseId: string | null;
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           managed: boolean;
           nextSurah: {
             name: {
@@ -3545,7 +3765,7 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           fromVerse: number;
           surahNumber: number;
           toVerse?: number;
@@ -3802,14 +4022,14 @@ export declare const api: {
         "query",
         "public",
         {
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           surahNumber: number;
           verseLimit?: number;
         },
         {
           activeManifestHash: string | null;
           activeReleaseId: string | null;
-          appLocale: "en" | "id" | "de";
+          appLocale: "en" | "id" | "de" | "ms";
           managed: boolean;
           preBismillah: {
             arabic: string;
@@ -4218,6 +4438,17 @@ export declare const api: {
     };
     runtime: {
       active: {
+        artifact: FunctionReference<
+          "query",
+          "public",
+          {
+            appLocale: "en" | "id" | "de" | "ms";
+            artifactHash: string;
+            family: "article" | "material" | "page";
+            publicPath: string;
+          },
+          { artifactJson: string } | null
+        >;
         dates: FunctionReference<
           "query",
           "public",
@@ -4227,6 +4458,30 @@ export declare const api: {
             program: string | null;
             quran: string | null;
           }
+        >;
+        frame: FunctionReference<
+          "query",
+          "public",
+          {},
+          {
+            activeManifestHash: string;
+            activeReleaseId: string;
+            releaseJson: string;
+            rendererJson: string;
+          } | null
+        >;
+        head: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
+          {
+            activeReleaseId: string;
+            artifactHash: string;
+            family: "article" | "material" | "page";
+            projectionHash: string;
+            projectionJson: string;
+            sourcePath: string;
+          } | null
         >;
         read: FunctionReference<
           "query",
@@ -4249,19 +4504,19 @@ export declare const api: {
       sitemapCount: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de" },
+        { appLocale: "en" | "id" | "de" | "ms" },
         { pageCount: number; routeCount: number }
       >;
       sitemapPage: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; page: number },
+        { appLocale: "en" | "id" | "de" | "ms"; page: number },
         { paths: Array<string> } | null
       >;
       taxonomy: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de" },
+        { appLocale: "en" | "id" | "de" | "ms" },
         {
           countries: Array<{ id: string; label: string }>;
           exams: Array<{ id: string; label: string }>;
@@ -4273,6 +4528,26 @@ export declare const api: {
   contents: {
     mutations: {
       views: {
+        finishLesson: FunctionReference<
+          "mutation",
+          "public",
+          { contentId: string; locale: "en" | "id" | "de"; publicPath: string },
+          | {
+              _tag: "granted";
+              badges: Array<
+                | "explorer"
+                | "fighter"
+                | "mathematics"
+                | "physics"
+                | "chemistry"
+                | "biology"
+              >;
+              stars: number;
+            }
+          | { _tag: "duplicate" }
+          | { _tag: "capped" }
+          | { _tag: "unread" }
+        >;
         recordContentView: FunctionReference<
           "mutation",
           "public",
@@ -10370,6 +10645,138 @@ export declare const api: {
       >;
     };
   };
+  island: {
+    mutations: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          operations: Array<
+            | {
+                _tag: "place";
+                at: { x: number; y: number; z: number };
+                item:
+                  | "house"
+                  | "tree"
+                  | "pond"
+                  | "grass"
+                  | "soil"
+                  | "stone"
+                  | "sand"
+                  | "planks"
+                  | "brick"
+                  | "glass"
+                  | "tile"
+                  | "slate"
+                  | "flowers"
+                  | "bush"
+                  | "rock"
+                  | "lamp";
+                rotation: number;
+                stage: number;
+              }
+            | {
+                _tag: "move";
+                from: { x: number; y: number; z: number };
+                rotation: number;
+                to: { x: number; y: number; z: number };
+              }
+            | { _tag: "remove"; at: { x: number; y: number; z: number } }
+            | { _tag: "upgrade"; at: { x: number; y: number; z: number } }
+            | { _tag: "downgrade"; at: { x: number; y: number; z: number } }
+          >;
+          version: number;
+        },
+        { version: number }
+      >;
+      harvest: FunctionReference<
+        "mutation",
+        "public",
+        { at: { x: number; y: number; z: number }; version: number },
+        { version: number }
+      >;
+      keepSnapshot: FunctionReference<
+        "mutation",
+        "public",
+        { fileId: Id<"bucketFiles"> },
+        null
+      >;
+      open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
+      reserveSnapshot: FunctionReference<
+        "mutation",
+        "public",
+        { byteSize: number },
+        { address: string; fileId: Id<"bucketFiles"> }
+      >;
+      share: FunctionReference<
+        "mutation",
+        "public",
+        { visibility: "private" | "link" | "public" },
+        null
+      >;
+      water: FunctionReference<
+        "mutation",
+        "public",
+        { version: number },
+        { version: number }
+      >;
+    };
+    queries: {
+      own: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          badges: Array<{
+            at: number;
+            badge:
+              | "explorer"
+              | "fighter"
+              | "mathematics"
+              | "physics"
+              | "chemistry"
+              | "biology";
+          }>;
+          layout: ArrayBuffer;
+          learned?: string;
+          level: number;
+          lifetime: number;
+          materials: { petals: number; wood: number };
+          size: number;
+          stars: number;
+          timeZone: string;
+          version: number;
+          visibility: "private" | "link" | "public";
+          watered?: string;
+        } | null
+      >;
+      visit: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          badges: Array<{
+            at: number;
+            badge:
+              | "explorer"
+              | "fighter"
+              | "mathematics"
+              | "physics"
+              | "chemistry"
+              | "biology";
+          }>;
+          layout: ArrayBuffer;
+          level: number;
+          mascot: string;
+          name: string;
+          size: number;
+          snapshot?: string;
+          timeZone: string;
+          username: string;
+        } | null
+      >;
+    };
+  };
   journal: {
     audit: {
       actors: FunctionReference<
@@ -14327,7 +14734,7 @@ export declare const api: {
             destinationSectionKey?: string;
             entrySectionKey?: string;
             examKey: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             setKey: string;
             trackKey: string;
           },
@@ -14384,7 +14791,7 @@ export declare const api: {
             countryKey: string;
             destinationSectionKey?: string;
             examKey: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             now: number;
             setKey: string;
             trackKey: string;
@@ -14402,7 +14809,7 @@ export declare const api: {
                   countryKey: string;
                   examKey: string;
                   kind: "current";
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   sectionKey: string;
                   setKey: string;
                   trackKey: string;
@@ -14410,7 +14817,7 @@ export declare const api: {
               | {
                   attemptId: string;
                   kind: "retained";
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   publicPath: string;
                 };
           },
@@ -14527,6 +14934,13 @@ export declare const api: {
                 exam: {
                   description?: string;
                   examKey: string;
+                  groupAxis: "grade" | "institution" | "year";
+                  publicPath: string;
+                  title: string;
+                };
+                group: {
+                  description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                 };
@@ -14554,10 +14968,10 @@ export declare const api: {
                 };
                 track: {
                   description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                   trackKey: string;
-                  trackKind: "institution" | "subject" | "year";
                 };
               };
             }
@@ -14571,14 +14985,14 @@ export declare const api: {
                   countryKey: string;
                   examKey: string;
                   kind: "current";
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   setKey: string;
                   trackKey: string;
                 }
               | {
                   attemptId: string;
                   kind: "retained";
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   publicPath: string;
                 };
           },
@@ -14702,6 +15116,13 @@ export declare const api: {
                 exam: {
                   description?: string;
                   examKey: string;
+                  groupAxis: "grade" | "institution" | "year";
+                  publicPath: string;
+                  title: string;
+                };
+                group: {
+                  description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                 };
@@ -14729,10 +15150,10 @@ export declare const api: {
                 };
                 track: {
                   description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                   trackKey: string;
-                  trackKind: "institution" | "subject" | "year";
                 };
               };
               restartTarget: {
@@ -14862,6 +15283,13 @@ export declare const api: {
                 exam: {
                   description?: string;
                   examKey: string;
+                  groupAxis: "grade" | "institution" | "year";
+                  publicPath: string;
+                  title: string;
+                };
+                group: {
+                  description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                 };
@@ -14889,10 +15317,10 @@ export declare const api: {
                 };
                 track: {
                   description?: string;
+                  groupKey: string;
                   publicPath: string;
                   title: string;
                   trackKey: string;
-                  trackKind: "institution" | "subject" | "year";
                 };
               };
               restartTarget: {
@@ -14914,7 +15342,7 @@ export declare const api: {
         getCountryPage: FunctionReference<
           "query",
           "public",
-          { appLocale: "en" | "id" | "de"; publicPath: string },
+          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
           null | {
             country: {
               countryCode: string;
@@ -14925,7 +15353,9 @@ export declare const api: {
             };
             exams: Array<{
               description?: string;
+              entryPath: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
               publicPath: string;
               title: string;
             }>;
@@ -14935,7 +15365,7 @@ export declare const api: {
         getExamPage: FunctionReference<
           "query",
           "public",
-          { appLocale: "en" | "id" | "de"; publicPath: string },
+          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
           null | {
             country: {
               countryCode: string;
@@ -14947,28 +15377,68 @@ export declare const api: {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
               publicPath: string;
               title: string;
             };
-            tracks: Array<{
+            groups: Array<{
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
-              trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             }>;
           }
         >;
         getFeaturedQuestion: FunctionReference<
           "query",
           "public",
-          { appLocale: "en" | "id" | "de" },
+          { appLocale: "en" | "id" | "de" | "ms" },
           { body: string; versionHash: string }
+        >;
+        getGroupPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
+          null | {
+            country: {
+              countryCode: string;
+              countryKey: string;
+              description?: string;
+              publicPath: string;
+              title: string;
+            };
+            exam: {
+              description?: string;
+              examKey: string;
+              groupAxis: "grade" | "institution" | "year";
+              publicPath: string;
+              title: string;
+            };
+            group: {
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            };
+            groups: Array<{
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            }>;
+            tracks: Array<{
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+              trackKey: string;
+            }>;
+          }
         >;
         getHubPage: FunctionReference<
           "query",
           "public",
-          { appLocale: "en" | "id" | "de" },
+          { appLocale: "en" | "id" | "de" | "ms" },
           {
             countries: Array<{
               countryCode: string;
@@ -14985,9 +15455,9 @@ export declare const api: {
           "query",
           "public",
           {
-            currentAppLocale: "en" | "id" | "de";
+            currentAppLocale: "en" | "id" | "de" | "ms";
             publicPath: string;
-            targetAppLocale: "en" | "id" | "de";
+            targetAppLocale: "en" | "id" | "de" | "ms";
           },
           string | null
         >;
@@ -14995,14 +15465,14 @@ export declare const api: {
           "query",
           "public",
           {
-            appLocale: "en" | "id" | "de";
-            kind: "country" | "exam" | "track" | "set" | "section";
+            appLocale: "en" | "id" | "de" | "ms";
+            kind: "country" | "exam" | "group" | "track" | "set" | "section";
             publicPath: string;
           },
           {
             route: null | {
               alternates: Array<{
-                appLocale: "en" | "id" | "de";
+                appLocale: "en" | "id" | "de" | "ms";
                 publicPath: string;
               }>;
               description?: string;
@@ -15018,11 +15488,18 @@ export declare const api: {
         getSectionPage: FunctionReference<
           "query",
           "public",
-          { appLocale: "en" | "id" | "de"; publicPath: string },
+          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
           null | {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
+              publicPath: string;
+              title: string;
+            };
+            group: {
+              description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
             };
@@ -15050,17 +15527,17 @@ export declare const api: {
             };
             track: {
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
               trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
         getSetPage: FunctionReference<
           "query",
           "public",
-          { appLocale: "en" | "id" | "de"; publicPath: string },
+          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
           null | {
             entrySection: {
               description?: string;
@@ -15074,6 +15551,13 @@ export declare const api: {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
+              publicPath: string;
+              title: string;
+            };
+            group: {
+              description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
             };
@@ -15101,17 +15585,17 @@ export declare const api: {
             };
             track: {
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
               trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
         getTrackPage: FunctionReference<
           "query",
           "public",
-          { appLocale: "en" | "id" | "de"; publicPath: string },
+          { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
           null | {
             country: {
               countryCode: string;
@@ -15123,15 +15607,28 @@ export declare const api: {
             exam: {
               description?: string;
               examKey: string;
+              groupAxis: "grade" | "institution" | "year";
               publicPath: string;
               title: string;
             };
+            group: {
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            };
+            groups: Array<{
+              description?: string;
+              groupKey: string;
+              publicPath: string;
+              title: string;
+            }>;
             track: {
               description?: string;
+              groupKey: string;
               publicPath: string;
               title: string;
               trackKey: string;
-              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
@@ -15143,7 +15640,7 @@ export declare const api: {
           {
             countryKey: string;
             examKey: string;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             paginationOpts: {
               cursor: string | null;
               endCursor?: string | null;
@@ -15186,7 +15683,7 @@ export declare const api: {
           "public",
           {
             attemptId: Id<"tryoutAttempts">;
-            locale: "en" | "id" | "de";
+            locale: "en" | "id" | "de" | "ms";
             sectionKey: string;
           },
           null | {
@@ -15278,7 +15775,10 @@ export declare const api: {
         getSetAttemptState: FunctionReference<
           "query",
           "public",
-          { attemptId: Id<"tryoutAttempts">; locale: "en" | "id" | "de" },
+          {
+            attemptId: Id<"tryoutAttempts">;
+            locale: "en" | "id" | "de" | "ms";
+          },
           null | {
             attempt: {
               activeSectionKey: string | null;
@@ -15831,7 +16331,7 @@ export declare const internal: {
                   attempt_number: number;
                   country_key: string;
                   exam_key: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   score_status: "provisional" | "official";
                   set_key: string;
                   track_key: string;
@@ -15843,7 +16343,7 @@ export declare const internal: {
                   attempt_number: number;
                   country_key: string;
                   exam_key: string;
-                  locale: "en" | "id" | "de";
+                  locale: "en" | "id" | "de" | "ms";
                   score_status: "provisional" | "official";
                   set_key: string;
                   total_questions: number;
@@ -16220,7 +16720,7 @@ export declare const internal: {
                     attempt_number: number;
                     country_key: string;
                     exam_key: string;
-                    locale: "en" | "id" | "de";
+                    locale: "en" | "id" | "de" | "ms";
                     score_status: "provisional" | "official";
                     set_key: string;
                     track_key: string;
@@ -16232,7 +16732,7 @@ export declare const internal: {
                     attempt_number: number;
                     country_key: string;
                     exam_key: string;
-                    locale: "en" | "id" | "de";
+                    locale: "en" | "id" | "de" | "ms";
                     score_status: "provisional" | "official";
                     set_key: string;
                     total_questions: number;
@@ -16509,7 +17009,13 @@ export declare const internal: {
         history: FunctionReference<
           "mutation",
           "internal",
-          { classSlug: string; count: number; read: number; slug: string },
+          {
+            author?: string;
+            classSlug: string;
+            count: number;
+            read: number;
+            slug: string;
+          },
           {
             channelId: Id<"classroomChannels">;
             classId: Id<"classes">;
@@ -16655,6 +17161,23 @@ export declare const internal: {
           person: Id<"tenantPeople">;
         }
       >;
+    };
+  };
+  comments: {
+    files: {
+      commit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          fileId: Id<"bucketFiles">;
+          height: number;
+          thumbnailId: Id<"bucketFiles"> | null;
+          userId: Id<"users">;
+          width: number;
+        },
+        Id<"commentUploads">
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, { deleted: number }>;
     };
   };
   connectors: {
@@ -16855,7 +17378,7 @@ export declare const internal: {
             kind: "activated";
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;
@@ -16897,7 +17420,7 @@ export declare const internal: {
             kind: "completed";
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;
@@ -16944,7 +17467,7 @@ export declare const internal: {
             kind: "activated";
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;
@@ -16986,7 +17509,7 @@ export declare const internal: {
             kind: "completed";
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;
@@ -17043,7 +17566,7 @@ export declare const internal: {
         readAgentTaxonomy: FunctionReference<
           "query",
           "internal",
-          { appLocale: "en" | "id" | "de" },
+          { appLocale: "en" | "id" | "de" | "ms" },
           { categories: Array<string>; managed: boolean }
         >;
       };
@@ -17149,7 +17672,7 @@ export declare const internal: {
           family: "article" | "material" | "page";
           heads: Array<{
             artifactHash: string;
-            artifactLocale: "en" | "id" | "de";
+            artifactLocale: "en" | "id" | "de" | "ms";
             compilerConfigHash: string;
             contentKey: string;
             delivery: "public" | "authenticated" | "entitled";
@@ -17246,7 +17769,7 @@ export declare const internal: {
             phase: "completed";
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;
@@ -17306,7 +17829,7 @@ export declare const internal: {
             phase: "completed";
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;
@@ -17390,7 +17913,7 @@ export declare const internal: {
           "internal",
           {
             cursor: {
-              artifactLocale: "en" | "id" | "de";
+              artifactLocale: "en" | "id" | "de" | "ms";
               contentKey: string;
             } | null;
             releaseId: string;
@@ -17399,7 +17922,7 @@ export declare const internal: {
             done: boolean;
             heads: Array<{
               artifactHash: string;
-              artifactLocale: "en" | "id" | "de";
+              artifactLocale: "en" | "id" | "de" | "ms";
               compilerConfigHash: string;
               contentKey: string;
               delivery: "public" | "authenticated" | "entitled";
@@ -17423,7 +17946,7 @@ export declare const internal: {
               sourcePath: string;
             }>;
             nextCursor: {
-              artifactLocale: "en" | "id" | "de";
+              artifactLocale: "en" | "id" | "de" | "ms";
               contentKey: string;
             } | null;
           }
@@ -17450,7 +17973,7 @@ export declare const internal: {
               phase: "completed";
               receipt: {
                 activatedHeads: number;
-                activeAppLocales: Array<"en" | "id" | "de">;
+                activeAppLocales: Array<"en" | "id" | "de" | "ms">;
                 deletedHeads: number;
                 manifestHash: string;
                 projectionDigest: string;
@@ -17637,7 +18160,7 @@ export declare const internal: {
             value: {
               receipt: {
                 activatedHeads: number;
-                activeAppLocales: Array<"en" | "id" | "de">;
+                activeAppLocales: Array<"en" | "id" | "de" | "ms">;
                 deletedHeads: number;
                 manifestHash: string;
                 projectionDigest: string;
@@ -17717,7 +18240,7 @@ export declare const internal: {
               markdown: {
                 activeManifestHash: string | null;
                 activeReleaseId: string | null;
-                appLocale: "en" | "id" | "de";
+                appLocale: "en" | "id" | "de" | "ms";
                 managed: boolean;
                 preBismillah: {
                   arabic: string;
@@ -18049,7 +18572,7 @@ export declare const internal: {
           read: FunctionReference<
             "query",
             "internal",
-            { appLocale: "en" | "id" | "de"; publicPath: string },
+            { appLocale: "en" | "id" | "de" | "ms"; publicPath: string },
             null | {
               activeManifestHash: string;
               activeReleaseId: string;
@@ -18067,7 +18590,7 @@ export declare const internal: {
             "internal",
             {
               requests: Array<{
-                appLocale: "en" | "id" | "de";
+                appLocale: "en" | "id" | "de" | "ms";
                 publicPath: string;
               }>;
             },
@@ -18157,7 +18680,7 @@ export declare const internal: {
           active: null | {
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;
@@ -18229,7 +18752,7 @@ export declare const internal: {
             phase: "completed";
             receipt: {
               activatedHeads: number;
-              activeAppLocales: Array<"en" | "id" | "de">;
+              activeAppLocales: Array<"en" | "id" | "de" | "ms">;
               deletedHeads: number;
               manifestHash: string;
               projectionDigest: string;

@@ -1,10 +1,8 @@
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
-import { PublicContentRuntimeResponseSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   decodePublicRuntimeRow,
-  encodePublicDelivery,
   PublicRuntimeReadError,
 } from "@repo/backend/content/publication/exchange";
 import {
@@ -17,9 +15,6 @@ import { Effect, Schema } from "effect";
 const decodeArtifact = Schema.decodeUnknownSync(
   Schema.fromJsonString(SignedContentArtifactSchema),
   { onExcessProperty: "error" }
-);
-const decodeRuntime = Schema.decodeUnknownSync(
-  Schema.fromJsonString(PublicContentRuntimeResponseSchema)
 );
 
 const readFixture = Effect.fn("test.publicationExchange")(function* () {
@@ -39,55 +34,6 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("stored public exchange", () => {
-  it.effect(
-    "binds one body to its exact shell and preserves a withdrawal",
-    () =>
-      Effect.gen(function* () {
-        const row = yield* readFixture();
-        const response = yield* decodePublicRuntimeRow(row);
-        assert(response);
-        const runtime = {
-          projectionJson: row.projectionJson,
-          response,
-        };
-        const source = yield* encodePublicDelivery(runtime, row);
-        expect(decodeRuntime(source ?? "")).toMatchObject({
-          activeReleaseId: row.activeReleaseId,
-          projectionHash: row.projectionHash,
-        });
-        expect(
-          yield* encodePublicDelivery(null, {
-            activeReleaseId: row.activeReleaseId,
-            projectionJson: null,
-          })
-        ).toBeNull();
-        for (const model of [
-          {
-            activeReleaseId: "different-release",
-            projectionJson: row.projectionJson,
-          },
-          {
-            activeReleaseId: row.activeReleaseId,
-            projectionJson: "different-projection",
-          },
-          {
-            activeReleaseId: row.activeReleaseId,
-            projectionJson: null,
-          },
-        ]) {
-          expect(
-            yield* encodePublicDelivery(runtime, model).pipe(Effect.flip)
-          ).toMatchObject({
-            code: "CONTENT_RELEASE_INTEGRITY",
-          });
-        }
-        expect(
-          yield* encodePublicDelivery(null, row).pipe(Effect.flip)
-        ).toMatchObject({
-          code: "CONTENT_RELEASE_INTEGRITY",
-        });
-      })
-  );
   it.effect(
     "decodes exact signed body and provenance, preserving absence",
     () =>

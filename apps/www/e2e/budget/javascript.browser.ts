@@ -6,42 +6,46 @@ import { MEMORY_PATH } from "@/e2e/support/memory";
 import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
 
-// Measured before the Start migration at 1,048,575 encoded / 3,092,340 decoded
-// bytes. The Start build is not measured yet. Limits keep the ~6% margin.
-const HOMEPAGE_MAX_ENCODED_BYTES = 1_112_000;
-const HOMEPAGE_MAX_DECODED_BYTES = 3_278_000;
+// Each graph counts every script a route loads until the JavaScript stops
+// arriving: its first paint, then the pages `warmLinks` warms once the page
+// settles (up to six links on screen, a page's tabs first), because a reader's
+// phone pays for both. A warm is a preload, so it takes a page's code and data
+// but never the sections under its first screen (ADR 0039 D3). Measured on the
+// Start build of 8 November 2026 (production build, 1440 by 900, three uncached
+// runs, all equal). Each limit keeps the ~6% margin over its measurement.
 
-// The pricing page's no-scroll graph is its own: measured before the Start
-// migration, while its toys still waited for a scroll, at 929,111 encoded /
-// 2,755,522 decoded bytes. Both pages now load their toys once React takes the
-// page over. The Start build is not measured yet.
-// Limits keep the ~6% margin.
-const PRICING_MAX_ENCODED_BYTES = 985_000;
-const PRICING_MAX_DECODED_BYTES = 2_921_000;
+// 897,759 encoded / 2,532,335 decoded: 758,203 at first paint, and the warmed
+// links on screen.
+const HOMEPAGE_MAX_ENCODED_BYTES = 952_000;
+const HOMEPAGE_MAX_DECODED_BYTES = 2_685_000;
 
-// The always-on baseline loads the SDK on every visit: measured before the
-// Start migration at 1,081,541 encoded / 3,189,166 decoded bytes. The Start
-// build is not measured yet. Limits keep the ~6% margin.
-const QURAN_MAX_ENCODED_BYTES = 1_147_000;
-const QURAN_MAX_DECODED_BYTES = 3_381_000;
+// 684,477 encoded / 1,922,081 decoded, its toys loaded once React takes the page
+// over: 659,526 at first paint.
+const PRICING_MAX_ENCODED_BYTES = 726_000;
+const PRICING_MAX_DECODED_BYTES = 2_038_000;
 
-// The sign-in page, with the animal pool that a wide screen loads: measured
-// before the Start migration at 515,493 encoded / 1,546,566 decoded bytes. The
-// Start build is not measured yet. Limits keep the ~6% margin.
-const AUTH_MAX_ENCODED_BYTES = 547_000;
-const AUTH_MAX_DECODED_BYTES = 1_638_000;
+// 833,187 encoded / 2,306,088 decoded: 730,190 at first paint, the always-on
+// analytics baseline included.
+const QURAN_MAX_ENCODED_BYTES = 884_000;
+const QURAN_MAX_DECODED_BYTES = 2_445_000;
 
-// The Memory page, signed in: measured before the Start migration at 954,412
-// encoded / 2,810,521 decoded bytes. The Start build is not measured yet.
-// Limits keep the ~6% margin.
-const MEMORY_MAX_ENCODED_BYTES = 1_012_000;
-const MEMORY_MAX_DECODED_BYTES = 2_980_000;
+// 567,013 encoded / 1,619,294 decoded, all at first paint with the animal pool
+// a wide screen loads; it warms nothing. Since the Start migration every first
+// paint carries the Confect client's function specs, the School member
+// middleware's among them, so the limit rose from the 547,000 measured before.
+const AUTH_MAX_ENCODED_BYTES = 602_000;
+const AUTH_MAX_DECODED_BYTES = 1_717_000;
+
+// The Memory page, signed in, warms its settings tabs: 1,049,988 encoded /
+// 2,944,185 decoded, measured on the Start build of 8 November 2026.
+const MEMORY_MAX_ENCODED_BYTES = 1_113_000;
+const MEMORY_MAX_DECODED_BYTES = 3_121_000;
 
 // A lesson, whose first visual card is near enough to the first screen to load
-// its 3D scene: measured on production on 30 October at 1,174,066 encoded /
-// 3,653,909 decoded bytes, 373 scripts. Limits keep the ~6% margin.
-const LESSON_MAX_ENCODED_BYTES = 1_245_000;
-const LESSON_MAX_DECODED_BYTES = 3_874_000;
+// its 3D scene: 1,127,084 encoded / 3,343,730 decoded, 1,017,722 before its
+// warmed neighbours.
+const LESSON_MAX_ENCODED_BYTES = 1_195_000;
+const LESSON_MAX_DECODED_BYTES = 3_545_000;
 
 const routeBudgets = [
   {

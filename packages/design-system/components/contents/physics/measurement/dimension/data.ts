@@ -75,8 +75,6 @@ export function getDimensionSceneColors(resolvedTheme: string | undefined) {
     blockDetail: isDarkTheme ? getColor("ZINC") : getColor("STONE"),
     edge: PLOT_COLORS.orange,
     face: PLOT_COLORS.teal,
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
-    skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     volume: PLOT_COLORS.violet,
   };

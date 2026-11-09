@@ -1,6 +1,6 @@
 import {
+  ActiveAppLocaleSchema,
   type AppLocale,
-  AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
@@ -19,6 +19,9 @@ const ProjectedHtmlRouteInputSchema = Schema.Struct({
   pathname: Schema.String,
 });
 type ProjectedHtmlRouteInput = typeof ProjectedHtmlRouteInputSchema.Type;
+
+/** A try-out set's path below its namespace: its country, exam, group, track and set. Its sections add one. */
+const TRYOUT_SET_SEGMENTS = 5;
 
 /** Resolves one material HTML route against a single active release snapshot. */
 const readProjectedMaterialRouteRejection = Effect.fn(
@@ -70,7 +73,7 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     return null;
   }
   const publicPath = Arr.join([namespace, ...pathSegments], "/");
-  const appLocale = AppLocaleSchema.make(locale);
+  const appLocale = ActiveAppLocaleSchema.make(locale);
   if (
     yield* matchesPreviewRoute({
       appLocale,
@@ -95,7 +98,8 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
   if (
     hasAttemptCapability &&
-    (pathSegments.length === 4 || pathSegments.length === 5)
+    (pathSegments.length === TRYOUT_SET_SEGMENTS ||
+      pathSegments.length === TRYOUT_SET_SEGMENTS + 1)
   ) {
     return null;
   }

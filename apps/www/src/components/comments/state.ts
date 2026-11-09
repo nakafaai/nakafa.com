@@ -16,10 +16,37 @@ export function threadOf(comment: Pick<CommentRow, "_id" | "threadId">) {
 /** The author of a comment, as the content page reads it. */
 export type CommentAuthor = NonNullable<CommentRow["user"]>;
 
+/**
+ * The fields of a comment that a row shows and acts on: a top-level comment, a reply, and a profile's
+ * comment all carry them.
+ */
+export type RowComment = Pick<
+  CommentRow,
+  | "_creationTime"
+  | "_id"
+  | "editedAt"
+  | "liked"
+  | "likeCount"
+  | "photos"
+  | "replyCount"
+  | "slug"
+  | "text"
+  | "threadId"
+  | "userId"
+>;
+
 /** The fields of a comment that the optimistic changes read, in every list that holds it. */
 export type ListedComment = Pick<
   CommentRow,
-  "_id" | "liked" | "likeCount" | "parentId" | "replyCount" | "threadId"
+  | "_id"
+  | "editedAt"
+  | "liked"
+  | "likeCount"
+  | "parentId"
+  | "replyCount"
+  | "slug"
+  | "text"
+  | "threadId"
 >;
 
 /** The comment as its viewer has liked it: one more like, and liked. A liked comment is returned as it is. */
@@ -106,8 +133,11 @@ export function draftComment(
   author: CommentAuthor,
   /** The comment the learner replies to, or none for a top-level comment. */
   parent: CommentRow | null,
-  /** The id the server never sees, the moment, the slug and the text of the comment. */
-  comment: Pick<CommentRow, "_creationTime" | "_id" | "slug" | "text">
+  /** The id the server never sees, the moment, the slug, the text and the photos of the comment. */
+  comment: Pick<
+    CommentRow,
+    "_creationTime" | "_id" | "photos" | "slug" | "text"
+  >
 ): CommentRow {
   const placement =
     parent === null

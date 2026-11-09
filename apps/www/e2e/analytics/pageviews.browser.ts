@@ -13,7 +13,10 @@ import {
 } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  readinessTimeoutMilliseconds,
+  servedTimeoutMilliseconds,
+} from "@/e2e/support/timeout";
 
 const CapturedIngestSchema = Schema.Struct({
   event: Schema.String,
@@ -90,15 +93,20 @@ function pageviews(captured: MutableList.MutableList<CapturedIngest>) {
 
 const waitForPageviews = (
   captured: MutableList.MutableList<CapturedIngest>,
-  count: number
+  count: number,
+  timeout = readinessTimeoutMilliseconds
 ) =>
   Effect.promise(() =>
-    expect
-      .poll(() => pageviewCount(captured), {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(count)
+    expect.poll(() => pageviewCount(captured), { timeout }).toBe(count)
   );
+
+/**
+ * Waits for the first pageview of a page nobody touches. The SDK starts once the page is read, after a gesture or
+ * ten seconds untouched (ADR 0039 D4), so the first view comes that long after the page settles.
+ */
+const waitForFirstPageview = (
+  captured: MutableList.MutableList<CapturedIngest>
+) => waitForPageviews(captured, 1, servedTimeoutMilliseconds);
 
 test("baseline counts one cookieless pageview without consent", async ({
   baseURL,
@@ -122,7 +130,7 @@ test("baseline counts one cookieless pageview without consent", async ({
                 })
               );
               yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-              yield* waitForPageviews(captured, 1);
+              yield* waitForFirstPageview(captured);
 
               const [view] = pageviews(captured);
               expect(view?.properties.$cookieless_mode).toBe(true);
@@ -166,7 +174,7 @@ test("granted consent upgrades to attributed pageviews", async ({
                 page.goto("/en", { waitUntil: "domcontentloaded" })
               );
               yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-              yield* waitForPageviews(captured, 1);
+              yield* waitForFirstPageview(captured);
 
               yield* Effect.promise(() =>
                 page.evaluate(() => {
@@ -206,7 +214,7 @@ test("grant keeps exact counts and attributes the next view", async ({
                 page.goto("/en", { waitUntil: "domcontentloaded" })
               );
               yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-              yield* waitForPageviews(captured, 1);
+              yield* waitForFirstPageview(captured);
 
               yield* openConsentPreferences(page, "dialog-content");
               yield* Effect.promise(() =>

@@ -28,16 +28,16 @@ const routes = vi.hoisted(() => ({
     fullPath: "/$locale/user/$username",
     options: {},
   },
-  "/$locale/try-out/$country/$exam": {
-    fullPath: "/$locale/try-out/$country/$exam",
+  "/$locale/try-out/$country/$exam/$group": {
+    fullPath: "/$locale/try-out/$country/$exam/$group",
     options: {},
   },
-  "/$locale/try-out/$country/$exam/$track": {
-    fullPath: "/$locale/try-out/$country/$exam/$track",
+  "/$locale/try-out/$country/$exam/$group/$track": {
+    fullPath: "/$locale/try-out/$country/$exam/$group/$track",
     options: {},
   },
-  "/$locale/try-out/$country/$exam/$track/$set/": {
-    fullPath: "/$locale/try-out/$country/$exam/$track/$set/",
+  "/$locale/try-out/$country/$exam/$group/$track/$set/": {
+    fullPath: "/$locale/try-out/$country/$exam/$group/$track/$set/",
     options: {},
   },
   "/$locale/_main/_app/_account": {
@@ -78,12 +78,12 @@ describe("rendered route templates", () => {
     expect(RENDERED_ROUTE_TEMPLATES).toContain("/$locale/chat/$id");
     expect(RENDERED_ROUTE_TEMPLATES).toContain("/$locale/search");
     expect(RENDERED_ROUTE_TEMPLATES).not.toContain(
-      "/$locale/try-out/$country/$exam/$track/$set/$section"
+      "/$locale/try-out/$country/$exam/$group/$track/$set/$section"
     );
     expect(RENDERED_ROUTE_TEMPLATES).not.toContain("/$locale/$");
     expect(RENDERED_ROUTE_TEMPLATES).not.toContain("/$locale/quran/$surah");
     expect(RENDERED_ROUTE_TEMPLATES).not.toContain(
-      "/$locale/try-out/$country/$exam"
+      "/$locale/try-out/$country/$exam/$group"
     );
   });
 

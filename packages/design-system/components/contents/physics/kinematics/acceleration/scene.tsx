@@ -105,6 +105,7 @@ function TimeGates({ motion }: { motion: AccelerationMotionState }) {
           <meshBasicMaterial
             color={motion.scenario.color}
             opacity={0.8}
+            toneMapped={false}
             transparent
           />
         </mesh>

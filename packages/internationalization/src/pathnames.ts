@@ -1,15 +1,26 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Record as Rec } from "effect";
 
 /**
  * The one route map. Each canonical segment is the name the router uses, and it
- * holds the spelling of that segment in every locale. `satisfies` makes a new
- * locale fail the build until every segment has its spelling.
+ * holds the spelling of that segment in every declared locale. `satisfies`
+ * makes a new locale fail the build until every segment has its spelling.
  */
 const LOCALIZED_SEGMENTS = {
-  curricula: { de: "lehrplaene", en: "curriculum", id: "kurikulum" },
-  materials: { de: "faecher", en: "subjects", id: "materi" },
-} as const satisfies Record<string, Record<Locale, string>>;
+  curricula: {
+    de: "lehrplaene",
+    en: "curriculum",
+    id: "kurikulum",
+    ms: "kurikulum",
+  },
+  materials: {
+    de: "faecher",
+    en: "subjects",
+    id: "materi",
+    ms: "mata-pelajaran",
+  },
+} as const satisfies Record<string, Record<AppLocaleCode, string>>;
 
 type CanonicalSegment = keyof typeof LOCALIZED_SEGMENTS;
 

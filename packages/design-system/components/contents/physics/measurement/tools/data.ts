@@ -1,5 +1,4 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { getColor } from "@repo/design-system/lib/color";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -151,8 +150,6 @@ export function getSceneColors(resolvedTheme: string | undefined) {
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
-    groundLight: isDarkTheme ? PLOT_COLORS.slate : getColor("STONE"),
-    skyLight: ORIGIN_COLOR.LIGHT,
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

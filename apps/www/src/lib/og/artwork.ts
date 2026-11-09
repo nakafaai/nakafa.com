@@ -9,11 +9,18 @@ import { getOgUrl } from "@/lib/seo/social";
 const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
 const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
 
-/** Reviewed public artwork grouped by stable, language-neutral identity. */
+/**
+ * Reviewed public artwork grouped by stable, language-neutral identity, each with
+ * the locales it has a file for. A design whose words read the same in every
+ * language, such as the School's or the Quran's, has one English file, which
+ * every locale falls back to.
+ */
 const artworkSources = {
-  "app/ask-nakafa": ALL_ARTWORK_LOCALES,
+  "app/ask-nina": ALL_ARTWORK_LOCALES,
   "app/pricing": ALL_ARTWORK_LOCALES,
+  "app/school": ENGLISH_ARTWORK,
   "curriculum/cambridge-international": ENGLISH_ARTWORK,
+  "curriculum/index": ALL_ARTWORK_LOCALES,
   "curriculum/merdeka": ALL_ARTWORK_LOCALES,
   "curriculum/singapore-moe": ENGLISH_ARTWORK,
   "curriculum/united-states": ENGLISH_ARTWORK,
@@ -21,37 +28,27 @@ const artworkSources = {
   "grade/10": ALL_ARTWORK_LOCALES,
   "grade/11": ALL_ARTWORK_LOCALES,
   "grade/12": ALL_ARTWORK_LOCALES,
-  "grade/bachelor": ["en", "id"],
   "grade/high-school": ["en", "id"],
   "grade/secondary": ["en", "de"],
   "grade/upper-secondary": ["en", "de"],
-  "quran/index": ALL_ARTWORK_LOCALES,
-  "subject/ai-ds": ALL_ARTWORK_LOCALES,
-  "subject/arabic-language": ENGLISH_ARTWORK,
+  "quran/index": ENGLISH_ARTWORK,
   "subject/biology": ALL_ARTWORK_LOCALES,
   "subject/chemistry": ALL_ARTWORK_LOCALES,
-  "subject/computer-science": ALL_ARTWORK_LOCALES,
-  "subject/economics": ALL_ARTWORK_LOCALES,
-  "subject/english-language": ALL_ARTWORK_LOCALES,
-  "subject/general-reasoning": ALL_ARTWORK_LOCALES,
-  "subject/geography": ALL_ARTWORK_LOCALES,
-  "subject/geospatial": ALL_ARTWORK_LOCALES,
-  "subject/history": ALL_ARTWORK_LOCALES,
-  "subject/indonesian-language": ALL_ARTWORK_LOCALES,
-  "subject/informatics": ALL_ARTWORK_LOCALES,
-  "subject/mathematical-reasoning": ALL_ARTWORK_LOCALES,
   "subject/mathematics": ALL_ARTWORK_LOCALES,
   "subject/physics": ALL_ARTWORK_LOCALES,
-  "subject/quantitative-knowledge": ALL_ARTWORK_LOCALES,
   "subject/science": ALL_ARTWORK_LOCALES,
-  "subject/sociology": ALL_ARTWORK_LOCALES,
-  "subject/technology-electro-medical": ALL_ARTWORK_LOCALES,
   "tryout/germany/index": ENGLISH_ARTWORK,
   "tryout/index": ["en", "de"],
   "tryout/indonesia/2027": ENGLISH_ARTWORK,
   "tryout/indonesia/index": ENGLISH_ARTWORK,
   "tryout/indonesia/snbt": ENGLISH_ARTWORK,
+  "tryout/indonesia/snbt/general-reasoning": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/snbt/mathematical-reasoning": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/snbt/quantitative-knowledge": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/tka": ENGLISH_ARTWORK,
+  "tryout/indonesia/tka/compulsory-mathematics": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/tka/english-language": ALL_ARTWORK_LOCALES,
+  "tryout/indonesia/tka/indonesian-language": ALL_ARTWORK_LOCALES,
 } as const satisfies Readonly<Record<string, readonly ["en", ...Locale[]]>>;
 
 export type ArtworkIdentity = keyof typeof artworkSources;

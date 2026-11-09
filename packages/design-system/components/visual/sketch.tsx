@@ -1,0 +1,135 @@
+import { Intersection } from "@repo/design-system/components/ui/intersection";
+import {
+  useStartVisualScene,
+  useVisualScene,
+} from "@repo/design-system/components/visual/card";
+import { loadP5, type SketchLoadError } from "@repo/design-system/lib/sketch";
+import { Effect, Exit } from "effect";
+import type p5 from "p5";
+import {
+  startTransition,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { useTranslations } from "use-intl";
+
+/**
+ * A p5 sketch in instance mode: it sets `setup` and `draw` on the instance it
+ * is given, and reads the card's latest state through `read` on every frame.
+ */
+type P5Program<State> = (sketch: p5, read: () => State) => void;
+
+/**
+ * Runs one p5 sketch inside a visual card's body. p5's modular core loads
+ * with `import()` only once the card nears the screen, so no page carries it
+ * in its first JavaScript. A sketch is an animation, so the card starts playing
+ * it once it first draws; the card's play button pauses and resumes it, a reset
+ * of the view starts it over, it follows its box's size, and it goes with the
+ * card.
+ */
+export function P5Sketch<State>({
+  label,
+  program,
+  state,
+}: {
+  readonly label: string;
+  readonly program: P5Program<State>;
+  readonly state: State;
+}) {
+  const t = useTranslations("Error");
+  const playing = useVisualScene((card) => card.playing, false);
+  const view = useVisualScene((card) => card.view, 0);
+  const [loaded, setLoaded] = useState<Exit.Exit<typeof p5, SketchLoadError>>();
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const start = useStartVisualScene();
+  const instance = useRef<p5>(undefined);
+  const latest = useRef(state);
+
+  useLayoutEffect(() => {
+    latest.current = state;
+    instance.current?.redraw();
+  }, [state]);
+
+  const load = useEffectEvent(() => {
+    if (loaded && Exit.isSuccess(loaded)) {
+      return;
+    }
+    Effect.runPromiseExit(loadP5()).then((exit) =>
+      startTransition(() => setLoaded(exit))
+    );
+  });
+
+  const keepPlaying = useEffectEvent((sketch: p5) => {
+    if (playing) {
+      sketch.loop();
+    } else {
+      sketch.noLoop();
+    }
+  });
+
+  // A sketch is an animation: once it first draws, the card starts playing it.
+  const startPlaying = useEffectEvent(() => start());
+
+  useEffect(() => {
+    if (!(loaded && Exit.isSuccess(loaded) && node)) {
+      return;
+    }
+    const sketch = new loaded.value(
+      (each) => program(each, () => latest.current),
+      node
+    );
+    instance.current = sketch;
+    keepPlaying(sketch);
+    startPlaying();
+    const resize = new ResizeObserver(([entry]) => {
+      if (entry) {
+        sketch.resizeCanvas(entry.contentRect.width, entry.contentRect.height);
+        sketch.redraw();
+      }
+    });
+    resize.observe(node);
+    return () => {
+      resize.disconnect();
+      sketch.remove();
+      instance.current = undefined;
+    };
+  }, [loaded, node, program]);
+
+  useEffect(() => {
+    const sketch = instance.current;
+    if (!sketch) {
+      return;
+    }
+    if (playing) {
+      sketch.loop();
+    } else {
+      sketch.noLoop();
+    }
+  }, [playing]);
+
+  if (loaded && Exit.isFailure(loaded)) {
+    return (
+      <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 p-4 text-center">
+        <p className="font-medium tracking-tight">{t("title")}</p>
+        <p className="text-muted-foreground max-w-md text-sm">
+          {String(loaded.cause)}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <Intersection
+      aria-label={label}
+      className="relative aspect-square w-full overflow-hidden sm:aspect-video"
+      // A reset of the view mounts a new box, which starts the sketch over.
+      key={view}
+      once
+      onIntersect={load}
+      ref={setNode}
+      role="img"
+    />
+  );
+}
