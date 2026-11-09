@@ -2,10 +2,21 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Option } from "effect";
+import {
+  Array as Arr,
+  DateTime,
+  Effect,
+  FileSystem,
+  Layer,
+  Option,
+  Order,
+} from "effect";
 import { HttpServerRequest, HttpServerResponse } from "effect/http";
 import { TestClock } from "effect/testing";
-import { answerShelfRequest } from "@/lib/content/store/shelf";
+import {
+  answerShelfRequest,
+  keepShelfEntries,
+} from "@/lib/content/store/shelf";
 
 const KEY = "b".repeat(64);
 
@@ -83,5 +94,94 @@ describe("answerShelfRequest", () => {
 
       expect((yield* answer(directory, "/../secret")).status).toBe(400);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+});
+
+/** When the deploy marked its restore. */
+const MARKED_AT = 1_794_000_000_000;
+
+/**
+ * A restored store: the mark and two entries the restore wrote before it, and
+ * the entries this deploy's build touched after it.
+ */
+const restoreShelf = Effect.fn("test.restoreShelf")(function* (
+  touched: readonly string[]
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const directory = yield* fs.makeTempDirectoryScoped();
+  const at = (millis: number) =>
+    DateTime.toDateUtc(DateTime.makeUnsafe(millis));
+  const mark = `${directory}/.restored`;
+  yield* fs.writeFileString(mark, "");
+  yield* fs.utimes(mark, at(MARKED_AT), at(MARKED_AT));
+  for (const key of [KEY, "c".repeat(64)]) {
+    yield* fs.writeFileString(`${directory}/${key}`, "{}");
+    yield* fs.utimes(`${directory}/${key}`, at(0), at(0));
+  }
+  for (const key of touched) {
+    yield* fs.writeFileString(`${directory}/${key}`, "{}");
+    yield* fs.utimes(
+      `${directory}/${key}`,
+      at(MARKED_AT + 1000),
+      at(MARKED_AT + 1000)
+    );
+  }
+  return { directory, mark };
+});
+
+/** The entries left in a store, by name. */
+const entriesOf = Effect.fn("test.entriesOf")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return Arr.sort(yield* fs.readDirectory(directory), Order.String);
+});
+
+describe("keepShelfEntries", () => {
+  it.effect(
+    "keeps every restored entry when the deploy's build read nothing",
+    () =>
+      Effect.gen(function* () {
+        const shelf = yield* restoreShelf([]);
+
+        const kept = yield* keepShelfEntries({ ...shelf, finished: true });
+
+        expect(kept).toEqual({ changed: false, dropped: 0, used: 0 });
+        expect(yield* entriesOf(shelf.directory)).toEqual([
+          ".restored",
+          KEY,
+          "c".repeat(64),
+        ]);
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("drops the entries that a finished build did not use", () =>
+    Effect.gen(function* () {
+      const shelf = yield* restoreShelf(["d".repeat(64)]);
+
+      const kept = yield* keepShelfEntries({ ...shelf, finished: true });
+
+      expect(kept).toEqual({ changed: true, dropped: 2, used: 1 });
+      expect(yield* entriesOf(shelf.directory)).toEqual([
+        ".restored",
+        "d".repeat(64),
+      ]);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "keeps every entry after a failed build, and saves what it added",
+    () =>
+      Effect.gen(function* () {
+        const shelf = yield* restoreShelf(["d".repeat(64)]);
+
+        const kept = yield* keepShelfEntries({ ...shelf, finished: false });
+
+        expect(kept).toEqual({ changed: true, dropped: 0, used: 1 });
+        expect(yield* entriesOf(shelf.directory)).toEqual([
+          ".restored",
+          KEY,
+          "c".repeat(64),
+          "d".repeat(64),
+        ]);
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
   );
 });
