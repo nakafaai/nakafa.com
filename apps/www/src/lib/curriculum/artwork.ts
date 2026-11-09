@@ -1,87 +1,51 @@
-import {
-  type CurriculumRoute,
-  CurriculumRouteSchema,
-} from "@nakafa/aksara-contracts/program/curriculum";
-import {
-  type LearningProgramKey,
-  LearningProgramKeySchema,
-} from "@nakafa/aksara-contracts/program/spec";
-import { Option, Record as Rec, Schema } from "effect";
+import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
+import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
+import { Match, Option } from "effect";
 import type { Locale } from "use-intl";
-import {
-  type ArtworkIdentity,
-  resolveSocialArtwork,
-  resolveStaticArtwork,
-} from "@/lib/og/artwork";
+import { resolveNamedArtwork, resolveSocialArtwork } from "@/lib/og/artwork";
 import { getOgUrl } from "@/lib/seo/social";
 
-/**
- * Reviewed artwork for exact signed program and node identities.
- * Material domains and icons describe shared content, not course identity.
- * Add a node only when its own title matches reviewed public artwork.
- */
-const CURRICULUM_ARTWORK_BY_IDENTITY: Record<string, ArtworkIdentity> = {
-  "cambridge-international": "curriculum/cambridge-international",
-  "cambridge-international/upper-secondary": "grade/upper-secondary",
-  "cambridge-international/mathematics-0580": "subject/mathematics",
-  "cambridge-international/biology-0610": "subject/biology",
-  "cambridge-international/chemistry-0620": "subject/chemistry",
-  "cambridge-international/physics-0625": "subject/physics",
-  merdeka: "curriculum/merdeka",
-  "merdeka/class-9": "grade/9",
-  "merdeka/class-10": "grade/10",
-  "merdeka/class-11": "grade/11",
-  "merdeka/class-12": "grade/12",
-  "merdeka/class-10-biology": "subject/biology",
-  "merdeka/class-10-chemistry": "subject/chemistry",
-  "merdeka/class-10-mathematics": "subject/mathematics",
-  "merdeka/class-10-physics": "subject/physics",
-  "merdeka/class-11-mathematics": "subject/mathematics",
-  "merdeka/class-11-physics": "subject/physics",
-  "merdeka/class-12-mathematics": "subject/mathematics",
-  "singapore-moe": "curriculum/singapore-moe",
-  "singapore-moe/secondary": "grade/secondary",
-  "singapore-moe/secondary-mathematics": "subject/mathematics",
-  "singapore-moe/secondary-science-physics": "subject/physics",
-  "singapore-moe/secondary-science-chemistry": "subject/chemistry",
-  "singapore-moe/secondary-science-biology": "subject/biology",
-  "singapore-moe/secondary-science": "subject/science",
-  "united-states": "curriculum/united-states",
-  "united-states/high-school": "grade/high-school",
-  "united-states/high-school-mathematics": "subject/mathematics",
-  "united-states/high-school-science": "subject/science",
-};
+type CurriculumArtworkRoute = Pick<
+  CurriculumRoute,
+  "level" | "materialDomain" | "nodeKey" | "programKey"
+>;
 
 type CurriculumSocialImageRoute = Pick<CurriculumRoute, "level" | "publicPath">;
 
-const CurriculumCatalogArtworkSourceSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("program"),
-    programKey: LearningProgramKeySchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("route"),
-    programKey: CurriculumRouteSchema.fields.programKey,
-    nodeKey: CurriculumRouteSchema.fields.nodeKey,
-  }),
-]);
+/**
+ * The artwork name of what a curriculum route is: a program root names its
+ * program, a class or a stage its own node, and a subject or a course the
+ * subject its lessons teach. A unit, a topic or a lesson is a part of a
+ * subject, not the subject, so it names none. Every curriculum reaches its
+ * artwork this way, and a design added under one of these names reaches every
+ * route it fits without a list to keep.
+ */
+function artworkIdentityOf(route: CurriculumArtworkRoute) {
+  return Match.value(route.level).pipe(
+    Match.when("track", () => Option.some(`curriculum/${route.programKey}`)),
+    Match.whenOr("class", "stage", () => Option.some(`grade/${route.nodeKey}`)),
+    Match.whenOr("subject", "course", () =>
+      Option.map(
+        Option.fromUndefinedOr(route.materialDomain),
+        (domain) => `subject/${domain}`
+      )
+    ),
+    Match.orElse(() => Option.none<string>())
+  );
+}
 
-type CurriculumCatalogArtworkSource =
-  typeof CurriculumCatalogArtworkSourceSchema.Type;
-
-/** Resolves reviewed card artwork from one signed curriculum identity. */
-export function resolveCurriculumCatalogArtwork(
+/**
+ * Resolves the card artwork of one curriculum route from what it is, or
+ * nothing when no design names it yet, so its card draws its tile.
+ */
+export function resolveCurriculumArtwork(
   locale: Locale,
-  source: CurriculumCatalogArtworkSource
+  route: CurriculumArtworkRoute
 ) {
-  const key =
-    source.kind === "program"
-      ? source.programKey
-      : `${source.programKey}/${source.nodeKey}`;
-
-  return resolveStaticArtwork(
-    Option.getOrUndefined(Rec.get(CURRICULUM_ARTWORK_BY_IDENTITY, key)),
-    locale
+  return Option.getOrUndefined(
+    Option.flatMap(artworkIdentityOf(route), (identity) =>
+      resolveNamedArtwork(identity, locale)
+    )
   );
 }
 
@@ -98,23 +62,22 @@ export function getCurriculumIndexSocialImage(
 }
 
 /**
- * Resolves a Learning program root from stable identity while deeper routes
- * keep their route-specific generated social artwork.
+ * Resolves a Learning program root from its program's artwork while deeper
+ * routes keep their route-specific generated social artwork.
  */
 export function getCurriculumRouteSocialImage(
   locale: Locale,
   programKey: LearningProgramKey,
   route: CurriculumSocialImageRoute
 ) {
+  const generated = getOgUrl(locale, route.publicPath);
+
   if (route.level !== "track") {
-    return getOgUrl(locale, route.publicPath);
+    return generated;
   }
 
-  return resolveSocialArtwork({
-    identity: Option.getOrUndefined(
-      Rec.get(CURRICULUM_ARTWORK_BY_IDENTITY, programKey)
-    ),
-    locale,
-    publicPath: route.publicPath,
-  });
+  return Option.getOrElse(
+    resolveNamedArtwork(`curriculum/${programKey}`, locale),
+    () => generated
+  );
 }

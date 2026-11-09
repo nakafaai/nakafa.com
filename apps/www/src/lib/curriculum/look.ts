@@ -59,10 +59,13 @@ function readCurriculumVisualSource(
  * subject takes another icon of the family of that subject, so two mathematics
  * routes of one grid never look alike.
  *
- * A grid whose cards may draw reviewed artwork names that artwork with
- * `readArtwork`. A route that has some comes back as its artwork source, in its
- * place, and takes no icon, no hue, and no turn of its subject from the other
- * routes, so the tiles of the grid look as they would without it.
+ * A grid whose cards may draw artwork names that artwork with `readArtwork`.
+ * A route of a stage or a course that has some comes back as its artwork
+ * source, in its place. The artwork of a subject is that subject's own look,
+ * so only the first route of the subject in the grid draws it, and a later
+ * route of the same subject, such as Additional Mathematics after Mathematics,
+ * takes a tile of the family of that subject, so no two cards of a grid show
+ * one picture.
  *
  * The families hold many icons that a card never needs, so this stays on the
  * server and hands each card only the icon it took.
@@ -88,31 +91,31 @@ export function getCurriculumLooks(
     Arr.empty<string>(),
     (subjects, route): readonly [readonly string[], TileRow | string] => {
       const artwork = readArtwork(route);
-
-      if (artwork !== undefined) {
-        return Tuple.make(subjects, artwork);
-      }
-
       const source = readCurriculumVisualSource(route);
 
       if (source.kind === "navigation") {
         return Tuple.make(
           subjects,
-          Tuple.make(
-            Arr.of(CURRICULUM_NAVIGATION_ICONS[source.key]),
-            route.nodeKey
-          )
+          artwork ??
+            Tuple.make(
+              Arr.of(CURRICULUM_NAVIGATION_ICONS[source.key]),
+              route.nodeKey
+            )
         );
       }
 
-      const pool = Arr.contains(subjects, source.key)
+      const seen = Arr.contains(subjects, source.key);
+      const next = Arr.append(subjects, source.key);
+
+      if (artwork !== undefined && !seen) {
+        return Tuple.make(next, artwork);
+      }
+
+      const pool = seen
         ? getLessonIcons(source.key)
         : getMaterialIcons(source.key);
 
-      return Tuple.make(
-        Arr.append(subjects, source.key),
-        Tuple.make(pool, route.nodeKey)
-      );
+      return Tuple.make(next, Tuple.make(pool, route.nodeKey));
     }
   );
 
