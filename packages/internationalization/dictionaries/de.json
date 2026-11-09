@@ -4107,6 +4107,7 @@
     "pro-feature-2": "{credits, number} Credits jeden Monat, um Nina zu fragen",
     "pro-feature-3": "Vollständige Lösungswege für alle Probetests, auch für frühere Versuche",
     "pro-feature-5": "Vorrangige Hilfe, wenn du Anleitung brauchst",
+    "pro-feature-6": "Lektionen und Artikel ohne Werbung",
     "pro-cta": "Pro holen",
     "offer-title": "Zahlungsart wählen",
     "offer-description": "Das Monatsabo verlängert sich selbst, ein Pass wird einmal bezahlt.",
@@ -4302,6 +4303,17 @@
     "load-error": "Deine Auswahl konnte nicht geladen werden, daher bleibt das Teilen aus, während wir es erneut versuchen.",
     "runtime-error": "Deine Auswahl ist gespeichert, aber das Teilen bleibt wie bisher.",
     "save-error": "Deine Auswahl konnte nicht gespeichert werden, daher bleibt das Teilen aus."
+  },
+  "Ads": {
+    "label": "Anzeigen",
+    "footer": "Pro ist werbefrei.",
+    "why": "Warum Werbung?",
+    "pro": "Pro ansehen",
+    "note-title": "Warum zeigt Nakafa Werbung?",
+    "note-description": "Eine kurze Notiz vom Gründer von Nakafa.",
+    "note-reason": "Nakafa gibt es, damit alle kostenlos lernen können. Server, Nina und neue Inhalte kosten jeden Monat Geld, deshalb zeigen Lektionen und Artikel jetzt Werbung. Probetests und Nina bleiben werbefrei.",
+    "note-pro": "Wenn du ohne Werbung lernen und Nakafa beim Wachsen helfen möchtest, ist Pro eine Option.",
+    "note-signature": "Nabil, Gründer von Nakafa"
   },
   "SEO": {
     "subject": {
