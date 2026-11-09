@@ -143,6 +143,9 @@ import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
 import postLikes from "./tables/postLikes";
 import posts from "./tables/posts";
+import practiceAnswers from "./tables/practiceAnswers";
+import practiceQuestions from "./tables/practiceQuestions";
+import practiceSessions from "./tables/practiceSessions";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import pushSubscriptions from "./tables/pushSubscriptions";
@@ -324,6 +327,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly operators: typeof operators;
   readonly postLikes: typeof postLikes;
   readonly posts: typeof posts;
+  readonly practiceAnswers: typeof practiceAnswers;
+  readonly practiceQuestions: typeof practiceQuestions;
+  readonly practiceSessions: typeof practiceSessions;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
   readonly pushSubscriptions: typeof pushSubscriptions;
@@ -504,6 +510,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   operators,
   postLikes,
   posts,
+  practiceAnswers,
+  practiceQuestions,
+  practiceSessions,
   programBuckets,
   programCatalog,
   pushSubscriptions,

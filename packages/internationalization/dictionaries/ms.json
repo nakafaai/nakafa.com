@@ -2595,8 +2595,18 @@
     "time-limit-label": "Had masa",
     "result-short": "Keputusan",
     "result-open": "Buka keputusan kamu, {correct} daripada {total} betul",
-    "review-controls": "Cubaan dan paparan",
+    "attempt-controls": "Pilihan cubaan",
     "verdict": "{state, select, correct {Betul} incorrect {Salah} partial {Separa betul} pending {Menunggu markah} other {Belum dijawab}}",
+    "practice-cta": "Latihan",
+    "practice-title": "Latihan: {title}",
+    "practice-pane": "Latihan kamu",
+    "practice-description": "Soalan yang sudah kamu semak dan keputusan setiap satu.",
+    "practice-footer": "Mula semula untuk mengosongkan setiap semakan.",
+    "practice-restart": "Mula semula",
+    "practice-checked-label": "Disemak",
+    "practice-check": "Semak",
+    "practice-open": "Buka latihan kamu, {checked} daripada {total} disemak",
+    "practice-short": "Latihan",
     "menu-history": "Sejarah",
     "attempt-menu-search-placeholder": "Cari cubaan...",
     "attempt-menu-empty": "Tiada cubaan yang sepadan ditemui.",
@@ -2979,6 +2989,10 @@
     "saved-description": "Cari, sunting atau buang apa yang disimpan oleh Nina."
   },
   "Toast": {
+    "practice-failed": {
+      "title": "Latihan kamu tidak dikemas kini.",
+      "description": "Semak sambungan kamu dan cuba lagi."
+    },
     "offline-move": {
       "title": "Kamu di luar talian.",
       "description": "Sambung semula untuk membuka halaman ini."

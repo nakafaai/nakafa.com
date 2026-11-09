@@ -57,6 +57,8 @@ const TryoutQuestionNumber = Schema.Int.check(
  */
 export const TryoutAttemptSearch = Schema.Struct({
   attemptId: Schema.optionalKey(TryoutQueryValue),
+  /** `practice` opens the page's practice in place of its try-out (ADR 0044). */
+  mode: Schema.optionalKey(TryoutQueryValue),
   question: Schema.optionalKey(TryoutQuestionNumber),
   view: Schema.optionalKey(TryoutQueryValue),
 });
