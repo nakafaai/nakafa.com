@@ -21,36 +21,37 @@ import { useTranslations } from "use-intl";
 import { PageConsentFooterItem } from "@/components/analytics/consent/mount";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
 import { FooterArt } from "@/components/marketing/shared/footer/art";
-import { holyMenu } from "@/components/sidebar/data/holy";
 import {
-  getSubjectMenuTarget,
-  subjectMenu,
-} from "@/components/sidebar/data/subject";
+  HEADER_SECTIONS,
+  type HeaderLink,
+  type HeaderSection,
+} from "@/components/marketing/shared/header/sections";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 import {
   Link,
   type LinkPreload,
   type LinkTarget,
   TargetLink,
-  useCurrentLocale,
 } from "@/lib/routing/link";
 import { PublicPathLink } from "@/lib/routing/public/link";
-import {
-  ARTICLES_TARGET,
-  CONTRIBUTOR_TARGET,
-  CURRICULA_TARGET,
-  LANDING_TARGET,
-  PRICING_TARGET,
-  SCHOOL_ENTER_TARGET,
-  SCHOOL_PRICING_TARGET,
-  SCHOOL_START_TARGET,
-  SCHOOL_TARGET,
-  TRYOUT_TARGET,
-} from "@/lib/routing/target";
+import { CONTRIBUTOR_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
-/** Every grade of every program of the subject menu, which the Learn group lists after the curricula. */
-const subjectGrades = Arr.flatMap(subjectMenu, (program) => program.items);
+/**
+ * The pages of one product that its footer group lists: every page the header's section holds, in the header's
+ * order. A link that opens a part of a page, such as a School feature, stays in the header, so the footer lists
+ * whole pages only, and a page added to the header joins the footer with it.
+ */
+function footerLinks(section: HeaderSection) {
+  const groups: readonly HeaderGroup[] = section.groups;
+  return Arr.filter(
+    Arr.flatMap(groups, (group): readonly HeaderLink[] => group.links),
+    (link) => !("hash" in link)
+  );
+}
+
+/** One group of a header section, whichever section holds it. */
+type HeaderGroup = HeaderSection["groups"][number];
 
 /**
  * Composes the shared marketing footer from product, policy, and social links
@@ -62,89 +63,26 @@ export function Footer({
 }: {
   pageNavigation: PageNavigation | null;
 }) {
-  const t = useTranslations("About");
-  const tLegal = useTranslations("Legal");
-  const tSubject = useTranslations("Subject");
-  const tHoly = useTranslations("Holy");
-  const tCommon = useTranslations("Common");
-  const tMarketing = useTranslations("Marketing");
-  const locale = useCurrentLocale();
+  const t = useTranslations();
 
   return (
     <footer className="w-full border-t" id="footer">
       <div className="mx-auto w-full max-w-7xl px-6">
         <div className="grid scroll-mt-28 grid-cols-2 gap-x-6 gap-y-12 pt-24 md:grid-cols-4">
-          <FooterGroup label={tMarketing("learn")}>
-            <li>
-              <FooterLink
-                label={tCommon("subject")}
-                target={CURRICULA_TARGET}
-              />
-            </li>
-            {Arr.map(subjectGrades, (subject) => (
-              <li key={subject.value}>
-                <FooterLink
-                  label={tSubject(subject.title, { grade: subject.value })}
-                  target={getSubjectMenuTarget(subject, locale)}
-                />
-              </li>
-            ))}
-            <li>
-              <FooterLink label={tCommon("try-out")} target={TRYOUT_TARGET} />
-            </li>
-            {Arr.map(holyMenu, (holy) => (
-              <li key={holy.title}>
-                <FooterLink label={tHoly(holy.title)} target={holy.target} />
-              </li>
-            ))}
-            <li>
-              <FooterLink
-                label={tCommon("articles")}
-                target={ARTICLES_TARGET}
-              />
-            </li>
-            <li>
-              <FooterLink
-                label={tMarketing("pricing")}
-                target={PRICING_TARGET}
-              />
-            </li>
-          </FooterGroup>
+          {Arr.map(HEADER_SECTIONS, (section) => (
+            <FooterGroup key={section.key} label={t(section.label)}>
+              {Arr.map(footerLinks(section), (link) => (
+                <li key={link.label}>
+                  <FooterLink label={t(link.label)} target={link.target} />
+                </li>
+              ))}
+            </FooterGroup>
+          ))}
 
-          <FooterGroup label={tMarketing("school")}>
+          <FooterGroup label={t("About.company")}>
             <li>
               <FooterLink
-                label={tMarketing("school-home")}
-                target={SCHOOL_TARGET}
-              />
-            </li>
-            <li>
-              <FooterLink
-                label={tMarketing("pricing")}
-                target={SCHOOL_PRICING_TARGET}
-              />
-            </li>
-            <li>
-              <FooterLink
-                label={tCommon("open-school")}
-                target={SCHOOL_START_TARGET}
-              />
-            </li>
-            <li>
-              <FooterLink
-                label={tMarketing("school-enter")}
-                target={SCHOOL_ENTER_TARGET}
-              />
-            </li>
-          </FooterGroup>
-
-          <FooterGroup label={t("company")}>
-            <li>
-              <FooterLink label={t("about-us")} target={LANDING_TARGET} />
-            </li>
-            <li>
-              <FooterLink
-                label={tCommon("contributor")}
+                label={t("Common.contributor")}
                 target={CONTRIBUTOR_TARGET}
               />
             </li>
@@ -153,7 +91,7 @@ export function Footer({
                 className={linkItemVariants()}
                 href={COMPANY_IDENTITY.socialProfiles.discord}
               >
-                {t("community")}
+                {t("About.community")}
               </a>
             </li>
             {pageNavigation ? (
@@ -167,7 +105,7 @@ export function Footer({
             ) : null}
           </FooterGroup>
 
-          <FooterGroup label={tLegal("terms-and-policies")}>
+          <FooterGroup label={t("Legal.terms-and-policies")}>
             {pageNavigation &&
               Arr.map(pageNavigation.legalItems, (page) => (
                 <li key={page.pageKey}>
@@ -178,7 +116,6 @@ export function Footer({
                   />
                 </li>
               ))}
-            <PageConsentFooterItem />
           </FooterGroup>
         </div>
       </div>
@@ -204,7 +141,7 @@ export function Footer({
         </div>
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
           <p className="text-center text-sm">
-            {tCommon("copyright", {
+            {t("Common.copyright", {
               year: "2026",
               companyName: COMPANY_IDENTITY.legalName,
             })}
@@ -233,7 +170,9 @@ export function Footer({
                 </Tooltip>
               ))}
             </div>
-            <FooterAction />
+            <FooterAction>
+              <PageConsentFooterItem />
+            </FooterAction>
           </div>
         </div>
       </section>

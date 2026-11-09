@@ -64,7 +64,7 @@ function EntryTitle({ entry }: { entry: DemoEntry }) {
 }
 
 /**
- * The columns of the class library's table that fit beside the words: each entry's title after its
+ * The columns of the class library's table: each entry's title after its
  * kind's icon, its kind, who added it, and the row's menu. Every head filters its column, as it does
  * in the School.
  */
@@ -108,7 +108,8 @@ function useDemoColumns() {
 }
 
 /**
- * The library part: one class's drive in the School's own library table, the chapter's folder first
+ * The library part, as wide as the page under its words: one class's drive in the School's own library
+ * table, the chapter's folder first
  * and its files under it, Nina's summary among them. Its heads filter the rows, and each row's menu
  * copies its title.
  */
@@ -116,7 +117,7 @@ export function SchoolLibrary() {
   const columns = useDemoColumns();
 
   return (
-    <FeatureRow id="library" layout="end">
+    <FeatureRow id="library" layout="wide">
       <SchoolFeatureText feature="library">
         <Nina act="carrying" label="" size={88} whole />
       </SchoolFeatureText>
