@@ -2310,7 +2310,9 @@
     "menu-speed": "Kelajuan",
     "menu-count": "Bilangan",
     "menu-more": "Lagi",
-    "menu-view": "Paparan"
+    "menu-view": "Paparan",
+    "menu-sort": "Susun",
+    "save": "Simpan"
   },
   "LearningPrograms": {
     "metadata-title": "Mula belajar dengan Nakafa",
@@ -2440,7 +2442,28 @@
     "delete-title": "Padam komen?",
     "delete-description": "Komen dan balasannya dipadam untuk selama-lamanya.",
     "delete-reply-description": "Balasan ini dan balasan kepadanya dipadam untuk selama-lamanya.",
-    "replying-to": "Membalas {name}"
+    "replying-to": "Membalas {name}",
+    "count": "{count, plural, =0 {Komen} one {# komen} other {# komen}}",
+    "sort-top": "Teratas",
+    "sort-newest": "Terbaru",
+    "replies": "{count, plural, one {# balasan} other {# balasan}}",
+    "replies-hide": "Sembunyikan balasan",
+    "edited": "(disunting)",
+    "edit-label": "Sunting komen",
+    "report-title": "Laporkan komen?",
+    "report-description": "Pilih sebabnya. Penulis tidak diberitahu siapa yang melaporkannya.",
+    "reason-spam": "Spam atau iklan",
+    "reason-harassment": "Gangguan atau kebencian",
+    "reason-misleading": "Salah atau mengelirukan",
+    "reason-other": "Sebab lain",
+    "send": "Hantar",
+    "emoji": "Emoji",
+    "photo": "Foto {number}",
+    "photo-open": "Buka {name}",
+    "photo-description": "Foto dalam saiz penuh.",
+    "photo-add": "Tambah foto",
+    "photo-remove": "Buang {name}",
+    "sign-in-to-comment": "Log masuk untuk komen"
   },
   "Subject": {
     "elementary-school": "Sekolah Rendah",
@@ -3731,6 +3754,21 @@
     "classroom-refusal-file-size": {
       "title": "Fail terlalu besar.",
       "description": "Pilih fail yang lebih kecil."
+    },
+    "comment-reported": {
+      "title": "Terima kasih, laporan sudah dihantar."
+    },
+    "comment-paste-refused": {
+      "title": "Teks ini terlalu panjang untuk satu komen."
+    },
+    "comment-photo-refused": {
+      "title": "Foto tidak ditambah."
+    },
+    "comment-photo-limit": {
+      "title": "Satu komen boleh ada empat foto sahaja."
+    },
+    "comment-photo-fixed": {
+      "title": "Foto komen yang sudah dihantar kekal begitu."
     },
     "island-refused-outside": {
       "title": "Itu tidak muat di pulau kamu."
