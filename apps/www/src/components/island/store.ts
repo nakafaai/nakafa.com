@@ -3,6 +3,7 @@ import { Array as Arr, HashSet, Schema } from "effect";
 import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
 import { applyEdits, type Edit, inverseOf } from "@/lib/island/edits";
+import type { Weather } from "@/lib/island/sky";
 import type { Cells } from "@/lib/island/world";
 
 /** The hand the learner builds with: one block placed per tap, or the pickaxe that removes one. */
@@ -66,6 +67,7 @@ interface GameStore {
   setTool: (tool: Tool) => void;
   /** Records that the server took the first `count` pending edits, now at `version`. */
   settle: (count: number, version: number) => void;
+  setWeather: (weather: Weather) => void;
   slot: number;
   /** Hands the chunks to mesh to the stage and forgets them. */
   takeDirty: () => HashSet.HashSet<number>;
@@ -73,6 +75,8 @@ interface GameStore {
   undo: () => void;
   /** The version of the edits the server holds, which the next batch builds on. */
   version: number;
+  /** The weather over the island: the learner's own, clear until it is read (D8). */
+  weather: Weather;
 }
 
 /** What a game opens with: its world, hotbar, level, progress, the version of its edits, and the way out. */
@@ -134,6 +138,7 @@ export function createGameStore(setup: GameSetup) {
       revision: 0,
       setBook: (book) => set({ book }),
       setNotice: (notice) => set({ notice }),
+      setWeather: (weather) => set({ weather }),
       setTool: (tool) => set({ tool }),
       rollback: () => {
         const touched = applyEdits(get().cells, inverseOf(get().pending));
@@ -157,6 +162,7 @@ export function createGameStore(setup: GameSetup) {
         return dirty;
       },
       tool: "place",
+      weather: "clear",
       undo: () => {
         const step = Arr.last(get().past);
         if (step._tag === "None") {
