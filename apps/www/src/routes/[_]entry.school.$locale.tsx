@@ -1,5 +1,5 @@
-import { DesignSystemProvider } from "@repo/design-system";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { DesignSystemProvider } from "@repo/design-system/providers/system";
 import { textDirection } from "@repo/internationalization/src/direction";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute } from "@tanstack/react-router";

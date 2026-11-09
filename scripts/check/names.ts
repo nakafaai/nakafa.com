@@ -1,5 +1,18 @@
-import { Array as Arr, HashSet, Option, Result, String as Str } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  HashSet,
+  Option,
+  Path,
+  Predicate,
+  Record as Rec,
+  Result,
+  Schema,
+  String as Str,
+} from "effect";
 import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";
+import { RepositoryReadError } from "#scripts/check/files";
 
 const WORD_SEPARATOR_PATTERN = /[-_.\s]+/u;
 const CAMEL_WORD_PATTERN = /(?<lower>[\p{Ll}\d])(?<upper>\p{Lu})/gu;
@@ -53,6 +66,31 @@ const FUNCTION_FILE_PATTERN = /^(?:.+\.)?(?:spec|impl)(?:\.test)?\.ts$/u;
 /** The implementation of one function of a spec beside it, named `<spec>.<function>.ts`. */
 const SPLIT_FUNCTION_PATTERN = /^(?<spec>[^.]+)\.[^.]+(?:\.test)?\.ts$/u;
 const SPEC_SUFFIX = ".spec.ts";
+/** The name a folder import resolves to, which names no capability of its own. */
+const INDEX_NAME = "index";
+/** The manifest of one workspace, by repository path. */
+const MANIFEST_PATTERN = /^(?:apps|packages)\/[^/]+\/package\.json$/u;
+const MANIFEST_FILE = "package.json";
+/** A target that a subpath pattern maps, which names no one module. */
+const PATTERN_TARGET = "*";
+
+/** One target of a manifest's `exports`: a module, `null` for a hidden subpath, or a map of subpaths or conditions. */
+type ExportTarget = string | null | { readonly [key: string]: ExportTarget };
+const ExportTargetSchema = Schema.Union([
+  Schema.String,
+  Schema.Null,
+  Schema.Record(
+    Schema.String,
+    Schema.suspend((): Schema.Codec<ExportTarget> => ExportTargetSchema)
+  ),
+]);
+/** What a manifest names as its entries. */
+const Manifest = Schema.fromJsonString(
+  Schema.Struct({
+    exports: Schema.optionalKey(ExportTargetSchema),
+    main: Schema.optionalKey(Schema.String),
+  })
+);
 
 /** Returns the semantic words of one folder name or file name, without its role suffixes and numbers. */
 function words(segment: string, isFile: boolean): readonly string[] {
@@ -79,6 +117,56 @@ function words(segment: string, isFile: boolean): readonly string[] {
       : semantic;
   return Arr.filter(named, (word) => !NUMBER_PATTERN.test(word));
 }
+
+/** The modules one `exports` target names, its nested maps included; a pattern or a hidden subpath names none. */
+function targetsOf(target: ExportTarget): readonly string[] {
+  if (target === null) {
+    return [];
+  }
+  if (Predicate.isString(target)) {
+    return target.includes(PATTERN_TARGET) ? [] : [target];
+  }
+  return Arr.flatMap(Rec.values(target), targetsOf);
+}
+
+/**
+ * Returns the modules that the workspace manifests among `files` name as an
+ * entry, through `main` or an `exports` target, as repository paths.
+ */
+export const manifestEntries = Effect.fn("RepositoryPolicy.manifestEntries")(
+  function* (root: string, files: readonly string[]) {
+    const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const entries = yield* Effect.forEach(
+      Arr.filter(files, (file) => MANIFEST_PATTERN.test(file)),
+      (file) =>
+        fileSystem.readFileString(path.join(root, file)).pipe(
+          Effect.flatMap(Schema.decodeEffect(Manifest)),
+          Effect.map(({ exports, main }) =>
+            Arr.map(
+              Arr.appendAll(
+                Option.toArray(Option.fromUndefinedOr(main)),
+                exports === undefined ? [] : targetsOf(exports)
+              ),
+              (target) =>
+                path.join(
+                  Str.slice(0, file.length - MANIFEST_FILE.length)(file),
+                  target
+                )
+            )
+          ),
+          Effect.mapError(
+            (cause) =>
+              new RepositoryReadError({
+                cause,
+                message: `Unable to read ${file} as a package manifest.`,
+              })
+          )
+        )
+    );
+    return Arr.flatten(entries);
+  }
+);
 
 /** The path up to and including the segment at `index`, which names the file or folder at fault once. */
 function path(segments: readonly string[], index: number) {
@@ -204,18 +292,64 @@ function isGiven(
   );
 }
 
+/** Whether a file name is `index`, after its role suffixes, such as `index.tsx` or `index.test.ts`. */
+function isIndex(segment: string) {
+  const name = words(segment, true);
+  return name.length === 1 && Arr.contains(name, INDEX_NAME);
+}
+
 /**
- * Reports each hand-written file or folder name of more than one word, and each one-word name that repeats the word of
- * the folder it stands in. A role suffix such as `.test` or `.server` names no capability, an uppercase document keeps
- * its conventional name, and the names other owners give stay as they are (`isGiven`).
+ * Whether a module named `index` keeps the name another owner gives it: a route file or a public asset of an app, whose
+ * path is its URL, generated output, or a module in a folder whose manifest entry is named `index`.
  */
-export function nameViolations(files: readonly string[]): readonly string[] {
+function keepsIndex(
+  segments: readonly string[],
+  entryFolders: HashSet.HashSet<string>
+) {
+  const folders = Arr.dropRight(segments, 1);
+  return (
+    (segments[0] === "apps" &&
+      Arr.some(ADDRESS_FOLDERS, (folder) =>
+        hasPrefix(folders, [...Arr.take(segments, 2), ...folder])
+      )) ||
+    Option.exists(Arr.last(segments), (name) =>
+      GENERATED_FILE_PATTERN.test(name)
+    ) ||
+    Arr.some(folders, (folder) => HashSet.has(GENERATED_FOLDERS, folder)) ||
+    HashSet.has(entryFolders, Arr.join(folders, "/"))
+  );
+}
+
+/**
+ * Reports each hand-written file or folder name of more than one word, each one-word name that repeats the word of
+ * the folder it stands in, and each module named `index`, which a folder import resolves to as if it were the
+ * folder's barrel. A role suffix such as `.test` or `.server` names no capability, an uppercase document keeps
+ * its conventional name, and the names other owners give stay as they are (`isGiven`). `entries` are the modules
+ * that a workspace manifest names, where a module named `index` keeps its name.
+ */
+export function nameViolations(
+  files: readonly string[],
+  entries: readonly string[]
+): readonly string[] {
   const functions = functionsOf(files);
+  const entryFolders = HashSet.fromIterable(
+    Arr.filterMap(entries, (entry) => {
+      const segments = Str.split(entry, "/");
+      return Option.exists(Arr.last(segments), isIndex)
+        ? Result.succeed(Arr.join(Arr.dropRight(segments, 1), "/"))
+        : Result.failVoid;
+    })
+  );
   return Arr.dedupe(
     Arr.flatMap(files, (file) => {
       const segments = Str.split(file, "/");
       return Arr.filterMap(segments, (segment, index) => {
         const isFile = index === segments.length - 1;
+        if (isFile && isIndex(segment) && !keepsIndex(segments, entryFolders)) {
+          return Result.succeed(
+            `${file}: ${segment} names no capability, and a folder import resolves to it as if it were a barrel. Name the module by the domain word of what it renders or does; only a route file, generated output, and the entry a workspace manifest names are called index.`
+          );
+        }
         if (
           isGiven(segments, segment, index, functions) ||
           (isFile && DOCUMENT_PATTERN.test(segment))
