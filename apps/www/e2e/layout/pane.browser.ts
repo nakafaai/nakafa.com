@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { readFrameProblems } from "@/e2e/support/frame";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -13,19 +14,22 @@ import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
  * is drawn, on a reading page's outline and on a detail opened by a press.
  */
 
-/** A bottom sheet that runs the window's width and ends at its bottom. */
+/** A bottom sheet that runs the window's width and rests at its bottom, one even inset off its edges. */
 function readSheetProblems(page: Page) {
   return page.evaluate(() => {
     const sheet = document.querySelector('[data-slot="drawer-popup"]');
     if (sheet === null) {
       return ["no sheet opened"];
     }
+    // The sheet floats one even inset off the window's sides and bottom.
     const box = sheet.getBoundingClientRect();
+    const inset = box.left;
     return [
-      Math.abs(box.bottom - innerHeight) > 1 &&
-        "the sheet does not end at the window's bottom",
-      (box.left > 1 || Math.abs(box.right - innerWidth) > 1) &&
-        "the sheet does not run the window's width",
+      (inset < 0 || inset > 16) && "the sheet does not run the window's width",
+      Math.abs(innerWidth - box.right - inset) > 1 &&
+        "the sheet stands off centre",
+      Math.abs(innerHeight - box.bottom - inset) > 1 &&
+        "the sheet does not rest at the window's bottom",
       Array.from(document.querySelectorAll("[data-pane-side]")).some(
         (pane) => pane.getBoundingClientRect().width > 1
       ) && "a pane stands beside the page on a phone",
@@ -52,6 +56,8 @@ test("a lesson's outline stands at the screen's right edge on a desktop, and a p
   for (const viewport of [desktopViewport, touchViewport]) {
     const context = await browser.newContext({ viewport });
     const page = await context.newPage();
+    // The usage-data prompt floats over the page until the visitor answers it, so the visit answers it first.
+    await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
     await page.goto(`${baseURL}${LESSON_PATH}`);
     await expect(page.locator('[data-slot="page-header"]')).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -75,6 +81,7 @@ test("a connector's detail opens at the screen's right edge on a desktop and as 
     const context = await browser.newContext({ viewport });
     await Effect.runPromise(signInLearner(context, String(baseURL)));
     const page = await context.newPage();
+    await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
     await page.goto(`${baseURL}/en/user/settings/connectors`);
     const open = page.getByRole("button", {
       exact: true,
@@ -87,7 +94,8 @@ test("a connector's detail opens at the screen's right edge on a desktop and as 
       expect(await readFrameProblems(page)).toEqual([]);
     } else {
       await expect(page.locator('[data-slot="drawer-popup"]')).toBeVisible();
-      expect(await readSheetProblems(page)).toEqual([]);
+      // The sheet slides up from the bottom, so it is read where it comes to rest.
+      await expect.poll(() => readSheetProblems(page)).toEqual([]);
     }
     await context.close();
   }
