@@ -28,6 +28,7 @@ describe("notice content", () => {
       locale: "id",
       privacyPolicyUrl: "https://nakafa.com/id/privacy-policy",
       termsOfServiceUrl: "https://nakafa.com/id/terms-of-service",
+      unsubscribeUrl: "https://nakafa.com/id/unsubscribe?token=signed",
     };
     assert.isTrue(Schema.is(NoticeEmailInputSchema)(input));
     assert.isFalse(

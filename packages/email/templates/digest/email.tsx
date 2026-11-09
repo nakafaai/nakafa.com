@@ -25,11 +25,19 @@ const digestEmailPreviewInput = {
   locale: "en",
   privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
   termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
+  unsubscribeUrl: new URL("/en/unsubscribe?token=preview", SITE_ORIGIN).href,
 } satisfies DigestEmailInput;
 
 /** Renders one notice mail for one supported locale. */
 function DigestEmail(input: DigestEmailInput = digestEmailPreviewInput) {
-  const { counts, inboxUrl, locale, privacyPolicyUrl, termsOfServiceUrl } = {
+  const {
+    counts,
+    inboxUrl,
+    locale,
+    privacyPolicyUrl,
+    termsOfServiceUrl,
+    unsubscribeUrl,
+  } = {
     ...digestEmailPreviewInput,
     ...input,
   };
@@ -40,6 +48,7 @@ function DigestEmail(input: DigestEmailInput = digestEmailPreviewInput) {
       locale={locale}
       privacyPolicyUrl={privacyPolicyUrl}
       termsOfServiceUrl={termsOfServiceUrl}
+      unsubscribeUrl={unsubscribeUrl}
     />
   );
 }

@@ -14,6 +14,7 @@ const input = {
   privacyPolicyUrl: "https://nakafa.com/id/privacy",
   signInUrl: "https://nf.nakafa.com/",
   termsOfServiceUrl: "https://nakafa.com/id/terms",
+  unsubscribeUrl: "https://nakafa.com/id/unsubscribe?token=signed",
 };
 const message = { html: "<p>Masuk</p>", subject: "Diundang", text: "Masuk" };
 const requestedAt = Date.UTC(2026, 9, 13, 9, 0, 0);
