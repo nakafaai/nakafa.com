@@ -67,6 +67,29 @@ describe("inbox row destinations", () => {
     expect(href(reply(null))).toEqual(Option.none());
   });
 
+  it("opens a try-out reminder's set, where its attempt resumes, and a reminder whose attempt is gone nowhere", () => {
+    const reminder = (set: unknown) =>
+      Schema.decodeUnknownSync(NotificationView)({
+        attemptId: "attempt-1",
+        changeType: "tryout.reminder",
+        createdAt: 1,
+        id: "notification-1",
+        set,
+      });
+
+    expect(
+      href(
+        reminder({
+          countryKey: "indonesia",
+          examKey: "snbt",
+          setKey: "set-1",
+          trackKey: "utbk",
+        })
+      )
+    ).toEqual(Option.some("/id/try-out/indonesia/snbt/utbk/set-1"));
+    expect(href(reminder(null))).toEqual(Option.none());
+  });
+
   it("opens the school's home for an invitation, whose subject is the Person it invites", () => {
     expect(
       href(row("person.invited", { id: "person-1", kind: "person" }))

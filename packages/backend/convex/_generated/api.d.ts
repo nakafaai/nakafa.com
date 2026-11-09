@@ -11768,6 +11768,19 @@ export declare const api: {
                 id: Id<"notifications">;
                 readAt?: number;
               }
+            | {
+                attemptId: Id<"tryoutAttempts">;
+                changeType: "tryout.reminder";
+                createdAt: number;
+                id: Id<"notifications">;
+                readAt?: number;
+                set: {
+                  countryKey: string;
+                  examKey: string;
+                  setKey: string;
+                  trackKey: string;
+                } | null;
+              }
           >;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -11851,6 +11864,19 @@ export declare const api: {
             id: Id<"notifications">;
             readAt?: number;
           }
+        | {
+            attemptId: Id<"tryoutAttempts">;
+            changeType: "tryout.reminder";
+            createdAt: number;
+            id: Id<"notifications">;
+            readAt?: number;
+            set: {
+              countryKey: string;
+              examKey: string;
+              setKey: string;
+              trackKey: string;
+            } | null;
+          }
       >;
       readAll: FunctionReference<
         "mutation",
@@ -11876,7 +11902,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
         }>
       >;
       set: FunctionReference<
@@ -11894,7 +11921,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
           on: boolean;
         },
         null
@@ -11917,7 +11945,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
         }>
       >;
       set: FunctionReference<
@@ -11935,7 +11964,8 @@ export declare const api: {
             | "examStart"
             | "examGuardianReminder"
             | "invitation"
-            | "commentReply";
+            | "commentReply"
+            | "tryoutReminder";
           on: boolean;
           slug: string;
         },
@@ -21587,6 +21617,86 @@ export declare const internal: {
           null
         >;
         sweep: FunctionReference<"mutation", "internal", {}, null>;
+      };
+    };
+    reminders: {
+      delivery: {
+        render: FunctionReference<
+          "action",
+          "internal",
+          {
+            continueUrl: string;
+            hoursLeft: number;
+            locale: "en" | "id" | "de";
+            privacyPolicyUrl: string;
+            setTitle: string;
+            termsOfServiceUrl: string;
+            unsubscribeUrl: string;
+            variant: "a" | "b";
+          },
+          { html: string; subject: string; text: string }
+        >;
+      };
+      jobs: {
+        email: FunctionReference<
+          "action",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            setTitle: string;
+          },
+          null
+        >;
+        enqueueEmail: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            html: string;
+            setTitle: string;
+            subject: string;
+            text: string;
+            variant: "a" | "b";
+          },
+          null
+        >;
+        hour: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            setTitle: string;
+          },
+          null
+        >;
+        readEmail: FunctionReference<
+          "query",
+          "internal",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            expiresAt: number;
+            setTitle: string;
+          },
+          | { _tag: "Skip" }
+          | { _tag: "Later"; at: number }
+          | {
+              _tag: "Send";
+              input: {
+                continueUrl: string;
+                hoursLeft: number;
+                locale: "en" | "id" | "de";
+                privacyPolicyUrl: string;
+                setTitle: string;
+                termsOfServiceUrl: string;
+                unsubscribeUrl: string;
+                variant: "a" | "b";
+              };
+              userId: Id<"users">;
+            }
+        >;
       };
     };
   };
