@@ -13,9 +13,12 @@ const QUIET_MILLISECONDS = 500;
  * slow one as late as it needs. A change of an inline style alone does not
  * count, since a running decoration rewrites one on every frame and moves no
  * layout; nor does a change inside a drawing (an SVG, such as Nina, whose live
- * pose rewrites its paths on every frame) or inside a part hidden from assistive
- * technology (decoration, such as letters a heading types and deletes in a loop);
- * nor does an endless animation, such as a spinner. A page that never
+ * pose rewrites its paths on every frame), inside a part hidden from assistive
+ * technology (decoration, such as letters a heading types and deletes in a loop),
+ * or on a toy, which rests and wakes in the layer that floats over the page;
+ * nor does an endless animation, such as a spinner, or one that the scroll
+ * drives, such as a part rising into view, which stays "running" as long as the
+ * page can scroll and never ends by itself. A page that never
  * goes quiet is read after `readinessTimeoutMilliseconds`, as late as a fixed
  * wait of that length would have read it.
  */
@@ -35,7 +38,7 @@ export const waitForQuiet = (page: Page) =>
             node instanceof Element ? node : (node.parentElement ?? null);
           return !(
             record.attributeName === "style" ||
-            element?.closest("svg, [aria-hidden='true']")
+            element?.closest("svg, [aria-hidden='true'], [data-toy]")
           );
         };
         const mutations = new MutationObserver((records) => {
@@ -58,6 +61,7 @@ export const waitForQuiet = (page: Page) =>
             .some(
               (animation) =>
                 animation.playState === "running" &&
+                animation.timeline === document.timeline &&
                 animation.effect?.getComputedTiming().iterations !==
                   Number.POSITIVE_INFINITY
             );

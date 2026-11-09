@@ -42,7 +42,10 @@ function movesOnlyOnScreen(shape: Locator) {
   });
 }
 
-/** Scrolls down the page a screen at a time from the top until `shape` is visible, as a reader's scroll brings it. */
+/**
+ * Scrolls down the page a screen at a time from the top until `shape` is visible, as a reader's scroll brings it,
+ * starting again from the top at the end of the page, since a toy comes only once the page has its reader.
+ */
 async function revealByScrolling(page: Page, shape: Locator) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect
@@ -50,6 +53,16 @@ async function revealByScrolling(page: Page, shape: Locator) {
       async () => {
         if (await shape.isVisible()) {
           return true;
+        }
+        // A reader who reaches the end of the page before the toys came starts again from the top.
+        const atEnd = await page.evaluate(
+          () =>
+            window.scrollY + window.innerHeight >=
+            document.documentElement.scrollHeight - 2
+        );
+        if (atEnd) {
+          await page.evaluate(() => window.scrollTo(0, 0));
+          return false;
         }
         await page.mouse.wheel(0, REVEAL_STEP);
         return false;
