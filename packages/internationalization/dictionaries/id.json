@@ -2310,7 +2310,9 @@
     "menu-speed": "Kecepatan",
     "menu-count": "Jumlah",
     "menu-more": "Lainnya",
-    "menu-view": "Tampilan"
+    "menu-view": "Tampilan",
+    "menu-sort": "Urutkan",
+    "save": "Simpan"
   },
   "LearningPrograms": {
     "metadata-title": "Mulai belajar di Nakafa",
@@ -2436,11 +2438,32 @@
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
-    "no-comments": "Belum ada komentar.",
+    "no-comments": "Belum ada komentar. Jadilah yang pertama.",
     "delete-title": "Hapus komentar?",
     "delete-description": "Komentar dan balasannya dihapus permanen.",
     "delete-reply-description": "Balasan ini dan balasan untuknya dihapus permanen.",
-    "replying-to": "Membalas {name}"
+    "replying-to": "Membalas {name}",
+    "count": "{count, plural, =0 {Komentar} other {# komentar}}",
+    "sort-top": "Teratas",
+    "sort-newest": "Terbaru",
+    "replies": "{count} balasan",
+    "replies-hide": "Sembunyikan balasan",
+    "edited": "(diedit)",
+    "edit-label": "Ubah komentar",
+    "report-title": "Laporkan komentar?",
+    "report-description": "Pilih alasannya. Penulis tidak diberi tahu siapa yang melapor.",
+    "reason-spam": "Spam atau iklan",
+    "reason-harassment": "Pelecehan atau kebencian",
+    "reason-misleading": "Salah atau menyesatkan",
+    "reason-other": "Hal lain",
+    "send": "Kirim",
+    "emoji": "Emoji",
+    "photo": "Foto {number}",
+    "photo-open": "Buka {name}",
+    "photo-description": "Foto dalam ukuran penuh.",
+    "photo-add": "Tambah foto",
+    "photo-remove": "Hapus {name}",
+    "sign-in-to-comment": "Masuk untuk berkomentar"
   },
   "Subject": {
     "elementary-school": "SD",
@@ -3731,6 +3754,21 @@
     "classroom-refusal-file-size": {
       "title": "Berkasnya terlalu besar.",
       "description": "Pilih berkas yang lebih kecil."
+    },
+    "comment-reported": {
+      "title": "Terima kasih, laporan terkirim."
+    },
+    "comment-paste-refused": {
+      "title": "Teksnya terlalu panjang untuk satu komentar."
+    },
+    "comment-photo-refused": {
+      "title": "Foto tidak ditambahkan."
+    },
+    "comment-photo-limit": {
+      "title": "Satu komentar memuat paling banyak empat foto."
+    },
+    "comment-photo-fixed": {
+      "title": "Foto komentar yang sudah dikirim tidak bisa diubah."
     },
     "island-refused-outside": {
       "title": "Itu tidak muat di pulaumu."

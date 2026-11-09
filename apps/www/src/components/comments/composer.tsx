@@ -1,150 +1,151 @@
 import { Login01Icon } from "@hugeicons/core-free-icons";
 import { photoOf } from "@repo/backend/confect/users/picture";
-import { readLearnerText } from "@repo/backend/confect/writing/text";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
-import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "cn";
-import { Effect, Option, Result } from "effect";
-import type { FocusEvent, FormEvent, KeyboardEvent } from "react";
+import { lazy, readChunk } from "@repo/design-system/lib/lazy";
+import { ClientOnly } from "@tanstack/react-router";
+import { cva } from "class-variance-authority";
+import { Effect, String as Str } from "effect";
+import { Suspense, use, useState } from "react";
 import { useTranslations } from "use-intl";
-import { type ComposerKey, textOf } from "@/components/comments/draft";
+import { photosOf, textOf } from "@/components/comments/draft";
+import { usePostComment } from "@/components/comments/posting";
 import { useCommentDraft } from "@/components/comments/provider";
-import { FeedAvatar, FeedForm } from "@/components/user/feed";
-import { remainingToShow } from "@/components/user/posts/remaining";
+import { ComposerAnswersContext } from "@/components/comments/scope";
+import type { CommentRow } from "@/components/comments/state";
+import { FeedAvatar } from "@/components/user/feed";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { useViewer } from "@/lib/identity/client";
 import { Link } from "@/lib/routing/link";
 
-/** Props of the composer: whose words it holds, how it posts, and how it closes when it is a reply. */
-interface Props {
-  /** The comment a reply composer answers; the list's own composer has none. */
-  readonly answers?: ComposerKey;
-  /** Whether the text field takes the focus when the composer appears. */
-  readonly autoFocus?: boolean;
-  /** Closes a reply composer on Escape, and when the learner leaves it empty. */
-  readonly onClose?: () => void;
-  /** Posts the text, and resolves to whether the server saved it. */
-  readonly onPost: (text: string) => Promise<boolean>;
+/** Loads the open composer, and the editing library with it. */
+const loadWriter = () => import("@/components/comments/writer");
+
+/** The open composer, which loads on the learner's first intent on the closed one. */
+const CommentWriter = lazy(() =>
+  loadWriter().then((module) => ({ default: module.CommentWriter }))
+);
+
+/** The closed composer: one line in the frame of a field, which opens the composer when pressed. */
+const closedField = cva(
+  "border-input text-muted-foreground hover:bg-accent/40 flex h-10 min-w-0 flex-1 items-center rounded-xl border px-3 text-start text-sm transition-colors ease-out"
+);
+
+/**
+ * The composer of a comment, or of a reply when a thread names the comment it answers
+ * (`ComposerAnswersContext`): the writer's picture beside a field. A
+ * visitor's field asks them to sign in. A learner's list composer stays one closed line until it is pressed,
+ * so the page loads no editor before then; a reply composer opens at once, with the focus in it.
+ */
+export function CommentComposer() {
+  const account = useViewer((state) => state.account);
+  return (
+    <div className="flex items-start gap-3">
+      <FeedAvatar
+        mascot={account?.appUser.mascot}
+        photo={account ? photoOf(account.appUser) : undefined}
+      />
+      {account ? <LearnerComposer /> : <VisitorComposer />}
+    </div>
+  );
 }
 
-/** Takes the focus when the text field appears. */
-function focusOnMount(node: HTMLTextAreaElement | null) {
-  node?.focus();
+/** A visitor's field: it reads as the composer, and leads to sign-in, which returns to the comments. */
+function VisitorComposer() {
+  const t = useTranslations("Comments");
+  const authNavigation = useCurrentAuthNavigation();
+  return (
+    <Link className={closedField()} {...authNavigation.linkProps}>
+      <HugeIcons className="me-2 size-4 shrink-0" icon={Login01Icon} />
+      <span className="truncate">{t("sign-in-to-comment")}</span>
+    </Link>
+  );
+}
+
+/** The closed composer, whose first intent loads the open one before the press. */
+function ClosedComposer({ onOpen }: { onOpen: () => void }) {
+  const t = useTranslations("Comments");
+  return (
+    <button
+      className={closedField()}
+      onClick={onOpen}
+      onFocus={() => Effect.runFork(readChunk(loadWriter))}
+      onPointerEnter={() => Effect.runFork(readChunk(loadWriter))}
+      type="button"
+    >
+      <span className="truncate">{t("add-comment-placeholder")}</span>
+    </button>
+  );
+}
+
+/** A learner's composer: closed until pressed for a new comment, open at once for a reply. */
+function LearnerComposer() {
+  const answers = use(ComposerAnswersContext);
+  const composerKey = answers?._id ?? "";
+  const drafted = useCommentDraft(
+    (draft) =>
+      !Str.isEmpty(textOf(draft, composerKey)) ||
+      photosOf(draft, composerKey).length > 0
+  );
+  const [open, setOpen] = useState(answers !== null || drafted);
+  const close = useCommentDraft((draft) => draft.close);
+  const send = useSend(answers);
+
+  if (!open) {
+    return <ClosedComposer onOpen={() => setOpen(true)} />;
+  }
+  return (
+    <Suspense fallback={<ClosedComposer onOpen={() => undefined} />}>
+      <ClientOnly fallback={<ClosedComposer onOpen={() => undefined} />}>
+        <CommentWriter
+          autoFocus
+          composerKey={composerKey}
+          onClose={() => {
+            if (answers !== null) {
+              close();
+              return;
+            }
+            if (!drafted) {
+              setOpen(false);
+            }
+          }}
+          onSend={send}
+        />
+      </ClientOnly>
+    </Suspense>
+  );
 }
 
 /**
- * Writes a comment or a reply in the composer of the posts. The text clears on
- * Post and stays usable while the server saves, so nothing waits. The words live
- * in the list's draft, so a reply composer that closes keeps them for when it
- * opens again, and a refused post gives its text back there, ahead of any next
- * text written meanwhile, while the list says why.
+ * Sends what one composer holds as a comment, or as a reply to `parent`. The composer empties at once and the
+ * comment shows where it will sit; a refusal gives the words and the photos back to the composer, ahead of
+ * anything written since, while the list says why.
  */
-export function CommentComposer({
-  answers = "",
-  autoFocus = false,
-  onClose,
-  onPost,
-}: Props) {
-  const t = useTranslations("Comments");
-  const tPosts = useTranslations("Posts");
-  const user = useViewer((state) => state.account);
-  const text = useCommentDraft((draft) => textOf(draft, answers));
-  const write = useCommentDraft((draft) => draft.write);
+function useSend(parent: CommentRow | null) {
+  const composerKey = parent?._id ?? "";
+  const text = useCommentDraft((draft) => textOf(draft, composerKey));
+  const photos = useCommentDraft((draft) => photosOf(draft, composerKey));
+  const clear = useCommentDraft((draft) => draft.clear);
+  const close = useCommentDraft((draft) => draft.close);
   const restore = useCommentDraft((draft) => draft.restore);
-  const body = readLearnerText(text);
-  const remaining = remainingToShow(text);
+  const addPhotos = useCommentDraft((draft) => draft.addPhotos);
+  const postComment = usePostComment();
 
-  /** Posts the trimmed text, and gives it back to the field when the server refuses it. */
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!user || Result.isFailure(body)) {
-      return;
+  return () => {
+    clear(composerKey);
+    if (parent !== null) {
+      close();
     }
-    const posted = body.success;
-    write(answers, "");
     Effect.runPromise(
-      Effect.promise(() => onPost(posted)).pipe(
+      Effect.promise(() => postComment({ parent, photos, text })).pipe(
         Effect.flatMap((saved) =>
           Effect.sync(() => {
             if (!saved) {
-              restore(answers, posted);
+              restore(composerKey, text);
+              addPhotos(composerKey, photos);
             }
           })
         )
       )
     );
-  }
-
-  /** Closes a reply composer that the learner leaves while it is empty. */
-  function closeWhenEmpty(event: FocusEvent<HTMLFormElement>) {
-    const next = event.relatedTarget;
-    const staysInside =
-      next instanceof Node && event.currentTarget.contains(next);
-    if (text === "" && !staysInside) {
-      onClose?.();
-    }
-  }
-
-  /** Closes a reply composer on Escape; its words wait in the draft for when it opens again. */
-  function closeOnEscape(event: KeyboardEvent<HTMLFormElement>) {
-    if (event.key === "Escape") {
-      onClose?.();
-    }
-  }
-
-  return (
-    <FeedForm
-      onBlur={closeWhenEmpty}
-      onKeyDown={closeOnEscape}
-      onSubmit={submit}
-    >
-      {user ? (
-        <FeedAvatar
-          mascot={user.appUser.mascot}
-          photo={photoOf(user.appUser)}
-        />
-      ) : null}
-      <InputGroupTextarea
-        aria-label={t("add-comment-placeholder")}
-        className="min-h-10 min-w-0 flex-1 px-0 py-2"
-        name="text"
-        onChange={(event) => write(answers, event.target.value)}
-        placeholder={t("add-comment-placeholder")}
-        ref={autoFocus ? focusOnMount : undefined}
-        value={text}
-      />
-      <div className="flex shrink-0 items-center gap-3 pt-1">
-        {Option.isSome(remaining) && (
-          <span className="text-muted-foreground text-sm tabular-nums">
-            {remaining.value}
-          </span>
-        )}
-        {user ? (
-          <Button disabled={Result.isFailure(body)} size="sm" type="submit">
-            {tPosts("post")}
-          </Button>
-        ) : (
-          <SignInLink />
-        )}
-      </div>
-    </FeedForm>
-  );
-}
-
-/** The link to the sign-in page, which returns to the page of the comments. */
-function SignInLink() {
-  const t = useTranslations("Auth");
-  const authNavigation = useCurrentAuthNavigation();
-
-  return (
-    <Link
-      className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
-      {...authNavigation.linkProps}
-    >
-      <HugeIcons icon={Login01Icon} />
-      {t("login")}
-    </Link>
-  );
+  };
 }
