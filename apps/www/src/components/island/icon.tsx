@@ -3,6 +3,7 @@
 import type { BlockKey } from "@repo/backend/confect/island/blocks";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, MutableHashMap, Option } from "effect";
+import type { Tool } from "@/components/island/store";
 import {
   plantPixels,
   speciesPixels,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/island/atlas";
 import { isPlant, looksOf } from "@/lib/island/look";
 import { TILE } from "@/lib/island/tiles/paint";
+import { feetTile, hammerTile, pickaxeTile } from "@/lib/island/tiles/tools";
 
 /** The side of a block icon in art pixels. */
 const ICON = 26;
@@ -135,4 +137,53 @@ export function SpeciesIcon({ index }: { index: number }) {
       width={TILE}
     />
   );
+}
+
+/** The scale a cursor is drawn at, so its pixels read on any screen. */
+const CURSOR_SCALE = 2;
+
+/** A tile as a cursor image address, enlarged with whole pixels. */
+function cursorUrlOf(pixels: Uint8ClampedArray<ArrayBuffer>) {
+  const tile = pixelsCanvas(pixels, 0);
+  const canvas = document.createElement("canvas");
+  canvas.width = TILE * CURSOR_SCALE;
+  canvas.height = TILE * CURSOR_SCALE;
+  const context = canvas.getContext("2d");
+  if (context === null) {
+    return "";
+  }
+  context.imageSmoothingEnabled = false;
+  context.drawImage(tile, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL();
+}
+
+/** Each tool's cursor, drawn once a page. */
+const CURSORS = MutableHashMap.empty<string, string>();
+
+/** A cursor drawn on first use. */
+function cursorOnce(key: string, draw: () => string) {
+  return Option.getOrElse(MutableHashMap.get(CURSORS, key), () => {
+    const url = draw();
+    MutableHashMap.set(CURSORS, key, url);
+    return url;
+  });
+}
+
+/**
+ * The cursor over the world for the hand the learner holds (ADR 0047, D5):
+ * the block itself while building, a pickaxe while digging, a hammer with a
+ * ready-made item, and footprints while walking, each with its point where it
+ * acts, and the system's own cursor as the fallback.
+ */
+export function cursorOf(tool: Tool, block: BlockKey) {
+  if (tool === "place") {
+    return `url(${iconOf(block)}) 13 13, crosshair`;
+  }
+  if (tool === "remove") {
+    return `url(${cursorOnce("remove", () => cursorUrlOf(pickaxeTile()))}) 2 2, crosshair`;
+  }
+  if (tool === "item") {
+    return `url(${cursorOnce("item", () => cursorUrlOf(hammerTile()))}) 2 2, copy`;
+  }
+  return `url(${cursorOnce("walk", () => cursorUrlOf(feetTile()))}) 16 16, pointer`;
 }

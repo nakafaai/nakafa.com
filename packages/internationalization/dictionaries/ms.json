@@ -4647,7 +4647,7 @@
     "top": "Semua blok sudah dibuka",
     "play": "Main",
     "mute": "Matikan bunyi",
-    "items": "Siap pasang",
+    "items": "Barang",
     "blocks": "Blok",
     "item-house": "Pondok",
     "item-tree": "Pokok",
@@ -4955,6 +4955,7 @@
     "block-papaya": "Pokok betik",
     "plants": "Tumbuhan",
     "walk": "Jalan",
-    "notice-path": "Tiada jalan ke sana. Cuba tempat yang boleh dicapai musangmu."
+    "notice-path": "Tiada jalan ke sana. Cuba tempat yang boleh dicapai musangmu.",
+    "search": "Cari"
   }
 }

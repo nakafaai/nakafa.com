@@ -12,6 +12,7 @@ import {
 } from "effect";
 import { use, useState } from "react";
 import { createPainter, type Painter } from "@/components/island/draw";
+import { cursorOf } from "@/components/island/icon";
 import {
   type GameStoreApi,
   GameStoreContext,
@@ -130,7 +131,21 @@ function start(
   };
   remesh(Arr.makeBy(CHUNKS * CHUNKS, (index) => index));
 
+  /** Shows the cursor of the hand the learner holds, or a grabbing hand while they drag the world. */
+  const showCursor = (dragging: boolean) => {
+    const { hotbar, slot, tool } = store.getState();
+    canvas.style.cursor = dragging ? "grabbing" : cursorOf(tool, hotbar[slot]);
+  };
+  showCursor(false);
+
   const unsubscribe = store.subscribe((state, previous) => {
+    if (
+      state.tool !== previous.tool ||
+      state.slot !== previous.slot ||
+      state.hotbar !== previous.hotbar
+    ) {
+      showCursor(false);
+    }
     if (state.revision !== previous.revision) {
       // A changed block can move light far past its own chunk, so every chunk whose light moved is meshed again too.
       const relit = glowOf(state.cells);
@@ -389,15 +404,20 @@ function start(
         )
       );
     }
+    const moved = Math.max(press.moved, distanceOf(press.start, point));
+    if (moved >= 8) {
+      showCursor(true);
+    }
     MutableHashMap.set(presses, event.pointerId, {
       ...press,
       last: point,
-      moved: Math.max(press.moved, distanceOf(press.start, point)),
+      moved,
     });
   };
   const onUp = (event: PointerEvent) => {
     const found = MutableHashMap.get(presses, event.pointerId);
     MutableHashMap.remove(presses, event.pointerId);
+    showCursor(false);
     Option.map(found, (press) => {
       if (!press.used && isTap(press.moved, event.timeStamp - press.at)) {
         act(press.start, press.button === 2);
@@ -425,7 +445,18 @@ function start(
     walkTo([last[0] + dx, last[1] + dz]);
   };
   const onKey = (event: KeyboardEvent) => {
-    if (event.metaKey || event.ctrlKey || event.altKey) {
+    if (event.key === "Escape" && store.getState().book) {
+      store.getState().setBook(false);
+      return;
+    }
+    // Keys typed into the book's search, or pressed while the book is open, are not moves in the world.
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.target instanceof HTMLInputElement ||
+      store.getState().book
+    ) {
       return;
     }
     const height = canvas.clientHeight;

@@ -251,7 +251,11 @@ export function createPainter(canvas: HTMLCanvasElement, season: Season) {
         gl.uniform1f(weatherUniform("uSway"), fall.sway);
         gl.uniform4fv(weatherUniform("uColor"), fall.color);
         gl.bindVertexArray(weather.vao);
-        gl.drawArrays(fall.flakes ? gl.POINTS : gl.LINES, 0, PARTICLES * 2);
+        gl.drawArrays(
+          fall.flakes ? gl.POINTS : gl.LINES,
+          0,
+          Math.min(PARTICLES, fall.count) * 2
+        );
       };
 
       /** Outlines the cell a press would change, over everything but the HUD. */
