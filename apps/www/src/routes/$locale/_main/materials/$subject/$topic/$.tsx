@@ -18,10 +18,6 @@ import { ContentByline } from "@/components/content/byline";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
 import { OpenContent } from "@/components/shared/content/actions";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
   MaterialBreadcrumb,
   MaterialHeading,
@@ -34,6 +30,9 @@ import {
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
+import { PageBody } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
@@ -263,71 +262,69 @@ function MaterialPage() {
       placements={page.placements}
       title={metadata.title}
     >
-      <LayoutMaterial>
-        <ContentViewTracker
-          contentId={page.contentId}
-          enabled
-          locale={page.locale}
-          publicPath={route.publicPath}
-          section="material"
-        />
-        <SidebarRightProvider>
-          <LayoutMaterialContent>
-            <ContentHeader breadcrumb={<MaterialBreadcrumb />}>
-              <OpenContent
-                content={page.content}
-                copySourceUrl={page.copySourceUrl}
-                slug={route.href}
-                sourceUrl={page.sourceUrl}
-              >
-                <AiMenuItem contextTitle={metadata.title} />
-              </OpenContent>
-            </ContentHeader>
-            <ContentTitle title={metadata.title}>
-              <ContentByline
-                authors={metadata.authors}
-                {...(metadata.dateModified === undefined
-                  ? {}
-                  : { dateModified: metadata.dateModified })}
-                datePublished={metadata.datePublished}
-              />
-            </ContentTitle>
-            <LayoutContent>
-              {headings.length === 0 ? <ComingSoon /> : page.body}
-            </LayoutContent>
-            <LessonFinish
-              contentId={page.contentId}
-              locale={page.locale}
-              publicPath={route.publicPath}
+      <ContentViewTracker
+        contentId={page.contentId}
+        enabled
+        locale={page.locale}
+        publicPath={route.publicPath}
+        section="material"
+      />
+      <SidebarRightProvider>
+        <Page>
+          <ContentHeader breadcrumb={<MaterialBreadcrumb />}>
+            <OpenContent
+              content={page.content}
+              copySourceUrl={page.copySourceUrl}
+              slug={route.href}
+              sourceUrl={page.sourceUrl}
+            >
+              <AiMenuItem contextTitle={metadata.title} />
+            </OpenContent>
+          </ContentHeader>
+          <ContentTitle title={metadata.title}>
+            <ContentByline
+              authors={metadata.authors}
+              {...(metadata.dateModified === undefined
+                ? {}
+                : { dateModified: metadata.dateModified })}
+              datePublished={metadata.datePublished}
             />
-            <MaterialPagination />
-            <FooterContent rule>
-              <DeferredComments slug={route.contentKey} />
-            </FooterContent>
-            <SheetEntry contextTitle={metadata.title} />
-          </LayoutMaterialContent>
-          <SidebarRightPanel
-            footer={
-              <SidebarRightFooter>
-                <CommentsButton />
-                <ReportButton />
-                {page.sourceUrl ? (
-                  <GithubButton githubUrl={page.sourceUrl} />
-                ) : null}
-                <ShareButton />
-              </SidebarRightFooter>
-            }
-            header={
-              <MaterialHeading
-                description={page.headMetadata.description}
-                title={metadata.title}
-              />
-            }
-          >
-            <SidebarTree data={headings} title={labels.onThisPage} />
-          </SidebarRightPanel>
-        </SidebarRightProvider>
-      </LayoutMaterial>
+          </ContentTitle>
+          <PageBody>
+            {headings.length === 0 ? <ComingSoon /> : page.body}
+          </PageBody>
+          <LessonFinish
+            contentId={page.contentId}
+            locale={page.locale}
+            publicPath={route.publicPath}
+          />
+          <MaterialPagination />
+          <PageFooter rule>
+            <DeferredComments slug={route.contentKey} />
+          </PageFooter>
+          <SheetEntry contextTitle={metadata.title} />
+        </Page>
+        <SidebarRightPanel
+          footer={
+            <SidebarRightFooter>
+              <CommentsButton />
+              <ReportButton />
+              {page.sourceUrl ? (
+                <GithubButton githubUrl={page.sourceUrl} />
+              ) : null}
+              <ShareButton />
+            </SidebarRightFooter>
+          }
+          header={
+            <MaterialHeading
+              description={page.headMetadata.description}
+              title={metadata.title}
+            />
+          }
+        >
+          <SidebarTree data={headings} title={labels.onThisPage} />
+        </SidebarRightPanel>
+      </SidebarRightProvider>
     </MaterialPlacementProvider>
   );
 }

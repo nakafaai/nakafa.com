@@ -26,7 +26,6 @@ import { startTransition } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
@@ -39,7 +38,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
-import { LoadFailure } from "@/components/state/failure";
+import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";

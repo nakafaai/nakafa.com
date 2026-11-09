@@ -14,13 +14,12 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { OpenSchoolDialog } from "@/components/operators/open";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { PageFrame } from "@/components/shared/content/frame";
-import { DataFailure } from "@/components/shared/failure";
+import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -29,7 +28,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
-import { LoadFailure } from "@/components/state/failure";
+import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { HOME_TARGET } from "@/lib/routing/target";
 
@@ -59,7 +58,7 @@ export function OperatorConsole() {
   const [isOpening, setIsOpening] = useState(false);
 
   return (
-    <PageFrame width="page">
+    <Page width="page">
       <TableFiltersProvider>
         <BreadcrumbHeader
           value={{
@@ -77,12 +76,12 @@ export function OperatorConsole() {
             title: t("title"),
           }}
         />
-        <TablePageBody>
+        <PageList>
           <OperatorSchools />
-        </TablePageBody>
+        </PageList>
         <OpenSchoolDialog open={isOpening} setOpen={setIsOpening} />
       </TableFiltersProvider>
-    </PageFrame>
+    </Page>
   );
 }
 

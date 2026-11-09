@@ -5,7 +5,7 @@ import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeContinueLearning } from "@/components/home/recent";
 import { HomeTrending } from "@/components/home/trending";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { signedInHead } from "@/lib/account/head";
 import { homeScreenFn } from "@/lib/account/home.functions";
 

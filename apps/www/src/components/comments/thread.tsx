@@ -17,7 +17,7 @@ import {
   type CommentRow as CommentRowData,
   threadOf,
 } from "@/components/comments/state";
-import { DataFailure } from "@/components/shared/failure";
+import { DataFailure } from "@/components/state/failure";
 
 /** How many replies a page of a thread holds, the first one and each one after it. */
 const REPLY_PAGE_SIZE = 20;

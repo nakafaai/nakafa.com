@@ -22,10 +22,11 @@ import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { PageList } from "@/components/shared/page/body";
+import { pageRowVariants } from "@/components/shared/page/width";
+import { TableNote } from "@/components/shared/table/card";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableNote, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
 import { TableTitle } from "@/components/shared/table/title";
@@ -114,14 +115,14 @@ export function ClassInsightTabs({
         </TabsList>
         <TabsPanel className="flex min-h-0 flex-col" value="students">
           <TableFiltersProvider>
-            <TablePageBody>
+            <PageList>
               <ClassStudents isRead={isRead} students={students} />
-            </TablePageBody>
+            </PageList>
           </TableFiltersProvider>
         </TabsPanel>
         <TabsPanel className="flex min-h-0 flex-col" value="mastery">
           <TableFiltersProvider>
-            <TablePageBody>
+            <PageList>
               <DataTable
                 columns={[
                   skillColumns.text((row) => row.student, {
@@ -192,14 +193,14 @@ export function ClassInsightTabs({
                   {read.forecasts ? t("chance-note") : t("chance-held")}
                 </TableNote>
               ) : null}
-            </TablePageBody>
+            </PageList>
           </TableFiltersProvider>
         </TabsPanel>
         <TabsPanel className="flex min-h-0 flex-col" value="practice">
           <TableFiltersProvider>
-            <TablePageBody>
+            <PageList>
               <SharedPractice isRead={isRead} students={students} />
-            </TablePageBody>
+            </PageList>
           </TableFiltersProvider>
         </TabsPanel>
       </Tabs>

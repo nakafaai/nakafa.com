@@ -13,10 +13,10 @@ import {
   FeatureProduct,
   FeatureRow,
 } from "@/components/marketing/shared/feature";
+import { PageList } from "@/components/shared/page/body";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { PERSON_ICONS } from "@/components/tenant/settings/choices";
@@ -122,13 +122,13 @@ export function SchoolLibrary() {
       </SchoolFeatureText>
       <FeatureProduct>
         <TableFiltersProvider>
-          <TablePageBody>
+          <PageList>
             <DataTable
               columns={columns}
               data={DEMO_ENTRIES}
               rowId={(entry) => entry.title}
             />
-          </TablePageBody>
+          </PageList>
         </TableFiltersProvider>
       </FeatureProduct>
     </FeatureRow>

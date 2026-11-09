@@ -18,7 +18,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { readNeighbor, readPosition } from "@/components/player/order";
 import { usePlayer } from "@/components/player/provider";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 
 /**
  * The controls under the questions in one row: previous at the start, the navigator opener below the large

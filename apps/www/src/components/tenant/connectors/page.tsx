@@ -34,7 +34,7 @@ import {
   disconnectSchoolUpdate,
 } from "@/components/connectors/optimistic";
 import { connectedService } from "@/components/connectors/outcome";
-import { PageFrame } from "@/components/shared/content/frame";
+import { Page } from "@/components/shared/page/frame";
 import { PaneFill, PaneFooter } from "@/components/shared/pane";
 import {
   Panes,
@@ -69,7 +69,7 @@ export function SchoolConnectionsSettings() {
   const tried = use(ConnectOutcomeContext);
 
   return (
-    <PageFrame width="column">
+    <Page width="column">
       <TableFiltersProvider>
         <PanesProvider opened={connectedService(tried)}>
           <SchoolSettingsHeader>
@@ -82,7 +82,7 @@ export function SchoolConnectionsSettings() {
           </div>
         </PanesProvider>
       </TableFiltersProvider>
-    </PageFrame>
+    </Page>
   );
 }
 

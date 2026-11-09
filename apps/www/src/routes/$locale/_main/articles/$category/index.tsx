@@ -14,9 +14,9 @@ import { ArticleNext } from "@/components/articles/next";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { CardArticle } from "@/components/shared/card/article";
 import { ContainerList } from "@/components/shared/card/list";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { RefContent } from "@/components/shared/content/references";
+import { PageStack } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
 import {
   ARTICLE_SOURCE_ROOT,
   type ArticlePageCursor,
@@ -240,20 +240,20 @@ function ArticleCategoryPage() {
           title: page.label,
         }}
       />
-      <LayoutContent className="py-6">
+      <PageStack>
         <ContainerList>
           {Arr.map(page.articles, (article) => (
             <CardArticle article={article} key={article.publicPath} />
           ))}
         </ContainerList>
-      </LayoutContent>
+      </PageStack>
       {page.nextSearch ? (
         <ArticleNext category={page.routeSlug} search={page.nextSearch} />
       ) : null}
       {page.sourceUrl ? (
-        <FooterContent className="mt-0">
+        <PageFooter>
           <RefContent githubUrl={page.sourceUrl} />
-        </FooterContent>
+        </PageFooter>
       ) : null}
     </>
   );

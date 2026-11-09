@@ -11,8 +11,8 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
-import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
+import { PageActions, PageHeader } from "@/components/shared/page/header";
 import { Link, type LinkTarget } from "@/lib/routing/link";
 
 /**
@@ -68,8 +68,7 @@ type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   const { action, home, homeLabel, items, title } = value;
   return (
-    <BreadcrumbHeaderFrame contentClassName="flex-nowrap">
-      <h1 className="sr-only">{title}</h1>
+    <PageHeader title={title}>
       <BreadcrumbHeaderPath
         home={home}
         homeLabel={homeLabel}
@@ -77,8 +76,8 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
           index === items.length - 1 ? { ...item, target: undefined } : item
         )}
       />
-      {action}
-    </BreadcrumbHeaderFrame>
+      {action === undefined ? null : <PageActions>{action}</PageActions>}
+    </PageHeader>
   );
 }
 

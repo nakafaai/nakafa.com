@@ -9,8 +9,8 @@ import {
 import { NotificationRow } from "@/components/notifications/row";
 import { useInboxTopic } from "@/components/notifications/tabs";
 import { inTopic } from "@/components/notifications/topic";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { DataFailure } from "@/components/state/failure";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 
 /**

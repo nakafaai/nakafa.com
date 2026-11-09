@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { cn } from "cn";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 import { profileScreenFn } from "@/lib/account/profile.functions";

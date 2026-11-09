@@ -11,9 +11,9 @@ import {
   FeatureProduct,
   FeatureRow,
 } from "@/components/marketing/shared/feature";
+import { PageList } from "@/components/shared/page/body";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -110,13 +110,13 @@ export function SchoolInsight() {
       </SchoolFeatureText>
       <FeatureProduct>
         <TableFiltersProvider>
-          <TablePageBody>
+          <PageList>
             <DataTable
               columns={columns}
               data={DEMO_STUDENTS}
               rowId={(row) => row.name}
             />
-          </TablePageBody>
+          </PageList>
         </TableFiltersProvider>
       </FeatureProduct>
     </FeatureRow>

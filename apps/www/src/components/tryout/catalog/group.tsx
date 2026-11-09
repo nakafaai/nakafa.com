@@ -11,7 +11,7 @@ import {
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { TryoutPageLink } from "@/components/tryout/route/link";

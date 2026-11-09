@@ -9,9 +9,8 @@ import { Option } from "effect";
 import { IslandFrame } from "@/components/island/frame";
 import { IslandHeader } from "@/components/island/header";
 import { OpenIsland } from "@/components/island/open";
-import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
+import { PageStack } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
 import { privateHead } from "@/lib/account/head";
 import { islandScreenFn } from "@/lib/account/home.functions";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -77,20 +76,16 @@ function IslandPage() {
       }}
     >
       <OpenIsland />
-      <PageFrame width="page">
-        <LayoutMaterial>
-          <LayoutMaterialContent>
-            <IslandHeader />
-            <LayoutContent className="py-6">
-              <IslandFrame
-                lifetime={shown.lifetime}
-                name={name}
-                stars={shown.stars}
-              />
-            </LayoutContent>
-          </LayoutMaterialContent>
-        </LayoutMaterial>
-      </PageFrame>
+      <Page width="page">
+        <IslandHeader />
+        <PageStack>
+          <IslandFrame
+            lifetime={shown.lifetime}
+            name={name}
+            stars={shown.stars}
+          />
+        </PageStack>
+      </Page>
     </IslandContext>
   );
 }

@@ -27,6 +27,7 @@ import {
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { PageList } from "@/components/shared/page/body";
 import {
   PaneBody,
   PaneFooter,
@@ -41,9 +42,9 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { TableFrame } from "@/components/shared/table/card";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame, TablePageBody } from "@/components/shared/table/frame";
 import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
@@ -91,12 +92,12 @@ export function GuardianHome() {
         />
         <Panes id="guardian">
           <PanesList>
-            <TablePageBody>
+            <PageList>
               {QueryResult.isFailure(children) ? (
                 <LoadFailure onRetry={reloadPage} />
               ) : null}
               {QueryResult.isSuccess(children) ? <GuardianChildren /> : null}
-            </TablePageBody>
+            </PageList>
           </PanesList>
           {QueryResult.isSuccess(children) ? (
             <PanesDetail label={t("child-detail")}>

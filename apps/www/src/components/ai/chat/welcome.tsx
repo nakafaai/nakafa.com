@@ -10,7 +10,7 @@ import {
 } from "@/components/ai/chat/new";
 import { StartPrompt } from "@/components/ai/chat/start";
 import { HomeTitle } from "@/components/ai/home/title";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { chatTarget } from "@/lib/routing/target";
 
 /**
