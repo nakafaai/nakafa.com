@@ -43,7 +43,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
-import { ShapePlace } from "@/components/tenant/exams/figure/place";
+import { PlanePlace, SpacePlace } from "@/components/tenant/exams/figure/place";
 import { freeName } from "@/components/tenant/exams/figure/plane";
 import { useFigure } from "@/components/tenant/exams/figure/provider";
 import {
@@ -182,6 +182,7 @@ export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
   const editor = useTranslations("Editor");
   const t = useTranslations("Exams");
   const changeShape = useFigure((state) => state.changeShape);
+  const space = useFigure((state) => state.draft.space === "space");
   const id = useId();
 
   return (
@@ -195,7 +196,7 @@ export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
         {t(SHAPE_NAME[shape.kind])}
         <ShapeMenu shape={shape} />
       </FieldLegend>
-      <ShapePlace shape={shape} />
+      {space ? <SpacePlace shape={shape} /> : <PlanePlace shape={shape} />}
       <div className="grid grid-cols-2 gap-3">
         {Arr.contains(LABELLED, shape.kind) ? (
           <Field>

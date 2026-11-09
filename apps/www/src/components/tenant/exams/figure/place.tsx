@@ -60,7 +60,7 @@ function ShapeInput({
 const isCoordinate = (text: string) => isNumber(text) || isFormula(text);
 
 /** The fields that place an object in space: a point and the ends of a segment take z, a function draws z = f(x, y). */
-function SpacePlace({ shape }: { readonly shape: ShapeDraft }) {
+export function SpacePlace({ shape }: { readonly shape: ShapeDraft }) {
   const t = useTranslations("Exams");
 
   return Match.value(shape.kind).pipe(
@@ -100,7 +100,7 @@ function SpacePlace({ shape }: { readonly shape: ShapeDraft }) {
 }
 
 /** The fields that place an object on a plane, by its kind. */
-function PlanePlace({ shape }: { readonly shape: ShapeDraft }) {
+export function PlanePlace({ shape }: { readonly shape: ShapeDraft }) {
   const t = useTranslations("Exams");
   const changeShape = useFigure((state) => state.changeShape);
   const id = useId();
@@ -191,11 +191,4 @@ function PlanePlace({ shape }: { readonly shape: ShapeDraft }) {
     )),
     Match.exhaustive
   );
-}
-
-/** The fields that place an object, in the graph's dimension. */
-export function ShapePlace({ shape }: { readonly shape: ShapeDraft }) {
-  const space = useFigure((state) => state.draft.space === "space");
-
-  return space ? <SpacePlace shape={shape} /> : <PlanePlace shape={shape} />;
 }

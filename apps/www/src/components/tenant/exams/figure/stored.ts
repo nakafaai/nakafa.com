@@ -134,12 +134,12 @@ const readOf = <Object extends { readonly id: string }>(
 
 /**
  * The graph of a stored MathVisual figure, so the teacher edits what stands there, at the range it shows: a
- * plane, or space with its z range. Readouts, or an object the builder does not write, give none, and the
+ * plane, or space with its z range. A plane's readouts, or an object the builder does not write, give none, and the
  * figure can only be removed.
  */
 export const planeOf = (visual: Visual): Option.Option<Plane> => {
   const { labels, scene } = visual.props;
-  if ((scene.readouts ?? []).length > 0) {
+  if (scene.space === "plane" && (scene.readouts ?? []).length > 0) {
     return Option.none();
   }
   const anchors: readonly SceneAnchor[] = scene.labels ?? [];

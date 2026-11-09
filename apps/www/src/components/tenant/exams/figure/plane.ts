@@ -1,4 +1,7 @@
-import type { SpacePoint } from "@nakafa/aksara-contracts/math/base";
+import {
+  PlanePointSchema,
+  type SpacePoint,
+} from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import {
@@ -115,30 +118,43 @@ export type Plane = typeof PlaneDraft.Type;
 const mathLabel = (latex: string) => [{ attrs: { latex }, type: "mathInline" }];
 
 /** The object of a shape in the graph's dimension, with its id and role. */
-const placedOf = (plane: Plane, shape: ShapeDraft) =>
-  Option.map(
-    plane.space === "space" ? spaceObjectOf(shape) : objectOf(shape),
-    (object) => ({ ...object, appearance: shape.appearance, id: shape.id })
-  );
+const placedOf = (plane: Plane, shape: ShapeDraft) => {
+  const role = { appearance: shape.appearance, id: shape.id };
+  return plane.space === "space"
+    ? Option.map(spaceObjectOf(shape), (object) => ({ ...object, ...role }))
+    : Option.map(objectOf(shape), (object) => ({ ...object, ...role }));
+};
 
-/** Where the label of a shape stands in the graph's dimension, or none for a shape with no label or no place. */
-const anchorAt = (plane: Plane, shape: ShapeDraft, scope: FormulaScope) =>
-  shape.label.trim() === "" || !Arr.contains(LABELLED, shape.kind)
-    ? Option.none()
-    : Option.map(
-        plane.space === "space"
-          ? Option.map(spaceAnchorOf(shape), (at) => ({
-              at,
-              placement: "above-right" as const,
-            }))
-          : anchorOf(shape, scope),
-        (anchor) => ({
-          ...anchor,
-          key: shape.id,
-          latex: shape.label.trim(),
-          objectId: shape.id,
-        })
-      );
+/** Whether a plane anchor stands at numbers, which the fit holds, rather than at formulas of the sliders. */
+const isPlanePoint = Schema.is(PlanePointSchema);
+
+/**
+ * Where the label of a shape stands in the graph's dimension, and the point the fit holds for it, or none for a
+ * shape with no label or no place. A label that follows the sliders gives the fit no point.
+ */
+const anchorAt = (plane: Plane, shape: ShapeDraft, scope: FormulaScope) => {
+  if (shape.label.trim() === "" || !Arr.contains(LABELLED, shape.kind)) {
+    return Option.none();
+  }
+  const named = {
+    key: shape.id,
+    latex: shape.label.trim(),
+    objectId: shape.id,
+  };
+  return plane.space === "space"
+    ? Option.map(spaceAnchorOf(shape), (at) => ({
+        ...named,
+        at,
+        placement: "above-right" as const,
+        spots: [at],
+      }))
+    : Option.map(anchorOf(shape, scope), ({ at, placement }) => ({
+        ...named,
+        at,
+        placement,
+        spots: isPlanePoint(at) ? [{ ...at, z: 0 }] : [],
+      }));
+};
 
 /** The frame that holds every object of the graph, its labels, and the origin, or the range the teacher typed. */
 const frameOf = (
@@ -199,11 +215,7 @@ export const sceneOf = (plane: Plane) =>
       const anchors = Arr.getSomes(
         Arr.map(plane.shapes, (shape) => anchorAt(plane, shape, scope))
       );
-      const labelled = Arr.flatMap(anchors, ({ at }) =>
-        typeof at.x === "number" && typeof at.y === "number"
-          ? [{ x: at.x, y: at.y, z: "z" in at ? at.z : 0 }]
-          : []
-      );
+      const labelled = Arr.flatMap(anchors, ({ spots }) => spots);
       return Option.map(frameOf(plane, scope, labelled), (frame) => ({
         labels: Rec.fromEntries(
           Arr.map(anchors, ({ key, latex }) => [key, mathLabel(latex)] as const)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   freeName,
   newSlider,
@@ -195,7 +195,7 @@ describe("exams/figure/plane", () => {
         placement: "above-right",
       },
     ]);
-    expect(Object.keys(labels)).toEqual(["point-1", "segment-1"]);
+    expect(Rec.keys(labels)).toEqual(["point-1", "segment-1"]);
   });
 
   it("keeps the z range a teacher types in space, and makes no scene of a kind only a plane draws", () => {
