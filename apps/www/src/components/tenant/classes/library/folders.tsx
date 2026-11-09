@@ -114,7 +114,7 @@ function FolderNameDialog({
 /**
  * Adds a folder inside the folder the page shows, or at the top of the library. The dialog closes on submit and the
  * folder shows at once last among the folders, and a refusal brings the dialog back. On a narrow screen the button
- * keeps its icon.
+ * keeps its icon. It stands in the header's group beside the search, which gives it its variant.
  */
 export function NewFolder() {
   const t = useTranslations("Classroom");
@@ -160,7 +160,6 @@ export function NewFolder() {
                 setOpen(true);
               }}
               type="button"
-              variant="outline"
             />
           }
         >

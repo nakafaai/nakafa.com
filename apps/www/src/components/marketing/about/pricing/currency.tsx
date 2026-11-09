@@ -12,7 +12,8 @@ const currencyBranchVariants = cva("", {
     currency: {
       EUR: "hidden in-data-[currency=EUR]:contents",
       IDR: "hidden in-data-[currency=IDR]:contents",
-      USD: "in-data-[currency=EUR]:hidden in-data-[currency=IDR]:hidden",
+      MYR: "hidden in-data-[currency=MYR]:contents",
+      USD: "in-data-[currency=EUR]:hidden in-data-[currency=IDR]:hidden in-data-[currency=MYR]:hidden",
     },
   },
 });
@@ -23,7 +24,8 @@ const currencyTextVariants = cva("", {
     currency: {
       EUR: "hidden in-data-[currency=EUR]:inline",
       IDR: "hidden in-data-[currency=IDR]:inline",
-      USD: "in-data-[currency=EUR]:hidden in-data-[currency=IDR]:hidden",
+      MYR: "hidden in-data-[currency=MYR]:inline",
+      USD: "in-data-[currency=EUR]:hidden in-data-[currency=IDR]:hidden in-data-[currency=MYR]:hidden",
     },
   },
 });

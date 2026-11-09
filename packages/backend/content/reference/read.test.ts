@@ -31,7 +31,7 @@ describe("contentRelease/reference/read", () => {
             for (const input of [
               {
                 kind: "route" as const,
-                appLocale: article.appLocale,
+                appLocale: "en" as const,
                 publicPath: article.publicPath,
               },
               {
@@ -69,7 +69,7 @@ describe("contentRelease/reference/read", () => {
             for (const input of [
               {
                 kind: "route" as const,
-                appLocale: material.appLocale,
+                appLocale: "en" as const,
                 publicPath: material.publicPath,
               },
               {
@@ -108,7 +108,7 @@ describe("contentRelease/reference/read", () => {
             for (const input of [
               {
                 kind: "route" as const,
-                appLocale: topic.appLocale,
+                appLocale: "en" as const,
                 publicPath: topic.publicPath,
               },
               {
@@ -134,6 +134,28 @@ describe("contentRelease/reference/read", () => {
         );
       })
   );
+  it.effect(
+    "resolves no reference for an asset of a locale Nakafa does not serve yet",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            expect(
+              yield* (yield* QueryRunner).runQuery(
+                refs.public.contentRelease.reference.read,
+                {
+                  input: {
+                    contentId: "asset:ms:quran:quran-surah:1",
+                    kind: "content" as const,
+                  },
+                }
+              )
+            ).toBeNull();
+          })
+        );
+      })
+  );
   it.effect("resolves one active signed Quran identity", () =>
     Effect.gen(function* () {
       const target = yield* Confect.pipe(Effect.provide(confectLayer));
@@ -151,7 +173,7 @@ describe("contentRelease/reference/read", () => {
             },
             {
               kind: "route" as const,
-              appLocale: quran.appLocale,
+              appLocale: "en" as const,
               publicPath: quran.route,
             },
           ]) {

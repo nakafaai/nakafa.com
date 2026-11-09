@@ -1,15 +1,15 @@
 import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option, Schema } from "effect";
 import { readPublishedTryoutSectionPage } from "@/lib/content/tryout/catalog";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
+import { readLocalizedSnbtSet } from "@/lib/routing/public/tryout/group";
 import {
   decodeAppLocale,
   readActiveTryoutPath,
-  readLocalizedSnbtSet,
   readPathSegments,
   SNBT_EXAM_PATH,
   SNBT_ROUTE,
@@ -21,7 +21,7 @@ import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
 
 const PRODUCT_YEAR_SET_PATTERN = /^(?<year>\d{4})-(?<set>set-\d+)$/u;
 const RetiredSnbtProductSchema = Schema.Struct({
-  appLocale: AppLocaleCodeSchema,
+  appLocale: ActiveAppLocaleCodeSchema,
   part: Schema.optionalKey(Schema.String),
   set: Schema.String,
   year: Schema.String,
@@ -32,7 +32,7 @@ type RetiredSnbtProduct = typeof RetiredSnbtProductSchema.Type;
 /** Reads the retired SNBT exam URL `/{l}/try-out/snbt`, which named no country. */
 export function readRetiredSnbtExam(
   pathname: string
-): Option.Option<AppLocaleCode> {
+): Option.Option<ActiveAppLocaleCode> {
   const [localeSegment, root, exam, ...rest] = readPathSegments(pathname);
   const appLocale = decodeAppLocale(localeSegment);
   if (
@@ -77,7 +77,7 @@ export function readRetiredSnbtProduct(
 /** Redirects the retired SNBT exam URL to its localized exam page once that page is live. */
 export const readRetiredSnbtExamRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutExamMigration"
-)(function* (appLocale: AppLocaleCode) {
+)(function* (appLocale: ActiveAppLocaleCode) {
   if ((yield* readActiveTryoutPath(appLocale, SNBT_ROUTE_PATH)) !== null) {
     return null;
   }

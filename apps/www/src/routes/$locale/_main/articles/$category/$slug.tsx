@@ -283,7 +283,7 @@ function ArticlePage() {
             <LayoutContent>
               {headings.length === 0 ? <ComingSoon /> : article.body}
             </LayoutContent>
-            <FooterContent>
+            <FooterContent rule>
               <DeferredComments key={`comments:${filePath}`} slug={filePath} />
             </FooterContent>
             <SheetEntry

@@ -5,7 +5,9 @@ import { Array as Arr, Record } from "effect";
  * highlight (ADR 0042, D16). Lighting moves a face along its own ramp, so a
  * shaded face is always one of these colours and never a gradient. The ramps
  * lean on Nakafa's identity: the pop green, red, blue and yellow, the cream, and
- * Nina's blue and pale face. Each ramp names its row of the palette texture.
+ * Nina's blue and pale face. Window panes have a ramp of their own, which the
+ * night lights; the sky has one ramp for each light of the day and for clouds.
+ * Each ramp names its row of the palette texture.
  */
 export const RAMPS = {
   ink: { row: 0, tones: ["#0d1730", "#15294f", "#26406e", "#3a5a8c"] },
@@ -26,6 +28,10 @@ export const RAMPS = {
   feather: { row: 15, tones: ["#b9b2a0", "#ddd8c9", "#f4f0e6", "#ffffff"] },
   petal: { row: 16, tones: ["#a83a5a", "#e05a7a", "#ff8fa3", "#ffc2cd"] },
   sky: { row: 17, tones: ["#8fd0f0", "#b3e0f5", "#d4eefa", "#eaf7fd"] },
+  pane: { row: 18, tones: ["#1c3150", "#2b5f8e", "#4f9ad2", "#bfe3f7"] },
+  dusk: { row: 19, tones: ["#5b3a6e", "#c0587a", "#f08a6a", "#ffc58f"] },
+  night: { row: 20, tones: ["#0a1026", "#111a3a", "#1a2752", "#26386b"] },
+  overcast: { row: 21, tones: ["#7d8797", "#98a2b1", "#b4bcc8", "#ced4dc"] },
 } as const;
 
 /** A ramp of the palette, by name. */

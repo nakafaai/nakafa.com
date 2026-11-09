@@ -67,7 +67,7 @@ describe("contentRelease/material/model", () => {
         const projection = makeMaterialProjection("en", 1);
         const result = yield* Effect.promise(() =>
           target.query(api.contentRelease.material.lesson, {
-            appLocale: projection.appLocale,
+            appLocale: "en",
             publicPath: projection.publicPath,
           })
         );
@@ -81,7 +81,7 @@ describe("contentRelease/material/model", () => {
         );
         const artifact = yield* Effect.promise(() =>
           target.query(api.contentRelease.runtime.active.artifact, {
-            appLocale: projection.appLocale,
+            appLocale: "en",
             artifactHash: head.artifactHash,
             family: "material",
             publicPath: projection.publicPath,

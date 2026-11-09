@@ -7,6 +7,7 @@ import {
 describe("onboarding product defaults", () => {
   it.each([
     ["indonesia", { curriculumProgramKey: "merdeka", locale: "id" }],
+    ["malaysia", { curriculumProgramKey: "kssm", locale: "en" }],
     ["singapore", { curriculumProgramKey: "singapore-moe", locale: "en" }],
     [
       "united-kingdom",

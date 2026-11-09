@@ -8,12 +8,15 @@ import {
   GLSL3,
   type Mesh,
   ShaderMaterial,
+  Vector3,
   type WebGLRenderTarget,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { useSkyStore } from "@/components/island/sky";
 import { useIsland } from "@/lib/island/context";
-import { paletteIndex } from "@/lib/island/palette";
+import { PALETTE_SIZE, paletteIndex } from "@/lib/island/palette";
 import { WATER_BELOW, watersOf } from "@/lib/island/pieces";
+import { gradeOf } from "@/lib/island/sky";
 import { VOXELS_PER_CELL } from "@/lib/island/terrain";
 import { paletteTexture } from "@/lib/island/texture";
 
@@ -35,7 +38,9 @@ void main() {
  * colour of the hidden pixel's own ramp or of the water's: ground leans to the
  * water's colours, and a sprite keeps its own, so an orange fish behind the
  * cross-section stays an orange fish, tinted. Its top glints where a
- * seeded ripple passes, and its sides show a bright waterline.
+ * seeded ripple passes, and its sides show a bright waterline. At dusk, dawn
+ * and night the water takes the light's tint like the rest of the island and
+ * returns to the nearest palette colour (ADR 0042, D18).
  */
 const WATER_FRAGMENT = /* glsl */ `
 uniform sampler2D sceneColor;
@@ -44,6 +49,8 @@ uniform sampler2D sceneNormal;
 uniform sampler2D sceneDepth;
 uniform sampler2D palette;
 uniform int water;
+uniform int paletteSize;
+uniform vec3 tint;
 uniform float time;
 uniform float surface;
 in vec3 vWorld;
@@ -58,6 +65,18 @@ vec3 nearest(vec3 color, int ramp, float keep) {
     vec3 delta = candidate - color;
     float d = dot(delta, delta) * (i < 4 ? keep : 1.0);
     if (d < distance) { distance = d; best = candidate; }
+  }
+  return best;
+}
+vec3 shaded(vec3 color) {
+  if (tint == vec3(1.0)) return color;
+  vec3 lit = color * tint;
+  vec3 best = colorOf(0);
+  float distance = 1e9;
+  for (int i = 0; i < paletteSize; i++) {
+    vec3 delta = (colorOf(i) - lit) * vec3(0.30, 0.59, 0.11);
+    float d = dot(delta, delta);
+    if (d < distance) { distance = d; best = colorOf(i); }
   }
   return best;
 }
@@ -77,7 +96,7 @@ void main() {
     color = colorOf(water + 3);
   }
   bool sprite = texelFetch(sceneNormal, p, 0).a < 0.5;
-  outColor = vec4(nearest(color, index - index % 4, sprite ? 1.0 : 3.0), 1.0);
+  outColor = vec4(shaded(nearest(color, index - index % 4, sprite ? 1.0 : 3.0)), 1.0);
 }
 `;
 
@@ -136,21 +155,27 @@ export function Water({
         glslVersion: GLSL3,
         uniforms: {
           palette: { value: paletteTexture() },
+          paletteSize: { value: PALETTE_SIZE },
           sceneColor: { value: outlined.texture },
           sceneDepth: { value: scene.depthTexture },
           sceneIndex: { value: scene.textures[0] },
           sceneNormal: { value: scene.textures[1] },
           surface: { value: -WATER_BELOW / VOXELS_PER_CELL },
           time: { value: 0 },
+          tint: { value: new Vector3(1, 1, 1) },
           water: { value: paletteIndex("water", 0) },
         },
         vertexShader: WATER_VERTEX,
       }),
     [outlined, scene]
   );
+  const sky = useSkyStore();
   useFrame((state) => {
     if (mesh.current !== null) {
-      mesh.current.material.uniforms.time.value = state.clock.elapsedTime;
+      const { phase, weather } = sky.getState();
+      const uniforms = mesh.current.material.uniforms;
+      uniforms.time.value = state.clock.elapsedTime;
+      uniforms.tint.value.set(...gradeOf(phase, weather).tint);
     }
   });
   if (Option.isNone(geometry)) {

@@ -132,7 +132,7 @@ for (const viewport of sidebarViewports) {
             expect(
               page.getByRole("menuitem", {
                 exact: true,
-                name: "Deutsch (Deutschland)",
+                name: "Deutsch",
               })
             ).toBeVisible()
           );
@@ -160,7 +160,7 @@ test("the language menu opens the same route in the chosen language", async ({
           .getByRole("button", { exact: true, name: "Language" });
         const german = page.getByRole("menuitem", {
           exact: true,
-          name: "Deutsch (Deutschland)",
+          name: "Deutsch",
         });
         yield* activateUntilVisible(
           languageButton,
@@ -345,26 +345,27 @@ test("guest reaches authentication only when starting a public tryout", async ({
           })
         );
 
-        const examHref = `${countryHref}/snbt`;
+        // An exam's card opens its first group, SNBT's year 2027.
+        const groupHref = `${countryHref}/snbt/2027`;
         const exam = page.getByRole("link", {
           exact: true,
           name: "View options SNBT",
         });
         yield* Effect.promise(() => expect(exam).toBeVisible());
         yield* Effect.promise(() =>
-          expect(exam).toHaveAttribute("href", examHref)
+          expect(exam).toHaveAttribute("href", groupHref)
         );
         yield* Effect.promise(() => exam.click());
         yield* Effect.promise(() =>
-          expect(page).toHaveURL(new URL(examHref, page.url()).toString(), {
+          expect(page).toHaveURL(new URL(groupHref, page.url()).toString(), {
             timeout: readinessTimeoutMilliseconds,
           })
         );
 
-        const trackHref = `${examHref}/2027`;
+        const trackHref = `${groupHref}/utbk`;
         const track = page.getByRole("link", {
           exact: true,
-          name: "View sets Year 2027",
+          name: "View sets UTBK",
         });
         yield* Effect.promise(() => expect(track).toBeVisible());
         yield* Effect.promise(() =>

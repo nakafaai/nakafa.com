@@ -1,5 +1,5 @@
 import {
-  type AppLocaleCode,
+  type ActiveAppLocaleCode,
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
@@ -88,7 +88,7 @@ const NakafaQuranArabicSourceSchema = NakafaQuranEmbeddedSourceSchema.mapFields(
 
 /** Builds one exact locale and translation source relationship. */
 function makeReadingSourcesSchema<
-  const Locale extends AppLocaleCode,
+  const Locale extends ActiveAppLocaleCode,
   const SourceId extends QuranEmbeddedSourceId,
 >(appLocale: Locale, sourceId: SourceId) {
   const translation = NakafaQuranEmbeddedSourceSchema.mapFields((fields) => ({

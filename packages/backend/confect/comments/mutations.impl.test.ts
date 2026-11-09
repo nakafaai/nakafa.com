@@ -1,6 +1,13 @@
 import { Ref } from "@confect/core";
+// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
+// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
+// file is collected, so no test pays it.
+import "@repo/backend/components/betterAuth/session";
+import "@repo/backend/convex/comments/mutations";
+import "@repo/backend/convex/comments/queries";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { TEXT_REFUSAL_MESSAGE } from "@repo/backend/confect/comments/text";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -58,14 +65,15 @@ describe("comment write and read contracts", () => {
     const slug = "articles/example";
     const root = await author.session.mutation(
       api.comments.mutations.addComment,
-      { slug, text: "Question" }
+      { uploads: [], slug, text: "Question" }
     );
     const reply = await reader.session.mutation(
       api.comments.mutations.addComment,
-      { slug, text: "Answer", parentId: root }
+      { uploads: [], slug, text: "Answer", parentId: root }
     );
     const rejected = await reader.session
       .mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug: "articles/other",
         text: "Wrong parent",
         parentId: root,
@@ -103,7 +111,7 @@ describe("comment write and read contracts", () => {
     });
     const page = await reader.session.query(
       api.comments.queries.getCommentsBySlug,
-      { slug, paginationOpts }
+      { sort: "newest", slug, paginationOpts }
     );
     expect(
       Option.getOrUndefined(Arr.findFirst(page.page, (row) => row._id === root))
@@ -166,6 +174,7 @@ describe("comment write and read contracts", () => {
     });
     await t.mutation((ctx) => ctx.db.delete("users", author.userId));
     const after = await t.query(api.comments.queries.getCommentsBySlug, {
+      sort: "newest",
       slug,
       paginationOpts,
     });
@@ -204,6 +213,7 @@ describe("comment write and read contracts", () => {
     });
     await expect(
       reader.session.mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "Missing reply",
         parentId: reply,
@@ -220,15 +230,15 @@ describe("comment write and read contracts", () => {
     const slug = "articles/threads";
     const root = await author.session.mutation(
       api.comments.mutations.addComment,
-      { slug, text: "Root" }
+      { uploads: [], slug, text: "Root" }
     );
     const first = await reader.session.mutation(
       api.comments.mutations.addComment,
-      { slug, text: "First reply", parentId: root }
+      { uploads: [], slug, text: "First reply", parentId: root }
     );
     const nested = await author.session.mutation(
       api.comments.mutations.addComment,
-      { slug, text: "Reply to the reply", parentId: first }
+      { uploads: [], slug, text: "Reply to the reply", parentId: first }
     );
     expect(await t.query((ctx) => ctx.db.get("comments", first))).toMatchObject(
       { parentId: root, threadId: root }
@@ -253,6 +263,7 @@ describe("comment write and read contracts", () => {
     );
     expect(Arr.map(thread.page, (row) => row._id)).toEqual([first, nested]);
     const top = await t.query(api.comments.queries.getCommentsBySlug, {
+      sort: "newest",
       slug,
       paginationOpts,
     });
@@ -264,13 +275,14 @@ describe("comment write and read contracts", () => {
     const slug = "articles/text";
     const commentId = await author.session.mutation(
       api.comments.mutations.addComment,
-      { slug, text: "  Halo.  " }
+      { uploads: [], slug, text: "  Halo.  " }
     );
     expect(
       await t.query((ctx) => ctx.db.get("comments", commentId))
     ).toMatchObject({ text: "Halo." });
     await expect(
       author.session.mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: " \n ",
       })
@@ -279,13 +291,14 @@ describe("comment write and read contracts", () => {
     });
     await expect(
       author.session.mutation(api.comments.mutations.addComment, {
+        uploads: [],
         slug,
         text: "a".repeat(LEARNER_TEXT_MAX_LENGTH + 1),
       })
     ).rejects.toMatchObject({
       data: {
         code: "POST_TEXT_TOO_LONG",
-        message: `The comment must hold 1 to ${LEARNER_TEXT_MAX_LENGTH} characters.`,
+        message: TEXT_REFUSAL_MESSAGE,
       },
     });
   });
@@ -294,7 +307,7 @@ describe("comment write and read contracts", () => {
     const { t, author, reader } = await createLearners();
     const commentId = await author.session.mutation(
       api.comments.mutations.addComment,
-      { slug: "articles/likes", text: "Liked" }
+      { uploads: [], slug: "articles/likes", text: "Liked" }
     );
     const count = () =>
       t
@@ -330,7 +343,7 @@ describe("comment write and read contracts", () => {
     const { author, reader } = await createLearners();
     const commentId = await author.session.mutation(
       api.comments.mutations.addComment,
-      { slug: "articles/gone", text: "Removed" }
+      { uploads: [], slug: "articles/gone", text: "Removed" }
     );
     await author.session.mutation(api.comments.mutations.deleteComment, {
       commentId,
@@ -343,5 +356,95 @@ describe("comment write and read contracts", () => {
         commentId,
       })
     ).rejects.toMatchObject({ data: { code: "COMMENT_NOT_FOUND" } });
+  });
+
+  it("edits the text of one's own comment, marks when, and refuses another learner's or an empty text", async () => {
+    const { t, author, reader } = await createLearners();
+    const commentId = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { uploads: [], slug: "articles/edit", text: "First words" }
+    );
+    const stored = () => t.query((ctx) => ctx.db.get("comments", commentId));
+    await author.session.mutation(api.comments.mutations.editComment, {
+      commentId,
+      text: "First words",
+    });
+    expect((await stored())?.editedAt).toBeUndefined();
+    await author.session.mutation(api.comments.mutations.editComment, {
+      commentId,
+      text: "  Better **words**  ",
+    });
+    expect(await stored()).toMatchObject({
+      editedAt: expect.any(Number),
+      text: "Better **words**",
+    });
+    await expect(
+      reader.session.mutation(api.comments.mutations.editComment, {
+        commentId,
+        text: "Not mine",
+      })
+    ).rejects.toMatchObject({ data: { code: "FORBIDDEN" } });
+    await expect(
+      author.session.mutation(api.comments.mutations.editComment, {
+        commentId,
+        text: " ",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "POST_TEXT_EMPTY", message: TEXT_REFUSAL_MESSAGE },
+    });
+  });
+
+  it("keeps one report per learner and comment, refuses a report of one's own comment, and clears reports with the comment", async () => {
+    vi.useFakeTimers();
+    const { t, author, reader } = await createLearners();
+    const commentId = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { uploads: [], slug: "articles/report", text: "Reported" }
+    );
+    const reports = () =>
+      t.query((ctx) => ctx.db.query("commentReports").collect());
+    await reader.session.mutation(api.comments.mutations.reportComment, {
+      commentId,
+      reason: "spam",
+    });
+    await reader.session.mutation(api.comments.mutations.reportComment, {
+      commentId,
+      reason: "harassment",
+    });
+    expect(await reports()).toEqual([
+      expect.objectContaining({
+        commentId,
+        reason: "spam",
+        userId: reader.userId,
+      }),
+    ]);
+    await expect(
+      author.session.mutation(api.comments.mutations.reportComment, {
+        commentId,
+        reason: "other",
+      })
+    ).rejects.toMatchObject({ data: { code: "FORBIDDEN" } });
+    await author.session.mutation(api.comments.mutations.deleteComment, {
+      commentId,
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await reports()).toEqual([]);
+    vi.useRealTimers();
+  });
+
+  it("refuses the writes of a learner past the limit of a minute", async () => {
+    const { author } = await createLearners();
+    const post = (index: number) =>
+      author.session.mutation(api.comments.mutations.addComment, {
+        slug: "articles/burst",
+        text: `Comment ${index}`,
+        uploads: [],
+      });
+    for (const index of Arr.range(1, 10)) {
+      await post(index);
+    }
+    await expect(post(11)).rejects.toMatchObject({
+      data: { code: "COMMENT_RATE_LIMITED" },
+    });
   });
 });

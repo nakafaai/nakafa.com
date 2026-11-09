@@ -2,6 +2,7 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
   publicTryoutExamValidator,
+  publicTryoutGroupValidator,
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
@@ -50,12 +51,14 @@ export type TryoutSectionAttemptPageRequest =
 const setPageValidator = Schema.Struct({
   exam: publicTryoutExamValidator,
   entrySection: publicTryoutSectionValidator,
+  group: publicTryoutGroupValidator,
   set: publicTryoutSetValidator,
   sections: Schema.mutable(Schema.Array(publicTryoutSectionValidator)),
   track: publicTryoutTrackValidator,
 });
 const sectionPageValidator = Schema.Struct({
   exam: publicTryoutExamValidator,
+  group: publicTryoutGroupValidator,
   section: publicTryoutSectionValidator,
   set: publicTryoutSetValidator,
   track: publicTryoutTrackValidator,

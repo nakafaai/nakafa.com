@@ -7,6 +7,7 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { assignRole } from "@repo/backend/confect/access/grant";
+import { countryProfiles } from "@repo/backend/confect/country/registry";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
@@ -24,7 +25,6 @@ import { accountPersonName } from "@repo/backend/confect/tenancy/create";
 import { FoundingRefused } from "@repo/backend/confect/tenancy/errors";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import {
-  countryDefaults,
   type StartRequest,
   startZone,
 } from "@repo/backend/confect/tenancy/start";
@@ -147,7 +147,7 @@ export const foundSchool = Effect.fn("tenancy.found")(function* (
   );
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  const defaults = countryDefaults[args.country];
+  const defaults = countryProfiles[args.country];
   const now = yield* Clock.currentTimeMillis;
   const tenantId = yield* writer
     .table("tenants")
@@ -216,7 +216,7 @@ export const foundSchool = Effect.fn("tenancy.found")(function* (
   yield* Effect.forEach(args.units, (draft) =>
     Effect.gen(function* () {
       const unit = yield* createUnit(actor, tenantId, {
-        contentLanguage: defaults.contentLanguage,
+        contentLanguage: defaults.locale,
         level: draft.level,
         name: draft.name,
         timeZone,

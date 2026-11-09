@@ -23,8 +23,8 @@ export function isExcludedPath(path: string): boolean {
   return family === SEARCH_SEGMENT;
 }
 
-/** The segments of a try-out section's path: `/<locale>/try-out/<country>/<exam>/<track>/<set>/<section>`. */
-const TRYOUT_SECTION_SEGMENTS = 8;
+/** The segments of a try-out section's path: `/<locale>/try-out/<country>/<exam>/<group>/<track>/<set>/<section>`. */
+const TRYOUT_SECTION_SEGMENTS = 9;
 
 /**
  * Whether the sitemap leaves a page out that the build still writes: a try-out

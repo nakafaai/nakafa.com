@@ -47,14 +47,15 @@ const TryoutRouteLabelsSchema = Schema.Struct({
 type TryoutRouteLabels = typeof TryoutRouteLabelsSchema.Type;
 
 /** The catalog kinds of a route's ancestors, from the top of a `try-out/...` path. */
-const ANCESTOR_KINDS = ["country", "exam", "track", "set"] as const;
+const ANCESTOR_KINDS = ["country", "exam", "group", "track", "set"] as const;
 
 /** How many segments a route's path holds above its first ancestor and below its last. */
 const OWN_SEGMENTS = 2;
 
 /**
  * The breadcrumb that a search result shows for a route: home, the hub, then each
- * ancestor by the title the catalog publishes, down to the route itself.
+ * ancestor by the title the catalog publishes, down to the route itself. An exam has
+ * no page of its own, so its title leads the crumb of its group, as `SNBT 2027`.
  */
 const readTryoutBreadcrumbs = Effect.fn("www.tryout.route.readBreadcrumbs")(
   function* (input: {
@@ -74,22 +75,47 @@ const readTryoutBreadcrumbs = Effect.fn("www.tryout.route.readBreadcrumbs")(
           publicPath: Arr.join(Arr.take(segments, index + OWN_SEGMENTS), "/"),
         })
     );
+    const nodes = Arr.zipWith(ANCESTOR_KINDS, ancestors, (kind, { route }) => ({
+      kind,
+      route,
+    }));
+    // An exam has no page of its own, so its title leads the crumb of its group.
+    const examLead = Option.getOrElse(
+      Arr.head(
+        Arr.flatMap(nodes, ({ kind, route }) =>
+          kind === "exam" && route ? [`${route.title} `] : []
+        )
+      ),
+      () => ""
+    );
+    const leadOf = (kind: string | undefined) =>
+      kind === "group" ? examLead : "";
+    const crumbs = Arr.flatMap(nodes, ({ kind, route }) =>
+      !route || kind === "exam"
+        ? []
+        : [
+            {
+              name: `${leadOf(kind)}${route.title}`,
+              path: `/${route.publicPath}`,
+            },
+          ]
+    );
     return createBreadcrumbItems(input.locale, [
       { name: labels.home, path: "" },
       { name: labels.tryOut, path: "/try-out" },
-      ...Arr.flatMap(ancestors, ({ route }) =>
-        route ? [{ name: route.title, path: `/${route.publicPath}` }] : []
-      ),
-      { name: input.title, path: `/${input.publicPath}` },
+      ...crumbs,
+      {
+        name: `${leadOf(ANCESTOR_KINDS[ancestors.length])}${input.title}`,
+        path: `/${input.publicPath}`,
+      },
     ]);
   }
 );
 
 /**
  * Reads the head facts of one published try-out route. The catalog decides the
- * title and the social image. A route the catalog does not publish, or an exam
- * without the social image identity it needs, has no page, so the reader says
- * so with none.
+ * title and the social image: an exam's group shows its exam's artwork. A route the
+ * catalog does not publish has no page, so the reader says so with none.
  */
 export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
   function* (input: {
@@ -130,7 +156,7 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
     const description =
       source.description ??
       tTryouts("route-metadata-description", { name: source.title });
-    if (input.kind !== "exam") {
+    if (source.socialImageIdentity === null) {
       return Option.some<TryoutRouteHead>({
         alternates,
         breadcrumbs,
@@ -140,9 +166,6 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
         indexable: true,
         title: tTryouts("search-title", { name: source.title }),
       });
-    }
-    if (!source.socialImageIdentity) {
-      return Option.none<TryoutRouteHead>();
     }
     const artwork = yield* resolveTryoutExamArtwork({
       ...source.socialImageIdentity,

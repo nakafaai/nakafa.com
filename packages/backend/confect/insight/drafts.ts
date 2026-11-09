@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { SkillView } from "@repo/backend/confect/insight/schema";
 import { Claim } from "@repo/backend/confect/spend/schema";
 import { Array as Arr, Schema } from "effect";
@@ -11,7 +11,7 @@ export const DraftSource = Schema.Struct({
   /** Who the draft's model call is held against: the teacher who asked, in their school. */
   claim: Claim,
   kktp: Schema.Finite,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   skills: Schema.Array(SkillView),
 });
 

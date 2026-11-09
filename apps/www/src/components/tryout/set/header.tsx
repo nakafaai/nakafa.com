@@ -5,8 +5,8 @@ import type { SetPage } from "@/components/tryout/set/model";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 
 /**
- * Renders the set heading with its exam and track path. The exam links only
- * while the page shows the current catalog version of the set.
+ * Renders the set heading with its exam and group, and its track. The group
+ * links only while the page shows the current catalog version of the set.
  */
 export function TryoutSetPageHeader({
   children,
@@ -17,18 +17,18 @@ export function TryoutSetPageHeader({
   /** The page's action, at the end of the header. */
   children: ReactNode;
   currentPath: string;
-  page: Pick<SetPage, "exam" | "set" | "track">;
+  page: Pick<SetPage, "exam" | "group" | "set" | "track">;
   returnPath: string;
 }) {
   return (
     <TryoutPageHeader
       items={[
         {
-          label: page.exam.title,
+          label: `${page.exam.title} ${page.group.title}`,
           target:
             currentPath === page.set.publicPath
               ? Option.getOrUndefined(
-                  getTryoutCrumbTarget(page.exam.publicPath)
+                  getTryoutCrumbTarget(page.group.publicPath)
                 )
               : undefined,
         },

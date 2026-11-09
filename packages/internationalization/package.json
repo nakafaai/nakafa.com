@@ -10,7 +10,7 @@
     "typecheck": "tsrs --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@nakafa/aksara-contracts": "4.1.1",
+    "@nakafa/aksara-contracts": "6.2.0",
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",

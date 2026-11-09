@@ -4,10 +4,13 @@ import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import {
   readPublishedCountryPage,
   readPublishedExamPage,
+  readPublishedGroupPage,
   readPublishedHubPage,
+  readPublishedTrackPage,
+} from "@repo/backend/content/tryout/navigation";
+import {
   readPublishedSectionPage,
   readPublishedSetPage,
-  readPublishedTrackPage,
 } from "@repo/backend/content/tryout/published";
 import { readTryoutSetSelection } from "@repo/backend/content/tryout/selection";
 import type {
@@ -56,13 +59,21 @@ export const readTryoutCountryPage = Effect.fn("tryouts.readCountryPage")(
   }
 );
 
-/** Reads one exam page of the active release. */
+/** Reads one exam of the active release with its groups. */
 export const readTryoutExamPage = Effect.fn("tryouts.readExamPage")(function* (
   input: PageInput
 ) {
   const catalog = yield* loadTryoutCatalog(input.appLocale);
   return yield* readPublishedExamPage(catalog, input.publicPath);
 });
+
+/** Reads one group page of the active release. */
+export const readTryoutGroupPage = Effect.fn("tryouts.readGroupPage")(
+  function* (input: PageInput) {
+    const catalog = yield* loadTryoutCatalog(input.appLocale);
+    return yield* readPublishedGroupPage(catalog, input.publicPath);
+  }
+);
 
 /** Reads one track page of the active release. */
 export const readTryoutTrackPage = Effect.fn("tryouts.readTrackPage")(

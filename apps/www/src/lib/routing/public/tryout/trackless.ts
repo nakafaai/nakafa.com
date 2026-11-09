@@ -1,6 +1,6 @@
 import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 import {
@@ -8,6 +8,7 @@ import {
   readPublishedTryoutSectionPage,
 } from "@/lib/content/tryout/catalog";
 import { temporaryRedirect } from "@/lib/routing/public/redirect";
+import { readSoleTrack } from "@/lib/routing/public/tryout/group";
 import {
   decodeAppLocale,
   readActiveTryoutPath,
@@ -20,15 +21,15 @@ import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
  * The set segment that each app locale publishes for a set. German names its
  * sets `aufgabensatz-N`; English and Indonesian name them `set-N`.
  */
-const TRACKLESS_SET_PATTERNS: Record<AppLocaleCode, RegExp> = {
+const TRACKLESS_SET_PATTERNS: Record<ActiveAppLocaleCode, RegExp> = {
   de: /^aufgabensatz-\d+$/u,
   en: /^set-\d+$/u,
   id: /^set-\d+$/u,
 };
-const YEAR_TRACK_KEY_PATTERN = /^\d{4}$/u;
+const YEAR_GROUP_KEY_PATTERN = /^\d{4}$/u;
 
 const TracklessSetRouteSchema = Schema.Struct({
-  appLocale: AppLocaleCodeSchema,
+  appLocale: ActiveAppLocaleCodeSchema,
   country: Schema.String,
   exam: Schema.String,
   section: Schema.optionalKey(Schema.String),
@@ -65,57 +66,58 @@ export function readTracklessSetRoute(
   });
 }
 
-/** Matches a track whose route key is a four-digit year. */
-function isYearTrack(track: {
-  readonly trackKey: string;
-  readonly trackKind: string;
-}) {
-  return (
-    track.trackKind === "year" && YEAR_TRACK_KEY_PATTERN.test(track.trackKey)
-  );
-}
-
 /**
- * Reads the one newest year track whose signed set is live. Two live tracks
- * of the same newest year leave the set ambiguous, so no track is chosen.
+ * Reads the track of the one newest year group whose signed set is live: a year
+ * group holds one track, its year's test. Two live groups of the same newest year
+ * leave the set ambiguous, so no track is chosen.
  */
 const readNewestServingTrack = Effect.fn(
   "www.routing.publicHtml.tryoutNewestTrack"
-)(function* (appLocale: AppLocaleCode, examPath: string, set: string) {
+)(function* (appLocale: ActiveAppLocaleCode, examPath: string, set: string) {
   const exam = yield* readPublishedTryoutExamPage({
     appLocale,
     publicPath: examPath,
   });
-  if (exam === null) {
+  if (exam === null || exam.exam.groupAxis !== "year") {
     return null;
   }
-  const servingTracks = yield* Effect.filter(
-    Arr.filter(exam.tracks, isYearTrack),
-    (track) =>
-      readActiveTryoutPath(appLocale, `${track.publicPath}/${set}`).pipe(
-        Effect.map((path) => path !== null)
-      )
+  const years = Arr.filter(exam.groups, ({ groupKey }) =>
+    YEAR_GROUP_KEY_PATTERN.test(groupKey)
   );
-  if (servingTracks.length === 0) {
+  const serving = Arr.getSomes(
+    yield* Effect.forEach(years, (group) =>
+      Effect.gen(function* () {
+        const track = yield* readSoleTrack(appLocale, group.publicPath);
+        if (Option.isNone(track)) {
+          return Option.none();
+        }
+        const path = yield* readActiveTryoutPath(
+          appLocale,
+          `${track.value.publicPath}/${set}`
+        );
+        return path === null
+          ? Option.none()
+          : Option.some({ groupKey: group.groupKey, track: track.value });
+      })
+    )
+  );
+  if (serving.length === 0) {
     return null;
   }
-  const newestYear = Arr.reduce(servingTracks, "", (newest, track) =>
-    Order.max(Order.String)(newest, track.trackKey)
+  const newestYear = Arr.reduce(serving, "", (newest, { groupKey }) =>
+    Order.max(Order.String)(newest, groupKey)
   );
-  const newestTracks = Arr.filter(
-    servingTracks,
-    (track) => track.trackKey === newestYear
-  );
-  if (newestTracks.length !== 1) {
+  const newest = Arr.filter(serving, ({ groupKey }) => groupKey === newestYear);
+  if (newest.length !== 1) {
     return null;
   }
-  return Option.getOrNull(Arr.head(newestTracks));
+  return Option.getOrNull(Option.map(Arr.head(newest), ({ track }) => track));
 });
 
 /**
  * Answers a retired track-less set with a temporary redirect to the same set in
- * its newest live year track. A newer year track can replace that track, so
- * the answer must not be permanent.
+ * the track of its newest live year. A newer year can replace that year, so the
+ * answer must not be permanent.
  */
 const readTracklessSetRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutTracklessSetMigration"
@@ -133,7 +135,7 @@ const readTracklessSetRedirect = Effect.fn(
 
 /**
  * Answers a retired track-less section with a temporary redirect to its renamed
- * section in the newest live year track, for the same reason as its set.
+ * section in the track of the newest live year, for the same reason as its set.
  */
 const readTracklessSectionRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutTracklessSectionMigration"

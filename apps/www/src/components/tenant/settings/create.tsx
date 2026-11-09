@@ -1,6 +1,6 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
-import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -29,11 +29,14 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { timeZoneItems } from "@/components/tenant/settings/choices";
+import {
+  languageItems,
+  timeZoneItems,
+} from "@/components/tenant/settings/choices";
 import { addUnitChange } from "@/components/tenant/settings/mutation";
+import { SelectField } from "@/components/tenant/settings/select";
 import type { Unit } from "@/components/tenant/settings/state";
 import {
-  UnitLanguageField,
   UnitLevelField,
   UnitNameField,
 } from "@/components/tenant/settings/units/fields";
@@ -107,7 +110,7 @@ function SchoolUnitCreateForm({
   // The choices start as the first school's, so only a pick the teacher makes is kept.
   const [zoneChoice, setZoneChoice] = useState<string | null>(null);
   const [languageChoice, setLanguageChoice] = useState<
-    typeof AppLocaleCodeSchema.Type | null
+    typeof ActiveAppLocaleCodeSchema.Type | null
   >(null);
   const timeZone =
     zoneChoice ?? Option.getOrNull(Option.map(unit, (it) => it.timeZone));
@@ -168,7 +171,7 @@ function SchoolUnitCreateForm({
     >
       <FieldGroup>
         <UnitNameField id={`${id}-name`} onChange={setName} value={name} />
-        <UnitLevelField id={`${id}-level`} onChange={setLevel} value={level} />
+        <UnitLevelField onChange={setLevel} value={level} />
         <Field>
           <FieldLabel htmlFor={`${id}-zone`}>{t("unit-time-zone")}</FieldLabel>
           <Select
@@ -196,9 +199,18 @@ function SchoolUnitCreateForm({
             </SelectContent>
           </Select>
         </Field>
-        <UnitLanguageField
-          id={`${id}-language`}
-          onChange={setLanguageChoice}
+        <SelectField
+          items={languageItems}
+          label={t("unit-page-language")}
+          menu={common("menu-language")}
+          onChoose={(next) => {
+            const chosen = Schema.decodeUnknownOption(
+              ActiveAppLocaleCodeSchema
+            )(next);
+            if (Option.isSome(chosen)) {
+              setLanguageChoice(chosen.value);
+            }
+          }}
           value={contentLanguage}
         />
       </FieldGroup>

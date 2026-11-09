@@ -12,4 +12,6 @@ export default {
 ["edit"]: RegisteredConvexFunction.register({ ...definitions["edit"], handler: forward(definitions["edit"].handler) }),
 ["water"]: RegisteredConvexFunction.register({ ...definitions["water"], handler: forward(definitions["water"].handler) }),
 ["harvest"]: RegisteredConvexFunction.register({ ...definitions["harvest"], handler: forward(definitions["harvest"].handler) }),
+["reserveSnapshot"]: RegisteredConvexFunction.register({ ...definitions["reserveSnapshot"], handler: forward(definitions["reserveSnapshot"].handler) }),
+["keepSnapshot"]: RegisteredConvexFunction.register({ ...definitions["keepSnapshot"], handler: forward(definitions["keepSnapshot"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../island/mutations.spec")["default"]>;

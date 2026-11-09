@@ -1,15 +1,19 @@
 import {
+  Backpack02Icon,
   BoardMathIcon,
+  Book04Icon,
   BookOpenTextIcon,
   BookSearchIcon,
   Brain02Icon,
   Building06Icon,
   Calendar01Icon,
   CalendarsIcon,
+  DeskIcon,
   DigitalClockIcon,
   Factory01Icon,
   FileTextIcon,
   FireworksIcon,
+  GraduationScrollIcon,
   Hospital01Icon,
   Knowledge01Icon,
   LandmarkIcon,
@@ -17,21 +21,26 @@ import {
   LibraryBigIcon,
   LighthouseIcon,
   Mortarboard02Icon,
+  Notebook02Icon,
   PartyPopperIcon,
   PuzzleIcon,
   QuillWriteIcon,
   Quiz04Icon,
   RankingIcon,
+  RulerIcon,
+  SchoolBell02Icon,
   SquareRootSquareIcon,
   StopWatchIcon,
+  StudentsIcon,
   SunMoonIcon,
   SunriseIcon,
+  TeacherIcon,
   TheaterIcon,
   TimeZoneIcon,
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { TrackKindSchema } from "@nakafa/aksara-contracts/assessment/catalog";
+import type { GroupAxisSchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { Array as Arr, Match, Option, Record as Rec } from "effect";
@@ -65,7 +74,7 @@ export const TRYOUT_SUBJECT_ICONS: Readonly<Record<string, IconSvgElement>> = {
 };
 
 /**
- * The drawings that the year tracks of one exam take apart, one each: a
+ * The drawings that the year groups of one exam take apart, one each: a
  * calendar and a stack of calendars, a digital clock, a stopwatch, the sun and
  * the moon, a sunrise, a globe with a clock, fireworks, and a party popper.
  * Each is a different object at 40px: calendars that differ only by a mark
@@ -85,7 +94,7 @@ export const TRYOUT_YEAR_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> = [
 ];
 
 /**
- * The icons that the institution tracks of one exam take apart, one each: a
+ * The icons that the institution groups of one exam take apart, one each: a
  * mortarboard, a building with columns, a campus, a library, an office, a
  * factory, a hospital, a theatre, and a lighthouse. Buildings that differ only
  * by their windows or by a spire read alike at 40px, so each is a different
@@ -133,18 +142,35 @@ export function getTryoutSubjectIcons(
 }
 
 /**
- * Resolves the icons that one track may show: the drawings of time of a year
- * track, the buildings of an institution track, and the icons of the subject of
- * a subject track. Tracks of one kind take them apart.
+ * The icons that the grade groups of one exam take apart, one each: a desk, a
+ * backpack, a school bell, a group of students, a teacher at a board, a ruler,
+ * a notebook, a book, and a graduation scroll. Each is a different object at
+ * 40px, and none is the icon of a curriculum stage or class.
  */
-export function getTryoutTrackIcons(
-  trackKind: typeof TrackKindSchema.Type,
-  trackKey: string
+export const TRYOUT_GRADE_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> = [
+  DeskIcon,
+  Backpack02Icon,
+  SchoolBell02Icon,
+  StudentsIcon,
+  TeacherIcon,
+  RulerIcon,
+  Notebook02Icon,
+  Book04Icon,
+  GraduationScrollIcon,
+];
+
+/**
+ * Resolves the icons that the groups of one exam take apart, by the axis the
+ * exam divides by: the drawings of time of a year, the schools of a grade, and
+ * the buildings of an institution.
+ */
+export function getTryoutGroupIcons(
+  axis: typeof GroupAxisSchema.Type
 ): Arr.NonEmptyReadonlyArray<IconSvgElement> {
-  return Match.value(trackKind).pipe(
+  return Match.value(axis).pipe(
     Match.when("year", () => TRYOUT_YEAR_ICONS),
+    Match.when("grade", () => TRYOUT_GRADE_ICONS),
     Match.when("institution", () => TRYOUT_INSTITUTION_ICONS),
-    Match.when("subject", () => getTryoutSubjectIcons(trackKey)),
     Match.exhaustive
   );
 }

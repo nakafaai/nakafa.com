@@ -53,3 +53,21 @@ export const editIslandChange: OptimisticUpdate<
     })
   );
 };
+
+/**
+ * Shows the owner's new choice of who may visit at once (ADR 0042, D20).
+ * Convex drops it when the server answers either way.
+ */
+export const shareIslandChange: OptimisticUpdate<
+  typeof island.mutations.share
+> = (localStore, { visibility }) => {
+  const own = localStore.getQuery(island.queries.own, {});
+  if (Option.isNone(own) || own.value === null) {
+    return;
+  }
+  localStore.setQuery(
+    island.queries.own,
+    {},
+    Option.some({ ...own.value, visibility })
+  );
+};

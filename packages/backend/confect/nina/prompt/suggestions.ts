@@ -1,6 +1,6 @@
 import {
   ActiveAppLocaleCodeSchema,
-  type ActiveAppLocaleCode as Locale,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { Schema } from "effect";
@@ -51,7 +51,19 @@ const localeInstructions = {
       - Ask Nina to explain the steps more slowly in Indonesian.
     `,
   },
-} satisfies Record<Locale, typeof LocaleInstructionSchema.Type>;
+  ms: {
+    language:
+      "Malaysian Malay (Bahasa Melayu as written in Malaysia, not Indonesian)",
+    example: `
+      ## Selepas Nina menyelesaikan soalan algebra:
+      - "Beri saya satu lagi soalan yang serupa untuk berlatih"
+      - "Bagaimana saya tahu kaedah mana yang perlu digunakan?"
+      - "Apa yang berlaku jika saya menukar nombor ini?"
+      - "Tunjukkan di mana ini digunakan dalam kehidupan sebenar"
+      - "Terangkan langkahnya dengan lebih perlahan"
+    `,
+  },
+} satisfies Record<AppLocaleCode, typeof LocaleInstructionSchema.Type>;
 
 /** Builds follow-up suggestion instructions for the active conversation locale. */
 export function nakafaSuggestions({ locale }: Params) {

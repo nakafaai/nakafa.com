@@ -153,4 +153,16 @@ describe("createLocalizedAlternates", () => {
       ).toEqual(expectedLanguages);
     }
   });
+
+  it("names no alternate for a counterpart in a locale Nakafa does not serve yet", () => {
+    expect(
+      createResolvedRouteAlternates(testArticleProjection, [
+        testArticleProjection,
+        { appLocale: "ms", publicPath: testArticleProjection.publicPath },
+      ]).languages
+    ).toEqual({
+      en: `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
+      "x-default": `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
+    });
+  });
 });

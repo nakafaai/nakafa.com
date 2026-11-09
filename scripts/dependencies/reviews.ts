@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.2",
-    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 4.1.1 peers effect 4.1.2 exactly. Checked 7 November 2026.",
+    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 6.0.0 peers effect 4.1.2 exactly. Checked 7 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "4.1.1",
-    "nakafa.com declares 4.1.1, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort, 3.0.0 moved them onto effect/crypto, and 4.0.0 reads a typed number with any decimal separator and Arabic-Indic digits.",
+    "5.0.0",
+    "nakafa.com declares 5.0.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort, and 5.0.0 divides every try-out exam's tracks into groups on one axis (year, grade, institution) with a group row in the catalog. Checked 8 November 2026.",
   ],
   [
     "tsrs@latest",

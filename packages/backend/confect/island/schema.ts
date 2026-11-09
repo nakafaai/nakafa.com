@@ -101,3 +101,12 @@ export class FarmRefused extends Schema.TaggedError<
     "watered",
   ]),
 }) {}
+
+/**
+ * A snapshot the island refused (ADR 0042, D20): a picture over its byte
+ * limit, or a file that is not an upload this island reserved.
+ */
+export class SnapshotRefused extends Schema.TaggedError<
+  SnapshotRefused,
+  { readonly brand: unique symbol }
+>()("SnapshotRefused", { reason: Schema.Literals(["file", "size"]) }) {}

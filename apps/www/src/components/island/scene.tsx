@@ -5,6 +5,7 @@ import { IslandPicker } from "@/components/island/pick";
 import { Wildlife } from "@/components/island/sprites";
 import { useTools } from "@/components/island/tools";
 import { VoxelMesh } from "@/components/island/voxels";
+import { chimneysOf, firefliesOf } from "@/lib/island/life";
 import { CLOUD_SHAPES, CLOUD_SIZE } from "@/lib/island/models/cloud";
 import { basinsOf, floraOf, piecesOf, wildlifeOf } from "@/lib/island/pieces";
 import { BODY_DEPTH, drawTerrain, VOXELS_PER_CELL } from "@/lib/island/terrain";
@@ -33,7 +34,8 @@ function cloudPlacements(size: number) {
 
 /**
  * Everything the island draws in its scene pass: the body cut for its ponds,
- * one instanced mesh for each kind of piece on it, its animals, and the clouds
+ * one instanced mesh for each kind of piece on it, its animals, smoke and
+ * fireflies, and the clouds
  * under it. The island turns about its centre in quarter steps.
  */
 export function IslandScene({
@@ -70,6 +72,8 @@ export function IslandScene({
   const cloud = useMemo(() => drawModel(CLOUD_SIZE, CLOUD_SHAPES, 5), []);
   const animals = useMemo(() => wildlifeOf(layout), [layout]);
   const flora = useMemo(() => floraOf(layout), [layout]);
+  const chimneys = useMemo(() => chimneysOf(layout), [layout]);
+  const flies = useMemo(() => firefliesOf(layout), [layout]);
   const building = useTools((state) => state.building);
   return (
     <>
@@ -92,7 +96,12 @@ export function IslandScene({
               placements={kind.pieces}
             />
           ))}
-          <Wildlife animals={animals} flora={flora} />
+          <Wildlife
+            animals={animals}
+            chimneys={chimneys}
+            flies={flies}
+            flora={flora}
+          />
           {building ? <IslandPicker /> : null}
         </group>
       </group>

@@ -43,7 +43,7 @@ const everyCurrency = (
 ) =>
   joinPrices(
     locale,
-    Arr.map(["IDR", "USD", "EUR"] as const, (currency) =>
+    Arr.map(["IDR", "MYR", "USD", "EUR"] as const, (currency) =>
       formatSchoolPrice(currency, amountOf(currency))
     )
   );

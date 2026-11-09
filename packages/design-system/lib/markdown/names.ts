@@ -66,7 +66,7 @@ export const semanticComponentNames = [
   baseComponentNames.subscript,
 ] as const;
 
-/** Canonical rich component names owned by chemistry routes. */
+/** Rich component names of the chemistry visuals; every lesson domain may use them. */
 export const chemistryComponentNames = {
   ancientAtomLab: "AncientAtomLab",
   atomShellLab: "AtomShellLab",
@@ -90,12 +90,7 @@ export const chemistryComponentNames = {
   valenceElectronLab: "ValenceElectronLab",
 } as const;
 
-/** Canonical rich component names owned by AI and data-science routes. */
-export const aiDsComponentNames = {
-  lineEquation: "LineEquation",
-} as const;
-
-/** Canonical rich component names owned by biology routes. */
+/** Rich component names of the biology visuals; every lesson domain may use them. */
 export const biologyComponentNames = {
   bacteriaStructureLab: "BacteriaStructureLab",
   climateObservationLab: "ClimateObservationLab",
@@ -108,7 +103,7 @@ export const biologyComponentNames = {
   virusStructureLab: "VirusStructureLab",
 } as const;
 
-/** Canonical rich component names owned by mathematics routes. */
+/** Rich component names of the mathematics visuals; every lesson domain may use them. */
 export const mathematicsComponentNames = {
   bacterialGrowth: "BacterialGrowth",
   barChart: "BarChart",
@@ -122,6 +117,7 @@ export const mathematicsComponentNames = {
   inequality: "Inequality",
   inverseFunctionIllustration: "InverseFunctionIllustration",
   lineEquation: "LineEquation",
+  numberLine: "NumberLine",
   quadraticEquationReadingRoomProblem: "QuadraticEquationReadingRoomProblem",
   scatterDiagram: "ScatterDiagram",
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
@@ -130,7 +126,7 @@ export const mathematicsComponentNames = {
   vectorChart: "VectorChart",
 } as const;
 
-/** Canonical rich component names owned by physics routes. */
+/** Rich component names of the physics visuals; every lesson domain may use them. */
 export const physicsComponentNames = {
   accelerationGraphCard: "AccelerationGraphCard",
   accelerationLab: "AccelerationLab",
@@ -138,7 +134,6 @@ export const physicsComponentNames = {
   dimensionLab: "DimensionLab",
   displacementDistanceLab: "DisplacementDistanceLab",
   instantaneousVelocitySpeedLab: "InstantaneousVelocitySpeedLab",
-  lineEquation: "LineEquation",
   measurementToolsLab: "MeasurementToolsLab",
   nonUniformLinearMotionGraphCard: "NonUniformLinearMotionGraphCard",
   nonUniformLinearMotionLab: "NonUniformLinearMotionLab",
@@ -154,7 +149,7 @@ export const physicsComponentNames = {
   windEnergyConversionLab: "WindEnergyConversionLab",
 } as const;
 
-/** Canonical rich component names owned by politics articles. */
+/** Rich component names of the politics visuals; every lesson domain may use them. */
 export const politicsComponentNames = {
   kimPlusElectabilityChart: "KimPlusElectabilityChart",
   merahPutihCabinetChart: "MerahPutihCabinetChart",
@@ -164,33 +159,4 @@ export const politicsComponentNames = {
   porkBarrelBudgetChart: "PorkBarrelBudgetChart",
   porkBarrelElectabilityChart: "PorkBarrelElectabilityChart",
   porkBarrelFundChart: "PorkBarrelFundChart",
-} as const;
-
-/** Public site pages intentionally own no rich MDX implementations. */
-export const siteComponentNames = {} as const;
-
-/** SNBT general-reasoning routes own no rich MDX implementations. */
-export const snbtGeneralComponentNames = {} as const;
-
-/** Canonical rich component names owned by SNBT mathematical-reasoning routes. */
-export const snbtMathComponentNames = {
-  lineEquation: "LineEquation",
-  numberLine: "NumberLine",
-} as const;
-
-/** SNBT plain-text routes intentionally own no rich MDX implementations. */
-export const snbtPlainComponentNames = {} as const;
-
-/** Canonical rich component names owned by SNBT quantitative-knowledge routes. */
-export const snbtQuantComponentNames = {
-  lineEquation: "LineEquation",
-  numberLine: "NumberLine",
-  unitCircle: "UnitCircle",
-} as const;
-
-/** Mathematical rendering capabilities shared by TKA subject routes. */
-export const tkaMathComponentNames = {
-  histogramChart: "HistogramChart",
-  lineEquation: "LineEquation",
-  numberLine: "NumberLine",
 } as const;

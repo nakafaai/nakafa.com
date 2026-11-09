@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranEmbeddedSourceId,
   type QuranExternalSourceId,
@@ -59,7 +59,7 @@ function externalSource(id: QuranExternalSourceId) {
 }
 
 /** Builds one complete reference for an explicit tafsir access record. */
-function reference(appLocale: AppLocaleCode, tafsir_access: unknown) {
+function reference(appLocale: ActiveAppLocaleCode, tafsir_access: unknown) {
   return {
     alignmentId: "alignment:quran:quran-surah:1",
     assetId: `asset:${appLocale}:quran:quran-surah:1`,

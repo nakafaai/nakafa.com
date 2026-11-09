@@ -9,37 +9,38 @@ import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useLocation } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { CommentComposer } from "@/components/comments/composer";
-import { usePostComment } from "@/components/comments/posting";
-import { CommentsProvider } from "@/components/comments/provider";
+import { useTranslations } from "use-intl";
+import { useCommentDraft } from "@/components/comments/provider";
 import { CommentRow, ReplyButton } from "@/components/comments/row";
 import { useCommentsSlug } from "@/components/comments/slug";
 import { CommentThread } from "@/components/comments/thread";
 import { DataFailure } from "@/components/shared/failure";
+import { LoadFailure } from "@/components/state/failure";
+import { FeedEmpty } from "@/components/user/feed";
 import { readFocusedComment } from "@/lib/comments/focus";
+import { useKeptRows } from "@/lib/data/kept";
 
 /** How many top-level comments a page holds, the first one and each one after it. */
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 20;
 
 /**
- * The comments of the page's slug: the comment the reader came for, the composer
- * of a new comment, then each top-level comment with its thread. Every change shows
- * at once, and a page is read as the list reaches its end.
+ * The comments of the page's slug: the comment the reader came for, then each top-level comment with its
+ * thread, in the order the header chose. Every change shows at once, the next page is read as the list nears
+ * its end, with no button to press, and a new order keeps the rows on screen until its own first page arrives.
  */
 export function CommentsList() {
   return (
-    <CommentsProvider>
+    <>
       <FocusedComment />
       <SlugComments />
-    </CommentsProvider>
+    </>
   );
 }
 
 /**
- * The comment that the address names, which an inbox row opens. It stands above
- * the list, because a reply may sit on a page of the list that is not read yet. This
- * list renders only in the browser, so reading the search here costs the static page
- * nothing.
+ * The comment that the address names, which an inbox row opens. It stands above the list, because a reply
+ * may sit on a page of the list that is not read yet. This list renders only in the browser, so reading the
+ * search here costs the static page nothing.
  */
 function FocusedComment() {
   const commentId = useLocation({
@@ -55,7 +56,7 @@ function FocusedRow({ commentId }: { commentId: Id<"comments"> }) {
     return null;
   }
   return (
-    <div className="rounded-xl border p-3">
+    <div className="rounded-xl border px-3">
       <CommentRow
         author={focused.value.user}
         comment={focused.value}
@@ -66,39 +67,54 @@ function FocusedRow({ commentId }: { commentId: Id<"comments"> }) {
   );
 }
 
-/** The composer and the comments of the slug, inside the provider their changes write to. */
+/** The top-level comments of the slug in the chosen order, a page at a time. */
 function SlugComments() {
+  const t = useTranslations("Comments");
   const slug = useCommentsSlug();
+  const sort = useCommentDraft((draft) => draft.sort);
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
-    { slug },
+    { slug, sort },
     { initialNumItems: PAGE_SIZE }
   );
-  const postComment = usePostComment();
 
+  // A new order keeps the rows of the last one until its first page arrives, so the list never blanks.
+  const rows = useKeptRows(
+    PaginatedQueryResult.isLoadingFirstPage(pagination),
+    pagination.results
+  );
+
+  if (Option.isNone(rows)) {
+    return null;
+  }
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    Arr.isReadonlyArrayEmpty(rows.value)
+  ) {
+    return <LoadFailure />;
+  }
+  if (
+    Arr.isReadonlyArrayEmpty(rows.value) &&
+    PaginatedQueryResult.isExhausted(pagination)
+  ) {
+    return <FeedEmpty>{t("no-comments")}</FeedEmpty>;
+  }
   return (
-    <>
-      <CommentComposer
-        onPost={(text) => postComment({ parent: null, slug, text })}
-      />
+    <div className="flex flex-col">
+      {Arr.map(rows.value, (comment) => (
+        <div data-slot="comment-thread" key={comment._id}>
+          <CommentRow
+            author={comment.user}
+            comment={comment}
+            replyAction={<ReplyButton comment={comment} />}
+          />
+          <CommentThread comment={comment} />
+        </div>
+      ))}
       {PaginatedQueryResult.isFailure(pagination) ? <DataFailure /> : null}
-      <div className="flex flex-col gap-4">
-        {Arr.map(pagination.results, (comment) => (
-          <div key={comment._id}>
-            <CommentRow
-              author={comment.user}
-              comment={comment}
-              replyAction={
-                <ReplyButton comment={comment} count={comment.replyCount} />
-              }
-            />
-            <CommentThread comment={comment} />
-          </div>
-        ))}
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
-      </div>
-    </>
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </div>
   );
 }

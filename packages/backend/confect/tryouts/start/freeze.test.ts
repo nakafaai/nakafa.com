@@ -34,14 +34,14 @@ describe("tryouts/start/freeze", () => {
         );
         expect(sections).toEqual([
           {
-            publicPath: "try-out/indonesia/snbt/2027/set-1-id/section-a",
+            publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-a",
             questionCount: 2,
             sectionKey: "section-a",
             sectionOrder: 1,
             timeLimitSeconds: 600,
           },
           {
-            publicPath: "try-out/indonesia/snbt/2027/set-1-id/section-b",
+            publicPath: "try-out/indonesia/snbt/2027/utbk/set-1-id/section-b",
             questionCount: 1,
             sectionKey: "section-b",
             sectionOrder: 2,

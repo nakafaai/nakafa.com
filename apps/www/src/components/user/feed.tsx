@@ -6,8 +6,14 @@ import type { ComponentProps, ReactNode } from "react";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 
-/** The frame every row of a profile shares, the composer's included. */
-const rowVariants = cva("relative flex items-start gap-3 border-b py-4");
+/**
+ * The frame every row of a profile shares, the composer's included. A row of a page's comments takes no
+ * hairline, so a comment and the replies under it read as one thread, as a video's comments do.
+ */
+const rowVariants = cva("relative flex items-start gap-3 py-4", {
+  defaultVariants: { rule: true },
+  variants: { rule: { false: "", true: "border-b" } },
+});
 
 /**
  * The rows of a profile, one anatomy under every tab, as in Threads: the
@@ -16,9 +22,15 @@ const rowVariants = cva("relative flex items-start gap-3 border-b py-4");
  * and the trailing menu sit on the content's edges, so every icon lines up with
  * the text above it.
  */
-export function FeedRow({ children }: { children: ReactNode }) {
+export function FeedRow({
+  children,
+  rule = true,
+}: {
+  children: ReactNode;
+  rule?: boolean;
+}) {
   return (
-    <article className={rowVariants()} data-slot="feed-row">
+    <article className={rowVariants({ rule })} data-slot="feed-row">
       {children}
     </article>
   );

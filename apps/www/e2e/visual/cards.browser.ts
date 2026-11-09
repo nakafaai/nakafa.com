@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
@@ -73,12 +73,12 @@ function countLabelsInView(card: Locator) {
   }, LINE_SCENE);
 }
 
-/** Proves playback still works: a reset from the band's menu replays the growth from its start. */
+/** Proves playback still works: the band's first view back replays the growth from its start. */
 const expectPlayback = Effect.fn("NakafaE2E.expectVisualPlayback")(function* (
   card: Locator
 ) {
   const scene = card.locator(BACTERIA_SCENE);
-  const reset = yield* revealMenuItem(card, MORE, en.Common.reset);
+  const reset = yield* revealMenuItem(card, MORE, en.Common["reset-view"]);
   yield* Effect.promise(async () => {
     await reset.click();
     const start = await scene.getAttribute("data-bacteria-count");
@@ -381,7 +381,7 @@ const pauseScenesBehind = Effect.fn("NakafaE2E.pauseVisualScenesBehind")(
 /** Enters and leaves full screen through the action named in `locale`. */
 const toggleInLocale = Effect.fn("NakafaE2E.toggleVisualInLocale")(function* (
   page: Page,
-  locale: AppLocaleCode
+  locale: ActiveAppLocaleCode
 ) {
   const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
   yield* openVisualLesson(
@@ -487,8 +487,10 @@ test.describe("scenes behind a visual card", () => {
 test("visual cards name their full screen action in every locale", async ({
   page,
 }) => {
-  const { APP_LOCALE_CODES } = await import("@nakafa/aksara-contracts/locale");
-  for (const locale of APP_LOCALE_CODES) {
+  const { ACTIVE_APP_LOCALE_CODES } = await import(
+    "@nakafa/aksara-contracts/locale"
+  );
+  for (const locale of ACTIVE_APP_LOCALE_CODES) {
     await test.step(locale, () =>
       Effect.runPromise(
         withObservedPageErrors(page, toggleInLocale(page, locale))

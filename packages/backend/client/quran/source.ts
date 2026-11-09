@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   quranReadingSourceIds,
   quranTafsirSourceId,
@@ -15,7 +15,7 @@ type QuranTafsirAccess = typeof quranTafsirAccessValidator.Type;
 export function hasExpectedQuranSources(
   sources: QuranReadingSources,
   tafsirAccess: QuranTafsirAccess,
-  appLocale: AppLocaleCode
+  appLocale: ActiveAppLocaleCode
 ) {
   const [arabicSourceId, translationSourceId] =
     quranReadingSourceIds(appLocale);

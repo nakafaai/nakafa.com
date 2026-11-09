@@ -1,4 +1,4 @@
-import type { ArtifactLocale } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { LineFacts } from "@repo/design-system/components/contents/mathematics/line/facts";
 import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
@@ -9,7 +9,8 @@ import { LineEquation } from "@/lib/content/renderer/client/mathematics/equation
 import { TAKES_LOCALE } from "@/lib/content/renderer/locale";
 
 type Props = Omit<ComponentProps<typeof LineEquation>, "facts"> & {
-  readonly locale: ArtifactLocale;
+  /** The artifact's locale, which the build renders only in a locale Nakafa serves. */
+  readonly locale: ActiveAppLocaleCode;
 };
 
 /**
