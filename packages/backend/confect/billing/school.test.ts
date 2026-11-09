@@ -8,8 +8,8 @@ import {
   applyInvoicePaid,
   ensureSchoolAccount,
   issueSchoolInvoice,
-  schoolRail,
 } from "@repo/backend/confect/billing/school";
+import { railOfCountry } from "@repo/backend/confect/country/registry";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -56,8 +56,8 @@ function journalOf(
 
 describe("billing/school accounts", () => {
   it("bills an Indonesian school through Xendit in rupiah and any other school through Polar", async () => {
-    expect(schoolRail("ID")).toBe("xendit");
-    expect(schoolRail("DE")).toBe("polar");
+    expect(railOfCountry("ID")).toBe("xendit");
+    expect(railOfCountry("DE")).toBe("polar");
     const t = createBillingTestConvex();
     const accounts = await t.run(async (ctx) => {
       const indonesian = await insertSchool(ctx);

@@ -6,9 +6,12 @@ import {
 /** The key of the drink that a monthly price buys in its own currency. */
 export function drinkKey(
   currency: string
-): "drink-eur" | "drink-idr" | "drink-usd" {
+): "drink-eur" | "drink-idr" | "drink-myr" | "drink-usd" {
   if (currency === "IDR") {
     return "drink-idr";
+  }
+  if (currency === "MYR") {
+    return "drink-myr";
   }
   if (currency === "EUR") {
     return "drink-eur";

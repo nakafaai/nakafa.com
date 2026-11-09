@@ -25,7 +25,6 @@ import { Array as Arr } from "effect";
 import { Suspense } from "react";
 import { type Locale, useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
-import { CountryFlagIcon } from "@/components/shared/flag";
 import { selectMenuSide } from "@/components/sidebar/menu/side";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
@@ -54,7 +53,7 @@ function LanguageMenuItems() {
       {Arr.map(languages, (language) => (
         <DropdownMenuItem
           disabled={isPending}
-          icon={<CountryFlagIcon countryCode={language.countryCode} />}
+          icon={TranslateIcon}
           key={language.value}
           onClick={() => handleChangeLocale(language.value)}
         >

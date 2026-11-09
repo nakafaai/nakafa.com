@@ -1,6 +1,6 @@
 import {
-  type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
@@ -164,7 +164,46 @@ const digestEmailCopy = {
     },
     subject: "Kabar baru dari sekolahmu",
   },
-} satisfies Record<ActiveAppLocaleCode, typeof DigestEmailCopySchema.Type>;
+  ms: {
+    accountReason:
+      "Kami menghantar e-mel ini kerana kamu memberi komen di Nakafa.",
+    cta: "Buka peti masuk kamu",
+    footerReason:
+      "Kami menghantar e-mel ini kerana kamu ahli sebuah sekolah di Nakafa.",
+    sentences: {
+      "comment.replied": {
+        one: "Seseorang telah membalas komen kamu.",
+        several: "Ada {count} balasan kepada komen kamu.",
+      },
+      "assignment.missed": {
+        one: "Anak kamu tidak menghantar tugasan tepat pada masanya.",
+        several:
+          "Anak kamu tidak menghantar {count} tugasan tepat pada masanya.",
+      },
+      "assignment.published": {
+        one: "Ada tugasan baharu dalam kelas kamu.",
+        several: "Ada {count} tugasan baharu dalam kelas kamu.",
+      },
+      "exam.reminder": {
+        one: "Anak kamu akan menduduki peperiksaan.",
+        several: "Anak kamu akan menduduki {count} peperiksaan.",
+      },
+      "exam.starting": {
+        one: "Peperiksaan kamu akan bermula tidak lama lagi.",
+        several: "{count} peperiksaan kamu akan bermula tidak lama lagi.",
+      },
+      "forum.mentioned": {
+        one: "Seseorang menyebut kamu dalam kelas kamu.",
+        several: "Kamu disebut {count} kali dalam kelas kamu.",
+      },
+      "grade.released": {
+        one: "Markah baharu telah dikeluarkan.",
+        several: "{count} markah baharu telah dikeluarkan.",
+      },
+    },
+    subject: "Perkara baharu di sekolah kamu",
+  },
+} satisfies Record<AppLocaleCode, typeof DigestEmailCopySchema.Type>;
 
 /**
  * Returns the reviewed copy of one notice mail: one sentence for each kind that waits, and the sentence itself as the

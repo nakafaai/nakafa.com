@@ -72,7 +72,11 @@ export const readPublishedSearchDocuments = Effect.fn(
       NAKAFA_AGENT_SEARCH_WINDOW,
       (row) => row._id
     );
-    const authenticated = yield* authenticateSearchRows(rows, owner);
+    const authenticated = yield* authenticateSearchRows(
+      rows,
+      owner,
+      args.locale
+    );
     return Arr.take(
       Arr.map(authenticated, ({ document }) => document),
       scanLimit
@@ -105,7 +109,7 @@ export const readPublishedSearchDocuments = Effect.fn(
     NAKAFA_AGENT_SEARCH_WINDOW,
     (row) => row._id
   );
-  const authenticated = yield* authenticateSearchRows(rows, owner);
+  const authenticated = yield* authenticateSearchRows(rows, owner, args.locale);
   const documentsByRow = HashMap.fromIterable(
     Arr.map(authenticated, ({ document, row }) => [row._id, document])
   );
@@ -202,15 +206,16 @@ const browseFamily = Effect.fn("contents.search.browseSearchFamily")(function* (
     .pipe(Effect.orDie);
   return rows;
 });
-/** Authenticates indexed hits before projecting public search documents. */
+/** Authenticates indexed hits, read in one served `locale`, before projecting public search documents. */
 function authenticateSearchRows(
   rows: readonly Docs["contentIndex"][],
-  owner: PublishedSearchOwner
+  owner: PublishedSearchOwner,
+  locale: ContentSearchInput["locale"]
 ) {
   return Effect.forEach(
     rows,
     (row) =>
-      authenticateSearchRow(row, owner).pipe(
+      authenticateSearchRow(row, owner, locale).pipe(
         Effect.map((document) => ({
           document,
           row,
@@ -224,7 +229,11 @@ function authenticateSearchRows(
 /** Verifies one search hit against its active immutable projection. */
 const authenticateSearchRow = Effect.fn(
   "contents.search.authenticatePublishedRow"
-)(function* (row: Docs["contentIndex"], owner: PublishedSearchOwner) {
+)(function* (
+  row: Docs["contentIndex"],
+  owner: PublishedSearchOwner,
+  locale: ContentSearchInput["locale"]
+) {
   const resolved = yield* resolveSearchProjection(row, owner);
   const projection = resolved.projection;
   const section = projection.kind === "article" ? "articles" : "material";
@@ -237,7 +246,7 @@ const authenticateSearchRow = Effect.fn(
           description: projection.metadata.description,
         }),
     hasMarkdownSource: true,
-    locale: projection.appLocale,
+    locale,
     route: projection.publicPath,
     section,
     sourcePath: resolved.sourcePath,

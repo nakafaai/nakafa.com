@@ -1,6 +1,6 @@
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { Array as Arr, HashSet, Record as Rec } from "effect";
+import { Array as Arr, HashSet, Record as Rec, String as Str } from "effect";
 
 /**
  * Names that could pass for Nakafa itself, its people, or its help. A username
@@ -37,19 +37,24 @@ const OUTSIDE_ROUTE_ROOTS = ["about", "community", "discord", "sitemap"];
 /**
  * Every name that no account takes: the misleading ones, each root of an
  * application route, each namespace a public route surface owns in any
- * language, and the roots that answer outside the route roots.
+ * language, and the roots that answer outside the route roots. A handle holds
+ * no hyphen, so each name is also reserved without its hyphens, the handle a
+ * slug such as `mata-pelajaran` would make.
  */
 export const RESERVED_USERNAMES = HashSet.fromIterable<string>(
-  Arr.flatten([
-    MISLEADING_NAMES,
-    OUTSIDE_ROUTE_ROOTS,
-    Arr.fromIterable(APPLICATION_ROUTE_ROOTS),
-    Arr.flatMap(PUBLIC_ROUTE_SURFACES, (surface) => [
-      surface.appSegment,
-      surface.key,
-      ...Rec.values(surface.routeSlugs),
+  Arr.flatMap(
+    Arr.flatten([
+      MISLEADING_NAMES,
+      OUTSIDE_ROUTE_ROOTS,
+      Arr.fromIterable(APPLICATION_ROUTE_ROOTS),
+      Arr.flatMap(PUBLIC_ROUTE_SURFACES, (surface) => [
+        surface.appSegment,
+        surface.key,
+        ...Rec.values(surface.routeSlugs),
+      ]),
     ]),
-  ])
+    (name) => [name, Str.replaceAll("-", "")(name)]
+  )
 );
 
 /** Whether a username is a route or could pass for Nakafa, so no account takes it. */

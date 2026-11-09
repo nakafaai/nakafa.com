@@ -5,8 +5,8 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALES,
+  type ActiveAppLocaleCode,
   type ActiveAppLocaleList,
-  type AppLocaleCode,
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
@@ -47,7 +47,7 @@ type QuranSearchRow = typeof QuranSearchRowSchema.Type;
 /** Builds one complete embedded source projection for transport tests. */
 function makeEmbeddedSource<
   const SourceId extends QuranEmbeddedSourceId,
-  const Locale extends AppLocaleCode,
+  const Locale extends ActiveAppLocaleCode,
 >(id: SourceId, appLocale: Locale) {
   const artifact = { byteCount: 1, digest: testDigest, fileCount: 1 };
   return {
@@ -68,7 +68,7 @@ function makeEmbeddedSource<
 /** Builds one complete external source projection for transport tests. */
 function makeExternalSource<
   const SourceId extends QuranExternalSourceId,
-  const Locale extends AppLocaleCode,
+  const Locale extends ActiveAppLocaleCode,
 >(id: SourceId, appLocale: Locale) {
   return {
     id,
@@ -89,7 +89,7 @@ function makeExternalSource<
 
 /** Builds an exact locale and translation-source relationship. */
 function projectQuranLocaleSources<
-  const Locale extends AppLocaleCode,
+  const Locale extends ActiveAppLocaleCode,
   const TranslationId extends QuranEmbeddedSourceId,
 >(appLocale: Locale, translationSourceId: TranslationId) {
   const arabicSourceId = quranReadingSourceIds(appLocale)[0];
@@ -102,7 +102,7 @@ function projectQuranLocaleSources<
 type QuranLocaleSources = ReturnType<typeof readTechnicalQuranLocaleSources>;
 
 /** Preserves the exact locale relationship in technical source fixtures. */
-function readTechnicalQuranLocaleSources(appLocale: AppLocaleCode) {
+function readTechnicalQuranLocaleSources(appLocale: ActiveAppLocaleCode) {
   if (appLocale === ENGLISH_APP_LOCALE_CODE) {
     return projectQuranLocaleSources(
       appLocale,
@@ -132,14 +132,14 @@ export function makeQuranLocaleSources(
   appLocale: "de"
 ): Extract<QuranLocaleSources, { translation: { id: "quranenc-german" } }>;
 export function makeQuranLocaleSources(
-  appLocale: AppLocaleCode
+  appLocale: ActiveAppLocaleCode
 ): QuranLocaleSources;
-export function makeQuranLocaleSources(appLocale: AppLocaleCode) {
+export function makeQuranLocaleSources(appLocale: ActiveAppLocaleCode) {
   return readTechnicalQuranLocaleSources(appLocale);
 }
 
 /** Builds the exact locale Tafsir access projection. */
-function projectQuranTafsir(appLocale: AppLocaleCode) {
+function projectQuranTafsir(appLocale: ActiveAppLocaleCode) {
   if (appLocale === INDONESIAN_APP_LOCALE_CODE) {
     const access = quranTafsirAccessByLocale[INDONESIAN_APP_LOCALE_CODE];
     return {
@@ -179,9 +179,9 @@ export function makeQuranTafsirProjection(
 ): Extract<QuranTafsirProjection, { readonly kind: "external" }>;
 /** Builds one exact Tafsir access projection for a dynamic app locale. */
 export function makeQuranTafsirProjection(
-  appLocale: AppLocaleCode
+  appLocale: ActiveAppLocaleCode
 ): QuranTafsirProjection;
-export function makeQuranTafsirProjection(appLocale: AppLocaleCode) {
+export function makeQuranTafsirProjection(appLocale: ActiveAppLocaleCode) {
   return projectQuranTafsir(appLocale);
 }
 
@@ -204,10 +204,10 @@ const quranTafsirAccessByLocale = {
     notice: "Catatan teknis tafsir Indonesia.",
     sourceId: quranTafsirSourceId("id"),
   },
-} satisfies Record<AppLocaleCode, QuranTafsirAccess>;
+} satisfies Record<ActiveAppLocaleCode, QuranTafsirAccess>;
 
 /** Returns one complete technical Tafsir access record for protocol tests. */
-function makeQuranTafsirAccess(appLocale: AppLocaleCode) {
+function makeQuranTafsirAccess(appLocale: ActiveAppLocaleCode) {
   return quranTafsirAccessByLocale[appLocale];
 }
 
@@ -289,8 +289,8 @@ export function makeQuranSurah(
 function makeQuranVerse(
   inQuran: number,
   inSurah: number,
-  translationFootnotes: Readonly<Partial<Record<AppLocaleCode, string>>>,
-  translationText: Readonly<Partial<Record<AppLocaleCode, string>>>
+  translationFootnotes: Readonly<Partial<Record<ActiveAppLocaleCode, string>>>,
+  translationText: Readonly<Partial<Record<ActiveAppLocaleCode, string>>>
 ): QuranRuntimeVerse {
   return Schema.decodeSync(QuranRuntimeVerseSchema)({
     meta: {
@@ -343,9 +343,11 @@ export function makeQuranChunk(input: {
   readonly firstVerse: number;
   readonly surahNumber: number;
   readonly translationFootnotes?: Readonly<
-    Partial<Record<AppLocaleCode, string>>
+    Partial<Record<ActiveAppLocaleCode, string>>
   >;
-  readonly translationText?: Readonly<Partial<Record<AppLocaleCode, string>>>;
+  readonly translationText?: Readonly<
+    Partial<Record<ActiveAppLocaleCode, string>>
+  >;
   readonly verseCount: number;
 }): QuranChunkRow {
   const verses = Array.from({ length: input.verseCount }, (_, index) => {
@@ -371,7 +373,7 @@ export function makeQuranChunk(input: {
 
 /** Creates one localized search row whose text is safe for test assertions. */
 export function makeQuranSearch(
-  appLocale: AppLocaleCode,
+  appLocale: ActiveAppLocaleCode,
   surahNumber: number,
   text = `Technical search text ${surahNumber}`
 ): QuranSearchRow {

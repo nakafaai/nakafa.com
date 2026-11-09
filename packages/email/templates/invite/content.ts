@@ -1,6 +1,6 @@
 import {
-  type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
@@ -50,14 +50,20 @@ const inviteEmailCopy = {
     footerReason: `Kami mengirim email ini karena ${organisation} mengundang alamat ini ke Nakafa.`,
     subject: `${organisation} mengundang kamu ke Nakafa`,
   }),
+  ms: (organisation) => ({
+    body: "Log masuk dengan alamat e-mel ini untuk menyertai.",
+    cta: "Log masuk",
+    footerReason: `Kami menghantar e-mel ini kerana ${organisation} telah menjemput alamat ini ke Nakafa.`,
+    subject: `${organisation} menjemput kamu ke Nakafa`,
+  }),
 } satisfies Record<
-  ActiveAppLocaleCode,
+  AppLocaleCode,
   (organisation: string) => typeof InviteEmailCopySchema.Type
 >;
 
-/** Returns the reviewed product copy for one active app locale and the inviting organisation. */
+/** Returns the reviewed product copy for one app locale and the inviting organisation. */
 export function getInviteEmailCopy(
-  locale: ActiveAppLocaleCode,
+  locale: AppLocaleCode,
   organisation: string
 ) {
   return { ...inviteEmailCopy[locale](organisation), ...legalLabels[locale] };

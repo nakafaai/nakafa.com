@@ -47,7 +47,7 @@ test("the account menu saves the language of the school host and renders the sch
 
   await page.getByRole("button", { name: "Acceptance Owner" }).click();
   await page.getByRole("menuitem", { name: "Language" }).click();
-  await page.getByRole("menuitem", { name: "Indonesia" }).click();
+  await page.getByRole("menuitem", { name: "Bahasa Indonesia" }).click();
 
   await expect(page.locator("html")).toHaveAttribute("lang", "id");
   await expect(page.getByRole("button", { name: "Buat ujian" })).toBeVisible();

@@ -1,6 +1,6 @@
 import {
-  type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
@@ -52,15 +52,19 @@ const passEndingEmailCopy = {
       "Kami mengirim email ini karena kamu membeli pass Nakafa Pro.",
     subject: `Pass Pro kamu berakhir pada ${endsOn}`,
   }),
+  ms: (endsOn) => ({
+    body: `Pas Pro kamu tamat pada ${endsOn}. Pas seterusnya bermula tepat pada masa itu, jadi kamu tidak terlepas sehari pun Pro.`,
+    cta: "Lanjutkan Pro",
+    footerReason:
+      "Kami menghantar e-mel ini kerana kamu telah membeli pas Nakafa Pro.",
+    subject: `Pas Pro kamu tamat pada ${endsOn}`,
+  }),
 } satisfies Record<
-  ActiveAppLocaleCode,
+  AppLocaleCode,
   (endsOn: string) => typeof PassEndingEmailCopySchema.Type
 >;
 
-/** Returns the reviewed reminder copy for one active app locale and the day the pass ends. */
-export function getPassEndingEmailCopy(
-  locale: ActiveAppLocaleCode,
-  endsOn: string
-) {
+/** Returns the reviewed reminder copy for one app locale and the day the pass ends. */
+export function getPassEndingEmailCopy(locale: AppLocaleCode, endsOn: string) {
   return { ...passEndingEmailCopy[locale](endsOn), ...legalLabels[locale] };
 }

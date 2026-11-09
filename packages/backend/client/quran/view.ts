@@ -1,3 +1,4 @@
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { decodePublishedQuranSurah } from "@repo/backend/client/quran/catalog";
 import {
@@ -27,7 +28,7 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
   function* (
     result: QuranViewResult,
     expected: {
-      readonly appLocale: QuranViewResult["appLocale"];
+      readonly appLocale: ActiveAppLocaleCode;
       readonly surahNumber: number;
     }
   ) {

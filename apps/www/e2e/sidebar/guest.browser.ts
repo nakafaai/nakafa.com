@@ -132,7 +132,7 @@ for (const viewport of sidebarViewports) {
             expect(
               page.getByRole("menuitem", {
                 exact: true,
-                name: "Deutsch (Deutschland)",
+                name: "Deutsch",
               })
             ).toBeVisible()
           );
@@ -160,7 +160,7 @@ test("the language menu opens the same route in the chosen language", async ({
           .getByRole("button", { exact: true, name: "Language" });
         const german = page.getByRole("menuitem", {
           exact: true,
-          name: "Deutsch (Deutschland)",
+          name: "Deutsch",
         });
         yield* activateUntilVisible(
           languageButton,

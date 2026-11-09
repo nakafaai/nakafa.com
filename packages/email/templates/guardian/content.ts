@@ -42,6 +42,13 @@ const guardianCodeCopy = {
       "Kami mengirim email ini karena kode masuk orang tua diminta dengan alamat ini.",
     subject: "Kode masuk Nakafa kamu",
   },
+  ms: {
+    body: "Masukkan kod ini di halaman log masuk ibu bapa sekolah kamu. Kod ini sah selama lima minit.",
+    ignore: "Jika kamu tidak meminta kod, abaikan e-mel ini.",
+    reason:
+      "Kami menghantar e-mel ini kerana kod log masuk ibu bapa telah diminta dengan alamat ini.",
+    subject: "Kod log masuk Nakafa kamu",
+  },
 };
 
 const { dark, light } = EMAIL_COLORS;

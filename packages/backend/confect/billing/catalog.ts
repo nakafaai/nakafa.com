@@ -7,8 +7,8 @@
  */
 import { HashSet, Schema } from "effect";
 
-/** The currencies an account bills in: IDR in Indonesia, EUR in the euro territories, USD elsewhere. */
-export const BillingCurrency = Schema.Literals(["EUR", "IDR", "USD"]);
+/** The currencies an account bills in, each country's from `country/registry.ts`: IDR, MYR, EUR in the euro territories, USD elsewhere. */
+export const BillingCurrency = Schema.Literals(["EUR", "IDR", "MYR", "USD"]);
 export type BillingCurrency = typeof BillingCurrency.Type;
 
 /** The rails that sell an offer. Polar is merchant of record outside Indonesia. */
@@ -22,6 +22,7 @@ const BillingOffer = Schema.Struct({
   prices: Schema.Struct({
     EUR: Schema.optionalKey(Schema.Int),
     IDR: Schema.optionalKey(Schema.Int),
+    MYR: Schema.optionalKey(Schema.Int),
     USD: Schema.optionalKey(Schema.Int),
   }),
   product: Schema.Literals(["credits", "pro", "school"]),
@@ -44,13 +45,28 @@ export const BillingOfferKey = Schema.Literals([
 export type BillingOfferKey = typeof BillingOfferKey.Type;
 
 /** The monthly Pro price in each currency, in minor units. The catalog and the pages both read this one fact. */
-export const proMonthlyPrices = { EUR: 899, IDR: 79_000, USD: 899 } as const;
+export const proMonthlyPrices = {
+  EUR: 899,
+  IDR: 79_000,
+  MYR: 2490,
+  USD: 899,
+} as const;
 
 /** The yearly Pro price in each currency, in minor units: the price of 10 months. The catalog and the pages both read this one fact. */
-export const proYearlyPrices = { EUR: 8990, IDR: 790_000, USD: 8990 } as const;
+export const proYearlyPrices = {
+  EUR: 8990,
+  IDR: 790_000,
+  MYR: 24_900,
+  USD: 8990,
+} as const;
 
 /** The price of one top-up pack in each currency, in minor units. The catalog and the pages both read this one fact. */
-export const topUpPrices = { EUR: 499, IDR: 59_000, USD: 499 } as const;
+export const topUpPrices = {
+  EUR: 499,
+  IDR: 59_000,
+  MYR: 2190,
+  USD: 499,
+} as const;
 
 const billingOffers = {
   "pro.monthly": {
