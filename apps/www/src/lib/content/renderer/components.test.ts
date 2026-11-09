@@ -179,15 +179,18 @@ describe("renderer components", () => {
       const components = yield* resolveRendererComponents({
         contentKey,
         rendererDomain: "mathematics",
-        requiredComponents: ["Triangle"],
+        requiredComponents: ["MathVisual"],
       });
 
       expect(
         Arr.sort(Rec.keys<string, unknown>(components), Order.String)
       ).toEqual(
-        Arr.sort([...Rec.keys(semanticMdxComponents), "Triangle"], Order.String)
+        Arr.sort(
+          [...Rec.keys(semanticMdxComponents), "MathVisual"],
+          Order.String
+        )
       );
-      expect(components).not.toHaveProperty("UnitCircle");
+      expect(components).not.toHaveProperty("FunctionChart");
     })
   );
 
@@ -199,10 +202,10 @@ describe("renderer components", () => {
       const components = yield* resolveRendererComponents({
         contentKey,
         rendererDomain: "site",
-        requiredComponents: ["Triangle", "AtomShellLab", "VirusRoleLab"],
+        requiredComponents: ["MathVisual", "AtomShellLab", "VirusRoleLab"],
       });
 
-      expect(components).toHaveProperty("Triangle");
+      expect(components).toHaveProperty("MathVisual");
       expect(components).toHaveProperty("AtomShellLab");
       expect(components).toHaveProperty("VirusRoleLab");
     })
