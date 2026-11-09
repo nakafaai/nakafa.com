@@ -1,10 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  readsWhole,
   reviewCellsOf,
   verdictOfQuestion,
 } from "@/components/tryout/review/model";
-import { makeTryoutBody, makeTryoutQuestion } from "@/test/tryout";
+import { makeTryoutQuestion } from "@/test/tryout";
 
 /** A response the learner saved, with the grade a reader who may see it receives. */
 const answered = (
@@ -22,12 +21,6 @@ const answered = (
     ...(grade === undefined ? {} : { grade }),
   },
 });
-
-const KEY = {
-  correct: ["first"],
-  interaction: "choice",
-  kind: "choice",
-} as const;
 
 describe("verdictOfQuestion", () => {
   it("reads a question without an answer as unanswered", () => {
@@ -60,14 +53,6 @@ describe("verdictOfQuestion", () => {
     expect(
       verdictOfQuestion(makeTryoutQuestion("a", answered(["first"])))
     ).toBe("answered");
-  });
-});
-
-describe("readsWhole", () => {
-  it("reads a section whole only when every question carries its key", () => {
-    const keyed = { ...makeTryoutBody("a"), key: KEY };
-    expect(readsWhole([keyed, keyed])).toBe(true);
-    expect(readsWhole([keyed, makeTryoutBody("b")])).toBe(false);
   });
 });
 

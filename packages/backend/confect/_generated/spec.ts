@@ -213,6 +213,7 @@ import operators_visits from "../operators/visits.spec";
 import posts_cleanup from "../posts/cleanup.spec";
 import posts_mutations from "../posts/mutations.spec";
 import posts_queries from "../posts/queries.spec";
+import practice_sessions from "../practice/sessions.spec";
 import privacy_recovery from "../privacy/recovery.spec";
 import records_checks from "../records/checks.spec";
 import records_draw from "../records/draw.spec";
@@ -301,6 +302,7 @@ const spec: Spec.Spec<{
   readonly onboarding: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "onboarding", never, GroupSpec.NamedAt<typeof onboarding_mutations, "mutations"> | GroupSpec.NamedAt<typeof onboarding_queries, "queries">>, "onboarding">;
   readonly operators: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "operators", never, GroupSpec.NamedAt<typeof operators_expiry, "expiry"> | GroupSpec.NamedAt<typeof operators_staff, "staff"> | GroupSpec.NamedAt<typeof operators_tenants, "tenants"> | GroupSpec.NamedAt<typeof operators_visits, "visits">>, "operators">;
   readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
+  readonly practice: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "practice", never, GroupSpec.NamedAt<typeof practice_sessions, "sessions">>, "practice">;
   readonly privacy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "privacy", never, GroupSpec.NamedAt<typeof privacy_recovery, "recovery">>, "privacy">;
   readonly records: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "records", never, GroupSpec.NamedAt<typeof records_checks, "checks"> | GroupSpec.NamedAt<typeof records_draw, "draw"> | GroupSpec.NamedAt<typeof records_exports, "exports"> | GroupSpec.NamedAt<typeof records_grades, "grades"> | GroupSpec.NamedAt<typeof records_graduations, "graduations"> | GroupSpec.NamedAt<typeof records_letters, "letters"> | GroupSpec.NamedAt<typeof records_prints, "prints"> | GroupSpec.NamedAt<typeof records_reports, "reports"> | GroupSpec.NamedAt<typeof records_schemes, "schemes"> | GroupSpec.NamedAt<typeof records_seed, "seed">>, "records">;
   readonly roster: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "roster", never, GroupSpec.NamedAt<typeof roster_entries, "entries"> | GroupSpec.NamedAt<typeof roster_exports, "exports"> | GroupSpec.NamedAt<typeof roster_imports, "imports">>, "roster">;
@@ -620,6 +622,9 @@ const spec: Spec.Spec<{
     ["cleanup"]: posts_cleanup,
     ["mutations"]: posts_mutations,
     ["queries"]: posts_queries,
+  }),
+  ["practice"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["sessions"]: practice_sessions,
   }),
   ["privacy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["recovery"]: privacy_recovery,

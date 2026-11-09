@@ -20,7 +20,7 @@ import type { Locale } from "@repo/contents/content";
 import { documentMarkdown } from "@repo/contents/llms/document";
 import { Effect, Option } from "effect";
 
-/** Verifies an explicitly requested question against a finished, entitled review. */
+/** Verifies an explicitly requested question against a finished review of the learner's own. */
 export const resolveQuestionFocus = Effect.fn("nina.focus.resolve")(function* (
   input: NinaFocusInput,
   userId: Docs["users"]["_id"]
@@ -106,7 +106,10 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
   } satisfies NinaFocusSource;
 });
 
-/** Answer access already requires a finished section and the Pro plan. */
+/**
+ * A reviewed question is Nina's to explain for every learner, who pays with Nina credits as for any answer
+ * (D1): the section must be finished, as its grades are.
+ */
 const readEntitledPlacement = Effect.fn("nina.focus.placement")(function* (
   focus: NinaFocusInput,
   userId: Docs["users"]["_id"]
@@ -137,5 +140,5 @@ const readEntitledPlacement = Effect.fn("nina.focus.placement")(function* (
     return Option.none();
   }
   const access = yield* readTryoutSectionContentAccess(attempt, section.status);
-  return access.answers ? Option.some({ attempt, placement }) : Option.none();
+  return access.grades ? Option.some({ attempt, placement }) : Option.none();
 });
