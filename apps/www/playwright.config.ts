@@ -132,9 +132,13 @@ const BEHAVIOUR_SCHOOL_TESTS = Arr.map(
   (name) => `**/school/${name}.browser.ts`
 );
 
+// The search palette is typed into, opened as a dialog or a phone's drawer, and
+// navigates in every engine, so Firefox and WebKit run it beside Chromium.
+const ENGINE_TESTS = ["**/sidebar/command.browser.ts"];
+
 // The visual cards take the whole screen through the Fullscreen API on desktop,
 // Android, and iPad, and cover the viewport on iPhone, in Safari too.
-const WEBKIT_TESTS = ["**/visual/cards.browser.ts"];
+const WEBKIT_TESTS = ["**/visual/cards.browser.ts", ...ENGINE_TESTS];
 
 // The School pages of the timing specs, which the browser timing suite runs in
 // the other four browsers.
@@ -206,6 +210,10 @@ const PROJECTS = {
   webkit: {
     testMatch: WEBKIT_TESTS,
     use: { browserName: "webkit" },
+  },
+  firefox: {
+    testMatch: ENGINE_TESTS,
+    use: { browserName: "firefox" },
   },
   "school-firefox": {
     testIgnore: [
@@ -285,7 +293,7 @@ const SUITES = {
   runtime: { projects: ["shared-runtime"], timing: false },
   learner: { projects: ["learner"], timing: false },
   chat: { projects: ["chat"], timing: false },
-  visual: { projects: ["visual", "webkit"], timing: false },
+  visual: { projects: ["visual", "webkit", "firefox"], timing: false },
   browsers: {
     projects: [
       "school-firefox",

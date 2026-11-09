@@ -1,6 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import { classifyPath, readPageEntry } from "@/lib/search/page";
+import type { SearchEntry } from "@/lib/search/entry";
+import {
+  classifyPath,
+  readExamEntries,
+  readPageEntry,
+} from "@/lib/search/page";
 
 /** A page's HTML holding these structured data blocks, as the prerender writes them. */
 function page(...blocks: readonly string[]) {
@@ -186,5 +191,80 @@ describe("readPageEntry", () => {
         path: "/en",
       })
     ).toEqual(Option.none());
+  });
+});
+
+describe("readExamEntries", () => {
+  it("names each exam from the pages under it and opens the shallowest of them", () => {
+    const entries: readonly SearchEntry[] = [
+      {
+        kind: "country",
+        path: "/en/try-out/indonesia",
+        title: "Indonesia",
+        trail: [],
+      },
+      {
+        kind: "tryout",
+        path: "/en/try-out/indonesia/snbt/2027/utbk/set-1",
+        title: "Set 1",
+        trail: ["Indonesia", "SNBT", "Year 2027", "UTBK"],
+      },
+      {
+        kind: "tryout",
+        path: "/en/try-out/indonesia/snbt/2027",
+        title: "Year 2027",
+        trail: ["Indonesia", "SNBT"],
+      },
+      {
+        kind: "tryout",
+        path: "/en/try-out/indonesia/tka/high/english",
+        title: "English",
+        trail: ["Indonesia", "TKA", "Senior High School"],
+      },
+      {
+        kind: "tryout",
+        path: "/en/try-out/indonesia/tka/middle",
+        title: "Junior High School",
+        trail: ["Indonesia", "TKA"],
+      },
+      {
+        kind: "tryout",
+        path: "/en/try-out/indonesia/tka/high",
+        title: "Senior High School",
+        trail: ["Indonesia", "TKA"],
+      },
+      {
+        kind: "exam",
+        path: "/en/try-out/germany/entrance",
+        title: "Entrance",
+        trail: ["Germany"],
+      },
+      {
+        kind: "tryout",
+        path: "/en/try-out/germany/entrance/darmstadt",
+        title: "Darmstadt",
+        trail: ["Germany", "Entrance"],
+      },
+      {
+        kind: "tryout",
+        path: "/en/try-out/odd/x/y",
+        title: "Y",
+        trail: ["Odd"],
+      },
+    ];
+    expect(readExamEntries(entries)).toEqual([
+      {
+        kind: "exam",
+        path: "/en/try-out/indonesia/snbt/2027",
+        title: "SNBT",
+        trail: ["Indonesia"],
+      },
+      {
+        kind: "exam",
+        path: "/en/try-out/indonesia/tka/high",
+        title: "TKA",
+        trail: ["Indonesia"],
+      },
+    ]);
   });
 });

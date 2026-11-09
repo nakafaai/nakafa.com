@@ -27,7 +27,7 @@ import {
   SubjectLocaleSchema,
 } from "@/lib/routing/public/subject";
 import { SearchIndexJson, searchIndexPath } from "@/lib/search/entry";
-import { readPageEntry } from "@/lib/search/page";
+import { readExamEntries, readPageEntry } from "@/lib/search/page";
 import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
 import { readRssText } from "@/lib/seo/feed";
 import { readManifestText } from "@/lib/seo/manifest";
@@ -230,7 +230,10 @@ const writeSearchIndexes = Effect.fn("www.static.searchIndexes")(function* (
           ),
         { concurrency: 8 }
       );
-      const index = { entries: Arr.getSomes(entries) };
+      const pageEntries = Arr.getSomes(entries);
+      const index = {
+        entries: Arr.appendAll(pageEntries, readExamEntries(pageEntries)),
+      };
       const json = yield* Schema.encodeEffect(SearchIndexJson)(index);
       yield* writeArtifact(outDir, searchIndexPath(locale).slice(1), json);
       return `${locale} ${index.entries.length}`;

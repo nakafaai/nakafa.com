@@ -1,6 +1,6 @@
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readCanonicalSpelling } from "@repo/internationalization/src/pathnames";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Order, Record as Rec, Schema } from "effect";
 import type { SearchEntry, SearchKind } from "@/lib/search/entry";
 
 /**
@@ -175,4 +175,47 @@ export function readPageEntry({
       trail,
     };
   });
+}
+
+/** The segments of an exam's address: `/<locale>/try-out/<country>/<exam>`. */
+const EXAM_SEGMENTS = 5;
+
+/** Orders pages from the shallowest, then by address, so the first page under an exam leads. */
+const ShallowFirst = Order.combineAll<SearchEntry>([
+  Order.mapInput(Order.Number, ({ path }) => path.split("/").length),
+  Order.mapInput(Order.String, ({ path }) => path),
+]);
+
+/**
+ * The exams of the try-outs. An exam's own address redirects to its first page,
+ * so the build writes no page for it, and its name is the second step of the
+ * trail of every try-out page under it. Its entry opens that first page, the
+ * shallowest under the exam, as the redirect does.
+ */
+export function readExamEntries(
+  entries: readonly SearchEntry[]
+): readonly SearchEntry[] {
+  const byExam = Arr.groupBy(
+    Arr.filter(
+      entries,
+      ({ kind, trail }) => kind === "tryout" && trail.length >= 2
+    ),
+    ({ path }) => Arr.join(Arr.take(path.split("/"), EXAM_SEGMENTS), "/")
+  );
+  return Arr.getSomes(
+    Arr.map(Rec.toEntries(byExam), ([exam, pages]) => {
+      const first = Arr.min(pages, ShallowFirst);
+      return Option.map(
+        Option.liftPredicate(first, () =>
+          Arr.every(entries, ({ path }) => path !== exam)
+        ),
+        (page) => ({
+          kind: "exam" as const,
+          path: page.path,
+          title: Arr.join(Arr.take(Arr.drop(page.trail, 1), 1), ""),
+          trail: Arr.take(page.trail, 1),
+        })
+      );
+    })
+  );
 }
