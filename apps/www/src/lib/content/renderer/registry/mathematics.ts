@@ -17,7 +17,6 @@ import {
   FunctionExplorationVirusChart,
 } from "@/lib/content/renderer/client/mathematics/growth";
 import { SequenceConceptTableChairsAnimation } from "@/lib/content/renderer/client/mathematics/sequence";
-import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every mathematics visual, which any lesson in any domain may use. */
@@ -57,10 +56,6 @@ export const mathematicsRenderers = [
   {
     name: mathematicsComponentNames.inverseFunctionIllustration,
     component: InverseFunctionIllustration,
-  },
-  {
-    name: mathematicsComponentNames.lineEquation,
-    component: LineEquationServer,
   },
   {
     name: mathematicsComponentNames.quadraticEquationReadingRoomProblem,

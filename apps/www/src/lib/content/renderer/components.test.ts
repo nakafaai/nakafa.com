@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe("renderer components", () => {
   it.effect(
-    "resolves the physics LineEquation artifact",
+    "resolves the physics MathVisual artifact",
     () =>
       Effect.gen(function* () {
         const { resolveRendererComponents } = yield* Effect.promise(
@@ -28,9 +28,9 @@ describe("renderer components", () => {
         const components = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "physics",
-          requiredComponents: ["LineEquation"],
+          requiredComponents: ["MathVisual"],
         });
-        expect(components.LineEquation).toBeDefined();
+        expect(components.MathVisual).toBeDefined();
       }),
     // This integration seam loads the real physics renderer module graph.
     15_000
