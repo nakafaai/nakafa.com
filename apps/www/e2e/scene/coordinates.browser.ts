@@ -21,9 +21,9 @@ import { isHydrated } from "@/e2e/support/window";
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
 const MANY_SOLUTIONS_TITLE = "Sistem Persamaan Linear dengan Banyak Solusi";
-/** A lesson whose unit circle is a MathVisual scene with an angle slider. */
-const UNIT_CIRCLE_ROUTE =
-  "/en/subjects/mathematics/function-modeling/trigonometric-function-arbitrary-angle";
+/** A lesson the acceptance runtime serves whose right triangles and unit circle are MathVisual scenes with an angle slider. */
+const SLIDER_ROUTE =
+  "/en/subjects/mathematics/trigonometry/trigonometric-comparison-three-primary";
 /** How many degrees the angle slider moves under the test's arrow presses. */
 const ANGLE_STEPS = 15;
 
@@ -146,14 +146,14 @@ test("coordinate-system interaction keeps its drawing buffer stable", async ({
 });
 
 /**
- * Moves a unit circle's angle slider with the keyboard and reads its value and
+ * Moves a scene's angle slider with the keyboard and reads its value and
  * its cos, sin and tan readouts follow: the formulas redraw at every step.
  */
 const expectSliderReadouts = Effect.fn("NakafaE2E.expectSliderReadouts")(
   function* (page: Page) {
     yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() =>
-      page.goto(UNIT_CIRCLE_ROUTE, { waitUntil: "domcontentloaded" })
+      page.goto(SLIDER_ROUTE, { waitUntil: "domcontentloaded" })
     );
     const slider = page.getByRole("slider", { exact: true, name: "a" }).first();
     const card = page.locator(CARD).filter({ has: slider }).first();
@@ -186,7 +186,7 @@ const expectSliderReadouts = Effect.fn("NakafaE2E.expectSliderReadouts")(
   }
 );
 
-test("a unit circle's angle slider redraws the circle and its readouts", async ({
+test("an angle slider redraws its scene and its sin, cos and tan readouts", async ({
   page,
 }) => {
   await Effect.runPromise(
