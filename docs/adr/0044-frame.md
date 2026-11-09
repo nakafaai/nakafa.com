@@ -42,7 +42,7 @@ D4. Everything at the right edge stands from the window's top to its bottom, and
 
 D5. A failed read has one module, `state/failure.tsx`: `LoadFailure` where nothing is on screen yet, `DataFailure` beside content that stays.
 
-D6. Delivery is one stack with no compatibility path. The first change lands the root, header, body, footer, width and failure and migrates every route to them, deleting the modules they replace. The second moves the right edge (`panes.tsx`, `panes/*`, `outline/panel.tsx`) into the folder, puts the outline, the exam editor's panel and a forum thread on the same right edge, and deletes the in-row mode.
+D6. Delivery is one stack with no compatibility path. The first change lands the root, header, body, footer, width and failure and migrates every route to them, deleting the modules they replace. The second moves the right edge (`panes.tsx`, `panes/*`, `pane.tsx`, `outline/panel.tsx`) into the folder and narrows the page beside the outline by the same rule as beside a pane. A forum thread already opens at the right edge. The exam editor stays the one canvas, edge to edge with its own header and toolbar as a design tool's canvas is (`data-canvas`), so its teacher panel stays a column of that canvas.
 
 D7. `e2e/support/frame.ts` measures the rule from what is drawn: header and body edges at 320 to 1920 px, and every right-edge surface flush with the window's right, top and bottom, with the header ending where the pane begins, at 390 px and on a desktop.
 
@@ -50,4 +50,4 @@ D7. `e2e/support/frame.ts` measures the rule from what is drawn: header and body
 
 Positive: a page is a few lines of slots; the width rule and the pane rule each live in one module; try-out, the player, School and the reading pages draw the same header row; about a dozen modules go.
 
-Negative: every route changes once, in the same stack, so open pull requests that touch these files merge `main` and rename. Moving the exam editor's panel and a forum thread to the right edge changes two School screens, which the School session reviews. A page still chooses between two widths; that is the one layout decision left to a route, because it says what the page is (a reading column or a working surface).
+Negative: every route changes once, in the same stack, so open pull requests that touch these files merge `main` and rename. A page still chooses between two widths; that is the one layout decision left to a route, because it says what the page is (a reading column or a working surface).
