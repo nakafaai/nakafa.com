@@ -3783,13 +3783,13 @@
       "title": "Ada yang berdiri di atasnya."
     },
     "island-refused-locked": {
-      "title": "Ini terbuka di level yang lebih tinggi."
+      "title": "Ini terbuka di level lebih tinggi."
     },
     "island-refused-unaffordable": {
       "title": "Bintangmu belum cukup untuk ini."
     },
     "island-refused-starter": {
-      "title": "Ini bawaan pulaumu, jadi tetap di sini."
+      "title": "Ini bawaan pulaumu, jadi tetap ada."
     },
     "island-refused-missing": {
       "title": "Benda itu sudah tidak ada."
@@ -3801,19 +3801,20 @@
       "title": "Ini sudah di tahap pertama."
     },
     "island-stale": {
-      "title": "Pulaumu berubah di tempat lain, jadi kami memuatnya lagi."
+      "title": "Pulaumu berubah di tempat lain.",
+      "description": "Sudah kami muat ulang, coba lagi ya."
     },
     "island-refused-grows": {
       "title": "Ini tumbuh saat kamu menyiramnya."
     },
     "island-refused-rooted": {
-      "title": "Ini sudah berakar, jadi pindahkan saja."
+      "title": "Ini sudah berakar, pindahkan saja."
     },
     "island-refused-materials": {
       "title": "Hasil kebunmu belum cukup untuk ini."
     },
     "island-farm-unlearned": {
-      "title": "Belajar dulu hari ini, lalu siram kebunmu."
+      "title": "Belajar dulu, lalu siram kebunmu."
     },
     "island-farm-watered": {
       "title": "Kebunmu sudah disiram hari ini."
@@ -3826,6 +3827,9 @@
     },
     "island-farm-unripe": {
       "title": "Ini belum siap dipanen."
+    },
+    "island-link-copied": {
+      "title": "Tautan pulaumu sudah disalin."
     },
     "island-watered": {
       "title": "Kebunmu sudah disiram."
@@ -4676,6 +4680,18 @@
     "item-lamp": "Lampu",
     "water": "Siram kebun",
     "harvest": "Panen",
+    "sound": "Suara",
+    "enter": "Masuk",
+    "enter-next": "{stars} Bintang lagi membuat pulaumu naik level.",
+    "enter-top": "Pulaumu sudah sebesar pulau bisa tumbuh.",
+    "earn-lesson": "+{stars} Bintang per materi",
+    "earn-section": "+{stars} Bintang per bagian",
+    "badges": "Lencana",
+    "share": "Bagikan",
+    "share-title": "Pulauku di Nakafa",
+    "clip": "Rekam klip",
+    "clip-file": "pulau-nakafa",
+    "visit-description": "Pulau {name}, tumbuh dari belajar di Nakafa.",
     "materials": "Kebun",
     "materials-value": "{wood} kayu, {petals} kelopak",
     "price-wood": "{stars} Bintang, {wood} kayu"

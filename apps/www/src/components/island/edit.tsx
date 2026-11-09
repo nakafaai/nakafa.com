@@ -6,10 +6,12 @@ import {
   type Operation,
 } from "@repo/backend/confect/island/build";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Effect, Option, Result } from "effect";
+import { Array as Arr, Effect, Option, Result } from "effect";
+import { useCue } from "@/components/island/sound";
 import { useToolStore } from "@/components/island/tools";
 import { useIsland } from "@/lib/island/context";
 import { editIslandChange } from "@/lib/island/edit";
+import { cueOfEdit } from "@/lib/island/music";
 
 /** Which history an edit belongs to: a new edit, an undo, or a redo. */
 type Step = "edit" | "redo" | "undo";
@@ -23,8 +25,9 @@ type Step = "edit" | "redo" | "undo";
  * no longer matches the island.
  */
 export function useEditIsland() {
-  const { layout, owner, size } = useIsland();
+  const { layout, level, owner, size } = useIsland();
   const tools = useToolStore();
+  const cue = useCue();
   const edit = useMutation(island.mutations.edit).withOptimisticUpdate(
     editIslandChange
   );
@@ -33,15 +36,17 @@ export function useEditIsland() {
       return false;
     }
     const applied = applyOperations(layout, operations, {
-      level: owner.value.level,
+      level,
       materials: owner.value.materials,
       size,
       stars: owner.value.stars,
     });
     if (Result.isFailure(applied)) {
+      cue("refuse");
       toast.error({ title: `island-refused-${applied.failure.reason}.title` });
       return false;
     }
+    Option.map(Arr.head(operations), (first) => cue(cueOfEdit(first._tag)));
     if (step === "undo") {
       tools.getState().undone(applied.success.undo);
     } else if (step === "redo") {
@@ -59,7 +64,10 @@ export function useEditIsland() {
               Effect.sync(() => {
                 tools.getState().forget();
                 if (error._tag === "IslandStale") {
-                  toast.error({ title: "island-stale.title" });
+                  toast.error({
+                    description: "island-stale.description",
+                    title: "island-stale.title",
+                  });
                 } else if (error._tag === "BuildRefused") {
                   toast.error({
                     title: `island-refused-${error.reason}.title`,
