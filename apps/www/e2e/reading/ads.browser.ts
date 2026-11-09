@@ -79,6 +79,23 @@ async function nearFirstPlace(page: Page) {
   });
 }
 
+/**
+ * Lets the scroll settle, then counts layout shifts from here on. A long lesson
+ * that hydrates while the reader scrolls can shift by itself before any frame
+ * exists, as its sections take their place; from here on a shift could come
+ * from the frame, which no gesture has opened yet.
+ */
+async function countShiftsFromHere(page: Page) {
+  await page.waitForTimeout(1000);
+  await expect(firstFrame(page)).toHaveCount(0);
+  await page.evaluate(() => {
+    const shifts = Reflect.get(window, "nakafaShifts");
+    if (Array.isArray(shifts)) {
+      shifts.length = 0;
+    }
+  });
+}
+
 /** The first ad place. */
 const firstPlace = (page: Page) => page.locator("div[data-ad-slot]").first();
 
@@ -155,6 +172,7 @@ test("an ad that never comes leaves the page as if it had no frame, at every wid
           // The frame asks for its ad and waits out of sight; AdSense never
           // answers, so the reader never sees it.
           await nearFirstPlace(page);
+          await countShiftsFromHere(page);
           await readUntilFrame(page);
           await expect.poll(requests).toBeGreaterThan(0);
           await firstPlace(page).scrollIntoViewIfNeeded();
@@ -181,6 +199,7 @@ test("a filled ad comes in a frame of its own height that moves nothing the read
           await page.setViewportSize({ height: 800, width });
           await page.goto(pinnedRoutes.material.en);
           await nearFirstPlace(page);
+          await countShiftsFromHere(page);
           await readUntilFrame(page);
 
           const frame = firstFrame(page);
