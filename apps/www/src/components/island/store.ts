@@ -10,10 +10,19 @@ import type { Weather } from "@/lib/island/sky";
 import type { Cells } from "@/lib/island/world";
 
 /** The hand the learner plays with: one block placed per tap, a ready-made item, the pickaxe that removes a block, or their own feet. */
-export type Tool = "place" | "item" | "remove" | "walk" | "fish";
+export type Tool =
+  | "place"
+  | "item"
+  | "remove"
+  | "walk"
+  | "fish"
+  | "hoe"
+  | "can";
 
 /** What the game tells the learner: a build the server refused, edits another device made first, or an item with no room where it was pressed. */
 export type Notice =
+  | "till"
+  | "water"
   | "bite"
   | "escaped"
   | "far"
@@ -52,6 +61,8 @@ interface GameStore {
   apply: (edits: readonly Edit[]) => void;
   /** Puts a block into a hotbar slot. */
   assign: (slot: number, key: BlockKey) => void;
+  /** How many crops the learner harvested today. */
+  basket: number;
   book: boolean;
   /** The species the learner caught today, by their place in the catalog, the latest last. */
   catches: readonly number[];
@@ -62,9 +73,17 @@ interface GameStore {
   choose: (slot: number) => void;
   /** Lets the catch the HUD shows fade. */
   clearCaught: () => void;
+  /** Lets the harvest the HUD shows fade. */
+  clearHarvest: () => void;
   /** The chunks whose meshes no longer match the world. */
   dirty: HashSet.HashSet<number>;
   future: readonly (readonly Edit[])[];
+  /** Writes what grew by itself (D16): sent to the server, but no step undo takes back. */
+  grow: (edits: readonly Edit[]) => void;
+  /** Adds a harvested crop to the basket and shows it. */
+  harvest: (crop: BlockKey) => void;
+  /** The crop the HUD shows as just harvested, none once it faded. */
+  harvested: BlockKey | null;
   /** Holds a ready-made item, which the next press places. */
   hold: (item: ItemKey) => void;
   hotbar: readonly BlockKey[];
@@ -180,8 +199,18 @@ export function createGameStore(setup: GameSetup) {
           catches: Arr.append(state.catches, species),
           caught: species,
         })),
+      basket: 0,
       catches: [],
       caught: null,
+      clearHarvest: () => set({ harvested: null }),
+      grow: (edits) => {
+        if (edits.length > 0) {
+          write(edits);
+        }
+      },
+      harvest: (crop) =>
+        set((state) => ({ basket: state.basket + 1, harvested: crop })),
+      harvested: null,
       clearCaught: () => set({ caught: null }),
       hold: (item) => set({ book: false, item, tool: "item" }),
       item: "house",

@@ -25,7 +25,7 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { IslandBook } from "@/components/island/book";
-import { BlockIcon, SpeciesIcon } from "@/components/island/icon";
+import { BlockIcon, SpeciesIcon, ToolIcon } from "@/components/island/icon";
 import { panelVariants } from "@/components/island/panel";
 import { useGame } from "@/components/island/store";
 import { SPECIES } from "@/lib/island/fauna/species";
@@ -37,7 +37,7 @@ const slotVariants = cva(
   {
     defaultVariants: { held: false, screen: "every" },
     variants: {
-      /** Slots 7 to 9 only fit a wide screen; a phone keeps six blocks at hand. */
+      /** Slots 4 to 9 only fit a wide screen; a phone keeps three blocks beside its tools. */
       screen: { every: "", wide: "max-sm:hidden" },
       held: {
         false:
@@ -101,6 +101,20 @@ function Hotbar() {
         <HugeIcons className="size-6" icon={FootprintsIcon} />
       </HudButton>
       <HudButton
+        held={tool === "hoe"}
+        label={t("hoe")}
+        onPress={() => setTool("hoe")}
+      >
+        <ToolIcon tool="hoe" />
+      </HudButton>
+      <HudButton
+        held={tool === "can"}
+        label={t("can")}
+        onPress={() => setTool("can")}
+      >
+        <ToolIcon tool="can" />
+      </HudButton>
+      <HudButton
         held={tool === "fish"}
         label={t("rod")}
         onPress={() => setTool("fish")}
@@ -115,7 +129,7 @@ function Hotbar() {
             key={number}
             label={t(`block-${hotbar[number]}`)}
             onPress={() => choose(number)}
-            screen={number < 6 ? "every" : "wide"}
+            screen={number < 3 ? "every" : "wide"}
           >
             <BlockIcon block={hotbar[number]} />
           </HudButton>
@@ -273,6 +287,35 @@ function Catch() {
   );
 }
 
+/** A crop the learner just harvested, its picture and the basket's count, gone after a few seconds (ADR 0047, D16). */
+function Harvest() {
+  const t = useTranslations("Island");
+  const harvested = useGame((state) => state.harvested);
+  const basket = useGame((state) => state.basket);
+  const clearHarvest = useGame((state) => state.clearHarvest);
+  return harvested === null ? null : (
+    <p
+      className={panelVariants({
+        className:
+          "pointer-events-auto mx-auto flex max-w-sm items-center gap-2 px-3 py-2 text-sm font-semibold",
+      })}
+      ref={(node) => {
+        if (node === null) {
+          return;
+        }
+        const timer = window.setTimeout(clearHarvest, NOTICE_MS);
+        return () => window.clearTimeout(timer);
+      }}
+      role="status"
+    >
+      <span className="size-8 shrink-0">
+        <BlockIcon block={harvested} />
+      </span>
+      {t("harvested", { count: basket, name: t(`block-${harvested}`) })}
+    </p>
+  );
+}
+
 /** How long a notice stays before it fades. */
 const NOTICE_MS = 4000;
 
@@ -327,6 +370,7 @@ export function IslandHud() {
       </header>
       <Notice />
       <Catch />
+      <Harvest />
       <footer className="mt-auto flex justify-center">
         <Hotbar />
       </footer>

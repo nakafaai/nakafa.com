@@ -13,8 +13,10 @@ import {
 import { isPlant, looksOf } from "@/lib/island/look";
 import { TILE } from "@/lib/island/tiles/paint";
 import {
+  canTile,
   feetTile,
   hammerTile,
+  hoeTile,
   pickaxeTile,
   rodTile,
 } from "@/lib/island/tiles/tools";
@@ -190,8 +192,30 @@ export function cursorOf(tool: Tool, block: BlockKey) {
   if (tool === "item") {
     return `url(${cursorOnce("item", () => cursorUrlOf(hammerTile()))}) 2 2, copy`;
   }
+  if (tool === "hoe") {
+    return `url(${cursorOnce("hoe", () => cursorUrlOf(hoeTile()))}) 2 22, pointer`;
+  }
+  if (tool === "can") {
+    return `url(${cursorOnce("can", () => cursorUrlOf(canTile()))}) 2 6, pointer`;
+  }
   if (tool === "fish") {
     return `url(${cursorOnce("fish", () => cursorUrlOf(rodTile()))}) 30 2, pointer`;
   }
   return `url(${cursorOnce("walk", () => cursorUrlOf(feetTile()))}) 16 16, pointer`;
+}
+
+/** The pixel tools the hotbar shows where no line icon fits: the hoe and the watering can. */
+const TOOL_TILES = { can: canTile, hoe: hoeTile } as const;
+
+/** A farming tool as the hotbar shows it, from the same pixels as its cursor. */
+export function ToolIcon({ tool }: { tool: keyof typeof TOOL_TILES }) {
+  return (
+    <img
+      alt=""
+      className="size-full [image-rendering:pixelated]"
+      height={TILE}
+      src={cursorOnce(`icon-${tool}`, () => cursorUrlOf(TOOL_TILES[tool]()))}
+      width={TILE}
+    />
+  );
 }

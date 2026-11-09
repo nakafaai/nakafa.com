@@ -4961,6 +4961,21 @@
     "notice-far": "Cast into the water near your fox.",
     "notice-bite": "A bite! Tap now!",
     "notice-escaped": "It got away. Cast again!",
-    "caught": "You caught a {name}!"
+    "caught": "You caught a {name}!",
+    "hoe": "Hoe",
+    "can": "Watering can",
+    "notice-till": "Till grass or dirt with open sky above it.",
+    "notice-water": "Water tilled soil or a sprout.",
+    "harvested": "+1 {name}, {count} in your basket",
+    "block-farmland": "Farmland",
+    "block-wet-farmland": "Watered farmland",
+    "block-rice-sprout": "Rice sprout",
+    "block-corn-sprout": "Corn sprout",
+    "block-cabbage-sprout": "Cabbage sprout",
+    "block-tomato-sprout": "Tomato sprout",
+    "block-chili-sprout": "Chili sprout",
+    "block-carrot-sprout": "Carrot sprout",
+    "block-cassava-sprout": "Cassava sprout",
+    "block-sweet-potato-sprout": "Sweet potato sprout"
   }
 }

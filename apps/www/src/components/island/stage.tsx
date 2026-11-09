@@ -1,6 +1,6 @@
 "use client";
 
-import { idOf } from "@repo/backend/confect/island/blocks";
+import { idOf, keyOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import {
   Array as Arr,
@@ -29,6 +29,7 @@ import {
   turnOrbit,
   zoomOrbit,
 } from "@/lib/island/camera";
+import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import {
   BITE,
   type Cast,
@@ -56,7 +57,7 @@ import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
 import { hourOf, lightOf } from "@/lib/island/sky";
 import { roam, standingQuad, wildOf, wildVertices } from "@/lib/island/wild";
-import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
+import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The island's world on the whole screen (ADR 0047, D1, D2 and D5): the canvas
@@ -231,6 +232,32 @@ function start(
     });
   };
 
+  /** Tills, harvests or waters at a point of the screen (D16), or says what the tool needs. */
+  const farm = (point: Point, tool: "hoe" | "can") => {
+    const state = store.getState();
+    Option.map(hitAt(point), (hit) => {
+      if (tool === "can") {
+        Option.match(waterOf(state.cells, hit.hit), {
+          onNone: () => state.setNotice("water"),
+          onSome: (edit) => state.apply([edit]),
+        });
+        return;
+      }
+      Option.match(hoeOf(state.cells, hit.hit), {
+        onNone: () => state.setNotice("till"),
+        onSome: (edits) => {
+          Option.map(
+            Option.flatMap(Arr.head(edits), (first) =>
+              first.after === 0 ? keyOf(first.before) : Option.none()
+            ),
+            state.harvest
+          );
+          state.apply(edits);
+        },
+      });
+    });
+  };
+
   /** Sends the fox along the shortest way to a column, or says no way leads there. */
   const walkTo = (column: readonly [number, number]) => {
     Option.match(
@@ -257,6 +284,10 @@ function start(
   const act = (point: Point, remove: boolean) => {
     const state = store.getState();
     aim = Option.none();
+    if ((state.tool === "hoe" || state.tool === "can") && !remove) {
+      farm(point, state.tool);
+      return;
+    }
     if (state.tool === "fish" && !remove) {
       fish(point);
       return;
@@ -283,7 +314,109 @@ function start(
       );
       return;
     }
-    Option.map(planAt(point, remove), (edit) => state.apply([edit]));
+    Option.map(planAt(point, remove), (edit) =>
+      state.apply([
+        {
+          ...edit,
+          after: sownOf(state.cells, [edit.x, edit.y, edit.z], edit.after),
+        },
+      ])
+    );
+  };
+
+  // Sprouts on wet soil and how long each has grown (D16), checked every two seconds of play.
+  const sprouts = MutableHashMap.empty<number, number>();
+  let lastGrowth = 0;
+  /** Ripens every sprout that has grown long enough on wet soil, as edits no undo takes back. */
+  const growCrops = (seconds: number) => {
+    store.getState().grow(ripeningOf(store.getState().cells, sprouts, seconds));
+  };
+
+  /** Moves the fox along its route for `dt` seconds, keeps the camera on it, and answers the cell it heads for. */
+  const stepWalker = (dt: number) => {
+    const next = Arr.head(route);
+    Option.map(next, ([cx, cz]) => {
+      const dx = cx + 0.5 - walker.x;
+      const dz = cz + 0.5 - walker.z;
+      const distance = Math.hypot(dx, dz);
+      const reach = WALK_SPEED * dt;
+      walker =
+        distance <= reach
+          ? { x: cx + 0.5, z: cz + 0.5 }
+          : {
+              x: walker.x + (dx / distance) * reach,
+              z: walker.z + (dz / distance) * reach,
+            };
+      if (distance <= reach) {
+        route = Arr.drop(route, 1);
+      }
+      // The camera keeps the walking fox in view.
+      goal = { ...goal, target: [walker.x, SEA_LEVEL + 1, walker.z] };
+      canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
+    });
+    return next;
+  };
+
+  /** Warns of a bite on the line out, and lets the fish go once the bite is over. */
+  const tendLine = (seconds: number) => {
+    Option.map(cast, (line) => {
+      if (seconds >= line.bite && !warned) {
+        warned = true;
+        store.getState().setNotice("bite");
+      }
+      if (seconds > line.bite + BITE) {
+        cast = Option.none();
+        store.getState().setNotice("escaped");
+      }
+    });
+  };
+
+  /** Hands the painter every creature this frame: the herd, the fox facing its way or its float, the wild visitors, and the float itself. */
+  const drawLife = (
+    cells: Cells,
+    next: Option.Option<readonly [number, number]>,
+    seconds: number
+  ) => {
+    const float = Option.match(cast, {
+      onNone: () => [],
+      onSome: (line) =>
+        standingQuad(
+          SLOTS.bobber,
+          [line.x, line.y - 0.3 + dipOf(line, seconds), line.z],
+          0.5,
+          orbit.yaw
+        ),
+    });
+    // The fox faces where it walks, or its float while it fishes.
+    const facing = Option.getOrElse(
+      Option.orElse(
+        Option.map(next, ([cx, cz]) => [cx + 0.5, cz + 0.5] as const),
+        () => Option.map(cast, (line) => [line.x, line.z] as const)
+      ),
+      () => [walker.x, walker.z] as const
+    );
+    const fox: Animal = {
+      kind: "fox",
+      rest: route.length > 0 ? 0 : 1,
+      steps: 0,
+      tx: facing[0],
+      tz: facing[1],
+      x: walker.x,
+      z: walker.z,
+    };
+    painter.herd(
+      herdQuads(
+        cells,
+        Arr.append(herd, fox),
+        size,
+        orbit.yaw,
+        seconds,
+        Arr.appendAll(
+          wildVertices(cells, wild, size, orbit.yaw, seconds),
+          float
+        )
+      )
+    );
   };
 
   /** The cell a hovering mouse would change, outlined before it presses (D5). */
@@ -319,76 +452,15 @@ function start(
       wander(cells, animal, seed, index, dt)
     );
     wild = Arr.map(wild, (creature) => roam(cells, creature, seed, dt));
-    const next = Arr.head(route);
-    Option.map(next, ([cx, cz]) => {
-      const dx = cx + 0.5 - walker.x;
-      const dz = cz + 0.5 - walker.z;
-      const distance = Math.hypot(dx, dz);
-      const reach = WALK_SPEED * dt;
-      walker =
-        distance <= reach
-          ? { x: cx + 0.5, z: cz + 0.5 }
-          : {
-              x: walker.x + (dx / distance) * reach,
-              z: walker.z + (dz / distance) * reach,
-            };
-      if (distance <= reach) {
-        route = Arr.drop(route, 1);
-      }
-      // The camera keeps the walking fox in view.
-      goal = { ...goal, target: [walker.x, SEA_LEVEL + 1, walker.z] };
-      canvas.dataset.player = `${Math.floor(walker.x)},${Math.floor(walker.z)}`;
-    });
+    const next = stepWalker(dt);
     canvas.dataset.walking = route.length > 0 ? "true" : "false";
-    Option.map(cast, (line) => {
-      const seconds = now / 1000;
-      if (seconds >= line.bite && !warned) {
-        warned = true;
-        store.getState().setNotice("bite");
-      }
-      if (seconds > line.bite + BITE) {
-        cast = Option.none();
-        store.getState().setNotice("escaped");
-      }
-    });
+    if (now - lastGrowth > 2000) {
+      lastGrowth = now;
+      growCrops(now / 1000);
+    }
+    tendLine(now / 1000);
     canvas.dataset.fishing = Option.isSome(cast) ? "true" : "false";
-    const float = Option.match(cast, {
-      onNone: () => [],
-      onSome: (line) =>
-        standingQuad(
-          SLOTS.bobber,
-          [line.x, line.y - 0.3 + dipOf(line, now / 1000), line.z],
-          0.5,
-          orbit.yaw
-        ),
-    });
-    // The fox faces where it walks, or its float while it fishes.
-    const facing = Option.orElse(
-      Option.map(next, ([cx, cz]) => [cx + 0.5, cz + 0.5] as const),
-      () => Option.map(cast, (line) => [line.x, line.z] as const)
-    );
-    const fox: Animal = {
-      kind: "fox",
-      rest: route.length > 0 ? 0 : 1,
-      steps: 0,
-      tx: Option.getOrElse(facing, () => [walker.x, walker.z] as const)[0],
-      tz: Option.getOrElse(facing, () => [walker.x, walker.z] as const)[1],
-      x: walker.x,
-      z: walker.z,
-    };
-    painter.herd(
-      herdQuads(
-        cells,
-        Arr.append(herd, fox),
-        size,
-        orbit.yaw,
-        now / 1000,
-        Arr.appendAll(
-          wildVertices(cells, wild, size, orbit.yaw, now / 1000),
-          float
-        )
-      )
-    );
+    drawLife(cells, next, now / 1000);
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
     const minute = Math.floor(hour * 60) % (24 * 60);
     if (minute !== store.getState().minute) {

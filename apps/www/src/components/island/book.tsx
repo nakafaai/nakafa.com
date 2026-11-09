@@ -23,6 +23,7 @@ import {
   isOpen,
   opensAt,
 } from "@repo/backend/confect/island/blocks";
+import { FARM_KEYS } from "@repo/backend/confect/island/farm";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { AWARD_RULES } from "@repo/backend/confect/island/schema";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -220,7 +221,10 @@ function ShelfGrid() {
   const blocks =
     shelf === "plants"
       ? PLANT_KEYS
-      : Arr.filter(BLOCK_KEYS, (block) => !isPlant(block));
+      : Arr.filter(
+          BLOCK_KEYS,
+          (block) => !(isPlant(block) || Arr.contains(FARM_KEYS, block))
+        );
   return (
     <ul className={grid}>
       {Arr.map(

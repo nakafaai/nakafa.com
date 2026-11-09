@@ -4961,6 +4961,21 @@
     "notice-far": "Baling ke air dekat musangmu.",
     "notice-bite": "Ada yang makan umpan! Ketik sekarang!",
     "notice-escaped": "Ikan terlepas. Baling lagi!",
-    "caught": "Kamu dapat {name}!"
+    "caught": "Kamu dapat {name}!",
+    "hoe": "Cangkul",
+    "can": "Penyiram",
+    "notice-till": "Cangkul rumput atau tanah yang terbuka di atasnya.",
+    "notice-water": "Siram tanah yang dicangkul atau tunas.",
+    "harvested": "+1 {name}, {count} dalam bakulmu",
+    "block-farmland": "Tanah ladang",
+    "block-wet-farmland": "Tanah ladang basah",
+    "block-rice-sprout": "Tunas padi",
+    "block-corn-sprout": "Tunas jagung",
+    "block-cabbage-sprout": "Tunas kubis",
+    "block-tomato-sprout": "Tunas tomato",
+    "block-chili-sprout": "Tunas cili",
+    "block-carrot-sprout": "Tunas lobak merah",
+    "block-cassava-sprout": "Tunas ubi kayu",
+    "block-sweet-potato-sprout": "Tunas ubi keledek"
   }
 }
