@@ -17,6 +17,8 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Option, Result } from "effect";
 import {
+  createContext,
+  type ReactNode,
   Suspense,
   use,
   useDeferredValue,
@@ -45,10 +47,43 @@ import { createRecentStore } from "@/lib/search/recent";
 /**
  * The global command palette: every page Nakafa publishes in the reader's
  * language, searched in the browser from one static index that the build wrote.
- * It reads the index once, when it first opens, and nothing per keystroke.
+ * The palette mounts when the reader shows intent, so the index is read once,
+ * before the press that opens it, and nothing is read per keystroke.
  */
 export function SearchCommand() {
   const locale = useLocale();
+  return (
+    <SearchIndex key={locale}>
+      <SearchDialog />
+    </SearchIndex>
+  );
+}
+
+/** What reading the index of the locale settled with. */
+type IndexAnswer = Result.Result<
+  Effect.Success<ReturnType<typeof readSearchIndex>>,
+  SearchIndexUnavailable
+>;
+
+/** The read of the locale's index, which the palette's body waits for. */
+const SearchIndexContext = createContext<Promise<IndexAnswer> | null>(null);
+
+/**
+ * Starts reading the index of one locale, once. It sits above the dialog, so a
+ * phone's drawer, whose body leaves when it closes, never reads the index again.
+ */
+function SearchIndex({ children }: { children: ReactNode }) {
+  const locale = useLocale();
+  const [answer] = useState(() =>
+    Effect.runPromise(
+      Effect.result(readSearchIndex(window.location.origin, locale))
+    )
+  );
+  return <SearchIndexContext value={answer}>{children}</SearchIndexContext>;
+}
+
+/** The dialog, or the phone's drawer, that holds the palette. */
+function SearchDialog() {
   const t = useTranslations("Utils");
   const tCommon = useTranslations("Common");
   const { open, setOpen } = useSearch((state) => ({
@@ -71,35 +106,20 @@ export function SearchCommand() {
         portalProps={{ keepMounted: true }}
         title={tCommon("search")}
       >
-        <SearchLocale key={locale} />
+        <Suspense fallback={<SearchPalette answer={Option.none()} />}>
+          <SearchSettled />
+        </Suspense>
       </CommandDialogPopup>
     </CommandDialog>
   );
 }
 
-/** What reading the index of the locale settled with. */
-type IndexAnswer = Result.Result<
-  Effect.Success<ReturnType<typeof readSearchIndex>>,
-  SearchIndexUnavailable
->;
-
-/** Starts reading the index of one locale, once, and shows the palette while it arrives. */
-function SearchLocale() {
-  const locale = useLocale();
-  const [answer] = useState(() =>
-    Effect.runPromise(
-      Effect.result(readSearchIndex(window.location.origin, locale))
-    )
-  );
-  return (
-    <Suspense fallback={<SearchPalette answer={Option.none()} />}>
-      <SearchSettled answer={answer} />
-    </Suspense>
-  );
-}
-
 /** The palette once the index has settled. */
-function SearchSettled({ answer }: { answer: Promise<IndexAnswer> }) {
+function SearchSettled() {
+  const answer = use(SearchIndexContext);
+  if (answer === null) {
+    throw new Error("SearchSettled must be used within SearchIndex");
+  }
   return <SearchPalette answer={Option.some(use(answer))} />;
 }
 
