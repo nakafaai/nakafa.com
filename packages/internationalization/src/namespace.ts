@@ -23,7 +23,6 @@ const messageNamespaceFlags = {
   Faq: true,
   Holy: true,
   Home: true,
-  Island: true,
   Landing: true,
   LearningPrograms: true,
   Legal: true,
