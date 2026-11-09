@@ -4,7 +4,6 @@ import { getPowerPreference } from "@repo/design-system/lib/device";
 import { useMemo } from "react";
 import { PixelPipeline } from "@/components/island/pipeline";
 import { IslandScene } from "@/components/island/scene";
-import { SkyProvider } from "@/components/island/sky";
 import { useIsland } from "@/lib/island/context";
 import { artPixelFor, bufferFor, cameraFor } from "@/lib/island/view";
 
@@ -13,7 +12,7 @@ import { artPixelFor, bufferFor, cameraFor } from "@/lib/island/view";
  * reaches a route's first JavaScript (ADR 0042, D14). Its drawing buffer is the
  * art resolution, sized in whole art pixels and centred on a whole CSS pixel,
  * and the browser enlarges it with nearest-neighbour sampling (D15). The sky
- * above it follows the owner's hour and weather (D18).
+ * above it comes from the frame's `SkyProvider` (D18).
  */
 export default function IslandCanvas({
   turn = 0,
@@ -45,31 +44,29 @@ export default function IslandCanvas({
             width: buffer.cssWidth,
           }}
         >
-          <SkyProvider>
-            <Canvas
-              camera={camera}
-              className="[&_canvas]:[image-rendering:pixelated]"
-              dpr={1 / artPixel}
-              flat
-              frameloop="demand"
-              gl={{
-                alpha: true,
-                antialias: false,
-                powerPreference: getPowerPreference(),
-              }}
-              linear
-              orthographic
+          <Canvas
+            camera={camera}
+            className="[&_canvas]:[image-rendering:pixelated]"
+            dpr={1 / artPixel}
+            flat
+            frameloop="demand"
+            gl={{
+              alpha: true,
+              antialias: false,
+              powerPreference: getPowerPreference(),
+            }}
+            linear
+            orthographic
+          >
+            <PixelPipeline
+              angle={angle}
+              columns={buffer.columns}
+              rows={buffer.rows}
+              size={size}
             >
-              <PixelPipeline
-                angle={angle}
-                columns={buffer.columns}
-                rows={buffer.rows}
-                size={size}
-              >
-                <IslandScene angle={angle} layout={layout} size={size} />
-              </PixelPipeline>
-            </Canvas>
-          </SkyProvider>
+              <IslandScene angle={angle} layout={layout} size={size} />
+            </PixelPipeline>
+          </Canvas>
         </div>
       ) : null}
     </div>
