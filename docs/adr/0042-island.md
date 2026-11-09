@@ -136,6 +136,8 @@ D19. Music is generated: the scale and tempo follow the hour (a major pentatonic
 
 D20. Sharing: a public link at `/{locale}/island/{username}`, an OpenGraph image from a snapshot the owner's browser renders and stores in R2, a short clip the browser records from the canvas, read-only visits with preset hearts and stickers (D16 of the plan), and live co-visits last through the installed `@convex-dev/presence`.
 
+D21. The signed-in home opens on the learner's island: a frame with its name and level, the live island once the page is read, an Enter button and the Stars the next level asks for, over the four places to learn, each with the Stars it earns. Entering is one view transition: the home frame and the island page's frame share a name, so the frame grows into the page while the camera comes down from the sky in whole art pixels. A reader who asks for less motion gets the page's plain cross-fade and an island already in place.
+
 ## Consequences
 
 - A learner's island grows from every lesson and try-out from the day this lands, before they first open it.

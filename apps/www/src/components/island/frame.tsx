@@ -87,58 +87,60 @@ export function IslandFrame({
     <ToolsProvider>
       <SkyProvider>
         <SoundProvider>
-          <VisualCard>
-            <VisualCardHeader
-              description={t("level", { level: growth.level })}
-              title={name === undefined ? t("title") : t("name", { name })}
-            />
-            <BuildBand />
-            <VisualCardBody className="aspect-square sm:aspect-video">
-              <Suspense fallback={null}>
-                <IslandCanvas turn={turn} />
-              </Suspense>
-            </VisualCardBody>
-            <VisualCardActions>
-              {Option.isSome(owner) ? <BuildToggle /> : null}
-              <VisualCardMenu>
-                {Option.isSome(owner) ? <WaterItem /> : null}
-                <DropdownMenuItem
-                  closeOnClick={false}
-                  icon={RotateLeft01Icon}
-                  onClick={() => setTurn((current) => (current + 3) % 4)}
-                >
-                  {t("turn-left")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  closeOnClick={false}
-                  icon={RotateRight01Icon}
-                  onClick={() => setTurn((current) => (current + 1) % 4)}
-                >
-                  {t("turn-right")}
-                </DropdownMenuItem>
-                <SoundItem />
-              </VisualCardMenu>
-            </VisualCardActions>
-            <VisualCardFooter>
-              <VisualCardFacts>
-                <VisualFactTabular label={t("stars")} value={stars} />
-                {Option.isSome(owner) ? (
+          <section className="motion-safe:[view-transition-name:island]">
+            <VisualCard>
+              <VisualCardHeader
+                description={t("level", { level: growth.level })}
+                title={name === undefined ? t("title") : t("name", { name })}
+              />
+              <BuildBand />
+              <VisualCardBody className="aspect-square sm:aspect-video">
+                <Suspense fallback={null}>
+                  <IslandCanvas descend turn={turn} />
+                </Suspense>
+              </VisualCardBody>
+              <VisualCardActions>
+                {Option.isSome(owner) ? <BuildToggle /> : null}
+                <VisualCardMenu>
+                  {Option.isSome(owner) ? <WaterItem /> : null}
+                  <DropdownMenuItem
+                    closeOnClick={false}
+                    icon={RotateLeft01Icon}
+                    onClick={() => setTurn((current) => (current + 3) % 4)}
+                  >
+                    {t("turn-left")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    closeOnClick={false}
+                    icon={RotateRight01Icon}
+                    onClick={() => setTurn((current) => (current + 1) % 4)}
+                  >
+                    {t("turn-right")}
+                  </DropdownMenuItem>
+                  <SoundItem />
+                </VisualCardMenu>
+              </VisualCardActions>
+              <VisualCardFooter>
+                <VisualCardFacts>
+                  <VisualFactTabular label={t("stars")} value={stars} />
+                  {Option.isSome(owner) ? (
+                    <VisualFactTabular
+                      label={t("materials")}
+                      value={t("materials-value", owner.value.materials)}
+                    />
+                  ) : null}
                   <VisualFactTabular
-                    label={t("materials")}
-                    value={t("materials-value", owner.value.materials)}
+                    label={t("next")}
+                    value={Option.match(growth.next, {
+                      onNone: () => t("top"),
+                      onSome: (next) =>
+                        t("next-value", { stars: next - lifetime }),
+                    })}
                   />
-                ) : null}
-                <VisualFactTabular
-                  label={t("next")}
-                  value={Option.match(growth.next, {
-                    onNone: () => t("top"),
-                    onSome: (next) =>
-                      t("next-value", { stars: next - lifetime }),
-                  })}
-                />
-              </VisualCardFacts>
-            </VisualCardFooter>
-          </VisualCard>
+                </VisualCardFacts>
+              </VisualCardFooter>
+            </VisualCard>
+          </section>
         </SoundProvider>
       </SkyProvider>
     </ToolsProvider>

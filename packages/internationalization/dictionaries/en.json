@@ -4676,6 +4676,11 @@
     "water": "Water the garden",
     "harvest": "Harvest",
     "sound": "Sound",
+    "enter": "Enter",
+    "enter-next": "{stars} more Stars grow your island to the next level.",
+    "enter-top": "Your island is as big as an island grows.",
+    "earn-lesson": "+{stars} Stars a lesson",
+    "earn-section": "+{stars} Stars a section",
     "materials": "Garden",
     "materials-value": "{wood} wood, {petals} petals",
     "price-wood": "{stars} Stars, {wood} wood"
