@@ -2596,6 +2596,7 @@
     "result-short": "Keputusan",
     "result-open": "Buka keputusan kamu, {correct} daripada {total} betul",
     "review-controls": "Cubaan dan paparan",
+    "verdict": "{state, select, correct {Betul} incorrect {Salah} partial {Separa betul} pending {Menunggu markah} other {Belum dijawab}}",
     "menu-history": "Sejarah",
     "attempt-menu-search-placeholder": "Cari cubaan...",
     "attempt-menu-empty": "Tiada cubaan yang sepadan ditemui.",

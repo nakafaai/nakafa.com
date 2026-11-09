@@ -7,8 +7,10 @@ import {
 } from "@/components/player/question";
 import { PlayerQuestions } from "@/components/player/questions";
 import { TryoutAskButton } from "@/components/tryout/review/ask";
-import { TryoutReviewLocked } from "@/components/tryout/review/locked";
+import { verdictOfQuestion } from "@/components/tryout/review/model";
+import { TryoutExplanationOffer } from "@/components/tryout/review/offer";
 import { useTryoutReview } from "@/components/tryout/review/result";
+import { TryoutVerdictBadge } from "@/components/tryout/review/verdict";
 import {
   TryoutExplanationBody,
   TryoutQuestionBody,
@@ -17,31 +19,25 @@ import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
 } from "@/components/tryout/runtime/question/shell";
+import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
 import { TryoutReviewedFields } from "@/components/tryout/runtime/response/review";
 
 /**
  * The questions of the finished attempt a page was loaded with, in the review's player
- * (`TryoutReviewFrame`): each with its body, the learner's answer marked against the key, and its
- * explanation, in the list or one at a time. The backend sends a question's key and explanation only to a
- * learner who may read them, so a section whose questions do not all carry a key shows its leading
- * preview under the Pro offer.
+ * (`TryoutReviewFrame`), in the list or one at a time: each with its body, the learner's own answer, and
+ * how it went, which every reader sees, as a score is free. The backend sends a question's key and
+ * explanation only to a reader who may read them, a Pro learner or anyone on the section's free samples,
+ * so such a question marks the answer against its key and opens its explanation, and any other question
+ * opens the Pro offer in its explanation's place. Nina answers about a question for a Pro learner.
  */
 export function TryoutAttemptReview({
   binding,
 }: {
   readonly binding: { readonly attemptId: Id<"tryoutAttempts"> } | null;
 }) {
-  const { joined, runtime, whole } = useTryoutReview();
+  const { joined, whole } = useTryoutReview();
   if (binding === null) {
     return null;
-  }
-  if (!whole) {
-    return (
-      <TryoutReviewLocked
-        preview={Arr.takeWhile(joined, ({ body }) => body.key !== undefined)}
-        total={runtime.questions.length}
-      />
-    );
   }
 
   return (
@@ -50,13 +46,16 @@ export function TryoutAttemptReview({
         {Arr.map(joined, ({ body, question }) => (
           <TryoutReviewQuestionShell
             action={
-              <TryoutAskButton
-                attemptId={binding.attemptId}
-                placementId={question.placementId}
-                questionOrder={question.questionOrder}
-              />
+              whole ? (
+                <TryoutAskButton
+                  attemptId={binding.attemptId}
+                  placementId={question.placementId}
+                  questionOrder={question.questionOrder}
+                />
+              ) : null
             }
             key={question.placementId}
+            mark={<TryoutVerdictBadge verdict={verdictOfQuestion(question)} />}
             questionKey={question.placementId}
             questionOrder={question.questionOrder}
           >
@@ -64,7 +63,17 @@ export function TryoutAttemptReview({
               <TryoutQuestionBody body={body} />
             </PlayerQuestionPrompt>
             <PlayerQuestionAnswer>
-              {body.key === undefined ? null : (
+              {body.key === undefined ? (
+                <TryoutResponseFields
+                  value={{
+                    id: `review-${question.placementId}`,
+                    interaction: body.interaction,
+                    locked: true,
+                    onChange: () => undefined,
+                    response: question.response?.response ?? null,
+                  }}
+                />
+              ) : (
                 <TryoutReviewedFields
                   answer={body.key}
                   id={`review-${question.placementId}`}
@@ -76,7 +85,11 @@ export function TryoutAttemptReview({
             <TryoutReviewQuestionExplanation
               questionOrder={question.questionOrder}
             >
-              <TryoutExplanationBody body={body} />
+              {body.key === undefined ? (
+                <TryoutExplanationOffer />
+              ) : (
+                <TryoutExplanationBody body={body} />
+              )}
             </TryoutReviewQuestionExplanation>
           </TryoutReviewQuestionShell>
         ))}
