@@ -175,6 +175,7 @@ describe("public route ownership", () => {
     ["de", "chat/id/fabricated"],
     ["de", "comment"],
     ["de", "comment/id/fabricated"],
+    ["en", "island"],
     ["de", "onboarding/focus"],
     ["de", "onboarding/role"],
     ["de", "onboarding/fabricated"],
