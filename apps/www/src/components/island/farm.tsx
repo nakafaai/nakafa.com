@@ -6,6 +6,7 @@ import { todayOf } from "@repo/backend/confect/island/day";
 import type { Placement } from "@repo/backend/confect/island/layout";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { DateTime, Effect, Option, Result } from "effect";
+import { useCue } from "@/components/island/sound";
 import { useIsland } from "@/lib/island/context";
 import {
   harvestIslandChange,
@@ -39,6 +40,7 @@ function farmFailed(
  */
 export function useWaterIsland() {
   const { layout, owner, timeZone } = useIsland();
+  const cue = useCue();
   const water = useMutation(island.mutations.water).withOptimisticUpdate(
     waterIslandChange
   );
@@ -51,9 +53,11 @@ export function useWaterIsland() {
     );
     const refusal = waterRefusal({ ...owner.value, layout }, today);
     if (Option.isSome(refusal)) {
+      cue("refuse");
       toast.error({ title: `island-farm-${refusal.value}.title` });
       return;
     }
+    cue("water");
     Effect.runFork(
       Effect.tryPromise(() => water({ version: owner.value.version })).pipe(
         Effect.flatMap((result) =>
@@ -73,6 +77,7 @@ export function useWaterIsland() {
 /** Harvests one ripe plant of the owner's island into materials, shown at once. */
 export function useHarvestIsland() {
   const { owner } = useIsland();
+  const cue = useCue();
   const harvest = useMutation(island.mutations.harvest).withOptimisticUpdate(
     harvestIslandChange
   );
@@ -81,6 +86,7 @@ export function useHarvestIsland() {
     if (Option.isNone(owner) || Option.isNone(gives)) {
       return;
     }
+    cue("harvest");
     Effect.runFork(
       Effect.tryPromise(() =>
         harvest({
