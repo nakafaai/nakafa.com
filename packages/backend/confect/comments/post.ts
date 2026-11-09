@@ -83,7 +83,8 @@ export const postComment = Effect.fn("comments.post")(function* (
   userId: GenericId.GenericId<"users">,
   post: typeof CommentPost.Type
 ) {
-  const text = readCommentText(post.text, post.uploads.length);
+  const uploads = post.uploads ?? [];
+  const text = readCommentText(post.text, uploads.length);
   if (Result.isFailure(text)) {
     return yield* new CommentWriteError({
       code: text.failure,
@@ -92,7 +93,7 @@ export const postComment = Effect.fn("comments.post")(function* (
   }
   const slug = cleanSlug(post.slug);
   const parent = yield* readParent(post.parentId, slug);
-  const photos = yield* takeUploads(userId, post.uploads);
+  const photos = yield* takeUploads(userId, uploads);
   const commentId = yield* (yield* DatabaseWriter)
     .table("comments")
     .insert({

@@ -16,8 +16,11 @@ const writeError = () => Schema.Union([AuthFailure, CommentWriteError]);
 export const CommentPost = Schema.Struct({
   ...commentsTable.Fields.mapFields(Struct.pick(["slug", "text", "parentId"]))
     .fields,
-  uploads: Schema.Array(IdSchema("commentUploads")).check(
-    Schema.isMaxLength(COMMENT_PHOTO_LIMIT)
+  // Optional only while the Worker that predates photos still serves pages; it posts text alone.
+  uploads: Schema.optionalKey(
+    Schema.Array(IdSchema("commentUploads")).check(
+      Schema.isMaxLength(COMMENT_PHOTO_LIMIT)
+    )
   ),
 });
 

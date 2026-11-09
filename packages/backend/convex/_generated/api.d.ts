@@ -2449,7 +2449,7 @@ export declare const api: {
           parentId?: Id<"comments">;
           slug: string;
           text: string;
-          uploads: Array<Id<"commentUploads">>;
+          uploads?: Array<Id<"commentUploads">>;
         },
         Id<"comments">
       >;
@@ -2607,7 +2607,7 @@ export declare const api: {
             numItems: number;
           };
           slug: string;
-          sort: "top" | "newest";
+          sort?: "top" | "newest";
         },
         {
           continueCursor: string;
