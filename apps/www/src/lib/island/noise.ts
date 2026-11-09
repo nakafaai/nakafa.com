@@ -4,17 +4,21 @@
  * so a world never needs to be stored to look the same everywhere.
  */
 
-/** The prime the hash works modulo: every product below stays an exact integer in a double. */
-const MODULUS = 2_147_483_647;
+/** A prime under 2^26: every square below it stays an exact integer in a double. */
+const MODULUS = 67_108_859;
 
 /** A number brought into [0, MODULUS). */
 function wrap(value: number) {
   return ((value % MODULUS) + MODULUS) % MODULUS;
 }
 
-/** One step of the Park and Miller generator, which scatters neighbouring values far apart. */
+/**
+ * One round of a quadratic map modulo the prime. A square is what makes the
+ * hash non-linear: with only products by constants, neighbouring cells would
+ * land on a lattice, and textures and terrain would show its stripes.
+ */
 function mix(value: number) {
-  return (value * 48_271) % MODULUS;
+  return (value * value + 30_269 * value + 12_345) % MODULUS;
 }
 
 /**
@@ -23,7 +27,7 @@ function mix(value: number) {
  * server compute the same value.
  */
 export function hashOf(seed: number, x: number, y = 0, z = 0) {
-  let hash = mix(mix(wrap(seed + 40_503)));
+  let hash = mix(mix(wrap(seed * 7919 + 40_503)));
   hash = mix(mix(wrap(hash + x * 92_821 + 1)));
   hash = mix(mix(wrap(hash + y * 68_917 + 2)));
   hash = mix(mix(wrap(hash + z * 39_119 + 3)));

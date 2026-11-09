@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import { hashOf, seedOf, smoothOf, unitOf } from "@/lib/island/noise";
 
 describe("island/noise", () => {
@@ -7,6 +8,24 @@ describe("island/noise", () => {
     expect(hashOf(7, 1, 2, 3)).toBe(hashOf(7, 1, 2, 3));
     expect(hashOf(7, 1, 2, 3)).not.toBe(hashOf(7, 1, 2, 4));
     expect(hashOf(7, 1)).toBe(hashOf(7, 1, 0, 0));
+  });
+
+  it("scatters neighbouring cells and the channels of one cell with no pattern between them", () => {
+    const count = 4000;
+    const pairs = Arr.makeBy(count, (index) => [
+      unitOf(71, index, 1),
+      unitOf(71, index, 2),
+      unitOf(5, index % 64, Math.floor(index / 64)),
+      unitOf(5, (index % 64) + 1, Math.floor(index / 64)),
+    ]);
+    const covariance = (a: number, b: number) =>
+      Arr.reduce(
+        pairs,
+        0,
+        (sum, pair) => sum + (pair[a] - 0.5) * (pair[b] - 0.5)
+      ) / count;
+    expect(Math.abs(covariance(0, 1))).toBeLessThan(0.005);
+    expect(Math.abs(covariance(2, 3))).toBeLessThan(0.005);
   });
 
   it("keeps unit values in [0, 1)", () => {
