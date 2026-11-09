@@ -6,10 +6,7 @@ import {
   ScatterDiagram,
   VectorChart,
 } from "@/lib/content/renderer/client/mathematics/charts";
-import {
-  Inequality,
-  QuadraticEquationReadingRoomProblem,
-} from "@/lib/content/renderer/client/mathematics/equation";
+import { QuadraticEquationReadingRoomProblem } from "@/lib/content/renderer/client/mathematics/equation";
 import {
   FunctionAndNonFunctionDiagram,
   FunctionAndNonFunctionRelationVisualizer,
@@ -24,7 +21,6 @@ import {
   BacterialGrowth,
   FunctionExplorationVirusChart,
 } from "@/lib/content/renderer/client/mathematics/growth";
-import { NumberLine } from "@/lib/content/renderer/client/mathematics/number";
 import { SequenceConceptTableChairsAnimation } from "@/lib/content/renderer/client/mathematics/sequence";
 import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
@@ -64,20 +60,12 @@ export const mathematicsRenderers = [
     component: HistogramChart,
   },
   {
-    name: mathematicsComponentNames.inequality,
-    component: Inequality,
-  },
-  {
     name: mathematicsComponentNames.inverseFunctionIllustration,
     component: InverseFunctionIllustration,
   },
   {
     name: mathematicsComponentNames.lineEquation,
     component: LineEquationServer,
-  },
-  {
-    name: mathematicsComponentNames.numberLine,
-    component: NumberLine,
   },
   {
     name: mathematicsComponentNames.quadraticEquationReadingRoomProblem,
