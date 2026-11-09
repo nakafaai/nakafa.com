@@ -1,7 +1,10 @@
 import { Array as Arr, HashSet, Option, Result } from "effect";
 import {
+  isArrowFunction,
   isCallExpression,
+  isFunctionExpression,
   isIdentifier,
+  isObjectBindingPattern,
   isJsxAttribute,
   isJsxElement,
   isJsxExpression,
@@ -39,6 +42,20 @@ const ICON_TAG = "HugeIcons";
 /** The call that declares a table's columns, and its member that declares the row's menu. */
 const COLUMNS_CALL = "tableColumns";
 const MENU_MEMBER = "menu";
+/**
+ * The registries whose every entry carries its own mark: a language the flag of its country, and a country its flag.
+ * An option drawn for each entry shows that mark, never one icon for the whole list.
+ */
+const MARKED_REGISTRIES = HashSet.make("countries", "languages");
+/** The options of a menu, a select and a picker, each of which takes the `icon` it shows before its words. */
+const OPTION_TAGS = HashSet.make(
+  "DropdownMenuCheckboxItem",
+  "DropdownMenuItem",
+  "DropdownMenuRadioItem",
+  "DropdownMenuSubTrigger",
+  "PickerItem",
+  "SelectItem"
+);
 /** What draws a button: the component, or the classes that make a link look like one. */
 const BUTTON_TAG = "Button";
 const BUTTON_CLASSES = "buttonVariants";
@@ -115,14 +132,99 @@ function drawsButton(node: Node) {
   );
 }
 
+/** The names that a callback binds to the entry it maps: `language`, or each name of `({ value, country })`. */
+function entryNames(callback: Node) {
+  if (!(isArrowFunction(callback) || isFunctionExpression(callback))) {
+    return HashSet.empty<string>();
+  }
+  return HashSet.fromIterable(
+    Arr.flatMap(Arr.take(callback.parameters, 1), ({ name }) => {
+      if (isIdentifier(name)) {
+        return [name.text];
+      }
+      return isObjectBindingPattern(name)
+        ? Arr.flatMap(name.elements, ({ name: inner }) =>
+            inner !== undefined && isIdentifier(inner) ? [inner.text] : []
+          )
+        : [];
+    })
+  );
+}
+
+/** The registry and the callback of `Arr.map(languages, (language) => ...)` or `languages.map(...)`. */
+function markedMap(node: Node) {
+  if (!isCallExpression(node)) {
+    return Option.none();
+  }
+  const callee = node.expression;
+  const method = isPropertyAccessExpression(callee) && callee.name.text === "map";
+  const [first, second] = node.arguments;
+  if (
+    method &&
+    isIdentifier(callee.expression) &&
+    callee.expression.text === "Arr" &&
+    first !== undefined &&
+    isIdentifier(first) &&
+    HashSet.has(MARKED_REGISTRIES, first.text) &&
+    second !== undefined
+  ) {
+    return Option.some({ callback: second, registry: first.text });
+  }
+  return method &&
+    isIdentifier(callee.expression) &&
+    HashSet.has(MARKED_REGISTRIES, callee.expression.text) &&
+    first !== undefined
+    ? Option.some({ callback: first, registry: callee.expression.text })
+    : Option.none();
+}
+
+/**
+ * The registries mapped to options whose icon ignores the entry: every option of the list would show one icon where
+ * each entry carries a mark of its own.
+ */
+function unmarkedOptions(nodes: readonly Node[]) {
+  return Arr.filterMap(nodes, (node) =>
+    Option.match(markedMap(node), {
+      onNone: () => Result.failVoid,
+      onSome: ({ callback, registry }) => {
+        const names = entryNames(callback);
+        const ignored = Arr.some(nodesBelow(callback), (child) => {
+          if (!(isJsxOpeningElement(child) || isJsxSelfClosingElement(child))) {
+            return false;
+          }
+          const tag = tagText(child.tagName);
+          return (
+            tag !== undefined &&
+            HashSet.has(OPTION_TAGS, tag) &&
+            Arr.some(
+              child.attributes.properties,
+              (attribute) =>
+                isJsxAttribute(attribute) &&
+                isIdentifier(attribute.name) &&
+                attribute.name.text === "icon" &&
+                attribute.initializer !== undefined &&
+                !Arr.some(
+                  nodesBelow(attribute.initializer),
+                  (part) => isIdentifier(part) && HashSet.has(names, part.text)
+                )
+            )
+          );
+        });
+        return ignored ? Result.succeed(registry) : Result.failVoid;
+      },
+    })
+  );
+}
+
 /**
  * Reports the ways a menu falls short. A sidebar group's label is text alone, so it never reads as
  * one of the items under it. A dropdown or a select names what it holds in one word: the design system requires the
  * popup's `label`, and this rule holds it to a key of the `menu-` family, which holds one word in every language.
  * Every row of a table has one action, so a table's columns
  * declare the row's menu, and that menu column draws no button of its own beside it. The menu
- * column's cell gives `RowItems` its items, and the table draws the button. The component sets that a
- * registry ships keep their upstream shape.
+ * column's cell gives `RowItems` its items, and the table draws the button. An option drawn for each language or
+ * country shows that entry's flag, never one icon for the whole list. The component sets that a registry ships keep
+ * their upstream shape.
  */
 export function inspectMenuSource(file: string, sourceFile: SourceFile) {
   if (
@@ -165,6 +267,11 @@ export function inspectMenuSource(file: string, sourceFile: SourceFile) {
       : Result.failVoid
   );
   return Arr.flatten([
+    Arr.map(
+      unmarkedOptions(nodes),
+      (registry) =>
+        `${file}: the options of ${registry} show one icon for every entry. Each entry carries its own flag: draw it from the entry, as the language lists of components/shared/language do.`
+    ),
     Arr.map(
       iconLabels,
       () =>
