@@ -1,5 +1,12 @@
 import { Array as Arr, Record as Rec, Schema } from "effect";
 import {
+  duckTile,
+  henStepTile,
+  henTile,
+  ninaStepTile,
+  ninaTile,
+} from "@/lib/island/tiles/animals";
+import {
   bookshelfTile,
   brickTile,
   cobbleTile,
@@ -53,6 +60,11 @@ export const TILE_NAMES = [
   "bookshelf",
   "marble",
   "gold",
+  "hen",
+  "henStep",
+  "duck",
+  "nina",
+  "ninaStep",
 ] as const;
 
 /** The name of one tile of the atlas. */
@@ -84,6 +96,11 @@ const PAINTERS = {
   bookshelf: bookshelfTile,
   marble: marbleTile,
   gold: goldTile,
+  hen: henTile,
+  henStep: henStepTile,
+  duck: duckTile,
+  nina: ninaTile,
+  ninaStep: ninaStepTile,
 } satisfies Record<TileName, (seed: number) => Pixels>;
 
 /** Tiles along one side of the atlas. */

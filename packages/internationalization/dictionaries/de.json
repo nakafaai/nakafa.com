@@ -4645,6 +4645,7 @@
     "notice-stale": "Deine Insel hat sich woanders geändert, sie lädt gerade neu.",
     "next": "Noch {stars} Sterne bis Stufe {level}",
     "top": "Alle Blöcke sind offen",
-    "play": "Spielen"
+    "play": "Spielen",
+    "mute": "Ton aus"
   }
 }

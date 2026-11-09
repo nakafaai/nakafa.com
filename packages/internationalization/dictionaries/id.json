@@ -4645,6 +4645,7 @@
     "notice-stale": "Pulaumu berubah di tempat lain, jadi dimuat ulang dulu ya.",
     "next": "{stars} Bintang lagi ke level {level}",
     "top": "Semua blok sudah terbuka",
-    "play": "Main"
+    "play": "Main",
+    "mute": "Matikan suara"
   }
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { footprintOf } from "@repo/backend/confect/island/world";
 import {
   Array as Arr,
   DateTime,
@@ -34,12 +33,14 @@ import {
   pinchOf,
   wheelZoomOf,
 } from "@/lib/island/gesture";
+import { herdOf, herdQuads, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
+import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
 import { hourOf, lightOf } from "@/lib/island/sky";
-import { CHUNKS, cellOf, isInside } from "@/lib/island/world";
+import { CHUNKS } from "@/lib/island/world";
 
 /**
  * The island's world on the whole screen (ADR 0047, D1, D2 and D5): the canvas
@@ -92,10 +93,11 @@ function start(
   let needsDraw = true;
   let frame = 0;
   let lastWater = 0;
-  const footprint = footprintOf(size);
   const presses = MutableHashMap.empty<number, Press>();
 
   let glow = glowOf(store.getState().cells);
+  let herd = herdOf(store.getState().cells, store.getState().seed, size);
+  let lastLife = 0;
   const remesh = (chunks: Iterable<number>) => {
     const { cells } = store.getState();
     const lighting = lightingOf(cells, glow);
@@ -123,8 +125,8 @@ function start(
     }
   });
 
-  /** Builds or digs at a point of the screen. */
-  const act = (point: Point, remove: boolean) => {
+  /** The edit a press at a point of the screen would make, none when it would make none. */
+  const planAt = (point: Point, remove: boolean) => {
     const rect = canvas.getBoundingClientRect();
     const ray = rayThrough(
       orbit,
@@ -133,35 +135,20 @@ function start(
       1 - ((point.y - rect.top) / rect.height) * 2
     );
     const state = store.getState();
-    Option.map(
+    return Option.flatMap(
       castRay(state.cells, ray.origin, ray.direction),
-      ({ block, hit, place }) => {
-        const within = (x: number, z: number) =>
-          x >= footprint.from &&
-          x <= footprint.to &&
-          z >= footprint.from &&
-          z <= footprint.to;
-        const held = heldOf(state);
-        if (remove || held === 0) {
-          if (hit[1] >= 1 && within(hit[0], hit[2])) {
-            state.apply([
-              { after: 0, before: block, x: hit[0], y: hit[1], z: hit[2] },
-            ]);
-          }
-          return;
-        }
-        const into = block === 11 ? hit : place;
-        if (isInside(...into) && into[1] >= 1 && within(into[0], into[2])) {
-          const before = state.cells[cellOf(...into)];
-          if (before !== held) {
-            state.apply([
-              { after: held, before, x: into[0], y: into[1], z: into[2] },
-            ]);
-          }
-        }
-      }
+      (hit) => planOf(state.cells, hit, remove ? 0 : heldOf(state), size)
     );
   };
+
+  /** Builds or digs at a point of the screen. */
+  const act = (point: Point, remove: boolean) => {
+    Option.map(planAt(point, remove), (edit) => store.getState().apply([edit]));
+    aim = Option.none();
+  };
+
+  /** The cell a hovering mouse would change, outlined before it presses (D5). */
+  let aim: Option.Option<readonly [number, number, number]> = Option.none();
 
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
@@ -181,12 +168,15 @@ function start(
     }
     lastWater = now;
     needsDraw = false;
-    painter.draw(
-      orbit,
-      lightOf(hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal()), weather),
-      now / 1000,
-      weather
+    const dt = lastLife === 0 ? 0 : Math.min(0.25, (now - lastLife) / 1000);
+    lastLife = now;
+    const { cells, seed } = store.getState();
+    herd = Arr.map(herd, (animal, index) =>
+      wander(cells, animal, seed, index, dt)
     );
+    painter.herd(herdQuads(cells, herd, size, orbit.yaw, now / 1000));
+    const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
+    painter.draw(orbit, lightOf(hour, weather), now / 1000, weather, aim);
     canvas.dataset.drawn = "true";
     canvas.dataset.weather = weather;
   };
@@ -216,6 +206,7 @@ function start(
   };
   const onDown = (event: PointerEvent) => {
     canvas.setPointerCapture(event.pointerId);
+    aim = Option.none();
     spendPresses();
     const point = { x: event.clientX, y: event.clientY };
     const id = event.pointerId;
@@ -241,6 +232,14 @@ function start(
   const onMove = (event: PointerEvent) => {
     const found = MutableHashMap.get(presses, event.pointerId);
     if (Option.isNone(found)) {
+      if (event.pointerType === "mouse") {
+        const { tool } = store.getState();
+        aim = Option.map(
+          planAt({ x: event.clientX, y: event.clientY }, tool === "remove"),
+          (edit) => [edit.x, edit.y, edit.z] as const
+        );
+        needsDraw = true;
+      }
       return;
     }
     const press = found.value;

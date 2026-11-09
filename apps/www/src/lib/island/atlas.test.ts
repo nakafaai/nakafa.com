@@ -18,6 +18,17 @@ const clearOf = (pixels: Uint8ClampedArray) =>
     (alpha) => alpha === 0
   ).length;
 
+/** The tiles a block or a sprite shows the world through. */
+const SEE_THROUGH = [
+  "glass",
+  "flowers",
+  "hen",
+  "henStep",
+  "duck",
+  "nina",
+  "ninaStep",
+];
+
 describe("island/atlas", () => {
   it("gives every tile its own slot, all of them inside the atlas", () => {
     const slots = Rec.values(SLOTS);
@@ -31,10 +42,10 @@ describe("island/atlas", () => {
     }
   });
 
-  it("paints solid tiles edge to edge, and leaves glass and flowers see-through", () => {
+  it("paints solid tiles edge to edge, and leaves glass, flowers and animals see-through", () => {
     for (const name of TILE_NAMES) {
       const clear = clearOf(tilePixels(name));
-      if (name === "glass" || name === "flowers") {
+      if (Arr.contains(SEE_THROUGH, name)) {
         expect(clear, name).toBeGreaterThan((TILE * TILE) / 2);
       } else {
         expect(clear, name).toBe(0);

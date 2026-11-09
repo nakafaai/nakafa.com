@@ -60,7 +60,7 @@ export function HomeWorld({
           <span className="text-sm font-semibold">
             {t("level", { level: island.level })}
           </span>
-          <span className="text-xs text-[#6b4426]">
+          <span className="text-sm text-[#6b4426]">
             {island.next === undefined
               ? t("top")
               : t("next", {
