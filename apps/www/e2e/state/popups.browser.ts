@@ -134,7 +134,7 @@ test("each submenu of the account menu shows its items in its first frame", asyn
         ).toBeVisible();
 
         const submenus = [
-          { contains: "Deutsch (Deutschland)", name: "Language" },
+          { contains: "Deutsch", name: "Language" },
           { contains: "Dark", name: "Theme" },
           { contains: "Community", name: "Learn more" },
         ];

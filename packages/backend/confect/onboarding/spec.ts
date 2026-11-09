@@ -28,6 +28,10 @@ const onboardingRegionDefaults = {
     ),
     locale: "en",
   },
+  malaysia: {
+    curriculumProgramKey: LearningProgramKeySchema.make("kssm"),
+    locale: "en",
+  },
   singapore: {
     curriculumProgramKey: LearningProgramKeySchema.make("singapore-moe"),
     locale: "en",
