@@ -53,7 +53,8 @@ const TryoutArtworkSchema = Schema.Struct({
  * localized slugs. `drawn` names the file of each locale in the owner's
  * source folder (`opengraph-nakafa/tryout/<number>.webp`). A country's design
  * is that country page's social image alone. An entity that has no design of
- * its own, such as the Aufnahmeprüfung or its Mathematics, shows no image.
+ * its own, such as the Aufnahmeprüfung or its Mathematics, borrows none: its
+ * card draws the tile of its own icon.
  */
 const TRYOUT_ARTWORK = {
   "country/germany": {

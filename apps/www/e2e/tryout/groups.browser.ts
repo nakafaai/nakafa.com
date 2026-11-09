@@ -107,23 +107,23 @@ test("reaches every exam's set table in at most two clicks from its country", as
 
 /**
  * A card wears only its own entity's design: SNBT and TKA their exam art, and
- * the Aufnahmeprüfung, which has none yet, its name on a plate. A country's
- * design stands in its page's metadata alone.
+ * the Aufnahmeprüfung, which has none yet, the tile of its own icon, a
+ * background and an icon with no text, since the card's title names it. A
+ * country's design stands in its page's metadata alone.
  */
-test("draws each exam card with its own design or its name on a plate", async ({
+test("draws each exam card with its own design or the tile of its icon", async ({
   page,
 }) => {
   await visit(page, INDONESIA);
   await expect(page.locator("main img")).toHaveCount(2);
-  await expect(page.locator('[data-slot="catalog-card-plate"]')).toHaveCount(0);
+  await expect(page.locator('main [data-slot="tile"]')).toHaveCount(0);
 
   await visit(page, GERMANY);
+  const tile = page.locator('main [data-slot="tile"]');
   await expect(page.locator("main img")).toHaveCount(0);
-  await expect(
-    page
-      .locator('[data-slot="catalog-card-plate"]')
-      .getByText("Aufnahmeprüfung")
-  ).toBeVisible();
+  await expect(tile).toHaveCount(1);
+  await expect(tile.locator('[data-slot="tile-icon"]')).toBeVisible();
+  await expect(tile).toHaveText("");
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     "content",
     GERMANY_DESIGN

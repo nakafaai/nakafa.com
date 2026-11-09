@@ -8,6 +8,7 @@ import {
   Building06Icon,
   Calendar01Icon,
   CalendarsIcon,
+  ClipboardPenIcon,
   DeskIcon,
   DigitalClockIcon,
   Factory01Icon,
@@ -45,8 +46,13 @@ import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { Array as Arr, Match, Option, Record as Rec } from "effect";
 
-/** The exams that the catalog knows, each with an icon of its own. */
+/**
+ * The exams that the catalog knows, each with an icon of its own, which its card
+ * draws on its tile until the owner draws its artwork: the Aufnahmeprüfung, a
+ * test written on a clipboard.
+ */
 export const TRYOUT_EXAM_ICONS: Readonly<Record<string, IconSvgElement>> = {
+  "entrance-examination": ClipboardPenIcon,
   snbt: RankingIcon,
   tka: Quiz04Icon,
 };
