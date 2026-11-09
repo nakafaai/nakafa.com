@@ -29,9 +29,9 @@ describe("the people of the School landing", () => {
     expect(Arr.dedupe(PEOPLE)).toHaveLength(16);
   });
 
-  it("give the toys sixteen more animals that none of the people has", () => {
+  it("give the toys eighteen more animals that none of the people has", () => {
     const toys = Arr.map(SCHOOL_TOY_HERD, (mascot) => mascot.animal);
-    expect(toys).toHaveLength(16);
-    expect(Arr.dedupe([...PEOPLE, ...toys])).toHaveLength(32);
+    expect(toys).toHaveLength(18);
+    expect(Arr.dedupe([...PEOPLE, ...toys])).toHaveLength(34);
   });
 });

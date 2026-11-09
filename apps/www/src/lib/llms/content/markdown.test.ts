@@ -261,6 +261,17 @@ describe("llms markdown content resolver", () => {
     })
   );
 
+  it.effect("reads the application-owned contributors document", () =>
+    Effect.gen(function* () {
+      const text = yield* readMarkdown("contributor");
+
+      expect(text).toContain("# Contributor - Nakafa");
+      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+      expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+      expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("reads the application-owned School pricing document", () =>
     Effect.gen(function* () {
       const text = yield* readMarkdown("school/pricing");
