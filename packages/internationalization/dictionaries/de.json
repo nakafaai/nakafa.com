@@ -4381,6 +4381,15 @@
     "approved": "Genehmigt am",
     "issued": "Ausgestellt am"
   },
+  "Unsubscribe": {
+    "ask-title": "Keine E-Mails mehr von Nakafa",
+    "ask-description": "Du erhältst keine Benachrichtigungs-E-Mails mehr. Anmeldecodes und Hinweise zu deinen Zahlungen kommen weiterhin.",
+    "confirm": "Abmelden",
+    "done-title": "Du bist abgemeldet",
+    "done-description": "Du kannst E-Mails in deinen Benachrichtigungseinstellungen wieder einschalten.",
+    "invalid-title": "Dieser Link funktioniert nicht",
+    "invalid-description": "Öffne den Abmeldelink in deiner neuesten E-Mail von Nakafa."
+  },
   "SchoolInsight": {
     "title": "Insight",
     "class": "Klasse",

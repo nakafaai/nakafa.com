@@ -17,13 +17,20 @@ const accountReadyEmailPreviewInput = {
   locale: "en",
   privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
   termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
+  unsubscribeUrl: new URL("/en/unsubscribe?token=preview", SITE_ORIGIN).href,
 } satisfies AccountReadyEmailInput;
 
 /** Renders the privacy-safe account-ready message for one supported locale. */
 function AccountReadyEmail(
   input: AccountReadyEmailInput = accountReadyEmailPreviewInput
 ) {
-  const { continueUrl, locale, privacyPolicyUrl, termsOfServiceUrl } = {
+  const {
+    continueUrl,
+    locale,
+    privacyPolicyUrl,
+    termsOfServiceUrl,
+    unsubscribeUrl,
+  } = {
     ...accountReadyEmailPreviewInput,
     ...input,
   };
@@ -34,6 +41,7 @@ function AccountReadyEmail(
       locale={locale}
       privacyPolicyUrl={privacyPolicyUrl}
       termsOfServiceUrl={termsOfServiceUrl}
+      unsubscribeUrl={unsubscribeUrl}
     />
   );
 }

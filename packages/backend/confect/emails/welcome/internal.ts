@@ -5,6 +5,7 @@ import {
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
+import { unsubscribePost } from "@repo/backend/confect/emails/unsubscribe/token";
 import {
   deferWelcomeIntent,
   toWelcomeIntentError,
@@ -50,12 +51,16 @@ export const enqueueRenderedWelcomeProgram = Effect.fn(
     if (user.deletionPreparedAt !== undefined) {
       return yield* deferWelcomeIntent();
     }
-    const componentEmailId = yield* sendMail(ctx, {
-      ...message,
-      from: EMAIL_FROM,
-      idempotencyKey: `welcome-email/${intent._id}`,
-      to: user.email,
-    }).pipe(Effect.mapError(toWelcomeIntentError));
+    const componentEmailId = yield* sendMail(
+      ctx,
+      {
+        ...message,
+        from: EMAIL_FROM,
+        idempotencyKey: `welcome-email/${intent._id}`,
+        to: user.email,
+      },
+      yield* unsubscribePost({ _tag: "Account", userId: intent.userId })
+    ).pipe(Effect.mapError(toWelcomeIntentError));
     yield* writer
       .table("welcomeEmailIntents")
       .replace(intent._id, {

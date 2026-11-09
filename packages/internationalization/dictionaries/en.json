@@ -4381,6 +4381,15 @@
     "approved": "Approved on",
     "issued": "Issued on"
   },
+  "Unsubscribe": {
+    "ask-title": "Stop emails from Nakafa",
+    "ask-description": "You will get no more notification emails. Sign-in codes and notices about your payments still arrive.",
+    "confirm": "Unsubscribe",
+    "done-title": "You are unsubscribed",
+    "done-description": "You can turn emails back on in your notification settings.",
+    "invalid-title": "This link does not work",
+    "invalid-description": "Open the unsubscribe link in your newest email from Nakafa."
+  },
   "SchoolInsight": {
     "title": "Insight",
     "class": "Class",

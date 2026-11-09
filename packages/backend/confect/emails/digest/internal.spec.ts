@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { Recipient } from "@repo/backend/confect/emails/unsubscribe/schema";
 import { SiteConfigError } from "@repo/backend/confect/site/spec";
 import { DigestEmailInputSchema } from "@repo/email/templates/digest/content";
 import { Schema } from "effect";
@@ -19,6 +20,7 @@ export default GroupSpec.make()
             address: Schema.String,
             input: DigestEmailInputSchema,
             key: Schema.String,
+            recipient: Recipient,
           })
         ),
       error: () => Schema.Union([ReleaseError, SiteConfigError]),
@@ -33,6 +35,7 @@ export default GroupSpec.make()
             address: Schema.String,
             html: Schema.String,
             key: Schema.String,
+            recipient: Recipient,
             subject: Schema.String,
             text: Schema.String,
           })

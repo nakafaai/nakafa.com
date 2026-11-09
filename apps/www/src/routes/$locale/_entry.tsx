@@ -27,6 +27,7 @@ const ENTRY_NAMESPACES = [
   "LearningPrograms",
   "ReportCheck",
   "SchoolStart",
+  "Unsubscribe",
 ] as const;
 
 const localeRoute = getRouteApi("/$locale");
