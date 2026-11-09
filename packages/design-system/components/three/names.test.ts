@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { AXIS_NAMES } from "@repo/design-system/components/three/names";
+import {
+  AXIS_NAMES,
+  PARAMETER_NAMES,
+} from "@repo/design-system/components/three/names";
 import { Array as Arr, Record } from "effect";
 import katex from "katex";
 
@@ -11,5 +14,14 @@ describe("axis names", () => {
         katex.renderToString(name, { throwOnError: false, trust: false }),
       ])
     ).toEqual(Record.toEntries(AXIS_NAMES));
+  });
+
+  it("are the markup KaTeX draws for each slider name", () => {
+    expect(
+      Arr.map(Record.keys(PARAMETER_NAMES), (name) => [
+        name,
+        katex.renderToString(name, { throwOnError: false, trust: false }),
+      ])
+    ).toEqual(Record.toEntries(PARAMETER_NAMES));
   });
 });

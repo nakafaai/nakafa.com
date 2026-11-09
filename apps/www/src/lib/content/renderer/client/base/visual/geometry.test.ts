@@ -355,4 +355,28 @@ describe("MathVisual geometry", () => {
       ).toBe(true);
     }
   });
+
+  it("leaves formula objects to the formula sampler, which reads the sliders", () => {
+    const empty = { markers: [], paths: [], regions: [] };
+    expect(
+      resolveVisualGeometry(
+        plane({
+          appearance: "primary",
+          formula: "x^2",
+          id: "parabola",
+          kind: "function",
+        })
+      )
+    ).toMatchObject(empty);
+    expect(
+      resolveVisualGeometry(
+        space({
+          appearance: "primary",
+          formula: "x y / 8",
+          id: "saddle",
+          kind: "function",
+        })
+      )
+    ).toMatchObject(empty);
+  });
 });
