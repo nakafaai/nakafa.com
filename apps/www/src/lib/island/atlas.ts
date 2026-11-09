@@ -20,6 +20,7 @@ import {
   slateTile,
   woolTile,
 } from "@/lib/island/tiles/built";
+import { folkBottomTile, folkTopTile } from "@/lib/island/tiles/folk";
 import {
   barkTile,
   dirtTile,
@@ -65,6 +66,15 @@ export const TILE_NAMES = [
   "duck",
   "nina",
   "ninaStep",
+  "catTop",
+  "catBottom",
+  "catStep",
+  "rabbitTop",
+  "rabbitBottom",
+  "rabbitStep",
+  "bearTop",
+  "bearBottom",
+  "bearStep",
 ] as const;
 
 /** The name of one tile of the atlas. */
@@ -101,6 +111,15 @@ const PAINTERS = {
   duck: duckTile,
   nina: ninaTile,
   ninaStep: ninaStepTile,
+  catTop: () => folkTopTile("cat"),
+  catBottom: () => folkBottomTile("cat", false),
+  catStep: () => folkBottomTile("cat", true),
+  rabbitTop: () => folkTopTile("rabbit"),
+  rabbitBottom: () => folkBottomTile("rabbit", false),
+  rabbitStep: () => folkBottomTile("rabbit", true),
+  bearTop: () => folkTopTile("bear"),
+  bearBottom: () => folkBottomTile("bear", false),
+  bearStep: () => folkBottomTile("bear", true),
 } satisfies Record<TileName, (seed: number) => Pixels>;
 
 /** Tiles along one side of the atlas. */

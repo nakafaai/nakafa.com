@@ -72,6 +72,21 @@ for (const viewport of [desktopViewport, touchViewport]) {
                   .getByRole("button", { name: en.Island["block-flowers"] })
                   .first()
               ).toHaveAttribute("aria-pressed", "true");
+              // A ready-made tree goes in whole with one press, and a cottage stays locked until level 3.
+              await page.getByRole("button", { name: en.Island.book }).click();
+              await expect(
+                book.getByRole("button", { name: "Opens at level 3" }).first()
+              ).toBeDisabled();
+              await book
+                .getByRole("button", { name: en.Island["item-tree"] })
+                .click();
+              await expect(book).toBeHidden();
+            })
+          ),
+          Effect.andThen(pressWorld(page, viewport.hasTouch)),
+          Effect.andThen(
+            Effect.promise(async () => {
+              await expectRevision(page, 5);
               await testInfo.attach(`island-${viewport.name}.png`, {
                 body: await page.screenshot(),
                 contentType: "image/png",

@@ -7,6 +7,7 @@ import {
   MutableHashMap,
   Option,
   Record as Rec,
+  Result,
 } from "effect";
 import { use, useState } from "react";
 import { createPainter, type Painter } from "@/components/island/draw";
@@ -33,6 +34,7 @@ import {
   pinchOf,
   wheelZoomOf,
 } from "@/lib/island/gesture";
+import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { herdOf, herdQuads, wander } from "@/lib/island/life";
 import { changedChunks, glowOf } from "@/lib/island/light";
 import { rayThrough } from "@/lib/island/matrix";
@@ -125,8 +127,8 @@ function start(
     }
   });
 
-  /** The edit a press at a point of the screen would make, none when it would make none. */
-  const planAt = (point: Point, remove: boolean) => {
+  /** What a ray through a point of the screen meets first, none when it meets nothing. */
+  const hitAt = (point: Point) => {
     const rect = canvas.getBoundingClientRect();
     const ray = rayThrough(
       orbit,
@@ -134,17 +136,44 @@ function start(
       ((point.x - rect.left) / rect.width) * 2 - 1,
       1 - ((point.y - rect.top) / rect.height) * 2
     );
+    return castRay(store.getState().cells, ray.origin, ray.direction);
+  };
+
+  /** The edit a press at a point of the screen would make, none when it would make none. */
+  const planAt = (point: Point, remove: boolean) => {
     const state = store.getState();
-    return Option.flatMap(
-      castRay(state.cells, ray.origin, ray.direction),
-      (hit) => planOf(state.cells, hit, remove ? 0 : heldOf(state), size)
+    return Option.flatMap(hitAt(point), (hit) =>
+      planOf(state.cells, hit, remove ? 0 : heldOf(state), size)
     );
   };
 
-  /** Builds or digs at a point of the screen. */
+  /**
+   * Builds or digs at a point of the screen. With an item in hand it builds the
+   * whole item there, its front to the camera, as one step undo takes back, or
+   * says there is no room for it (ADR 0047, D10).
+   */
   const act = (point: Point, remove: boolean) => {
-    Option.map(planAt(point, remove), (edit) => store.getState().apply([edit]));
+    const state = store.getState();
     aim = Option.none();
+    if (state.tool === "item" && !remove) {
+      Option.map(hitAt(point), (hit) =>
+        Result.match(
+          itemPlanOf(
+            state.cells,
+            state.item,
+            hit.place,
+            turnOf(orbit.yaw),
+            size
+          ),
+          {
+            onFailure: () => state.setNotice("room"),
+            onSuccess: (edits) => state.apply(edits),
+          }
+        )
+      );
+      return;
+    }
+    Option.map(planAt(point, remove), (edit) => state.apply([edit]));
   };
 
   /** The cell a hovering mouse would change, outlined before it presses (D5). */
@@ -176,6 +205,10 @@ function start(
     );
     painter.herd(herdQuads(cells, herd, size, orbit.yaw, now / 1000));
     const hour = hourOf(DateTime.nowUnsafe(), DateTime.zoneMakeLocal());
+    const minute = Math.floor(hour * 60) % (24 * 60);
+    if (minute !== store.getState().minute) {
+      store.getState().setMinute(minute);
+    }
     painter.draw(orbit, lightOf(hour, weather), now / 1000, weather, aim);
     canvas.dataset.drawn = "true";
     canvas.dataset.weather = weather;

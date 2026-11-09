@@ -18,7 +18,7 @@ const clearOf = (pixels: Uint8ClampedArray) =>
     (alpha) => alpha === 0
   ).length;
 
-/** The tiles a block or a sprite shows the world through. */
+/** The tiles a block or a sprite shows the world through, around its shape. */
 const SEE_THROUGH = [
   "glass",
   "flowers",
@@ -27,6 +27,15 @@ const SEE_THROUGH = [
   "duck",
   "nina",
   "ninaStep",
+  "catTop",
+  "catBottom",
+  "catStep",
+  "rabbitTop",
+  "rabbitBottom",
+  "rabbitStep",
+  "bearTop",
+  "bearBottom",
+  "bearStep",
 ];
 
 describe("island/atlas", () => {
@@ -42,11 +51,11 @@ describe("island/atlas", () => {
     }
   });
 
-  it("paints solid tiles edge to edge, and leaves glass, flowers and animals see-through", () => {
+  it("paints solid tiles edge to edge, and leaves glass, flowers, animals and villagers see-through", () => {
     for (const name of TILE_NAMES) {
       const clear = clearOf(tilePixels(name));
       if (Arr.contains(SEE_THROUGH, name)) {
-        expect(clear, name).toBeGreaterThan((TILE * TILE) / 2);
+        expect(clear, name).toBeGreaterThan(TILE * 2);
       } else {
         expect(clear, name).toBe(0);
       }

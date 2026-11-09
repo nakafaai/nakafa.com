@@ -2,6 +2,7 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import type { Edit } from "@repo/backend/confect/island/world";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { smoothOf, unitOf } from "@/lib/island/noise";
+import { layVillage, VILLAGE } from "@/lib/island/village";
 import {
   blockAt,
   type Cells,
@@ -22,8 +23,8 @@ const FLOWERS = idOf("flowers");
 /** The middle of the world, where every island is centered. */
 const MIDDLE = SPAN / 2;
 
-/** The open meadow kept clear of trees around the middle, in cells. */
-const MEADOW = 5.5;
+/** The flat ground around the middle: the village and a ring of open meadow to build on, so no hill climbs under a house. */
+const MEADOW = VILLAGE + 6;
 
 /**
  * The column at (x, z): the top cell of its ground and whether that ground is
@@ -36,7 +37,7 @@ export function columnOf(seed: number, size: number, x: number, z: number) {
   const edge = radius * (0.8 + 0.28 * smoothOf(seed, x, z, 5));
   if (distance < edge) {
     const inland = Math.min(1, (edge - distance) / 4);
-    const hills = smoothOf(seed + 1, x, z, 7) * 3 * inland;
+    const hills = smoothOf(seed + 1, x, z, 7) * 2 * inland;
     const flat = distance < MEADOW ? 0 : hills;
     return { land: true, top: SEA_LEVEL + Math.floor(flat) };
   }
@@ -120,12 +121,12 @@ function plantAt(
   z: number
 ) {
   const top = meadows[z * SPAN + x];
-  const away = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE) > MEADOW + 1;
+  const away = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE) > VILLAGE + 4;
   if (top < 0 || !away) {
     return;
   }
   const roll = unitOf(seed + 4, x, 0, z);
-  if (roll < 0.035 && isClearForTree(meadows, cells, x, top, z)) {
+  if (roll < 0.022 && isClearForTree(meadows, cells, x, top, z)) {
     growTree(cells, seed, x, top, z);
   } else if (roll > 0.9 && blockAt(cells, x, top + 1, z) === 0) {
     cells[cellOf(x, top + 1, z)] = FLOWERS;
@@ -134,12 +135,14 @@ function plantAt(
 
 /**
  * The generated world of an island with this seed and footprint side: ground,
- * shore, sea, trees and flowers (ADR 0047, D3). It is never stored; the
+ * shore, sea, the village in its middle, and trees and flowers around it
+ * (ADR 0047, D3 and D10). It is never stored; the
  * learner's edits are laid over it.
  */
 export function terrainOf(seed: number, size: number) {
   const cells = emptyCells();
   const meadows = layGround(cells, seed, size);
+  layVillage(cells);
   for (let z = 2; z < SPAN - 2; z += 1) {
     for (let x = 2; x < SPAN - 2; x += 1) {
       plantAt(cells, meadows, seed, x, z);

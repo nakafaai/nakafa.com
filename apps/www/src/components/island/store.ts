@@ -3,14 +3,15 @@ import { Array as Arr, HashSet, Schema } from "effect";
 import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
 import { applyEdits, type Edit, inverseOf } from "@/lib/island/edits";
+import type { ItemKey } from "@/lib/island/items";
 import type { Weather } from "@/lib/island/sky";
 import type { Cells } from "@/lib/island/world";
 
-/** The hand the learner builds with: one block placed per tap, or the pickaxe that removes one. */
-export type Tool = "place" | "remove";
+/** The hand the learner builds with: one block placed per tap, a ready-made item, or the pickaxe that removes a block. */
+export type Tool = "place" | "item" | "remove";
 
-/** What the game tells the learner about the server: a refused build, or edits another device made first. */
-export type Notice = "refused" | "stale";
+/** What the game tells the learner: a build the server refused, edits another device made first, or an item with no room where it was pressed. */
+export type Notice = "refused" | "room" | "stale";
 
 /** The learner's lifetime Stars between the level they reached and the next one. */
 export const Progress = Schema.Struct({
@@ -43,11 +44,17 @@ interface GameStore {
   /** The chunks whose meshes no longer match the world. */
   dirty: HashSet.HashSet<number>;
   future: readonly (readonly Edit[])[];
+  /** Holds a ready-made item, which the next press places. */
+  hold: (item: ItemKey) => void;
   hotbar: readonly BlockKey[];
+  /** The ready-made item in hand while the tool is "item". */
+  item: ItemKey;
   /** Leaves the game for the page the learner came from. */
   leave: () => void;
   /** The island's level, which opens blocks for building (D7). */
   level: number;
+  /** The minute of the learner's day the clock shows, from 0 to 1439. */
+  minute: number;
   /** Whether the learner turned the island's sound off. */
   muted: boolean;
   /** What the game tells the learner, none most of the time. */
@@ -67,6 +74,7 @@ interface GameStore {
   /** The seed the island's terrain and life grow from. */
   seed: number;
   setBook: (book: boolean) => void;
+  setMinute: (minute: number) => void;
   setMuted: (muted: boolean) => void;
   setNotice: (notice: Notice | null) => void;
   setTool: (tool: Tool) => void;
@@ -133,6 +141,9 @@ export function createGameStore(setup: GameSetup) {
       choose: (slot) => set({ slot, tool: "place" }),
       dirty: HashSet.empty(),
       future: [],
+      hold: (item) => set({ book: false, item, tool: "item" }),
+      item: "house",
+      minute: 0,
       notice: null,
       past: [],
       pending: [],
@@ -149,6 +160,7 @@ export function createGameStore(setup: GameSetup) {
       },
       revision: 0,
       setBook: (book) => set({ book }),
+      setMinute: (minute) => set({ minute }),
       setMuted: (muted) => set({ muted }),
       setNotice: (notice) => set({ notice }),
       setWeather: (weather) => set({ weather }),

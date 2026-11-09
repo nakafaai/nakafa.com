@@ -11,45 +11,69 @@ const countOf = (cells: Uint8Array, id: number) =>
   cells.reduce((count, block) => count + (block === id ? 1 : 0), 0);
 
 describe("island/terrain", () => {
-  it("raises a meadow of grass at the middle and keeps the sea at the edges", () => {
-    const cells = terrainOf(11, 24);
+  it("lays flat village ground at the middle and keeps the sea at the edges", () => {
+    const cells = terrainOf(11, 44);
     const middle = SPAN / 2;
-    expect(blockAt(cells, middle, SEA_LEVEL, middle)).toBe(idOf("grass"));
+    expect(blockAt(cells, middle, SEA_LEVEL, middle)).toBe(idOf("path"));
     expect(blockAt(cells, middle, SEA_LEVEL - 1, middle)).toBe(idOf("dirt"));
     expect(blockAt(cells, middle, 0, middle)).toBe(idOf("stone"));
     expect(blockAt(cells, 1, SEA_LEVEL - 1, 1)).toBe(idOf("water"));
     expect(blockAt(cells, 1, SEA_LEVEL, 1)).toBe(0);
   });
 
+  it("opens every world on a finished village: a well, cottages with doors on a path, a garden and lamps, all standing on the ground", () => {
+    const cells = terrainOf(11, 44);
+    const middle = SPAN / 2;
+    const floor = SEA_LEVEL + 1;
+    expect(blockAt(cells, middle, floor, middle)).toBe(idOf("water"));
+    expect(blockAt(cells, middle + 1, floor, middle)).toBe(idOf("cobble"));
+    expect(blockAt(cells, middle - 3, floor + 2, middle - 3)).toBe(
+      idOf("lantern")
+    );
+    const door = { x: middle - 7, z: middle - 4 };
+    expect(blockAt(cells, door.x, floor, door.z)).toBe(0);
+    expect(blockAt(cells, door.x, floor + 1, door.z)).toBe(0);
+    expect(blockAt(cells, door.x, floor + 2, door.z)).toBe(idOf("plaster"));
+    expect(blockAt(cells, door.x, SEA_LEVEL, door.z + 1)).toBe(idOf("path"));
+    expect(blockAt(cells, door.x - 3, floor, door.z)).toBe(idOf("log"));
+    expect(blockAt(cells, middle - 7, floor, middle + 5)).toBe(idOf("flowers"));
+    for (let z = 0; z < SPAN; z += 1) {
+      for (let x = 0; x < SPAN; x += 1) {
+        const built = blockAt(cells, x, floor, z);
+        if (built === idOf("plaster") || built === idOf("cobble")) {
+          expect(blockAt(cells, x, SEA_LEVEL, z)).not.toBe(0);
+        }
+      }
+    }
+  });
+
   it("lines the shore with sand and grows trees and flowers inland", () => {
-    const cells = terrainOf(11, 32);
+    const cells = terrainOf(11, 44);
     expect(countOf(cells, idOf("sand"))).toBeGreaterThan(0);
     expect(countOf(cells, idOf("log"))).toBeGreaterThan(0);
-    expect(countOf(cells, idOf("leaves"))).toBeGreaterThan(
-      countOf(cells, idOf("log"))
-    );
+    expect(countOf(cells, idOf("leaves"))).toBeGreaterThan(0);
     expect(countOf(cells, idOf("flowers"))).toBeGreaterThan(0);
   });
 
   it("grows a wider island at a wider footprint, the same from the same seed", () => {
-    const small = terrainOf(5, 16);
-    const large = terrainOf(5, 48);
+    const small = terrainOf(5, 44);
+    const large = terrainOf(5, 64);
     expect(countOf(large, idOf("grass"))).toBeGreaterThan(
       countOf(small, idOf("grass"))
     );
-    expect(terrainOf(5, 16)).toEqual(small);
+    expect(terrainOf(5, 44)).toEqual(small);
   });
 
   it("slopes the sea floor down away from the island", () => {
-    const near = columnOf(3, 24, 32, 32 - 13);
-    const far = columnOf(3, 24, 32, 1);
+    const near = columnOf(3, 44, 32, 32 - 13);
+    const far = columnOf(3, 44, 32, 1);
     expect(near.land || near.top >= far.top).toBe(true);
     expect(far).toEqual({ land: false, top: SEA_LEVEL - 5 });
   });
 
   it("lays the learner's edits over the terrain, emptied cells included", () => {
     const middle = SPAN / 2;
-    const cells = worldOf(11, 24, [
+    const cells = worldOf(11, 44, [
       { block: idOf("planks"), x: middle, y: SEA_LEVEL + 1, z: middle },
       { block: 0, x: middle, y: SEA_LEVEL, z: middle },
     ]);

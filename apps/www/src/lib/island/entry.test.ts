@@ -22,7 +22,7 @@ describe("island/entry", () => {
       lifetime: 420,
       next: 900,
       seed: seedOf("users-1"),
-      size: 32,
+      size: 56,
       version: 3,
     });
   });
@@ -33,7 +33,7 @@ describe("island/entry", () => {
       level: 1,
       next: 150,
       seed: seedOf("island"),
-      size: 16,
+      size: 52,
       version: 0,
     });
     expect(

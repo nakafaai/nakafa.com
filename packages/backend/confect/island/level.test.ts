@@ -8,25 +8,25 @@ describe("island/level", () => {
       from: 0,
       level: 1,
       next: Option.some(150),
-      size: 16,
+      size: 52,
     });
     expect(growthOf(149)).toEqual({
       from: 0,
       level: 1,
       next: Option.some(150),
-      size: 16,
+      size: 52,
     });
     expect(growthOf(150)).toEqual({
       from: 150,
       level: 2,
       next: Option.some(400),
-      size: 24,
+      size: 54,
     });
     expect(growthOf(3500)).toEqual({
       from: 3500,
       level: 6,
       next: Option.some(6000),
-      size: 56,
+      size: 62,
     });
   });
 
