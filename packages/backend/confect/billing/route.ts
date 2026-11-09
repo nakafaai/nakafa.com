@@ -2,11 +2,15 @@ import {
   BillingCurrency,
   type BillingOfferKey,
   BillingOfferRailSchema,
-  billingEuroTerritoryCodes,
   billingOffer,
   billingOfferPrice,
 } from "@repo/backend/confect/billing/catalog";
-import { Array as Arr, Config, Effect, HashSet, Option, Schema } from "effect";
+import {
+  countryOfCurrency,
+  currencyOfCountry,
+  railOfCountry,
+} from "@repo/backend/confect/country/registry";
+import { Array as Arr, Config, Effect, Option, Schema } from "effect";
 
 /**
  * The value of the Indonesia rail switch. `passes` takes everything paid once
@@ -103,19 +107,12 @@ export const UNKNOWN_COUNTRY = "ZZ";
 
 /**
  * The country a learner checkout routes as, from the currency of the price the
- * learner was shown: rupiah is shown only in Indonesia, and any other currency
- * is a country Polar prices by the buyer's IP.
+ * learner was shown: the one open country that pays in it, such as Indonesia
+ * for rupiah or Malaysia for ringgit, else a country Polar prices by the
+ * buyer's IP.
  */
 export function checkoutCountryFor(currency: BillingCurrency): string {
-  return currency === "IDR" ? "ID" : UNKNOWN_COUNTRY;
-}
-
-/** The currency an account in `country` bills in: IDR in Indonesia, EUR in the euro territories, USD elsewhere. */
-export function billingCurrencyFor(country: string): BillingCurrency {
-  if (country === "ID") {
-    return "IDR";
-  }
-  return HashSet.has(billingEuroTerritoryCodes, country) ? "EUR" : "USD";
+  return Option.getOrElse(countryOfCurrency(currency), () => UNKNOWN_COUNTRY);
 }
 
 /**
@@ -128,9 +125,11 @@ export const routeOffer = Effect.fn("billing.route.routeOffer")(function* (
   country: string,
   offer: BillingOfferKey
 ) {
-  const currency = billingCurrencyFor(country);
+  const currency = currencyOfCountry(country);
   const switched =
-    country === "ID" ? yield* readIndonesiaRail : ("polar" as const);
+    railOfCountry(country) === "xendit"
+      ? yield* readIndonesiaRail
+      : ("polar" as const);
   const preferred = switched === "passes" ? railUnderPasses(offer) : switched;
   const keysConfigured = yield* isXenditConfigured();
   const sellsOnPolar = Arr.contains(billingOffer(offer).rails, "polar");

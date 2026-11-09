@@ -1930,6 +1930,7 @@
     "country-description": "Ini menetapkan mata wang, bahasa dan tahun persekolahan.",
     "country": {
       "ID": "Indonesia",
+      "MY": "Malaysia",
       "SG": "Singapura",
       "GB": "United Kingdom",
       "DE": "Jerman",
@@ -1975,6 +1976,22 @@
         "title": "SLB",
         "description": "Sekolah pendidikan khas"
       },
+      "my-sk": {
+        "title": "SK",
+        "description": "Sekolah rendah, Tahun 1 hingga 6"
+      },
+      "my-smk": {
+        "title": "SMK",
+        "description": "Sekolah menengah, Tingkatan 1 hingga 5"
+      },
+      "my-smka": {
+        "title": "SMKA",
+        "description": "Sekolah menengah agama, Tingkatan 1 hingga 5"
+      },
+      "my-form6": {
+        "title": "Tingkatan 6",
+        "description": "Pra-universiti, STPM"
+      },
       "other": {
         "title": "Lain-lain",
         "description": "Jenis sekolah lain"
@@ -1990,6 +2007,10 @@
       "ma": "Menengah atas",
       "smk": "Vokasional",
       "slb": "Pendidikan khas",
+      "my-sk": "Rendah",
+      "my-smk": "Menengah",
+      "my-smka": "Menengah",
+      "my-form6": "Pra-universiti",
       "other": "Lain-lain"
     },
     "unit-name": "{name} {level}",
@@ -4106,6 +4127,7 @@
     "drink-title": "Lebih kurang {count} {item}",
     "drink-note": "Bezanya, yang ini bertahan sebulan penuh.",
     "drink-idr": "{count, plural, one {kopi susu ais} other {kopi susu ais}}",
+    "drink-myr": "{count, plural, one {gelas teh tarik} other {gelas teh tarik}}",
     "drink-eur": "{count, plural, one {kopi bungkus} other {kopi bungkus}}",
     "drink-usd": "{count, plural, one {latte} other {latte}}",
     "per-day-title": "{price} sehari",

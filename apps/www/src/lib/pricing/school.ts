@@ -24,6 +24,10 @@ const CURRENCY_FORMATS = {
     exact: { currency: "IDR", digits: 0, locale: "id-ID" },
     whole: { currency: "IDR", digits: 0, locale: "id-ID" },
   },
+  MYR: {
+    exact: { currency: "MYR", digits: 2, locale: "ms-MY" },
+    whole: { currency: "MYR", digits: 0, locale: "ms-MY" },
+  },
   USD: {
     exact: { currency: "USD", digits: 2, locale: "en-US" },
     whole: { currency: "USD", digits: 0, locale: "en-US" },

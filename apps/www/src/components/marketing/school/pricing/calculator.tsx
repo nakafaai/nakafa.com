@@ -195,6 +195,7 @@ export function SchoolCalculator() {
               amounts={{
                 EUR: quote("EUR").monthlyAfterDiscount,
                 IDR: idr.monthlyAfterDiscount,
+                MYR: quote("MYR").monthlyAfterDiscount,
                 USD: quote("USD").monthlyAfterDiscount,
               }}
             />
@@ -205,6 +206,7 @@ export function SchoolCalculator() {
                 amounts={{
                   EUR: quote("EUR").total,
                   IDR: idr.total,
+                  MYR: quote("MYR").total,
                   USD: quote("USD").total,
                 }}
               />
