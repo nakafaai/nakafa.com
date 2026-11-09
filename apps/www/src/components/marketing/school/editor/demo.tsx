@@ -15,11 +15,17 @@ import { DEMO_SLUG, demoExam } from "@/components/marketing/school/editor/exam";
 import { TenantContext } from "@/components/tenant/context";
 import { ExamDesk } from "@/components/tenant/exams/editor";
 import { ExamProvider } from "@/components/tenant/exams/provider";
-import { ConvexAuthContext, createConvexAuthStore } from "@/lib/auth/convex";
+import { ConvexAuthConfirmation, ConvexAuthContext } from "@/lib/auth/convex";
 import { AuthSession } from "@/lib/auth/session";
 
 /** The session the demo's editor is signed in under. It names no account: the demo's server answers every call. */
 const DEMO_SESSION = "demo";
+
+/** Convex's answer to the demo session: signed in. */
+const DEMO_CONFIRMATION = ConvexAuthConfirmation.make({
+  isAuthenticated: true,
+  sessionId: DEMO_SESSION,
+});
 
 /** The exam's id and school, as the editor's read names them. */
 const DEMO_EXAM = {
@@ -62,16 +68,13 @@ export function EditorDemo() {
       })
     )
   );
-  const [auth] = useState(() => {
-    const store = createConvexAuthStore();
-    store.setState({
-      confirmation: Option.some({
-        isAuthenticated: true,
-        sessionId: DEMO_SESSION,
-      }),
-    });
-    return store;
-  });
+  // Convex's answer is known from the first render, the server's included, so the prerendered pages draw their
+  // questions instead of empty paper while the section waits for its code.
+  const [auth] = useState(() =>
+    createStore(() => ({
+      confirmation: Option.fromNullishOr(DEMO_CONFIRMATION),
+    }))
+  );
 
   return (
     <ConvexProvider client={client}>
