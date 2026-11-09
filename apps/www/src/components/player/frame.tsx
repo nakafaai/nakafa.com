@@ -1,12 +1,12 @@
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { PaneSide } from "@/components/shared/page/panes/side";
 import {
   pageBoxVariants,
   pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/page/width";
-import { PaneSide } from "@/components/shared/panes/side";
 
 /**
  * The questions in the page's frame, right under the player's one header row, and the navigator in the pane at the

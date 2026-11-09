@@ -2,7 +2,11 @@ import type { Ref } from "@confect/core";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
-import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
+import {
+  Panes,
+  PanesList,
+  PanesProvider,
+} from "@/components/shared/page/panes";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { ForumFrame, ForumPick } from "@/components/tenant/classes/forum/frame";
 import {

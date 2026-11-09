@@ -1,7 +1,7 @@
 import { useResizable } from "@repo/design-system/hooks/resizable";
 import { cva } from "class-variance-authority";
 import { type ReactNode, useLayoutEffect, useSyncExternalStore } from "react";
-import { PaneEdge } from "@/components/shared/panes/edge";
+import { PaneEdge } from "@/components/shared/page/panes/edge";
 
 /** How wide a pane starts and how far a drag of its edge takes it, in pixels. */
 const PANE_WIDTH = { initialWidth: 420, maxWidth: 768, minWidth: 320 };

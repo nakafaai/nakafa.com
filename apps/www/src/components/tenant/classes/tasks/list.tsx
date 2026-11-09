@@ -25,8 +25,8 @@ import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
-import { PaneOpen } from "@/components/shared/pane";
-import { Panes, PanesDetail, PanesList } from "@/components/shared/panes";
+import { PaneOpen } from "@/components/shared/page/pane";
+import { PagePane, Panes, PanesList } from "@/components/shared/page/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
@@ -194,9 +194,9 @@ function TaskListBody() {
               </TablePages>
             </PageList>
           </PanesList>
-          <PanesDetail label={t("task-detail")}>
+          <PagePane label={t("task-detail")}>
             <TaskDetail rows={Option.getOrElse(kept, Arr.empty)} />
-          </PanesDetail>
+          </PagePane>
         </Panes>
       </div>
     </>

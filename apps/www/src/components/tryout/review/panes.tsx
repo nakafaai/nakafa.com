@@ -6,17 +6,17 @@ import { type ComponentProps, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
 import { splitTime } from "@/components/player/time";
-import { pageRowVariants } from "@/components/shared/page/width";
-import { PaneBody, PaneHeader } from "@/components/shared/pane";
+import { PaneBody, PaneHeader } from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   PanesProvider,
   usePanes,
-} from "@/components/shared/panes";
-import { PaneEdge } from "@/components/shared/panes/edge";
-import { paneSideVariants } from "@/components/shared/panes/side";
+} from "@/components/shared/page/panes";
+import { PaneEdge } from "@/components/shared/page/panes/edge";
+import { paneSideVariants } from "@/components/shared/page/panes/side";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
@@ -46,10 +46,10 @@ export function TryoutFinishedPanes({
             {children}
           </div>
         </PanesList>
-        <PanesDetail alwaysOn label={t("finished-panel")}>
+        <PagePane alwaysOn label={t("finished-panel")}>
           <PaneHeader title={t("finished-panel")} />
           {panel}
-        </PanesDetail>
+        </PagePane>
       </Panes>
     </PanesProvider>
   );

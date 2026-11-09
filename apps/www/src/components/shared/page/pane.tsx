@@ -13,7 +13,7 @@ import { cn } from "cn";
 import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { usePaneMode, usePanes } from "@/components/shared/panes";
+import { usePaneMode, usePanes } from "@/components/shared/page/panes";
 import { pressesRow } from "@/components/shared/row";
 import { tableCardVariants } from "@/components/shared/table/card";
 
