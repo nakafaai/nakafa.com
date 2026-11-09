@@ -22,14 +22,30 @@ const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
   ["indonesia", "tryout/indonesia/index"],
 ]);
 
-/** The reviewed artwork of each TKA subject track, by its stable key, never its localized slug. */
-const TKA_TRACK_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
-  (typeof CatalogTrackSchema.Type)["trackKey"],
-  ArtworkIdentity
->([
-  ["compulsory-mathematics", "tryout/indonesia/tka/compulsory-mathematics"],
-  ["english-language", "tryout/indonesia/tka/english-language"],
-  ["indonesian-language", "tryout/indonesia/tka/indonesian-language"],
+/**
+ * The reviewed artwork of each try-out track that has one, by its country, exam
+ * and track keys, never its localized slugs. Germany's Mathematics shares the
+ * owner's Mathematics subject design until it has its own.
+ */
+const TRACK_ARTWORK_BY_TRACK = HashMap.fromIterable<string, ArtworkIdentity>([
+  [
+    "germany/entrance-examination/tu-darmstadt-mathematics",
+    "subject/mathematics",
+  ],
+  ["indonesia/snbt/2027", "tryout/indonesia/2027"],
+  [
+    "indonesia/tka/advanced-mathematics",
+    "tryout/indonesia/tka/advanced-mathematics",
+  ],
+  [
+    "indonesia/tka/compulsory-mathematics",
+    "tryout/indonesia/tka/compulsory-mathematics",
+  ],
+  ["indonesia/tka/english-language", "tryout/indonesia/tka/english-language"],
+  [
+    "indonesia/tka/indonesian-language",
+    "tryout/indonesia/tka/indonesian-language",
+  ],
 ]);
 
 /** The reviewed artwork of each SNBT section that has one, by its stable key, never its localized slug. */
@@ -131,7 +147,7 @@ export function getTryoutCountryCatalogArtwork(
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }
 
-/** Resolves the reviewed artwork of one signed try-out track, SNBT's UTBK of 2027 or a TKA subject, for its card and its social image. */
+/** Resolves the reviewed artwork of one signed try-out track that has one, for its card and its social image. */
 export function getTryoutTrackCatalogArtwork(
   locale: Locale,
   source: Pick<
@@ -139,18 +155,12 @@ export function getTryoutTrackCatalogArtwork(
     "countryKey" | "examKey" | "trackKey"
   >
 ) {
-  let identity: ArtworkIdentity | undefined;
-  if (
-    source.countryKey === "indonesia" &&
-    source.examKey === "snbt" &&
-    source.trackKey === "2027"
-  ) {
-    identity = "tryout/indonesia/2027";
-  } else if (source.countryKey === "indonesia" && source.examKey === "tka") {
-    identity = Option.getOrUndefined(
-      HashMap.get(TKA_TRACK_ARTWORK_BY_TRACK_KEY, source.trackKey)
-    );
-  }
+  const identity = Option.getOrUndefined(
+    HashMap.get(
+      TRACK_ARTWORK_BY_TRACK,
+      `${source.countryKey}/${source.examKey}/${source.trackKey}`
+    )
+  );
 
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }

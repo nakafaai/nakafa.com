@@ -149,17 +149,20 @@ describe("try-out artwork", () => {
   );
 
   it.each(["en", "id", "de"] as const)(
-    "resolves compulsory Mathematics artwork from its canonical key in %s",
+    "resolves both TKA Mathematics subjects from their canonical keys in %s",
     (locale) => {
-      expect(
-        getTryoutTrackCatalogArtwork(locale, {
-          countryKey: "indonesia",
-          examKey: "tka",
-          trackKey: "compulsory-mathematics",
-        })
-      ).toBe(
-        `/open-graph/tryout/indonesia/tka/${locale}-compulsory-mathematics.png`
-      );
+      for (const trackKey of [
+        "advanced-mathematics",
+        "compulsory-mathematics",
+      ]) {
+        expect(
+          getTryoutTrackCatalogArtwork(locale, {
+            countryKey: "indonesia",
+            examKey: "tka",
+            trackKey,
+          })
+        ).toBe(`/open-graph/tryout/indonesia/tka/${locale}-${trackKey}.png`);
+      }
       for (const trackKey of [
         "mathematics",
         "matematika-wajib",
@@ -173,6 +176,26 @@ describe("try-out artwork", () => {
           })
         ).toBeUndefined();
       }
+    }
+  );
+
+  it.each(["en", "id", "de"] as const)(
+    "shares the Mathematics subject design with Germany's Darmstadt Mathematics, and only there, in %s",
+    (locale) => {
+      expect(
+        getTryoutTrackCatalogArtwork(locale, {
+          countryKey: "germany",
+          examKey: "entrance-examination",
+          trackKey: "tu-darmstadt-mathematics",
+        })
+      ).toBe(`/open-graph/subject/${locale}-mathematics.png`);
+      expect(
+        getTryoutTrackCatalogArtwork(locale, {
+          countryKey: "germany",
+          examKey: "assessment-examination",
+          trackKey: "tu-darmstadt-mathematics",
+        })
+      ).toBeUndefined();
     }
   );
 
