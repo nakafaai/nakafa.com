@@ -34,6 +34,8 @@ const LANGUAGES = [
     locale: "de",
     show: "Code anzeigen",
     title: "Diagramm",
+    zoomIn: "Vergrößern",
+    zoomOut: "Verkleinern",
   },
   {
     copy: "Salin kode",
@@ -44,69 +46,53 @@ const LANGUAGES = [
     locale: "id",
     show: "Tampilkan kode",
     title: "Diagram",
+    zoomIn: "Perbesar",
+    zoomOut: "Perkecil",
   },
 ];
 
-/**
- * How the card draws its diagram: whether the whole drawing fits its stage
- * without a scrollbar.
- */
-const cardFacts = (wrapper: Element) => {
-  const svg = wrapper.querySelector("svg");
-  const drawing = svg?.getBoundingClientRect();
-  const stage = wrapper.getBoundingClientRect();
-
-  return {
-    fits: drawing
-      ? drawing.left >= stage.left - 0.5 &&
-        drawing.right <= stage.right + 0.5 &&
-        drawing.top >= stage.top - 0.5 &&
-        drawing.bottom <= stage.bottom + 0.5
-      : false,
-    scrolls:
-      wrapper.scrollWidth > wrapper.clientWidth ||
-      wrapper.scrollHeight > wrapper.clientHeight,
-  };
-};
+/** Mermaid writes its labels at 16 pixels; a diagram is never drawn below three quarters of that. */
+const LABEL_PIXELS = 16;
+const LEGIBLE_PIXELS = 12;
 
 /**
- * How the dialog draws its diagram. The label's own font size is 16 pixels in
- * the diagram's units; drawn at its natural size, the page shows it at that
- * size. The box scrolls when the drawing is wider than it, and centres the
- * drawing when the drawing is smaller.
+ * How a box draws its diagram: the size a label reaches on the page, which is
+ * its own font size times the drawing's scale, and whether the box scrolls.
  */
-const dialogFacts = (box: Element) => {
+const drawnFacts = (box: Element) => {
   const svg = box.querySelector("svg");
   const label = svg?.querySelector(".nodeLabel");
-  const drawing = svg?.getBoundingClientRect();
-  const frame = box.getBoundingClientRect();
-  const style = getComputedStyle(box);
   const fontPixels = label
     ? Number.parseFloat(getComputedStyle(label).fontSize)
     : Number.NaN;
 
   return {
-    // The width the drawing can fill without scrolling: the box less its padding.
-    contentWidth:
-      box.clientWidth -
-      Number.parseFloat(style.paddingLeft) -
-      Number.parseFloat(style.paddingRight),
-    centred: drawing
-      ? Math.abs(drawing.left - frame.left - (frame.right - drawing.right)) <= 1
-      : false,
-    drawingWidth: drawing?.width ?? Number.NaN,
-    fontPixels,
-    renderedPixels: fontPixels * (svg?.getScreenCTM()?.a ?? Number.NaN),
-    scrolls: box.scrollWidth > box.clientWidth,
-    viewBoxWidth: svg?.viewBox.baseVal.width ?? Number.NaN,
+    labelPixels: fontPixels * (svg?.getScreenCTM()?.a ?? Number.NaN),
+    scrolls:
+      box.scrollWidth > box.clientWidth + 1 ||
+      box.scrollHeight > box.clientHeight + 1,
   };
 };
+
+/** Every element of the dialog that scrolls, named by its role or its tag. */
+const dialogScrollers = (dialog: Element) =>
+  Array.from(dialog.querySelectorAll("*"))
+    .filter((element) => {
+      const style = getComputedStyle(element);
+      return (
+        (["auto", "scroll"].includes(style.overflowY) &&
+          element.scrollHeight > element.clientHeight + 1) ||
+        (["auto", "scroll"].includes(style.overflowX) &&
+          element.scrollWidth > element.clientWidth + 1)
+      );
+    })
+    .map((element) => element.getAttribute("role") ?? element.tagName);
 
 test.describe("The dialog of a diagram", () => {
   test.describe.configure({ timeout: 240_000 });
 
-  for (const width of [390, 1440]) {
-    test(`at ${width}px shows the diagram at its natural size`, async ({
+  for (const width of [390, 768, 1440]) {
+    test(`at ${width}px keeps every label legible and scrolls in one place`, async ({
       baseURL,
       page,
     }) => {
@@ -122,10 +108,20 @@ test.describe("The dialog of a diagram", () => {
             await expect(wrapper.locator("svg")).toBeVisible({
               timeout: revealTimeoutMilliseconds,
             });
-            // The card keeps the whole diagram in its stage, with no scrollbar.
-            const preview = await wrapper.evaluate(cardFacts);
-            expect.soft(preview.fits).toBe(true);
-            expect.soft(preview.scrolls).toBe(false);
+            // The card fits the diagram, never below a 12 pixel label, and
+            // scrolls only when the diagram is larger than that.
+            const preview = await wrapper.evaluate(drawnFacts);
+            expect
+              .soft(preview.labelPixels)
+              .toBeGreaterThanOrEqual(LEGIBLE_PIXELS - 0.1);
+            expect
+              .soft(preview.labelPixels)
+              .toBeLessThanOrEqual(LABEL_PIXELS + 0.1);
+            expect
+              .soft(
+                preview.scrolls && preview.labelPixels > LEGIBLE_PIXELS + 0.1
+              )
+              .toBe(false);
 
             await card.getByRole("button").first().click();
             const dialog = page.getByRole("dialog");
@@ -135,23 +131,31 @@ test.describe("The dialog of a diagram", () => {
             });
             // The dialog zooms in when it opens, and a drawing measured during the zoom is scaled.
             await settled(box);
-            const facts = await box.evaluate(dialogFacts);
+            const fitted = await box.evaluate(drawnFacts);
+            expect
+              .soft(fitted.labelPixels)
+              .toBeGreaterThanOrEqual(LEGIBLE_PIXELS - 0.1);
+            expect
+              .soft(fitted.labelPixels)
+              .toBeLessThanOrEqual(LABEL_PIXELS + 0.1);
+            // The dialog's body never scrolls: the diagram's box is the one place that does.
+            const scrollers = await dialog.evaluate(dialogScrollers);
+            expect.soft(scrollers).toEqual(fitted.scrolls ? ["img"] : []);
 
-            // A label keeps its own font size, so the drawing is not scaled.
-            expect.soft(facts.fontPixels).toBeGreaterThan(0);
+            // Zoomed to twice its natural size, it pans in its own box.
+            const zoomIn = dialog.getByRole("button", { name: "Zoom in" });
+            await zoomIn.click();
+            await zoomIn.click();
+            await zoomIn.click();
+            await expect.soft(zoomIn).toBeDisabled();
+            const zoomed = await box.evaluate(drawnFacts);
             expect
-              .soft(Math.abs(facts.renderedPixels - facts.fontPixels))
-              .toBeLessThanOrEqual(1);
+              .soft(Math.abs(zoomed.labelPixels - 2 * LABEL_PIXELS))
+              .toBeLessThanOrEqual(0.5);
+            expect.soft(zoomed.scrolls).toBe(true);
             expect
-              .soft(Math.abs(facts.drawingWidth - facts.viewBoxWidth))
-              .toBeLessThanOrEqual(1);
-            // A wider drawing scrolls in its box, and a narrower one sits in the middle.
-            expect
-              .soft(facts.scrolls)
-              .toBe(facts.drawingWidth > facts.contentWidth);
-            expect
-              .soft(facts.centred || facts.drawingWidth > facts.contentWidth)
-              .toBe(true);
+              .soft(await dialog.evaluate(dialogScrollers))
+              .toEqual(["img"]);
           });
         })
       );
@@ -203,6 +207,13 @@ test.describe("The words of a diagram", () => {
             await expect
               .soft(page.getByRole("dialog"))
               .toHaveAccessibleDescription(language.description);
+            // Its zoom has a name in the page's language too.
+            await expect
+              .soft(page.getByRole("button", { name: language.zoomIn }))
+              .toBeVisible();
+            await expect
+              .soft(page.getByRole("button", { name: language.zoomOut }))
+              .toBeVisible();
             await page.keyboard.press("Escape");
 
             // A diagram that cannot be drawn says so in the same words.
