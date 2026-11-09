@@ -7,6 +7,7 @@ import {
 } from "@repo/site";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Option, Result, Schema } from "effect";
+import { AD_POLICY_SOURCES } from "#www/src/lib/ads/account";
 
 const WwwHeaderSchema = Schema.Struct({
   key: Schema.String,
@@ -41,9 +42,11 @@ export class WwwHeaderLineTooLong extends Schema.TaggedError<
  * Builds the headers of every www answer: the security policy, the agent
  * discovery links and the TDM reservation, which reserves model training on
  * every page under the content license. A loopback Convex deployment joins the
- * policy only while it runs on this machine, and the PostHog proxy host is the
- * one analytics origin. A loopback analytics host is the local stand-in that
- * also serves the bucket, so its origin may draw pictures too.
+ * policy only while it runs on this machine, the PostHog proxy host is the
+ * one analytics origin, and the ad script's Google origins join the policy that
+ * every page shares, since a lesson's frames load after a client navigation too.
+ * A loopback analytics host is the local stand-in that also serves the bucket,
+ * so its origin may draw pictures too.
  */
 export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
   const convexOrigins = Arr.flatMap(
@@ -63,11 +66,14 @@ export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
       additionalConnectSources: [
         ...convexOrigins,
         new URL(origins.posthogProxyHost).origin,
+        ...AD_POLICY_SOURCES.connect,
       ],
+      additionalFrameSources: AD_POLICY_SOURCES.frame,
       additionalImageSources: Arr.filter(
         [...convexOrigins, ...standIn],
         (source) => source.startsWith("http:")
       ),
+      additionalScriptSources: AD_POLICY_SOURCES.script,
     }),
     ...AGENT_DISCOVERY_HEADERS,
     { key: "tdm-reservation", value: "1" },

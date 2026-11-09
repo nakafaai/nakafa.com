@@ -130,6 +130,16 @@ build and the Worker no longer call the authenticated runtime endpoint, which re
 release document and the artifact again for every route of every release, so the Worker
 holds no `CONTENT_READ_TOKEN`; the endpoint stays for Aksara's own reads.
 
+Amended on 9 November 2026: a deploy whose Worker does not build keeps the read store it
+restored. The last step dropped every entry that the build had not touched, and a deploy
+that changes no file of the Worker (a backend or scripts change, where Alchemy plans
+`[Web] noop`) builds nothing, so it touched nothing and saved an empty store. On 9
+November the deploy at 08:11 UTC restored 23,972,411 bytes and saved 250, and the
+release deploy at 08:21 restored those 250 bytes and read every snapshot and artifact
+answer of the release again. `keepShelfEntries` (`apps/www/src/lib/content/store/shelf.ts`)
+now drops entries only when the build touched at least one, and its tests pin that a
+deploy that read nothing keeps every entry.
+
 ## Phase A as implemented
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the

@@ -18,10 +18,12 @@ import { readStaticData } from "@/lib/static/data";
  * Pricing is here because a finished try-out set offers Pro, and the signed-in
  * screens read it from here too. ComingSoon is the body of a lesson, an article,
  * a curriculum page or a try-out catalog that has no content yet. DataTable is the
- * try-out catalog's table, and Error is a 3D visual that fails to draw.
+ * try-out catalog's table, and Error is a 3D visual that fails to draw. Ads is
+ * the ad frame of a lesson or an article and its founder's note.
  */
 const MAIN_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
+  "Ads",
   "ComingSoon",
   "Comments",
   "DataTable",

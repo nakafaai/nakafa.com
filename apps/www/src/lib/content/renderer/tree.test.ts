@@ -11,7 +11,7 @@ import type {
 import { contentOutline } from "@repo/contents/toc";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { Array as Arr, Effect, Schema } from "effect";
-import { createElement, type ReactNode } from "react";
+import { createElement, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TAKES_LOCALE } from "@/lib/content/renderer/locale";
 import { renderContentTree } from "@/lib/content/renderer/tree";
@@ -87,7 +87,7 @@ function renderTree(tree: ContentTreeElement) {
     "site",
     tree,
     ArtifactLocaleSchema.make("de")
-  );
+  ).pipe(Effect.map((blocks) => createElement(Fragment, null, ...blocks)));
 }
 
 describe("content tree rendering", () => {
@@ -123,6 +123,32 @@ describe("content tree rendering", () => {
           "<div>x</div><section>y</section>"
         );
       })
+  );
+
+  it.effect(
+    "renders a fragment inside a block without an element of its own",
+    () =>
+      Effect.gen(function* () {
+        const element = yield* renderTree(
+          root([node("div", [node("fragment", [node("section", ["a"]), "b"])])])
+        );
+
+        expect(renderToStaticMarkup(element)).toBe(
+          "<div><section>a</section>b</div>"
+        );
+      })
+  );
+
+  it.effect("keeps the text between the root's blocks as text", () =>
+    Effect.gen(function* () {
+      const element = yield* renderTree(
+        root([node("div", ["first"]), "\n", node("section", ["second"])])
+      );
+
+      expect(renderToStaticMarkup(element)).toBe(
+        "<div>first</div>\n<section>second</section>"
+      );
+    })
   );
 
   it.effect(
