@@ -1,4 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -10,8 +13,6 @@ const EXPONENT_ROUTE =
   "/en/subjects/mathematics/exponential-logarithm/basic-concept";
 /** The readout the card keeps on its body, the count of bacteria it shows. */
 const COUNT = "[data-bacteria-count]";
-/** The card's pause button, which the playing sketch shows, found by its accessible name. */
-const PAUSE = /pause/iu;
 /** How long a paused dish must hold still: longer than a generation takes at 1x. */
 const HOLD_MILLISECONDS = 3000;
 
@@ -46,9 +47,15 @@ const expectSketchPlays = Effect.fn("NakafaE2E.expectSketchPlays")(function* (
       { timeout: revealTimeoutMilliseconds }
     )
   );
-  // Pausing holds the dish where it stands.
+  // The band's play toggle reads pressed while the sketch plays; pressing it
+  // again pauses, which holds the dish where it stands.
+  const play = card.getByRole("button", { exact: true, name: en.Common.play });
   yield* Effect.promise(() =>
-    card.getByRole("button", { name: PAUSE }).first().click()
+    expect(play).toHaveAttribute("aria-pressed", "true")
+  );
+  yield* Effect.promise(() => play.click());
+  yield* Effect.promise(() =>
+    expect(play).toHaveAttribute("aria-pressed", "false")
   );
   const held = yield* Effect.promise(() =>
     card.locator(COUNT).getAttribute("data-bacteria-count")
