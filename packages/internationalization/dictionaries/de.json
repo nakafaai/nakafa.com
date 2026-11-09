@@ -602,7 +602,7 @@
     "figure-source-hint": "In Mermaid geschrieben.",
     "figure-edit": "Abbildung bearbeiten",
     "figure-remove": "Abbildung entfernen",
-    "figure-graph-description": "Setz Punkte, Geraden, Funktionen und mehr auf die Ebene. Sie zeichnet sich neu, während du tippst.",
+    "figure-graph-description": "Setz Punkte, Geraden, Funktionen und mehr auf die Ebene. Die Ebene zeichnet sich neu, während du tippst.",
     "figure-objects": "Objekte",
     "figure-add": "Hinzufügen",
     "figure-point": "Punkt",

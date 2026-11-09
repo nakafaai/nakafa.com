@@ -20,7 +20,10 @@ const made = (draft: FigureDraft) => Option.getOrThrow(figureOf(draft));
 describe("exams/figure", () => {
   it("makes a graph of its plane: one function by default, fitted with the origin, under its name", () => {
     const figure = made(graph);
-    if (figure.component !== "MathVisual" || figure.props.scene.space !== "plane") {
+    if (
+      figure.component !== "MathVisual" ||
+      figure.props.scene.space !== "plane"
+    ) {
       throw new Error("A graph is a math visual on a plane.");
     }
     expect(figure.props.scene.objects).toEqual([
@@ -47,7 +50,9 @@ describe("exams/figure", () => {
       Option.isNone(figureOf({ ...graph, shapes: [{ ...curve, from: "dua" }] }))
     ).toBe(true);
     expect(
-      Option.isNone(figureOf({ ...graph, shapes: [{ ...curve, formula: "x +" }] }))
+      Option.isNone(
+        figureOf({ ...graph, shapes: [{ ...curve, formula: "x +" }] })
+      )
     ).toBe(true);
     expect(Option.isNone(figureOf({ ...graph, shapes: [] }))).toBe(true);
   });

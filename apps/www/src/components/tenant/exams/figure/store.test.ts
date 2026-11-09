@@ -36,9 +36,12 @@ describe("exams/figure/store", () => {
       "point-2",
     ]);
     store.getState().changeShape("point-2", { x: "4" });
-    expect(
-      Arr.map(store.getState().draft.shapes, ({ x }) => x)
-    ).toEqual(["0", "0", "0", "4"]);
+    expect(Arr.map(store.getState().draft.shapes, ({ x }) => x)).toEqual([
+      "0",
+      "0",
+      "0",
+      "4",
+    ]);
     store.getState().removeShape("point-1");
     store.getState().addShape("point");
     expect(Arr.map(store.getState().draft.shapes, ({ id }) => id)).toEqual([

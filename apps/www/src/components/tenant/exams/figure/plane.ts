@@ -1,5 +1,5 @@
 import type { FigureAttrs } from "@nakafa/aksara-contracts/assessment/figure";
-import type { InlineNode } from "@nakafa/aksara-contracts/assessment/inline";
+import type { PlanePoint } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import {
   Array as Arr,
@@ -13,9 +13,10 @@ import {
   anchorOf,
   cornersText,
   LABELLED,
+  newShape,
   numberOf,
   objectOf,
-  type ShapeDraft,
+  ShapeDraft,
   valueAt,
 } from "@/components/tenant/exams/figure/shapes";
 
@@ -31,8 +32,7 @@ export const SliderDraft = Schema.Struct({
 export type SliderDraft = typeof SliderDraft.Type;
 
 /** Whether the plane fits itself around its objects, or keeps the range the teacher typed. */
-export const PlaneView = Schema.Literals(["auto", "manual"]);
-export type PlaneView = typeof PlaneView.Type;
+const PlaneView = Schema.Literals(["auto", "manual"]);
 
 /** A new slider named by the next free letter of the ones formulas may read. */
 export const newSlider = (id: string, name: string): SliderDraft => ({
@@ -85,11 +85,11 @@ const FIT_LIMIT = 100;
 /** The samples of a function's range that the fit reads. */
 const FIT_SAMPLES = 40;
 
-/** A point the fit holds. */
-type Spot = { readonly x: number; readonly y: number };
-
 /** The points of a shape that the plane must show. */
-const spotsOf = (shape: ShapeDraft, scope: FormulaScope): readonly Spot[] =>
+const spotsOf = (
+  shape: ShapeDraft,
+  scope: FormulaScope
+): readonly PlanePoint[] =>
   Option.getOrElse(
     Option.map(objectOf(shape), (object) =>
       Match.value(object).pipe(
@@ -105,21 +105,28 @@ const spotsOf = (shape: ShapeDraft, scope: FormulaScope): readonly Spot[] =>
         ),
         Match.when({ kind: "line" }, ({ through }) => through),
         Match.when({ kind: "ray" }, ({ from, through }) => [from, through]),
-        Match.whenOr({ kind: "segment" }, { kind: "vector" }, ({ from, to }) => [
-          from,
-          to,
-        ]),
+        Match.whenOr(
+          { kind: "segment" },
+          { kind: "vector" },
+          ({ from, to }) => [from, to]
+        ),
         Match.when({ kind: "polygon" }, ({ vertices }) => vertices),
-        Match.whenOr({ kind: "circle" }, { kind: "arc" }, ({ center, radius }) => [
-          { x: center.x - radius, y: center.y - radius },
-          { x: center.x + radius, y: center.y + radius },
-        ]),
+        Match.whenOr(
+          { kind: "circle" },
+          { kind: "arc" },
+          ({ center, radius }) => [
+            { x: center.x - radius, y: center.y - radius },
+            { x: center.x + radius, y: center.y + radius },
+          ]
+        ),
         Match.when({ kind: "function" }, ({ domain, formula }) =>
-          Arr.filterMap(Arr.range(0, FIT_SAMPLES), (step) => {
-            const x =
-              domain.min + ((domain.max - domain.min) * step) / FIT_SAMPLES;
-            return Option.map(valueAt(formula, scope, x), (y) => ({ x, y }));
-          })
+          Arr.getSomes(
+            Arr.map(Arr.range(0, FIT_SAMPLES), (step) => {
+              const x =
+                domain.min + ((domain.max - domain.min) * step) / FIT_SAMPLES;
+              return Option.map(valueAt(formula, scope, x), (y) => ({ x, y }));
+            })
+          )
         ),
         Match.orElse(() => [])
       )
@@ -138,27 +145,26 @@ const axisAround = (values: readonly number[]) => {
 };
 
 /** The frame that holds every object of the plane, its labels, and the origin. */
-const fitFrame = (spots: readonly Spot[]) => ({
+const fitFrame = (spots: readonly PlanePoint[]) => ({
   kind: "cartesian",
   x: axisAround(Arr.map(spots, ({ x }) => x)),
   y: axisAround(Arr.map(spots, ({ y }) => y)),
 });
 
-/** The plane of a graph: the objects, the sliders, and the range it shows. */
-export type Plane = {
-  readonly shapes: readonly ShapeDraft[];
-  readonly sliders: readonly SliderDraft[];
-  readonly view: PlaneView;
-  readonly xMax: string;
-  readonly xMin: string;
-  readonly yMax: string;
-  readonly yMin: string;
-};
+/** The plane of a graph as its fields hold it: the objects, the sliders, and the range it shows. */
+export const PlaneDraft = Schema.Struct({
+  shapes: Schema.Array(ShapeDraft),
+  sliders: Schema.Array(SliderDraft),
+  view: PlaneView,
+  xMax: Schema.String,
+  xMin: Schema.String,
+  yMax: Schema.String,
+  yMin: Schema.String,
+});
+export type Plane = typeof PlaneDraft.Type;
 
 /** A rich label of LaTeX, as a scene anchors it. */
-const mathLabel = (latex: string) => [
-  { attrs: { latex }, type: "mathInline" },
-];
+const mathLabel = (latex: string) => [{ attrs: { latex }, type: "mathInline" }];
 
 /**
  * The scene of a plane and the rich labels it anchors, or none while a number of an object or a
@@ -185,25 +191,27 @@ export const sceneOf = (plane: Plane) =>
       const scope: FormulaScope = Rec.fromEntries(
         Arr.map(parameters, ({ name, value }) => [name, value] as const)
       );
-      const anchors = Arr.filterMap(plane.shapes, (shape) =>
-        shape.label.trim() === "" || !Arr.contains(LABELLED, shape.kind)
-          ? Option.none()
-          : Option.map(anchorOf(shape, scope), (anchor) => ({
-              ...anchor,
-              key: shape.id,
-              latex: shape.label.trim(),
-              objectId: shape.id,
-            }))
+      const anchors = Arr.getSomes(
+        Arr.map(plane.shapes, (shape) =>
+          shape.label.trim() === "" || !Arr.contains(LABELLED, shape.kind)
+            ? Option.none()
+            : Option.map(anchorOf(shape, scope), (anchor) => ({
+                ...anchor,
+                key: shape.id,
+                latex: shape.label.trim(),
+                objectId: shape.id,
+              }))
+        )
       );
       const frame =
         plane.view === "auto"
           ? Option.some(
               fitFrame([
                 ...Arr.flatMap(plane.shapes, (shape) => spotsOf(shape, scope)),
-                ...Arr.filterMap(anchors, ({ at }) =>
+                ...Arr.flatMap(anchors, ({ at }) =>
                   typeof at.x === "number" && typeof at.y === "number"
-                    ? Option.some({ x: at.x, y: at.y })
-                    : Option.none()
+                    ? [{ x: at.x, y: at.y }]
+                    : []
                 ),
               ])
             )
@@ -228,12 +236,15 @@ export const sceneOf = (plane: Plane) =>
           frame: fitted,
           ...(Arr.isReadonlyArrayNonEmpty(anchors)
             ? {
-                labels: Arr.map(anchors, ({ at, key, objectId, placement }) => ({
-                  at,
-                  key,
-                  objectId,
-                  placement,
-                })),
+                labels: Arr.map(
+                  anchors,
+                  ({ at, key, objectId, placement }) => ({
+                    at,
+                    key,
+                    objectId,
+                    placement,
+                  })
+                ),
               }
             : {}),
           objects,
@@ -254,15 +265,11 @@ type PlaneObject = Extract<
   { readonly space: "plane" }
 >["objects"][number];
 
-/** The LaTeX of a rich label: its formula, or its words as text. */
-const latexOf = (nodes: readonly InlineNode[]) =>
+/** The LaTeX of a rich label: its formulas, and its words as text. */
+const latexOf = (nodes: Visual["props"]["labels"][string]) =>
   Arr.join(
     Arr.map(nodes, (node) =>
-      Match.value(node).pipe(
-        Match.when({ type: "mathInline" }, ({ attrs }) => attrs.latex),
-        Match.when({ type: "text" }, ({ text }) => `\\text{${text}}`),
-        Match.orElse(() => "")
-      )
+      node.type === "mathInline" ? node.attrs.latex : `\\text{${node.text}}`
     ),
     ""
   );
@@ -278,14 +285,17 @@ const fieldsOf = (
     Match.when({ kind: "marker" }, ({ x, y }) =>
       Option.some({ kind: "point" as const, x, y })
     ),
-    Match.whenOr({ kind: "segment" }, { kind: "vector" }, ({ from, kind, to }) =>
-      Option.some({
-        kind,
-        x: String(from.x),
-        x2: String(to.x),
-        y: String(from.y),
-        y2: String(to.y),
-      })
+    Match.whenOr(
+      { kind: "segment" },
+      { kind: "vector" },
+      ({ from, kind, to }) =>
+        Option.some({
+          kind,
+          x: String(from.x),
+          x2: String(to.x),
+          y: String(from.y),
+          y2: String(to.y),
+        })
     ),
     Match.when({ kind: "line" }, ({ through: [from, to] }) =>
       Option.some({
@@ -372,22 +382,17 @@ export const planeOf = (visual: Visual): Option.Option<Plane> => {
     Option.all(
       Arr.map(scene.objects, (object) =>
         Option.map(fieldsOf(object), (fields) => ({
+          ...newShape(fields.kind, object.id, 0),
           ...fields,
           appearance: object.appearance,
-          formula: fields.formula ?? "",
-          from: fields.from ?? "",
-          id: object.id,
           label: pipe(
-            Arr.findFirst(scene.labels ?? [], ({ objectId }) => objectId === object.id),
+            Arr.findFirst(
+              scene.labels ?? [],
+              ({ objectId }) => objectId === object.id
+            ),
             Option.flatMap(({ key }) => Rec.get(labels, key)),
             Option.match({ onNone: () => "", onSome: latexOf })
           ),
-          r: fields.r ?? "",
-          to: fields.to ?? "",
-          x: fields.x ?? "",
-          x2: fields.x2 ?? "",
-          y: fields.y ?? "",
-          y2: fields.y2 ?? "",
         }))
       )
     ),

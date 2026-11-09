@@ -12,16 +12,11 @@ import {
   String as Str,
 } from "effect";
 import {
-  PlaneView,
+  PlaneDraft,
   planeOf,
-  SliderDraft,
   sceneOf,
 } from "@/components/tenant/exams/figure/plane";
-import {
-  newShape,
-  numberOf,
-  ShapeDraft,
-} from "@/components/tenant/exams/figure/shapes";
+import { newShape, numberOf } from "@/components/tenant/exams/figure/shapes";
 
 /** The figures a teacher makes: a graph on a plane, a chart of values, or a diagram. */
 export const FigureKind = Schema.Literals(["graph", "chart", "diagram"]);
@@ -37,20 +32,14 @@ export type ChartMark = typeof ChartMark.Type;
  * read their own fields, and each kind leaves the others as they stand.
  */
 export const FigureDraft = Schema.Struct({
+  ...PlaneDraft.fields,
   alt: Schema.String,
   categories: Schema.String,
   chart: Schema.String,
   kind: FigureKind,
   mark: ChartMark,
-  shapes: Schema.Array(ShapeDraft),
-  sliders: Schema.Array(SliderDraft),
   title: Schema.String,
   values: Schema.String,
-  view: PlaneView,
-  xMax: Schema.String,
-  xMin: Schema.String,
-  yMax: Schema.String,
-  yMin: Schema.String,
 });
 export type FigureDraft = typeof FigureDraft.Type;
 

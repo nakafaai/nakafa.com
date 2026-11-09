@@ -79,10 +79,9 @@ test("a teacher builds a graph of a function, a slider, a labelled point and a v
 
   // A half-typed number marks its field and keeps the last picture until it reads again.
   await point.getByRole("textbox", { exact: true, name: "y" }).fill("1 +");
-  await expect(point.getByRole("textbox", { exact: true, name: "y" })).toHaveAttribute(
-    "aria-invalid",
-    "true"
-  );
+  await expect(
+    point.getByRole("textbox", { exact: true, name: "y" })
+  ).toHaveAttribute("aria-invalid", "true");
   await expect(save).toBeDisabled();
   await expect(preview).toBeVisible();
   await point.getByRole("textbox", { exact: true, name: "y" }).fill("1");
@@ -127,7 +126,9 @@ test("a teacher builds a graph of a function, a slider, a labelled point and a v
 
   await page.getByRole("link", { name: "Try as student" }).click();
   await page.waitForURL(TRY_PATH);
-  await expect(page.getByRole("figure", { name: "Parabola dengan" })).toBeVisible({
+  await expect(
+    page.getByRole("figure", { name: "Parabola dengan" })
+  ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await context.close();

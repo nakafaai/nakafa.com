@@ -1,5 +1,14 @@
-import { MathAppearanceSchema } from "@nakafa/aksara-contracts/math/base";
+import {
+  MathAppearanceSchema,
+  MathLabelPlacementSchema,
+  type PlanePoint,
+  PlanePointSchema,
+} from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
+import {
+  type PlaneFormulaPoint,
+  PlaneFormulaPointSchema,
+} from "@nakafa/aksara-contracts/math/formula/field";
 import {
   readFormula,
   readRelation,
@@ -191,9 +200,11 @@ export const cornersOf = (text: string) =>
   );
 
 /** The corners of a polygon as a teacher reads them. */
-export const cornersText = (
-  corners: readonly { readonly x: number; readonly y: number }[]
-) => Arr.join(Arr.map(corners, ({ x, y }) => `(${x}, ${y})`), " ");
+export const cornersText = (corners: readonly PlanePoint[]) =>
+  Arr.join(
+    Arr.map(corners, ({ x, y }) => `(${x}, ${y})`),
+    " "
+  );
 
 /** The inequalities of a region, one on each line, without empty lines. */
 export const inequalitiesOf = (text: string) =>
@@ -209,11 +220,7 @@ export const valueAt = (formula: string, scope: FormulaScope, x: number) =>
   );
 
 /** The point and the angle of the end of an arm of an angle, at its radius. */
-const armEnd = (
-  vertex: { readonly x: number; readonly y: number },
-  radius: number,
-  degrees: number
-) => {
+const armEnd = (vertex: PlanePoint, radius: number, degrees: number) => {
   const radians = (degrees * Math.PI) / 180;
   return {
     x: vertex.x + radius * Math.cos(radians),
@@ -282,7 +289,10 @@ export const objectOf = (shape: ShapeDraft) =>
     ),
     Match.when("circle", () =>
       Option.map(
-        Option.all({ center: pointOf(shape.x, shape.y), radius: numberOf(shape.r) }),
+        Option.all({
+          center: pointOf(shape.x, shape.y),
+          radius: numberOf(shape.r),
+        }),
         ({ center, radius }) => ({ center, kind: "circle" as const, radius })
       )
     ),
@@ -310,12 +320,17 @@ export const objectOf = (shape: ShapeDraft) =>
   );
 
 /** The middle of two points. */
-const middle = (
-  [from, to]: readonly [
-    { readonly x: number; readonly y: number },
-    { readonly x: number; readonly y: number },
-  ]
-) => ({ x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 });
+const middle = ([from, to]: readonly [PlanePoint, PlanePoint]) => ({
+  x: (from.x + to.x) / 2,
+  y: (from.y + to.y) / 2,
+});
+
+/** Where a label stands: an exact point, or one the sliders move, and its side of that point. */
+const Anchor = Schema.Struct({
+  at: Schema.Union([PlanePointSchema, PlaneFormulaPointSchema]),
+  placement: MathLabelPlacementSchema,
+});
+type Anchor = typeof Anchor.Type;
 
 /**
  * Where a shape's label stands, as the contract places an anchor: a point at its point, a segment
@@ -325,19 +340,14 @@ const middle = (
 export const anchorOf = (
   shape: ShapeDraft,
   scope: FormulaScope
-): Option.Option<{
-  readonly at:
-    | { readonly x: number; readonly y: number }
-    | { readonly x: string; readonly y: string };
-  readonly placement: "above" | "above-right" | "center" | "right";
-}> =>
+): Option.Option<Anchor> =>
   Match.value(shape.kind).pipe(
     Match.when("point", () =>
       Option.some({
-        at: Option.getOrElse<
-          { readonly x: number; readonly y: number },
-          { readonly x: string; readonly y: string }
-        >(pointOf(shape.x, shape.y), () => ({ x: shape.x, y: shape.y })),
+        at: Option.getOrElse<PlanePoint, PlaneFormulaPoint>(
+          pointOf(shape.x, shape.y),
+          () => ({ x: shape.x, y: shape.y })
+        ),
         placement: "above-right" as const,
       })
     ),
@@ -360,7 +370,10 @@ export const anchorOf = (
     ),
     Match.when("circle", () =>
       Option.map(
-        Option.all({ center: pointOf(shape.x, shape.y), radius: numberOf(shape.r) }),
+        Option.all({
+          center: pointOf(shape.x, shape.y),
+          radius: numberOf(shape.r),
+        }),
         ({ center, radius }) => ({
           at: { x: center.x, y: center.y + radius },
           placement: "above" as const,
@@ -368,10 +381,13 @@ export const anchorOf = (
       )
     ),
     Match.when("angle", () =>
-      Option.map(angleOf(shape), ({ center, radius, startDegrees, sweepDegrees }) => ({
-        at: armEnd(center, radius * 1.6, startDegrees + sweepDegrees / 2),
-        placement: "center" as const,
-      }))
+      Option.map(
+        angleOf(shape),
+        ({ center, radius, startDegrees, sweepDegrees }) => ({
+          at: armEnd(center, radius * 1.6, startDegrees + sweepDegrees / 2),
+          placement: "center" as const,
+        })
+      )
     ),
     Match.when("function", () =>
       Option.flatMap(

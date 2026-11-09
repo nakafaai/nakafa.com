@@ -1,4 +1,5 @@
 import {
+  Add01Icon,
   AngleIcon,
   ArrowRight02Icon,
   ArrowUpRight01Icon,
@@ -12,6 +13,7 @@ import {
   LinerIcon,
   MoreHorizontalIcon,
   PolygonIcon,
+  SlidersHorizontalIcon,
   SquaresIntersectIcon,
 } from "@hugeicons/core-free-icons";
 import { MathAppearanceSchema } from "@nakafa/aksara-contracts/math/base";
@@ -40,9 +42,10 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { Array as Arr, Match, Schema } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
+import { freeName } from "@/components/tenant/exams/figure/plane";
 import { useFigure } from "@/components/tenant/exams/figure/provider";
 import {
   isEquation,
@@ -51,11 +54,11 @@ import {
   isNumber,
   LABELLED,
   type ShapeDraft,
-  type ShapeKind,
+  ShapeKind,
 } from "@/components/tenant/exams/figure/shapes";
 
 /** The icon of each object, the same in the add menu and on its card. */
-export const SHAPE_ICON = {
+const SHAPE_ICON = {
   angle: AngleIcon,
   circle: CircleIcon,
   equation: EqualSignIcon,
@@ -70,7 +73,7 @@ export const SHAPE_ICON = {
 } satisfies Record<ShapeKind, typeof AngleIcon>;
 
 /** The name of each object. */
-export const SHAPE_NAME = {
+const SHAPE_NAME = {
   angle: "figure-angle",
   circle: "figure-circle",
   equation: "figure-equation",
@@ -106,11 +109,13 @@ function ShapeInput({
   check = isNumber,
   field,
   label,
+  placeholder = "0",
   shape,
 }: {
   readonly check?: (text: string) => boolean;
   readonly field: LineField | "formula";
   readonly label: string;
+  readonly placeholder?: string;
   readonly shape: ShapeDraft;
 }) {
   const changeShape = useFigure((state) => state.changeShape);
@@ -128,6 +133,7 @@ function ShapeInput({
         onChange={(event) =>
           changeShape(shape.id, { [field]: event.target.value })
         }
+        placeholder={placeholder}
         value={value}
       />
     </Field>
@@ -181,6 +187,7 @@ function ShapePlace({ shape }: { readonly shape: ShapeDraft }) {
             check={isFormula}
             field="formula"
             label="f(x) ="
+            placeholder="a x^2 + 1"
             shape={shape}
           />
         </div>
@@ -193,6 +200,7 @@ function ShapePlace({ shape }: { readonly shape: ShapeDraft }) {
         check={isEquation}
         field="formula"
         label={t("figure-equation")}
+        placeholder="x^2 + y^2 = 4"
         shape={shape}
       />
     )),
@@ -213,16 +221,59 @@ function ShapePlace({ shape }: { readonly shape: ShapeDraft }) {
           onChange={(event) =>
             changeShape(shape.id, { formula: event.target.value })
           }
+          placeholder={kind === "polygon" ? "(0, 0) (4, 0) (0, 3)" : "y >= x^2"}
           value={shape.formula}
         />
         <FieldDescription>
           {t(
-            kind === "polygon" ? "figure-corners-hint" : "figure-inequalities-hint"
+            kind === "polygon"
+              ? "figure-corners-hint"
+              : "figure-inequalities-hint"
           )}
         </FieldDescription>
       </Field>
     )),
     Match.exhaustive
+  );
+}
+
+/** The menu that puts a new object or a slider on the plane, drawn at once where it starts. */
+export function AddMenu() {
+  const common = useTranslations("Common");
+  const t = useTranslations("Exams");
+  const addShape = useFigure((state) => state.addShape);
+  const addSlider = useFigure((state) => state.addSlider);
+  const full = useFigure((state) =>
+    Option.isNone(freeName(state.draft.sliders))
+  );
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button className="w-full" type="button" variant="outline" />}
+      >
+        <HugeIcons aria-hidden="true" icon={Add01Icon} />
+        {t("figure-add")}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" label={common("menu-insert")}>
+        {Arr.map(ShapeKind.literals, (kind) => (
+          <DropdownMenuItem
+            icon={SHAPE_ICON[kind]}
+            key={kind}
+            onClick={() => addShape(kind)}
+          >
+            {t(SHAPE_NAME[kind])}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuItem
+          disabled={full}
+          icon={SlidersHorizontalIcon}
+          onClick={addSlider}
+        >
+          {t("figure-slider-add")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -277,7 +328,7 @@ export function ShapeCard({ shape }: { readonly shape: ShapeDraft }) {
       <FieldLegend className="flex w-full items-center gap-2" variant="label">
         <HugeIcons
           aria-hidden="true"
-          className="size-4 text-muted-foreground"
+          className="text-muted-foreground size-4"
           icon={SHAPE_ICON[shape.kind]}
         />
         {t(SHAPE_NAME[shape.kind])}

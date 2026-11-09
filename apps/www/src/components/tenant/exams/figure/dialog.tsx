@@ -21,7 +21,10 @@ import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { PendingFigure } from "@/components/tenant/exams/editing";
 import { GraphBuilder } from "@/components/tenant/exams/figure/builder";
-import { ChartMark, type FigureKind } from "@/components/tenant/exams/figure/draft";
+import {
+  ChartMark,
+  type FigureKind,
+} from "@/components/tenant/exams/figure/draft";
 import {
   AltField,
   FigurePreview,

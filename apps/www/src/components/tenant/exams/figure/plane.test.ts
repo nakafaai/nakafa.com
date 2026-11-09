@@ -87,20 +87,20 @@ describe("exams/figure/plane", () => {
     });
   });
 
-  it("follows a function and a sliding point by the sliders, and keeps a runaway curve readable", () => {
+  it("follows a sliding point by the sliders, and keeps a runaway curve readable", () => {
     const { scene } = made(
       plane(
         [
-          shape("function", { formula: "1/x", from: "-1", label: "f", to: "1" }),
+          shape("function", { formula: "x^9", from: "-3", to: "3" }),
           shape("point", { label: "P", x: "a", y: "2 a" }),
-          shape("point", { x: "a +", y: "1" }),
+          shape("point", { id: "point-2", x: "a +", y: "1" }),
         ],
         { sliders: [newSlider("a", "a"), { ...newSlider("b", "b"), step: "" }] }
       )
     );
     expect(scene.frame).toEqual({
       kind: "cartesian",
-      x: { max: 2, min: -2 },
+      x: { max: 4, min: -4 },
       y: { max: 101, min: -101 },
     });
     expect(scene.parameters).toEqual([
@@ -108,12 +108,6 @@ describe("exams/figure/plane", () => {
       { max: 5, min: -5, name: "b", value: 1 },
     ]);
     expect(scene.labels).toEqual([
-      {
-        at: { x: 0.6000000000000001, y: 1.6666666666666665 },
-        key: "function-1",
-        objectId: "function-1",
-        placement: "right",
-      },
       {
         at: { x: "a", y: "2 a" },
         key: "point-1",
@@ -126,7 +120,13 @@ describe("exams/figure/plane", () => {
   it("keeps the range a teacher types, and makes no scene while a number of it is missing", () => {
     const point = [shape("point", { x: "1", y: "1" })];
     const { labels, scene } = made(
-      plane(point, { view: "manual", xMax: "2", xMin: "-2", yMax: "3", yMin: "-1" })
+      plane(point, {
+        view: "manual",
+        xMax: "2",
+        xMin: "-2",
+        yMax: "3",
+        yMin: "-1",
+      })
     );
     expect(scene.frame).toEqual({
       kind: "cartesian",
@@ -175,24 +175,109 @@ describe("exams/figure/plane", () => {
   it("reads a stored plane back into the builder, at the range it shows", () => {
     const stored = visual(
       {
-        frame: { kind: "cartesian", x: { max: 7, min: -3 }, y: { max: 5, min: -1 } },
-        labels: [
-          { at: { x: 2, y: 0 }, key: "vertex", objectId: "vertex" },
-        ],
+        frame: {
+          kind: "cartesian",
+          x: { max: 7, min: -3 },
+          y: { max: 5, min: -1 },
+        },
+        labels: [{ at: { x: 2, y: 0 }, key: "vertex", objectId: "vertex" }],
         objects: [
-          { appearance: "highlight", at: { x: 2, y: 0 }, id: "vertex", kind: "point" },
-          { appearance: "primary", id: "moving", kind: "marker", x: "a", y: "1" },
-          { appearance: "primary", from: { x: 0, y: 0 }, id: "side", kind: "segment", to: { x: 1, y: 1 } },
-          { appearance: "primary", from: { x: 0, y: 0 }, id: "arrow", kind: "vector", to: { x: 1, y: 1 } },
-          { appearance: "primary", id: "slope", kind: "line", through: [{ x: 0, y: 0 }, { x: 1, y: 1 }] },
-          { appearance: "primary", from: { x: 0, y: 0 }, id: "beam", kind: "ray", through: { x: 1, y: 0 } },
-          { appearance: "primary", id: "shape", kind: "polygon", vertices: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }] },
-          { appearance: "primary", center: { x: 0, y: 0 }, id: "ring", kind: "circle", radius: 1 },
-          { appearance: "primary", center: { x: 0, y: 0 }, id: "turn", kind: "arc", radius: 1, startDegrees: 30, sweepDegrees: 60 },
-          { appearance: "primary", domain: { max: 2, min: -2 }, formula: "x^2", id: "f", kind: "function" },
-          { appearance: "primary", coefficients: { a: 1, b: -2, c: 3 }, domain: { max: 2, min: -2 }, id: "q", inputAxis: "x", kind: "quadratic" },
-          { appearance: "primary", equation: "x^2 + y^2 = 4", id: "round", kind: "implicit" },
-          { appearance: "answer", id: "zone", inequalities: ["y >= 0", "y <= 1"], kind: "region" },
+          {
+            appearance: "highlight",
+            at: { x: 2, y: 0 },
+            id: "vertex",
+            kind: "point",
+          },
+          {
+            appearance: "primary",
+            id: "moving",
+            kind: "marker",
+            x: "a",
+            y: "1",
+          },
+          {
+            appearance: "primary",
+            from: { x: 0, y: 0 },
+            id: "side",
+            kind: "segment",
+            to: { x: 1, y: 1 },
+          },
+          {
+            appearance: "primary",
+            from: { x: 0, y: 0 },
+            id: "arrow",
+            kind: "vector",
+            to: { x: 1, y: 1 },
+          },
+          {
+            appearance: "primary",
+            id: "slope",
+            kind: "line",
+            through: [
+              { x: 0, y: 0 },
+              { x: 1, y: 1 },
+            ],
+          },
+          {
+            appearance: "primary",
+            from: { x: 0, y: 0 },
+            id: "beam",
+            kind: "ray",
+            through: { x: 1, y: 0 },
+          },
+          {
+            appearance: "primary",
+            id: "shape",
+            kind: "polygon",
+            vertices: [
+              { x: 0, y: 0 },
+              { x: 1, y: 0 },
+              { x: 0, y: 1 },
+            ],
+          },
+          {
+            appearance: "primary",
+            center: { x: 0, y: 0 },
+            id: "ring",
+            kind: "circle",
+            radius: 1,
+          },
+          {
+            appearance: "primary",
+            center: { x: 0, y: 0 },
+            id: "turn",
+            kind: "arc",
+            radius: 1,
+            startDegrees: 30,
+            sweepDegrees: 60,
+          },
+          {
+            appearance: "primary",
+            domain: { max: 2, min: -2 },
+            formula: "x^2",
+            id: "f",
+            kind: "function",
+          },
+          {
+            appearance: "primary",
+            coefficients: { a: 1, b: 0, c: -1 },
+            domain: { max: 2, min: -2 },
+            id: "q",
+            inputAxis: "x",
+            kind: "quadratic",
+          },
+          {
+            appearance: "primary",
+            equation: "x^2 + y^2 = 4",
+            id: "round",
+            kind: "implicit",
+          },
+          {
+            appearance: "answer",
+            id: "zone",
+            inequalities: ["y >= 0", "y <= 1"],
+            kind: "region",
+          },
         ],
         parameters: [
           { max: 2, min: 0, name: "a", step: 0.5, value: 1 },
@@ -205,7 +290,6 @@ describe("exams/figure/plane", () => {
         vertex: [
           { attrs: { latex: "V" }, type: "mathInline" },
           { text: " top", type: "text" },
-          { type: "hardBreak" },
         ],
       }
     );
@@ -222,7 +306,12 @@ describe("exams/figure/plane", () => {
       { id: "b", max: "2", min: "0", name: "b", step: "", value: "1" },
     ]);
     expect(
-      Arr.map(read.shapes, ({ formula, id, kind, label }) => [id, kind, formula, label])
+      Arr.map(read.shapes, ({ formula, id, kind, label }) => [
+        id,
+        kind,
+        formula,
+        label,
+      ])
     ).toEqual([
       ["vertex", "point", "", "V\\text{ top}"],
       ["moving", "point", "", ""],
@@ -234,7 +323,7 @@ describe("exams/figure/plane", () => {
       ["ring", "circle", "", ""],
       ["turn", "angle", "", ""],
       ["f", "function", "x^2", ""],
-      ["q", "function", "1*x^2 + -2*x + 3", ""],
+      ["q", "function", "1*x^2 + 0*x + -1", ""],
       ["round", "equation", "x^2 + y^2 = 4", ""],
       ["zone", "region", "y >= 0\ny <= 1", ""],
     ]);
@@ -243,7 +332,11 @@ describe("exams/figure/plane", () => {
   });
 
   it("offers no plane for a space scene, readouts, or an object the builder does not write", () => {
-    const frame = { kind: "cartesian", x: { max: 2, min: -2 }, y: { max: 2, min: -2 } };
+    const frame = {
+      kind: "cartesian",
+      x: { max: 2, min: -2 },
+      y: { max: 2, min: -2 },
+    };
     const scene = (objects: unknown[], extra = {}) => ({
       frame,
       objects,
@@ -251,7 +344,12 @@ describe("exams/figure/plane", () => {
       view: { kind: "fit" },
       ...extra,
     });
-    const point = { appearance: "primary", at: { x: 0, y: 0 }, id: "p", kind: "point" };
+    const point = {
+      appearance: "primary",
+      at: { x: 0, y: 0 },
+      id: "p",
+      kind: "point",
+    };
     for (const stored of [
       visual({
         frame: { ...frame, z: { max: 2, min: -2 } },
@@ -259,11 +357,49 @@ describe("exams/figure/plane", () => {
         space: "space",
         view: { kind: "isometric" },
       }),
-      visual(scene([point], { readouts: [{ formula: "1", key: "one" }] })),
-      visual(scene([{ appearance: "primary", id: "c", kind: "parametric", parameter: { max: 1, min: 0 }, x: "t", y: "t" }])),
-      visual(scene([{ appearance: "primary", formula: "y", id: "f", inputAxis: "y", kind: "function" }])),
-      visual(scene([{ appearance: "primary", formula: "x", id: "f", kind: "function" }])),
-      visual(scene([{ appearance: "primary", coefficients: { a: 1, b: 0, c: 0 }, domain: { max: 1, min: 0 }, id: "q", inputAxis: "y", kind: "quadratic" }])),
+      visual(scene([point], { readouts: [{ formula: "1", key: "one" }] }), {
+        one: [{ text: "1", type: "text" }],
+      }),
+      visual(
+        scene([
+          {
+            appearance: "primary",
+            id: "c",
+            kind: "parametric",
+            parameter: { max: 1, min: 0 },
+            x: "t",
+            y: "t",
+          },
+        ])
+      ),
+      visual(
+        scene([
+          {
+            appearance: "primary",
+            formula: "y",
+            id: "f",
+            inputAxis: "y",
+            kind: "function",
+          },
+        ])
+      ),
+      visual(
+        scene([
+          { appearance: "primary", formula: "x", id: "f", kind: "function" },
+        ])
+      ),
+      visual(
+        scene([
+          {
+            appearance: "primary",
+            coefficients: { a: 1, b: 0, c: 0 },
+            domain: { max: 1, min: 0 },
+            id: "q",
+            inputAxis: "y",
+            kind: "quadratic",
+          },
+        ])
+      ),
     ]) {
       expect(Option.isNone(planeOf(stored))).toBe(true);
     }

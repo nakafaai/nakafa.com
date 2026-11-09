@@ -20,6 +20,14 @@ import { isNumber } from "@/components/tenant/exams/figure/shapes";
 /** The fields of a slider that hold a number. */
 type SliderField = "max" | "min" | "step" | "value";
 
+/** What each number of a slider looks like, shown while its field is empty. */
+const SLIDER_EXAMPLE = {
+  max: "5",
+  min: "-5",
+  step: "0.1",
+  value: "1",
+} as const satisfies Record<SliderField, string>;
+
 /** One number of a slider. */
 function SliderInput({
   field,
@@ -47,6 +55,7 @@ function SliderInput({
         onChange={(event) =>
           changeSlider(slider.id, { [field]: event.target.value })
         }
+        placeholder={SLIDER_EXAMPLE[field]}
         value={value}
       />
     </Field>
@@ -67,7 +76,7 @@ export function SliderCard({ slider }: { readonly slider: SliderDraft }) {
       <FieldLegend className="flex w-full items-center gap-2" variant="label">
         <HugeIcons
           aria-hidden="true"
-          className="size-4 text-muted-foreground"
+          className="text-muted-foreground size-4"
           icon={SlidersHorizontalIcon}
         />
         {t("figure-slider", { name: slider.name })}

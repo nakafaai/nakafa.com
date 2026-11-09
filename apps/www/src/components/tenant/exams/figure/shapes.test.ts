@@ -28,7 +28,10 @@ describe("exams/figure/shapes", () => {
       expect(Option.isSome(objectOf(shape(kind)))).toBe(true);
     }
     expect(
-      Arr.map([0, 1, 2, 3, 4], (place) => newShape("point", "p", place).appearance)
+      Arr.map(
+        [0, 1, 2, 3, 4],
+        (place) => newShape("point", "p", place).appearance
+      )
     ).toEqual(["primary", "secondary", "highlight", "answer", "primary"]);
   });
 
@@ -83,7 +86,11 @@ describe("exams/figure/shapes", () => {
       })
     );
     expect(objectOf(shape("ray", ends))).toEqual(
-      Option.some({ from: { x: 0, y: 1 }, kind: "ray", through: { x: 3, y: 2 } })
+      Option.some({
+        from: { x: 0, y: 1 },
+        kind: "ray",
+        through: { x: 3, y: 2 },
+      })
     );
     expect(objectOf(shape("vector", ends))).toEqual(
       Option.some({ from: { x: 0, y: 1 }, kind: "vector", to: { x: 3, y: 2 } })
@@ -103,7 +110,11 @@ describe("exams/figure/shapes", () => {
       })
     );
     expect(objectOf(shape("function"))).toEqual(
-      Option.some({ domain: { max: 2, min: -2 }, formula: "x^2", kind: "function" })
+      Option.some({
+        domain: { max: 2, min: -2 },
+        formula: "x^2",
+        kind: "function",
+      })
     );
     expect(objectOf(shape("equation"))).toEqual(
       Option.some({ equation: "x^2 + y^2 = 4", kind: "implicit" })
@@ -140,9 +151,9 @@ describe("exams/figure/shapes", () => {
     expect(at(shape("polygon", { formula: "(0, 0) (3, 0) (0, 3)" }))).toEqual(
       Option.some({ x: 1, y: 1 })
     );
-    expect(Option.isNone(anchorOf(shape("polygon", { formula: " " }), {}))).toBe(
-      true
-    );
+    expect(
+      Option.isNone(anchorOf(shape("polygon", { formula: " " }), {}))
+    ).toBe(true);
     expect(at(shape("circle", { r: "2", x: "1", y: "1" }))).toEqual(
       Option.some({ x: 1, y: 3 })
     );
@@ -152,12 +163,19 @@ describe("exams/figure/shapes", () => {
     expect(angle.x).toBeCloseTo(0);
     expect(angle.y).toBeCloseTo(1.6);
     expect(at(shape("function", { formula: "a x" }), { a: 2 })).toEqual(
-      Option.some({ x: 1.2000000000000002, y: 2.4000000000000004 })
+      Option.some({ x: 1.200_000_000_000_000_2, y: 2.400_000_000_000_000_4 })
     );
     expect(
-      Option.isNone(anchorOf(shape("function", { formula: "1/(x - 1.2000000000000002)" }), {}))
+      Option.isNone(
+        anchorOf(
+          shape("function", { formula: "1/(x - 1.2000000000000002)" }),
+          {}
+        )
+      )
     ).toBe(true);
-    expect(Option.isNone(anchorOf(shape("function", { to: "" }), {}))).toBe(true);
+    expect(Option.isNone(anchorOf(shape("function", { to: "" }), {}))).toBe(
+      true
+    );
     expect(Option.isNone(anchorOf(shape("equation"), {}))).toBe(true);
   });
 });

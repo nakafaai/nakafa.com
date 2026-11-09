@@ -1,11 +1,3 @@
-import { Add01Icon, SlidersHorizontalIcon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
   FieldGroup,
@@ -13,7 +5,6 @@ import {
   FieldLegend,
   FieldSet,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { Array as Arr, Option } from "effect";
@@ -24,55 +15,10 @@ import {
   FigurePreview,
   NameField,
 } from "@/components/tenant/exams/figure/fields";
-import { freeName } from "@/components/tenant/exams/figure/plane";
 import { useFigure } from "@/components/tenant/exams/figure/provider";
-import {
-  SHAPE_ICON,
-  SHAPE_NAME,
-  ShapeCard,
-} from "@/components/tenant/exams/figure/shape";
-import { isNumber, ShapeKind } from "@/components/tenant/exams/figure/shapes";
+import { AddMenu, ShapeCard } from "@/components/tenant/exams/figure/shape";
+import { isNumber } from "@/components/tenant/exams/figure/shapes";
 import { SliderCard } from "@/components/tenant/exams/figure/slider";
-
-/** The menu that puts a new object or a slider on the plane, drawn at once where it starts. */
-function AddMenu() {
-  const common = useTranslations("Common");
-  const t = useTranslations("Exams");
-  const addShape = useFigure((state) => state.addShape);
-  const addSlider = useFigure((state) => state.addSlider);
-  const full = useFigure((state) =>
-    Option.isNone(freeName(state.draft.sliders))
-  );
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={<Button className="w-full" type="button" variant="outline" />}
-      >
-        <HugeIcons aria-hidden="true" icon={Add01Icon} />
-        {t("figure-add")}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" label={common("menu-insert")}>
-        {Arr.map(ShapeKind.literals, (kind) => (
-          <DropdownMenuItem
-            icon={SHAPE_ICON[kind]}
-            key={kind}
-            onClick={() => addShape(kind)}
-          >
-            {t(SHAPE_NAME[kind])}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem
-          disabled={full}
-          icon={SlidersHorizontalIcon}
-          onClick={addSlider}
-        >
-          {t("figure-slider-add")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 /** The objects on the plane and its sliders, each a card the teacher edits in place, over the add menu. */
 function ShapeList() {
@@ -94,12 +40,20 @@ function ShapeList() {
   );
 }
 
+/** What each end of the range looks like, shown while its field is empty. */
+const RANGE_EXAMPLE = {
+  xMax: "5",
+  xMin: "-5",
+  yMax: "5",
+  yMin: "-5",
+} as const;
+
 /** One end of the range the plane shows. */
 function RangeInput({
   field,
   label,
 }: {
-  readonly field: "xMax" | "xMin" | "yMax" | "yMin";
+  readonly field: keyof typeof RANGE_EXAMPLE;
   readonly label: string;
 }) {
   const value = useFigure((state) => state.draft[field]);
@@ -115,6 +69,7 @@ function RangeInput({
         id={id}
         inputMode="decimal"
         onChange={(event) => change({ [field]: event.target.value })}
+        placeholder={RANGE_EXAMPLE[field]}
         value={value}
       />
     </Field>
@@ -160,11 +115,7 @@ function ViewFields() {
   return (
     <FieldSet className="gap-3">
       <Field orientation="horizontal">
-        <Switch
-          checked={view === "auto"}
-          id={id}
-          onCheckedChange={fit}
-        />
+        <Switch checked={view === "auto"} id={id} onCheckedChange={fit} />
         <FieldLabel htmlFor={id}>{t("figure-fit")}</FieldLabel>
       </Field>
       {view === "manual" ? (
