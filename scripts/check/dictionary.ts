@@ -178,7 +178,7 @@ function sentenceRule(listed: HashSet.HashSet<string>): ValueRule {
 
 /** The namespace of a dotted key path: its first key, such as `Memory` in `Memory.empty-description`. */
 function namespaceOf(keyPath: string) {
-  return Str.split(keyPath, ".")[0] ?? keyPath;
+  return Arr.headNonEmpty(Str.split(keyPath, "."));
 }
 
 /** Every value: a rule of this family reads all of a dictionary. */

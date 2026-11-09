@@ -185,9 +185,10 @@ describe("published material delivery", () => {
         );
 
         expect(
-          yield* readMaterial(input)
-            .pipe(Effect.flatMap(renderMaterialArtifact))
-            .pipe(Effect.flip)
+          yield* readMaterial(input).pipe(
+            Effect.flatMap(renderMaterialArtifact),
+            Effect.flip
+          )
         ).toMatchObject({
           _tag: "PublishedProjectionError",
           appLocale: input.appLocale,
@@ -205,9 +206,10 @@ describe("published material delivery", () => {
     (request) =>
       Effect.gen(function* () {
         expect(
-          yield* readMaterial(request)
-            .pipe(Effect.flatMap(renderMaterialArtifact))
-            .pipe(Effect.flip)
+          yield* readMaterial(request).pipe(
+            Effect.flatMap(renderMaterialArtifact),
+            Effect.flip
+          )
         ).toMatchObject({
           _tag: "PublishedProjectionError",
           appLocale: request.appLocale,
@@ -225,9 +227,10 @@ describe("published material delivery", () => {
       readMock.mockReturnValueOnce(Effect.fail(failure));
 
       expect(
-        yield* readMaterial(input)
-          .pipe(Effect.flatMap(renderMaterialArtifact))
-          .pipe(Effect.flip)
+        yield* readMaterial(input).pipe(
+          Effect.flatMap(renderMaterialArtifact),
+          Effect.flip
+        )
       ).toBe(failure);
       expect(bodyMock).not.toHaveBeenCalled();
     })
@@ -243,9 +246,10 @@ describe("published material delivery", () => {
       bodyMock.mockReturnValueOnce(Effect.fail(failure));
 
       expect(
-        yield* readMaterial(input)
-          .pipe(Effect.flatMap(renderMaterialArtifact))
-          .pipe(Effect.flip)
+        yield* readMaterial(input).pipe(
+          Effect.flatMap(renderMaterialArtifact),
+          Effect.flip
+        )
       ).toBe(failure);
       expect(readMock).toHaveBeenCalledOnce();
     })
