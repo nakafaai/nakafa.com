@@ -40,7 +40,7 @@ import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectMenuSource } from "#scripts/check/menus";
-import { nameViolations } from "#scripts/check/names";
+import { manifestEntries, nameViolations } from "#scripts/check/names";
 import { inspectMenuOrder } from "#scripts/check/order";
 import { inspectPickerSource } from "#scripts/check/pickers";
 import { pluginRuleNames } from "#scripts/check/plugin";
@@ -226,12 +226,14 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const isOwner =
       (yield* fileSystem.realPath(root)) ===
       (yield* fileSystem.realPath(owner));
+    const repositoryPaths = Arr.map(
+      relative(Arr.flatten([workspaces, scripts, agents, docs])),
+      (file) => Arr.join(Str.split(file, path.sep), "/")
+    );
     const names = isOwner
       ? nameViolations(
-          Arr.map(
-            relative(Arr.flatten([workspaces, scripts, agents, docs])),
-            (file) => Arr.join(Str.split(file, path.sep), "/")
-          )
+          repositoryPaths,
+          yield* manifestEntries(root, repositoryPaths)
         )
       : [];
     const reports = Arr.filter(

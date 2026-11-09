@@ -1,4 +1,4 @@
-import { CodeBlock } from "@repo/design-system/components/code";
+import { CodeBlock } from "@repo/design-system/components/code/block";
 import {
   CodeBlockBody,
   CodeBlockItem,
