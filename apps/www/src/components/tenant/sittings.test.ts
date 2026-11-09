@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
-import { orderSittings } from "@/components/tenant/sittings";
+import { orderSittings, sittingStatusOf } from "@/components/tenant/sittings";
 
 describe("tenant/sittings client", () => {
   it("lists every open sitting before the scheduled ones, and each group by its opening time", () => {
@@ -37,5 +37,20 @@ describe("tenant/sittings client", () => {
 
   it("keeps an empty list empty", () => {
     expect(orderSittings([])).toEqual([]);
+  });
+
+  it("says a sitting is finished once its student submitted it or it closed, open while it takes answers, and upcoming before", () => {
+    expect(sittingStatusOf({ attempt: "submitted", state: "open" })).toBe(
+      "finished"
+    );
+    expect(sittingStatusOf({ attempt: null, state: "closed" })).toBe(
+      "finished"
+    );
+    expect(sittingStatusOf({ attempt: "inProgress", state: "open" })).toBe(
+      "open"
+    );
+    expect(sittingStatusOf({ attempt: null, state: "scheduled" })).toBe(
+      "upcoming"
+    );
   });
 });
