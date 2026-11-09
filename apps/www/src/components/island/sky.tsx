@@ -8,9 +8,11 @@ import {
   type SkyStore,
   weatherOf,
 } from "@/lib/island/sky";
-import { readWeatherSummary } from "@/lib/weather/request";
 
 const SkyContext = createContext<SkyStore | null>(null);
+
+/** The weather request and its Effect HTTP client, loaded only when a read starts (ADR 0039). */
+const loadWeather = () => import("@/lib/weather/request");
 
 /** How often the light follows the owner's clock. */
 const CLOCK_GAP = 60_000;
@@ -25,8 +27,10 @@ function phaseNow(timeZone: string) {
 /**
  * Gives one island canvas its sky (ADR 0042, D18): the light of the owner's
  * local hour, checked every minute, and, on the owner's own page, the weather
- * their browser reads from the weather route. A failed read keeps the sky
- * clear, the weather a picture can always show truthfully.
+ * their browser reads from the weather route, whose Effect HTTP client loads
+ * only then (ADR 0039). A failed read keeps the sky clear, the weather a
+ * picture can always show truthfully. The frame provides it, so the canvas and
+ * the island's sound read one sky.
  */
 export function SkyProvider({ children }: { children: ReactNode }) {
   const { owner, timeZone } = useIsland();
@@ -43,7 +47,10 @@ export function SkyProvider({ children }: { children: ReactNode }) {
       return;
     }
     const fiber = Effect.runFork(
-      Effect.promise(readWeatherSummary).pipe(
+      Effect.promise(loadWeather).pipe(
+        Effect.flatMap(({ readWeatherSummary }) =>
+          Effect.promise(readWeatherSummary)
+        ),
         Effect.map((read) =>
           Option.map(
             Option.flatMap(read, (summary) => weatherOf(summary.icon)),

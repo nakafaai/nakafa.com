@@ -1,11 +1,12 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, HashSet, Option } from "effect";
 import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
 import { userSettingsSections } from "@/lib/settings/routes";
 
-type PublicLocale = Locale;
+/** A declared locale, since every declared locale owns its route slugs before Nakafa serves it. */
+type PublicLocale = AppLocaleCode;
 
 /** The deepest try-out page below its namespace: its country, exam, group, track, set and section. */
 const TRYOUT_PAGE_SEGMENTS = 6;
@@ -119,6 +120,11 @@ export function isApplicationRoutePath(
 
   if (root === "comment") {
     return segments.length === 1;
+  }
+
+  // The owner's island, and a visit to one learner's shared island by username.
+  if (root === "island") {
+    return segments.length <= 1;
   }
 
   if (root === "og") {

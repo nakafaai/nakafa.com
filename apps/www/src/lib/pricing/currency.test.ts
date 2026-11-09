@@ -46,6 +46,7 @@ const timeZoneIntl = (timeZone: string | undefined) => ({
 describe("currency of a country", () => {
   it.each([
     ["ID", "IDR"],
+    ["MY", "MYR"],
     ["de", "EUR"],
     ["FR", "EUR"],
     ["US", "USD"],

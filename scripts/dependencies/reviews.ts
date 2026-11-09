@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.2",
-    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 5.0.0 peers effect 4.1.2 exactly. Checked 7 November 2026.",
+    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 6.0.0 peers effect 4.1.2 exactly. Checked 7 November 2026.",
   ],
   [
     "@effect/platform-node@latest",

@@ -1,6 +1,7 @@
 import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
   INDONESIAN_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
@@ -44,14 +45,16 @@ export const decodeLocale = Schema.decodeUnknownOption(LocaleSchema);
 /**
  * The time zone that each locale formats dates and times in. Server and client
  * render one clock, and use-intl logs ENVIRONMENT_FALLBACK for a date without one.
+ * Every declared locale has one, so a locale is complete before it is served.
  */
 const LOCALE_TIME_ZONES = {
   de: "Europe/Berlin",
   en: "Asia/Jakarta",
   id: "Asia/Jakarta",
-} as const satisfies Record<Locale, string>;
+  ms: "Asia/Kuala_Lumpur",
+} as const satisfies Record<AppLocaleCode, string>;
 
 /** The time zone that dates of one locale are formatted in. */
-export function localeTimeZone(locale: Locale) {
+export function localeTimeZone(locale: AppLocaleCode) {
   return LOCALE_TIME_ZONES[locale];
 }

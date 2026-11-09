@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Claim } from "@repo/backend/confect/spend/schema";
 import { Array as Arr, Schema } from "effect";
@@ -21,7 +21,7 @@ export const NinaAsk = Schema.Struct({
   history: Schema.Array(
     Schema.Struct({ author: Schema.String, text: Schema.String })
   ),
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   question: Schema.String,
 });
 

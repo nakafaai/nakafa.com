@@ -1,6 +1,6 @@
 import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
@@ -25,7 +25,7 @@ const quranTranslationNoteHrefPattern = /^#.+-translation-note-\d+$/u;
 const rawTranslationNotePattern = /\[\d+\]/u;
 
 const QuranMeaningContractSchema = Schema.Struct({
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   text: Schema.String,
 });
 
@@ -42,7 +42,7 @@ const QuranLocaleContractSchema = Schema.Struct({
 type QuranLocaleContract = typeof QuranLocaleContractSchema.Type;
 
 type QuranLocaleContracts = {
-  readonly [Locale in AppLocaleCode]: QuranLocaleContract & {
+  readonly [Locale in ActiveAppLocaleCode]: QuranLocaleContract & {
     readonly locale: Locale;
   };
 };
@@ -79,7 +79,7 @@ const quranLocaleContracts = {
     translationNotesLabel: "Catatan terjemahan",
   },
 } satisfies QuranLocaleContracts;
-type QuranLocaleCase = (typeof quranLocaleContracts)[AppLocaleCode];
+type QuranLocaleCase = (typeof quranLocaleContracts)[ActiveAppLocaleCode];
 
 function quranMeaningLocator(
   page: Page,

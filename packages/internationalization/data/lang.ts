@@ -1,28 +1,21 @@
 import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
+  type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr } from "effect";
 
-const languageMetadata = {
-  de: {
-    countryCode: "DE",
-    label: "Deutsch (Deutschland)",
-  },
-  en: {
-    countryCode: "GB",
-    label: "English",
-  },
-  id: {
-    countryCode: "ID",
-    label: "Indonesia",
-  },
-} satisfies {
-  readonly [Key in ActiveAppLocaleCode]: {
-    readonly countryCode: string;
-    readonly label: string;
-  };
-};
+/**
+ * Each declared language named in itself, so a reader finds their own language
+ * whatever language the page is in. A language never carries a flag: a flag
+ * names a country, and Malay, English or German are spoken in many.
+ */
+const languageLabels = {
+  de: "Deutsch",
+  en: "English",
+  id: "Bahasa Indonesia",
+  ms: "Bahasa Melayu",
+} satisfies Record<AppLocaleCode, string>;
 
 /**
  * The active locale codes as a plain readonly array. Mapping the tuple itself
@@ -30,8 +23,8 @@ const languageMetadata = {
  */
 const localeCodes: readonly ActiveAppLocaleCode[] = ACTIVE_APP_LOCALE_CODES;
 
-/** Language options derived from every canonical Nakafa locale. */
+/** The languages Nakafa serves, each named in itself. */
 export const languages = Arr.map(localeCodes, (value) => ({
-  ...languageMetadata[value],
+  label: languageLabels[value],
   value,
 }));

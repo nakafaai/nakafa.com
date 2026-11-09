@@ -1,4 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import {
+  APP_LOCALE_CODES,
+  type AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -6,6 +10,9 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
+import ms from "@repo/internationalization/dictionaries/ms.json" with {
   type: "json",
 };
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
@@ -25,17 +32,27 @@ import {
 } from "@repo/internationalization/src/toast";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 
-/** The locales that have a dictionary, so each one's messages can be loaded. */
+/** The text of one toast copy, as the dictionary holds it. */
+type ToastCopyText = typeof ToastCopyTextSchema.Type;
+
 /** Every part of a toast namespace that takes too many lines, named by the key of its copy. */
-function overlongToastCopy(
-  copies: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
-) {
+function overlongToastCopy(copies: Readonly<Record<string, ToastCopyText>>) {
   return Arr.flatMap(Rec.toEntries(copies), ([key, copy]) =>
     Arr.map(overlongToastParts(copy), (overlong) => ({ ...overlong, key }))
   );
 }
 
-const Locales = Schema.Literals(["de", "en", "id"]);
+/**
+ * The toast copy of every declared locale. Keyed by the declared locales, so a
+ * locale added to the contract fails to compile here until its toasts are
+ * measured too.
+ */
+const toasts = {
+  de: de.Toast,
+  en: en.Toast,
+  id: id.Toast,
+  ms: ms.Toast,
+} satisfies Record<AppLocaleCode, Readonly<Record<string, ToastCopyText>>>;
 
 /** A namespace of the app's messages, which holds messages or namespaces. */
 const MessageNamespaceSchema = Schema.Record(Schema.String, Schema.Unknown);
@@ -51,9 +68,7 @@ function placeholdersIn(text: string) {
 }
 
 /** The placeholder names of every title and description in a toast namespace. */
-function placeholdersOf(
-  namespace: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
-) {
+function placeholdersOf(namespace: Readonly<Record<string, ToastCopyText>>) {
   return Arr.flatMap(Rec.values(namespace), (copy) =>
     Arr.flatMap([copy.title, copy.description ?? ""], placeholdersIn)
   );
@@ -73,9 +88,7 @@ function messagesOf(node: unknown): readonly string[] {
  * The text each toast copy shows as a whole: its title alone, or its title and
  * its description after it.
  */
-function wholeCopiesOf(
-  namespace: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
-) {
+function wholeCopiesOf(namespace: Readonly<Record<string, ToastCopyText>>) {
   return Arr.map(Rec.values(namespace), (copy) =>
     copy.description === undefined
       ? copy.title
@@ -88,7 +101,7 @@ function wholeCopiesOf(
  * title or description that has a placeholder.
  */
 function interpolatingKeysOf(
-  namespace: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
+  namespace: Readonly<Record<string, ToastCopyText>>
 ) {
   return Arr.flatMap(Rec.toEntries(namespace), ([name, copy]) =>
     Arr.flatMap(
@@ -102,24 +115,22 @@ function interpolatingKeysOf(
 }
 
 describe("toast copy at 320px", () => {
-  it("keeps every German title on one line and every description on two", () => {
-    expect(overlongToastCopy(de.Toast)).toEqual([]);
-  });
+  it.each(APP_LOCALE_CODES)(
+    "keeps every %s title on one line and every description on two",
+    (locale) => {
+      expect(overlongToastCopy(toasts[locale])).toEqual([]);
+    }
+  );
 
-  it("keeps every English title on one line and every description on two", () => {
-    expect(overlongToastCopy(en.Toast)).toEqual([]);
-  });
+  it.each(APP_LOCALE_CODES)(
+    "gives %s the same toast copy keys as English, so no toast is missing a language",
+    (locale) => {
+      const keys = Rec.keys(toasts[locale]);
 
-  it("keeps every Indonesian title on one line and every description on two", () => {
-    expect(overlongToastCopy(id.Toast)).toEqual([]);
-  });
-
-  it("gives every locale the same toast copy keys, so no toast is missing a language", () => {
-    expect(Arr.difference(Rec.keys(en.Toast), Rec.keys(de.Toast))).toEqual([]);
-    expect(Arr.difference(Rec.keys(de.Toast), Rec.keys(en.Toast))).toEqual([]);
-    expect(Arr.difference(Rec.keys(en.Toast), Rec.keys(id.Toast))).toEqual([]);
-    expect(Arr.difference(Rec.keys(id.Toast), Rec.keys(en.Toast))).toEqual([]);
-  });
+      expect(Arr.difference(Rec.keys(en.Toast), keys)).toEqual([]);
+      expect(Arr.difference(keys, Rec.keys(en.Toast))).toEqual([]);
+    }
+  );
 
   it("reports a title that wraps past its one line, and nothing for a title on it", () => {
     expect(
@@ -196,7 +207,7 @@ describe("toast copy at 320px", () => {
   });
 
   it("names every placeholder of a toast message in the values the Toaster passes", () => {
-    const names = Arr.flatMap([de.Toast, en.Toast, id.Toast], placeholdersOf);
+    const names = Arr.flatMap(Rec.values(toasts), placeholdersOf);
 
     expect(names).toContain("size");
     expect(Arr.difference(names, Rec.keys(ToastValuesSchema.fields))).toEqual(
@@ -205,24 +216,21 @@ describe("toast copy at 320px", () => {
   });
 
   it("lists exactly the messages that interpolate a value as the keys that take values, in every locale", () => {
-    const unlisted = Arr.flatMap(
-      [de.Toast, en.Toast, id.Toast],
-      (namespace) => {
-        const keys = interpolatingKeysOf(namespace);
+    const unlisted = Arr.flatMap(Rec.values(toasts), (namespace) => {
+      const keys = interpolatingKeysOf(namespace);
 
-        return [
-          ...Arr.difference(keys, ToastValueKeySchema.literals),
-          ...Arr.difference(ToastValueKeySchema.literals, keys),
-        ];
-      }
-    );
+      return [
+        ...Arr.difference(keys, ToastValueKeySchema.literals),
+        ...Arr.difference(ToastValueKeySchema.literals, keys),
+      ];
+    });
 
     expect(unlisted).toEqual([]);
   });
 });
 
 describe("toast copy has one owner", () => {
-  it.each(Locales.literals)(
+  it.each(APP_LOCALE_CODES)(
     "names no message of the app in %s that repeats the whole copy of a toast",
     async (locale) => {
       const { Toast, ...messages } = await loadLocaleMessages(locale);

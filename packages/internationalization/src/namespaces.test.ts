@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -29,7 +30,7 @@ describe("message namespaces", () => {
   });
 
   it("gives every locale the same namespaces", () => {
-    for (const locale of ["de", "en", "id"] as const) {
+    for (const locale of APP_LOCALE_CODES) {
       expect(
         sortedKeys(pickRouteMessages(locale, MESSAGE_NAMESPACES))
       ).toStrictEqual(Arr.sort(Order.String)(MESSAGE_NAMESPACES));

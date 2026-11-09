@@ -1930,6 +1930,7 @@
     "country-description": "Ini menentukan mata uang, bahasa, dan tahun ajaran.",
     "country": {
       "ID": "Indonesia",
+      "MY": "Malaysia",
       "SG": "Singapura",
       "GB": "Inggris",
       "DE": "Jerman",
@@ -1975,6 +1976,22 @@
         "title": "SLB",
         "description": "Sekolah luar biasa"
       },
+      "my-sk": {
+        "title": "SK",
+        "description": "Sekolah dasar, Tahun 1 sampai 6"
+      },
+      "my-smk": {
+        "title": "SMK",
+        "description": "Sekolah menengah, Tingkatan 1 sampai 5"
+      },
+      "my-smka": {
+        "title": "SMKA",
+        "description": "Sekolah menengah agama, Tingkatan 1 sampai 5"
+      },
+      "my-form6": {
+        "title": "Tingkatan 6",
+        "description": "Pra-universitas, STPM"
+      },
       "other": {
         "title": "Lainnya",
         "description": "Jenis sekolah lain"
@@ -1990,6 +2007,10 @@
       "ma": "Menengah atas",
       "smk": "Kejuruan",
       "slb": "Pendidikan khusus",
+      "my-sk": "Dasar",
+      "my-smk": "Menengah",
+      "my-smka": "Menengah",
+      "my-form6": "Pra-universitas",
       "other": "Lainnya"
     },
     "unit-name": "{name} {level}",
@@ -2344,6 +2365,9 @@
       "region": {
         "indonesia": {
           "title": "Indonesia"
+        },
+        "malaysia": {
+          "title": "Malaysia"
         },
         "singapore": {
           "title": "Singapura"
@@ -3759,16 +3783,16 @@
       "title": "Terima kasih, laporan terkirim."
     },
     "comment-paste-refused": {
-      "title": "Teksnya terlalu panjang untuk satu komentar."
+      "title": "Teksnya kepanjangan untuk komentar."
     },
     "comment-photo-refused": {
       "title": "Foto tidak ditambahkan."
     },
     "comment-photo-limit": {
-      "title": "Satu komentar memuat paling banyak empat foto."
+      "title": "Maksimal empat foto per komentar."
     },
     "comment-photo-fixed": {
-      "title": "Foto komentar yang sudah dikirim tidak bisa diubah."
+      "title": "Fotonya tidak bisa diubah lagi."
     },
     "island-refused-outside": {
       "title": "Itu tidak muat di pulaumu."
@@ -3783,13 +3807,13 @@
       "title": "Ada yang berdiri di atasnya."
     },
     "island-refused-locked": {
-      "title": "Ini terbuka di level yang lebih tinggi."
+      "title": "Ini terbuka di level lebih tinggi."
     },
     "island-refused-unaffordable": {
       "title": "Bintangmu belum cukup untuk ini."
     },
     "island-refused-starter": {
-      "title": "Ini bawaan pulaumu, jadi tetap di sini."
+      "title": "Ini bawaan pulaumu, jadi tetap ada."
     },
     "island-refused-missing": {
       "title": "Benda itu sudah tidak ada."
@@ -3801,19 +3825,20 @@
       "title": "Ini sudah di tahap pertama."
     },
     "island-stale": {
-      "title": "Pulaumu berubah di tempat lain, jadi kami memuatnya lagi."
+      "title": "Pulaumu berubah di tempat lain.",
+      "description": "Sudah kami muat ulang, coba lagi ya."
     },
     "island-refused-grows": {
       "title": "Ini tumbuh saat kamu menyiramnya."
     },
     "island-refused-rooted": {
-      "title": "Ini sudah berakar, jadi pindahkan saja."
+      "title": "Ini sudah berakar, pindahkan saja."
     },
     "island-refused-materials": {
       "title": "Hasil kebunmu belum cukup untuk ini."
     },
     "island-farm-unlearned": {
-      "title": "Belajar dulu hari ini, lalu siram kebunmu."
+      "title": "Belajar dulu, lalu siram kebunmu."
     },
     "island-farm-watered": {
       "title": "Kebunmu sudah disiram hari ini."
@@ -3826,6 +3851,9 @@
     },
     "island-farm-unripe": {
       "title": "Ini belum siap dipanen."
+    },
+    "island-link-copied": {
+      "title": "Tautan pulaumu sudah disalin."
     },
     "island-watered": {
       "title": "Kebunmu sudah disiram."
@@ -4099,6 +4127,7 @@
     "drink-title": "Kira-kira {count} {item}",
     "drink-note": "Bedanya, yang ini kepakai sebulan penuh.",
     "drink-idr": "es kopi susu",
+    "drink-myr": "gelas teh tarik",
     "drink-eur": "kopi bungkus",
     "drink-usd": "latte",
     "per-day-title": "{price} sehari",
@@ -4628,7 +4657,7 @@
     "faq-added-question": "Bisakah menambah akun satu per satu?",
     "faq-added-answer": "Bisa. Tambah berapa pun mulai dari satu, masing-masing dengan 6 kredit AI per bulan dan Drive 200 MB. Akun tambahan masuk ke tagihan paketmu.",
     "faq-pay-question": "Bagaimana cara membayarnya?",
-    "faq-pay-answer": "Bayar di muka untuk 1, 3, 6, atau 12 bulan, dengan hemat 3% untuk 6 bulan dan 5% untuk 12 bulan. Sekolah di Indonesia membayar dalam rupiah, sekolah lain dalam dolar atau euro.",
+    "faq-pay-answer": "Bayar di muka untuk 1, 3, 6, atau 12 bulan, dengan hemat 3% untuk 6 bulan dan 5% untuk 12 bulan. Sekolah di Indonesia membayar dalam rupiah, sekolah di Malaysia dalam ringgit, sekolah lain dalam dolar atau euro.",
     "faq-tax-question": "Apakah harga sudah termasuk pajak?",
     "faq-tax-answer": "Belum. Semua harga sebelum pajak, dan tagihan menambahkan pajak yang berlaku.",
     "faq-credits-question": "Apa itu kredit AI?",
@@ -4676,6 +4705,18 @@
     "item-lamp": "Lampu",
     "water": "Siram kebun",
     "harvest": "Panen",
+    "sound": "Suara",
+    "enter": "Masuk",
+    "enter-next": "{stars} Bintang lagi membuat pulaumu naik level.",
+    "enter-top": "Pulaumu sudah sebesar pulau bisa tumbuh.",
+    "earn-lesson": "+{stars} Bintang per materi",
+    "earn-section": "+{stars} Bintang per bagian",
+    "badges": "Lencana",
+    "share": "Bagikan",
+    "share-title": "Pulauku di Nakafa",
+    "clip": "Rekam klip",
+    "clip-file": "pulau-nakafa",
+    "visit-description": "Pulau {name}, tumbuh dari belajar di Nakafa.",
     "materials": "Kebun",
     "materials-value": "{wood} kayu, {petals} kelopak",
     "price-wood": "{stars} Bintang, {wood} kayu"

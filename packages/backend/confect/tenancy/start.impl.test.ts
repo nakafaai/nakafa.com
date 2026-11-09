@@ -221,7 +221,7 @@ describe("tenancy/start", () => {
 
         const rows = yield* fixture.run(foundedRows("yayasan"));
         expect(Struct.pick(rows.tenant, ["currency", "kind"])).toEqual({
-          currency: "SGD",
+          currency: "USD",
           kind: "foundation",
         });
         expect(Arr.map(rows.people, (person) => person.name)).toEqual([

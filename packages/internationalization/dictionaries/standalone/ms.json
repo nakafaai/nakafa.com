@@ -1,0 +1,19 @@
+{
+  "NotFound": {
+    "title": "Halaman ini tidak ditemui",
+    "description": "Mungkin alamatnya tersalah taip, atau halaman ini sudah berpindah.",
+    "search-button": "Cari bahan"
+  },
+  "Error": {
+    "title": "Ada yang rosak",
+    "description": "Bukan salah kamu, biar kami yang uruskan.",
+    "retry": "Cuba lagi",
+    "report": "Laporkan"
+  },
+  "State": {
+    "home-button": "Kembali ke utama"
+  },
+  "Document": {
+    "description": "Bahan pembelajaran percuma, soalan latihan dan persediaan peperiksaan di Nakafa, dari sekolah rendah hingga universiti."
+  }
+}

@@ -7,6 +7,8 @@ describe("tenancy/grades", () => {
     expect(gradesOf("sd")).toEqual([1, 2, 3, 4, 5, 6]);
     expect(gradesOf("mts")).toEqual([7, 8, 9]);
     expect(gradesOf("smk")).toEqual([10, 11, 12]);
+    expect(gradesOf("my-sk")).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(gradesOf("my-smk")).toEqual([1, 2, 3, 4, 5]);
     expect(gradesOf("paud")).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
     ]);
@@ -16,6 +18,8 @@ describe("tenancy/grades", () => {
     expect(lastGradeOf("mi")).toStrictEqual(Option.some(6));
     expect(lastGradeOf("smp")).toStrictEqual(Option.some(9));
     expect(lastGradeOf("ma")).toStrictEqual(Option.some(12));
+    expect(lastGradeOf("my-smka")).toStrictEqual(Option.some(5));
+    expect(lastGradeOf("my-form6")).toStrictEqual(Option.some(6));
     expect(lastGradeOf("slb")).toStrictEqual(Option.none());
   });
 });

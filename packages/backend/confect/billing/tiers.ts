@@ -26,6 +26,7 @@ export type SchoolPeriod = typeof SchoolPeriod.Type;
 const SchoolPrices = Schema.Struct({
   EUR: Schema.Int,
   IDR: Schema.Int,
+  MYR: Schema.Int,
   USD: Schema.Int,
 });
 
@@ -48,21 +49,21 @@ export const schoolTiers = {
     accounts: 20,
     credits: 20,
     creditsRenew: false,
-    monthly: { EUR: 0, IDR: 0, USD: 0 },
+    monthly: { EUR: 0, IDR: 0, MYR: 0, USD: 0 },
     storageMegabytes: 250,
   },
   pro: {
     accounts: 100,
     credits: 600,
     creditsRenew: true,
-    monthly: { EUR: 10_900, IDR: 1_790_000, USD: 10_900 },
+    monthly: { EUR: 10_900, IDR: 1_790_000, MYR: 44_900, USD: 10_900 },
     storageMegabytes: 10_000,
   },
   max: {
     accounts: 500,
     credits: 3000,
     creditsRenew: true,
-    monthly: { EUR: 49_900, IDR: 7_990_000, USD: 49_900 },
+    monthly: { EUR: 49_900, IDR: 7_990_000, MYR: 199_000, USD: 49_900 },
     storageMegabytes: 100_000,
   },
 } as const satisfies Record<SchoolTierKey, SchoolTier>;
@@ -89,7 +90,7 @@ const SchoolAccount = Schema.Struct({
  */
 export const schoolAccount = {
   credits: 6,
-  monthly: { EUR: 99, IDR: 15_900, USD: 99 },
+  monthly: { EUR: 99, IDR: 15_900, MYR: 390, USD: 99 },
   storageMegabytes: 200,
 } as const satisfies typeof SchoolAccount.Type;
 
@@ -120,19 +121,19 @@ export const SCHOOL_CREDIT_PACK_MONTHS = 12;
 export const schoolAddOns = {
   credits: {
     credits: 1000,
-    price: { EUR: 2400, IDR: 349_000, USD: 2400 },
+    price: { EUR: 2400, IDR: 349_000, MYR: 9900, USD: 2400 },
     recurring: false,
     storageMegabytes: 0,
   },
   drive: {
     credits: 0,
-    price: { EUR: 2900, IDR: 449_000, USD: 2900 },
+    price: { EUR: 2900, IDR: 449_000, MYR: 11_900, USD: 2900 },
     recurring: true,
     storageMegabytes: 100_000,
   },
   driveLarge: {
     credits: 0,
-    price: { EUR: 24_900, IDR: 3_990_000, USD: 24_900 },
+    price: { EUR: 24_900, IDR: 3_990_000, MYR: 99_900, USD: 24_900 },
     recurring: true,
     storageMegabytes: 1_000_000,
   },

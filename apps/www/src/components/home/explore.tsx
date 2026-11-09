@@ -8,8 +8,9 @@ import {
   Target01Icon,
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
+import { AWARD_RULES } from "@repo/backend/confect/island/schema";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -124,8 +125,10 @@ function SchoolIcon() {
 }
 
 /**
- * Renders the home exploration shortcuts from the same canonical route helpers
- * used by sidebar and sitemap navigation. Only the signed-in home mounts it, behind
+ * Renders the home exploration shortcuts under the learner's island: the ways
+ * to earn Stars, each with the Stars it earns when it earns any, from the same
+ * canonical route helpers used by sidebar and sitemap navigation. Only the
+ * signed-in home mounts it, behind
  * the account gate and under the app's Convex provider, so it reads the learner's
  * preferences directly. The School card always leads to `/school`, which knows the
  * account and goes on from there, so its link never changes under the reader.
@@ -133,6 +136,7 @@ function SchoolIcon() {
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
+  const tIsland = useTranslations("Island");
   const locale = useCurrentLocale();
   // The shared shortcuts are the same for every audience; only their resolved
   // destinations follow the learner preferences below.
@@ -142,9 +146,25 @@ export function HomeExplore() {
     preferredTryoutTarget: usePreferredTryoutTarget(locale),
   };
   const exploreCards = {
-    askNina: { icon: <NinaIcon />, title: tAi("ask-nina") },
-    subject: { icon: <SubjectIcon />, title: tCommon("subject") },
-    tryOut: { icon: <TryoutIcon />, title: tCommon("try-out") },
+    askNina: {
+      icon: <NinaIcon />,
+      reward: Option.none(),
+      title: tAi("ask-nina"),
+    },
+    subject: {
+      icon: <SubjectIcon />,
+      reward: Option.some(
+        tIsland("earn-lesson", { stars: AWARD_RULES.lesson.stars })
+      ),
+      title: tCommon("subject"),
+    },
+    tryOut: {
+      icon: <TryoutIcon />,
+      reward: Option.some(
+        tIsland("earn-section", { stars: AWARD_RULES.section.stars })
+      ),
+      title: tCommon("try-out"),
+    },
   };
 
   return (
@@ -153,6 +173,7 @@ export function HomeExplore() {
         {Arr.map(items, (item) => (
           <ExploreCard
             key={item.id}
+            reward={exploreCards[item.id].reward}
             target={getPrimaryNavigationTarget(item, preferences)}
             title={exploreCards[item.id].title}
           >
@@ -160,6 +181,7 @@ export function HomeExplore() {
           </ExploreCard>
         ))}
         <ExploreCard
+          reward={Option.none()}
           target={{ from: LOCALE_ROUTE, to: "/$locale/school/enter" }}
           title={tCommon("school")}
         >
@@ -172,10 +194,13 @@ export function HomeExplore() {
 
 function ExploreCard({
   children,
+  reward,
   title,
   ...link
 }: {
   children: ReactNode;
+  /** The Stars the place earns for the learner's island, when it earns any. */
+  reward: Option.Option<string>;
   target: LinkTarget;
   title: string;
 }) {
@@ -185,6 +210,11 @@ function ExploreCard({
         {children}
       </div>
       <h2 className="text-center text-sm sm:text-base">{title}</h2>
+      {Option.isSome(reward) ? (
+        <p className="text-muted-foreground -mt-1 text-center text-xs tabular-nums">
+          {reward.value}
+        </p>
+      ) : null}
     </TargetLink>
   );
 }

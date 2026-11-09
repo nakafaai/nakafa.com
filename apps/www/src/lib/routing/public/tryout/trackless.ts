@@ -1,6 +1,6 @@
 import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 import {
@@ -21,7 +21,7 @@ import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
  * The set segment that each app locale publishes for a set. German names its
  * sets `aufgabensatz-N`; English and Indonesian name them `set-N`.
  */
-const TRACKLESS_SET_PATTERNS: Record<AppLocaleCode, RegExp> = {
+const TRACKLESS_SET_PATTERNS: Record<ActiveAppLocaleCode, RegExp> = {
   de: /^aufgabensatz-\d+$/u,
   en: /^set-\d+$/u,
   id: /^set-\d+$/u,
@@ -29,7 +29,7 @@ const TRACKLESS_SET_PATTERNS: Record<AppLocaleCode, RegExp> = {
 const YEAR_GROUP_KEY_PATTERN = /^\d{4}$/u;
 
 const TracklessSetRouteSchema = Schema.Struct({
-  appLocale: AppLocaleCodeSchema,
+  appLocale: ActiveAppLocaleCodeSchema,
   country: Schema.String,
   exam: Schema.String,
   section: Schema.optionalKey(Schema.String),
@@ -73,7 +73,7 @@ export function readTracklessSetRoute(
  */
 const readNewestServingTrack = Effect.fn(
   "www.routing.publicHtml.tryoutNewestTrack"
-)(function* (appLocale: AppLocaleCode, examPath: string, set: string) {
+)(function* (appLocale: ActiveAppLocaleCode, examPath: string, set: string) {
   const exam = yield* readPublishedTryoutExamPage({
     appLocale,
     publicPath: examPath,

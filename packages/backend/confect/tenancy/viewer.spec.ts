@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
   TenantCapabilities,
@@ -48,7 +48,7 @@ export const ViewerView = Schema.Struct({
   units: Schema.Array(
     Schema.Struct({
       can: UnitCapabilities,
-      contentLanguage: AppLocaleCodeSchema,
+      contentLanguage: ActiveAppLocaleCodeSchema,
       id: Id("tenantUnits"),
       level: UnitLevel,
       name: UnitName,

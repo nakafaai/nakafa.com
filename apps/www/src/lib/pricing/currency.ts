@@ -1,3 +1,7 @@
+import {
+  countryProfiles,
+  OpenCountry,
+} from "@repo/backend/confect/country/registry";
 import { readCookie } from "@repo/internationalization/src/cookie";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import {
@@ -14,15 +18,6 @@ export const PRICING_CURRENCY_ATTRIBUTE = "data-currency";
 
 /** The currency of a visitor who is in none of the mapped places. */
 const FALLBACK_CURRENCY: PricingCurrency = "USD";
-
-/** The Indonesian time zones, which show the rupiah price. */
-const INDONESIAN_TIME_ZONES = [
-  "Asia/Jakarta",
-  "Asia/Jayapura",
-  "Asia/Makassar",
-  "Asia/Pontianak",
-  "Asia/Ujung_Pandang",
-];
 
 /**
  * The European time zones of the territories that Polar prices in euros (see
@@ -67,12 +62,21 @@ const TimeZoneCurrencies = Schema.Record(Schema.String, PricingCurrencySchema);
 /** The mapping as JSON text, which the inline script reads. */
 const TimeZoneCurrenciesJson = Schema.fromJsonString(TimeZoneCurrencies);
 
+/**
+ * The zones of each open country that pays in a currency of its own, such as
+ * Indonesia's in rupiah and Malaysia's in ringgit, from the country registry.
+ * A dollar country's zones are left out, since an unmapped zone shows dollars.
+ */
+const OWN_CURRENCY_ZONES = Arr.flatMap(OpenCountry.literals, (country) => {
+  const { currency, zones } = countryProfiles[country];
+  return currency === FALLBACK_CURRENCY
+    ? []
+    : Arr.map(zones, (zone): [string, PricingCurrency] => [zone, currency]);
+});
+
 const CURRENCY_BY_TIME_ZONE: Readonly<Record<string, PricingCurrency>> =
   Rec.fromEntries([
-    ...Arr.map(INDONESIAN_TIME_ZONES, (zone): [string, PricingCurrency] => [
-      zone,
-      "IDR",
-    ]),
+    ...OWN_CURRENCY_ZONES,
     ...Arr.map(EURO_TIME_ZONES, (zone): [string, PricingCurrency] => [
       zone,
       "EUR",

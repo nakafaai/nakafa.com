@@ -1,3 +1,5 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+
 /** The words of an invoice, in each language Nakafa bills in. */
 export const INVOICE_COPY = {
   de: {
@@ -42,4 +44,18 @@ export const INVOICE_COPY = {
     total: "Total",
     void: "Dibatalkan",
   },
-} as const;
+  ms: {
+    amount: "Amaun",
+    billedTo: "Dibilkan kepada",
+    date: "Tarikh",
+    due: "Tarikh akhir",
+    item: "Perkara",
+    open: "Belum dibayar",
+    paid: "Dibayar",
+    paidWith: "Dibayar melalui",
+    status: "Status",
+    title: "Invois",
+    total: "Jumlah",
+    void: "Dibatalkan",
+  },
+} as const satisfies Record<AppLocaleCode, Record<string, string>>;

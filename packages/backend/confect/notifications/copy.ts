@@ -1,8 +1,11 @@
-import type { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type {
+  ActiveAppLocaleCodeSchema,
+  AppLocaleCodeSchema,
+} from "@nakafa/aksara-contracts/locale";
 import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 
 /** The language of a notice with no school: an account keeps none, and Nakafa's learners are Indonesian. */
-export const ACCOUNT_LOCALE: typeof AppLocaleCodeSchema.Type = "id";
+export const ACCOUNT_LOCALE: typeof ActiveAppLocaleCodeSchema.Type = "id";
 
 /**
  * The general sentences a push shows on a lock screen, in each language a school
@@ -46,6 +49,19 @@ const SENTENCES = {
     "exam.reminder": "Anakmu akan mengikuti ujian.",
     "grade.released": "Ada nilai baru yang dirilis.",
     "comment.replied": "Ada yang membalas komentarmu.",
+  },
+  ms: {
+    "announcement.posted": "Ada pengumuman baharu dalam kelas kamu.",
+    "assignment.published": "Ada tugasan baharu dalam kelas kamu.",
+    "assignment.deadline": "Tarikh akhir sesuatu tugasan semakin hampir.",
+    "assignment.missed":
+      "Anak kamu tidak menghantar tugasan tepat pada masanya.",
+    "forum.mentioned": "Seseorang menyebut kamu dalam kelas kamu.",
+    "person.invited": "Kamu telah dijemput ke sebuah sekolah.",
+    "exam.starting": "Peperiksaan kamu akan bermula tidak lama lagi.",
+    "exam.reminder": "Anak kamu akan menduduki peperiksaan.",
+    "grade.released": "Markah baharu telah dikeluarkan.",
+    "comment.replied": "Seseorang telah membalas komen kamu.",
   },
 } satisfies Record<
   typeof AppLocaleCodeSchema.Type,

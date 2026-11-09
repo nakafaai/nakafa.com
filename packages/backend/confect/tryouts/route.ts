@@ -1,5 +1,5 @@
 import { KebabKeySchema } from "@nakafa/aksara-contracts/assessment/identity";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { publicFailure } from "@repo/backend/confect/failure";
 import { Array as Arr, Effect, Schema } from "effect";
@@ -29,7 +29,7 @@ export type TryoutSetIdentity = typeof tryoutSetIdentityValidator.Type;
 const TryoutSetIdentitySchema = Schema.Struct({
   countryKey: KebabKeySchema,
   examKey: KebabKeySchema,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   setKey: KebabKeySchema,
   trackKey: KebabKeySchema,
 });

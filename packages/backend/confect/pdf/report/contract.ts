@@ -1,4 +1,4 @@
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
 
 /** One subject of a report card: its class, its grade, and how the grade reads. */
@@ -14,7 +14,7 @@ export const ReportInput = Schema.Struct({
   approvedAt: Schema.Finite,
   cohort: Schema.String,
   hash: Schema.String,
-  locale: AppLocaleCodeSchema,
+  locale: ActiveAppLocaleCodeSchema,
   note: Schema.String,
   period: Schema.String,
   school: Schema.String,

@@ -60,6 +60,23 @@ describe("invitation content", () => {
     assert.strictEqual(copy.termsOfService, "Nutzungsbedingungen");
   });
 
+  it("names the organisation in Malay", () => {
+    const copy = getInviteEmailCopy("ms", "Harapan");
+
+    assert.strictEqual(copy.subject, "Harapan menjemput kamu ke Nakafa");
+    assert.strictEqual(
+      copy.body,
+      "Log masuk dengan alamat e-mel ini untuk menyertai."
+    );
+    assert.strictEqual(copy.cta, "Log masuk");
+    assert.strictEqual(
+      copy.footerReason,
+      "Kami menghantar e-mel ini kerana Harapan telah menjemput alamat ini ke Nakafa."
+    );
+    assert.strictEqual(copy.privacyPolicy, "Dasar Privasi");
+    assert.strictEqual(copy.termsOfService, "Terma Perkhidmatan");
+  });
+
   it.effect("accepts an organisation, a locale, and secure links", () =>
     Effect.gen(function* () {
       const input = yield* Schema.decodeEffect(InviteEmailInputSchema)({

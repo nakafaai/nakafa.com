@@ -1930,6 +1930,7 @@
     "country-description": "This sets the currency, language, and school year.",
     "country": {
       "ID": "Indonesia",
+      "MY": "Malaysia",
       "SG": "Singapore",
       "GB": "United Kingdom",
       "DE": "Germany",
@@ -1975,6 +1976,22 @@
         "title": "SLB",
         "description": "Special needs school"
       },
+      "my-sk": {
+        "title": "SK",
+        "description": "Primary school, Year 1 to 6"
+      },
+      "my-smk": {
+        "title": "SMK",
+        "description": "Secondary school, Form 1 to 5"
+      },
+      "my-smka": {
+        "title": "SMKA",
+        "description": "Religious secondary school, Form 1 to 5"
+      },
+      "my-form6": {
+        "title": "Form 6",
+        "description": "Pre-university, STPM"
+      },
       "other": {
         "title": "Other",
         "description": "Another kind of school"
@@ -1990,6 +2007,10 @@
       "ma": "Upper secondary",
       "smk": "Vocational",
       "slb": "Special needs",
+      "my-sk": "Primary",
+      "my-smk": "Secondary",
+      "my-smka": "Secondary",
+      "my-form6": "Pre-university",
       "other": "Other"
     },
     "unit-name": "{name} {level}",
@@ -2344,6 +2365,9 @@
       "region": {
         "indonesia": {
           "title": "Indonesia"
+        },
+        "malaysia": {
+          "title": "Malaysia"
         },
         "singapore": {
           "title": "Singapore"
@@ -3759,7 +3783,7 @@
       "title": "Thanks, the report was sent."
     },
     "comment-paste-refused": {
-      "title": "The text is too long for one comment."
+      "title": "That is too long for one comment."
     },
     "comment-photo-refused": {
       "title": "The photo was not added."
@@ -3768,7 +3792,7 @@
       "title": "A comment holds four photos at most."
     },
     "comment-photo-fixed": {
-      "title": "The photos of a posted comment stay as they are."
+      "title": "A posted comment keeps its photos."
     },
     "island-refused-outside": {
       "title": "That does not fit on your island."
@@ -3789,7 +3813,7 @@
       "title": "You need more Stars for this."
     },
     "island-refused-starter": {
-      "title": "This came with your island, so it stays."
+      "title": "It came with your island and stays."
     },
     "island-refused-missing": {
       "title": "That piece is no longer there."
@@ -3801,22 +3825,23 @@
       "title": "It is already at its first stage."
     },
     "island-stale": {
-      "title": "Your island changed elsewhere, so we loaded it again."
+      "title": "Your island changed elsewhere.",
+      "description": "We loaded the newest one, so try again."
     },
     "island-refused-grows": {
       "title": "It grows when you water it."
     },
     "island-refused-rooted": {
-      "title": "It has taken root, so move it instead."
+      "title": "It took root, so move it instead."
     },
     "island-refused-materials": {
-      "title": "You need more from your garden for this."
+      "title": "You need more from your garden."
     },
     "island-farm-unlearned": {
-      "title": "Learn something today, then water your garden."
+      "title": "Learn something first, then water."
     },
     "island-farm-watered": {
-      "title": "Your garden is already watered today."
+      "title": "Your garden is watered for today."
     },
     "island-farm-barren": {
       "title": "Plant a tree or flowers first."
@@ -3826,6 +3851,9 @@
     },
     "island-farm-unripe": {
       "title": "It has not grown its harvest yet."
+    },
+    "island-link-copied": {
+      "title": "The link to your island is copied."
     },
     "island-watered": {
       "title": "Your garden is watered."
@@ -4099,6 +4127,7 @@
     "drink-title": "About {count} {item}",
     "drink-note": "The difference is that this one lasts a whole month.",
     "drink-idr": "{count, plural, one {iced milk coffee} other {iced milk coffees}}",
+    "drink-myr": "{count, plural, one {glass of teh tarik} other {glasses of teh tarik}}",
     "drink-eur": "{count, plural, one {takeaway coffee} other {takeaway coffees}}",
     "drink-usd": "{count, plural, one {latte} other {lattes}}",
     "per-day-title": "{price} a day",
@@ -4628,7 +4657,7 @@
     "faq-added-question": "Can we add accounts one at a time?",
     "faq-added-answer": "Yes. Add any number from one, each with 6 AI credits a month and 200 MB of Drive. They join your plan's invoice.",
     "faq-pay-question": "How do we pay?",
-    "faq-pay-answer": "Pay in advance for 1, 3, 6 or 12 months, with 3% off 6 months and 5% off 12 months. Schools in Indonesia pay in rupiah, others in dollars or euros.",
+    "faq-pay-answer": "Pay in advance for 1, 3, 6 or 12 months, with 3% off 6 months and 5% off 12 months. Schools in Indonesia pay in rupiah, schools in Malaysia in ringgit, others in dollars or euros.",
     "faq-tax-question": "Are taxes included?",
     "faq-tax-answer": "No. Every price is before tax, and the invoice adds the tax that applies.",
     "faq-credits-question": "What are AI credits?",
@@ -4676,6 +4705,18 @@
     "item-lamp": "Lamp",
     "water": "Water the garden",
     "harvest": "Harvest",
+    "sound": "Sound",
+    "enter": "Enter",
+    "enter-next": "{stars} more Stars grow your island to the next level.",
+    "enter-top": "Your island is as big as an island grows.",
+    "earn-lesson": "+{stars} Stars a lesson",
+    "earn-section": "+{stars} Stars a section",
+    "badges": "Badges",
+    "share": "Share",
+    "share-title": "My island on Nakafa",
+    "clip": "Record a clip",
+    "clip-file": "nakafa-island",
+    "visit-description": "{name}'s island, grown from learning on Nakafa.",
     "materials": "Garden",
     "materials-value": "{wood} wood, {petals} petals",
     "price-wood": "{stars} Stars, {wood} wood"
