@@ -73,8 +73,7 @@ export default GroupSpec.make()
       name: "getCommentsBySlug",
       args: () => ({
         slug: Schema.String,
-        // Optional only while the Worker that predates the order still serves pages; it reads newest first.
-        sort: Schema.optionalKey(CommentSort),
+        sort: CommentSort,
       }),
       item: () => commentWithUserValidator,
       error: () => AuthFailure,

@@ -404,30 +404,4 @@ describe("comments/queries", () => {
       })
     ).toBe(0);
   });
-
-  it("serves the Worker that predates the order and photos: a post without uploads, and a page without sort read newest first", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const author = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now, suffix: "bridge-author" })
-    );
-    const authorClient = t.withIdentity({
-      subject: author.authUserId,
-      sessionId: author.sessionId,
-    });
-    const slug = "articles/bridge";
-    const post = (text: string) =>
-      authorClient.mutation(api.comments.mutations.addComment, { slug, text });
-    const first = await post("First");
-    const second = await post("Second");
-    const page = await t.query(api.comments.queries.getCommentsBySlug, {
-      paginationOpts,
-      slug,
-    });
-    expect(
-      Arr.map(page.page, (row) => [row._id, row.text, row.photos])
-    ).toEqual([
-      [second, "Second", []],
-      [first, "First", []],
-    ]);
-  });
 });
