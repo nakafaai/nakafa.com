@@ -7,6 +7,7 @@ import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
 import { matchesKey } from "@/components/tryout/runtime/response/state";
 
@@ -36,7 +37,7 @@ function useTryoutDemo<Selected>(
     // A part of the demo outside it is a composition error at this seam.
     throw new Error("A try-out demo part renders inside its TryoutDemo.");
   }
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /**

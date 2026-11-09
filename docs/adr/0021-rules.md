@@ -537,6 +537,34 @@ found 6 variables, 1 in `apps/www` and 5 in `packages/design-system`. Reading
 calls, shorthand members, string keys, and destructured names raised neither
 count and found no further variable.
 
+### Store selectors that answer a new value
+
+A Zustand selector that answers a new array or object on every read makes
+`useSyncExternalStore` see a change on every render, so React renders again
+without end. The comments composer crashed this way on 9 November: its hook
+passed the caller's selector to `useStore` bare, and a helper three modules away
+answered `() => []` for an empty tray. No reader of a store hook can see that
+rule, so `scripts/check/selectors.ts` (`store-selector`) puts it where the
+store is read. A hook that passes its caller's selector to `useStore` wraps it
+in `useShallow`, which settles any selector whose parts are stable, and an
+inline selector that builds an object, an array, a `new` value or a lazy empty
+fallback is wrapped too, or answers a module-level constant. Measured on main
+6f9aeb340a: 31 hooks passed a selector bare and none built a value inline; all
+31 now wrap it.
+
+### Route roots without an ownership rule
+
+`isApplicationRoutePath` in `apps/www/src/lib/ownership/route.ts` decides which
+paths below an application root are pages before the router streams, and a
+path it refuses answers a hard 404. Its rules were a hand list, so the island
+visit (`/island/{username}`) answered 404 until a rule was added by hand. The
+rules are now one record whose keys are typed from the generated route tree's
+full paths, less the index, the root splat and the public surfaces, so a route
+root without a rule, or a rule for a root no route serves, fails the `www`
+typecheck. `route.test.ts` reads the same generated paths, writes each as the
+browser shows it, and requires every one to be accepted; on main 6f9aeb340a it
+refused 9 addresses, `agent`, `articles` and `quran` among them.
+
 ## Consequences
 
 - `packages/typescript-config/base.json` lists every rule the installed plugin

@@ -2,6 +2,7 @@ import type { AtomShellSampleId } from "@repo/design-system/components/contents/
 import type { ParabolicLaunchId } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { createContext, use } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 
 /**
  * The reader's choice in each lab of the lesson window. A choice is null until
@@ -52,5 +53,5 @@ export function useLessonSelection<Selected>(
     // A lab has no selections outside its lesson window, a composition error at this seam.
     throw new Error("A lesson lab reads its selections inside its window.");
   }
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }

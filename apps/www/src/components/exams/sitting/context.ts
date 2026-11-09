@@ -4,6 +4,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, HashMap, Schema } from "effect";
 import { createContext, use } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import type { SittingStore } from "@/components/exams/sitting/store";
 
@@ -56,5 +57,5 @@ export function useSittingStore<Selected>(
       "useSittingStore must be used within the sitting dashboard"
     );
   }
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }

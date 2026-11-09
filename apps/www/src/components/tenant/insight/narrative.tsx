@@ -17,6 +17,7 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { RowItems } from "@/components/shared/table/menu";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { InsightStudent } from "@/components/tenant/insight/rows";
@@ -56,7 +57,7 @@ function useNarrativeChoice<T>(selector: (state: NarrativeChoice) => T) {
     throw new Error("useNarrativeChoice must be used within NarrativeProvider");
   }
 
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /** Reads the class of the page's narrative dialog. */

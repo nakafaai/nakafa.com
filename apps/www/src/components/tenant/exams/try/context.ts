@@ -2,6 +2,7 @@ import type { GenericId } from "@confect/core";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { createContext, use } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import type { ExamTry } from "@/components/tenant/exams/try/store";
 
 /** The exam of the try, which the try page provides. */
@@ -44,5 +45,5 @@ export function useExamTry<Selected>(selector: (state: ExamTry) => Selected) {
   if (store === null) {
     throw new TypeError("useExamTry must be used within ExamTryPaper");
   }
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }

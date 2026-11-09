@@ -5,6 +5,7 @@ import type {
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 
 /** Creates one lab's store, which holds the reaction type its reader picked. */
 export function createChemicalReactionTypeStore(
@@ -71,5 +72,5 @@ export function useChemicalReactionTypeScene() {
 export function useChemicalReactionTypeSelection<T>(
   selector: (state: ChemicalReactionTypeState) => T
 ) {
-  return useStore(useChemicalReactionTypeScene().store, selector);
+  return useStore(useChemicalReactionTypeScene().store, useShallow(selector));
 }

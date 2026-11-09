@@ -3,6 +3,7 @@ import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 
 /** Creates one biology lab's store, which holds the item its reader picked. */
 export function createBiologyItemStore(initialItemIndex: number) {
@@ -70,5 +71,5 @@ export function useBiologyView() {
 export function useBiologyItemSelection<T>(
   selector: (state: BiologyItemState) => T
 ) {
-  return useStore(useBiologyLab().store, selector);
+  return useStore(useBiologyLab().store, useShallow(selector));
 }

@@ -3,6 +3,7 @@ import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import type {
   NinaConnectionError,
   NinaFailure,
@@ -80,5 +81,5 @@ export function useChatStore<T>(selector: (state: ChatStore) => T) {
   if (!store) {
     throw new Error("useChatStore must be used within ChatProvider");
   }
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }

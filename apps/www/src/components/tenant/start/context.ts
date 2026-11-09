@@ -1,5 +1,6 @@
 import { createContext, use } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import type { StartAnswer, StartDraft } from "@/components/tenant/start/state";
 import type { TypedName } from "@/components/tenant/start/typed";
 
@@ -32,5 +33,5 @@ export function useStart() {
 export function useTypedName<Selected>(
   selector: (state: TypedName) => Selected
 ) {
-  return useStore(useStart().typed, selector);
+  return useStore(useStart().typed, useShallow(selector));
 }

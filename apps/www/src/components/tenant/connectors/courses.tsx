@@ -10,6 +10,7 @@ import {
   useTransition,
 } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
@@ -72,7 +73,7 @@ export function useCourses<T>(selector: (state: CoursesStore) => T) {
     throw new Error("useCourses must be used within CoursesProvider");
   }
 
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /** Asks Google for the courses. */

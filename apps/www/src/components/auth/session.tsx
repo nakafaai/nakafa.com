@@ -1,5 +1,6 @@
 import { type ReactNode, use, useLayoutEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { AuthSessionContext } from "@/components/auth/context";
 import { followSignedInHint } from "@/lib/auth/hint";
 import { type AuthSession, previewAuthSession } from "@/lib/auth/session";
@@ -48,5 +49,5 @@ export function useAuthSessionStore() {
 
 /** Selects one part of the shared session. */
 export function useAuthSession<T>(selector: (session: AuthSession) => T) {
-  return useStore(useAuthSessionStore(), selector);
+  return useStore(useAuthSessionStore(), useShallow(selector));
 }

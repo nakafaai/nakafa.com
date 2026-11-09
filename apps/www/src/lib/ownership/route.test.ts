@@ -6,6 +6,7 @@ import { isReservedUsername } from "@repo/backend/confect/users/reserved";
 import { readUsername } from "@repo/backend/confect/users/username";
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   Array as Arr,
   Effect,
@@ -20,6 +21,33 @@ import {
   isApplicationRouteRoot,
   isReservedPagePath,
 } from "@/lib/ownership/route";
+import { routeRewrite } from "@/lib/routing/rewrite";
+
+/** One full route path of the generated tree, below the locale, as its route index lists it. */
+const FULL_PATH_PATTERN = /(?<=^ {2}')\/\$locale\/[^']*(?=': typeof)/gmu;
+/** The locale that every sample address is written in, which the public path leaves out. */
+const LOCALE_PREFIX_PATTERN = /^\/en\/?/u;
+
+/**
+ * The public address of one route path: each parameter takes a sample value
+ * that a username, an id, a hash and a slug all accept, and the router's output
+ * rewrite writes it as the browser shows it.
+ */
+function addressOf(template: string) {
+  const sample = Arr.join(
+    Arr.map(Arr.filter(Str.split(template, "/"), Str.isNonEmpty), (segment) => {
+      if (segment === "$locale") {
+        return "en";
+      }
+      return Str.startsWith("$")(segment) ? "nabil" : segment;
+    }),
+    "/"
+  );
+  const { pathname } = routeRewrite.output({
+    url: new URL(sample, SITE_ORIGIN),
+  });
+  return Str.replace(LOCALE_PREFIX_PATTERN, "")(pathname);
+}
 
 /** The extension of a route file, which names no segment. */
 const ROUTE_FILE_EXTENSION = /\.tsx$/u;
@@ -78,6 +106,44 @@ describe("public route ownership", () => {
         expect(
           Arr.filter(named, (root) => !HashSet.has(owned, root)),
           "declare the root in @repo/contents/route/root"
+        ).toEqual([]);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "accepts a page of every route that the router serves below the locale, so no route answers a hard 404",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tree = yield* fs.readFileString(
+          path.resolve("src/routeTree.gen.ts")
+        );
+        // A route id names its pathless layouts (`/_main`), which no address shows.
+        const templates = Arr.filter(
+          Arr.dedupe(
+            Arr.map(
+              Arr.fromIterable(Str.matchAll(FULL_PATH_PATTERN)(tree)),
+              (match) => match[0]
+            )
+          ),
+          (template) => !Str.includes("/_")(template)
+        );
+        const addresses = Arr.map(templates, addressOf);
+        // The locale's index, and the root splat that serves a signed Page, name no application root.
+        const served = Arr.filter(
+          addresses,
+          (address) => !(address === "" || address === "nabil")
+        );
+        expect(served).toEqual(
+          expect.arrayContaining(["agent", "island/nabil", "@nabil/chat"])
+        );
+        expect(
+          Arr.filter(
+            served,
+            (address) => !isApplicationRoutePath("en", address)
+          ),
+          "give the route's root a rule in ROOT_RULES"
         ).toEqual([]);
       }).pipe(Effect.provide(NodeServices.layer))
   );

@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 
 /** The time between two letters of what the learner asks. */
 const TYPE_EVERY_MS = 32;
@@ -64,7 +65,7 @@ function useTurn<Selected>(selector: (state: TurnState) => Selected) {
     // A message outside its turn is a composition error at this seam.
     throw new Error("A turn message renders inside its TurnPlayer.");
   }
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /**

@@ -11,6 +11,7 @@ import {
 } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 
 const TocStateSchema = Schema.Struct({
   activeHeadings: Schema.Array(Schema.String),
@@ -157,5 +158,5 @@ export function useToc<T>(selector: (state: TocState) => T): T {
   if (!store) {
     throw new Error("useToc must be used within a TocProvider.");
   }
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }

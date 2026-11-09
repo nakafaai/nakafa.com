@@ -26,6 +26,7 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 
 const GROUP_COUNT = 18;
 const PERIOD_COUNT = 7;
@@ -106,7 +107,7 @@ function useModernPeriodicTableScene() {
 function useModernPeriodicTableFocus<T>(
   selector: (state: ModernPeriodicTableFocusState) => T
 ) {
-  return useStore(useModernPeriodicTableScene().store, selector);
+  return useStore(useModernPeriodicTableScene().store, useShallow(selector));
 }
 
 /**

@@ -3,6 +3,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import {
   createExamEditing,
   type ExamEditing,
@@ -111,7 +112,7 @@ export function useExamSelection<T>(selector: (state: ExamSelection) => T) {
     throw new Error("useExamSelection must be used within ExamProvider");
   }
 
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /**
@@ -136,7 +137,7 @@ export function useExamLive<T>(selector: (state: ExamLive) => T) {
     throw new Error("useExamLive must be used within ExamProvider");
   }
 
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /** Reads one selected slice of the editing state: the editor the toolbar acts on and the pictures that wait. */
@@ -147,7 +148,7 @@ export function useExamEditing<T>(selector: (state: ExamEditing) => T) {
     throw new Error("useExamEditing must be used within ExamProvider");
   }
 
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /** Reads one selected slice of the zoom of the pages. */
@@ -158,7 +159,7 @@ export function useExamZoom<T>(selector: (state: ExamZoom) => T) {
     throw new Error("useExamZoom must be used within ExamProvider");
   }
 
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /** Reads one selected slice of how the editor shows its questions: the canvas of pages, or the grid. */
@@ -169,7 +170,7 @@ export function useEditorView<T>(selector: (state: EditorView) => T) {
     throw new Error("useEditorView must be used within ExamProvider");
   }
 
-  return useStore(store, selector);
+  return useStore(store, useShallow(selector));
 }
 
 /** The question the canvas shows, with its place, or none for an exam with no question. */
