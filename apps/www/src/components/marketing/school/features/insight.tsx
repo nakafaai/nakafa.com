@@ -97,14 +97,15 @@ function useDemoColumns() {
 }
 
 /**
- * The insight part: one class's students in the School's own insight table, with the mastery that
+ * The insight part, as wide as the page under its words: one class's students in the School's own
+ * insight table, with the mastery that
  * shows who needs help and where each narrative stands, before any report is due.
  */
 export function SchoolInsight() {
   const columns = useDemoColumns();
 
   return (
-    <FeatureRow id="insight">
+    <FeatureRow id="insight" layout="wide">
       <SchoolFeatureText feature="insight">
         <Nina act="searching" label="" size={88} whole />
       </SchoolFeatureText>
