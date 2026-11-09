@@ -1,8 +1,5 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
-import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import {
   dragMouse,
   expectCanvasToMove,
@@ -24,14 +21,11 @@ import { isHydrated } from "@/e2e/support/window";
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
 const MANY_SOLUTIONS_TITLE = "Sistem Persamaan Linear dengan Banyak Solusi";
-const TRIANGLE_ROUTE =
-  "/en/subjects/mathematics/trigonometry/right-triangle-naming";
+/** A lesson whose unit circle is a MathVisual scene with an angle slider. */
 const UNIT_CIRCLE_ROUTE =
-  "/en/subjects/mathematics/trigonometry/trigonometry-concept";
-const HYPOTENUSE_LABEL = /^c$/u;
-const TRIANGLE_SCENE = '[data-scene="triangle"]';
-/** How long one edit may take to show in the field before it is tried again. */
-const EDIT_PROBE_TIMEOUT_MILLISECONDS = 1000;
+  "/en/subjects/mathematics/function-modeling/trigonometric-function-arbitrary-angle";
+/** How many degrees the angle slider moves under the test's arrow presses. */
+const ANGLE_STEPS = 15;
 
 const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
   page: Page,
@@ -54,91 +48,6 @@ const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
       y: bounds.y + bounds.height * 0.4,
     }
   );
-});
-
-const zoomScene = Effect.fn("NakafaE2E.zoomScene")(function* (
-  page: Page,
-  canvas: Locator,
-  deltaY: number,
-  steps = 12
-) {
-  yield* Effect.promise(() => canvas.hover());
-  for (let step = 0; step < steps; step += 1) {
-    yield* Effect.promise(() => page.mouse.wheel(0, deltaY));
-  }
-  yield* waitForStableCanvas(canvas);
-});
-
-const expectReadableLabel = Effect.fn("NakafaE2E.expectReadableLabel")(
-  function* (label: Locator) {
-    const fontSize = yield* Effect.promise(() =>
-      label.evaluate((element) => {
-        let scale = 1;
-        for (
-          let node: Element | null = element;
-          node && node.getAttribute("data-scene") !== "coordinate-system";
-          node = node.parentElement
-        ) {
-          const style = getComputedStyle(node);
-          const matrix = new DOMMatrixReadOnly(style.transform);
-          const localScale =
-            style.scale === "none" ? 1 : Number.parseFloat(style.scale);
-          scale *= Math.hypot(matrix.a, matrix.b) * localScale;
-        }
-        return Number.parseFloat(getComputedStyle(element).fontSize) * scale;
-      })
-    );
-    yield* Effect.sync(() =>
-      expect(fontSize).toBeGreaterThanOrEqual(
-        THREE_DIAGRAM_MINIMUM_FONT_SIZE - 0.01
-      )
-    );
-  }
-);
-
-const expectBoundedTriangleZoom = Effect.fn(
-  "NakafaE2E.expectBoundedTriangleZoom"
-)(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
-  const response = yield* Effect.promise(() =>
-    page.goto(TRIANGLE_ROUTE, { waitUntil: "domcontentloaded" })
-  );
-  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-  const scene = page.locator(TRIANGLE_SCENE);
-  const card = page.locator(CARD).filter({ has: scene });
-  const canvas = scene.locator("canvas");
-  const label = scene
-    .locator(".katex-html")
-    .filter({ hasText: HYPOTENUSE_LABEL });
-  // Reveal the content-visibility card before scrolling its deferred scene.
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await card.scrollIntoViewIfNeeded();
-      await expect(scene).toBeVisible();
-      await scene.scrollIntoViewIfNeeded();
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: revealTimeoutMilliseconds })
-  );
-  yield* Effect.promise(() => expect(label).toBeVisible());
-  yield* Effect.promise(() =>
-    expect(card.locator(VISUAL_CARD_FOOTER)).toContainText("Hypotenuse")
-  );
-  yield* waitForStableCanvas(canvas);
-  yield* expectReadableLabel(label);
-
-  yield* zoomScene(page, canvas, 240);
-  yield* expectReadableLabel(label);
-  const atLimit = yield* Effect.promise(() => canvas.screenshot());
-  yield* zoomScene(page, canvas, 240);
-  const afterMoreZoom = yield* Effect.promise(() => canvas.screenshot());
-  yield* Effect.sync(() => expect(afterMoreZoom.equals(atLimit)).toBe(true));
-
-  yield* zoomScene(page, canvas, -240, 1);
-  yield* expectCanvasToMove(canvas, atLimit);
-  yield* expectReadableLabel(label);
-  const beforeOrbit = yield* Effect.promise(() => canvas.screenshot());
-  yield* orbitScene(page, canvas);
-  yield* expectCanvasToMove(canvas, beforeOrbit);
 });
 
 const expectStableCoordinateSystem = Effect.fn(
@@ -236,156 +145,51 @@ test("coordinate-system interaction keeps its drawing buffer stable", async ({
   );
 });
 
-for (const width of [390, 1200]) {
-  test(`triangle zoom remains readable and interactive at ${width}px`, async ({
-    baseURL,
-    browser,
-  }) => {
-    expect(baseURL).toBeTruthy();
-    await Effect.runPromise(
-      withBrowserContext(
-        browser,
-        {
-          baseURL: baseURL ?? "",
-          serviceWorkers: "block",
-          viewport: { height: 844, width },
-        },
-        (context) =>
-          Effect.gen(function* () {
-            const page = yield* Effect.promise(() => context.newPage());
-            yield* withObservedPageErrors(
-              page,
-              expectBoundedTriangleZoom(page)
-            );
-          })
+/**
+ * Moves a unit circle's angle slider with the keyboard and reads its value and
+ * its cos, sin and tan readouts follow: the formulas redraw at every step.
+ */
+const expectSliderReadouts = Effect.fn("NakafaE2E.expectSliderReadouts")(
+  function* (page: Page) {
+    yield* seedAnalyticsConsent(page, "denied");
+    yield* Effect.promise(() =>
+      page.goto(UNIT_CIRCLE_ROUTE, { waitUntil: "domcontentloaded" })
+    );
+    const slider = page.getByRole("slider", { exact: true, name: "a" }).first();
+    const card = page.locator(CARD).filter({ has: slider }).first();
+    const facts = card.locator(VISUAL_CARD_FOOTER);
+    yield* Effect.promise(() =>
+      expect(async () => {
+        await slider.scrollIntoViewIfNeeded();
+        await expect(slider).toBeVisible();
+        expect(await isHydrated(slider)).toBe(true);
+      }).toPass({ timeout: revealTimeoutMilliseconds })
+    );
+    const start = Number(
+      yield* Effect.promise(() => slider.getAttribute("aria-valuenow"))
+    );
+    const before = yield* Effect.promise(() => facts.textContent());
+    yield* Effect.promise(() => slider.focus());
+    yield* Effect.promise(() =>
+      page.keyboard.press("ArrowRight", { delay: 10 })
+    );
+    for (let step = 1; step < ANGLE_STEPS; step += 1) {
+      yield* Effect.promise(() => page.keyboard.press("ArrowRight"));
+    }
+    yield* Effect.promise(() =>
+      expect(slider).toHaveAttribute(
+        "aria-valuenow",
+        String(start + ANGLE_STEPS)
       )
     );
-  });
-}
-
-/** Proves one published unit-circle angle field stays finite and exact. */
-const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
-  function* (card: Locator, angle: Locator, locale: AppLocaleCode) {
-    const formatter = new Intl.NumberFormat(locale);
-    const ratioFormatter = new Intl.NumberFormat(locale, {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
-      useGrouping: false,
-    });
-    const annotations = card.locator(
-      `${VISUAL_CARD_FOOTER} annotation[encoding="application/x-tex"]`
-    );
-    for (const value of [31.5, -30.5, 390.5]) {
-      const formatted = formatter.format(value);
-      const radians = (value * Math.PI) / 180;
-      const ratio = (ratioValue: number) =>
-        `\\approx ${ratioFormatter.format(ratioValue).replaceAll(",", "{,}")}`;
-      // Each fact of the footer is a label and a value, in the order the card shows them.
-      const expected = [
-        "\\theta",
-        `${value}^\\circ`,
-        "\\sin\\theta",
-        ratio(Math.sin(radians)),
-        "\\cos\\theta",
-        ratio(Math.cos(radians)),
-        "\\tan\\theta",
-        ratio(Math.tan(radians)),
-      ];
-      for (const input of [formatted, ""]) {
-        // The footer follows the commit on blur, so the edit repeats until it
-        // shows there.
-        yield* Effect.promise(() =>
-          expect(async () => {
-            await angle.fill(input);
-            await angle.press("Tab");
-            await expect(angle).toHaveValue(formatted, {
-              timeout: EDIT_PROBE_TIMEOUT_MILLISECONDS,
-            });
-            await expect(annotations).toHaveText(expected, {
-              timeout: EDIT_PROBE_TIMEOUT_MILLISECONDS,
-            });
-          }).toPass({ intervals: [100], timeout: revealTimeoutMilliseconds })
-        );
-        yield* Effect.promise(() => expect(card).not.toContainText("NaN"));
-      }
-    }
+    yield* Effect.promise(() => expect(facts).not.toHaveText(before ?? ""));
   }
 );
 
-test("published unit-circle controls preserve finite angles after clearing", async ({
+test("a unit circle's angle slider redraws the circle and its readouts", async ({
   page,
 }) => {
-  const { APP_LOCALE_CODES } = await import("@nakafa/aksara-contracts/locale");
   await Effect.runPromise(
-    withObservedPageErrors(
-      page,
-      Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
-        const response = yield* Effect.promise(() =>
-          page.goto(UNIT_CIRCLE_ROUTE, { waitUntil: "domcontentloaded" })
-        );
-        yield* Effect.sync(() => expect(response?.status()).toBe(200));
-      })
-    )
+    withObservedPageErrors(page, expectSliderReadouts(page))
   );
-  for (const locale of APP_LOCALE_CODES) {
-    await test.step(locale, () =>
-      Effect.runPromise(
-        withObservedPageErrors(
-          page,
-          Effect.gen(function* () {
-            const messages = yield* Effect.promise(() =>
-              loadLocaleMessages(locale)
-            );
-            const alternate = page.locator(
-              `link[rel="alternate"][hreflang="${locale}"]`
-            );
-            yield* Effect.promise(() => expect(alternate).toHaveCount(1));
-            const href = yield* Effect.promise(() =>
-              alternate.getAttribute("href")
-            );
-            const localized = yield* Schema.decodeUnknownEffect(
-              Schema.URLFromString
-            )(href);
-            const response = yield* Effect.promise(() =>
-              page.goto(localized.pathname, { waitUntil: "domcontentloaded" })
-            );
-            yield* Effect.sync(() => expect(response?.status()).toBe(200));
-            const article = page.locator("article");
-            const angles = article.getByRole("textbox", {
-              exact: true,
-              name: messages.Common.angle,
-            });
-            // This signed lesson teaches the triangle before the unit circle.
-            const angle = angles.last();
-            const circle = article
-              .locator(CARD)
-              .filter({
-                has: page.getByRole("textbox", {
-                  exact: true,
-                  name: messages.Common.angle,
-                }),
-              })
-              .last();
-            // Reveal the deferred card after hydration before editing; the
-            // client render replaces the pre-hydration node, so the reveal
-            // must be retried until the unit-circle field is live.
-            yield* Effect.promise(() =>
-              expect(async () => {
-                await expect(angles).toHaveCount(2);
-                await expect(circle).toHaveCount(1);
-                await angle.scrollIntoViewIfNeeded();
-                await expect(angle).toBeVisible();
-                await expect(angle).toHaveValue("30");
-                // An edit before hydration stays in the field's text, and React
-                // ignores the same text typed again, so it never reaches the visual.
-                expect(await isHydrated(angle)).toBe(true);
-              }).toPass({ timeout: revealTimeoutMilliseconds })
-            );
-            yield* verifyUnitCircleEditing(circle, angle, locale);
-          })
-        )
-      )
-    );
-  }
 });

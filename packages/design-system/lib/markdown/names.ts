@@ -116,7 +116,6 @@ export const mathematicsComponentNames = {
   histogramChart: "HistogramChart",
   inverseFunctionIllustration: "InverseFunctionIllustration",
   lineEquation: "LineEquation",
-  numberLine: "NumberLine",
   quadraticEquationReadingRoomProblem: "QuadraticEquationReadingRoomProblem",
   scatterDiagram: "ScatterDiagram",
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
