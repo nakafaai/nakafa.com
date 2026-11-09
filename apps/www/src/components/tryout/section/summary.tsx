@@ -48,30 +48,27 @@ export function TryoutSectionSummary({
 
   return (
     <TryoutPartSummary waiting={waiting}>
-      <TryoutSectionMetrics pending={pending} score={score} section={section} />
+      <TryoutSectionMetrics score={score} section={section} />
     </TryoutPartSummary>
   );
 }
 
 /** Chooses terminal score metrics or pre-start section facts explicitly. */
 function TryoutSectionMetrics({
-  pending,
   score,
   section,
 }: {
-  pending: boolean;
   score: TryoutScoreResult | null;
   section: TryoutSummarySection;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const waiting = useFactsWaiting(pending);
 
   if (score) {
     return <TryoutScoreMetrics score={score} />;
   }
 
   return (
-    <TryoutPartStats waiting={waiting}>
+    <TryoutPartStats>
       <TryoutPartStat label={tTryouts("part-questions-label")}>
         <TryoutMetricNumber value={section.questionCount} />
       </TryoutPartStat>
