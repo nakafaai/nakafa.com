@@ -2,7 +2,11 @@ import { describe, expect, it } from "@effect/vitest";
 import island from "@repo/backend/confect/_generated/refs/island";
 import { STARTER_LAYOUT } from "@repo/backend/confect/island/starter";
 import { Option } from "effect";
-import { buildContextOf, editIslandChange } from "@/lib/island/edit";
+import {
+  buildContextOf,
+  editIslandChange,
+  shareIslandChange,
+} from "@/lib/island/edit";
 import { createLocalStore } from "@/test/optimistic";
 
 /** The owner's island as its query answers it, with 20 Stars to spend. */
@@ -12,6 +16,7 @@ const OWN = {
   level: 1,
   lifetime: 20,
   materials: { petals: 0, wood: 2 },
+  size: 6,
   stars: 20,
   timeZone: "Asia/Jakarta",
   version: 3,
@@ -61,6 +66,22 @@ describe("island edit", () => {
     const none = createLocalStore();
     none.seed(island.queries.own, {}, null);
     editIslandChange(none.store, { operations: [grass], version: 0 });
+    expect(none.written()).toEqual([]);
+  });
+
+  it("shows the owner's new choice of who may visit at once, and nothing before the island loads", () => {
+    const local = createLocalStore();
+    local.seed(island.queries.own, {}, OWN);
+    shareIslandChange(local.store, { visibility: "link" });
+    expect(
+      Option.getOrThrow(local.store.getQuery(island.queries.own, {}))
+    ).toMatchObject({ version: 3, visibility: "link" });
+    const empty = createLocalStore();
+    shareIslandChange(empty.store, { visibility: "public" });
+    expect(empty.written()).toEqual([]);
+    const none = createLocalStore();
+    none.seed(island.queries.own, {}, null);
+    shareIslandChange(none.store, { visibility: "public" });
     expect(none.written()).toEqual([]);
   });
 });

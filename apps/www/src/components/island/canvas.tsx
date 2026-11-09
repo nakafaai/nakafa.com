@@ -2,6 +2,7 @@ import { useElementSize } from "@mantine/hooks";
 import { Canvas } from "@react-three/fiber";
 import { getPowerPreference } from "@repo/design-system/lib/device";
 import { useMemo } from "react";
+import { useClipCanvas } from "@/components/island/clip";
 import { Descent } from "@/components/island/descent";
 import { PixelPipeline } from "@/components/island/pipeline";
 import { IslandScene } from "@/components/island/scene";
@@ -28,6 +29,7 @@ export default function IslandCanvas({
   zoom?: number;
 }) {
   const { layout, size } = useIsland();
+  const clip = useClipCanvas();
   const { height, ref, width } = useElementSize();
   const artPixel = zoom ?? artPixelFor(width, height, size);
   const buffer = bufferFor(width, height, artPixel);
@@ -58,9 +60,12 @@ export default function IslandCanvas({
               alpha: true,
               antialias: false,
               powerPreference: getPowerPreference(),
+              // A clip copies the drawn frame between frames; at art resolution keeping it costs little.
+              preserveDrawingBuffer: true,
             }}
             linear
             orthographic
+            ref={clip}
           >
             {descend ? <Descent /> : null}
             <PixelPipeline

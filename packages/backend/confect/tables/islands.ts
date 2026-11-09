@@ -16,6 +16,8 @@ export default Table.make(() =>
     lifetime: Schema.Finite,
     /** The placements, stored packed (D4). */
     layout: Layout,
+    /** The stored picture of the island its owner last shared, a visit's OpenGraph image; none before the first (D20). */
+    snapshot: Schema.optionalKey(IdSchema("bucketFiles")),
     /** The owner's zone, kept current by their own visits; it sets the island's day and hour (D18). */
     timeZone: Schema.TimeZoneNamedFromString,
     userId: IdSchema("users"),
