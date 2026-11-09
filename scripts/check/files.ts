@@ -10,7 +10,9 @@ import {
   Schema,
   String as Str,
 } from "effect";
+import { ChildProcess } from "effect/process";
 import type { RepositorySource } from "#scripts/check/source";
+import { collectText } from "#scripts/process";
 
 /** Expected failure while reading the repository tree. */
 export class RepositoryReadError extends Schema.TaggedError<
@@ -103,6 +105,73 @@ export const readRepositoryFiles = Effect.fn("RepositoryPolicy.readFiles")(
   }
 );
 
+/** Git could not say which files the checkout ignores. */
+export class RepositoryIgnoreError extends Schema.TaggedError<
+  RepositoryIgnoreError,
+  { readonly brand: unique symbol }
+>()("RepositoryIgnoreError", { message: Schema.String }) {}
+
+/** Runs one Git command in `root` and answers its exit code and its output. */
+const runGit = Effect.fn("RepositoryPolicy.runGit")(
+  (root: string, args: readonly string[]) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const command = yield* ChildProcess.make("git", args, { cwd: root });
+        return yield* Effect.all(
+          [
+            command.exitCode,
+            collectText(command.stdout),
+            collectText(command.stderr),
+          ],
+          { concurrency: 3 }
+        );
+      })
+    ).pipe(
+      Effect.mapError(
+        (cause) =>
+          new RepositoryIgnoreError({
+            message: `git ${Arr.join(args, " ")}: ${cause.message}`,
+          })
+      )
+    )
+);
+
+/**
+ * Lists what Git ignores below `root`, as paths relative to it, each ignored
+ * folder once with a trailing `/`. A Python environment, a build, or a cache
+ * that an install writes is no authored file, whatever names its tool gives
+ * inside it. A folder outside a Git checkout has no ignore rules, so it ignores
+ * nothing.
+ */
+export const readIgnoredPaths = Effect.fn("RepositoryPolicy.readIgnoredPaths")(
+  function* (root: string) {
+    const [inside] = yield* runGit(root, [
+      "rev-parse",
+      "--is-inside-work-tree",
+    ]);
+    if (inside !== 0) {
+      return HashSet.empty<string>();
+    }
+    const args = [
+      "ls-files",
+      "-z",
+      "--others",
+      "--ignored",
+      "--exclude-standard",
+      "--directory",
+    ];
+    const [exitCode, stdout, stderr] = yield* runGit(root, args);
+    if (exitCode !== 0) {
+      return yield* new RepositoryIgnoreError({
+        message: `git ${Arr.join(args, " ")}: ${Str.trim(stderr)}`,
+      });
+    }
+    return HashSet.fromIterable(
+      Arr.filter(Str.split(stdout, "\0"), Str.isNonEmpty)
+    );
+  }
+);
+
 /**
  * Reads the files of the authored workspaces and of the repository scripts,
  * and the files of the agent skills folder, whose scripts import repository
@@ -111,8 +180,21 @@ export const readRepositoryFiles = Effect.fn("RepositoryPolicy.readFiles")(
 export const readAuthoredTree = Effect.fn("RepositoryPolicy.readAuthoredTree")(
   function* (root: string) {
     const path = yield* Path.Path;
+    const ignored = yield* readIgnoredPaths(root);
+    /** Whether Git ignores one file, by its own path or by a folder above it. */
+    const isIgnored = (file: string) => {
+      const segments = Str.split(path.relative(root, file), path.sep);
+      return Arr.some(segments, (_, index) => {
+        const prefix = Arr.join(Arr.take(segments, index + 1), "/");
+        return (
+          HashSet.has(ignored, prefix) || HashSet.has(ignored, `${prefix}/`)
+        );
+      });
+    };
     const read = (directory: string) =>
-      readRepositoryFiles(path.join(root, directory), IGNORED_DIRECTORIES);
+      readRepositoryFiles(path.join(root, directory), IGNORED_DIRECTORIES).pipe(
+        Effect.map(Arr.filter((file) => !isIgnored(file)))
+      );
     const { agents, apps, docs, packages, scripts } = yield* Effect.all({
       agents: read(".agents"),
       apps: read("apps"),
