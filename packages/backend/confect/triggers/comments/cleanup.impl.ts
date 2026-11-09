@@ -30,9 +30,25 @@ const scheduleNextPass = Effect.fn(
   return null;
 });
 
+/** Removes one bounded batch of the reports of a deleted comment, and returns how many it removed. */
+const removeReportBatch = Effect.fn(
+  "triggers.comments.cleanup.removeReportBatch"
+)(function* (commentId: Id<"comments">) {
+  const reports = yield* (yield* DatabaseReader)
+    .table("commentReports")
+    .index("by_commentId_and_userId", (q) => q.eq("commentId", commentId))
+    .take(COMMENT_LIKE_CLEANUP_BATCH_SIZE)
+    .pipe(Effect.orDie);
+  const writer = yield* DatabaseWriter;
+  yield* Effect.forEach(reports, (report) =>
+    writer.table("commentReports").delete(report._id)
+  );
+  return reports.length;
+});
+
 /**
  * Removes what a deleted comment leaves behind, one bounded batch at a time: its
- * inbox row, its likes, then its replies. A deleted top-level comment takes its whole thread, every
+ * inbox row, its likes, its reports, then its replies. A deleted top-level comment takes its whole thread, every
  * reply at any depth. A deleted reply takes the replies that name it as their parent,
  * and each of those takes its own. A batch that fills up schedules the next pass.
  */
@@ -47,6 +63,10 @@ const cleanupDeletedComment = FunctionImpl.make(
       yield* purgeReply(args.commentId);
       const removedLikes = yield* removeCommentLikeBatch(args.commentId);
       if (removedLikes === COMMENT_LIKE_CLEANUP_BATCH_SIZE) {
+        return yield* scheduleNextPass(args.commentId);
+      }
+      const removedReports = yield* removeReportBatch(args.commentId);
+      if (removedReports === COMMENT_LIKE_CLEANUP_BATCH_SIZE) {
         return yield* scheduleNextPass(args.commentId);
       }
       const members = yield* database

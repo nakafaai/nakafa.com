@@ -59,6 +59,15 @@ function useVisual<T>(selector: (state: VisualState) => T) {
   return useStore(store, useShallow(selector));
 }
 
+/**
+ * Starts the card's scene playing, as an animation does once it first shows.
+ * A scene outside a card has nothing to start.
+ */
+function useStartVisualScene() {
+  const store = use(VisualContext);
+  return () => store?.getState().play();
+}
+
 /** A scene outside a card has no store to follow. */
 const followNothing = () => () => undefined;
 
@@ -387,6 +396,7 @@ function VisualCardMenu({ children }: { children: ReactNode }) {
 }
 
 export {
+  useStartVisualScene,
   useVisual,
   useVisualScene,
   VisualCard,

@@ -130,7 +130,7 @@ D17. Performance budget:
 
 ### Life, sound and sharing
 
-D18. Day and night follow the owner's local time, also for a visitor (D17 of the plan), from the island's `timeZone`, which the owner's own visit keeps current. Weather comes from the existing `/api/weather` route; a visitor sees the owner's weather, read on the server, so a visitor never learns where the owner is.
+D18. Day and night follow the owner's local time, also for a visitor (D17 of the plan), from the island's `timeZone`, which the owner's own visit keeps current. The island keeps no place, so the light changes at the same hours everywhere: dawn from 05:00, day from 06:30, dusk from 17:30, night from 19:00. Weather comes from the existing `/api/weather` route on the owner's own page; the server holds no place to read a visitor's view of the owner's weather from, so a visit shows clear weather and never learns where the owner is. The grade pass tints every colour by the light and the weather and returns it to the nearest palette colour, so night, dusk, fog and storms stay pixel art; window panes have their own ramp, which the night lights, and lamps keep their glow. Rain, snow, stars and lightning are drawn on the art grid in the same pass, and fireflies and chimney smoke are sprites.
 
 D19. Music is generated: the scale and tempo follow the hour, the instruments follow the weather, and it starts after the first tap with one mute control (D26). Ambient sounds and effects are synthesized too.
 

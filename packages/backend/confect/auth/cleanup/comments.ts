@@ -6,6 +6,7 @@ import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { removeCommentLike } from "@repo/backend/confect/comments/likes";
 import { findComment } from "@repo/backend/confect/comments/rows";
 import { rootAfterPromotion } from "@repo/backend/confect/comments/thread";
+import { dropUpload } from "@repo/backend/confect/comments/unposted";
 import { COMMENT_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/triggers/comments/cleanup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
@@ -145,6 +146,41 @@ export const cleanupCommentLikes = Effect.fn(
       yield* removeCommentLike(like, comment);
     }
     return likes.length > 0;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);
+
+/** Removes one bounded batch of the learner's reports of other learners' comments. */
+export const cleanupCommentReports = Effect.fn(
+  "auth.cleanup.cleanupCommentReports"
+)(
+  function* (userId: Id<"users">) {
+    const reports = yield* (yield* DatabaseReader)
+      .table("commentReports")
+      .index("by_userId", (query) => query.eq("userId", userId))
+      .take(COMMENT_REFERENCE_BATCH_SIZE)
+      .pipe(Effect.orDie);
+    const writer = yield* DatabaseWriter;
+    yield* Effect.forEach(reports, (report) =>
+      writer.table("commentReports").delete(report._id)
+    );
+    return reports.length > 0;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);
+
+/** Deletes one bounded batch of the learner's unposted photos, with their files. */
+export const cleanupCommentUploads = Effect.fn(
+  "auth.cleanup.cleanupCommentUploads"
+)(
+  function* (userId: Id<"users">) {
+    const uploads = yield* (yield* DatabaseReader)
+      .table("commentUploads")
+      .index("by_userId", (query) => query.eq("userId", userId))
+      .take(COMMENT_REFERENCE_BATCH_SIZE)
+      .pipe(Effect.orDie);
+    yield* Effect.forEach(uploads, dropUpload);
+    return uploads.length > 0;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );

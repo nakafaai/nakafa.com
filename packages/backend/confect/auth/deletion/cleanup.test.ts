@@ -3,6 +3,11 @@ import { Array as Arr, Schema } from "effect";
 // @vitest-environment node
 
 import { afterEach, expect, it } from "@effect/vitest";
+// convex-test imports a function's module, and the Better Auth module behind a signed write, on the first
+// call, inside that test's 5 s, and the cold graph takes longer. Importing them here loads them while the
+// file is collected, so no test pays it.
+import "@repo/backend/components/betterAuth/adapter";
+import "@repo/backend/convex/auth/deletion/workflow";
 import { components } from "@repo/backend/confect/_generated/components";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
