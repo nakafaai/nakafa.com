@@ -1,8 +1,8 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Path, Ref, Stdio } from "effect";
-import { capture, makeCapture } from "#scripts/test.capture";
 import { checkPatchPolicy } from "#scripts/check/patches";
+import { capture, makeCapture } from "#scripts/test.capture";
 
 /** Writes one fixture file below the repository root. */
 const writeFixture = Effect.fn("PatchPolicyTest.writeFixture")(function* (

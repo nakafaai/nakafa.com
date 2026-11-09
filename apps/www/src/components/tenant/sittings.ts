@@ -1,5 +1,5 @@
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
-import { Array as Arr, type Option, Order, Schema } from "effect";
+import { Array as Arr, Order, Schema } from "effect";
 
 /** The part of a sitting that its order reads: its state, when it opens, and the student's attempt in it. */
 type Listed = Pick<

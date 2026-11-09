@@ -176,6 +176,11 @@ function sentenceRule(listed: HashSet.HashSet<string>): ValueRule {
   };
 }
 
+/** The namespace of a dotted key path: its first key, such as `Memory` in `Memory.empty-description`. */
+function namespaceOf(keyPath: string) {
+  return Str.split(keyPath, ".")[0] ?? keyPath;
+}
+
 /** Every value: a rule of this family reads all of a dictionary. */
 const EVERY_VALUE: ValueRule = {
   covers: () => true,
@@ -246,7 +251,8 @@ function formalFindings(file: string, sourceFile: SourceFile) {
  * It also reports a dropdown's label that holds more than one word, since a label
  * names what is chosen in one word in every language, an empty list's words
  * that run past one sentence, a value that speaks formally, a `listed` message
- * that is not one sentence, and a `listed` key that no dictionary holds.
+ * that is not one sentence, and a `listed` key that no dictionary holds although
+ * one holds its namespace.
  */
 export const dictionaryFindings = Effect.fn(
   "RepositoryPolicy.dictionaryFindings"
@@ -268,8 +274,15 @@ export const dictionaryFindings = Effect.fn(
       )
     )
   );
+  // A dictionary that holds a namespace judges the listed keys of it, so a
+  // repository without that namespace has nothing to report.
+  const namespaces = HashSet.map(held, (keyPath) => namespaceOf(keyPath));
   const unheld = Arr.map(
-    Arr.filter(Arr.fromIterable(listed), (key) => !HashSet.has(held, key)),
+    Arr.filter(
+      Arr.fromIterable(listed),
+      (key) =>
+        HashSet.has(namespaces, namespaceOf(key)) && !HashSet.has(held, key)
+    ),
     (key) =>
       `scripts/check/sentences.ts: ${key} names no message in any dictionary: drop it from SENTENCE_KEYS, or add the message.`
   );

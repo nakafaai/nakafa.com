@@ -16,6 +16,8 @@ import {
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
+import { runGoogleIndexing } from "@/scripts/indexing/google/run";
+import { loadSubmissionHistory } from "@/scripts/indexing/history";
 import {
   ARTICLE,
   indexingPaths,
@@ -25,8 +27,6 @@ import {
   runToEnd,
   runToFailure,
 } from "@/scripts/indexing/test.fixture";
-import { runGoogleIndexing } from "@/scripts/indexing/google/run";
-import { loadSubmissionHistory } from "@/scripts/indexing/history";
 
 // Signing uses real Web Crypto, which the test clock does not advance, so the
 // token step is doubled here. auth.test.ts covers the signed assertion itself.

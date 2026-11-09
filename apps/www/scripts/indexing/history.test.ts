@@ -15,7 +15,6 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
-import { recordLogs } from "@/scripts/indexing/test.fixture";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
@@ -25,6 +24,7 @@ import {
   updateSubmissionHistory,
 } from "@/scripts/indexing/history";
 import { indexingFiles } from "@/scripts/indexing/paths";
+import { recordLogs } from "@/scripts/indexing/test.fixture";
 
 const FIRST = "https://nakafa.com/id/first";
 const SECOND = "https://nakafa.com/id/second";

@@ -1,15 +1,31 @@
 // @vitest-environment node
 
-import { beforeEach } from "@effect/vitest";
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  GitCommitShaSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import {
   TEST_PROOF_RENDERER,
   testSignedArtifact,
   testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
 import { Effect } from "effect";
+import {
+  decodeArticleData,
+  renderArticleArtifact,
+} from "@/lib/content/published/article";
+import { ContentExecutionError } from "@/lib/content/published/errors";
+import {
+  type PublishedContentInput,
+  readPublishedContent,
+} from "@/lib/content/published/exchange";
+import { previewProjection } from "@/test/manifest";
 import { makePublishedParts } from "@/test/parts";
 import {
   testArticleProjection as projection,
@@ -42,6 +58,11 @@ const makeFound = Effect.fn("test.www.publishedArticle.found")(function* () {
   };
   return found;
 });
+const input = {
+  activeReleaseId: releaseId,
+  appLocale: projection.appLocale,
+  publicPath: projection.publicPath,
+};
 
 vi.mock("@repo/backend/client/content/public", () => ({
   verifyPublicContentFound: readMock,
@@ -78,4 +99,131 @@ beforeEach(() => {
       parts().pipe(Effect.map(({ artifactJson }) => artifactJson))
     );
   bodyMock.mockReset().mockReturnValue(Effect.succeed("cached-article-body"));
+});
+
+/** Reads one article the way its publication does: the signed exchange, then the article decode. */
+const readArticle = Effect.fn("test.www.publishedArticle.read")(function* (
+  articleInput: PublishedContentInput
+) {
+  return yield* decodeArticleData(
+    yield* readPublishedContent(articleInput),
+    articleInput
+  );
+});
+
+describe("published article delivery", () => {
+  it.effect("keeps pinned source evidence with its signed rendered body", () =>
+    Effect.gen(function* () {
+      const found = yield* makeFound();
+      const data = yield* readArticle(input);
+
+      expect(bodyMock).not.toHaveBeenCalled();
+      expect(headMock).toHaveBeenCalledExactlyOnceWith(
+        contentRelease.runtime.active.head,
+        { appLocale: input.appLocale, publicPath: input.publicPath }
+      );
+      expect(partsMocks.frame).toHaveBeenCalledExactlyOnceWith(
+        found.activeReleaseId
+      );
+      expect(yield* renderArticleArtifact(data)).toEqual({
+        activeReleaseId: found.activeReleaseId,
+        artifactHash: found.artifact.artifactHash,
+        body: "cached-article-body",
+        categoryTitle: projection.categoryTitle,
+        contentId: projection.graph.assetId,
+        metadata: projection.metadata,
+        official: projection.official,
+        projection,
+        publicPath: projection.publicPath,
+        rawMdx: found.artifact.payload.rawMdx,
+        references: projection.references,
+        sourcePath,
+        sourceRevision: GitCommitShaSchema.make("a".repeat(40)),
+      });
+      expect(bodyMock).toHaveBeenCalledExactlyOnceWith(found.artifact);
+      expect(readMock).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("rejects an article from a different signed release", () =>
+    Effect.gen(function* () {
+      const found = yield* makeFound();
+      const expectedReleaseId = ReleaseIdSchema.make("release-older");
+
+      expect(
+        yield* readArticle({
+          ...input,
+          activeReleaseId: expectedReleaseId,
+        }).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: found.activeReleaseId,
+        expectedReleaseId,
+      });
+      expect(bodyMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect.each([{ ...projection, unexpected: true }, previewProjection])(
+    "rejects excess fields and a different content family",
+    (invalid) =>
+      Effect.gen(function* () {
+        const found = yield* makeFound();
+        readMock.mockReturnValueOnce(
+          Effect.succeed({ ...found, projection: invalid })
+        );
+
+        expect(yield* readArticle(input).pipe(Effect.flip)).toMatchObject({
+          _tag: "PublishedProjectionError",
+          appLocale: input.appLocale,
+          publicPath: input.publicPath,
+        });
+        expect(bodyMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect.each([
+    { ...input, appLocale: AppLocaleSchema.make("de") },
+    { ...input, publicPath: "articles/politics/another-article" },
+  ])(
+    "rejects a projection selected for a different public identity",
+    (request) =>
+      Effect.gen(function* () {
+        expect(yield* readArticle(request).pipe(Effect.flip)).toMatchObject({
+          _tag: "PublishedProjectionError",
+          appLocale: request.appLocale,
+          publicPath: request.publicPath,
+        });
+        expect(bodyMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("preserves signed-read failure before rendering", () =>
+    Effect.gen(function* () {
+      const failure = new ContentRuntimeVerificationError({
+        cause: "Invalid article signature",
+      });
+      readMock.mockReturnValueOnce(Effect.fail(failure));
+
+      expect(yield* readArticle(input).pipe(Effect.flip)).toBe(failure);
+      expect(bodyMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("preserves a typed failure from the immutable body cache", () =>
+    Effect.gen(function* () {
+      const found = yield* makeFound();
+      const data = yield* readArticle(input);
+      const failure = new ContentExecutionError({
+        contentKey: found.artifact.payload.contentKey,
+        stage: "render",
+      });
+      bodyMock.mockReturnValueOnce(Effect.fail(failure));
+
+      expect(yield* renderArticleArtifact(data).pipe(Effect.flip)).toBe(
+        failure
+      );
+      expect(readMock).toHaveBeenCalledOnce();
+    })
+  );
 });

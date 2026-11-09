@@ -46,7 +46,7 @@ describe("dictionary key policy", () => {
   it.effect("reports a listed key that no dictionary holds", () =>
     Effect.gen(function* () {
       const findings = yield* dictionaryFindings(
-        [source(EN, '{\n  "Memory": {}\n}\n')],
+        [source(EN, '{\n  "Memory": { "title": "Memory" }\n}\n')],
         HashSet.make("Memory.gone-description")
       );
       assert.deepStrictEqual(findings, [
