@@ -385,6 +385,23 @@ with its count, tests included, and a module that a tool generated is not
 judged. The limit is on physical lines, so a long comment counts: a module
 that needs that much explanation holds more than one capability.
 
+### Modules named index
+
+A module named `index`, after its role suffixes, names no capability, and a
+folder import resolves to it as if it were the folder's barrel, so the names
+check reports it with the domain word that replaces it
+(`scripts/check/names.ts`). Three owners keep the name: an app's route files
+and public assets, whose paths are their URLs; generated output; and a module
+in the folder of an entry that a workspace manifest names `index` through
+`main` or an `exports` target, such as `packages/site/index.ts`, which is its
+manifest's `exports["."]`. A subpath pattern such as `"./*": "./*.ts"` names no
+one module, so it keeps no `index`. The registry's component sets, content
+slugs and the backend's function folders are judged too: none holds an
+`index`, and a new one would read as a barrel there as well. Of the five
+`index` modules on 9 November, none was a re-export barrel; the four outside
+`packages/site` took a domain word (`providers/system`, `code/block`,
+`comments/section`, `auth/action`).
+
 ### Dictionary keys named twice
 
 A dictionary JSON file under `packages/internationalization/dictionaries`,

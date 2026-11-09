@@ -1,5 +1,4 @@
 import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   VisualCard,
@@ -8,6 +7,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -20,7 +20,10 @@ interface Props {
   title: ReactNode;
 }
 
-/** Renders the reversible mapping used to explain inverse functions. */
+/**
+ * Renders the reversible mapping used to explain inverse functions. The input and the output wear a button's look
+ * but are values, not actions, so they are plain text that a screen reader reads with its math and a keyboard skips.
+ */
 export function FunctionIllustration({
   title,
   description,
@@ -32,7 +35,11 @@ export function FunctionIllustration({
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
         <div className="flex flex-col items-center justify-center gap-8 px-(--card-spacing) py-8 sm:flex-row">
-          <Button className="pointer-events-none">{content.input}</Button>
+          <span
+            className={buttonVariants({ className: "pointer-events-none" })}
+          >
+            {content.input}
+          </span>
 
           <HugeIcons
             className="hidden size-4 sm:block"
@@ -56,9 +63,14 @@ export function FunctionIllustration({
             icon={ArrowRight02Icon}
           />
 
-          <Button className="pointer-events-none" variant="destructive">
+          <span
+            className={buttonVariants({
+              className: "pointer-events-none",
+              variant: "destructive",
+            })}
+          >
             {content.output}
-          </Button>
+          </span>
         </div>
       </VisualCardBody>
       <VisualCardActions>
