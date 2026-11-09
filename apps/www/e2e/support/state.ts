@@ -1,11 +1,18 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { FIGURE_WIDTH } from "@/components/state/size";
+import { FIGURE_GAP, NINA_SIZE, THING_SIZE } from "@/components/state/size";
 import {
   expectNoOverflow,
   readCumulativeLayoutShift,
 } from "@/e2e/support/layout";
 import { STATE_FIGURE } from "@/e2e/support/selector";
+
+/**
+ * The room the three need side by side. With less room the things are left
+ * out, and `Beside` writes that threshold in rem, which a browser test holds to
+ * this width.
+ */
+export const FIGURE_WIDTH = NINA_SIZE + 2 * (THING_SIZE + FIGURE_GAP);
 
 /** What a full-page state says and offers: its title, its sentence, and each way on with where it leads. */
 const StateSchema = Schema.Struct({

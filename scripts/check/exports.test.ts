@@ -16,6 +16,11 @@ function report(line: number, name: string, file = MODULE) {
   return `${file}:${line}: no other module names ${name}: remove its \`export\`, or delete the declaration when this module does not use it either (unused-export)`;
 }
 
+/** Names the report of one export that only tests read. */
+function testOnly(line: number, name: string, file = MODULE) {
+  return `${file}:${line}: only tests name ${name}, and its own module never uses it: delete it with the tests that hold it, or move it into the test that needs it (test-only-export)`;
+}
+
 /**
  * Inspects fixture modules with the export policy alone. `others` holds the
  * text of modules that no rule judges, and `unjudged` the directories whose
@@ -63,6 +68,43 @@ const repository = Effect.fn("ExportTest.repository")(function* (
 });
 
 describe("Unused export policy", () => {
+  it.effect(
+    "reports a name that only a test or a browser spec reads and that its own module never uses",
+    () =>
+      Effect.gen(function* () {
+        const findings = yield* inspect({
+          [MODULE]:
+            "export const total = 1;\nexport const shipping = 2;\nexport const price = 3;\n",
+          [READER]: 'import { price } from "./cart";\nprice;\n',
+          "packages/shop/cart.test.ts":
+            'import { total } from "./cart";\ntotal;\n',
+          "apps/www/e2e/shop.browser.ts":
+            'import { shipping } from "@repo/shop/cart";\nshipping;\n',
+        });
+        assert.deepStrictEqual(findings, [
+          testOnly(1, "total"),
+          testOnly(2, "shipping"),
+        ]);
+      })
+  );
+
+  it.effect(
+    "keeps a name that only tests read when its own module uses it, and every name of a module that only tests load",
+    () =>
+      Effect.gen(function* () {
+        const findings = yield* inspect({
+          [MODULE]:
+            "export const LIMIT = 2;\nexport function capped(count: number) {\n  return Math.min(count, LIMIT);\n}\n",
+          [READER]: 'import { capped } from "./cart";\ncapped(3);\n',
+          "packages/shop/test/cart.ts": "export const seeded = 1;\n",
+          "packages/shop/test.helpers.ts": "export const helped = 1;\n",
+          "packages/shop/cart.test.ts":
+            'import { LIMIT } from "./cart";\nimport { seeded } from "./test/cart";\nimport { helped } from "./test.helpers";\nLIMIT + seeded + helped;\n',
+        });
+        assert.deepStrictEqual(findings, []);
+      })
+  );
+
   it.effect("reports each kind of declaration that nothing else names", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

@@ -10,7 +10,7 @@ import {
   PROJECT_CONFIG,
   ROOT,
   withProject,
-} from "#scripts/check/fixture";
+} from "#scripts/check/test.fixture";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 
 /** A module with one array method call on line 2, judged by the root project. */

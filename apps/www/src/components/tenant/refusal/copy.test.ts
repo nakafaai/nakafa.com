@@ -1,8 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { GrantRejected } from "@repo/backend/confect/access/errors";
 import { CohortInUse, PeriodInUse } from "@repo/backend/confect/tenancy/errors";
-import { toast } from "@repo/design-system/lib/toast/notify";
-import { refusalCopy, toastRefusal } from "@/components/tenant/refusal/copy";
+import { refusalCopy } from "@/components/tenant/refusal/copy";
 
 const ACTION_ERROR = {
   description: "action-error.description",
@@ -71,16 +70,5 @@ describe("refusalCopy", () => {
     expect(refusalCopy({ _tag: "UnnamedRefusal" })).toEqual(ACTION_ERROR);
     expect(refusalCopy(new Error("offline"))).toEqual(ACTION_ERROR);
     expect(refusalCopy(undefined)).toEqual(ACTION_ERROR);
-  });
-});
-
-describe("toastRefusal", () => {
-  it("shows the action error toast every School action uses for a failure with no refusal", () => {
-    const error = vi.spyOn(toast, "error");
-
-    toastRefusal();
-
-    expect(error).toHaveBeenCalledWith(ACTION_ERROR);
-    error.mockRestore();
   });
 });

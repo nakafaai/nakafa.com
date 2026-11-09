@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { embedBatch } from "@repo/backend/confect/contents/sections/embed";
-import {
-  EMBED_BATCH_SIZE,
-  EMBED_RETRIES,
-} from "@repo/backend/confect/contents/sections/limits";
+import { EMBED_RETRIES } from "@repo/backend/confect/contents/sections/limits";
 import type { SectionDraft } from "@repo/backend/confect/contents/sections/schema";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
@@ -118,21 +115,22 @@ const failedLogged = (drafts: readonly SectionDraft[]) => {
 const pass = (milliseconds: number) =>
   Effect.promise(() => vi.advanceTimersByTimeAsync(milliseconds));
 
+/** More drafts than run at once, so the requests queue. */
+const DRAFTS = 65;
+
 describe("section embedding", () => {
   it.live(
     "gives the vector of each draft in order, one request for each text",
     () =>
       Effect.gen(function* () {
         const model = embedder(() => undefined);
-        const drafts = Arr.makeBy(EMBED_BATCH_SIZE + 1, (index) =>
+        const drafts = Arr.makeBy(DRAFTS, (index) =>
           draft("t".repeat(index + 1), index)
         );
         expect(yield* embed(drafts)).toEqual(
-          Arr.makeBy(EMBED_BATCH_SIZE + 1, (index) =>
-            Option.some(vectorOf(index + 1))
-          )
+          Arr.makeBy(DRAFTS, (index) => Option.some(vectorOf(index + 1)))
         );
-        expect(model.doEmbedCalls).toHaveLength(EMBED_BATCH_SIZE + 1);
+        expect(model.doEmbedCalls).toHaveLength(DRAFTS);
         expect(
           Arr.every(model.doEmbedCalls, ({ values }) => values.length === 1)
         ).toBe(true);

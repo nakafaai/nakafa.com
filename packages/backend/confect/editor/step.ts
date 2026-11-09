@@ -170,17 +170,6 @@ export const UncheckedStepSchema = Schema.Unknown.check(
   })
 );
 
-/**
- * Writes a step as its JSON text. The depth of the slice is checked on the typed
- * input before the encoder walks it, so a deep slice fails as a schema issue.
- */
-export const encodeStep = Effect.fn("editor.step.encode")(function* (
-  step: Step
-) {
-  yield* Schema.decodeEffect(UncheckedStepSchema)(step);
-  return yield* Schema.encodeEffect(StepTextSchema)(step);
-});
-
 /** Reads a stored step's JSON text back into a checked step. */
 export const decodeStep = Effect.fn("editor.step.decode")(function* (
   text: string

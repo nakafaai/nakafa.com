@@ -12,19 +12,29 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import {
   characterCount,
   lineCount,
-  overlongToastCopy,
   overlongToastParts,
   TOAST_DESCRIPTION_LINE_CHARACTERS,
   TOAST_DESCRIPTION_LINES,
   TOAST_TITLE_LINE_CHARACTERS,
   TOAST_TITLE_LINES,
-  type ToastCopyText,
+  type ToastCopyTextSchema,
+} from "@repo/internationalization/src/test.toast";
+import {
   ToastValueKeySchema,
   ToastValuesSchema,
 } from "@repo/internationalization/src/toast";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 
 /** The locales that have a dictionary, so each one's messages can be loaded. */
+/** Every part of a toast namespace that takes too many lines, named by the key of its copy. */
+function overlongToastCopy(
+  copies: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
+) {
+  return Arr.flatMap(Rec.toEntries(copies), ([key, copy]) =>
+    Arr.map(overlongToastParts(copy), (overlong) => ({ ...overlong, key }))
+  );
+}
+
 const Locales = Schema.Literals(["de", "en", "id"]);
 
 /** A namespace of the app's messages, which holds messages or namespaces. */
@@ -41,7 +51,9 @@ function placeholdersIn(text: string) {
 }
 
 /** The placeholder names of every title and description in a toast namespace. */
-function placeholdersOf(namespace: Readonly<Record<string, ToastCopyText>>) {
+function placeholdersOf(
+  namespace: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
+) {
   return Arr.flatMap(Rec.values(namespace), (copy) =>
     Arr.flatMap([copy.title, copy.description ?? ""], placeholdersIn)
   );
@@ -61,7 +73,9 @@ function messagesOf(node: unknown): readonly string[] {
  * The text each toast copy shows as a whole: its title alone, or its title and
  * its description after it.
  */
-function wholeCopiesOf(namespace: Readonly<Record<string, ToastCopyText>>) {
+function wholeCopiesOf(
+  namespace: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
+) {
   return Arr.map(Rec.values(namespace), (copy) =>
     copy.description === undefined
       ? copy.title
@@ -74,7 +88,7 @@ function wholeCopiesOf(namespace: Readonly<Record<string, ToastCopyText>>) {
  * title or description that has a placeholder.
  */
 function interpolatingKeysOf(
-  namespace: Readonly<Record<string, ToastCopyText>>
+  namespace: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
 ) {
   return Arr.flatMap(Rec.toEntries(namespace), ([name, copy]) =>
     Arr.flatMap(

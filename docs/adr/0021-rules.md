@@ -395,6 +395,16 @@ the native compiler, wrapped in parentheses so that its lines keep their
 numbers, and reports each extra copy with its line and key path
 (`scripts/check/dictionary.ts`).
 
+The same check owns the one-sentence rule, once: a card description, card
+footer, dialog description, failure message or answer that
+`scripts/check/sentences.ts` lists is one sentence that ends with a period, a
+question mark or an exclamation mark, and what an empty list says (a key that
+ends in `empty`) holds no second sentence. One detector judges both, ignoring
+the inside of an ICU argument and of math, and a listed key that no dictionary
+holds is reported, so the list cannot keep a message that is gone. The unit
+test in `packages/internationalization` that held a second copy of the rule
+was removed.
+
 ### Exports that nothing names
 
 An exported name is the interface of its module, so the check reports each one
@@ -412,6 +422,22 @@ Generated and declaration files, JavaScript, the agent skill scripts, and the
 modules at the repository root count by word, since no rule parses them. The
 sweep that followed removed 52 names: the `export` keyword of 44 and 8
 declarations that nothing used.
+
+A name that only tests read is interface for the tests alone. The check
+reports it when its own module never uses it either: no product path runs it,
+so the tests alone keep it alive. The fix deletes it with the tests that hold
+it, or moves it into the test or the fixture that needs it. A name that its own
+module uses, such as a limit or a typed error that a test observes, stays an
+export the tests may read. Tests here are the unit tests (`*.test.ts` and the
+`test.<name>.ts` modules that only tests load), the browser specs
+(`*.browser.ts`), and the modules of a `test`, `e2e` or `checks` folder, which
+hold what tests share; a name that such a module declares is not judged this
+way. The sweep that introduced the rule removed 46 such names and the modules
+and fixtures that only they kept alive, among them the material preview
+artifact executor, which ADR 0038 retired, and the runtime article and material readers
+that static prerendering replaced. It also moved the CLI publish workflow's
+validator into the GitHub Action policy that `inspectGithubActionPolicy` runs,
+so a product path reads it.
 
 The check does not judge a module whose exports are read by name from outside
 the repository's imports: the TanStack Start route files and entry modules of an

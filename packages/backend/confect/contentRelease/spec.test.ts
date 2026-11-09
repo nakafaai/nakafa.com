@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import {
-  ARTICLE_VALIDATION_CLAIM_READ_LIMIT,
-  ARTICLE_VALIDATION_SCAN_LIMIT,
-} from "@repo/backend/confect/contentRelease/article/limits";
+import { ARTICLE_VALIDATION_SCAN_LIMIT } from "@repo/backend/confect/contentRelease/article/limits";
 import { CONTENT_BUCKET_SIZE } from "@repo/backend/confect/contentRelease/bucket";
 import {
   CONTENT_DOCUMENT_LIMIT,
@@ -31,6 +28,9 @@ import {
   TRANSACTION_READ_HEADROOM,
   TRANSACTION_READ_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
+
+/** Two category-owner and two explicit-route rows per distinct page member. */
+const ARTICLE_VALIDATION_CLAIM_READ_LIMIT = RELEASE_PAGE_LIMIT * 4;
 
 describe("contentRelease/spec", () => {
   it("preserves four MiB around worst-case lifecycle pages", () => {

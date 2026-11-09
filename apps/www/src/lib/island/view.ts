@@ -63,9 +63,8 @@ export function cameraFor(size: number, columns: number, rows: number) {
   return camera;
 }
 
-/** The art pixel's size in CSS pixels when the island fits, and its bounds for zoom. */
+/** The art pixel's size in CSS pixels when the island fits. */
 export const DEFAULT_ART_PIXEL = 3;
-const LARGEST_ART_PIXEL = 6;
 
 /** The space around an island's body, in art pixels, for its trees, roofs and clouds. */
 const MARGIN = { bottom: 60, side: 24, top: 56 };
@@ -84,11 +83,6 @@ export function artPixelFor(width: number, height: number, size: number) {
     size * VOXELS_PER_CELL + BODY_PIXELS + MARGIN.top + MARGIN.bottom;
   const fits = Math.floor(Math.min(width / islandWidth, height / islandHeight));
   return Math.max(1, Math.min(DEFAULT_ART_PIXEL, fits));
-}
-
-/** Moves an art pixel one zoom step in or out, within its bounds. */
-export function zoomed(artPixel: number, step: 1 | -1) {
-  return Math.max(1, Math.min(LARGEST_ART_PIXEL, artPixel + step));
 }
 
 /**

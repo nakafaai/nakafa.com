@@ -10,14 +10,11 @@ import {
   schoolClassLibraryTarget,
   schoolClassTarget,
   schoolClassTasksTarget,
-  schoolClassTaskTarget,
   schoolExamEditTarget,
-  schoolExamSittingResultsTarget,
   schoolExamSittingTarget,
   schoolExamsTarget,
   schoolExamTarget,
   schoolHomeTarget,
-  schoolNotificationsTarget,
   schoolSittingTarget,
 } from "@/lib/routing/school/target";
 
@@ -48,26 +45,11 @@ describe("school targets", () => {
     );
   });
 
-  it("builds the school's notifications under the school's slug", () => {
-    expect(schoolNotificationsTarget(slug)).toEqual(
-      expect.objectContaining({
-        params: { slug },
-        to: "/school/$slug/notifications",
-      })
-    );
-  });
-
   it("builds the sitting, results, student sitting and class pages", () => {
     expect(schoolExamSittingTarget(slug, "e1", "s1")).toEqual(
       expect.objectContaining({
         params: { exam: "e1", sitting: "s1", slug },
         to: "/school/$slug/exams/$exam/sittings/$sitting",
-      })
-    );
-    expect(schoolExamSittingResultsTarget(slug, "e1", "s1")).toEqual(
-      expect.objectContaining({
-        params: { exam: "e1", sitting: "s1", slug },
-        to: "/school/$slug/exams/$exam/sittings/$sitting/results",
       })
     );
     expect(schoolSittingTarget(slug, "s1")).toEqual(
@@ -115,12 +97,6 @@ describe("school targets", () => {
     );
     expect(schoolClassTasksTarget(slug, "7a")).toEqual(
       expect.objectContaining({ to: "/school/$slug/classes/$classSlug/tasks" })
-    );
-    expect(schoolClassTaskTarget(slug, "7a", "latihan")).toEqual(
-      expect.objectContaining({
-        params: { classSlug: "7a", slug, task: "latihan" },
-        to: "/school/$slug/classes/$classSlug/tasks/$task",
-      })
     );
   });
 });

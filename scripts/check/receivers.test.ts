@@ -7,7 +7,7 @@ import {
   ROOT,
   typedProject,
   withProject,
-} from "#scripts/check/fixture";
+} from "#scripts/check/test.fixture";
 import { receiverVerdicts } from "#scripts/check/receivers";
 import { descendants } from "#scripts/check/source";
 

@@ -2,10 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
-import {
-  renderTrainingCrawlerExpression,
-  TRAINING_CRAWLERS,
-} from "@/lib/seo/crawlers";
+import { TRAINING_CRAWLERS } from "@/lib/seo/crawlers";
 
 /** Whether the edge rule refuses a user agent, by the text each crawler sends. */
 const refused = (agent: string) =>
@@ -13,6 +10,18 @@ const refused = (agent: string) =>
     Arr.flatMap(TRAINING_CRAWLERS, (crawler) => crawler.sentAs),
     (text) => agent.toLowerCase().includes(text)
   );
+
+/**
+ * The edge rule's expression: the lowercased user agent contains one refused
+ * token. A token that no request carries is left out.
+ */
+function renderTrainingCrawlerExpression(crawlers: typeof TRAINING_CRAWLERS) {
+  const matches = Arr.map(
+    Arr.flatMap(crawlers, (crawler) => crawler.sentAs),
+    (text) => `lower(http.user_agent) contains "${text}"`
+  );
+  return `(${Arr.join(matches, " or ")})`;
+}
 
 describe("renderTrainingCrawlerExpression", () => {
   it("blocks each refused user agent in lowercase and leaves out the robots-only token", () => {

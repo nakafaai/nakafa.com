@@ -5,7 +5,7 @@ import { Effect } from "effect";
  * The bot policy of the nakafa.com zone, deployed from production only. The AI
  * search, user and training classes all allow at the edge, so answer services can
  * read and cite, and training is refused by robots.txt and one WAF rule, whose
- * expression `renderTrainingCrawlerExpression` writes. The deploy token holds no
+ * expression the crawler registry test renders (`src/lib/seo/crawlers.test.ts`). The deploy token holds no
  * Zone WAF Write, so that rule stands in Cloudflare outside this stack, a free
  * custom rule of the zone, and an operator's Cloudflare OAuth changes it. Bot Preference Sync, Bot Fight Mode and AI Labyrinth stay off. Alchemy documents
  * `fightMode` as the Free plan's field and the other fields set here as shared

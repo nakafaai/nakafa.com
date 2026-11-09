@@ -12,7 +12,7 @@ import {
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
-import { answer, quotaAnswer, urlsOf } from "@/scripts/indexing/fixture";
+import { answer, quotaAnswer, urlsOf } from "@/scripts/indexing/test.fixture";
 import {
   readBingWebmasterApiKey,
   submitUrlsToBing,

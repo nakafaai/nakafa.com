@@ -2,7 +2,7 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { isIdentifier, type SourceFile, SyntaxKind } from "tsrs/ast";
 import { API, Checker, Program, Snapshot } from "tsrs/sync";
-import { apiMethods } from "#scripts/check/fixture";
+import { apiMethods } from "#scripts/check/test.fixture";
 import {
   descendants,
   parseSources,

@@ -15,7 +15,7 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
-import { recordLogs } from "@/scripts/indexing/fixture";
+import { recordLogs } from "@/scripts/indexing/test.fixture";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,

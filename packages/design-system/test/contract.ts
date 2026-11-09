@@ -1,4 +1,4 @@
-import { TEXT_ROLE_PAIRS } from "@repo/design-system/lib/theme/contrast";
+import { TEXT_ROLE_PAIRS } from "@repo/design-system/test/contrast";
 import Color from "colorjs.io";
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import postcss, { type AtRule, Root, type Rule } from "postcss";

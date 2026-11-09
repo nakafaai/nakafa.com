@@ -11,7 +11,7 @@ import {
   Ref,
   Stdio,
 } from "effect";
-import { capture, makeCapture } from "#scripts/capture";
+import { capture, makeCapture } from "#scripts/test.capture";
 import { RULES } from "#scripts/check/rules";
 import { checkTestPolicy } from "#scripts/check/tests";
 

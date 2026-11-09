@@ -3,7 +3,7 @@ import { Array as Arr, Effect, Order, Tuple } from "effect";
 import { type Identifier, isIdentifier, type Node } from "tsrs/ast";
 import { symbolAt, symbolTable } from "#scripts/check/convex";
 import { effectTestViolations } from "#scripts/check/effect";
-import { ROOT, typedProject, withProject } from "#scripts/check/fixture";
+import { ROOT, typedProject, withProject } from "#scripts/check/test.fixture";
 import { descendants } from "#scripts/check/source";
 
 const file = "packages/backend/example.test.ts";

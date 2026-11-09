@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, PlatformError, Ref, Sink, Stdio } from "effect";
-import { capture, makeCapture } from "#scripts/capture";
+import { capture, makeCapture } from "#scripts/test.capture";
 import { writeError, writeOutput } from "#scripts/output";
 
 const closedStream = PlatformError.systemError({

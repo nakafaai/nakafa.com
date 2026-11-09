@@ -29,8 +29,6 @@ export const SocialOpenGraphType = Schema.Literals([
   "website",
 ]);
 
-type SocialOpenGraphType = typeof SocialOpenGraphType.Type;
-
 /**
  * The sections that own one social image each. Every page of a section shares its
  * section's image, which the build writes once per locale. A section without
@@ -71,47 +69,4 @@ export function getOgUrl(locale: Locale, path: string) {
   }
 
   return `/${locale}/og/${collection.value}/image.png` as const;
-}
-
-/** Builds complete social metadata so nested Open Graph and Twitter fields never fall back to parent defaults. */
-export function getSocialMetadata({
-  title,
-  description,
-  locale,
-  path,
-  image,
-  type = "website",
-}: {
-  title: string;
-  description: string;
-  locale: Locale;
-  path: string;
-  image: string;
-  type?: SocialOpenGraphType;
-}) {
-  const metadataImage = {
-    url: image,
-    alt: title,
-    ...SOCIAL_IMAGE_SIZE,
-  };
-
-  return {
-    openGraph: {
-      title,
-      description,
-      url: path,
-      siteName: SOCIAL_SITE_NAME,
-      locale,
-      type,
-      images: [metadataImage],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [metadataImage],
-      creator: SOCIAL_TWITTER_ACCOUNT,
-      site: SOCIAL_TWITTER_ACCOUNT,
-    },
-  };
 }

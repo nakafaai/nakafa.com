@@ -16,7 +16,7 @@ import {
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
-import { capture, makeCapture } from "#scripts/capture";
+import { capture, makeCapture } from "#scripts/test.capture";
 import {
   bumpDependencies,
   outdatedNames,

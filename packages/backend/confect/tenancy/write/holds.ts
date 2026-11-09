@@ -2,7 +2,6 @@ import type {
   TenantCohortsDoc,
   TenantPeriodsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import type { TableNames } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   classCohortHolder,
@@ -22,7 +21,6 @@ import type {
   CohortHolder,
   Holder,
   PeriodHolder,
-  Reference,
 } from "@repo/backend/confect/tenancy/hold";
 import {
   promotionCohortHolder,
@@ -88,27 +86,6 @@ export const periodHolders: readonly PeriodHolder[] = [
   graduationsHolder,
   promotionPeriodHolder,
   insightHolder,
-];
-
-/**
- * Period fields that no read needs, each beside the reference that covers it: the row's period is always the period of
- * the cohort or class it belongs to, and that cohort or class holds the period while the row holds it.
- */
-export const coveredReferences: Readonly<Record<Reference, Reference>> = {
-  "classTeachers.periodId": "classes.periodId",
-  "graduationLetters.periodId": "tenantCohorts.periodId",
-  "reportCards.periodId": "tenantCohorts.periodId",
-  "tenantAssignments.periodId": "tenantCohorts.periodId",
-  "tenantCohortMembers.periodId": "tenantCohorts.periodId",
-};
-
-/**
- * Tables whose references may outlive their subject by design: the journal keeps every removal it records (ADR 0041),
- * and an inbox row reads its subject when it is opened and shows nothing of one that is gone (ADR 0027).
- */
-export const keptTables: readonly TableNames[] = [
-  "journalEntries",
-  "notifications",
 ];
 
 /** The first hold among the holders that the subject has, in their order, reading every holder at once. */

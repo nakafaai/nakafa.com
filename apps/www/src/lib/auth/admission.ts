@@ -223,34 +223,6 @@ export function getPostAuthOnboardingHref(
   return `/${locale}${onboarding}`;
 }
 
-/** Rebuilds a trusted browser location into one exact intent source. */
-export function getPostAuthIntentSource(
-  pathname: string,
-  search: string,
-  hash = ""
-) {
-  const query = search === "" || search.startsWith("?") ? search : `?${search}`;
-  const fragment = hash === "" || hash.startsWith("#") ? hash : `#${hash}`;
-  return `${pathname}${query}${fragment}`;
-}
-
-/** Builds auth entry from a browser-location snapshot without reading globals. */
-export function getPostAuthSignInHrefForLocation(
-  location: {
-    readonly hash: string;
-    readonly pathname: string;
-    readonly search: string;
-  },
-  rawLocale: string
-) {
-  const source = getPostAuthIntentSource(
-    location.pathname,
-    location.search,
-    location.hash
-  );
-  return getPostAuthSignInHref(resolvePostAuthIntent(source, rawLocale));
-}
-
 /**
  * The sign-in route of one locale, resuming the intent that a browser source
  * (path, search and hash) names. A source that names no intent opens the bare route.

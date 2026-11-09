@@ -25,9 +25,11 @@ import {
   SyntaxKind,
 } from "tsrs/ast";
 import { RepositoryReadError } from "#scripts/check/files";
+import { TEST_PATTERN } from "#scripts/check/kinds";
 import {
   exportReader,
   fileStems,
+  heldNames,
   namespaceStems,
 } from "#scripts/check/readers";
 import { isGenerated, type RepositorySource } from "#scripts/check/source";
@@ -52,6 +54,11 @@ export const COMPONENT_SET_DIRECTORIES = [
   "packages/design-system/components/ui/",
   "packages/design-system/components/evilcharts/",
 ];
+
+/** A browser spec, which Playwright runs against a production build. */
+const BROWSER_SPEC_PATTERN = /\.browser\.ts$/u;
+/** A folder of the modules that only tests run: shared fixtures, browser helpers, and the site checks that Vitest runs. */
+const TEST_FOLDER_PATTERN = /(?:^|\/)(?:checks|e2e|test)\//u;
 
 /** The manifest of one workspace, by repository-relative path. */
 const WORKSPACE_MANIFEST_PATTERN = /^(?:apps|packages)\/[^/]+\/package\.json$/u;
@@ -176,10 +183,27 @@ function exportedNames(statement: Statement): readonly string[] {
 }
 
 /**
+ * Whether only tests load the module at `file`: a test, a browser spec, or a
+ * module of a folder of what tests share.
+ */
+function servesTests(file: string) {
+  return (
+    TEST_PATTERN.test(file) ||
+    BROWSER_SPEC_PATTERN.test(file) ||
+    TEST_FOLDER_PATTERN.test(file)
+  );
+}
+
+/**
  * Reports an exported name that no other module reads. An export is the
  * interface of its module, so a name that nothing imports is not interface: it
  * loses `export`, and the formatter then reports the declaration when its own
  * module does not use it either.
+ *
+ * It also reports a name of a module outside the tests that only tests read
+ * and that its own module never uses: no product path runs it, so the tests
+ * alone keep it alive. A name that its own module uses, such as a limit or an
+ * error that a test observes, stays an export the tests may read.
  *
  * An authored module reads a name of another module when it loads that module
  * by a module specifier and holds the name in code, or when it forwards that
@@ -199,25 +223,37 @@ export function inspectExports(
   others: readonly string[],
   unjudged: readonly string[]
 ): readonly string[] {
-  const declared = Arr.flatMap(modules, ({ file, sourceFile }) =>
-    isGenerated(sourceFile) ||
-    Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
-      Str.startsWith(directory)(file)
-    ) ||
-    FRAMEWORK_MODULE_PATTERN.test(file) ||
-    Arr.some(unjudged, (directory) => Str.startsWith(directory)(file))
-      ? []
-      : Arr.flatMap(sourceFile.statements, (statement) =>
-          Arr.map(exportedNames(statement), (name) => ({
-            file,
-            line:
-              sourceFile.getLineAndCharacterOfPosition(
-                statement.getStart(sourceFile)
-              ).line + 1,
-            name,
-          }))
-        )
-  );
+  const declared = Arr.flatMap(modules, ({ file, sourceFile }) => {
+    if (
+      isGenerated(sourceFile) ||
+      Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
+        Str.startsWith(directory)(file)
+      ) ||
+      FRAMEWORK_MODULE_PATTERN.test(file) ||
+      Arr.some(unjudged, (directory) => Str.startsWith(directory)(file))
+    ) {
+      return [];
+    }
+    const exported = Arr.flatMap(sourceFile.statements, (statement) =>
+      Arr.map(exportedNames(statement), (name) => ({
+        line:
+          sourceFile.getLineAndCharacterOfPosition(
+            statement.getStart(sourceFile)
+          ).line + 1,
+        name,
+      }))
+    );
+    const held = heldNames(
+      sourceFile,
+      HashSet.fromIterable(Arr.map(exported, ({ name }) => name))
+    );
+    return Arr.map(exported, ({ line, name }) => ({
+      file,
+      line,
+      name,
+      used: Arr.filter(held, (word) => word === name).length > 1,
+    }));
+  });
   const names = HashSet.fromIterable(Arr.map(declared, ({ name }) => name));
   const namespaces = HashSet.fromIterable(
     Arr.flatMap(modules, ({ sourceFile }) => namespaceStems(sourceFile))
@@ -225,6 +261,7 @@ export function inspectExports(
   const readers = Arr.map(modules, ({ file, sourceFile }) => ({
     file,
     reads: exportReader(sourceFile, names, namespaces),
+    tests: servesTests(file),
   }));
   const otherWords = HashSet.fromIterable(
     Arr.filter(
@@ -232,16 +269,27 @@ export function inspectExports(
       (word) => HashSet.has(names, word)
     )
   );
-  return Arr.filterMap(declared, ({ file, line, name }) => {
+  return Arr.filterMap(declared, ({ file, line, name, used }) => {
     const stems = fileStems(file);
-    return HashSet.has(otherWords, name) ||
-      Arr.some(
-        readers,
-        (reader) => reader.file !== file && reader.reads(stems, name)
-      )
+    const reading = Arr.filter(
+      readers,
+      (reader) => reader.file !== file && reader.reads(stems, name)
+    );
+    if (
+      HashSet.has(otherWords, name) ||
+      Arr.some(reading, (reader) => !reader.tests)
+    ) {
+      return Result.failVoid;
+    }
+    if (Arr.isReadonlyArrayEmpty(reading)) {
+      return Result.succeed(
+        `${file}:${line}: no other module names ${name}: remove its \`export\`, or delete the declaration when this module does not use it either (unused-export)`
+      );
+    }
+    return used || servesTests(file)
       ? Result.failVoid
       : Result.succeed(
-          `${file}:${line}: no other module names ${name}: remove its \`export\`, or delete the declaration when this module does not use it either (unused-export)`
+          `${file}:${line}: only tests name ${name}, and its own module never uses it: delete it with the tests that hold it, or move it into the test that needs it (test-only-export)`
         );
   });
 }

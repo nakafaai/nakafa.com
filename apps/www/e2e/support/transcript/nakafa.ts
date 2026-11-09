@@ -1,6 +1,6 @@
 import type {
   NakafaAgentContentRefSchema,
-  NakafaAgentSection,
+  NakafaAgentSectionSchema,
 } from "@repo/contents/agent/schema/ref";
 import type { Locale } from "@repo/contents/content";
 import { Array as Arr } from "effect";
@@ -17,7 +17,7 @@ type Reference = typeof NakafaAgentContentRefSchema.Encoded;
 function reference(
   locale: Locale,
   route: string,
-  section: NakafaAgentSection
+  section: typeof NakafaAgentSectionSchema.Type
 ): Reference {
   const path = Arr.join(route.split("/"), ":");
   const asset = `asset:fixture:${section}:${path}`;

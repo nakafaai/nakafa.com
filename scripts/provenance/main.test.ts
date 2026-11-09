@@ -9,7 +9,7 @@ import {
   Schema,
   Stdio,
 } from "effect";
-import { capture, makeCapture } from "#scripts/capture";
+import { capture, makeCapture } from "#scripts/test.capture";
 import { verifyProvenanceAudit } from "#scripts/provenance/main";
 import {
   AuditSchema,

@@ -124,15 +124,37 @@ function isNamespaced(
   );
 }
 
-/** Every node of a module in source order. Trivia such as a comment holds no node. */
-function nodesOf(sourceFile: SourceFile): readonly Node[] {
+/**
+ * Every node of a module in source order, leaving out the nodes below a node
+ * that `skips`. Trivia such as a comment holds no node.
+ */
+function nodesOf(
+  sourceFile: SourceFile,
+  skips: (node: Node) => boolean = () => false
+): readonly Node[] {
   const nodes = MutableList.make<Node>();
   const visit = (node: Node): void => {
     MutableList.append(nodes, node);
-    node.forEachChild(visit);
+    if (!skips(node)) {
+      node.forEachChild(visit);
+    }
   };
   visit(sourceFile);
   return MutableList.toArray(nodes);
+}
+
+/**
+ * Each identifier of a module that holds one of `names`, outside an `export`
+ * list, which only forwards a name. A declaration holds its own name once, so
+ * a name held twice or more is one that its own module uses.
+ */
+export function heldNames(
+  sourceFile: SourceFile,
+  names: HashSet.HashSet<string>
+): readonly string[] {
+  return Arr.flatMap(nodesOf(sourceFile, isExportDeclaration), (node) =>
+    isIdentifier(node) ? namedWords(node, names) : []
+  );
 }
 
 /** The declared name that a node holds in code as an identifier or a string, as a list of at most one. */

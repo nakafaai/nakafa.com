@@ -24,7 +24,7 @@ import {
   runToEnd,
   runToFailure,
   urlsOf,
-} from "@/scripts/indexing/fixture";
+} from "@/scripts/indexing/test.fixture";
 import { loadSubmissionHistory } from "@/scripts/indexing/history";
 import { runIndexNow } from "@/scripts/indexing/indexnow/run";
 import { INDEXNOW_KEY, INDEXNOW_KEY_LOCATION } from "@/scripts/indexing/paths";

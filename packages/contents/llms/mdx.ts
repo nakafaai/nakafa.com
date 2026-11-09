@@ -73,25 +73,6 @@ export class MdxAgentProjectionError extends Schema.TaggedError<
   message: Schema.String,
 }) {}
 
-/** Preserves the authored lesson body while omitting non-rendered module declarations. */
-export const readMdxBody = Effect.fn("contents.llms.mdx.body")(function* (
-  source: string
-) {
-  const tree = yield* parseMdxTree(source);
-  let body = source;
-  for (const node of Arr.reverse(tree.children)) {
-    if (node.type !== "mdxjsEsm") {
-      continue;
-    }
-    const position = yield* Schema.decodeUnknownEffect(MdxPositionSchema)(
-      node.position
-    ).pipe(Effect.mapError(makeMdxAgentProjectionError));
-    body =
-      body.slice(0, position.start.offset) + body.slice(position.end.offset);
-  }
-  return body.trim();
-});
-
 /** Projects authored MDX into bounded markdown that preserves agent semantics. */
 export const projectMdxForAgentMarkdown = Effect.fn(
   "contents.llms.mdx.project"

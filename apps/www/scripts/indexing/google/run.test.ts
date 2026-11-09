@@ -24,7 +24,7 @@ import {
   recordLogs,
   runToEnd,
   runToFailure,
-} from "@/scripts/indexing/fixture";
+} from "@/scripts/indexing/test.fixture";
 import { runGoogleIndexing } from "@/scripts/indexing/google/run";
 import { loadSubmissionHistory } from "@/scripts/indexing/history";
 

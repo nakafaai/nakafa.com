@@ -6,7 +6,6 @@ import {
   cameraFor,
   DEFAULT_ART_PIXEL,
   PIXELS_PER_UNIT,
-  zoomed,
 } from "@/lib/island/view";
 
 describe("island view", () => {
@@ -19,12 +18,6 @@ describe("island view", () => {
     expect(artPixelFor(390, 390, 6)).toBe(2);
     expect(artPixelFor(600, 500, 8)).toBe(2);
     expect(artPixelFor(100, 100, 24)).toBe(1);
-  });
-
-  it("zooms one whole art pixel at a time within its bounds", () => {
-    expect(zoomed(3, 1)).toBe(4);
-    expect(zoomed(1, -1)).toBe(1);
-    expect(zoomed(6, 1)).toBe(6);
   });
 
   it("sizes the buffer in an even number of whole art pixels", () => {

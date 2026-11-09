@@ -7,13 +7,13 @@ import {
   PLOT_COLORS,
   PlotColorSchema,
 } from "@repo/design-system/lib/plot";
-import { getWcagContrast } from "@repo/design-system/lib/theme/contrast";
 import {
   createThemeProfiles,
   findTopLevelRule,
   readDirectValue,
   readThemeStyleSources,
 } from "@repo/design-system/test/contract";
+import { getWcagContrast } from "@repo/design-system/test/contrast";
 import Color from "colorjs.io";
 import { Array as Arr, Effect, Record as Rec } from "effect";
 
