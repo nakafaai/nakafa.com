@@ -578,9 +578,9 @@ visit (`/island/{username}`) answered 404 until a rule was added by hand. The
 rules are now one record whose keys are typed from the generated route tree's
 full paths, less the index, the root splat and the public surfaces, so a route
 root without a rule, or a rule for a root no route serves, fails the `www`
-typecheck. `route.test.ts` reads the same generated paths, writes each as the
-browser shows it, and requires every one to be accepted; on main 6f9aeb340a it
-refused 9 addresses, `agent`, `articles` and `quran` among them.
+typecheck. `route.test.ts` reads the route files below the locale, writes each
+route as the browser shows it, and requires every one to be accepted; on main
+6f9aeb340a it refused 9 addresses, `agent`, `articles` and `quran` among them.
 
 ## Consequences
 

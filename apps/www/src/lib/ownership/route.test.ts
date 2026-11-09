@@ -23,69 +23,61 @@ import {
 } from "@/lib/ownership/route";
 import { routeRewrite } from "@/lib/routing/rewrite";
 
-/** One full route path of the generated tree, below the locale, as its route index lists it. */
-const FULL_PATH_PATTERN = /(?<=^ {2}')\/\$locale\/[^']*(?=': typeof)/gmu;
+/** The extension of a route file, which names no segment. */
+const ROUTE_FILE_EXTENSION = /\.tsx$/u;
 /** The locale that every sample address is written in, which the public path leaves out. */
 const LOCALE_PREFIX_PATTERN = /^\/en\/?/u;
 
 /**
- * The public address of one route path: each parameter takes a sample value
- * that a username, an id, a hash and a slug all accept, and the router's output
- * rewrite writes it as the browser shows it.
+ * The path segments of a route file below the locale, as the router names them: pathless layouts (`_main`),
+ * index and layout files leave no segment, and a flat file name such as `verify.$hash` names its segments with dots.
  */
-function addressOf(template: string) {
-  const sample = Arr.join(
-    Arr.map(Arr.filter(Str.split(template, "/"), Str.isNonEmpty), (segment) => {
-      if (segment === "$locale") {
-        return "en";
-      }
-      return Str.startsWith("$")(segment) ? "nabil" : segment;
-    }),
-    "/"
+function routeSegmentsOf(file: string) {
+  return Arr.filter(
+    Arr.flatMap(
+      Str.split(Str.replace(ROUTE_FILE_EXTENSION, "")(file), "/"),
+      Str.split(".")
+    ),
+    (segment) =>
+      !(
+        Str.startsWith("_")(segment) ||
+        segment === "index" ||
+        segment === "route"
+      )
+  );
+}
+
+/**
+ * The public address of one route below the locale: each parameter takes a
+ * sample value that a username, an id, a hash and a slug all accept, and the
+ * router's output rewrite writes it as the browser shows it.
+ */
+function addressOf(segments: readonly string[]) {
+  const sample = Arr.map(segments, (segment) =>
+    Str.startsWith("$")(segment) ? "nabil" : segment
   );
   const { pathname } = routeRewrite.output({
-    url: new URL(sample, SITE_ORIGIN),
+    url: new URL(Arr.join(Arr.prepend(sample, "en"), "/"), SITE_ORIGIN),
   });
   return Str.replace(LOCALE_PREFIX_PATTERN, "")(pathname);
 }
 
-/** The extension of a route file, which names no segment. */
-const ROUTE_FILE_EXTENSION = /\.tsx$/u;
-
-/**
- * The first path segment of a route file below the locale, as the router names it: pathless layouts (`_main`),
- * index and layout files leave no segment, and a flat file name such as `verify.$hash` names its segments with dots.
- */
-function routeRootOf(file: string) {
-  return Arr.head(
-    Arr.filter(
-      Arr.flatMap(
-        Str.split(Str.replace(ROUTE_FILE_EXTENSION, "")(file), "/"),
-        Str.split(".")
-      ),
-      (segment) =>
-        !(
-          Str.startsWith("_")(segment) ||
-          segment === "index" ||
-          segment === "route"
-        )
-    )
-  );
-}
+/** Reads every route file below the locale, by its path relative to the locale's folder. */
+const readRouteFiles = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const files = yield* fs.readDirectory(path.resolve("src/routes/$locale"), {
+    recursive: true,
+  });
+  return Arr.filter(files, (file) => ROUTE_FILE_EXTENSION.test(file));
+});
 
 describe("public route ownership", () => {
   it.effect(
     "owns the first segment of every route below the locale, so no route answers as a missing page",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const files = yield* fs.readDirectory(
-          path.resolve("src/routes/$locale"),
-          {
-            recursive: true,
-          }
-        );
+        const files = yield* readRouteFiles;
         const owned = HashSet.union(
           APPLICATION_ROUTE_ROOTS,
           HashSet.fromIterable(
@@ -94,10 +86,7 @@ describe("public route ownership", () => {
         );
         const roots = Arr.dedupe(
           Arr.getSomes(
-            Arr.map(
-              Arr.filter(files, (file) => Str.endsWith(".tsx")(file)),
-              routeRootOf
-            )
+            Arr.map(files, (file) => Arr.head(routeSegmentsOf(file)))
           )
         );
         // A route parameter at the root, such as the authored pages' splat, owns no segment of its own.
@@ -114,29 +103,18 @@ describe("public route ownership", () => {
     "accepts a page of every route that the router serves below the locale, so no route answers a hard 404",
     () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const tree = yield* fs.readFileString(
-          path.resolve("src/routeTree.gen.ts")
+        const files = yield* readRouteFiles;
+        // A layout and an index name the same address, which is judged once.
+        const addresses = Arr.dedupe(
+          Arr.map(files, (file) => addressOf(routeSegmentsOf(file)))
         );
-        // A route id names its pathless layouts (`/_main`), which no address shows.
-        const templates = Arr.filter(
-          Arr.dedupe(
-            Arr.map(
-              Arr.fromIterable(Str.matchAll(FULL_PATH_PATTERN)(tree)),
-              (match) => match[0]
-            )
-          ),
-          (template) => !Str.includes("/_")(template)
-        );
-        const addresses = Arr.map(templates, addressOf);
         // The locale's index, and the root splat that serves a signed Page, name no application root.
         const served = Arr.filter(
           addresses,
           (address) => !(address === "" || address === "nabil")
         );
         expect(served).toEqual(
-          expect.arrayContaining(["agent", "island/nabil", "@nabil/chat"])
+          expect.arrayContaining(["agent", "verify/nabil", "@nabil/chat"])
         );
         expect(
           Arr.filter(
@@ -208,8 +186,6 @@ describe("public route ownership", () => {
     ["de", "school/pricing"],
     ["de", "chat/new"],
     ["de", "comment/fabricated"],
-    ["en", "island"],
-    ["en", "island/nabil"],
     ["de", "user/settings/learning"],
     ["de", "user/settings/subscriptions"],
     ["de", "user/settings/memory"],
@@ -243,7 +219,7 @@ describe("public route ownership", () => {
     ["de", "chat/id/fabricated"],
     ["de", "comment"],
     ["de", "comment/id/fabricated"],
-    ["en", "island/nabil/fabricated"],
+    ["en", "island"],
     ["de", "onboarding/focus"],
     ["de", "onboarding/role"],
     ["de", "onboarding/fabricated"],
