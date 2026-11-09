@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { movePointerTo } from "@/e2e/support/input";
 import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
@@ -126,9 +127,9 @@ const openSchoolFromHeader = Effect.fn("NakafaE2E.openSchoolFromHeader")(
       );
       return;
     }
-    yield* Effect.promise(() =>
-      header.getByRole("button", { name: "School" }).hover()
-    );
+    // The pointer comes to the trigger from the page, as a reader's does, so the trigger sees it arrive.
+    yield* Effect.promise(() => page.mouse.move(8, 320));
+    yield* movePointerTo(page, header.getByRole("button", { name: "School" }));
     yield* Effect.promise(() =>
       page
         .locator('[data-slot="navigation-menu-popup"]')
@@ -159,9 +160,7 @@ const pressMenu = Effect.fn("NakafaE2E.pressMenu")(function* (
   );
   const popup = page.locator('[data-slot="navigation-menu-popup"]');
   yield* Effect.promise(() => expect(popup).toBeVisible());
-  yield* Effect.promise(() =>
-    header.getByRole("button", { name: "School" }).hover()
-  );
+  yield* movePointerTo(page, header.getByRole("button", { name: "School" }));
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(popup).toHaveCount(0));
 });
