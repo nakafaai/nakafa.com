@@ -12,7 +12,6 @@ import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { type Locale, useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
-import { LanguageMark } from "@/components/shared/language";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 /**
@@ -52,7 +51,7 @@ export function Language({ compact = false }: { compact?: boolean }) {
         {Arr.map(languages, (language) => (
           <DropdownMenuItem
             disabled={isPending}
-            icon={<LanguageMark code={language.value} />}
+            icon={TranslateIcon}
             key={language.value}
             onClick={(event) => {
               event.stopPropagation();
