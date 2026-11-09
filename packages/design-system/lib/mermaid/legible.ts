@@ -25,15 +25,17 @@ function viewBoxSize(viewBox: string | null | undefined) {
 }
 
 /**
- * Sizes a Mermaid SVG to fit its box without ever turning illegible. Its width
- * and height are its viewBox in CSS pixels, so it never grows past its natural
- * size; it shrinks to fit the box's width and height; and it never shrinks
- * below `LEGIBLE_SCALE`, where a larger diagram overflows its box, which then
- * scrolls. Mermaid writes a width of 100 percent and a maximum width instead,
+ * Sizes a Mermaid SVG for its box. Without a scale it fits the box without
+ * ever turning illegible: its width and height are its viewBox in CSS pixels,
+ * so it never grows past its natural size; it shrinks to fit the box's width
+ * and height; and it never shrinks below `LEGIBLE_SCALE`, where a larger
+ * diagram overflows its box, which then scrolls. With a scale, which a reader
+ * zooms to, it is drawn at that multiple of its natural size and scrolls in its
+ * box. Mermaid writes a width of 100 percent and a maximum width instead,
  * which shrinks a wide diagram until its labels cannot be read. The markup is
  * read as HTML, the way the page reads it, and written back the same way.
  */
-export function legibleSvg(svg: string) {
+export function legibleSvg(svg: string, scale?: number) {
   const root = new DOMParser().parseFromString(svg, "text/html").body
     .firstElementChild;
   const size = viewBoxSize(root?.getAttribute("viewBox"));
@@ -43,6 +45,12 @@ export function legibleSvg(svg: string) {
   }
 
   const { height, width } = size.value;
+  if (scale !== undefined) {
+    root.setAttribute("width", String(width * scale));
+    root.setAttribute("height", String(height * scale));
+    root.removeAttribute("style");
+    return root.outerHTML;
+  }
   root.setAttribute("width", String(width));
   root.setAttribute("height", String(height));
   // Mermaid writes nothing else into the style of the root but its maximum

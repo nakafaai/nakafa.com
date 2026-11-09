@@ -19,9 +19,18 @@ describe("legible size of a Mermaid SVG", () => {
     expect(sized).toContain('<rect width="10" height="10"></rect>');
   });
 
+  it("draws a zoomed diagram at that multiple of its natural size", () => {
+    const sized = legibleSvg(FITTED, 1.5);
+
+    expect(sized).toContain(' width="1218"');
+    expect(sized).toContain(' height="693"');
+    expect(sized).not.toContain("style=");
+  });
+
   it("keeps an SVG without a viewBox as Mermaid wrote it", () => {
     const svg = '<svg width="100%"><g></g></svg>';
 
     expect(legibleSvg(svg)).toBe(svg);
+    expect(legibleSvg(svg, 2)).toBe(svg);
   });
 });

@@ -41,6 +41,8 @@ interface MermaidProps {
   className?: string;
   config?: MermaidRenderConfig | undefined;
   label: string;
+  /** The multiple of its natural size a reader zoomed the diagram to; without one it fits its box. */
+  zoom?: number | undefined;
 }
 /**
  * Renders Mermaid chart markup with a cached last-good SVG fallback. The
@@ -49,7 +51,13 @@ interface MermaidProps {
  * fits the box at a legible scale, centered by auto margins; a diagram larger
  * than that starts at the box's edge, and the box is the one place it scrolls.
  */
-export function Mermaid({ chart, className, config, label }: MermaidProps) {
+export function Mermaid({
+  chart,
+  className,
+  config,
+  label,
+  zoom,
+}: MermaidProps) {
   const t = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const componentId = useId();
@@ -163,9 +171,12 @@ export function Mermaid({ chart, className, config, label }: MermaidProps) {
   return (
     <div
       aria-label={label}
-      className={cn("flex overflow-auto [&>svg]:m-auto", className)}
+      className={cn(
+        "flex overflow-auto [&>svg]:m-auto [&>svg]:shrink-0",
+        className
+      )}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid returns sanitized SVG in strict security mode.
-      dangerouslySetInnerHTML={{ __html: legibleSvg(renderState.svg) }}
+      dangerouslySetInnerHTML={{ __html: legibleSvg(renderState.svg, zoom) }}
       role="img"
     />
   );

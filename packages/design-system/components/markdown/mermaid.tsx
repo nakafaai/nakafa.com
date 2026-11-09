@@ -1,4 +1,8 @@
-import { Maximize02Icon } from "@hugeicons/core-free-icons";
+import {
+  Maximize02Icon,
+  ZoomInAreaIcon,
+  ZoomOutAreaIcon,
+} from "@hugeicons/core-free-icons";
 import {
   CodeBlockCopyButton,
   CodeBlockDownloadButton,
@@ -7,9 +11,11 @@ import {
 import { Mermaid } from "@repo/design-system/components/ai/mermaid";
 import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
+import { Array as Arr, Option } from "effect";
 import { createContext, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 
@@ -75,20 +81,53 @@ function DiagramCard() {
   );
 }
 
+/** The multiples of its natural size a reader zooms a diagram to, after the fit it opens at. */
+const ZOOM_STEPS = [1, 1.5, 2];
+
 /**
- * The diagram in the dialog that opens it, filling the dialog's body. The
- * body does not scroll, so this box is the one place a larger diagram does.
+ * The diagram in the dialog that opens it, filling the dialog's body. It opens
+ * fitted to the body, and a reader zooms it through its natural size up to
+ * twice that. The body does not scroll, so the diagram's box is the one place a
+ * larger diagram does.
  */
 function DialogDiagram() {
+  const t = useTranslations("Ai");
   const { chart, config, title } = useMermaidFigure();
+  // -1 is the fit the dialog opens at; each step after it is one of ZOOM_STEPS.
+  const [step, setStep] = useState(-1);
 
   return (
-    <Mermaid
-      chart={chart}
-      className="bg-muted/40 min-h-0 flex-1 basis-[60dvh] rounded-lg p-4 text-base"
-      config={config}
-      label={title}
-    />
+    <>
+      <ButtonGroup aria-label={t("diagram-zoom")} className="self-end">
+        <Button
+          disabled={step < 0}
+          onClick={() => setStep((current) => Math.max(current - 1, -1))}
+          size="icon-sm"
+          title={t("zoom-out")}
+          tooltip={t("zoom-out")}
+        >
+          <HugeIcons icon={ZoomOutAreaIcon} />
+        </Button>
+        <Button
+          disabled={step >= ZOOM_STEPS.length - 1}
+          onClick={() =>
+            setStep((current) => Math.min(current + 1, ZOOM_STEPS.length - 1))
+          }
+          size="icon-sm"
+          title={t("zoom-in")}
+          tooltip={t("zoom-in")}
+        >
+          <HugeIcons icon={ZoomInAreaIcon} />
+        </Button>
+      </ButtonGroup>
+      <Mermaid
+        chart={chart}
+        className="bg-muted/40 min-h-0 flex-1 basis-[60dvh] rounded-lg p-4 text-base"
+        config={config}
+        label={title}
+        zoom={Option.getOrUndefined(Arr.get(ZOOM_STEPS, step))}
+      />
+    </>
   );
 }
 
