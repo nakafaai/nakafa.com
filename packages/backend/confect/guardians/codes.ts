@@ -13,6 +13,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { createAuth } from "@repo/backend/confect/auth/runtime";
 import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
+import {
+  unsubscribePage,
+  unsubscribePost,
+} from "@repo/backend/confect/emails/unsubscribe/token";
 import { liveLinksOfAddress } from "@repo/backend/confect/guardians/link";
 import {
   CODE_TERM,
@@ -157,12 +161,22 @@ export const sendCode = Effect.fn("guardians.codes.send")(function* (input: {
     return answer;
   }
   const { code, codeId } = yield* storeCode(tenant.value._id, input.email);
-  yield* sendMail(yield* MutationCtx, {
-    ...guardianCodeEmail({ code, locale: input.locale }),
-    from: EMAIL_FROM,
-    idempotencyKey: `guardian-code/${codeId}/${now}`,
-    to: input.email,
-  }).pipe(Effect.orDie);
+  // The guardian asked for this code, so an address that unsubscribed still receives it.
+  const recipient = { _tag: "Address", address: input.email } as const;
+  yield* sendMail(
+    yield* MutationCtx,
+    {
+      ...guardianCodeEmail({
+        code,
+        locale: input.locale,
+        unsubscribeUrl: yield* unsubscribePage(recipient, input.locale),
+      }),
+      from: EMAIL_FROM,
+      idempotencyKey: `guardian-code/${codeId}/${now}`,
+      to: input.email,
+    },
+    yield* unsubscribePost(recipient)
+  ).pipe(Effect.orDie);
   return answer;
 });
 

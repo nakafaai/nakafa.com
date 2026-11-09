@@ -4381,6 +4381,15 @@
     "approved": "Disetujui pada",
     "issued": "Diterbitkan pada"
   },
+  "Unsubscribe": {
+    "ask-title": "Berhenti menerima email dari Nakafa",
+    "ask-description": "Kamu tidak akan menerima email notifikasi lagi. Kode masuk dan pemberitahuan pembayaranmu tetap terkirim.",
+    "confirm": "Berhenti berlangganan",
+    "done-title": "Kamu sudah berhenti berlangganan",
+    "done-description": "Kamu bisa menyalakan email lagi di pengaturan notifikasi.",
+    "invalid-title": "Tautan ini tidak berlaku",
+    "invalid-description": "Buka tautan berhenti berlangganan di email terbaru dari Nakafa."
+  },
   "SchoolInsight": {
     "title": "Insight",
     "class": "Kelas",

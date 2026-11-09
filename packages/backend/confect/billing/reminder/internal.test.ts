@@ -94,6 +94,9 @@ describe("billing/reminder", () => {
           locale: "id",
           privacyPolicyUrl: "http://localhost:3000/id/privacy-id",
           termsOfServiceUrl: "http://localhost:3000/id/terms-id",
+          unsubscribeUrl: expect.stringContaining(
+            "http://localhost:3000/id/unsubscribe?token="
+          ),
         });
       })
   );
