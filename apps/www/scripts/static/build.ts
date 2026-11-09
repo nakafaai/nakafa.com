@@ -143,8 +143,9 @@ const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
 
 /**
  * Lists the Mermaid diagrams of one prerendered page with a signed body, read
- * from the content tree the page rendered. The content store answers each read
- * from the prerender's own, so the check costs no Convex call.
+ * from the content tree the page rendered. The content store answers a body
+ * from the reads the prerender and the Markdown twin already made; a page with
+ * no signed body costs one ownership read for each release.
  */
 const readPageDiagrams = Effect.fn("www.static.pageDiagrams")(function* (
   page: string
