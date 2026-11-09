@@ -1,8 +1,11 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
 import { testSignedArtifact } from "@repo/backend/test/content/proof";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, Result } from "effect";
+import { isValidElement, type ReactNode } from "react";
+import { AdSlot } from "@/components/ads/slot";
 import { readRenderedBody } from "@/lib/content/published/body";
 
 const renderServerComponentMock = vi.hoisted(() =>
@@ -22,6 +25,35 @@ vi.mock("@/lib/analytics/exception.server", () => ({
 
 const VERIFIED_BODY_TEXT = "Verified body";
 
+/** One block of a body's root, by its element name and text. */
+function block(name: string, text: string): ContentTreeElement {
+  return { $node: "element", children: [text], name, props: {} };
+}
+
+/** A lesson of an introduction and four sections, each a heading and a paragraph. */
+const SECTIONED_TREE: ContentTreeElement = {
+  $node: "element",
+  children: [
+    block("p", "Introduction"),
+    ...Arr.flatMap(["One", "Two", "Three", "Four"], (title) => [
+      block("h2", title),
+      block("p", `${title} body`),
+    ]),
+  ],
+  name: "fragment",
+  props: {},
+};
+
+/** The blocks that one body handed to its server render, in order. */
+function renderedBlocks(): readonly unknown[] {
+  const body = renderServerComponentMock.mock.calls[0]?.[0];
+  if (!isValidElement<{ readonly children?: ReactNode }>(body)) {
+    return [];
+  }
+  const { children } = body.props;
+  return Arr.isArray(children) ? children : [children];
+}
+
 beforeEach(() => {
   renderServerComponentMock.mockReset().mockResolvedValue("server markup");
   captureMock.mockReset().mockReturnValue(Effect.void);
@@ -35,9 +67,50 @@ describe("published body reader", () => {
         rawMdx: VERIFIED_BODY_TEXT,
       });
 
-      expect(yield* readRenderedBody(artifact)).toBe("server markup");
+      expect(yield* readRenderedBody(artifact, Option.none())).toBe(
+        "server markup"
+      );
       expect(renderServerComponentMock).toHaveBeenCalledOnce();
       expect(captureMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "sets a lesson's ad frames after its second section and before its last",
+    () =>
+      Effect.gen(function* () {
+        const artifact = yield* testSignedArtifact("site", {
+          contentKey: "test:sections",
+          contentTree: SECTIONED_TREE,
+          rawMdx: "Introduction",
+        });
+
+        yield* readRenderedBody(artifact, Option.some("material"));
+
+        const slots = Arr.filterMap(renderedBlocks(), (child, index) =>
+          isValidElement<{ readonly unit: string }>(child) &&
+          child.type === AdSlot
+            ? Result.succeed({ index, key: child.key, unit: child.props.unit })
+            : Result.failVoid
+        );
+        // Blocks: p, h2, p, h2, p, [slot], h2, p, [slot], h2, p.
+        expect(slots).toEqual([
+          { index: 5, key: "test:sections:5", unit: "material" },
+          { index: 8, key: "test:sections:7", unit: "material" },
+        ]);
+      })
+  );
+
+  it.effect("sets no ad frame in a body that names no unit", () =>
+    Effect.gen(function* () {
+      const artifact = yield* testSignedArtifact("site", {
+        contentTree: SECTIONED_TREE,
+        rawMdx: "Introduction",
+      });
+
+      yield* readRenderedBody(artifact, Option.none());
+
+      expect(renderedBlocks()).toHaveLength(SECTIONED_TREE.children.length);
     })
   );
 
@@ -51,7 +124,7 @@ describe("published body reader", () => {
         });
 
         expect(
-          yield* readRenderedBody(artifact).pipe(Effect.flip)
+          yield* readRenderedBody(artifact, Option.none()).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "RendererImplementationMissing",
           componentName: "NoSuchComponent",
@@ -71,13 +144,13 @@ describe("published body reader", () => {
       const cause = new TypeError("render boom");
       renderServerComponentMock.mockRejectedValueOnce(cause);
 
-      expect(yield* readRenderedBody(artifact).pipe(Effect.flip)).toMatchObject(
-        {
-          _tag: "ContentExecutionError",
-          contentKey: artifact.payload.contentKey,
-          stage: "render",
-        }
-      );
+      expect(
+        yield* readRenderedBody(artifact, Option.none()).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "ContentExecutionError",
+        contentKey: artifact.payload.contentKey,
+        stage: "render",
+      });
       expect(captureMock).toHaveBeenCalledWith(cause, {
         source: "content.body",
       });

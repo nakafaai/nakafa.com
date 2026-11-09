@@ -161,7 +161,7 @@ export function SchoolPlayer() {
 
   return (
     <TryoutDemo>
-      <FeatureRow id="player" layout="end">
+      <FeatureRow id="player">
         <FeatureText>
           <span className="inline-block" id="player-nina">
             <TryoutDemoNina />

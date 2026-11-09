@@ -72,10 +72,14 @@ export function createLoopbackConnectSources(source: URL) {
  */
 export function createSecurityHeaders({
   additionalConnectSources = [],
+  additionalFrameSources = [],
   additionalImageSources = [],
+  additionalScriptSources = [],
 }: {
   readonly additionalConnectSources?: readonly string[];
+  readonly additionalFrameSources?: readonly string[];
   readonly additionalImageSources?: readonly string[];
+  readonly additionalScriptSources?: readonly string[];
 } = {}) {
   return [
     {
@@ -83,7 +87,13 @@ export function createSecurityHeaders({
       value: Arr.join(
         [
           "default-src 'self'",
-          `script-src ${Arr.join(BASE_CONTENT_SECURITY_POLICY.scriptSrc, " ")}`,
+          `script-src ${Arr.join(
+            [
+              ...BASE_CONTENT_SECURITY_POLICY.scriptSrc,
+              ...additionalScriptSources,
+            ],
+            " "
+          )}`,
           "style-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net",
           Arr.join(
             [
@@ -100,7 +110,13 @@ export function createSecurityHeaders({
             ],
             " "
           )}`,
-          "frame-src 'self' https://accounts.google.com https://docs.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+          Arr.join(
+            [
+              "frame-src 'self' https://accounts.google.com https://docs.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+              ...additionalFrameSources,
+            ],
+            " "
+          ),
           `media-src ${Arr.join(BASE_CONTENT_SECURITY_POLICY.mediaSrc, " ")}`,
           "frame-ancestors 'none'",
           "base-uri 'self'",

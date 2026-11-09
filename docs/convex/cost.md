@@ -140,6 +140,15 @@ page and reads the whole active release (`contentRelease/material:lesson`,
 - `scripts/github/policy.ts` pins the restore and save inputs, and a test runs the
   policy over the repository's own workflows, so a key that names the code again
   fails the tests.
+- A deploy whose Worker does not build keeps what it restored (9 November 2026). The
+  last step dropped every entry the build had not touched, so a deploy where Alchemy
+  plans `[Web] noop` (a backend, scripts or docs change) saved an empty store, and the
+  next deploy that built read the whole release again: deploy 42584174792 (08:11 UTC)
+  restored 23,972,411 bytes and saved 250, and the release deploy 42585307349 (08:21 UTC)
+  restored the 250 bytes. Its Quran reads (342 `quran:page` calls, 42.8 MB, and 342
+  `quran:prose` calls) are the only pass of them that day, because the release kept the
+  Quran snapshot. `keepShelfEntries` (`apps/www/src/lib/content/store/shelf.ts`) now drops
+  entries only after a build that touched one, and its tests pin it.
 
 ### Local proof
 
@@ -507,6 +516,35 @@ archives before schema deployment:
 The local backup directory is intentionally not committed because it contains
 deployment data.
 
+## Backups and exports (12 October to 9 November 2026)
+
+Read on 9 November 2026 from the usage API (function breakdown by day, which names
+backups `_system_job/cloud_backup` and `convex export` runs `_system_job/snapshot_export`)
+and from the dashboard's backup API (`get_periodic_backup_config` and
+`list_cloud_backups` per deployment), which reads metadata and no documents.
+
+- Neither deployment has a periodic backup: the schedule of production
+  (`dapper-antelope-269`) and of development (`different-frog-109`) is `null`. Nothing
+  in either repository runs `convex export` or requests a backup: no workflow, script or
+  cron does.
+- Every backup and export of the period ran on 7 November, by hand, from a lane:
+
+| Deployment | Job | Database I/O |
+| --- | --- | ---: |
+| production | `cloud_backup`, 17:03 UTC, with file storage | 674 MB |
+| production | `cloud_backup`, 22:55 UTC, without file storage | 40 MB |
+| production | `snapshot_export` | 674 MB and 40 MB |
+| development | `snapshot_export` | 591 MB |
+
+- That is 2.0 GB of the period's 91 GB of reads, on one day. The production export rows
+  match the two backups byte for byte, so the usage API may count each backup twice; the
+  backup API lists only the two backups (retention 7 days).
+- The period before (12 September to 12 October) had 8.92 GB of `snapshot_export`
+  (above). The rule since 7 November (`packages/backend/AGENTS.md`): exports and backups
+  are recovery points that the owner takes, never a way to read data. A periodic backup
+  is the owner's dashboard setting; at production's size a daily one would read about
+  0.7 GB a day, 20 GB a month, 40% of the plan.
+
 ## Scale Model
 
 Millions of localized content records are partitioned by signed source identity,
@@ -525,9 +563,9 @@ bounded pages.
 
 1. Export the monthly Database I/O breakdown after a full billing cycle on this
    architecture and compare I/O per build and active user with the baseline.
-2. Record dev and production logical-backup schedules and reconcile their reads
-   with the same invoice period. Do not disable production backups merely to
-   reduce cost.
+2. Reconcile backup reads with each invoice period ("Backups and exports" above
+   records 12 October to 9 November 2026). Do not disable production backups merely
+   to reduce cost.
 3. Add a durable monthly alert before included database I/O is exhausted, using
    Convex usage attribution fields.
 4. Review high-I/O Insights findings by function before considering another
