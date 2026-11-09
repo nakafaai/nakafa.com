@@ -1,10 +1,14 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { readGroupRedirect } from "@/lib/routing/public/tryout/group";
+import {
+  readCountryEntryRedirect,
+  readGroupRedirect,
+} from "@/lib/routing/public/tryout/group";
 import { type RouteIdentity, serveTryoutCatalog } from "@/test/catalog";
 
 const mocks = vi.hoisted(() => ({
+  country: vi.fn(),
   exam: vi.fn(),
   group: vi.fn(),
   path: vi.fn(),
@@ -14,6 +18,7 @@ vi.mock("@/lib/content/tryout/path", () => ({
   readPublishedTryoutLocalizedPath: mocks.path,
 }));
 vi.mock("@/lib/content/tryout/catalog", () => ({
+  readPublishedTryoutCountryPage: mocks.country,
   readPublishedTryoutExamPage: mocks.exam,
   readPublishedTryoutGroupPage: mocks.group,
   readPublishedTryoutSectionPage: mocks.section,
@@ -31,6 +36,18 @@ const SNBT_TRACK = `${SNBT_YEAR}/utbk`;
 
 /** The signed catalog of both exams: TKA by grade, and SNBT's one year with its one track. */
 const CATALOG = {
+  countries: [
+    {
+      appLocale: "id",
+      entryPath: "try-out/jerman/aufnahmepruefung/studienkolleg/matematika",
+      publicPath: "try-out/jerman",
+    },
+    {
+      appLocale: "id",
+      entryPath: "try-out/indonesia",
+      publicPath: "try-out/indonesia",
+    },
+  ],
   exams: [
     {
       appLocale: "id",
@@ -104,6 +121,53 @@ describe("try-out URLs from before the groups", () => {
         yield* readGroupRedirect("/id/try-out/indonesia/ujian-lain")
       ).toBeNull();
     })
+  );
+
+  it.effect(
+    "enters an exam, and a group with one track, at that track's set table, for now",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* readGroupRedirect(`/id/${SNBT}`)).toEqual({
+          destination: `/id/${SNBT_TRACK}`,
+          status: 307,
+        });
+        expect(yield* readGroupRedirect(`/id/${SNBT_YEAR}`)).toEqual({
+          destination: `/id/${SNBT_TRACK}`,
+          status: 307,
+        });
+        expect(yield* readGroupRedirect(`/id/${TKA_GRADE}`)).toBeNull();
+      })
+  );
+
+  it.effect("leaves a live group alone when its exam is gone", () =>
+    Effect.gen(function* () {
+      serveTryoutCatalog(mocks, { ...CATALOG, exams: [] });
+      expect(yield* readGroupRedirect(`/id/${TKA_GRADE}`)).toBeNull();
+    })
+  );
+
+  it.effect(
+    "enters a country with one exam at that exam's entry, and leaves one with more exams on its page",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* readCountryEntryRedirect("/id/try-out/jerman")).toEqual({
+          destination:
+            "/id/try-out/jerman/aufnahmepruefung/studienkolleg/matematika",
+          status: 307,
+        });
+        expect(
+          yield* readCountryEntryRedirect("/id/try-out/indonesia")
+        ).toBeNull();
+        expect(yield* readCountryEntryRedirect("/id/try-out/mars")).toBeNull();
+        for (const pathname of [
+          "/id",
+          "/fr/try-out/jerman",
+          "/id/articles/jerman",
+          "/id/try-out/jerman/aufnahmepruefung",
+        ]) {
+          expect(yield* readCountryEntryRedirect(pathname)).toBeNull();
+        }
+      })
   );
 
   it.effect("leaves an exam without a group on its 404", () =>

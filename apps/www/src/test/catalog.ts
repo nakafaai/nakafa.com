@@ -19,6 +19,14 @@ const ExamFixtureSchema = Schema.Struct({
 });
 export type ExamFixture = typeof ExamFixtureSchema.Type;
 
+/** One signed country in one locale: its entry, where a link to it lands. */
+const CountryFixtureSchema = Schema.Struct({
+  appLocale: AppLocaleCodeSchema,
+  entryPath: Schema.String,
+  publicPath: Schema.String,
+});
+export type CountryFixture = typeof CountryFixtureSchema.Type;
+
 /** One signed group in one locale: its tracks in order. */
 const GroupFixtureSchema = Schema.Struct({
   appLocale: AppLocaleCodeSchema,
@@ -36,11 +44,11 @@ const SectionFixtureSchema = Schema.Struct({
 });
 export type SectionFixture = typeof SectionFixtureSchema.Type;
 
-/** The catalog reads that the routing rules call, each a test double. */
+/** The catalog reads that the routing rules call, each a test double; a rule that reads no country needs no country double. */
 type CatalogMocks = Record<
   "exam" | "group" | "path" | "section",
   ReturnType<typeof vi.fn>
->;
+> & { readonly country?: ReturnType<typeof vi.fn> };
 
 /** Finds the row a read asks for: its locale and its path. */
 function findRow<Row extends { appLocale: AppLocaleCode; publicPath: string }>(
@@ -60,13 +68,15 @@ function findRow<Row extends { appLocale: AppLocaleCode; publicPath: string }>(
 export function serveTryoutCatalog(
   mocks: CatalogMocks,
   fixture: {
+    readonly countries?: readonly CountryFixture[];
     readonly exams?: readonly ExamFixture[];
     readonly groups?: readonly GroupFixture[];
     readonly routes?: readonly RouteIdentity[];
     readonly sections?: readonly SectionFixture[];
   }
 ) {
-  const { exams, groups, routes, sections } = {
+  const { countries, exams, groups, routes, sections } = {
+    countries: [],
     exams: [],
     groups: [],
     routes: [],
@@ -91,13 +101,38 @@ export function serveTryoutCatalog(
         )
       )
   );
+  // A group enters at its one track's table, or at its own page of track cards, as the catalog's depth rule does.
+  const entryOf = (
+    appLocale: AppLocaleCode,
+    group: ExamFixture["groups"][number]
+  ) =>
+    Option.match(findRow(groups, { appLocale, publicPath: group.publicPath }), {
+      onNone: () => group.publicPath,
+      onSome: ({ tracks }) =>
+        tracks.length === 1 && tracks[0] !== undefined
+          ? tracks[0].publicPath
+          : group.publicPath,
+    });
+  mocks.country?.mockImplementation(
+    (input: { appLocale: AppLocaleCode; publicPath: string }) =>
+      Effect.succeed(
+        Option.getOrNull(
+          Option.map(findRow(countries, input), (country) => ({
+            entryPath: country.entryPath,
+          }))
+        )
+      )
+  );
   mocks.exam.mockImplementation(
     (input: { appLocale: AppLocaleCode; publicPath: string }) =>
       Effect.succeed(
         Option.getOrNull(
           Option.map(findRow(exams, input), (exam) => ({
             exam: { groupAxis: exam.groupAxis },
-            groups: exam.groups,
+            groups: Arr.map(exam.groups, (group) => ({
+              ...group,
+              entryPath: entryOf(input.appLocale, group),
+            })),
           }))
         )
       )

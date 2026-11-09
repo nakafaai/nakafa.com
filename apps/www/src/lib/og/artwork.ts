@@ -40,7 +40,6 @@ const artworkSources = {
   "tryout/germany/index": ENGLISH_ARTWORK,
   "tryout/index": ["en", "de"],
   "tryout/indonesia/2027": ENGLISH_ARTWORK,
-  "tryout/indonesia/index": ENGLISH_ARTWORK,
   "tryout/indonesia/snbt": ENGLISH_ARTWORK,
   "tryout/indonesia/snbt/general-reasoning": ALL_ARTWORK_LOCALES,
   "tryout/indonesia/snbt/mathematical-reasoning": ALL_ARTWORK_LOCALES,

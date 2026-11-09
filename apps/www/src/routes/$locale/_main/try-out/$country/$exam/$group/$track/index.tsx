@@ -9,11 +9,7 @@ import { Option, Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
-import { TryoutCatalogChoices } from "@/components/tryout/catalog/choice";
-import {
-  TryoutExamSelector,
-  TryoutGroupSelector,
-} from "@/components/tryout/catalog/selector";
+import { TryoutGroupSelector } from "@/components/tryout/catalog/selector";
 import {
   CATALOG_QUERY_DEFAULTS,
   CatalogQuery,
@@ -90,34 +86,30 @@ function TryoutTrackPage() {
       <LayoutMaterialContent className="flex min-h-0 flex-1 flex-col">
         <BreadcrumbHeader
           value={{
-            action: (
-              <TryoutCatalogChoices>
-                <TryoutExamSelector
-                  currentValue={route.page.exam.publicPath}
-                  options={route.examOptions}
-                />
+            action:
+              route.groupOptions.length > 0 ? (
                 <TryoutGroupSelector
                   axis={route.page.exam.groupAxis}
                   currentValue={route.page.group.publicPath}
                   options={route.groupOptions}
                 />
-              </TryoutCatalogChoices>
-            ),
+              ) : undefined,
             home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [
               {
                 label: route.labels.tryOut,
                 menuLabel: route.labels.tryOutShort,
-                target: Option.getOrUndefined(
-                  getTryoutCrumbTarget(route.countryPath)
-                ),
+                target: Option.getOrUndefined(getTryoutCrumbTarget("try-out")),
               },
               {
-                label: `${route.page.exam.title} ${route.page.group.title}`,
-                target: Option.getOrUndefined(
-                  getTryoutCrumbTarget(route.page.group.publicPath)
-                ),
+                label: route.examCrumb.label,
+                target:
+                  route.examCrumb.path === undefined
+                    ? undefined
+                    : Option.getOrUndefined(
+                        getTryoutCrumbTarget(route.examCrumb.path)
+                      ),
               },
               { label: route.page.track.title },
             ],

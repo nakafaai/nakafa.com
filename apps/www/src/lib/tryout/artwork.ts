@@ -1,5 +1,4 @@
 import type {
-  CatalogCountrySchema,
   CatalogSectionSchema,
   CatalogTrackSchema,
 } from "@nakafa/aksara-contracts/assessment/catalog";
@@ -14,12 +13,15 @@ import {
   resolveStaticArtwork,
 } from "@/lib/og/artwork";
 
-const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
-  (typeof CatalogCountrySchema.Type)["countryKey"],
-  ArtworkIdentity
->([
-  ["germany", "tryout/germany/index"],
-  ["indonesia", "tryout/indonesia/index"],
+/**
+ * The reviewed artwork of each exam card, by its country and exam keys, never
+ * its localized slugs. The Aufnahmeprüfung wears the owner's Deutschland
+ * design, Germany's one exam, until it has its own.
+ */
+const EXAM_ARTWORK_BY_EXAM = HashMap.fromIterable<string, ArtworkIdentity>([
+  ["germany/entrance-examination", "tryout/germany/index"],
+  ["indonesia/snbt", "tryout/indonesia/snbt"],
+  ["indonesia/tka", "tryout/indonesia/tka"],
 ]);
 
 /**
@@ -135,18 +137,6 @@ export function resolveTryoutExamArtwork(
   );
 }
 
-/** Resolves reviewed card artwork for one signed try-out country. */
-export function getTryoutCountryCatalogArtwork(
-  locale: Locale,
-  source: Pick<typeof CatalogCountrySchema.Type, "countryKey">
-) {
-  const identity = Option.getOrUndefined(
-    HashMap.get(TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY, source.countryKey)
-  );
-
-  return identity ? resolveStaticArtwork(identity, locale) : undefined;
-}
-
 /** Resolves the reviewed artwork of one signed try-out track that has one, for its card and its social image. */
 export function getTryoutTrackCatalogArtwork(
   locale: Locale,
@@ -186,13 +176,7 @@ function getTryoutExamArtworkIdentity(
   countryKey: string,
   examKey: string
 ): ArtworkIdentity | undefined {
-  if (countryKey !== "indonesia") {
-    return;
-  }
-  if (examKey === "snbt") {
-    return "tryout/indonesia/snbt";
-  }
-  if (examKey === "tka") {
-    return "tryout/indonesia/tka";
-  }
+  return Option.getOrUndefined(
+    HashMap.get(EXAM_ARTWORK_BY_EXAM, `${countryKey}/${examKey}`)
+  );
 }

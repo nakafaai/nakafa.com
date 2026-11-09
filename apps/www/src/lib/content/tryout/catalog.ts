@@ -4,6 +4,9 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Effect } from "effect";
 import { querySnapshotContentStore } from "@/lib/content/store/query";
 
+type TryoutCountryPageArgs = Ref.Args<
+  typeof tryouts.queries.catalog.getCountryPage
+>;
 type TryoutExamPageArgs = Ref.Args<typeof tryouts.queries.catalog.getExamPage>;
 type TryoutGroupPageArgs = Ref.Args<
   typeof tryouts.queries.catalog.getGroupPage
@@ -11,6 +14,21 @@ type TryoutGroupPageArgs = Ref.Args<
 type TryoutSectionPageArgs = Ref.Args<
   typeof tryouts.queries.catalog.getSectionPage
 >;
+
+/**
+ * Reads one signed country with its exams and its entry, or null when the
+ * country is not live. The content store answers for the release, so the
+ * catalog and the routing decisions share one read of each release.
+ */
+export const readPublishedTryoutCountryPage = Effect.fn(
+  "www.tryouts.readCountryPage"
+)(function* (args: TryoutCountryPageArgs) {
+  return yield* querySnapshotContentStore(
+    "assessment",
+    tryouts.queries.catalog.getCountryPage,
+    args
+  );
+});
 
 /**
  * Reads one signed exam with its groups, or null when the exam is not live.

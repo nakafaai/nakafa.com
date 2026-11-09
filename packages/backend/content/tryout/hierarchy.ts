@@ -38,7 +38,7 @@ const PublishedCatalogIndexSchema = Schema.Struct({
   snapshotId: Schema.String,
   tracks: Schema.Array(CatalogTrackSchema),
 });
-type PublishedCatalogIndex = typeof PublishedCatalogIndexSchema.Type;
+export type PublishedCatalogIndex = typeof PublishedCatalogIndexSchema.Type;
 
 /** Splits one locale's catalog rows by kind and rejects a public route held twice. */
 export const indexPublishedCatalog = Effect.fn(
@@ -95,6 +95,80 @@ export function readPublishedExamGroups(
         row.countryKey === exam.countryKey && row.examKey === exam.examKey
     )
   );
+}
+
+/** Returns the tracks of one group in their authored order. */
+export function readPublishedGroupTracks(
+  index: PublishedCatalogIndex,
+  group: Pick<CatalogGroup, "countryKey" | "examKey" | "groupKey">
+) {
+  return sortCatalogRows(
+    Arr.filter(
+      index.tracks,
+      (row) =>
+        row.countryKey === group.countryKey &&
+        row.examKey === group.examKey &&
+        row.groupKey === group.groupKey
+    )
+  );
+}
+
+/**
+ * Where a link to one group lands, the one depth rule of the catalog. A group
+ * with a single track opens that track's set table, so a level with one option
+ * never shows as a page of its own; a group with more tracks opens its track
+ * cards. An exam enters at its first group, so from the hub's exam cards every
+ * set table of that group is at most two clicks away.
+ */
+export function readPublishedGroupEntry(
+  index: PublishedCatalogIndex,
+  group: CatalogGroup
+) {
+  const [first, ...others] = readPublishedGroupTracks(index, group);
+  return first !== undefined && others.length === 0
+    ? first.publicPath
+    : group.publicPath;
+}
+
+/**
+ * Where a link to one country lands, by the same rule: a country with a single
+ * exam opens that exam's entry, and a country with more exams opens its own
+ * page of exam cards.
+ */
+export function readPublishedCountryEntry(
+  index: PublishedCatalogIndex,
+  country: CatalogCountry
+) {
+  const [exam, ...others] = sortCatalogRows(
+    Arr.filter(index.exams, (row) => row.countryKey === country.countryKey)
+  );
+  const group =
+    exam === undefined || others.length > 0
+      ? undefined
+      : Arr.head(readPublishedExamGroups(index, exam)).pipe(
+          Option.getOrUndefined
+        );
+  return group === undefined
+    ? country.publicPath
+    : readPublishedGroupEntry(index, group);
+}
+
+/**
+ * Whether a link can land on one catalog row: an exam never, because a link
+ * to it opens its entry, and a country or a group only when it is its own
+ * entry. The sitemap, and so the static build, lists only these pages.
+ */
+export function isPublishedLanding(
+  index: PublishedCatalogIndex,
+  row: PublishedCatalogIndex["countries" | "exams" | "groups"][number]
+) {
+  if (row.kind === "exam") {
+    return false;
+  }
+  if (row.kind === "country") {
+    return readPublishedCountryEntry(index, row) === row.publicPath;
+  }
+  return readPublishedGroupEntry(index, row) === row.publicPath;
 }
 
 /** Resolves the country and exam a group belongs to, and its exam's groups in order. */

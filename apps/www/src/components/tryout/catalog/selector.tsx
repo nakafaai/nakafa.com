@@ -13,13 +13,9 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { TryoutCatalogChoice } from "@/components/tryout/catalog/choice";
-import {
-  getTryoutExamIcons,
-  getTryoutGroupIcons,
-} from "@/components/tryout/catalog/icons";
+import { getTryoutGroupIcons } from "@/components/tryout/catalog/icons";
 import type {
   TryoutCountrySelectorOption,
-  TryoutExamSelectorOption,
   TryoutGroupSelectorOption,
 } from "@/components/tryout/catalog/options";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";
@@ -185,41 +181,6 @@ function TryoutCountrySelect({
   );
 }
 
-/**
- * Renders the try-out exam selector of a group or a track page. Each exam links to
- * its entry, the first of its groups, because an exam has no page of its own.
- */
-export function TryoutExamSelector({
-  currentValue,
-  options,
-}: {
-  currentValue: string;
-  options: readonly TryoutExamSelectorOption[];
-}) {
-  const common = useTranslations("Common");
-  const tTryouts = useTranslations("Tryouts");
-  const looks = getTileLooks(
-    Arr.map(options, (option) =>
-      Tuple.make(getTryoutExamIcons(option.examKey), option.examKey)
-    )
-  );
-  const entries = Arr.zipWith(options, looks, (option, look) => ({
-    icon: look.icon,
-    publicPath: option.entryPath,
-    title: option.title,
-    value: option.value,
-  }));
-
-  return (
-    <TryoutCatalogChoice
-      current={Arr.findFirst(entries, ({ value }) => value === currentValue)}
-      entries={entries}
-      label={tTryouts("exam-selector-label")}
-      menuLabel={common("menu-exam")}
-    />
-  );
-}
-
 /** The menu label of each group axis: a year, a grade, or an institution. */
 const GROUP_MENU_LABELS = {
   grade: "menu-grade",
@@ -228,9 +189,10 @@ const GROUP_MENU_LABELS = {
 } as const;
 
 /**
- * Renders the group selector beside the exam selector: the years of SNBT, the
- * grades of TKA, or the Studienkollegs of a German exam. Each group links to its
- * page and takes its own icon of its exam's axis.
+ * Renders a catalog page's one primary control: the grades of TKA, the
+ * Studienkollegs of a German exam, or the years of SNBT once it has two. Each
+ * group links to its entry, its set table when it holds one track, and takes
+ * its own icon of its exam's axis.
  */
 export function TryoutGroupSelector({
   axis,
@@ -250,7 +212,7 @@ export function TryoutGroupSelector({
   );
   const entries = Arr.zipWith(options, looks, (option, look) => ({
     icon: look.icon,
-    publicPath: option.value,
+    publicPath: option.entryPath,
     title: option.title,
     value: option.value,
   }));

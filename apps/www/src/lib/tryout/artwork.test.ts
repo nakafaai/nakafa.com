@@ -3,33 +3,33 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
-  getTryoutCountryCatalogArtwork,
   getTryoutSectionArtwork,
   getTryoutTrackCatalogArtwork,
   resolveTryoutExamArtwork,
 } from "@/lib/tryout/artwork";
 
 describe("try-out artwork", () => {
-  it.each(["en", "id", "de"] as const)(
-    "uses English-default country artwork for %s",
-    (appLocale) => {
-      expect(
-        getTryoutCountryCatalogArtwork(appLocale, {
-          countryKey: "indonesia",
-        })
-      ).toBe("/open-graph/tryout/indonesia/en-index.png");
-      expect(
-        getTryoutCountryCatalogArtwork(appLocale, {
-          countryKey: "germany",
-        })
-      ).toBe("/open-graph/tryout/germany/en-index.png");
-      expect(
-        getTryoutCountryCatalogArtwork(appLocale, {
-          countryKey: "future-country",
-        })
-      ).toBeUndefined();
-    }
+  it.effect.each(["en", "id", "de"] as const)(
+    "gives every exam card of the catalog its reviewed artwork in %s, so none falls back to a gradient",
+    (appLocale) =>
+      Effect.gen(function* () {
+        for (const [countryKey, examKey, artwork] of [
+          ["germany", "entrance-examination", "germany/en-index"],
+          ["indonesia", "snbt", "indonesia/en-snbt"],
+          ["indonesia", "tka", "indonesia/en-tka"],
+        ] as const) {
+          expect(
+            (yield* resolveTryoutExamArtwork({
+              appLocale,
+              countryKey,
+              examKey,
+              publicPath: `try-out/${countryKey}/${examKey}`,
+            })).cardImageSrc
+          ).toBe(`/open-graph/tryout/${artwork}.png`);
+        }
+      })
   );
+
   it.effect.each(["en", "id", "de"] as const)(
     "uses English-default exam artwork for %s",
     (appLocale) =>

@@ -1,10 +1,12 @@
+import type { Ref } from "@confect/core";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import {
   buildTryoutCountryOptions,
-  buildTryoutExamOptions,
   buildTryoutGroupOptions,
+  offersGroupChoice,
 } from "@/components/tryout/catalog/options";
 import {
   readTryoutCountryPage,
@@ -29,9 +31,25 @@ import {
   resolveTryoutExamArtwork,
 } from "@/lib/tryout/artwork";
 
+/** One exam card with the reviewed artwork the catalog names for it, when it has one. */
+const withExamArtwork = Effect.fn("www.tryout.route.examArtwork")(function* <
+  Exam extends { readonly examKey: string; readonly publicPath: string },
+>(locale: Locale, countryKey: string, exam: Exam) {
+  const artwork = yield* resolveTryoutExamArtwork({
+    appLocale: locale,
+    countryKey,
+    examKey: exam.examKey,
+    publicPath: exam.publicPath,
+  });
+  return artwork.cardImageSrc
+    ? { ...exam, imageSrc: artwork.cardImageSrc }
+    : exam;
+});
+
 /**
- * The hub: the country-first catalog and its breadcrumbs. A try-out catalog's
- * revision is an authored date, not a commit, so it names no source tree.
+ * The hub: every country's exam cards and the breadcrumbs. Picking an exam is
+ * the first click. A try-out catalog's revision is an authored date, not a
+ * commit, so it names no source tree.
  */
 export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
   function* (locale: Locale) {
@@ -45,6 +63,14 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
       ],
       { concurrency: "unbounded" }
     );
+    const countries = yield* Effect.forEach(page.countries, (country) =>
+      Effect.map(
+        Effect.forEach(country.exams, (exam) =>
+          withExamArtwork(locale, country.countryKey, exam)
+        ),
+        (exams) => ({ ...country, exams })
+      )
+    );
     return {
       breadcrumbs: createBreadcrumbItems(locale, [
         { name: labels.home, path: "" },
@@ -57,7 +83,7 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
         publicPath: "try-out",
       }),
       labels,
-      page,
+      page: { countries },
       title: tTryouts("hub-search-title"),
     };
   }
@@ -87,18 +113,7 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       return { kind: "notFound" as const };
     }
     const exams = yield* Effect.forEach(page.value.exams, (exam) =>
-      resolveTryoutExamArtwork({
-        appLocale: input.locale,
-        countryKey: page.value.country.countryKey,
-        examKey: exam.examKey,
-        publicPath: exam.publicPath,
-      }).pipe(
-        Effect.map((artwork) =>
-          artwork.cardImageSrc
-            ? { ...exam, imageSrc: artwork.cardImageSrc }
-            : exam
-        )
-      )
+      withExamArtwork(input.locale, page.value.country.countryKey, exam)
     );
     return {
       countryOptions: buildTryoutCountryOptions(hub.countries),
@@ -112,14 +127,38 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
   }
 );
 
-/** The exam and group selectors of a group or a track page, from its country's exams and its exam's groups. */
-function readSelectors(
-  exams: Parameters<typeof buildTryoutExamOptions>[0],
-  groups: Parameters<typeof buildTryoutGroupOptions>[0]
+/**
+ * The header of a group or a track page: the group choice, its one primary
+ * control, when the exam offers one, and the exam's name in the breadcrumb.
+ * Without a choice the crumb names the group as well, as in SNBT 2027. The
+ * crumb links to the group's track cards only when the group has some.
+ */
+function readCatalogHeader(
+  page: Pick<
+    NonNullable<Ref.Returns<typeof tryouts.queries.catalog.getGroupPage>>,
+    "exam" | "group" | "groups"
+  >
 ) {
+  const offered = offersGroupChoice(page.exam.groupAxis, page.groups);
+  const own = Arr.findFirst(
+    page.groups,
+    (group) => group.publicPath === page.group.publicPath
+  );
+  const cards = Option.filter(
+    own,
+    (group) => group.entryPath === group.publicPath
+  );
   return {
-    examOptions: buildTryoutExamOptions(exams),
-    groupOptions: buildTryoutGroupOptions(groups),
+    examCrumb: {
+      label: offered
+        ? page.exam.title
+        : `${page.exam.title} ${page.group.title}`,
+      ...Option.match(cards, {
+        onNone: () => ({}),
+        onSome: (group) => ({ path: group.publicPath }),
+      }),
+    },
+    groupOptions: offered ? buildTryoutGroupOptions(page.groups) : [],
   };
 }
 
@@ -131,16 +170,14 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
     readonly group: string;
     readonly locale: Locale;
   }) {
-    const countryPath = getTryoutPublicPath({ country: input.country });
     const groupPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
       group: input.group,
     });
-    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
+    const [page, head, labels, tTryouts] = yield* Effect.all(
       [
         readTryoutGroupPage(input.locale, groupPath),
-        readTryoutCountryPage(input.locale, countryPath),
         readTryoutRouteHead({
           kind: "group",
           locale: input.locale,
@@ -153,21 +190,21 @@ export const readTryoutGroupRoute = Effect.fn("www.tryout.route.readGroup")(
       ],
       { concurrency: "unbounded" }
     );
-    if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
+    if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     // A group's own name is a year, a grade or a Kolleg, so the page names its exam too.
     const name = `${page.exam.title} ${page.group.title}`;
+    const header = readCatalogHeader(page);
     return {
-      ...readSelectors(countryPage.value.exams, page.groups),
-      countryPath,
+      groupOptions: header.groupOptions,
       head: {
         ...head.value,
         title: tTryouts("search-title", { name }),
       },
       kind: "found" as const,
       labels,
-      name,
+      name: header.examCrumb.label,
       page,
     };
   }
@@ -183,17 +220,15 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     readonly search: CatalogQuery;
     readonly track: string;
   }) {
-    const countryPath = getTryoutPublicPath({ country: input.country });
     const trackPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
       group: input.group,
       track: input.track,
     });
-    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
+    const [page, head, labels, tTryouts] = yield* Effect.all(
       [
         readTryoutTrackPage(input.locale, trackPath),
-        readTryoutCountryPage(input.locale, countryPath),
         readTryoutRouteHead({
           kind: "track",
           locale: input.locale,
@@ -206,7 +241,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       ],
       { concurrency: "unbounded" }
     );
-    if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
+    if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     // The set list needs the track's keys, so it follows the page here, on the
@@ -222,9 +257,10 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     });
     // A track's own name is a subject or a test, so the page names its exam and group too.
     const exam = `${page.exam.title} ${page.group.title} ${page.track.title}`;
+    const header = readCatalogHeader(page);
     return {
-      ...readSelectors(countryPage.value.exams, page.groups),
-      countryPath,
+      examCrumb: header.examCrumb,
+      groupOptions: header.groupOptions,
       head: {
         ...head.value,
         description:

@@ -1,41 +1,45 @@
 import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { getTileShifts } from "@repo/design-system/lib/look";
-import { Array as Arr, Effect, Predicate } from "effect";
+import { getTileLooks } from "@repo/design-system/lib/look";
+import { Array as Arr, Effect, Tuple } from "effect";
 import { type RefObject, useImperativeHandle, useRef } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import {
   CatalogCard,
-  CatalogCardTile,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { ComingSoon } from "@/components/shared/upcoming";
+import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";
 import { TryoutPageLink } from "@/components/tryout/route/link";
-import { getTryoutCountryCatalogArtwork } from "@/lib/tryout/artwork";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation";
 
+type HubPageCountry = Ref.Returns<
+  typeof tryouts.queries.catalog.getHubPage
+>["countries"][number];
+
+/** One country of the hub, its exams carrying the card artwork the server found for them. */
+type HubCountry = Omit<HubPageCountry, "exams"> & {
+  readonly exams: readonly (HubPageCountry["exams"][number] & {
+    readonly imageSrc?: string;
+  })[];
+};
+
+type HubCountries = readonly HubCountry[];
+
 interface TryoutHubClientProps {
-  page: {
-    readonly countries: Ref.Returns<
-      typeof tryouts.queries.catalog.getHubPage
-    >["countries"];
-  };
+  page: { readonly countries: HubCountries };
 }
 
-type HubCountries = TryoutHubClientProps["page"]["countries"];
-
-type HubCountry = HubCountries[number];
-
 /**
- * Renders the country-first try-out hub. The cards are the same for a visitor and a learner, so they stand
- * outside the page's live client and never redraw when it arrives. A learner's pick also saves the chosen
- * country, through the part that mounts only once the page holds a client.
+ * Renders the try-out hub: every exam under its country. The cards are the same for a visitor and a learner,
+ * so they stand outside the page's live client and never redraw when it arrives. A learner's pick also saves
+ * the exam's country, through the part that mounts only once the page holds a client.
  */
 export function TryoutHubClient({ page }: TryoutHubClientProps) {
   const savePick = useRef<((country: HubCountry) => void) | null>(null);
@@ -94,7 +98,12 @@ function TryoutHubPreference({
   return null;
 }
 
-/** The country cards of the hub. A card reports its pick only when the page passes `onPick`. */
+/**
+ * The hub's exams, under their countries: each country's flag and name, then
+ * its exam cards, so picking an exam is the first click. A card wears the
+ * exam's reviewed artwork, or a tile with the exam's own icon. A card reports
+ * its pick only when the page passes `onPick`.
+ */
 function TryoutHubCountries({
   countries,
   onPick,
@@ -102,22 +111,60 @@ function TryoutHubCountries({
   countries: HubCountries;
   onPick?: (country: HubCountry) => void;
 }) {
-  const locale = useLocale();
   const tTryouts = useTranslations("Tryouts");
-  const visuals = getTileShifts(
-    Arr.map(countries, (country) => {
-      const imageSrc = getTryoutCountryCatalogArtwork(locale, {
-        countryKey: country.countryKey,
-      });
 
-      return imageSrc === undefined ? country.countryKey : { imageSrc };
-    })
+  return (
+    <CatalogActionLabelContext value={tTryouts("open-exam-cta")}>
+      <div className="flex flex-col gap-10 pt-6 pb-24">
+        {Arr.map(countries, (country, index) => (
+          <TryoutHubCountry
+            country={country}
+            first={index === 0}
+            key={country.countryKey}
+            onPick={onPick}
+          />
+        ))}
+      </div>
+    </CatalogActionLabelContext>
+  );
+}
+
+/** One country of the hub: its flag and name over its exam cards. */
+function TryoutHubCountry({
+  country,
+  first,
+  onPick,
+}: {
+  country: HubCountry;
+  first: boolean;
+  onPick: ((country: HubCountry) => void) | undefined;
+}) {
+  const visuals = getTileLooks(
+    Arr.map(
+      country.exams,
+      (exam) =>
+        exam.imageSrc ??
+        Tuple.make(getTryoutExamIcons(exam.examKey), exam.examKey)
+    )
   );
 
   return (
-    <CatalogActionLabelContext value={tTryouts("open-country-cta")}>
-      <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-        {Arr.map(Arr.zip(countries, visuals), ([country, visual], index) => (
+    <section
+      aria-labelledby={`tryout-country-${country.countryKey}`}
+      className="flex flex-col gap-4"
+    >
+      <h2
+        className="flex items-center gap-2 text-lg font-medium"
+        id={`tryout-country-${country.countryKey}`}
+      >
+        <CountryFlagIcon
+          className="ring-border/60 h-4 w-6 rounded-xs ring-1"
+          countryCode={country.countryCode}
+        />
+        {country.title}
+      </h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {Arr.map(Arr.zip(country.exams, visuals), ([exam, visual], index) => (
           <CatalogCard
             action={(anchor) => (
               <TryoutPageLink
@@ -125,28 +172,16 @@ function TryoutHubCountries({
                 onClick={
                   onPick === undefined ? undefined : () => onPick(country)
                 }
-                publicPath={country.publicPath}
+                publicPath={exam.entryPath}
               />
             )}
-            key={country.countryKey}
-            title={country.title}
+            key={exam.examKey}
+            title={exam.title}
           >
-            {Predicate.isNumber(visual) ? (
-              <CatalogCardTile seed={country.countryKey} shift={visual}>
-                <CountryFlagIcon
-                  className="ring-border/60 h-6 w-9 rounded-xs ring-1"
-                  countryCode={country.countryCode}
-                />
-              </CatalogCardTile>
-            ) : (
-              <CatalogCardVisual
-                preload={index === 0}
-                visual={visual.imageSrc}
-              />
-            )}
+            <CatalogCardVisual preload={first && index === 0} visual={visual} />
           </CatalogCard>
         ))}
       </div>
-    </CatalogActionLabelContext>
+    </section>
   );
 }

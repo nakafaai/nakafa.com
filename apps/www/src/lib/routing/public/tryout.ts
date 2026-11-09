@@ -1,11 +1,15 @@
 import { Effect, Option } from "effect";
-import { readGroupRedirect } from "@/lib/routing/public/tryout/group";
+import {
+  readCountryEntryRedirect,
+  readGroupRedirect,
+} from "@/lib/routing/public/tryout/group";
 import {
   readRetiredSnbtExam,
   readRetiredSnbtExamRedirect,
   readRetiredSnbtProduct,
   readRetiredSnbtProductRedirect,
 } from "@/lib/routing/public/tryout/product";
+import { readRenamedExamRedirect } from "@/lib/routing/public/tryout/renamed";
 import { readRetiredSectionRedirect } from "@/lib/routing/public/tryout/section";
 import {
   readTracklessRouteRedirect,
@@ -16,9 +20,9 @@ import {
  * Resolves one retired try-out URL to its live successor, with the status that
  * answers it. Each rule keeps the retired path absent and the successor live,
  * so a redirect never lands on a page that the signed catalog does not serve.
- * The track-less rules and an exam's own address answer 307, because their
- * newest live year or first group can change; every other try-out rule answers
- * 308.
+ * The track-less rules and the entries of an exam, a single-track group and a
+ * single-exam country answer 307, because their newest live year, first group
+ * or one option can change; every other try-out rule answers 308.
  */
 export const readTryoutRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutRedirect"
@@ -38,6 +42,14 @@ export const readTryoutRedirect = Effect.fn(
   const trackless = readTracklessSetRoute(pathname);
   if (Option.isSome(trackless)) {
     return yield* readTracklessRouteRedirect(trackless.value);
+  }
+  const renamed = yield* readRenamedExamRedirect(pathname);
+  if (renamed !== null) {
+    return renamed;
+  }
+  const country = yield* readCountryEntryRedirect(pathname);
+  if (country !== null) {
+    return country;
   }
   return yield* readGroupRedirect(pathname);
 });

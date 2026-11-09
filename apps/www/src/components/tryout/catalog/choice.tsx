@@ -7,13 +7,13 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option } from "effect";
-import type { ReactNode } from "react";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 
 /**
- * One select of a try-out catalog header, such as the exam or the group: its
- * trigger shows the current choice's icon, and its title from the small
- * breakpoint, and each choice links to the page it opens.
+ * The one select of a try-out catalog header, its primary control: its trigger
+ * shows the current choice's icon, and its title from the small breakpoint,
+ * capped so the breadcrumb keeps its room, and each choice links to the page
+ * it opens.
  */
 export function TryoutCatalogChoice({
   current,
@@ -49,7 +49,8 @@ export function TryoutCatalogChoice({
     >
       <SelectTrigger
         aria-label={label}
-        className="w-auto min-w-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 sm:max-w-64"
+        tone="primary"
       >
         <span
           className="flex min-w-0 items-center gap-2"
@@ -87,12 +88,4 @@ export function TryoutCatalogChoice({
       </SelectContent>
     </Select>
   );
-}
-
-/**
- * Holds the selects of a catalog header together at the end of its row, the exam
- * first and its group beside it, so the header keeps its path, then its choices.
- */
-export function TryoutCatalogChoices({ children }: { children: ReactNode }) {
-  return <div className="flex shrink-0 items-center gap-2">{children}</div>;
 }
