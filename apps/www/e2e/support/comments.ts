@@ -42,7 +42,7 @@ async function send(page: Page, field: Locator, text: string) {
  * that holds them, which stays in the page, and not the comments' anchor, which React replaces while the
  * feed loads: a scroll that waits on a replaced element fails.
  */
-export async function scrollToComments(page: Page) {
+async function scrollToComments(page: Page) {
   await page.locator("footer:has(#comments)").scrollIntoViewIfNeeded();
 }
 
