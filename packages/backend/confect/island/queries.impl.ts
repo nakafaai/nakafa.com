@@ -5,6 +5,7 @@ import {
   Session,
 } from "@repo/backend/confect/auth/session";
 import spec from "@repo/backend/confect/island/queries.spec";
+import { snapshotAddress } from "@repo/backend/confect/island/snapshot";
 import { findIsland } from "@repo/backend/confect/island/store";
 import {
   toOwnIsland,
@@ -56,7 +57,12 @@ const visit = FunctionImpl.make(
     if (!access.opens) {
       return null;
     }
-    return toVisitedIsland(island.value, owner, username);
+    return toVisitedIsland(
+      island.value,
+      owner,
+      username,
+      yield* snapshotAddress(island.value)
+    );
   })
 );
 

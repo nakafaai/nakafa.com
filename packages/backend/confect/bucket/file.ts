@@ -39,10 +39,12 @@ export const FileRequest = Schema.Struct({
 
 /**
  * Reserves one file before any byte arrives: one write of the day's free operations, the bucket's limit, and the
- * school's limit when a school pays for it. The file starts `reserved`.
+ * school's limit when a school pays for it. The file starts `reserved`, under its school's folder or every
+ * account's, or under the folder its owner names, which then proves whose upload it is.
  */
 export const reserveFile = Effect.fn("bucket.file.reserve")(function* (
-  request: typeof FileRequest.Type
+  request: typeof FileRequest.Type,
+  folder = `files/${request.tenantId ?? "accounts"}`
 ) {
   yield* spendOperations("bucketWrite", 1);
   yield* chargeBucket(request.byteSize);
@@ -52,7 +54,7 @@ export const reserveFile = Effect.fn("bucket.file.reserve")(function* (
   ) {
     return yield* new StorageFull({ reason: "school" });
   }
-  const objectKey = `files/${request.tenantId ?? "accounts"}/${yield* randomUuid}`;
+  const objectKey = `${folder}/${yield* randomUuid}`;
   const fileId = yield* (yield* DatabaseWriter)
     .table("bucketFiles")
     .insert({
@@ -67,11 +69,15 @@ export const reserveFile = Effect.fn("bucket.file.reserve")(function* (
   return { fileId, objectKey };
 });
 
-/** Reserves one file a browser uploads, and answers the address it goes to, which binds its exact length and type. */
+/**
+ * Reserves one file a browser uploads, under the folder `reserveFile` names, and answers the address it goes to,
+ * which binds its exact length and type.
+ */
 export const reserveUpload = Effect.fn("bucket.file.reserveUpload")(function* (
-  request: typeof FileRequest.Type
+  request: typeof FileRequest.Type,
+  folder?: string
 ) {
-  const { fileId, objectKey } = yield* reserveFile(request);
+  const { fileId, objectKey } = yield* reserveFile(request, folder);
   return {
     address: yield* objectAddress(objectKey, {
       expiresSeconds: UPLOAD_SECONDS,

@@ -18,6 +18,7 @@ import { Link } from "@tanstack/react-router";
 import { Option } from "effect";
 import { Suspense } from "react";
 import { useTranslations } from "use-intl";
+import { ClipProvider } from "@/components/island/clip";
 import { SkyProvider } from "@/components/island/sky";
 import { ToolsProvider } from "@/components/island/tools";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -30,14 +31,27 @@ const IslandCanvas = lazy(() => import("@/components/island/canvas"));
 /** The island of a learner whose first visit has not opened it yet: the starter set. */
 const STARTER: Pick<
   NonNullable<Ref.Returns<typeof island.queries.own>>,
-  "layout" | "lifetime" | "materials" | "stars" | "timeZone" | "version"
+  | "badges"
+  | "layout"
+  | "level"
+  | "lifetime"
+  | "materials"
+  | "size"
+  | "stars"
+  | "timeZone"
+  | "version"
+  | "visibility"
 > = {
+  badges: [],
   layout: STARTER_LAYOUT,
+  level: 1,
   lifetime: 0,
   materials: NO_MATERIALS,
+  size: growthOf(0).size,
   stars: 0,
   timeZone: "UTC",
   version: 0,
+  visibility: "private",
 };
 
 /**
@@ -66,56 +80,62 @@ export function HomeIsland({
     <section className="motion-safe:[view-transition-name:island]">
       <IslandContext
         value={{
+          badges: shown.badges.length,
           layout: shown.layout,
+          level: shown.level,
           owner: Option.some({
             learned: Option.none(),
-            level: growth.level,
+            lifetime: shown.lifetime,
             materials: shown.materials,
             stars: shown.stars,
+            username: Option.none(),
             version: shown.version,
+            visibility: shown.visibility,
             watered: Option.none(),
           }),
-          size: growth.size,
+          size: shown.size,
           timeZone: shown.timeZone,
         }}
       >
         <ToolsProvider>
           <SkyProvider>
-            <VisualCard>
-              <VisualCardHeader
-                description={t("level", { level: growth.level })}
-                title={name === undefined ? t("title") : t("name", { name })}
-              />
-              <VisualCardBody className="aspect-video">
-                <AfterPageRead>
-                  <Suspense fallback={null}>
-                    <IslandCanvas />
-                  </Suspense>
-                </AfterPageRead>
-              </VisualCardBody>
-              <VisualCardActions>
-                <Button
-                  render={
-                    <Link
-                      from={LOCALE_ROUTE}
-                      to="/$locale/island"
-                      viewTransition
-                    />
-                  }
-                >
-                  {t("enter")}
-                </Button>
-              </VisualCardActions>
-              <VisualCardFooter>
-                <p className="text-muted-foreground text-sm">
-                  {Option.match(growth.next, {
-                    onNone: () => t("enter-top"),
-                    onSome: (next) =>
-                      t("enter-next", { stars: next - shown.lifetime }),
-                  })}
-                </p>
-              </VisualCardFooter>
-            </VisualCard>
+            <ClipProvider>
+              <VisualCard>
+                <VisualCardHeader
+                  description={t("level", { level: growth.level })}
+                  title={name === undefined ? t("title") : t("name", { name })}
+                />
+                <VisualCardBody className="aspect-video">
+                  <AfterPageRead>
+                    <Suspense fallback={null}>
+                      <IslandCanvas />
+                    </Suspense>
+                  </AfterPageRead>
+                </VisualCardBody>
+                <VisualCardActions>
+                  <Button
+                    render={
+                      <Link
+                        from={LOCALE_ROUTE}
+                        to="/$locale/island"
+                        viewTransition
+                      />
+                    }
+                  >
+                    {t("enter")}
+                  </Button>
+                </VisualCardActions>
+                <VisualCardFooter>
+                  <p className="text-muted-foreground text-sm">
+                    {Option.match(growth.next, {
+                      onNone: () => t("enter-top"),
+                      onSome: (next) =>
+                        t("enter-next", { stars: next - shown.lifetime }),
+                    })}
+                  </p>
+                </VisualCardFooter>
+              </VisualCard>
+            </ClipProvider>
           </SkyProvider>
         </ToolsProvider>
       </IslandContext>

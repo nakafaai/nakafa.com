@@ -3788,7 +3788,7 @@
       "title": "You need more Stars for this."
     },
     "island-refused-starter": {
-      "title": "This came with your island, so it stays."
+      "title": "It came with your island and stays."
     },
     "island-refused-missing": {
       "title": "That piece is no longer there."
@@ -3800,22 +3800,23 @@
       "title": "It is already at its first stage."
     },
     "island-stale": {
-      "title": "Your island changed elsewhere, so we loaded it again."
+      "title": "Your island changed elsewhere.",
+      "description": "We loaded the newest one, so try again."
     },
     "island-refused-grows": {
       "title": "It grows when you water it."
     },
     "island-refused-rooted": {
-      "title": "It has taken root, so move it instead."
+      "title": "It took root, so move it instead."
     },
     "island-refused-materials": {
-      "title": "You need more from your garden for this."
+      "title": "You need more from your garden."
     },
     "island-farm-unlearned": {
-      "title": "Learn something today, then water your garden."
+      "title": "Learn something first, then water."
     },
     "island-farm-watered": {
-      "title": "Your garden is already watered today."
+      "title": "Your garden is watered for today."
     },
     "island-farm-barren": {
       "title": "Plant a tree or flowers first."
@@ -3825,6 +3826,9 @@
     },
     "island-farm-unripe": {
       "title": "It has not grown its harvest yet."
+    },
+    "island-link-copied": {
+      "title": "The link to your island is copied."
     },
     "island-watered": {
       "title": "Your garden is watered."
@@ -4681,6 +4685,12 @@
     "enter-top": "Your island is as big as an island grows.",
     "earn-lesson": "+{stars} Stars a lesson",
     "earn-section": "+{stars} Stars a section",
+    "badges": "Badges",
+    "share": "Share",
+    "share-title": "My island on Nakafa",
+    "clip": "Record a clip",
+    "clip-file": "nakafa-island",
+    "visit-description": "{name}'s island, grown from learning on Nakafa.",
     "materials": "Garden",
     "materials-value": "{wood} wood, {petals} petals",
     "price-wood": "{stars} Stars, {wood} wood"

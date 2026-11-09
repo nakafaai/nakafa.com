@@ -27,7 +27,10 @@ function farmFailed(
   if (error._tag === "FarmRefused") {
     toast.error({ title: `island-farm-${error.reason}.title` });
   } else if (error._tag === "IslandStale") {
-    toast.error({ title: "island-stale.title" });
+    toast.error({
+      description: "island-stale.description",
+      title: "island-stale.title",
+    });
   } else {
     captureException(error, { source });
   }
