@@ -16,9 +16,12 @@ import { PaneSide } from "@/components/shared/panes/side";
  */
 export function PlayerMain({
   children,
+  label,
   navigator,
 }: {
   children: ReactNode;
+  /** The pane's name for a screen reader, the navigator's unless the paper names its pane otherwise. */
+  label?: string;
   navigator: ReactNode;
 }) {
   const t = useTranslations("Player");
@@ -35,7 +38,12 @@ export function PlayerMain({
         {children}
       </div>
       {navigator === null ? null : (
-        <PaneSide from="lg" group="player" label={t("navigator")} row={false}>
+        <PaneSide
+          from="lg"
+          group="player"
+          label={label ?? t("navigator")}
+          row={false}
+        >
           {navigator}
         </PaneSide>
       )}
