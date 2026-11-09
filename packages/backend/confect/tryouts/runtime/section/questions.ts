@@ -137,10 +137,7 @@ function projectRuntimeQuestions(
   placements: readonly TryoutPlacement[],
   responses: TryoutResponseIndex["responses"],
   flagged: HashSet.HashSet<string>,
-  access: {
-    readonly answers: boolean;
-    readonly questions: boolean;
-  }
+  access: { readonly grades: boolean }
 ) {
   const responsesByPlacement = MutableHashMap.fromIterable(
     Arr.map(responses, (response) => [response.placementId, response])
@@ -155,20 +152,20 @@ function projectRuntimeQuestions(
   );
 }
 
-/** Projects one validated frozen placement and the learner's answer to it, graded only once answers may be reviewed. */
+/**
+ * Projects one validated frozen placement and the learner's answer to it, graded once the section is
+ * reviewed, for every reviewer: a running section never says whether an answer is right.
+ */
 function projectRuntimeQuestion(
   placement: TryoutPlacement,
   response: TryoutResponse | null,
   flagged: boolean,
-  access: {
-    readonly answers: boolean;
-    readonly questions: boolean;
-  }
+  access: { readonly grades: boolean }
 ) {
   const runtimeResponse = response
     ? {
         answeredAt: response.answeredAt,
-        ...(access.answers ? { grade: response.grade } : {}),
+        ...(access.grades ? { grade: response.grade } : {}),
         response: response.response,
         updatedAt: response.updatedAt,
       }

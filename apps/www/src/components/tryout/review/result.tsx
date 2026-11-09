@@ -104,7 +104,7 @@ export function TryoutResultFacts({
  * The time it took counts from the section's start to its end, up to its limit.
  */
 export function TryoutResult() {
-  const { limit, runtime, score, whole } = useTryoutReview();
+  const { limit, runtime, score } = useTryoutReview();
   const used = Option.map(
     Option.fromNullOr(runtime.section.completedAt),
     (completedAt) => {
@@ -121,14 +121,14 @@ export function TryoutResult() {
   return (
     <div className="flex flex-col gap-6">
       <TryoutResultFacts limit={limit} score={score} used={used} />
-      <PlayerReviewGrid questions={reviewCellsOf(runtime.questions, whole)} />
+      <PlayerReviewGrid questions={reviewCellsOf(runtime.questions)} />
     </div>
   );
 }
 
 /**
- * The result's footer, under a review the reader may read whole: what the colors of the numbers say, and
- * the explanation of the current question, which it opens and closes.
+ * The result's footer: what the colors of the numbers say, and the explanation of the current question, which
+ * it opens and closes; a question whose explanation waits for Pro opens its offer.
  */
 export function TryoutResultFooter() {
   const t = useTranslations("Tryouts");
