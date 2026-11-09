@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import de from "@repo/internationalization/dictionaries/de.json" with {
+  type: "json",
+};
+import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
 import { Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import {
@@ -19,36 +25,28 @@ const TITLED = answerTurn({ markdown: ANSWER.diagram, order: 3 });
 
 /**
  * What the page says around a diagram, in each language it has: the names of
- * the three controls of the card, the title and the description of a diagram
- * the model gave neither, the words of a diagram that cannot be drawn, and the
- * word for its code. Indonesian writes `Diagram` as English does, so there only
- * the description tells the page's words from the English ones.
+ * the card's three controls and of the dialog's zoom, the title and the
+ * description of a diagram the model gave neither, the words of a diagram that
+ * cannot be drawn, and the word for its code. They are read from each
+ * language's dictionary, so a change of copy changes what is expected with it.
+ * Indonesian writes `Diagram` as English does, so there only the description
+ * tells the page's words from the English ones.
  */
+const wordsOf = (ai: typeof de.Ai) => ({
+  copy: ai["copy-code"],
+  description: ai["diagram-description"],
+  download: ai["download-file"],
+  error: ai["diagram-error"],
+  expand: ai["open-diagram"],
+  show: ai["show-code"],
+  title: ai["diagram-title"],
+  zoomIn: ai["zoom-in"],
+  zoomOut: ai["zoom-out"],
+});
+
 const LANGUAGES = [
-  {
-    copy: "Code kopieren",
-    description: "Die wichtigsten Ideen, visuell dargestellt.",
-    download: "Datei herunterladen",
-    error: "Dieses Diagramm konnte nicht gezeichnet werden.",
-    expand: "Größeres Diagramm öffnen",
-    locale: "de",
-    show: "Code anzeigen",
-    title: "Diagramm",
-    zoomIn: "Vergrößern",
-    zoomOut: "Verkleinern",
-  },
-  {
-    copy: "Salin kode",
-    description: "Gagasan utama ditampilkan secara visual.",
-    download: "Unduh berkas",
-    error: "Diagram ini belum bisa digambar.",
-    expand: "Buka diagram yang lebih besar",
-    locale: "id",
-    show: "Tampilkan kode",
-    title: "Diagram",
-    zoomIn: "Perbesar",
-    zoomOut: "Perkecil",
-  },
+  { ...wordsOf(de.Ai), locale: "de" },
+  { ...wordsOf(id.Ai), locale: "id" },
 ];
 
 /** Mermaid writes its labels at 16 pixels; a diagram is never drawn below three quarters of that. */
