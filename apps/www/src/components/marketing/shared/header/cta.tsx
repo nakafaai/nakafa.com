@@ -36,11 +36,10 @@ export function LogoCta() {
 
 /**
  * The header's call to action: a visitor signs up, and a learner opens home. The
- * signed-in hint of the root picks the one that shows, as `LogoCta` does.
+ * signed-in hint of the root picks the one that shows, as `LogoCta` does. Its words keep the width of the
+ * School action's (`ActionLabel`).
  */
 export function HeaderCta() {
-  const t = useTranslations("Marketing");
-
   return (
     <>
       <span className="contents" data-account="visitor">
@@ -49,7 +48,7 @@ export function HeaderCta() {
           className={buttonVariants({ variant: "secondary" })}
           to="/$locale/auth"
         >
-          {t("try-nakafa")}
+          <ActionLabel label="try-nakafa" />
         </Link>
       </span>
       <span className="contents" data-account="member">
@@ -58,7 +57,7 @@ export function HeaderCta() {
           className={buttonVariants({ variant: "secondary" })}
           to="/$locale/home"
         >
-          {t("try-nakafa")}
+          <ActionLabel label="try-nakafa" />
         </Link>
       </span>
     </>
@@ -71,14 +70,29 @@ export function HeaderCta() {
  * every school begins with the free trial.
  */
 export function SchoolCta() {
-  const t = useTranslations("Marketing");
-
   return (
     <Link
       className={buttonVariants({ variant: "secondary" })}
       to="/$locale/school/new"
     >
-      {t("start-school")}
+      <ActionLabel label="start-school" />
     </Link>
+  );
+}
+
+/**
+ * The words of a header action, as wide as the wider of the two products' actions: the other product's words hold
+ * the width unseen, so the language beside the action stays where it stands on the way between the two landings.
+ */
+function ActionLabel({ label }: { label: "start-school" | "try-nakafa" }) {
+  const t = useTranslations("Marketing");
+
+  return (
+    <span className="grid justify-items-center">
+      <span className="col-start-1 row-start-1">{t(label)}</span>
+      <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+        {t(label === "try-nakafa" ? "start-school" : "try-nakafa")}
+      </span>
+    </span>
   );
 }

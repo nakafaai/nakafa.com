@@ -227,3 +227,20 @@ export function scrollToElement(
     block
   );
 }
+
+/** Moves the pointer to the middle of `target` in small steps, as a reader's hand does, so every element on the way sees it. */
+export const movePointerTo = Effect.fn("NakafaE2E.movePointerTo")(function* (
+  page: Page,
+  target: Locator
+) {
+  const box = yield* Effect.promise(() => target.boundingBox());
+  expect(box, "the pointer's target is on the page").not.toBeNull();
+  if (box === null) {
+    return;
+  }
+  yield* Effect.promise(() =>
+    page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, {
+      steps: 12,
+    })
+  );
+});

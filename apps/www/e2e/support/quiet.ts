@@ -12,7 +12,10 @@ const QUIET_MILLISECONDS = 500;
  * reads after every late part had its chance, on a fast run at once and on a
  * slow one as late as it needs. A change of an inline style alone does not
  * count, since a running decoration rewrites one on every frame and moves no
- * layout; nor does an endless animation, such as a spinner. A page that never
+ * layout; nor does a change inside a drawing (an SVG, such as Nina, whose live
+ * pose rewrites its paths on every frame) or inside a part hidden from assistive
+ * technology (decoration, such as letters a heading types and deletes in a loop);
+ * nor does an endless animation, such as a spinner. A page that never
  * goes quiet is read after `readinessTimeoutMilliseconds`, as late as a fixed
  * wait of that length would have read it.
  */
@@ -25,8 +28,18 @@ export const waitForQuiet = (page: Page) =>
         const touch = () => {
           last = performance.now();
         };
+        // A record counts when it changes the page, not a drawing or decoration that runs by itself.
+        const counts = (record: MutationRecord) => {
+          const node = record.target;
+          const element =
+            node instanceof Element ? node : (node.parentElement ?? null);
+          return !(
+            record.attributeName === "style" ||
+            element?.closest("svg, [aria-hidden='true']")
+          );
+        };
         const mutations = new MutationObserver((records) => {
-          if (records.some((record) => record.attributeName !== "style")) {
+          if (records.some(counts)) {
             touch();
           }
         });

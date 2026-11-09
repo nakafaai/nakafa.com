@@ -29,8 +29,9 @@ function keysOf(spots: readonly GapSpot[]) {
 /** The keys of the spots that place a toy at this width of the page. */
 function placedKeys(id: string, spots: readonly GapSpot[], width: number) {
   return keysOf(
-    Arr.filter(spots, (spot) =>
-      Option.isSome(within(id, spot.anchor)(width, box))
+    Arr.filter(
+      spots,
+      (spot) => within(id, spot.anchor)(width, box)._tag === "Placed"
     )
   );
 }
@@ -44,7 +45,12 @@ function standsAt(
 ) {
   const spot = Arr.findFirst(spots, (candidate) => candidate.key === key);
   return Option.getOrNull(
-    Option.flatMap(spot, (found) => within(id, found.anchor)(width, box))
+    Option.flatMap(spot, (found) => {
+      const placement = within(id, found.anchor)(width, box);
+      return placement._tag === "Placed"
+        ? Option.some(placement.spot)
+        : Option.none();
+    })
   );
 }
 
