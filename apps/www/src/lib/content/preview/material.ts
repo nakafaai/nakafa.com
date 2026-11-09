@@ -3,6 +3,7 @@ import type { MaterialPreviewDocument } from "@nakafa/aksara-contracts/preview/d
 import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Option, Schema } from "effect";
+import { createElement, Fragment } from "react";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -33,7 +34,7 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
     previewArtifact,
   });
   return {
-    body: rendered.element,
+    body: createElement(Fragment, null, ...rendered.blocks),
     appLocale: projection.appLocale,
     metadata: projection.metadata,
     projection,

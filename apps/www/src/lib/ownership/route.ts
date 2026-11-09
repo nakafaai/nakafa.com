@@ -122,11 +122,6 @@ export function isApplicationRoutePath(
     return segments.length === 1;
   }
 
-  // The owner's island, and a visit to one learner's shared island by username.
-  if (root === "island") {
-    return segments.length <= 1;
-  }
-
   if (root === "og") {
     return segments.length >= 1;
   }
