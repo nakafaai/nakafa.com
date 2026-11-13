@@ -66,7 +66,7 @@ const readCallerUser = Effect.fn("auth.caller.user")(function* (
   if (Option.isNone(identity)) {
     return Option.none<Id<"users">>();
   }
-  const appIssuer = yield* Config.string("CONVEX_CLOUD_URL").pipe(
+  const appIssuer = yield* Config.String("CONVEX_CLOUD_URL").pipe(
     Effect.mapError(authReadFailure)
   );
   return identity.value.issuer === appIssuer

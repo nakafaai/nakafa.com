@@ -1,8 +1,6 @@
 import { convexAuthProvider } from "@convex-dev/auth/server";
+import { AGENT_TOKEN_AUDIENCE } from "@repo/backend/confect/auth/grant/audience";
 import type { AuthConfig } from "convex/server";
-
-/** The audience of an agent's token, which tells it apart from every other token the app signs. */
-export const AGENT_TOKEN_AUDIENCE = "nakafa-agent";
 
 /**
  * The deployment's own address, which Convex sets in every deployment. Without

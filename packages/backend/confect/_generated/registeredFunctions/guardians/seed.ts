@@ -7,5 +7,5 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../guardians/seed.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
-["code"]: RegisteredConvexFunction.register({ ...definitions["code"], handler: forward(definitions["code"].handler) }),
+["account"]: RegisteredConvexFunction.register({ ...definitions["account"], handler: forward(definitions["account"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../guardians/seed.spec")["default"]>;

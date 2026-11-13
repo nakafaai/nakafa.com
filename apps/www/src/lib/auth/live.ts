@@ -2,6 +2,7 @@ import type { ConvexReactClient } from "convex/react";
 import { Effect, Option, Result, Schema } from "effect";
 import { createStore, type StoreApi } from "zustand";
 import { reportClientException } from "@/lib/analytics/client";
+import type { SessionFeed } from "@/lib/auth/client";
 import type { ConvexAuthConfirmation } from "@/lib/auth/convex";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { followAuthSession, previewAuthSession } from "@/lib/auth/session";
@@ -21,7 +22,7 @@ function initialLiveSessionState(client: Option.Option<ConvexReactClient>) {
 }
 
 /**
- * The live session of one page: Better Auth's session as its readers see it,
+ * The live session of one page: Convex Auth's session as its readers see it,
  * Convex's answer for that session, the page's one Convex client, and whether a
  * pointer is down, which holds an island's swap to that client. The fields are
  * flat, so the store is also the session store and the Convex authentication store
@@ -48,16 +49,16 @@ export class LiveSessionLoadFailed extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("LiveSessionLoadFailed", { cause: Schema.Unknown }) {}
 
-/** A store atom that the live session follows: a value it reports to a listener until the listener is unsubscribed. */
-interface LiveAtom {
-  readonly subscribe: (listener: (value: unknown) => void) => () => void;
-}
 
 /** The browser modules a signed-in page loads, as the page loads them. */
 export interface LiveSessionModules {
-  /** Better Auth's session atom, which a signed-in page needs and a visitor never does. */
+  /** Convex Auth's session, which a signed-in page needs and a visitor never does. */
   readonly auth: Effect.Effect<
-    { readonly readSessionAtom: () => LiveAtom },
+    {
+      readonly followClientSession: (
+        convex: ConvexReactClient
+      ) => SessionFeed;
+    },
     LiveSessionLoadFailed
   >;
   /** Convex's client module, whose constructor opens no socket. */
@@ -79,21 +80,17 @@ export function loadPageModule<A>(load: () => Promise<A>) {
 
 /** The page's browser modules, loaded with dynamic imports so a visitor's page never loads them. */
 const liveSessionModules: LiveSessionModules = {
-  auth: loadPageModule(() => import("@/lib/auth/client")).pipe(
-    Effect.map((loaded) => ({
-      readSessionAtom: () => loaded.readAuthClient().$store.atoms.session,
-    }))
-  ),
+  auth: loadPageModule(() => import("@/lib/auth/client")),
   convex: loadPageModule(() => import("@/lib/convex/client")),
 };
 
 /**
- * Follows Better Auth's session atom into the store until the scope closes, so
- * the readers see the session as Better Auth settles it.
+ * Follows Convex Auth's session into the store until the scope closes, so the
+ * readers see the session as the client settles it.
  */
 const followSession = Effect.fn("www.auth.followSession")(function* (
   store: LiveSessionStore,
-  session: LiveAtom
+  session: SessionFeed
 ) {
   yield* Effect.acquireRelease(
     Effect.sync(() =>
@@ -109,7 +106,7 @@ const followSession = Effect.fn("www.auth.followSession")(function* (
 /**
  * Starts the page's live session after hydration. A visitor's page, which the
  * signed-in hint does not mark, loads nothing and keeps the signed-out session.
- * A marked page loads the Better Auth and Convex clients, follows Better Auth's
+ * A marked page loads the Convex Auth and Convex clients, follows Convex Auth's
  * session from pending, and creates the page's one Convex client. Constructing
  * that client opens no socket: the first subscription or `setAuth` opens one.
  * The fiber runs until it is interrupted, which closes the subscription. A
@@ -160,11 +157,10 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
       });
       return;
     }
-    store.setState({
-      client: Option.some(loaded.success.convex.readConvexClient(convexUrl)),
-    });
+    const convex = loaded.success.convex.readConvexClient(convexUrl);
+    store.setState({ client: Option.some(convex) });
     return yield* Effect.scoped(
-      followSession(store, loaded.success.auth.readSessionAtom())
+      followSession(store, loaded.success.auth.followClientSession(convex))
     );
   }
 );

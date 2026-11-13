@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { SchoolSignIn } from "@repo/backend/confect/auth/school";
+import { SchoolSignIn } from "@repo/backend/confect/auth/methods";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 

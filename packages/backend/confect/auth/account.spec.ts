@@ -6,7 +6,8 @@ import {
   GoogleMethod,
   SchoolMethod,
   SchoolSignUpRefused,
-} from "@repo/backend/confect/auth/account";
+} from "@repo/backend/confect/auth/methods";
+import { WelcomeIntentError } from "@repo/backend/confect/emails/welcome/spec";
 import { Schema } from "effect";
 
 /**
@@ -21,7 +22,7 @@ export default GroupSpec.make()
       name: "createGoogle",
       args: () => ({ method: GoogleMethod }),
       returns: () => Id("users"),
-      error: () => GoogleAddressRefused,
+      error: () => Schema.Union([GoogleAddressRefused, WelcomeIntentError]),
     })
   )
   .addFunction(

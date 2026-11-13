@@ -1,5 +1,5 @@
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
-import { AGENT_TOKEN_AUDIENCE } from "@repo/backend/confect/auth";
+import { AGENT_TOKEN_AUDIENCE } from "@repo/backend/confect/auth/grant/audience";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Duration, Effect } from "effect";
 
