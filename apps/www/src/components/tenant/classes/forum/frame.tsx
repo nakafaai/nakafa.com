@@ -63,7 +63,7 @@ export function ForumPick() {
     <div className="flex flex-1 items-center justify-center">
       <EmptyState
         description={t("chat-pick-description")}
-        scene={<EmptyNina act="typing" />}
+        scene={<EmptyNina act="pointing" />}
         title={t("chat-pick")}
       />
     </div>

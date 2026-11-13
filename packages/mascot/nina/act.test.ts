@@ -13,6 +13,8 @@ type Girth = typeof ARM;
 
 /** Twelve seconds in steps of a twenty-fifth of a second: longer than any act takes to come round. */
 const MOMENTS = Arr.makeBy(301, (i) => i * 0.04);
+/** Every act at every moment: seconds of work once the acts number in the thirties, more on a busy machine. */
+const EVERY_ACT_TIMEOUT = 60_000;
 const [LEFT, TOP, WIDTH, HEIGHT] = WHOLE_BOX;
 
 /** Where a limb runs, as points along its middle line. */
@@ -105,28 +107,36 @@ function problems(pose: Pose) {
 }
 
 describe("her shape", () => {
-  it("answers a whole pose with finite numbers, in any act at any moment", () => {
-    for (const [name, act] of Rec.toEntries({ ...ACTS, ...EDGES })) {
-      for (const t of MOMENTS) {
-        expect(Schema.is(PoseSchema)(act.pose(t)), `${name} at ${t}`).toBe(
-          true
-        );
+  it(
+    "answers a whole pose with finite numbers, in any act at any moment",
+    () => {
+      for (const [name, act] of Rec.toEntries({ ...ACTS, ...EDGES })) {
+        for (const t of MOMENTS) {
+          expect(Schema.is(PoseSchema)(act.pose(t)), `${name} at ${t}`).toBe(
+            true
+          );
+        }
       }
-    }
-  });
+    },
+    EVERY_ACT_TIMEOUT
+  );
 
   it("does not take a pose with a number that is not finite for a pose", () => {
     expect(Schema.is(PoseSchema)({ ...REST, lift: Number.NaN })).toBe(false);
     expect(Schema.is(PoseSchema)({ ...REST, held: [1] })).toBe(false);
   });
 
-  it("folds no limb, crosses no arms or legs and leaves no window, in any act at any moment", () => {
-    for (const [name, act] of Rec.toEntries(ACTS)) {
-      for (const t of MOMENTS) {
-        expect(problems(act.pose(t)), `${name} at ${t}`).toEqual([]);
+  it(
+    "folds no limb, crosses no arms or legs and leaves no window, in any act at any moment",
+    () => {
+      for (const [name, act] of Rec.toEntries(ACTS)) {
+        for (const t of MOMENTS) {
+          expect(problems(act.pose(t)), `${name} at ${t}`).toEqual([]);
+        }
       }
-    }
-  });
+    },
+    EVERY_ACT_TIMEOUT
+  );
 
   it("keeps her arms apart and inside the window over an edge at any moment", () => {
     for (const [name, act] of Rec.toEntries(EDGES)) {

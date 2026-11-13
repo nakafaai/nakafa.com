@@ -201,6 +201,18 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "e1e2b6e5a9bd 091b0416b954 987f14ee6fbb 951c271e98d7 79f496e0a59a 8f8ad4fa5fbb 9421a144a90b a8a559e780d5",
   "whole.carrying.right":
     "72efba8b3c0f 46a71f32ed88 d9368a5f2e36 a157a1b5a177 30dbe84cd94b 6b4c67f0b739 0220883c323c e467c5e59966",
+  "whole.charting.left":
+    "bf91bd47160d 9493b28136ad c4e188d5dc8d a22a9fd5c5ec f59d217da2b8 98266bba92fb 6207286c7fd3 792c3173ab5b",
+  "whole.charting.right":
+    "06bf85d6a672 16f0b7515e15 b60a7e7a5ff0 e0cb531192ed 573d362557bc aae35a390d8e d7d89a76efc9 05eeb2407cea",
+  "whole.chatting.left":
+    "19a24dbb6f68 c7847e48ba6f 45d1266455e2 347bd1d8b628 c9bbda781575 64c02a184d94 c7442c545d52 dc50868aa479",
+  "whole.chatting.right":
+    "9560c81509e7 f731d91cc4a8 13a051f49eba 4fd806cfae2f cba4db1c6cd5 d4bb8f040e32 4b5f7317189b cf001f785453",
+  "whole.checking.left":
+    "daa870fd8996 19b0dac083c3 90d5f60d1b98 b8e94d9968d8 fb7fd4c09210 97009543ef28 18ff3e36798f 5dbb8e9f9fa1",
+  "whole.checking.right":
+    "831a5ee65d7d f268df7157db 4dc8737c2aad cbeb53ad4c48 60d2edf76686 73406d036642 2320dfc31f19 3e5466131dfa",
   "whole.cheering.left":
     "bfa5d890e563 b283d739096b c9ceb9eddead f7fbb93526d3 e5da97219d1b fe3e03b19d70 426f6f4e9a33 534ebecb77e6",
   "whole.cheering.right":
@@ -209,6 +221,14 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "f13383cbd4a8 1f0385d0c7ff 5322c9aad104 4da705880ebf 56723c82a496 af7dee3c07ef c2723871894c 83040b8db56a",
   "whole.counting.right":
     "c0776210aa9a 199b23968069 1407e8698c35 6597bd4f37bf faf2f710a88e 47c72a423b81 7f11ff5cfc79 c0d3538f1624",
+  "whole.filing.left":
+    "9a39e91e0775 81c9299fb7ba ae6a4d2257ed a8d0a520926f d51e65dcada5 9256bc5b01c5 660807f5f661 17c3681a8e5d",
+  "whole.filing.right":
+    "6e65e30d692e de1311987ae2 c71ae167b384 a0544ca7c15c 591b1c3d4940 c92d16a80edb 5ff0f8d610b5 f14df0675b08",
+  "whole.fishing.left":
+    "d20621f40d16 76f01684bd09 bc463df227e6 baf0a3d00d66 ea0470bc379d a4e445b4bfe8 bfd9353452e8 a6fcdce59da0",
+  "whole.fishing.right":
+    "75f523b6192b ea70a25dd2d2 65f066cee35a 8b3b4542ee0c 6a303b0b767c a2c24a1fb901 c5851215268e c31c673b4258",
   "whole.graduating.left":
     "1fc64e5b8919 969838c1fef8 69a8e50060f1 323ddbedf6c4 6646af52395f 65b3978c4adc c59003314b9d 3b1844231209",
   "whole.graduating.right":
@@ -225,6 +245,22 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "52d1927b4d40 4cf55138ebdb 515988f7dd72 84588039aab8 81fc152c1c90 59b0ec469624 20c32784005b a13c30b6df7f",
   "whole.juggling.right":
     "437f09ba529d 0ba4fdf64a20 b99aa57abe64 b9a3c8953863 38c6801fe47b f4c6c54d714a d6283d5024cc cf47708a78c1",
+  "whole.mailing.left":
+    "0e91a0d81502 eb9e98bdcc15 d89dbc403487 7c1057ffc37f 2bfb798e2091 28fe857e4774 4c35b8a15f26 06395e05b44e",
+  "whole.mailing.right":
+    "dc5e4737dd15 894e0e6a5b67 93fd881e9444 21e4ee886f00 7c940fabc7e2 58620478f40e 972fcb119530 531837fb73fc",
+  "whole.painting.left":
+    "918d1d16d35e 11a5e5e3b088 1799e242e527 d321c1ce9554 c1c859d77751 575bf09e53a0 5f9669132235 2081e6223c2f",
+  "whole.painting.right":
+    "6a5c222363b3 f567c25eeef6 efc951faab74 92fdfea9bf6a f19dc20f45ab d25ef4af2543 a3c15cc92239 160d9433a8fe",
+  "whole.photographing.left":
+    "9d4d0f2c037c d19dec575fca 0ff188c32786 fba3410e71cd 11763bbedf35 7aa235e511bf 064d9452899f 50d02eace772",
+  "whole.photographing.right":
+    "3c0aa23cb731 68a0470ea75c f67204f5985d fa80b4278f71 44c0894be3da 995f9a39b398 f93539e48067 c8a27479f499",
+  "whole.plugging.left":
+    "5e29838063b8 ddf2653b5bfe 62dc339f4dbe a5483340b951 4c63d243d3c5 d8973ab4924f 7aadec822064 d84c90c58b63",
+  "whole.plugging.right":
+    "9423ace6e3fd 059f1b388e4a 1aa8794af4b4 d5af10aab5a3 090bbe5806e7 7e25a3fd5aaa 764aa88724cc d5d221ed4541",
   "whole.pointing.left":
     "0063816d7a94 98f5457a0401 08afa603d1b3 383003ac3cc2 7ae339f62c13 34554cefb40e 9476b202cb49 42ac4b7921a7",
   "whole.pointing.right":
@@ -253,6 +289,10 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "4c1b2e0336cb 1a323417f265 bab470d6cd3e 2d32a4444f69 fab6d1241dc1 76c255271706 c263a4dff2e0 6bbad4509dc8",
   "whole.stamping.right":
     "943b87666e15 842ba786b96e cbc9b35da1fc 84d2a1ca2273 38f8fdce3bdd a3fd10c6a445 936b8f5b902d c5aceab81bd9",
+  "whole.sweeping.left":
+    "afd84e4ac2f7 026f9b534619 91eb8b12d175 50d097516743 e34a90fff87c 2d6b567b513f bba5166508c3 06be385e280b",
+  "whole.sweeping.right":
+    "2c6c707e8f54 7f7055a86ec1 d274ae6015e4 7abdd0e80526 7a7221243c48 7f1b73b6e038 78af591e0ec4 fa290d4975c0",
   "whole.teaching.left":
     "f7eb4e401eea 3bd6114f1a85 e8aecfc634bd d9d6354ae364 dc1336570af0 9c5c7ef50175 3423245ca74d 7e65983cf725",
   "whole.teaching.right":
@@ -265,10 +305,26 @@ export const DIGESTS: Readonly<Record<string, string>> = {
     "692469250b44 25bf8d691278 584e5251560c 097343d65cf7 75ba06f52095 cd5e8a5c38f2 aacbae7c242b c56f944a8f5b",
   "whole.typing.right":
     "3aa842e95f92 b658f1dd2d55 dbb9ef6c24bb ba8b04a9a627 b5db45c30852 e5256c44cbc2 f9c0803dc18e a953e72355ab",
+  "whole.unboxing.left":
+    "358842153ce7 9060070ce46b 397a3cf63c15 d98c8d8a4a9c 07c66f37aa98 faad96a9c75a 4c94c3beca84 bba6516e9634",
+  "whole.unboxing.right":
+    "62921079ab17 2d26d216837c 44379da82d57 6db1c2ebd148 6e97bd92706a 4fbd3e517c97 6a1117d84854 45f7157d8338",
+  "whole.voting.left":
+    "b59605bbccf2 8f4900376482 0f83506d7f98 039ce9918b77 50306f127146 7a8661bcdf39 89dd0ae877fa 025e6de7fa7f",
+  "whole.voting.right":
+    "a323533b6bb7 84ea6a8eb17e 3eca2e094918 6fe1550410f3 98b2e3962e8a 2f80e7ed14bb 0a11bc557282 a69c00d0af7f",
+  "whole.watering.left":
+    "3f2736765f21 1dacc805a35c c2a0aae5e3e9 ce13574957aa 1bef8157f771 a4cf0450eb16 5889c05c9e49 98bbce032c1f",
+  "whole.watering.right":
+    "f738ff12aa63 44628ce1debe 21dd73c5ad1e 590a50d3d454 2ccb81dd9f6e c832062dc1d6 acff24eb83db d2654030312d",
   "whole.waving.left":
     "0fe7412fedb0 afe1275c604e 635ed6c69672 556e70c613d2 67f03d285a4f 83040270fc0b a060cf6e828e 228dfa3479e2",
   "whole.waving.right":
     "631a01068ce3 5d2db4b1d1e7 18e56ca61da6 cc1c4fc22b20 e7c847b8cdfb 67e80672e0c0 bda2ad8f1062 bbf79ea2ea42",
+  "whole.wishing.left":
+    "e024b26be7fc 1c109a5f11ca fddae3360b9b b02d7328ff75 2ff12e34ca98 91ce89c08187 173ee5cfee33 3aae8562c7ea",
+  "whole.wishing.right":
+    "5c0c140af69f 79c8a813164e cef8fa3e6443 ccd5b1142033 1c8d3fcf0452 82332af82aa4 8ff0e13c3660 d0a061ca89c8",
   "whole.writing.left":
     "00bcbbb94825 55c2163c9f05 54d6688063f1 466f598afb77 e687afbf1ff7 44f82df59f12 e3c0dc79490d 70d880c4c2ef",
   "whole.writing.right":

@@ -1,3 +1,19 @@
+import {
+  charting,
+  chatting,
+  checking,
+  filing,
+  fishing,
+  mailing,
+  painting,
+  photographing,
+  plugging,
+  sweeping,
+  unboxing,
+  voting,
+  watering,
+  wishing,
+} from "@repo/mascot/nina/chore";
 import { free } from "@repo/mascot/nina/ink";
 import { type Curve, flip } from "@repo/mascot/nina/limb";
 import { at } from "@repo/mascot/nina/point";
@@ -48,6 +64,20 @@ export const ActSchema = Schema.Literals([
   "graduating",
   "ringing",
   "counting",
+  "wishing",
+  "watering",
+  "fishing",
+  "sweeping",
+  "mailing",
+  "checking",
+  "unboxing",
+  "filing",
+  "charting",
+  "voting",
+  "painting",
+  "photographing",
+  "chatting",
+  "plugging",
 ]);
 
 /** Doing nothing in particular. */
@@ -198,6 +228,20 @@ function hanging(t: number): Pose {
  */
 export const ACTS = {
   carrying: { pose: carrying, still: 0.4 },
+  charting: { pose: charting, still: 3.4 },
+  chatting: { pose: chatting, still: 2.4 },
+  checking: { pose: checking, still: 3.4 },
+  filing: { pose: filing, still: 1.2 },
+  fishing: { pose: fishing, still: 1.2 },
+  mailing: { pose: mailing, still: 2.6 },
+  painting: { pose: painting, still: 3.2 },
+  photographing: { pose: photographing, still: 2.1 },
+  plugging: { pose: plugging, still: 2 },
+  sweeping: { pose: sweeping, still: 0.5 },
+  unboxing: { pose: unboxing, still: 1 },
+  voting: { pose: voting, still: 0.8 },
+  watering: { pose: watering, still: 2.4 },
+  wishing: { pose: wishing, still: 0.4 },
   cheering: { pose: cheering, still: 0.35 },
   counting: { pose: counting, still: 3.1 },
   graduating: { pose: graduating, still: 0.4 },
