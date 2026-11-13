@@ -146,7 +146,7 @@ export function BrakingSurfaceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={30} setting="field">
+        <ScienceStage floor={0} reach={30} setting="field">
           <Suspense fallback={null}>
             <SurfaceScene stop={stop} surface={surface} />
           </Suspense>

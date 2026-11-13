@@ -20,9 +20,10 @@ import { DataTexture, type Group, RepeatWrapping, SRGBColorSpace } from "three";
 
 /**
  * A two-lane road at real scale, in metres: lanes of 3.5 m, a kerb, a
- * pavement, lamp posts and a row of trees on the left (−z), a grass verge on
- * the right (+z), and white distance posts every 10 m from the line where the
- * hazard appears. Traffic keeps left, as in Indonesia and Malaysia: the car
+ * pavement, lamp posts and a row of trees on the left (−z), and white distance
+ * posts every 10 m from the line where the hazard appears. The road lies on
+ * the `field` setting's own grass: a lab passes `floor={0}` to its stage, so
+ * an unseen ground catches the shadows and no second grass meets the photo. Traffic keeps left, as in Indonesia and Malaysia: the car
  * drives in the left lane toward +x, and the camera watches from the verge
  * across the empty right lane, so the car moves left to right on screen with
  * the pavement and trees behind it.
@@ -206,43 +207,10 @@ export function Road({
           roughness={0.95}
         />
       </mesh>
-      <Grass middle={middle} />
 
       <Trees positions={trees} />
       <Lamps positions={lamps} />
     </group>
-  );
-}
-
-/** How far the ground runs every way from the road, past where the haze hides it. */
-const GROUND = 2400;
-
-/**
- * The grass that runs to the horizon. Its grain tiles every eight metres in
- * both directions, so it never stretches into streaks, and the haze turns it
- * to sky long before its edge.
- */
-function Grass({ middle }: { readonly middle: number }) {
-  const texture = useMemo(() => {
-    const grain = createGrainTexture(0.7);
-    grain.colorSpace = SRGBColorSpace;
-    grain.repeat.set(GROUND / 8, GROUND / 8);
-    return grain;
-  }, []);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return (
-    <mesh
-      position={[middle, -0.01, 0]}
-      receiveShadow
-      rotation={[-Math.PI / 2, 0, 0]}
-    >
-      <planeGeometry args={[GROUND, GROUND]} />
-      <meshStandardMaterial
-        color={MATERIAL.grass}
-        map={texture}
-        roughness={1}
-      />
-    </mesh>
   );
 }
 

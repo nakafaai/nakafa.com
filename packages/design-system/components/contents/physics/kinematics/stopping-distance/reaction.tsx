@@ -142,7 +142,7 @@ export function ReactionTimeLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={40} setting="field">
+        <ScienceStage floor={0} reach={40} setting="field">
           <Suspense fallback={null}>
             <ReactionScene
               onSettled={() => setPhase("done")}
