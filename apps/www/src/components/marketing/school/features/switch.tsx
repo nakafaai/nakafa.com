@@ -65,7 +65,7 @@ function useOpenFeature() {
 }
 
 const panelVariants = cva(
-  "col-start-1 row-start-1 grid min-w-0 scroll-mt-24 content-start transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:transition-none",
+  "col-start-1 row-start-1 grid min-w-0 scroll-mt-24 grid-cols-1 content-start transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:transition-none",
   {
     variants: {
       open: {

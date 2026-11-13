@@ -270,7 +270,9 @@ function PaperWindow() {
       </div>
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
-          <TryReveal questions={exam.questions}>
+          {/* The paper shows one question at a time, and a hidden question runs no effect to say its text can
+              draw, so the paper waits only for the question the reader starts on. */}
+          <TryReveal questions={Arr.take(exam.questions, 1)}>
             {Arr.map(exam.questions, (question, index) => (
               <ExamTryQuestion
                 key={question.id}
