@@ -21,8 +21,8 @@ const MetalSchema = Schema.Struct({
   flame: Schema.Boolean,
   /** First ionization energy in kilojoules per mole. */
   ionization: Schema.Finite,
-  /** Whether the heat of the reaction melts the piece into a ball (melting point under 100 degrees). */
-  melts: Schema.Boolean,
+  /** Melting point in degrees Celsius. */
+  melting: Schema.Finite,
   /** Whether the hydroxide is too little soluble to stay dissolved, so the water turns milky. */
   milky: Schema.Boolean,
   /** Metallic radius in picometres. */
@@ -32,9 +32,9 @@ const MetalSchema = Schema.Struct({
 type Metal = typeof MetalSchema.Type;
 
 /**
- * Densities, metallic radii and first ionization energies from the CRC
- * Handbook of Chemistry and Physics; melting points of sodium (98 degrees)
- * and potassium (64 degrees) are below boiling water, lithium's (181) is not.
+ * Densities, metallic radii, first ionization energies and melting points
+ * from the CRC Handbook of Chemistry and Physics; sodium (98 degrees) and
+ * potassium (64 degrees) melt below boiling water, lithium (181) does not.
  * Calcium hydroxide dissolves only about 1.7 g per litre, so it clouds the
  * water. Magnesium barely reacts with cold water.
  */
@@ -45,7 +45,7 @@ const METALS = {
     equation: "\\mathrm{Ca + 2H_2O \\rightarrow Ca(OH)_2 + H_2}",
     flame: false,
     ionization: 589.8,
-    melts: false,
+    melting: 842,
     milky: true,
     radius: 197,
     symbol: "Ca",
@@ -56,7 +56,7 @@ const METALS = {
     equation: "\\mathrm{2Li + 2H_2O \\rightarrow 2LiOH + H_2}",
     flame: false,
     ionization: 520.2,
-    melts: false,
+    melting: 180.5,
     milky: false,
     radius: 152,
     symbol: "Li",
@@ -67,7 +67,7 @@ const METALS = {
     equation: "\\mathrm{Mg + 2H_2O \\rightarrow Mg(OH)_2 + H_2}",
     flame: false,
     ionization: 737.7,
-    melts: false,
+    melting: 650,
     milky: false,
     radius: 160,
     symbol: "Mg",
@@ -78,7 +78,7 @@ const METALS = {
     equation: "\\mathrm{2K + 2H_2O \\rightarrow 2KOH + H_2}",
     flame: true,
     ionization: 418.8,
-    melts: true,
+    melting: 63.5,
     milky: false,
     radius: 227,
     symbol: "K",
@@ -89,7 +89,7 @@ const METALS = {
     equation: "\\mathrm{2Na + 2H_2O \\rightarrow 2NaOH + H_2}",
     flame: false,
     ionization: 495.8,
-    melts: true,
+    melting: 97.8,
     milky: false,
     radius: 186,
     symbol: "Na",
@@ -101,10 +101,28 @@ export function getMetal(id: MetalId): Metal {
   return METALS[id];
 }
 
+/**
+ * Whether the heat of the reaction melts the piece into a ball: its melting
+ * point lies below the 100 degrees the water around it cannot pass.
+ */
+export function melts(id: MetalId) {
+  return METALS[id].melting < 100;
+}
+
 /** Whether a piece of the metal floats on water, lighter than water's 1 g/cm3. */
 export function floats(id: MetalId) {
   return METALS[id].density < 1;
 }
+
+/** The radius of the piece dropped in, in metres: a pea-sized piece about 8 mm across. */
+const PIECE = 0.004;
+
+/** The share of the piece that has reacted when a paused card shows the run. */
+const STILL_SHARE = 0.6;
+
+/** How fast the piece reacts in a run lasting `duration`: a brisk metal is used up within it. */
+const rate = (id: MetalId, duration: number) =>
+  (4 * METALS[id].activity) / duration;
 
 /**
  * How much of the piece has reacted after `seconds` of a run lasting
@@ -112,31 +130,41 @@ export function floats(id: MetalId) {
  * starts, as the share 1 - exp(-k t) with k set by its activity.
  */
 export function reacted(id: MetalId, seconds: number, duration: number) {
-  const rate = (4 * METALS[id].activity) / duration;
-  return 1 - Math.exp(-rate * Math.max(0, seconds));
+  return 1 - Math.exp(-rate(id, duration) * Math.max(0, seconds));
 }
 
 /**
- * Where the piece of metal is and how big it is at `seconds` into a run: a
- * floating piece skims round the trough faster the more briskly it reacts, a
- * sinking one rests on the bottom, and each shrinks as it is used up.
+ * The moment of a run a paused card shows, so its still frame already shows
+ * the outcome: when most of the piece has reacted, or the end of the run for
+ * a metal that never gets that far in cold water.
+ */
+export function stillMoment(id: MetalId, duration: number) {
+  return Math.min(duration, -Math.log(1 - STILL_SHARE) / rate(id, duration));
+}
+
+/**
+ * Where the piece of metal is and how big it is at `seconds` into a run, in
+ * metres above the beaker's inner bottom: a floating piece skims round on its
+ * hydrogen, farther out toward the glass (`room`) the more briskly it reacts,
+ * a sinking one rests on the bottom, and each shrinks as it is used up.
  */
 export function pieceAt(
   id: MetalId,
   seconds: number,
   duration: number,
-  surface: number
+  surface: number,
+  room: number
 ) {
   const { activity } = METALS[id];
   const used = reacted(id, seconds, duration);
-  const size = 0.45 * Math.cbrt(Math.max(0.02, 1 - used));
-  const orbit = floats(id) ? activity * 3.2 : 0;
+  const size = PIECE * Math.cbrt(Math.max(0.02, 1 - used));
+  const orbit = floats(id) ? activity * room : 0;
   const turn = seconds * (0.4 + activity * 1.6);
   return {
     size,
     used,
     x: orbit * Math.cos(turn),
     y: floats(id) ? surface + size * 0.3 : size,
-    z: orbit * 0.6 * Math.sin(turn),
+    z: orbit * Math.sin(turn),
   };
 }

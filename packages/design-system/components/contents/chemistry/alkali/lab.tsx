@@ -1,20 +1,26 @@
+import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
   floats,
   getMetal,
   type MetalId,
   MetalIdSchema,
+  melts,
   pieceAt,
+  stillMoment,
 } from "@repo/design-system/components/contents/chemistry/alkali/metals";
 import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
-import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import {
   MATH_NUMBER_OPTIONS,
   mathNumber,
 } from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { GlassMaterial } from "@repo/design-system/components/three/physical";
+import {
+  GlassMaterial,
+  LiquidMaterial,
+  MetalMaterial,
+} from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -43,20 +49,43 @@ import {
   useRef,
   useState,
 } from "react";
-import { Color, type Mesh, type MeshPhysicalMaterial } from "three";
+import { Color, type Mesh, MeshPhysicalMaterial, Vector2 } from "three";
 import { useFormatter } from "use-intl";
 
-/** The inside of the glass trough, in centimetres: wide, deep and tall. */
-const TROUGH = { depth: 10, height: 6, width: 16 } as const;
+/** A 600 mL Griffin beaker, in metres: 90 mm across, 125 mm tall, its glass 2 mm thick. */
+const BEAKER = {
+  base: 0.003,
+  height: 0.125,
+  inner: 0.043,
+  outer: 0.045,
+} as const;
 
-/** How deep the water stands in the trough, in centimetres. */
-const WATER = 4.2;
+/** The beaker's wall, from the middle of its base out and up to the lip, turned around its axis. */
+const BEAKER_WALL = Arr.map(
+  [
+    [0.001, 0],
+    [BEAKER.inner, 0],
+    [BEAKER.outer, BEAKER.base],
+    [BEAKER.outer, BEAKER.height - 0.002],
+    [BEAKER.outer + 0.002, BEAKER.height],
+  ] as const,
+  ([radius, height]) => new Vector2(radius, height)
+);
+
+/** How deep 400 mL of water stands in the beaker, in metres. */
+const LEVEL = 400e-6 / (Math.PI * BEAKER.inner ** 2);
+
+/** The white glazed tile under the beaker, which shows the pink, in metres. */
+const TILE = { side: 0.15, thick: 0.008 } as const;
+
+/** The printed graduations, every 100 mL up to 500 mL, as heights above the inner bottom. */
+const MARKS = Arr.map(
+  Arr.range(1, 5),
+  (step) => (step * 100e-6) / (Math.PI * BEAKER.inner ** 2)
+);
 
 /** How long one run lasts while the card plays, in seconds. */
 const RUN = 10;
-
-/** The moment of the run a paused card shows. */
-const STILL = 3.5;
 
 /** How many bubbles a fully active metal keeps rising at once. */
 const BUBBLES = 36;
@@ -71,6 +100,8 @@ interface AlkaliLabels {
   readonly equation: ReactNode;
   /** The readout of the first ionization energy. */
   readonly ionization: ReactNode;
+  /** The readout of the melting point. */
+  readonly melting: ReactNode;
   /** The readout of the atomic radius. */
   readonly radius: ReactNode;
   /** What the scene shows, for assistive technology. */
@@ -78,13 +109,15 @@ interface AlkaliLabels {
 }
 
 /**
- * A glass trough of water with a few drops of phenolphthalein, and a small
- * piece of metal dropped in. A metal lighter than water floats and skims
- * about on its hydrogen; a heavier one sinks. A brisk metal melts into a ball,
- * potassium lights its hydrogen with a lilac flame, calcium clouds the water
- * with its hydroxide, and the water turns pink as hydroxide forms, fastest for
- * the most reactive metal. The footer reads the equation and the measured
- * properties behind the trend.
+ * A 600 mL beaker of water with a few drops of phenolphthalein on a white
+ * tile, at its real size on a lab bench, and a pea-sized piece of metal
+ * dropped in. A metal lighter than water floats and skates about on its
+ * hydrogen; a heavier one sinks. A metal that melts below boiling water melts
+ * into a ball, potassium lights its hydrogen with a lilac flame, calcium
+ * clouds the water with its hydroxide, and the water turns pink as hydroxide
+ * forms, fastest for the most reactive metal. A paused card shows the run
+ * when most of the piece has reacted. The footer reads the measured
+ * properties behind the trend and, on a line of its own, the equation.
  *
  * @param metals - The metals to offer, in order
  */
@@ -156,10 +189,10 @@ export function AlkaliWaterLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={11} setting="lab">
+        <ScienceStage floor={0} reach={0.2} setting="lab">
           <Suspense>
-            <TroughCamera />
-            <Trough key={shown} metalId={shown} />
+            <BeakerCamera />
+            <Beaker key={shown} metalId={shown} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -168,10 +201,6 @@ export function AlkaliWaterLab({
 
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFact
-            label={labels.equation}
-            value={<InlineMath math={metal.equation} />}
-          />
           <VisualFact
             label={labels.ionization}
             value={
@@ -196,6 +225,18 @@ export function AlkaliWaterLab({
               />
             }
           />
+          <VisualFact
+            label={labels.melting}
+            value={
+              <InlineMath
+                math={`T_m = ${number(metal.melting, 1)}\\ ^{\\circ}\\mathrm{C}`}
+              />
+            }
+          />
+          <VisualFact
+            label={labels.equation}
+            value={<InlineMath math={metal.equation} />}
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
@@ -203,19 +244,16 @@ export function AlkaliWaterLab({
 }
 
 /**
- * The trough, the water and its color, the piece of metal, its bubbles and,
- * for potassium, its flame. Time runs while the card plays and rests at a
- * moment early in the run while it is paused.
+ * The tile, the beaker and its graduations, the water and its color, the
+ * piece of metal, its bubbles and, for potassium, its flame. Time runs while
+ * the card plays and rests on the outcome while it is paused.
  */
-function Trough({ metalId }: { readonly metalId: MetalId }) {
+function Beaker({ metalId }: { readonly metalId: MetalId }) {
   const metal = getMetal(metalId);
   const playing = useVisualScene((card) => card.playing, false);
   const pieceRef = useRef<Mesh>(null);
   const flame = useRef<Mesh>(null);
-  const water = useRef<MeshPhysicalMaterial>(null);
-  const clear = useMemo(() => new Color(getColor("SLATE", 200)), []);
-  const pink = useMemo(() => new Color(PLOT_COLORS.pink), []);
-  const milk = useMemo(() => new Color(getColor("SLATE", 50)), []);
+  const water = useRef<Mesh>(null);
   const bubbles = useMemo(
     () =>
       Arr.map(
@@ -229,73 +267,87 @@ function Trough({ metalId }: { readonly metalId: MetalId }) {
     [metal.activity]
   );
   const floating = floats(metalId);
+  const still = stillMoment(metalId, RUN);
+  const room = BEAKER.inner * 0.6;
 
   useFrame((state) => {
-    const seconds = playing ? state.clock.elapsedTime % RUN : STILL;
-    const piece = pieceAt(metalId, seconds, RUN, WATER);
-    placePiece(pieceRef.current, piece, metal.melts);
+    const seconds = playing ? state.clock.elapsedTime % RUN : still;
+    const piece = pieceAt(metalId, seconds, RUN, LEVEL, room);
+    placePiece(pieceRef.current, piece, melts(metalId));
     placeFlame(flame.current, piece, metal.flame, seconds);
-    if (water.current !== null) {
-      const tint = metal.milky ? milk : pink;
-      water.current.color
-        .copy(clear)
-        .lerp(tint, Math.min(0.85, piece.used * 1.2));
-      water.current.opacity = metal.milky ? 0.62 + 0.3 * piece.used : 0.62;
-    }
+    tintWater(water.current, piece.used, metal.milky);
     for (const bubble of bubbles) {
       const rise = (seconds * (0.8 + metal.activity) + bubble.offset) % 1;
       placeBubble(bubble.ref.current, piece, bubble.spread, {
         floating,
         rise,
-        surface: WATER,
+        surface: LEVEL,
       });
     }
   });
 
   return (
     <group>
-      <mesh position={[0, TROUGH.height / 2, 0]}>
-        <boxGeometry args={[TROUGH.width, TROUGH.height, TROUGH.depth]} />
-        <GlassMaterial color={getColor("SLATE", 200)} opacity={0.18} />
-      </mesh>
-      <mesh position={[0, WATER / 2, 0]}>
-        <boxGeometry args={[TROUGH.width - 0.2, WATER, TROUGH.depth - 0.2]} />
+      <mesh position={[0, TILE.thick / 2, 0]} receiveShadow>
+        <boxGeometry args={[TILE.side, TILE.thick, TILE.side]} />
         <meshPhysicalMaterial
-          clearcoat={0.6}
-          color={getColor("SLATE", 200)}
-          depthWrite={false}
-          ior={1.33}
-          opacity={0.62}
-          ref={water}
-          roughness={0.1}
-          transparent
+          clearcoat={0.8}
+          color={getColor("ZINC", 100)}
+          roughness={0.3}
         />
       </mesh>
-      <mesh castShadow ref={pieceRef}>
-        <dodecahedronGeometry args={[1, 1]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          color={ELEMENTS[metal.symbol].color}
-          metalness={0.8}
-          roughness={0.35}
-        />
-      </mesh>
-      <mesh ref={flame}>
-        <coneGeometry args={[0.35, 1.4, 24, 1, true]} />
-        <meshBasicMaterial
-          color={new Color(PLOT_COLORS.violet).multiplyScalar(2.2)}
-          depthWrite={false}
-          opacity={0.7}
-          toneMapped={false}
-          transparent
-        />
-      </mesh>
-      {Arr.map(bubbles, (bubble) => (
-        <mesh key={bubble.offset} ref={bubble.ref}>
-          <sphereGeometry args={[0.07, 10, 8]} />
-          <GlassMaterial color={getColor("SLATE", 50)} opacity={0.5} />
+      <group position={[0, TILE.thick, 0]}>
+        <mesh castShadow>
+          <latheGeometry args={[BEAKER_WALL, 48]} />
+          <GlassMaterial color={getColor("SLATE", 200)} opacity={0.22} />
         </mesh>
-      ))}
+        {Arr.map(MARKS, (height) => (
+          <Line
+            color={getColor("ZINC", 100)}
+            key={height}
+            lineWidth={1.2}
+            points={Arr.map(Arr.range(0, 12), (step) => {
+              const angle = Math.PI / 2 - 0.35 + (0.7 * step) / 12;
+              return [
+                (BEAKER.outer + 0.0003) * Math.cos(angle),
+                BEAKER.base + height,
+                (BEAKER.outer + 0.0003) * Math.sin(angle),
+              ] as const;
+            })}
+          />
+        ))}
+        <group position={[0, BEAKER.base, 0]}>
+          <mesh position={[0, LEVEL / 2, 0]} ref={water}>
+            <cylinderGeometry
+              args={[BEAKER.inner - 0.0004, BEAKER.inner - 0.0004, LEVEL, 48]}
+            />
+            <LiquidMaterial color={getColor("SLATE", 50)} opacity={0.3} />
+          </mesh>
+          <mesh castShadow ref={pieceRef}>
+            <dodecahedronGeometry args={[1, 1]} />
+            <MetalMaterial
+              color={getColor("SLATE", 300)}
+              roughness={metal.milky ? 0.55 : 0.3}
+            />
+          </mesh>
+          <mesh ref={flame}>
+            <coneGeometry args={[0.0035, 0.016, 24, 1, true]} />
+            <meshBasicMaterial
+              color={new Color(PLOT_COLORS.violet).multiplyScalar(2.2)}
+              depthWrite={false}
+              opacity={0.7}
+              toneMapped={false}
+              transparent
+            />
+          </mesh>
+          {Arr.map(bubbles, (bubble) => (
+            <mesh key={bubble.offset} ref={bubble.ref}>
+              <sphereGeometry args={[0.0011, 10, 8]} />
+              <GlassMaterial color={getColor("SLATE", 50)} opacity={0.6} />
+            </mesh>
+          ))}
+        </group>
+      </group>
     </group>
   );
 }
@@ -303,13 +355,40 @@ function Trough({ metalId }: { readonly metalId: MetalId }) {
 /** Where the piece is at one moment of the run. */
 type Piece = ReturnType<typeof pieceAt>;
 
-/** Stands the piece at its place, a ball once a brisk metal melts. */
-function placePiece(mesh: Mesh | null, piece: Piece, melts: boolean) {
+/** The clear water, and the tints its hydroxide gives it. */
+const WATER_TINTS = {
+  clear: new Color(getColor("SLATE", 50)),
+  milky: new Color(getColor("ZINC", 100)),
+  pink: new Color(PLOT_COLORS.pink),
+} as const;
+
+/**
+ * Turns the water pink as hydroxide forms, or milky for a hydroxide too
+ * little soluble to stay dissolved, the more of the piece has reacted.
+ */
+function tintWater(mesh: Mesh | null, used: number, milky: boolean) {
+  const material = mesh?.material;
+  if (!(material instanceof MeshPhysicalMaterial)) {
+    return;
+  }
+  const share = Math.min(1, used * 1.4);
+  material.color
+    .copy(WATER_TINTS.clear)
+    .lerp(milky ? WATER_TINTS.milky : WATER_TINTS.pink, 0.8 * share);
+  material.opacity = 0.3 + (milky ? 0.55 : 0.3) * share;
+}
+
+/** Stands the piece at its place, a ball once a metal melts in its own heat. */
+function placePiece(mesh: Mesh | null, piece: Piece, melted: boolean) {
   if (mesh === null) {
     return;
   }
   mesh.position.set(piece.x, piece.y, piece.z);
-  mesh.scale.set(piece.size, melts ? piece.size : piece.size * 0.7, piece.size);
+  mesh.scale.set(
+    piece.size,
+    melted ? piece.size : piece.size * 0.7,
+    piece.size
+  );
   mesh.visible = piece.used < 0.995;
 }
 
@@ -324,11 +403,15 @@ function placeFlame(
     return;
   }
   mesh.visible = burns && piece.used < 0.97;
-  mesh.position.set(piece.x, piece.y + 0.9, piece.z);
+  mesh.position.set(piece.x, piece.y + 0.009, piece.z);
   mesh.scale.set(1, 0.8 + 0.25 * Math.sin(seconds * 23), 1);
 }
 
-/** Lifts one bubble from the piece to the surface, while the piece still reacts. */
+/**
+ * Lifts one bubble of hydrogen: round a floating piece it froths just above
+ * the surface, from a sunken one it rises to the surface, while the piece
+ * still reacts.
+ */
 function placeBubble(
   mesh: Mesh | null,
   piece: Piece,
@@ -343,27 +426,27 @@ function placeBubble(
     return;
   }
   mesh.position.set(
-    piece.x + spread * piece.size * 2,
+    piece.x + spread * piece.size * 3,
     rising.floating
-      ? rising.surface + rising.rise * 0.5
+      ? rising.surface + rising.rise * 0.006
       : piece.y + rising.rise * (rising.surface - piece.y),
-    piece.z + spread * piece.size
+    piece.z + spread * piece.size * 1.5
   );
   mesh.visible = piece.used < 0.995;
 }
 
-/** Looks into the trough from the front and above, closer on a wide card. */
-function TroughCamera() {
+/** Looks into the beaker from the front and above, farther back on a narrow card. */
+function BeakerCamera() {
   const size = useThree((state) => state.size);
   const narrow = size.width < size.height * 1.2;
-  const distance = narrow ? 24 : 16;
+  const distance = narrow ? 0.42 : 0.32;
   return (
     <CameraControls
-      cameraPosition={[0, distance * 0.55, distance * 0.82]}
-      cameraTarget={[0, 2.5, 0]}
-      fov={40}
-      maxDistance={distance * 1.8}
-      minDistance={6}
+      cameraPosition={[0, distance * 0.62, distance * 0.78]}
+      cameraTarget={[0, 0.06, 0]}
+      fov={36}
+      maxDistance={distance * 2}
+      minDistance={0.14}
     />
   );
 }

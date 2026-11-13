@@ -8,6 +8,7 @@ import {
   type SampleId,
   SampleIdSchema,
 } from "@repo/design-system/components/contents/chemistry/spectrometer/isotopes";
+import { spreadLabels } from "@repo/design-system/components/contents/chemistry/spectrometer/placement";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -55,6 +56,15 @@ const BEAMS = [
   PLOT_COLORS.violet,
 ] as const;
 
+/** The least distance between two isotope labels along the detector, in scene units. */
+const LABEL_GAP = 3;
+
+/** How far in front of the detector its isotope labels hang, in scene units. */
+const LABEL_FRONT = 1;
+
+/** How far round the magnet's rim, from the detector side, its pole marks stand. */
+const POLE_ANGLE = (35 * Math.PI) / 180;
+
 /** How long an ion takes around its half circle while the card plays, in seconds. */
 const FLIGHT = 2.4;
 
@@ -66,10 +76,14 @@ interface SpectrometerLabels {
   readonly choose: string;
   /** The readout of the isotopes and their shares. */
   readonly isotopes: ReactNode;
+  /** The letter that marks the magnet's north pole, N or U. */
+  readonly north: string;
   /** The readout of how the path radius follows the mass. */
   readonly radius: ReactNode;
   /** The readout of the ratio of the outer and inner paths. */
   readonly ratio: ReactNode;
+  /** The letter that marks the magnet's south pole. */
+  readonly south: string;
   /** What the scene shows, for assistive technology. */
   readonly view: string;
 }
@@ -156,7 +170,12 @@ export function MassSpectrometerLab({
         <ScienceStage floor={-0.02} reach={8} setting="lab">
           <Suspense>
             <SpectrometerCamera />
-            <Spectrometer key={shown} sampleId={shown} />
+            <Spectrometer
+              key={shown}
+              north={labels.north}
+              sampleId={shown}
+              south={labels.south}
+            />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -217,11 +236,21 @@ export function MassSpectrometerLab({
 
 /**
  * The instrument: the ion source and its slit, the magnet's poles as two
- * half discs, one glowing beam per isotope on its half circle, the detector
- * plate, and a peak at each landing place. While the card plays, ions fly
+ * half discs, marked S above and N below (the field points up, which turns
+ * positive ions this way), one glowing beam per isotope on its half circle,
+ * the detector plate, and a peak at each landing place, its label spread
+ * along the front of the plate so neighbouring isotopes never touch. While the card plays, ions fly
  * round the beams, more of them on the more common isotope.
  */
-function Spectrometer({ sampleId }: { readonly sampleId: SampleId }) {
+function Spectrometer({
+  north,
+  sampleId,
+  south,
+}: {
+  readonly north: string;
+  readonly sampleId: SampleId;
+  readonly south: string;
+}) {
   const sample = getSample(sampleId);
   const playing = useVisualScene((card) => card.playing, false);
   const beams = useMemo(
@@ -254,6 +283,18 @@ function Spectrometer({ sampleId }: { readonly sampleId: SampleId }) {
   const widest = Arr.reduce(beams, 0, (most, beam) =>
     Math.max(most, beam.radius)
   );
+  const labels = Arr.zip(
+    beams,
+    spreadLabels(
+      Arr.map(beams, (beam) => 2 * beam.radius),
+      LABEL_GAP
+    )
+  );
+  const rim = widest + 1.3;
+  const pole = [
+    widest + rim * Math.cos(POLE_ANGLE),
+    -rim * Math.sin(POLE_ANGLE),
+  ] as const;
 
   useFrame((state) => {
     const time = playing ? state.clock.elapsedTime / FLIGHT : 0.5;
@@ -331,14 +372,25 @@ function Spectrometer({ sampleId }: { readonly sampleId: SampleId }) {
               side={DoubleSide}
             />
           </mesh>
+        </group>
+      ))}
+      {Arr.map(labels, ([beam, place]) => (
+        <group key={`label-${beam.isotope.number}`}>
+          <Line
+            color={getColor("SLATE", 400)}
+            lineWidth={1}
+            points={[
+              [2 * beam.radius, 0.3, 0.4],
+              [place, 0.3, 0.25 + LABEL_FRONT],
+            ]}
+            toneMapped={false}
+          />
           <ThreeLabel
+            anchorY="top"
             color={getColor("SLATE", 400)}
             fontSize="compact"
-            position={[
-              2 * beam.radius,
-              0.45 + PEAK * beam.isotope.abundance,
-              0.25,
-            ]}
+            gap={0.1}
+            position={[place, 0.3, 0.25 + LABEL_FRONT]}
           >
             <InlineMath
               math={`\\mathrm{^{${beam.isotope.number}}${sample.symbol}}`}
@@ -346,6 +398,24 @@ function Spectrometer({ sampleId }: { readonly sampleId: SampleId }) {
           </ThreeLabel>
         </group>
       ))}
+      <ThreeLabel
+        anchorY="bottom"
+        color={getColor("SLATE", 400)}
+        fontSize="compact"
+        gap={0.15}
+        position={[pole[0], 0.62, pole[1]]}
+      >
+        {south}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorY="top"
+        color={getColor("SLATE", 400)}
+        fontSize="compact"
+        gap={0.15}
+        position={[pole[0], 0.02, pole[1]]}
+      >
+        {north}
+      </ThreeLabel>
     </group>
   );
 }
