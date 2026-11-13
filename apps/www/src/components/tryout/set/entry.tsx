@@ -25,11 +25,13 @@ import { TryoutSummaryAction } from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
+import { TryoutSetSamplesLater } from "@/components/tryout/set/later";
 import type {
   LoadedRuntime,
   SetEntrySection,
 } from "@/components/tryout/set/model";
 import type { TryoutSetOverviewProps } from "@/components/tryout/set/overview";
+import { TryoutSetSiblings } from "@/components/tryout/set/siblings";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 
 /** Props of the direct-entry set: its render model and its only section's runtime. */
@@ -114,6 +116,8 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
             section: value.entrySection,
           }}
         />
+        {value.activeAttempt ? null : <TryoutSetSamplesLater />}
+        <TryoutSetSiblings />
         <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
       </TryoutPageBody>
     </TryoutPage>

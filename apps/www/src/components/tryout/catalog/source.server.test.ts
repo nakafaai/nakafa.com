@@ -21,6 +21,7 @@ import {
   readTryoutSectionPage,
   readTryoutSetList,
   readTryoutSetPage,
+  readTryoutSetSamples,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/source.server";
 import { resetTestRuntimeCache } from "@/test/store";
@@ -243,6 +244,31 @@ describe("immutable try-out application catalog", () => {
 
         expect(featured.prompt.type).toBe("doc");
         expect(featured.interaction.id).toBe(featured.key?.interaction);
+      })
+  );
+  it.effect(
+    "decodes a set's samples with their keys and explanations, and finds none for a section",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        fetchQueryMock.mockImplementation(world.visitor.query);
+
+        const samples = Option.getOrThrow(
+          yield* readTryoutSetSamples("en", SET("en"))
+        );
+
+        const sample = {
+          body: {
+            explanation: { type: "doc" },
+            interaction: { id: "choice" },
+            key: { interaction: "choice", kind: "choice" },
+          },
+          versionHash: expect.any(String),
+        };
+        expect(samples).toMatchObject([sample, sample]);
+        expect(yield* readTryoutSetSamples("en", SECTION("en"))).toStrictEqual(
+          Option.none()
+        );
       })
   );
   it.effect("asks Convex for the featured question once for each release", () =>
