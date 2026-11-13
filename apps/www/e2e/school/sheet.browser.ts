@@ -97,7 +97,10 @@ test("a leader's phone sidebar draws every class and the school's logo in its fi
   );
   await teacher.close();
 
-  const context = await browser.newContext({ viewport: PHONE });
+  const context = await browser.newContext({
+    recordVideo: { dir: test.info().outputPath("video"), size: PHONE },
+    viewport: PHONE,
+  });
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
