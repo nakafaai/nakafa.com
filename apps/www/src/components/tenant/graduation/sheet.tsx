@@ -15,13 +15,13 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { PageList } from "@/components/shared/page/body";
-import { PaneOpen } from "@/components/shared/pane";
+import { PaneOpen } from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   PanesProvider,
-} from "@/components/shared/panes";
+} from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -227,9 +227,9 @@ function GraduationStudents() {
           </TablePages>
         </PageList>
       </PanesList>
-      <PanesDetail label={t("detail")}>
+      <PagePane label={t("detail")}>
         <GraduationLineDetail lines={pagination.results} />
-      </PanesDetail>
+      </PagePane>
     </Panes>
   );
 }

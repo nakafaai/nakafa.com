@@ -28,13 +28,13 @@ import {
   type Connection,
   disconnectOwnUpdate,
 } from "@/components/connectors/optimistic";
-import { PaneFill, PaneFooter } from "@/components/shared/pane";
+import { PaneFill, PaneFooter } from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   PanesProvider,
-} from "@/components/shared/panes";
+} from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { LoadFailure } from "@/components/state/failure";
@@ -140,7 +140,7 @@ export function AccountDirectory({
         <PanesList>
           <ServiceList entries={entries} />
         </PanesList>
-        <PanesDetail label={t("detail")}>
+        <PagePane label={t("detail")}>
           <ServiceDetail entries={entries}>
             <ServiceHeader />
             <PaneFill>
@@ -151,7 +151,7 @@ export function AccountDirectory({
               <ServiceActions />
             </PaneFooter>
           </ServiceDetail>
-        </PanesDetail>
+        </PagePane>
       </Panes>
     </ConnectorActionsContext>
   );

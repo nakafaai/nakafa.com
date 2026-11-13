@@ -1,11 +1,11 @@
 import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { Panes, PanesList, PanesRail } from "@/components/shared/page/panes";
 import {
   pageBoxVariants,
   pageGutterVariants,
 } from "@/components/shared/page/width";
-import { Panes, PanesList, PanesRail } from "@/components/shared/panes";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 import { ChatRail } from "@/components/tenant/classes/forum/rail";

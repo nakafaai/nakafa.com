@@ -19,7 +19,7 @@ import {
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { usePanes } from "@/components/shared/panes";
+import { usePanes } from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";

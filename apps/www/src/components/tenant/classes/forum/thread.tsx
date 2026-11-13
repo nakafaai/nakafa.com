@@ -12,8 +12,8 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { PaneHeader } from "@/components/shared/pane";
-import { PanesDetail, useWide } from "@/components/shared/panes";
+import { PaneHeader } from "@/components/shared/page/pane";
+import { PagePane, useWide } from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { LoadFailure } from "@/components/state/failure";
 import { MESSAGE_PAGE_SIZE } from "@/components/tenant/classes/forum/channel";
@@ -205,7 +205,7 @@ export function ThreadPane({
   const drawn = Option.filter(front, (kept) => isSettledFeed(kept, feed));
 
   return (
-    <PanesDetail
+    <PagePane
       label={Option.match(front, {
         onNone: () => "",
         onSome: (kept) =>
@@ -242,7 +242,7 @@ export function ThreadPane({
           </div>
         ),
       })}
-    </PanesDetail>
+    </PagePane>
   );
 }
 

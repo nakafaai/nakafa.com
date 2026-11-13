@@ -14,16 +14,16 @@ import { ContentHeader } from "@/components/content/header";
 import { ContentLead } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
-import {
-  SidebarRightFooter,
-  SidebarRightHeader,
-  SidebarRightPanel,
-  SidebarRightProvider,
-} from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
 import { PageBody } from "@/components/shared/page/body";
 import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
+import {
+  PageOutline,
+  PageOutlineFooter,
+  PageOutlineHeader,
+  PageOutlineProvider,
+} from "@/components/shared/page/outline";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
@@ -237,7 +237,7 @@ function ArticlePage() {
       publicPath={article.publicPath}
       section="articles"
     >
-      <SidebarRightProvider>
+      <PageOutlineProvider>
         <Page>
           <ContentHeader
             breadcrumb={
@@ -286,9 +286,9 @@ function ArticlePage() {
           </PageFooter>
           <SheetEntry contextTitle={metadata.title} key={`nina:${filePath}`} />
         </Page>
-        <SidebarRightPanel
+        <PageOutline
           footer={
-            <SidebarRightFooter>
+            <PageOutlineFooter>
               <CommentsButton />
               <ReferenceButton references={article.references} />
               <ReportButton />
@@ -296,10 +296,10 @@ function ArticlePage() {
                 <GithubButton githubUrl={article.sourceUrl} />
               ) : null}
               <ShareButton />
-            </SidebarRightFooter>
+            </PageOutlineFooter>
           }
           header={
-            <SidebarRightHeader
+            <PageOutlineHeader
               description={description}
               publicPath={publicPath}
               title={metadata.title}
@@ -307,8 +307,8 @@ function ArticlePage() {
           }
         >
           <SidebarTree data={headings} title={labels.onThisPage} />
-        </SidebarRightPanel>
-      </SidebarRightProvider>
+        </PageOutline>
+      </PageOutlineProvider>
     </ContentViewTracker>
   );
 }

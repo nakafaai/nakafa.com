@@ -33,14 +33,14 @@ import {
   PaneFooter,
   PaneHeader,
   PaneOpen,
-} from "@/components/shared/pane";
+} from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   PanesProvider,
   usePanes,
-} from "@/components/shared/panes";
+} from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
@@ -100,9 +100,9 @@ export function GuardianHome() {
             </PageList>
           </PanesList>
           {QueryResult.isSuccess(children) ? (
-            <PanesDetail label={t("child-detail")}>
+            <PagePane label={t("child-detail")}>
               <GuardianChild items={children.value} />
-            </PanesDetail>
+            </PagePane>
           ) : null}
         </Panes>
       </PanesProvider>

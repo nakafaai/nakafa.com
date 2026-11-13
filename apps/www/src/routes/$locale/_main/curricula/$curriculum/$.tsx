@@ -16,16 +16,16 @@ import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { ContainerList } from "@/components/shared/card/list";
 import { CardMaterial } from "@/components/shared/card/material";
 import { RefContent } from "@/components/shared/content/references";
-import {
-  SidebarRightFooter,
-  SidebarRightHeader,
-  SidebarRightPanel,
-  SidebarRightProvider,
-} from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
 import { PageBody } from "@/components/shared/page/body";
 import { PageFooter } from "@/components/shared/page/footer";
 import { Page } from "@/components/shared/page/frame";
+import {
+  PageOutline,
+  PageOutlineFooter,
+  PageOutlineHeader,
+  PageOutlineProvider,
+} from "@/components/shared/page/outline";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
@@ -274,20 +274,20 @@ function CurriculumRoutePage() {
         ) : null}
       </Page>
       {hasOutline ? (
-        <SidebarRightPanel
+        <PageOutline
           footer={
-            <SidebarRightFooter>
+            <PageOutlineFooter>
               <ReportButton />
               {page.sourceUrl ? (
                 <GithubButton githubUrl={page.sourceUrl} />
               ) : null}
               <ShareButton />
-            </SidebarRightFooter>
+            </PageOutlineFooter>
           }
-          header={<SidebarRightHeader {...page.toc} />}
+          header={<PageOutlineHeader {...page.toc} />}
         >
           <SidebarTree data={page.chapters} title={route.title} />
-        </SidebarRightPanel>
+        </PageOutline>
       ) : null}
     </CurriculumOutline>
   );
@@ -302,7 +302,7 @@ function CurriculumOutline({
   enabled: boolean;
 }) {
   return enabled ? (
-    <SidebarRightProvider>{children}</SidebarRightProvider>
+    <PageOutlineProvider>{children}</PageOutlineProvider>
   ) : (
     children
   );

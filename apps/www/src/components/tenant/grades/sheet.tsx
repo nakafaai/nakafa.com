@@ -33,13 +33,13 @@ import {
   PaneFooter,
   PaneHeader,
   PaneOpen,
-} from "@/components/shared/pane";
+} from "@/components/shared/page/pane";
 import {
+  PagePane,
   Panes,
-  PanesDetail,
   PanesList,
   usePanes,
-} from "@/components/shared/panes";
+} from "@/components/shared/page/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
@@ -222,9 +222,9 @@ export function ClassGradebook({
             </TablePages>
           </PageList>
         </PanesList>
-        <PanesDetail label={t("detail")}>
+        <PagePane label={t("detail")}>
           {isRead ? <GradeLineDetail lines={pagination.results} /> : null}
-        </PanesDetail>
+        </PagePane>
       </Panes>
     </GradebookContext>
   );

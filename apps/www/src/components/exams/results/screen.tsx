@@ -30,7 +30,11 @@ import { ReleaseAction } from "@/components/exams/results/release";
 import { StudentsTable } from "@/components/exams/results/students";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { PageList } from "@/components/shared/page/body";
-import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
+import {
+  Panes,
+  PanesList,
+  PanesProvider,
+} from "@/components/shared/page/panes";
 import {
   TableFiltersProvider,
   TableSearch,
