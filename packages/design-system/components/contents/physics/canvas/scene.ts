@@ -19,7 +19,7 @@ import type p5 from "p5";
  */
 
 /** Where the road lies on the canvas and how metres map onto it. */
-export const RoadSchema = Schema.Struct({
+const RoadSchema = Schema.Struct({
   /** The height of the scene band, in pixels. */
   height: Schema.Finite,
   /** The canvas x of the road's zero, in pixels. */

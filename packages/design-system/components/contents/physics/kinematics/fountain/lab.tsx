@@ -46,10 +46,11 @@ const DROPS = 90;
 const PLAY_RATE = 0.5;
 
 /** What the sketch reads on every frame. */
-interface FountainFrame {
-  readonly angle: JetAngle;
-  readonly speed: number;
-}
+const FountainFrameSchema = Schema.Struct({
+  angle: JetAngleSchema,
+  speed: Schema.Finite,
+});
+type FountainFrame = typeof FountainFrameSchema.Type;
 
 /** Maps metres onto the canvas: the nozzle near the left, the farthest landing and the highest top in view. */
 function lawnView(sketch: p5, speed: number) {

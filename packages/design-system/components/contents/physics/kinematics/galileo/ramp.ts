@@ -11,7 +11,7 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** Gravitational acceleration, in m/s². */
-export const RAMP_GRAVITY = 10;
+const RAMP_GRAVITY = 10;
 
 /** The angles a learner can tilt the ramp to, in degrees. */
 export const RampAngleSchema = Schema.Literals([2, 3, 4]);

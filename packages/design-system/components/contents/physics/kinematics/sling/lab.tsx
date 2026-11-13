@@ -60,11 +60,12 @@ const PLAY_RATE = 0.4;
 const HOLD_SECONDS = 1;
 
 /** What the sketch reads on every frame. */
-interface SlingFrame {
-  readonly period: number;
-  readonly radius: number;
-  readonly release: ReleasePoint;
-}
+const SlingFrameSchema = Schema.Struct({
+  period: Schema.Finite,
+  radius: Schema.Finite,
+  release: ReleasePointSchema,
+});
+type SlingFrame = typeof SlingFrameSchema.Type;
 
 /**
  * Draws one moment of the throw from above, on a court: the thrower at the

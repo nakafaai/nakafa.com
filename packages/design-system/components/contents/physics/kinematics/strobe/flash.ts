@@ -9,7 +9,7 @@ import { Array as Arr, Match, Schema } from "effect";
  */
 
 /** Gravitational acceleration, in m/s². */
-export const GRAVITY = 10;
+const GRAVITY = 10;
 
 /** The photographs a lesson can show. */
 export const StrobeShotSchema = Schema.Literals([
@@ -28,6 +28,19 @@ const BallSchema = Schema.Struct({
   y: Schema.Finite,
 });
 type Ball = typeof BallSchema.Type;
+
+/** One photograph: its balls, how long the shutter stays open, the frame it shows in metres, and the time between flashes. */
+const PhotoSchema = Schema.Struct({
+  balls: Schema.Array(BallSchema),
+  duration: Schema.Finite,
+  frame: Schema.Struct({
+    bottom: Schema.Finite,
+    left: Schema.Finite,
+    right: Schema.Finite,
+    top: Schema.Finite,
+  }),
+  interval: Schema.Finite,
+});
 
 /** A ball that starts at (x, y) with velocity (vx, vy) and then only falls. */
 function thrown(start: Ball, time: number): Ball {
@@ -74,15 +87,7 @@ export const STROBE_SHOTS = {
     frame: { bottom: -0.25, left: -0.85, right: 0.85, top: 1.5 },
     interval: 0.1,
   },
-} as const satisfies Record<
-  StrobeShot,
-  {
-    balls: readonly Ball[];
-    duration: number;
-    frame: { bottom: number; left: number; right: number; top: number };
-    interval: number;
-  }
->;
+} as const satisfies Record<StrobeShot, typeof PhotoSchema.Type>;
 
 /** Every ball of a shot at `time` after release. */
 export function strobeBalls(shot: StrobeShot, time: number) {
@@ -104,9 +109,10 @@ export function strobeFlashes(shot: StrobeShot) {
  * of a toss, the reach of a ball rolled off a table, or the range of a kick.
  */
 export function strobeFacts(shot: StrobeShot) {
-  const { balls, duration } = STROBE_SHOTS[shot];
-  const first = balls[0];
-  const last = balls.at(-1) ?? first;
+  const { duration } = STROBE_SHOTS[shot];
+  const balls: Arr.NonEmptyReadonlyArray<Ball> = STROBE_SHOTS[shot].balls;
+  const first = Arr.headNonEmpty(balls);
+  const last = Arr.lastNonEmpty(balls);
   const end = thrown(last, duration);
   const outcome = Match.value(shot).pipe(
     Match.when("drop", () => Math.abs(end.vy)),
