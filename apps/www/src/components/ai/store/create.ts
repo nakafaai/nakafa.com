@@ -1,6 +1,6 @@
 import { Array as Arr, DateTime, Effect, Option, Record as Rec } from "effect";
 import { createStore } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import {
   resolveAiDraftText,
   resolveAiOwnerChange,
@@ -12,6 +12,7 @@ import {
   refuseHolds,
   strayFiles,
 } from "@/components/ai/store/hold";
+import { keptChatStorage } from "@/components/ai/store/kept";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
@@ -223,7 +224,7 @@ export function createAiStore() {
       {
         name: AI_STORAGE_KEY,
         partialize: (state) => ({ activeChatId: state.activeChatId }),
-        storage: createJSONStorage(() => localStorage),
+        storage: keptChatStorage,
         version: 1,
       }
     )
