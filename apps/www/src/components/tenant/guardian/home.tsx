@@ -27,7 +27,7 @@ import {
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { PageList } from "@/components/shared/page/body";
+import { ListCard, PageList } from "@/components/shared/page/body";
 import {
   PaneBody,
   PaneFooter,
@@ -44,7 +44,6 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/inset";
 import { RowCopy, RowItems, RowOpen } from "@/components/shared/table/menu";
 import { TableStatus } from "@/components/shared/table/status";
 import { TableText } from "@/components/shared/table/text";
@@ -401,7 +400,7 @@ function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
   }
   return (
     <TableFiltersProvider>
-      <TableFrame>
+      <ListCard>
         <DataTable
           columns={[
             gradeColumns.text((grade) => grade.className, {
@@ -425,7 +424,7 @@ function GuardianGradeTable({ grades }: { grades: readonly ChildGrade[] }) {
           plain
           rowId={(grade) => grade.id}
         />
-      </TableFrame>
+      </ListCard>
     </TableFiltersProvider>
   );
 }

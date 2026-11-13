@@ -96,8 +96,9 @@ export function PageTitle({
 }
 
 /**
- * The page's actions at the end of its header, its one primary action among them. A header holds at most two controls,
- * a button group counting as one, so more go into a group.
+ * The page's action at the end of its header (owner, 13 Nov): one button, or one button group that counts as one, so
+ * more actions go into a group or a menu. A search field is no action, and the path is the page's navigation
+ * (`crumbSiblings`), so no selector stands here.
  */
 export function PageActions({ children }: { children: ReactNode }) {
   return (

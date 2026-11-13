@@ -61,16 +61,18 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
  * name. Every other column holds its width as its floor too, so the heads also stand still in a table wider than its
  * screen. Every cell keeps one line and cuts what passes its column's width (`TableText`, `TableValue`), so no value
  * widens a column. A column of known values holds the longest status badge whole, or a first value with its `+N`.
+ * A phone gives the row's name and a column of known values less, so a table's first two columns stand whole beside
+ * the row's menu from 375 px, and the rest scroll under it; from the small breakpoint they take their full widths.
  */
 export const headWidth = cva("", {
   variants: {
     width: {
-      choice: "w-48 min-w-48",
+      choice: "w-36 min-w-36 sm:w-48 sm:min-w-48",
       days: "w-52 min-w-52",
       menu: "min-w-12",
       number: "w-28 min-w-28",
-      text: "min-w-60 not-first:w-72 sm:min-w-50 sm:not-first:min-w-64",
-      values: "w-48 min-w-48",
+      text: "min-w-36 not-first:w-72 sm:min-w-50 sm:not-first:min-w-64",
+      values: "w-36 min-w-36 sm:w-48 sm:min-w-48",
       wide: "w-60 min-w-60",
     },
   },
