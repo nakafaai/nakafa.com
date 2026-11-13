@@ -1,7 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
-import { BodyKind, bodyFaces } from "@/lib/island/models/kinds";
+import { speciesFaces } from "@/lib/island/models/catalog";
+import {
+  BodyKind,
+  bodyFaces,
+  modelFaces,
+  modelKey,
+} from "@/lib/island/models/kinds";
+import { swimmerFaces } from "@/lib/island/models/ocean";
 import { boundsOf, flatten, meters } from "@/lib/island/models/parts";
 import { SCALE } from "@/lib/island/scale";
 
@@ -39,5 +46,23 @@ describe("island/models/kinds", () => {
     for (const kind of BodyKind.literals) {
       expect(flatten(bodyFaces(kind)).length % (3 * 9)).toBe(0);
     }
+  });
+
+  it("builds every model the world draws from its own maker, kept under one key a model", () => {
+    const models = [
+      { _tag: "body", kind: "cow" },
+      { _tag: "species", index: 3 },
+      { _tag: "swimmer", kind: "orca" },
+    ] as const;
+    expect(Arr.map(models, modelFaces)).toEqual([
+      bodyFaces("cow"),
+      speciesFaces(3),
+      swimmerFaces("orca"),
+    ]);
+    expect(Arr.map(models, modelKey)).toEqual([
+      "body-cow",
+      "species-3",
+      "swimmer-orca",
+    ]);
   });
 });

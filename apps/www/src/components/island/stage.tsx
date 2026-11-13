@@ -21,7 +21,7 @@ import {
   GameStoreContext,
   heldOf,
 } from "@/components/island/store";
-import { bodiesOf } from "@/lib/island/bodies";
+import { bodiesOf, seaBodies } from "@/lib/island/bodies";
 import {
   clampOrbit,
   easeOrbit,
@@ -41,7 +41,7 @@ import { planOf } from "@/lib/island/plan";
 import { castRay } from "@/lib/island/ray";
 import { touches } from "@/lib/island/room";
 import { hourOf, lightOf } from "@/lib/island/sky";
-import { roam, wildOf, wildVertices } from "@/lib/island/wild";
+import { roam, wildBodies, wildOf } from "@/lib/island/wild";
 import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /**
@@ -326,7 +326,7 @@ function start(
     return next;
   };
 
-  /** Hands the painter every creature this frame: the herd and the fox facing its way or its float as true 3D bodies (D21), then the wild visitors and the float. */
+  /** Hands the painter every creature this frame as true 3D bodies: the herd and the fox facing its way or its float (D21), the open sea's swimmers (D24) and the wild visitors (D25); then Nina and the float, still flat. */
   const drawLife = (
     cells: Cells,
     next: Option.Option<readonly [number, number]>,
@@ -344,17 +344,12 @@ function start(
       ...foxAt(walker.x, walker.z, facing[0], facing[1]),
       rest: route.length > 0 ? 0 : 1,
     };
-    painter.bodies(bodiesOf(cells, Arr.append(herd, fox), seconds));
-    painter.herd(
-      flatQuads(
-        size,
-        seconds,
-        Arr.appendAll(
-          wildVertices(cells, wild, size, orbit.yaw, seconds),
-          rod.quads(seconds, orbit.yaw)
-        )
-      )
-    );
+    painter.bodies([
+      ...bodiesOf(cells, Arr.append(herd, fox), seconds),
+      ...seaBodies(store.getState().seed, seconds),
+      ...wildBodies(cells, wild, size, seconds),
+    ]);
+    painter.herd(flatQuads(size, seconds, rod.quads(seconds, orbit.yaw)));
   };
 
   /** The cell a hovering mouse would change, outlined before it presses (D5). */
