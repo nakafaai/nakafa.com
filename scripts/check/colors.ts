@@ -28,13 +28,14 @@ const COLOR_TEXT =
 /** A color written as a six-digit hex number, the way three.js accepts one. */
 const COLOR_NUMBER = /^0x[0-9a-f]{6}$/iu;
 const COLOR_RULE =
-  "color a plotted mark with PLOT_COLORS from @repo/design-system/lib/plot and a neutral surface with getColor from @repo/design-system/lib/color, instead of a color written in place or a theme chart token";
+  "color a plotted mark with PLOT_COLORS from @repo/design-system/lib/plot, a neutral surface with getColor from @repo/design-system/lib/color, and a real material such as asphalt, glass or a reagent with MATERIAL from @repo/design-system/lib/material, instead of a color written in place or a theme chart token";
 
 /**
  * Reports a color that a lesson visual writes in place. The plot palette keeps
  * every plotted hue away from the red, green, and blue axes, and the theme
  * chart tokens change with each theme, so a visual takes its colors from the
- * palette and the neutral scale alone. Tests are not judged.
+ * plot palette, the neutral scale and the palette of real materials alone.
+ * Tests are not judged.
  */
 export function inspectColorSource(file: string, sourceFile: SourceFile) {
   if (
