@@ -306,9 +306,9 @@ tests and framework configuration, by `new-promise`. The rule counts only while
 
 ### Rules that follow components across modules
 
-The owner's rule of 13 November 2026 that tables are full-page only holds for
-what a page renders, and a page composes its table from components of other
-modules. So the check reads the component graph of the judged modules
+Two of the owner's rules of 13 November 2026 hold for what a page renders, and a
+page composes its table and its header from components of other modules. So
+these two checks read the component graph of the judged modules
 (`scripts/check/components.ts`): the components each module declares, and the
 component an element's tag names, the module's own or one it imports by name,
 also through `lazy(() => import(...))`. A specifier resolves by the app's `@/`
@@ -324,6 +324,25 @@ holds a card when it places its `children` inside one, such as
 `??`. A component that draws a table outside a card passes the
 table to whatever renders it, and the check reports the table at the component
 no element renders, such as a route's page, where the chain starts.
+
+**A header shows two pills and one group** (`scripts/check/actions.ts`). The
+owner's rule of 13 November 2026: a page header shows at most two standalone
+pill buttons, and its secondary icon actions, such as More or the outline
+toggle, stand in one `ButtonGroup`. The row is `PageActions` of the page frame
+(`shared/page/header.tsx`). A control that writes only icon sizes, as
+`size="icon"`, on itself, on the element its `render` draws, or in
+`buttonVariants`, is an icon button, and so is a component whose root writes
+only icon sizes; any other control is a pill, a component that draws one
+included. A `ButtonGroup` is one group, whatever it holds, and so is a
+component that returns one at its root. A search field, the value a header
+takes in its `search` prop, and a dialog, a sheet or a popup that a control
+opens, are not actions. A component that places a prop in the row as it is,
+such as `SchoolHeader`'s `children` or BreadcrumbHeader's `value.action`, is a
+header, and each usage counts what it writes there with what the header draws
+itself. A row shows at most two pills, and its icon buttons and groups standing
+apart number one at most. A header that crowds its own row is reported there,
+not again at each usage, and a header that draws itself in its row stops after
+twelve readings.
 
 ### Data shapes written inline
 
