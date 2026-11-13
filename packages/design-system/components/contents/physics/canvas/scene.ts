@@ -21,15 +21,15 @@ import type p5 from "p5";
 /** Where the road lies on the canvas and how metres map onto it. */
 export const RoadSchema = Schema.Struct({
   /** The height of the scene band, in pixels. */
-  height: Schema.Number,
+  height: Schema.Finite,
   /** The canvas x of the road's zero, in pixels. */
-  origin: Schema.Number,
+  origin: Schema.Finite,
   /** Pixels per metre along the road. */
-  scale: Schema.Number,
+  scale: Schema.Finite,
   /** The canvas y of the road surface where the wheels stand. */
-  surface: Schema.Number,
+  surface: Schema.Finite,
   /** The top of the scene band, in pixels. */
-  top: Schema.Number,
+  top: Schema.Finite,
 });
 export type Road = typeof RoadSchema.Type;
 

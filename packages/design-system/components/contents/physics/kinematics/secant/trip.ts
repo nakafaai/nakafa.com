@@ -12,8 +12,8 @@ export const TripSchema = Schema.Literals(["commute", "cruise", "return"]);
 export type Trip = typeof TripSchema.Type;
 
 const StretchSchema = Schema.Struct({
-  acceleration: Schema.Number,
-  duration: Schema.Number,
+  acceleration: Schema.Finite,
+  duration: Schema.Finite,
 });
 type Stretch = typeof StretchSchema.Type;
 
@@ -84,8 +84,9 @@ export function tripState(trip: Trip, time: number) {
 
 /** How long a trip lasts, in seconds. */
 export function tripDuration(trip: Trip) {
+  const stretches: readonly Stretch[] = TRIPS[trip].stretches;
   return Arr.reduce(
-    TRIPS[trip].stretches,
+    stretches,
     0,
     (sum, stretch) => sum + stretch.duration
   );

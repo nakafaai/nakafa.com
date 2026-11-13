@@ -22,10 +22,10 @@ export type StrobeShot = typeof StrobeShotSchema.Type;
 
 /** One ball in a photograph: where it is at a time after release, in metres. */
 const BallSchema = Schema.Struct({
-  vx: Schema.Number,
-  vy: Schema.Number,
-  x: Schema.Number,
-  y: Schema.Number,
+  vx: Schema.Finite,
+  vy: Schema.Finite,
+  x: Schema.Finite,
+  y: Schema.Finite,
 });
 type Ball = typeof BallSchema.Type;
 
