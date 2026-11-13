@@ -1,6 +1,6 @@
 Source: Poly Haven HDRIs, 1k Radiance files
   lab.exr     Vintage Measuring Lab by Oliksiy Yakovlyev, https://polyhaven.com/a/vintage_measuring_lab
-  field.exr   Meadow 2 by Sergej Majboroda, https://polyhaven.com/a/meadow_2
+  field.exr   J&E Gray Park by Greg Zaal, https://polyhaven.com/a/je_gray_park
   studio.exr  Studio Small 08 by Sergej Majboroda, https://polyhaven.com/a/studio_small_08
 Project: https://polyhaven.com
 License: CC0 1.0 Universal, https://polyhaven.com/license

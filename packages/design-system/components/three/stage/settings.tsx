@@ -13,16 +13,17 @@ import { type ColorRepresentation, DataTexture } from "three";
  * stage's key light stands, at an azimuth of 52 degrees from +x toward +z, and
  * gives the key light the sun's elevation. Measured from each 1k HDRI as the
  * luminance-weighted direction of its brightest 0.2% of pixels: the lab's
- * windows at -28.1 degrees and 41.3 up, the meadow's sun at 36.2 and 27 up,
- * and the studio's largest softbox at 54.6 and 19 up.
+ * windows at -28.1 degrees and 41.3 up, the park's sun at 36.1 and 17.1 up,
+ * and the studio's largest softbox at 54.6 and 19 up. The field's key light
+ * rises to 30 degrees, so its shadows stay within a lab's reach.
  */
 const LAB_TURN = -1.398;
-const FIELD_TURN = -0.276;
+const FIELD_TURN = -0.2775;
 const STUDIO_TURN = 0.045;
 
 /** Unit directions toward each setting's sun, at the key light's azimuth. */
 const LAB_SUN = [0.463, 0.66, 0.592] as const;
-const FIELD_SUN = [0.549, 0.454, 0.702] as const;
+const FIELD_SUN = [0.533, 0.5, 0.682] as const;
 const SKY_SUN = [0.505, 0.574, 0.645] as const;
 const STUDIO_SUN = [0.423, 0.725, 0.544] as const;
 
@@ -161,15 +162,15 @@ export function LabSetting() {
   );
 }
 
-/** An open meadow in afternoon sun, for anything that moves outdoors. */
+/** An open park field under a clear sky with a distant tree line, for anything that moves outdoors. */
 export function FieldSetting() {
   return (
     <>
       <Suspense fallback={<Panels />}>
         <Photo
-          backdrop={2.2}
-          blur={0.2}
-          exposure={1.8}
+          backdrop={4}
+          blur={0.12}
+          exposure={3.5}
           file="field"
           turn={FIELD_TURN}
         />
