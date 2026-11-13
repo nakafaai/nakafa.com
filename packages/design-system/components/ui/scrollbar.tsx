@@ -23,7 +23,10 @@ const ThumbDrag = Schema.Struct({
  * while the page moves, and lets the thumb drag the page and the track jump it. The page keeps its own scrolling,
  * by wheel, keys, find and anchors; only its native bar is hidden. The bar writes the DOM directly, so it renders
  * nothing: the page's and the window's heights are read only when either changes, and a scroll reads its offset
- * once in the next frame and moves the thumb. The returned function unwires it.
+ * once in the next frame and moves the thumb. A change of height is read in that frame too, never in the observer's
+ * callback: reading the page's height there makes the browser lay out, which can draw a part that
+ * `content-visibility` skipped and change the height again inside the same frame, and WebKit then reports a
+ * ResizeObserver loop as a page error. The returned function unwires it.
  */
 function wirePageScrollbar(track: HTMLDivElement) {
   const thumb = track.firstElementChild;
@@ -35,6 +38,8 @@ function wirePageScrollbar(track: HTMLDivElement) {
   let hide = 0;
   let drag = Option.none<typeof ThumbDrag.Type>();
   let size = { length: 0, room: 0, travel: 0 };
+  // Whether a height changed since the thumb was last measured.
+  let stale = true;
 
   /** Reads the page's travel, the thumb's length and how far the thumb may move, after either height changed. */
   const measure = () => {
@@ -48,12 +53,16 @@ function wirePageScrollbar(track: HTMLDivElement) {
 
   const place = () => {
     frame = 0;
+    if (stale) {
+      stale = false;
+      measure();
+    }
     const offset =
       size.travel > 0 ? (root.scrollTop / size.travel) * size.room : 0;
     thumb.style.transform = `translateY(${offset}px)`;
   };
 
-  /** Moves the thumb once in the next frame, however many scroll events the frame holds. */
+  /** Measures and moves the thumb once in the next frame, however many scroll or resize events the frame holds. */
   const schedule = () => {
     if (frame === 0) {
       frame = window.requestAnimationFrame(place);
@@ -61,7 +70,7 @@ function wirePageScrollbar(track: HTMLDivElement) {
   };
 
   const resized = () => {
-    measure();
+    stale = true;
     schedule();
   };
 
