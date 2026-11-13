@@ -19,19 +19,25 @@ describe("authenticated user query contracts", () => {
       })
     );
     const authed = t.withIdentity({ subject: user.sessionId });
-    expect(await authed.query(api.auth.queries.getCurrentUser)).toMatchObject({
-      appUser: { _id: user.userId, authId: user.authUserId },
-      authUser: { _id: user.authUserId, name: "User query-user" },
+    expect(await authed.query(api.auth.queries.getCurrentUser)).toEqual({
+      appUser: expect.objectContaining({
+        _id: user.userId,
+        name: "User query-user",
+      }),
     });
-    // The profile comes from the app user copy that auth triggers maintain.
+    // The account row holds the whole profile, so no component is read.
     await t.mutation((ctx) =>
       ctx.db.patch("users", user.userId, {
         image: "https://example.com/query-user.png",
       })
     );
     expect(await authed.query(api.auth.queries.getCurrentUser)).toMatchObject({
-      authUser: { image: "https://example.com/query-user.png" },
+      appUser: { image: "https://example.com/query-user.png" },
     });
+    await t.mutation((ctx) =>
+      ctx.db.patch("users", user.userId, { deletedAt: NOW })
+    );
+    expect(await authed.query(api.auth.queries.getCurrentUser)).toBeNull();
     await t.mutation((ctx) => ctx.db.delete("users", user.userId));
     expect(await authed.query(api.auth.queries.getCurrentUser)).toBeNull();
   });

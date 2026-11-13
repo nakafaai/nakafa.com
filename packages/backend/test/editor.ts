@@ -192,8 +192,7 @@ export const otherSchoolTeacher = Effect.fn("test.editor.otherSchoolTeacher")(
   function* (fixture: Fixture) {
     const account = yield* fixture.account(
       "editor-other-teacher",
-      "editor-other-teacher@example.com",
-      true
+      "editor-other-teacher@example.com"
     );
     const tenantId = fixture.tenants.other;
     yield* fixture.run(
