@@ -21,6 +21,12 @@ import { workerSettings } from "#www/worker";
 const SMALL_MODULE_BYTES = 8 * 1024;
 
 /**
+ * The most bytes of the small modules that the same routes share, below which
+ * they join the chunk of the routes that share the most with them.
+ */
+const SMALL_CHUNK_BYTES = 64 * 1024;
+
+/**
  * A script module. A stylesheet stays with the chunk that imports it, so no page
  * loads another route's styles or meets them in a new order.
  */
@@ -34,29 +40,64 @@ const SCRIPT_MODULE = /\.[cm]?[jt]sx?$/u;
 function bootsWithEntry(
   moduleId: string,
   context: Rolldown.ChunkingContext,
-  known: Map<string, boolean>
+  booted: Map<string, boolean>
 ): boolean {
-  const cached = known.get(moduleId);
-  if (cached !== undefined) {
-    return cached;
+  const known = booted.get(moduleId);
+  if (known !== undefined) {
+    return known;
   }
-  known.set(moduleId, false);
+  booted.set(moduleId, false);
   const info = context.getModuleInfo(moduleId);
   const boots =
     info !== null &&
     (info.isEntry ||
       info.importers.some((importer) =>
-        bootsWithEntry(importer, context, known)
+        bootsWithEntry(importer, context, booted)
       ));
-  known.set(moduleId, boots);
+  booted.set(moduleId, boots);
   return boots;
 }
 
 /**
- * The most bytes of the small modules that the same routes share, below which
- * they join the chunk of the routes that share the most with them.
+ * The depth of a small module: 0 when it imports nothing but boot modules, and
+ * otherwise one more than the deepest small module it imports. A boot module, a
+ * stylesheet, a module over `SMALL_MODULE_BYTES`, and a module that imports any
+ * of the last two or sits on an import cycle have none, so they keep the chunks
+ * Rolldown gives them.
  */
-const SMALL_CHUNK_BYTES = 32 * 1024;
+function smallDepth(
+  moduleId: string,
+  context: Rolldown.ChunkingContext,
+  booted: Map<string, boolean>,
+  depths: Map<string, number | null>
+): number | null {
+  if (depths.has(moduleId)) {
+    return depths.get(moduleId) ?? null;
+  }
+  depths.set(moduleId, null);
+  const info = context.getModuleInfo(moduleId);
+  if (
+    info === null ||
+    !SCRIPT_MODULE.test(moduleId) ||
+    (info.code?.length ?? Number.POSITIVE_INFINITY) > SMALL_MODULE_BYTES ||
+    bootsWithEntry(moduleId, context, booted)
+  ) {
+    return null;
+  }
+  let depth = 0;
+  for (const imported of info.importedIds) {
+    if (bootsWithEntry(imported, context, booted)) {
+      continue;
+    }
+    const below = smallDepth(imported, context, booted, depths);
+    if (below === null) {
+      return null;
+    }
+    depth = Math.max(depth, below + 1);
+  }
+  depths.set(moduleId, depth);
+  return depth;
+}
 
 /**
  * The code splitting of the browser's JavaScript.
@@ -65,34 +106,34 @@ const SMALL_CHUNK_BYTES = 32 * 1024;
  * Every page runs all of them when it boots, in the order a single-entry bundle
  * runs them, so no page loads or runs a byte more.
  *
- * The small chunks hold the small modules that two or more routes share and that
- * import nothing but modules of the boot chunk: icons, constants, hooks. They are
- * cut by the routes that use them, and a cut under `SMALL_CHUNK_BYTES` joins its
- * nearest neighbour, so a page loads a few of them in place of up to a hundred
- * files, and little it does not use. The boot chunk has run before any of them
- * loads and none of them imports route code, so no cut changes a module's order
- * against its imports or pulls anything into the boot. One small chunk for every
- * route instead loaded 1.7 MB on every page (13 November 2026).
+ * The small chunks hold the small modules that two or more routes share: icons,
+ * constants, schemas, hooks. A small module imports only boot modules and other
+ * small modules, and the modules of one depth are cut by the routes that use
+ * them, a cut under `SMALL_CHUNK_BYTES` joining its nearest neighbour. A small
+ * chunk therefore imports only the boot chunk and small chunks of a lower depth:
+ * no two chunks import each other, so every module still runs after its imports
+ * (the cycles of #1835), and no route code joins the boot. A page loads a few
+ * small chunks in place of up to a hundred files. One small chunk for every
+ * route loaded 1.7 MB on every page, and one cut of every depth together left
+ * pages with 111 scripts (13 November 2026).
  */
 function browserCodeSplitting(): Rolldown.CodeSplittingOptions {
   const booted = new Map<string, boolean>();
+  const depths = new Map<string, number | null>();
   return {
     groups: [
       { name: "boot", priority: 1, tags: ["$initial"] },
       {
         entriesAware: true,
         entriesAwareMergeThreshold: SMALL_CHUNK_BYTES,
-        maxModuleSize: SMALL_MODULE_BYTES,
+        // Each import of a small module is a boot module or a small module of a
+        // lower depth, which its own group takes.
+        includeDependenciesRecursively: false,
         minShareCount: 2,
-        name: (moduleId, context) =>
-          context
-            .getModuleInfo(moduleId)
-            ?.importedIds.every((imported) =>
-              bootsWithEntry(imported, context, booted)
-            )
-            ? "small"
-            : null,
-        test: SCRIPT_MODULE,
+        name: (moduleId, context) => {
+          const depth = smallDepth(moduleId, context, booted, depths);
+          return depth === null ? null : `small${depth}`;
+        },
       },
     ],
   };
