@@ -291,9 +291,9 @@ function Beaker({ metalId }: { readonly metalId: MetalId }) {
       <mesh position={[0, TILE.thick / 2, 0]} receiveShadow>
         <boxGeometry args={[TILE.side, TILE.thick, TILE.side]} />
         <meshPhysicalMaterial
-          clearcoat={0.8}
+          clearcoat={0.3}
           color={getColor("ZINC", 100)}
-          roughness={0.3}
+          roughness={0.45}
         />
       </mesh>
       <group position={[0, TILE.thick, 0]}>
@@ -342,7 +342,7 @@ function Beaker({ metalId }: { readonly metalId: MetalId }) {
           </mesh>
           {Arr.map(bubbles, (bubble) => (
             <mesh key={bubble.offset} ref={bubble.ref}>
-              <sphereGeometry args={[0.0011, 10, 8]} />
+              <sphereGeometry args={[0.0015, 10, 8]} />
               <GlassMaterial color={getColor("SLATE", 50)} opacity={0.6} />
             </mesh>
           ))}
@@ -374,8 +374,8 @@ function tintWater(mesh: Mesh | null, used: number, milky: boolean) {
   const share = Math.min(1, used * 1.4);
   material.color
     .copy(WATER_TINTS.clear)
-    .lerp(milky ? WATER_TINTS.milky : WATER_TINTS.pink, 0.8 * share);
-  material.opacity = 0.3 + (milky ? 0.55 : 0.3) * share;
+    .lerp(milky ? WATER_TINTS.milky : WATER_TINTS.pink, 0.9 * share);
+  material.opacity = 0.3 + (milky ? 0.55 : 0.35) * share;
 }
 
 /** Stands the piece at its place, a ball once a metal melts in its own heat. */

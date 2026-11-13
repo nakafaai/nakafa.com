@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
+import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
 import {
@@ -180,61 +181,50 @@ export function IonFormationLab({
           <VisualFact
             label={labels.metalShells}
             value={
-              <StateChange
-                after={`${ionTex(pair.metal.symbol, pair.electrons)}\\ ${shellsTex(metalAfter)}`}
-                before={`\\mathrm{${pair.metal.symbol}}\\ ${shellsTex(pair.metal.shells)}`}
+              <MathLines
+                lines={[
+                  `\\mathrm{${pair.metal.symbol}}\\ ${shellsTex(pair.metal.shells)}`,
+                  `\\rightarrow ${ionTex(pair.metal.symbol, pair.electrons)}\\ ${shellsTex(metalAfter)}`,
+                ]}
               />
             }
           />
           <VisualFact
             label={labels.nonmetalShells}
             value={
-              <StateChange
-                after={`${ionTex(pair.nonmetal.symbol, -pair.electrons)}\\ ${shellsTex(nonmetalAfter)}`}
-                before={`\\mathrm{${pair.nonmetal.symbol}}\\ ${shellsTex(pair.nonmetal.shells)}`}
+              <MathLines
+                lines={[
+                  `\\mathrm{${pair.nonmetal.symbol}}\\ ${shellsTex(pair.nonmetal.shells)}`,
+                  `\\rightarrow ${ionTex(pair.nonmetal.symbol, -pair.electrons)}\\ ${shellsTex(nonmetalAfter)}`,
+                ]}
               />
             }
           />
           <VisualFact
             label={labels.metalRadius}
             value={
-              <StateChange
-                after={`${number(pair.metal.ionic)}\\ \\mathrm{pm}`}
-                before={`${number(pair.metal.atomic)}\\ \\mathrm{pm}`}
+              <MathLines
+                lines={[
+                  `${number(pair.metal.atomic)}\\ \\mathrm{pm}`,
+                  `\\rightarrow ${number(pair.metal.ionic)}\\ \\mathrm{pm}`,
+                ]}
               />
             }
           />
           <VisualFact
             label={labels.nonmetalRadius}
             value={
-              <StateChange
-                after={`${number(pair.nonmetal.ionic)}\\ \\mathrm{pm}`}
-                before={`${number(pair.nonmetal.atomic)}\\ \\mathrm{pm}`}
+              <MathLines
+                lines={[
+                  `${number(pair.nonmetal.atomic)}\\ \\mathrm{pm}`,
+                  `\\rightarrow ${number(pair.nonmetal.ionic)}\\ \\mathrm{pm}`,
+                ]}
               />
             }
           />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * A reading that changes, its state before on one line and after on the
- * next, so neither state breaks across a line on a narrow card.
- */
-function StateChange({
-  after,
-  before,
-}: {
-  readonly after: string;
-  readonly before: string;
-}) {
-  return (
-    <span className="flex flex-col gap-0.5">
-      <InlineMath math={before} />
-      <InlineMath math={`\\rightarrow ${after}`} />
-    </span>
   );
 }
 

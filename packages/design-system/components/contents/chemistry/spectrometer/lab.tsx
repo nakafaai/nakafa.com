@@ -1,6 +1,7 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { toggleColumns } from "@repo/design-system/components/contents/chemistry/columns";
+import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import {
   averageMass,
   getSample,
@@ -187,14 +188,11 @@ export function MassSpectrometerLab({
           <VisualFact
             label={labels.isotopes}
             value={
-              <InlineMath
-                math={Arr.join(
-                  Arr.map(
-                    isotopes,
-                    (isotope) =>
-                      `${nuclide(isotope.number)}: ${number(isotope.abundance * 100, 2)}\\%`
-                  ),
-                  ",\\ "
+              <MathLines
+                lines={Arr.map(
+                  isotopes,
+                  (isotope) =>
+                    `${nuclide(isotope.number)}: ${number(isotope.abundance * 100, 2)}\\%`
                 )}
               />
             }
@@ -202,15 +200,15 @@ export function MassSpectrometerLab({
           <VisualFact
             label={labels.average}
             value={
-              <InlineMath
-                math={`\\bar{A} = ${Arr.join(
+              <MathLines
+                lines={Arr.append(
                   Arr.map(
                     isotopes,
-                    (isotope) =>
-                      `${number(isotope.abundance, 4)}(${number(isotope.mass, 2)})`
+                    (isotope, index) =>
+                      `${index === 0 ? "\\bar{A} =" : "+"} ${number(isotope.abundance, 4)}(${number(isotope.mass, 2)})`
                   ),
-                  " + "
-                )} = ${number(averageMass(shown), 2)}`}
+                  `= ${number(averageMass(shown), 2)}`
+                )}
               />
             }
           />
@@ -222,8 +220,11 @@ export function MassSpectrometerLab({
             label={labels.ratio}
             value={
               first && last ? (
-                <InlineMath
-                  math={`\\dfrac{r_{${last.number}}}{r_{${first.number}}} = \\sqrt{\\dfrac{${number(last.mass, 2)}}{${number(first.mass, 2)}}} = ${number(pathRadius(last.mass, first.mass), 3)}`}
+                <MathLines
+                  lines={[
+                    `\\dfrac{r_{${last.number}}}{r_{${first.number}}} = \\sqrt{\\dfrac{${number(last.mass, 2)}}{${number(first.mass, 2)}}}`,
+                    `= ${number(pathRadius(last.mass, first.mass), 3)}`,
+                  ]}
                 />
               ) : null
             }
