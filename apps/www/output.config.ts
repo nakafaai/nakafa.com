@@ -17,7 +17,7 @@ import { workerSettings } from "#www/worker";
  * page boots too many.
  */
 
-/** The most bytes, as Rolldown transformed it, of a module that joins the small modules' chunk. */
+/** The most bytes, as Rolldown transformed it, of a module that joins a small chunk. */
 const SMALL_MODULE_BYTES = 8 * 1024;
 
 /**
@@ -29,7 +29,7 @@ const SCRIPT_MODULE = /\.[cm]?[jt]sx?$/u;
 /**
  * Whether the browser entry imports a module statically, so every page runs it
  * when it boots. A module met again inside a cycle reads as not booting, which
- * keeps a module out of the small modules' chunk rather than in it.
+ * keeps a module out of the small chunks rather than in them.
  */
 function bootsWithEntry(
   moduleId: string,
@@ -53,19 +53,26 @@ function bootsWithEntry(
 }
 
 /**
- * The code splitting of the browser's JavaScript, in two chunks besides the
- * routes' own.
+ * The most bytes of the small modules that the same routes share, below which
+ * they join the chunk of the routes that share the most with them.
+ */
+const SMALL_CHUNK_BYTES = 32 * 1024;
+
+/**
+ * The code splitting of the browser's JavaScript.
  *
  * The boot chunk holds the modules that the browser entry imports statically.
  * Every page runs all of them when it boots, in the order a single-entry bundle
  * runs them, so no page loads or runs a byte more.
  *
- * The small modules' chunk holds every small module that imports nothing but
- * modules of the boot chunk: icons, constants, hooks. The boot chunk has run
- * before any of them loads, and none of them imports route code, so the chunk
- * changes no module's order against its imports and pulls nothing into the
- * boot. A page loads all of them once, about 40 KB compressed, in place of up
- * to a hundred requests.
+ * The small chunks hold the small modules that two or more routes share and that
+ * import nothing but modules of the boot chunk: icons, constants, hooks. They are
+ * cut by the routes that use them, and a cut under `SMALL_CHUNK_BYTES` joins its
+ * nearest neighbour, so a page loads a few of them in place of up to a hundred
+ * files, and little it does not use. The boot chunk has run before any of them
+ * loads and none of them imports route code, so no cut changes a module's order
+ * against its imports or pulls anything into the boot. One small chunk for every
+ * route instead loaded 1.7 MB on every page (13 November 2026).
  */
 function browserCodeSplitting(): Rolldown.CodeSplittingOptions {
   const booted = new Map<string, boolean>();
@@ -73,7 +80,10 @@ function browserCodeSplitting(): Rolldown.CodeSplittingOptions {
     groups: [
       { name: "boot", priority: 1, tags: ["$initial"] },
       {
+        entriesAware: true,
+        entriesAwareMergeThreshold: SMALL_CHUNK_BYTES,
         maxModuleSize: SMALL_MODULE_BYTES,
+        minShareCount: 2,
         name: (moduleId, context) =>
           context
             .getModuleInfo(moduleId)
