@@ -195,16 +195,18 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
               image: getOgUrl(locale, filePath),
               locale,
               path: `/${locale}${filePath}`,
-              trail: [
-                { name: loaderData.labels.home, path: `/${locale}` },
-                {
-                  name: loaderData.labels.articles,
-                  path: `/${locale}/articles`,
-                },
-                {
-                  name: loaderData.categoryLabel,
-                  path: `/${locale}/articles/${loaderData.category}`,
-                },
+              trails: [
+                [
+                  { name: loaderData.labels.home, path: `/${locale}` },
+                  {
+                    name: loaderData.labels.articles,
+                    path: `/${locale}/articles`,
+                  },
+                  {
+                    name: loaderData.categoryLabel,
+                    path: `/${locale}/articles/${loaderData.category}`,
+                  },
+                ],
               ],
             }),
           ],
