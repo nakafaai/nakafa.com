@@ -6,6 +6,7 @@ import {
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
+  NODE_RUNTIME_VERSION,
   PACKAGE_MANAGER,
   TSRS_VERSION,
   VITEST_COHORT_VERSION,
@@ -76,7 +77,7 @@ function validInput(): PolicyInput {
     lock: "",
     manifests,
     rootManifest: {
-      devEngines: { runtime: { version: "26.13.0" } },
+      devEngines: { runtime: { version: NODE_RUNTIME_VERSION } },
       packageManager: PACKAGE_MANAGER,
     },
     workspace: {
@@ -402,7 +403,7 @@ describe("dependency policy validation", () => {
           devEngines: { runtime: { version: "24.20.0" } },
         },
       }),
-      problem: "The managed Node runtime must be 26.13.0.",
+      problem: `The managed Node runtime must be ${NODE_RUNTIME_VERSION}.`,
     },
   ])("reports $name", ({ change, problem }) => {
     assert.deepStrictEqual(validateDependencyPolicy(change(validInput())), [

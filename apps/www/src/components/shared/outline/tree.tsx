@@ -18,16 +18,25 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { elementById } from "@repo/design-system/lib/element";
-import { toAnchorSlug } from "@repo/utilities/slug";
-import { Array as Arr } from "effect";
-import type { MouseEvent, ReactElement, ReactNode } from "react";
+import { Array as Arr, Option } from "effect";
+import {
+  type MouseEvent,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+} from "react";
 import { useTranslations } from "use-intl";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
+import { revealOffset } from "@/components/shared/outline/reading";
 
 interface Props {
   data: ParsedHeading[];
   title?: string;
 }
+
+/** The element that scrolls an outline in its panel. */
+const OUTLINE_SCROLLER = '[data-slot="scroll-area-viewport"]';
 
 /** Keeps outline labels on one line while exposing their complete title. */
 function SidebarTreeLabel({ label }: Pick<ParsedHeading, "label">) {
@@ -77,13 +86,27 @@ function SidebarTreeTooltip({
 }
 
 /**
- * Whether the reading band holds a heading. Each entry selects only its own
- * state, so an active-heading change re-renders the entries that change
- * instead of the whole outline.
+ * Whether a heading's section is the one being read. Each entry selects only
+ * its own state, so a change of section re-renders the two entries that change
+ * instead of the whole outline. The entry's link names the heading's id.
  */
-function useActiveHeading({ label }: Pick<ParsedHeading, "label">) {
-  const id = toAnchorSlug(label);
-  return useToc((context) => Arr.contains(context.activeHeadings, id));
+function useActiveHeading({ href }: Pick<ParsedHeading, "href">) {
+  return useToc((context) => Option.contains(context.active, href.slice(1)));
+}
+
+/**
+ * Scrolls the outline the least that shows a whole entry, and never the page, so
+ * the section being read stays in sight in an outline longer than its panel.
+ */
+function revealEntry(entry: HTMLElement) {
+  const scroller = entry.closest(OUTLINE_SCROLLER);
+  if (scroller === null) {
+    return;
+  }
+  scroller.scrollTop += revealOffset(
+    entry.getBoundingClientRect(),
+    scroller.getBoundingClientRect()
+  );
 }
 
 /**
@@ -121,13 +144,25 @@ function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
  */
 function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
   const isActive = useActiveHeading(heading);
+  const entry = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (isActive && entry.current !== null) {
+      revealEntry(entry.current);
+    }
+  }, [isActive]);
 
   return (
     <SidebarTreeTooltip label={heading.label}>
       <SidebarMenuButton
         isActive={isActive}
         render={
-          <a href={heading.href} onClick={jumpToHeading} title={heading.label}>
+          <a
+            href={heading.href}
+            onClick={jumpToHeading}
+            ref={entry}
+            title={heading.label}
+          >
             <SidebarTreeLabel label={heading.label} />
           </a>
         }
@@ -153,8 +188,8 @@ function SidebarTreeGroup({
 }
 
 /**
- * Lists links to the sections of the page.
- * @param data - The headings, typically generated from the `getHeadings` function.
+ * Lists links to the sections of the page, the section being read marked.
+ * @param data - The headings, such as `contentOutline` gives for a signed content tree.
  */
 export function SidebarTree({ data, title }: Props) {
   const t = useTranslations("Common");
