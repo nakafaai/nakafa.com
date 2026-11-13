@@ -1,4 +1,4 @@
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, HashSet, Result } from "effect";
 import {
   type Expression,
   isArrayLiteralExpression,
@@ -20,7 +20,7 @@ import {
   type SourceFile,
 } from "tsrs/ast";
 import { isFunctionValue } from "#scripts/check/scope";
-import { children } from "#scripts/check/source";
+import { children, descendants } from "#scripts/check/source";
 
 const STORE_MODULE = "zustand";
 const STORE_READER = "useStore";
@@ -97,15 +97,6 @@ function answersFresh(node: Node): boolean {
   return returnsFresh(body);
 }
 
-/** The identifier names that a function binds as its own parameters. */
-function parameterNames(node: Node) {
-  return isFunctionValue(node) || isFunctionDeclaration(node)
-    ? Arr.flatMap(node.parameters, (parameter) =>
-        isIdentifier(parameter.name) ? [parameter.name.text] : []
-      )
-    : [];
-}
-
 /** Whether a selector argument is already compared by `useShallow(...)`. */
 function isShallow(node: Expression) {
   return (
@@ -116,52 +107,38 @@ function isShallow(node: Expression) {
 }
 
 /**
- * Reports each Zustand `useStore(store, selector)` whose selector can answer a
- * new array or object on every read, which makes React render again without
- * end: an inline selector that builds one, and a selector a hook takes from its
- * caller and passes on bare, since no reader of the hook can see that it must
- * answer a stable value. Wrapping the selector in `useShallow` settles both,
- * and an inline selector may instead answer a module-level constant.
+ * Reports each Zustand `useStore(store, selector)` whose inline selector builds
+ * a new array, object or value on every read, which makes React render again
+ * without end. Wrapping the selector in `useShallow` settles it, or it answers a
+ * module-level constant. A hook that hands its caller's selector on keeps
+ * `useStore`'s identity check: `useShallow` there would also call two different
+ * elements, dates or files equal, which have no own keys to compare, and keep
+ * the first one.
  */
 export function inspectSelectorSource(file: string, sourceFile: SourceFile) {
   const readers = storeReaders(sourceFile);
   if (HashSet.size(readers) === 0) {
     return [];
   }
-  const lineOf = (node: Node) =>
-    sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line +
-    1;
-  /** Reports the selectors below one node, given the parameters of its enclosing functions. */
-  const visit = (node: Node, parameters: HashSet.HashSet<string>): string[] => {
-    const scope = HashSet.union(
-      parameters,
-      HashSet.fromIterable(parameterNames(node))
-    );
+  return Arr.filterMap(descendants(sourceFile), (node) => {
     const selector =
       isCallExpression(node) &&
       isIdentifier(node.expression) &&
       HashSet.has(readers, node.expression.text)
         ? node.arguments[1]
         : undefined;
-    const found =
-      selector === undefined || isShallow(selector)
-        ? []
-        : Arr.appendAll(
-            answersFresh(selector)
-              ? [
-                  `${file}:${lineOf(selector)}: this store selector answers a new array or object on every read, which renders React again without end: wrap it in useShallow, or answer a module-level constant (store-selector)`,
-                ]
-              : [],
-            isIdentifier(selector) && HashSet.has(scope, selector.text)
-              ? [
-                  `${file}:${lineOf(selector)}: ${selector.text} comes from the hook's caller, who cannot see that it must answer a stable value: pass useShallow(${selector.text}) to useStore (store-selector)`,
-                ]
-              : []
-          );
-    return Arr.appendAll(
-      found,
-      Arr.flatMap(children(node), (child) => visit(child, scope))
+    if (
+      selector === undefined ||
+      isShallow(selector) ||
+      !answersFresh(selector)
+    ) {
+      return Result.failVoid;
+    }
+    const { line } = sourceFile.getLineAndCharacterOfPosition(
+      selector.getStart(sourceFile)
     );
-  };
-  return visit(sourceFile, HashSet.empty());
+    return Result.succeed(
+      `${file}:${line + 1}: this store selector answers a new array or object on every read, which renders React again without end: wrap it in useShallow, or answer a module-level constant (store-selector)`
+    );
+  });
 }

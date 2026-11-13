@@ -5,7 +5,6 @@ import type {
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 
 /** Creates one lab's store, which holds the cue its reader picked. */
 export function createReactionCueStore(initialCueId: ReactionCueId) {
@@ -72,8 +71,5 @@ export function useReactionCharacteristicsColors() {
 export function useReactionCharacteristicsCue<T>(
   selector: (state: ReactionCueState) => T
 ) {
-  return useStore(
-    useReactionCharacteristicsScene().store,
-    useShallow(selector)
-  );
+  return useStore(useReactionCharacteristicsScene().store, selector);
 }

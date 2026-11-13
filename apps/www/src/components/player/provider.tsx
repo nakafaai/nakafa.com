@@ -1,6 +1,5 @@
 import { createContext, type ReactNode, use, useState } from "react";
 import { useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import type { PlayerMode } from "@/components/player/mode";
 import {
   createPlayerStore,
@@ -47,5 +46,5 @@ export function usePlayer<T>(selector: (state: PlayerStore) => T) {
     throw new Error("usePlayer must be used within PlayerProvider.");
   }
 
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }

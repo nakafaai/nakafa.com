@@ -6,7 +6,6 @@ import {
 import { Option, Schema } from "effect";
 import { createContext, use } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 
 /**
  * The thread a press opened, which the pane draws at once from the message the reader pressed: its channel, its
@@ -64,7 +63,7 @@ export function useOpening<T>(selector: (state: OpeningStore) => T) {
     throw new Error("useOpening must be used within a forum");
   }
 
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }
 
 /**

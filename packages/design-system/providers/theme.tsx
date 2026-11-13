@@ -6,7 +6,6 @@ import {
 } from "@repo/design-system/lib/theme/store";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 
 const ThemeContext = createContext<ThemeStore | null>(null);
 
@@ -42,5 +41,5 @@ function useThemeStore(): ThemeStore {
 export function useTheme<Selected>(
   selector: (state: ThemeState) => Selected
 ): Selected {
-  return useStore(useThemeStore(), useShallow(selector));
+  return useStore(useThemeStore(), selector);
 }

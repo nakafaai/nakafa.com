@@ -3,7 +3,6 @@ import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Equal, Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import {
   outlineIds,
   readingHeading,
@@ -141,5 +140,5 @@ export function useToc<T>(selector: (state: TocState) => T): T {
   if (!store) {
     throw new Error("useToc must be used within a TocProvider.");
   }
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }

@@ -13,7 +13,6 @@ import {
 import { useTranslations } from "use-intl";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 
 /** A scene that shows its grid. */
 const initialControls = { showGrid: true };
@@ -55,7 +54,7 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
     // A missing provider is a programmer composition error at this React seam.
     throw new Error("Coordinate controls require CoordinateProvider.");
   }
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }
 
 /**

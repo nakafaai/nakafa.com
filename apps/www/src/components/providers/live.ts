@@ -1,6 +1,5 @@
 import { createContext, use } from "react";
 import { useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import type { LiveSessionState, LiveSessionStore } from "@/lib/auth/live";
 
 /**
@@ -22,5 +21,5 @@ function useLiveSessionStore() {
 
 /** Selects one part of the page's live session. */
 export function useLiveSession<T>(selector: (state: LiveSessionState) => T) {
-  return useStore(useLiveSessionStore(), useShallow(selector));
+  return useStore(useLiveSessionStore(), selector);
 }

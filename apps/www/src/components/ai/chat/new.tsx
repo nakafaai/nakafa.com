@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import { NinaHeldAttach } from "@/components/ai/attachment";
 import type { useChatAdmission } from "@/components/ai/chat/admission";
 import { useStartChat } from "@/components/ai/chat/start";
@@ -59,7 +58,7 @@ function useNewChatContext() {
 
 /** Reads one part of the send held by the new chat. */
 function useHeldSend<Selected>(selector: (state: HeldSend) => Selected) {
-  return useStore(useNewChatContext().held, useShallow(selector));
+  return useStore(useNewChatContext().held, selector);
 }
 
 /** The composer as its variant draws it: the variant, the prompt on its way, and what the field does. */

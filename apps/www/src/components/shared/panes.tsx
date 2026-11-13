@@ -14,7 +14,6 @@ import { Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import {
   PanesGroupContext,
   PanesGroupProvider,
@@ -130,7 +129,7 @@ export function usePanes<T>(selector: (state: PanesStore) => T) {
     throw new Error("usePanes must be used within PanesProvider");
   }
 
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }
 
 /** Whether the page has panes, so a data table opens a row when it is pressed. */

@@ -15,7 +15,6 @@ import {
 import { Array as Arr, Record as Rec, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import { FacetValues } from "@/components/shared/table/filter";
 
 /**
@@ -79,7 +78,7 @@ export function useTableFilters<T>(selector: (state: TableFilters) => T) {
     throw new Error("useTableFilters must be used within TableFiltersProvider");
   }
 
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }
 
 /**

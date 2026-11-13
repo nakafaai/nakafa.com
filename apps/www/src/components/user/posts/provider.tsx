@@ -1,6 +1,5 @@
 import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import { useAgeNow } from "@/components/user/ages";
 import type { AgeClock } from "@/components/user/clock";
 import { createPostDraft, type PostDraft } from "@/components/user/posts/draft";
@@ -29,7 +28,7 @@ export function usePostDraft<T>(selector: (draft: PostDraft) => T) {
     throw new Error("usePostDraft must be used within PostDraftProvider");
   }
 
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }
 
 /** What the list and its rows show: the profile, whether the viewer owns it, the clock of the ages, and Retry. */

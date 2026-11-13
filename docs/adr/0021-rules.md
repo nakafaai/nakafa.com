@@ -560,14 +560,19 @@ A Zustand selector that answers a new array or object on every read makes
 `useSyncExternalStore` see a change on every render, so React renders again
 without end. The comments composer crashed this way on 9 November: its hook
 passed the caller's selector to `useStore` bare, and a helper three modules away
-answered `() => []` for an empty tray. No reader of a store hook can see that
-rule, so `scripts/check/selectors.ts` (`store-selector`) puts it where the
-store is read. A hook that passes its caller's selector to `useStore` wraps it
-in `useShallow`, which settles any selector whose parts are stable, and an
-inline selector that builds an object, an array, a `new` value or a lazy empty
-fallback is wrapped too, or answers a module-level constant. Measured on main
-6f9aeb340a: 31 hooks passed a selector bare and none built a value inline; all
-31 now wrap it.
+answered `() => []` for an empty tray. `scripts/check/selectors.ts`
+(`store-selector`) rejects an inline selector at a `useStore` call that builds
+an object, an array, a `new` value or a lazy empty fallback: it is wrapped in
+`useShallow`, or answers a module-level constant. Measured on main 6f9aeb340a,
+no selector did.
+
+A hook that hands its caller's selector to `useStore` is not wrapped. A first
+version wrapped all 31 such hooks, and the free-runner proof of 13 November
+showed the cost: `useShallow` compares an object by its own keys, and an
+element, a date or a file has none, so it called two different elements equal.
+The panes store then kept handing out the detached `aside` of the previous page
+after a remount. A helper in another module that builds a value for a selector,
+as the comments tray did, is therefore left to review and to the browser proof.
 
 ### Route roots without an ownership rule
 

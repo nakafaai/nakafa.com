@@ -1,7 +1,6 @@
 import { DateTime } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import {
   type CommentDraft,
   createCommentDraft,
@@ -48,5 +47,5 @@ export function useCommentDraft<T>(selector: (draft: CommentDraft) => T) {
     throw new Error("useCommentDraft must be used within CommentsProvider");
   }
 
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }

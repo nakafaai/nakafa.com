@@ -20,10 +20,6 @@ function inspect(sourceText: string) {
 const fresh = (line: number) =>
   `${FILE}:${line}: this store selector answers a new array or object on every read, which renders React again without end: wrap it in useShallow, or answer a module-level constant (store-selector)`;
 
-/** The finding of a caller's selector passed on bare on line `line`. */
-const bare = (line: number, name: string) =>
-  `${FILE}:${line}: ${name} comes from the hook's caller, who cannot see that it must answer a stable value: pass useShallow(${name}) to useStore (store-selector)`;
-
 describe("Store selector policy", () => {
   it.effect(
     "reports a selector that builds an object, an array, a new value or a lazy empty fallback",
@@ -43,20 +39,8 @@ const g = read(store, (state) => (state.open ? state.list : []));`),
       })
   );
 
-  it.effect("reports a hook that passes its caller's selector on bare", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* inspect(`import { useStore } from "zustand";
-export function useCommentDraft<T>(selector: (draft: Draft) => T) {
-  return useStore(store, selector);
-}`),
-        [bare(3, "selector")]
-      );
-    })
-  );
-
   it.effect(
-    "keeps a shallow selector, a stable answer, a nested builder, and a store read without a selector",
+    "keeps a shallow selector, a stable answer, a nested builder, a store read without a selector, and a hook that hands its caller's selector on",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -64,7 +48,7 @@ export function useCommentDraft<T>(selector: (draft: Draft) => T) {
 import { useShallow } from "zustand/react/shallow";
 const NO_PHOTOS = [];
 export function useDraft<T>(selector: (draft: Draft) => T) {
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }
 const a = useStore(store, useShallow((state) => ({ open: state.open })));
 const b = useStore(store, (state) => Option.getOrElse(state.photos, () => NO_PHOTOS));
@@ -86,6 +70,8 @@ function useLab({ store }: Lab) { return useStore(store, (state) => state.open);
       Effect.gen(function* () {
         assert.deepStrictEqual(
           yield* inspect(`import { useStore } from "@tanstack/react-store";
+import "zustand";
+import * as zustand from "zustand";
 import type { StoreApi } from "zustand";
 const a = useStore(store, (state) => ({ open: state.open }));`),
           []

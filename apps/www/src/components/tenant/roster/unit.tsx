@@ -3,7 +3,6 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { useShallow } from "zustand/react/shallow";
 import { useViewerQuery } from "@/components/tenant/context";
 import {
   SchoolUnitChoice,
@@ -49,7 +48,7 @@ function useRosterUnitStore<T>(selector: (state: RosterUnitStore) => T) {
     );
   }
 
-  return useStore(store, useShallow(selector));
+  return useStore(store, selector);
 }
 
 /** The school's units once the viewer is in, and the unit the import goes into: the chosen one, else the first active one. */
