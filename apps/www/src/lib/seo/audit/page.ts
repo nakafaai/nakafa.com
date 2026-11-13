@@ -45,6 +45,14 @@ export const PageAudit = Schema.Struct({
 
 export type PageAudit = typeof PageAudit.Type;
 
+/**
+ * The bytes of a page that Googlebot fetches for Search, uncompressed: it stops
+ * there and indexes only what it read, so a page's main content must end before.
+ *
+ * @see https://developers.google.com/search/docs/crawling-indexing/googlebot
+ */
+const GOOGLEBOT_FETCH_BYTES = 2_000_000;
+
 /** Whether a page lets search engines index it, as its robots meta says. */
 export function isIndexable(facts: PageFacts) {
   return Arr.some(facts.robots, (robots) => robots.startsWith("index"));
@@ -195,8 +203,9 @@ function checkOne(label: string, values: readonly string[]) {
  * Checks one indexable page against the search contract: one title, description,
  * robots rule and canonical link to its own address, a self and an `x-default`
  * alternate on the site's origin, one `h1`, JSON-LD that parses, one breadcrumb that
- * ends at the page and agrees with the breadcrumb a reader sees, and no formula whose
- * MathML copy a snippet could quote.
+ * ends at the page and agrees with the breadcrumb a reader sees, main content that
+ * ends inside the bytes Googlebot fetches, and no formula whose MathML copy a
+ * snippet could quote.
  */
 export function auditPage(path: string, facts: PageFacts): PageAudit {
   const canonical = new URL(path, SITE_ORIGIN).href;
@@ -224,6 +233,11 @@ export function auditPage(path: string, facts: PageFacts): PageAudit {
       (href) => `the alternate ${href} leaves the site`
     ),
     ...(facts.headings === 1 ? [] : [`${facts.headings} h1 headings, needs 1`]),
+    ...(facts.contentBytes <= GOOGLEBOT_FETCH_BYTES
+      ? []
+      : [
+          `the main content ends at byte ${facts.contentBytes}, past the ${GOOGLEBOT_FETCH_BYTES} that Googlebot fetches`,
+        ]),
     ...(facts.openMathCopies === 0
       ? []
       : [

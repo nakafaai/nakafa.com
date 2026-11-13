@@ -18,11 +18,13 @@ const PageAlternate = Schema.Struct({
 /**
  * What a crawler reads in one prerendered page: the head entries that decide its
  * search result, the JSON-LD texts, the number of `h1` headings, the labels of each
- * visible breadcrumb, and the formulas whose MathML copy a snippet could still quote.
+ * visible breadcrumb, the formulas whose MathML copy a snippet could still quote,
+ * and how many bytes of the page a crawler reads before its main content ends.
  */
 export const PageFacts = Schema.Struct({
   alternates: Schema.Array(PageAlternate),
   canonicals: Schema.Array(Schema.String),
+  contentBytes: Schema.Int,
   descriptions: Schema.Array(Schema.String),
   headings: Schema.Int,
   jsonLd: Schema.Array(Schema.String),
@@ -112,6 +114,17 @@ const BREADCRUMB = /<nav\b[^>]*data-slot="breadcrumb"[^>]*>.*?<\/nav>/gsu;
 const BREADCRUMB_CRUMB =
   /<a\b[^>]*data-slot="breadcrumb-link"[^>]*>.*?<\/a>|<span\b[^>]*data-slot="breadcrumb-page"[^>]*>.*?<\/span>/gsu;
 const OPEN_MATH_COPY = /<span class="katex-mathml">/gu;
+const MAIN_END = "</main>";
+
+/**
+ * The bytes of the page up to the end of its main content, as a crawler reads
+ * them: UTF-8 and uncompressed. A page without a `<main>` counts whole.
+ */
+function readContentBytes(html: string) {
+  const end = html.indexOf(MAIN_END);
+  const content = end === -1 ? html : html.slice(0, end + MAIN_END.length);
+  return new TextEncoder().encode(content).length;
+}
 
 /** How many times a pattern occurs in a text. */
 function count(text: string, pattern: RegExp) {
@@ -147,6 +160,7 @@ export function readPageFacts(html: string): PageFacts {
       )
     ),
     canonicals: readKeyedValues(links, "rel", "canonical", "href"),
+    contentBytes: readContentBytes(html),
     descriptions: readKeyedValues(metas, "name", "description", "content"),
     headings: count(html, HEADING),
     jsonLd: Arr.map(readMatches(html, JSON_LD), (script) =>

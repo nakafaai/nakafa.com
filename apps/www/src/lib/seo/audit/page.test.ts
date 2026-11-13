@@ -186,6 +186,16 @@ describe("auditPage", () => {
     ]);
   });
 
+  it("reports main content that ends past the bytes Googlebot fetches", () => {
+    const facts = readPageFacts(writePage());
+
+    expect(
+      auditPage(PAGE_PATH, { ...facts, contentBytes: 2_000_001 }).problems
+    ).toStrictEqual([
+      `${PAGE_PATH}: the main content ends at byte 2000001, past the 2000000 that Googlebot fetches`,
+    ]);
+  });
+
   it("reads the breadcrumb of a document that holds several nodes, as an article's does", () => {
     expect(
       problemsOf({ jsonLd: [`[{"@type":"Article"},${breadcrumbText(TRAIL)}]`] })

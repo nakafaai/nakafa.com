@@ -26,6 +26,7 @@ describe("readPageFacts", () => {
         },
       ],
       canonicals: [`https://nakafa.com${PAGE_PATH}`],
+      contentBytes: expect.any(Number),
       descriptions: ["Putar titik dan grafik fungsi terhadap titik asal."],
       headings: 1,
       jsonLd: [expect.stringContaining('"BreadcrumbList"')],
@@ -41,10 +42,17 @@ describe("readPageFacts", () => {
     });
   });
 
+  it("counts the UTF-8 bytes a crawler reads up to the end of the main content", () => {
+    expect(readPageFacts("<main>é</main><script>x</script>").contentBytes).toBe(
+      15
+    );
+  });
+
   it("reads nothing from a document without a head", () => {
     expect(readPageFacts("<html><body></body></html>")).toStrictEqual({
       alternates: [],
       canonicals: [],
+      contentBytes: 26,
       descriptions: [],
       headings: 0,
       jsonLd: [],
