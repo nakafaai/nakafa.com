@@ -17,6 +17,7 @@ describe("browser environment", () => {
   it("holds exactly the public values, with an unset preview flag undefined", async () => {
     stubPublicConvex();
     vi.stubEnv("VITE_AKSARA_PREVIEW_CHILD", undefined);
+    vi.stubEnv("VITE_STRICT_MESSAGES", undefined);
 
     const { clientEnv } = await import("@/env.public");
 
@@ -24,6 +25,7 @@ describe("browser environment", () => {
       VITE_AKSARA_PREVIEW_CHILD: undefined,
       VITE_CONVEX_SITE_URL: "https://example.convex.site",
       VITE_CONVEX_URL: "https://example.convex.cloud",
+      VITE_STRICT_MESSAGES: undefined,
     });
   });
 
@@ -43,5 +45,18 @@ describe("browser environment", () => {
         "VITE_AKSARA_PREVIEW_CHILD"
       );
     }
+  });
+
+  it("makes messages strict only where an acceptance build says true", async () => {
+    stubPublicConvex();
+    vi.stubEnv("VITE_STRICT_MESSAGES", "true");
+    const { clientEnv } = await import("@/env.public");
+    expect(clientEnv.VITE_STRICT_MESSAGES).toBe("true");
+
+    vi.resetModules();
+    vi.stubEnv("VITE_STRICT_MESSAGES", "false");
+    await expect(import("@/env.public")).rejects.toThrow(
+      "VITE_STRICT_MESSAGES"
+    );
   });
 });

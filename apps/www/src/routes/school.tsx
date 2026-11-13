@@ -14,8 +14,9 @@ import {
 } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { type ReactElement, useLayoutEffect } from "react";
-import { IntlProvider, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { SchoolPending } from "@/components/tenant/pending";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { SCHOOL_ENTRY_ID } from "@/lib/routing/shell";
 import { readSchoolRoot } from "@/lib/tenant/root";
 
@@ -79,7 +80,7 @@ function SchoolRoot(): ReactElement {
   const { locale, messages, now } = Route.useLoaderData();
   useEntryRelease();
   return (
-    <IntlProvider
+    <MessagesProvider
       formats={FORMATS}
       locale={locale}
       messages={messages}
@@ -92,7 +93,7 @@ function SchoolRoot(): ReactElement {
         </div>
         <SchoolToaster />
       </DesignSystemProvider>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }
 

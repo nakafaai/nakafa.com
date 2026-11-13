@@ -14,9 +14,11 @@ export const clientEnv = {
       VITE_AKSARA_PREVIEW_CHILD: Schema.UndefinedOr(
         Schema.Literals(["true", "false"])
       ),
+      VITE_STRICT_MESSAGES: Schema.UndefinedOr(Schema.Literal("true")),
     },
     {
       VITE_AKSARA_PREVIEW_CHILD: import.meta.env.VITE_AKSARA_PREVIEW_CHILD,
+      VITE_STRICT_MESSAGES: import.meta.env.VITE_STRICT_MESSAGES,
     }
   ),
 };

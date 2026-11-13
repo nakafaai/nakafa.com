@@ -133,6 +133,8 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     VITE_POSTHOG_PROJECT_TOKEN: "phc_local_acceptance",
     VITE_POSTHOG_UI_HOST: runtime.app,
     VITE_POSTHOG_PROXY_HOST: runtime.analytics,
+    // A message a page cannot render fails the build and the suites it serves.
+    VITE_STRICT_MESSAGES: "true",
     SITE_URL: runtime.app,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],

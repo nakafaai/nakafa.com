@@ -41,6 +41,7 @@ import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectMenuSource } from "#scripts/check/menus";
+import { inspectMessageReach } from "#scripts/check/messages";
 import { manifestEntries, nameViolations } from "#scripts/check/names";
 import { inspectMenuOrder } from "#scripts/check/order";
 import { inspectPickerSource } from "#scripts/check/pickers";
@@ -223,6 +224,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     );
     const sdkViolations = yield* inspectSdkReach(root, workspaces);
     const dictionaryViolations = yield* inspectDictionaries(root, workspaces);
+    const messageViolations = yield* inspectMessageReach(root, workspaces);
     // Every hand-written path is named, the documents and the agent skills' tooling included, by repository path. A
     // repository that runs this check from another one names its paths by its own rules, so only the owner is judged.
     const isOwner =
@@ -257,6 +259,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         lineReport(Arr.flatten(sheetViolations)),
         lineReport(sdkViolations),
         lineReport(dictionaryViolations),
+        lineReport(messageViolations),
         lineReport(names),
         lineReport(
           inspectCompilerConfigs(
