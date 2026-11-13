@@ -36,7 +36,7 @@ test("a lesson's comment composer names its toolbar and its emoji chooser in wor
               .click();
             await expect(openComposer(page)).toBeFocused();
             await page
-              .getByRole("button", { name: app.Comments.emoji, exact: true })
+              .getByRole("button", { name: app.Common.emoji, exact: true })
               .last()
               .click();
             await expect(page.locator("[data-slot=emoji-panel]")).toBeVisible();
