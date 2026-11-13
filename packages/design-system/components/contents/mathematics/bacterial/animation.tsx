@@ -19,6 +19,7 @@ import {
   shownGeneration,
 } from "@repo/design-system/components/contents/mathematics/bacterial/store";
 import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   useVisualScene,
   VisualCard,
@@ -167,17 +168,20 @@ function BacteriaToolbar() {
   const speed = useStore(settings.store, (state) => state.speed);
   return (
     <VisualCardToolbar>
-      <BacterialSpeeds
-        onSpeedChange={(next) => settings.store.getState().pace(next)}
-        speed={speed}
-      />
-      <BacterialGenerations
-        generation={generation}
-        maxGenerations={settings.maxGenerations}
-        onGenerationChange={(next) =>
-          settings.store.getState().show(next, view)
-        }
-      />
+      {/* The two choices read as one control at the default size, so neither stands at a width of its own. */}
+      <ButtonGroup>
+        <BacterialSpeeds
+          onSpeedChange={(next) => settings.store.getState().pace(next)}
+          speed={speed}
+        />
+        <BacterialGenerations
+          generation={generation}
+          maxGenerations={settings.maxGenerations}
+          onGenerationChange={(next) =>
+            settings.store.getState().show(next, view)
+          }
+        />
+      </ButtonGroup>
     </VisualCardToolbar>
   );
 }

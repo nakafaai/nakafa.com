@@ -8,6 +8,7 @@ import {
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -167,61 +168,64 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
       />
 
       <VisualCardToolbar>
-        <Select
-          items={speedItems}
-          onValueChange={(next: number | null) => {
-            if (next !== null) {
-              setSpeed(next);
-            }
-          }}
-          value={speed}
-        >
-          <SelectTrigger aria-label={labels.setSpeed} size="sm">
-            <HugeIcons
-              className="text-muted-foreground"
-              icon={DashboardSpeed01Icon}
-            />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent label={common("menu-speed")}>
-            {Arr.map(speedItems, (item) => (
-              <SelectItem
+        {/* The speed and the count read as one control at the default size. */}
+        <ButtonGroup>
+          <Select
+            items={speedItems}
+            onValueChange={(next: number | null) => {
+              if (next !== null) {
+                setSpeed(next);
+              }
+            }}
+            value={speed}
+          >
+            <SelectTrigger aria-label={labels.setSpeed}>
+              <HugeIcons
+                className="text-muted-foreground"
                 icon={DashboardSpeed01Icon}
-                key={item.value}
-                value={item.value}
-              >
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent label={common("menu-speed")}>
+              {Arr.map(speedItems, (item) => (
+                <SelectItem
+                  icon={DashboardSpeed01Icon}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select
-          items={tableItems}
-          onValueChange={(next: number | null) => {
-            if (next !== null) {
-              setTableCount(next);
-              setIsPlaying(false);
-            }
-          }}
-          value={tableCount}
-        >
-          <SelectTrigger aria-label={labels.setTableCount} size="sm">
-            <HugeIcons className="text-muted-foreground" icon={Table01Icon} />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent label={common("menu-count")}>
-            {Arr.map(tableItems, (item) => (
-              <SelectItem
-                icon={Table01Icon}
-                key={item.value}
-                value={item.value}
-              >
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select
+            items={tableItems}
+            onValueChange={(next: number | null) => {
+              if (next !== null) {
+                setTableCount(next);
+                setIsPlaying(false);
+              }
+            }}
+            value={tableCount}
+          >
+            <SelectTrigger aria-label={labels.setTableCount}>
+              <HugeIcons className="text-muted-foreground" icon={Table01Icon} />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent label={common("menu-count")}>
+              {Arr.map(tableItems, (item) => (
+                <SelectItem
+                  icon={Table01Icon}
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </ButtonGroup>
       </VisualCardToolbar>
 
       <VisualCardBody className="p-(--card-spacing)">
