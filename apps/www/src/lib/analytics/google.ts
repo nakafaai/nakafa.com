@@ -39,7 +39,7 @@ function gtag(..._command: readonly unknown[]) {
  * start after a withdrawal grants analytics storage again.
  */
 export const startGoogleAnalytics = Effect.gen(function* () {
-  if (document.getElementById(SCRIPT_ID) !== null) {
+  if (document.querySelector(`#${SCRIPT_ID}`) !== null) {
     gtag("consent", "update", { analytics_storage: "granted" });
     return;
   }
@@ -67,7 +67,7 @@ export const startGoogleAnalytics = Effect.gen(function* () {
  * runs, and its cookies deleted on the site's domain, where Google sets them.
  */
 export const stopGoogleAnalytics = Effect.sync(() => {
-  if (document.getElementById(SCRIPT_ID) !== null) {
+  if (document.querySelector(`#${SCRIPT_ID}`) !== null) {
     gtag("consent", "update", { analytics_storage: "denied" });
   }
 }).pipe(

@@ -113,7 +113,7 @@ export function followConsentMessage() {
 
 /** Adds Google's consent message and its presence frame to the document once. */
 function appendConsentMessage() {
-  if (document.getElementById(MESSAGE_ID) !== null) {
+  if (document.querySelector(`#${MESSAGE_ID}`) !== null) {
     return;
   }
   const frame = document.createElement("iframe");
