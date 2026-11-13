@@ -9,16 +9,6 @@ const FIRST_ROOM = 8;
 /** Bytes in one float. */
 const FLOAT = 4;
 
-/** One model on the GPU: its mesh, its place buffer, how many bodies that buffer holds, and how many to draw. */
-interface Entry {
-  readonly corners: number;
-  count: number;
-  readonly mesh: WebGLBuffer;
-  readonly places: WebGLBuffer;
-  room: number;
-  readonly vao: WebGLVertexArrayObject;
-}
-
 /** Points one per-body attribute of the place buffer at its float within each body's run. */
 function placeAttribute(
   gl: WebGL2RenderingContext,
@@ -39,7 +29,7 @@ function placeAttribute(
 }
 
 /** Builds one model's mesh and an empty place buffer for its bodies. */
-function entryOf(gl: WebGL2RenderingContext, model: Model): Entry {
+function entryOf(gl: WebGL2RenderingContext, model: Model) {
   const vertices = flatten(modelFaces(model));
   const vao = gl.createVertexArray();
   const mesh = gl.createBuffer();
@@ -85,7 +75,7 @@ function entryOf(gl: WebGL2RenderingContext, model: Model): Entry {
  * model's bodies are drawn in one call however many there are.
  */
 export function createBodies(gl: WebGL2RenderingContext) {
-  const entries = MutableHashMap.empty<string, Entry>();
+  const entries = MutableHashMap.empty<string, ReturnType<typeof entryOf>>();
   return {
     /** Draws every model's bodies with the program and uniforms already set. */
     draw() {

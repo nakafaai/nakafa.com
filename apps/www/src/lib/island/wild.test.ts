@@ -33,7 +33,11 @@ const creature = (index: number, x: number, z: number, tx = x, tz = z) => ({
 });
 
 /** A world laid with one block across every column at height `y`, and water over it up to the sea when asked. */
-const floored = (block: string, y: number, flooded = false) => {
+const floored = (
+  block: Parameters<typeof idOf>[0],
+  y: number,
+  flooded = false
+) => {
   const cells: Cells = emptyCells();
   for (const x of Arr.makeBy(SPAN, (index) => index)) {
     for (const z of Arr.makeBy(SPAN, (index) => index)) {
