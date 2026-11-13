@@ -67,12 +67,12 @@ function surface(sketch: p5, sea: Sea, time: number, still: number) {
   });
 }
 
+/** A point on the canvas, in pixels. */
+const PointSchema = Schema.Struct({ x: Schema.Finite, y: Schema.Finite });
+type Point = typeof PointSchema.Type;
+
 /** The water body under the surface, lit at the crests and darker in the deep. */
-function paintSea(
-  sketch: p5,
-  points: readonly { x: number; y: number }[],
-  still: number
-) {
+function paintSea(sketch: p5, points: readonly Point[], still: number) {
   const { height, width } = sketch;
   const drawing = sketch.drawingContext;
   if (drawing instanceof CanvasRenderingContext2D) {
@@ -177,24 +177,6 @@ function waveProgram(sketch: p5, read: () => WaveFrame) {
     const points = surface(sketch, sea, time, still);
     paintSea(sketch, points, still);
     paintBuoy(sketch, sea, time, still);
-    const metre = width / VIEW_METRES;
-    sketch.stroke(fade(getColor("WHITE"), 0.55));
-    sketch.strokeWeight(1);
-    const crest = still - (SEA_STATES[sea].height / 2) * metre * HEIGHT_STRETCH;
-    sketch.line(
-      width * 0.04,
-      crest,
-      width * 0.04,
-      crest + SEA_STATES[sea].height * metre * HEIGHT_STRETCH
-    );
-    sketch.line(width * 0.04 - 5, crest, width * 0.04 + 5, crest);
-    sketch.line(
-      width * 0.04 - 5,
-      crest + SEA_STATES[sea].height * metre * HEIGHT_STRETCH,
-      width * 0.04 + 5,
-      crest + SEA_STATES[sea].height * metre * HEIGHT_STRETCH
-    );
-    sketch.noStroke();
     vignette(sketch, 0.3);
   };
 }

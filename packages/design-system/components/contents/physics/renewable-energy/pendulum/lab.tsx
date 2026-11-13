@@ -36,7 +36,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 /** The moment the facts read, in seconds after the release. */
 const READ_TIME = 10;
 
-/** The color of each store, shared by the chart and the facts. */
+/** The mark of each store in the facts. */
 const STORE_COLORS = {
   heat: PLOT_COLORS.pink,
   kinetic: PLOT_COLORS.teal,
@@ -60,10 +60,11 @@ interface PendulumEnergyLabProps {
 }
 
 /**
- * A 1 kg bob on a 2 m string, let go from 40°, beside a chart of its energy
- * stores. Without drag, potential and kinetic energy trade back and forth
- * forever. With drag, heat in the surroundings grows while the swing dies
- * down, and the three bands always stack to the same 4.59 J.
+ * A 1 kg bob on a 2 m string, let go from 40°, with its energy stores read
+ * 10 s after the release. Without drag, potential and kinetic energy trade
+ * back and forth forever. With drag, heat in the surroundings grows while
+ * the swing dies down, and the three stores always add up to the same
+ * 4.59 J.
  */
 export function PendulumEnergyLab({
   description,
@@ -108,13 +109,13 @@ export function PendulumEnergyLab({
         <ScienceStage floor={0} frameloop="always" reach={2.5} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[1.6, 1.8, 5.6]}
-              cameraTarget={[0.7, 1.2, 0]}
+              cameraPosition={[0.9, 1.7, 4.6]}
+              cameraTarget={[0, 1.15, 0]}
               fov={38}
               maxDistance={8}
               minDistance={1.5}
             />
-            <PendulumScene colors={STORE_COLORS} drag={drag} run={run} />
+            <PendulumScene drag={drag} run={run} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>

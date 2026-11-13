@@ -179,13 +179,44 @@ function paintKettle(
   return body;
 }
 
-/** A thermometer beside the kettle, filled from 0 °C to 100 °C. */
+/** A thermometer beside the kettle, held in a clamp on a lab stand, filled from 0 °C to 100 °C. */
 function paintThermometer(sketch: p5, counter: number, temperature: number) {
   const { height, width } = sketch;
   const x = width * 0.72;
   const top = counter - height * 0.62;
   const span = height * 0.5;
   const tube = Math.max(width * 0.018, 9);
+  const rod = x + tube * 4;
+  withShadow(
+    sketch,
+    { blur: 10, color: fade(getColor("BLACK"), 0.4), drop: 4 },
+    () => {
+      sketch.fill(mix(MATERIAL.castIron, getColor("BLACK"), 0.45));
+      sketch.rect(
+        x - tube * 1.5,
+        counter - tube * 0.7,
+        tube * 8,
+        tube * 0.7,
+        tube * 0.2
+      );
+      sketch.fill(MATERIAL.probeSteel);
+      sketch.rect(
+        rod - tube * 0.25,
+        top - tube * 3,
+        tube * 0.5,
+        counter - top + tube * 2.4
+      );
+      sketch.fill(MATERIAL.castIron);
+      sketch.rect(
+        rod - tube * 0.6,
+        top - tube * 0.3,
+        tube * 1.2,
+        tube * 1.4,
+        2
+      );
+      sketch.rect(x, top + tube * 0.1, rod - x, tube * 0.6);
+    }
+  );
   withShadow(
     sketch,
     { blur: 10, color: fade(getColor("BLACK"), 0.4), drop: 4 },
@@ -206,6 +237,8 @@ function paintThermometer(sketch: p5, counter: number, temperature: number) {
     sketch.line(x + tube, y, x + tube + (mark % 5 === 0 ? 9 : 5), y);
   }
   sketch.noStroke();
+  sketch.fill(MATERIAL.castIron);
+  sketch.rect(x - tube * 1.3, top - tube * 0.1, tube * 2.6, tube, tube * 0.3);
 }
 
 /**

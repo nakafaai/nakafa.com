@@ -12,7 +12,7 @@ import { Schema } from "effect";
 const AIR_DENSITY = 1.225;
 
 /** The rotor's radius, in metres. */
-export const ROTOR_RADIUS = 40;
+const ROTOR_RADIUS = 40;
 
 /** The share of the wind's power the turbine turns into electricity. */
 const POWER_SHARE = 0.4;

@@ -12,13 +12,17 @@ import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
+import { DoubleSide, Vector2 } from "three";
+
+/** The deepest rock, before the reservoir's heat warms its tone. */
+const DEEP_ROCK = mix(MATERIAL.rock, getColor("BLACK"), 0.35);
 
 /** The cutaway block's layers from the surface down: their tone and thickness in scene units. */
 const LAYERS = [
   { tall: 0.25, tone: MATERIAL.grass },
   { tall: 1.4, tone: MATERIAL.soil },
   { tall: 2.6, tone: MATERIAL.rock },
-  { tall: 2.2, tone: mix(MATERIAL.rock, getColor("BLACK"), 0.35) },
+  { tall: 2.2, tone: DEEP_ROCK },
 ] as const;
 
 /** The block's width and depth, in scene units. */
@@ -27,12 +31,29 @@ const BLOCK = { deep: 6, wide: 12 } as const;
 /** Where the two wells reach the surface, along the block. */
 const WELLS = { cool: 2.4, hot: -2.4 } as const;
 
+/** The plant hall: its middle, size and the height its gable rises above the walls. */
+const HALL = { at: [0, 0.8, 1], gable: 0.5, size: [6.2, 1.6, 2.4] } as const;
+
+/** The small cooling tower behind the hall, in scene units. */
+const TOWER = { at: [0, 0, -1.7], tall: 2.4 } as const;
+
 /**
- * A geothermal field cut open: grass, soil and rock above a hot reservoir
- * that glows as hot as the slider sets it. Water rises hot up the production
- * well, gives its heat to the plant, and sinks again down the injection
- * well; the cooling fans breathe warm air, and the power line carries away
- * as much electricity as the plant makes.
+ * The tower's shell, base to rim: wide at the foot, pinched near the top and
+ * flaring again, as a natural-draught tower is built.
+ */
+const TOWER_SHELL = Arr.makeBy(13, (step) => {
+  const along = step / 12;
+  const waist = (along - 0.72) / 0.72;
+  return new Vector2(0.42 + 0.38 * waist * waist, along * TOWER.tall);
+});
+
+/**
+ * A geothermal field cut open: grass, soil and rock above a reservoir of hot
+ * rock, its tone warming as the slider heats it. Rock only starts to glow
+ * near 525 °C, so at these temperatures it stays dark. Water rises hot up the
+ * production well, gives its heat to the plant, and sinks again down the
+ * injection well; the cooling tower breathes warm, moist air, and the power
+ * line carries away as much electricity as the plant makes.
  */
 export function GeothermalScene({
   colors,
@@ -61,9 +82,8 @@ export function GeothermalScene({
       <mesh position={[0, bottom - 0.5, 0]}>
         <boxGeometry args={[BLOCK.wide, 1, BLOCK.deep]} />
         <meshStandardMaterial
-          color={mix(MATERIAL.rock, MATERIAL.coalGlow, 0.3 + warmth * 0.4)}
-          emissive={MATERIAL.coalGlow}
-          emissiveIntensity={0.25 + warmth * 1.4}
+          color={mix(DEEP_ROCK, MATERIAL.roofTerracotta, 0.1 + warmth * 0.3)}
+          roughness={0.9}
         />
       </mesh>
       {Arr.map(
@@ -99,19 +119,88 @@ export function GeothermalScene({
           </group>
         )
       )}
-      <mesh castShadow position={[0, 0.8, 1]} receiveShadow>
-        <boxGeometry args={[6.2, 1.6, 2.4]} />
+      <mesh castShadow position={[...HALL.at]} receiveShadow>
+        <boxGeometry args={[...HALL.size]} />
         <meshStandardMaterial color={MATERIAL.concrete} roughness={0.8} />
       </mesh>
-      <mesh castShadow position={[0, 0.55, -1.6]}>
-        <boxGeometry args={[4, 1.1, 1.4]} />
-        <meshStandardMaterial color={getColor("SLATE", 300)} roughness={0.6} />
+      <mesh
+        castShadow
+        position={[
+          HALL.at[0],
+          HALL.at[1] + HALL.size[1] / 2 + HALL.gable / 3,
+          HALL.at[2],
+        ]}
+        rotation={[0, 0, Math.PI / 2]}
+        scale={[HALL.gable / ((HALL.size[2] + 0.3) * 0.866), 1, 1]}
+      >
+        <cylinderGeometry
+          args={[
+            (HALL.size[2] + 0.3) / 1.732,
+            (HALL.size[2] + 0.3) / 1.732,
+            HALL.size[0] + 0.3,
+            3,
+            1,
+            false,
+            Math.PI / 2,
+          ]}
+        />
+        <MetalMaterial color={MATERIAL.roofZinc} roughness={0.5} />
+      </mesh>
+      {Arr.map([-2.2, -1.1, 0, 1.1, 2.2] as const, (x) => (
+        <mesh
+          key={x}
+          position={[x, 1.05, HALL.at[2] + HALL.size[2] / 2 + 0.01]}
+        >
+          <boxGeometry args={[0.6, 0.35, 0.02]} />
+          <meshStandardMaterial
+            color={MATERIAL.tintedGlass}
+            metalness={0.2}
+            roughness={0.15}
+          />
+        </mesh>
+      ))}
+      {Arr.map([WELLS.hot, WELLS.cool] as const, (x) => (
+        <group key={x}>
+          <Pipe
+            from={[x, 0.4, BLOCK.deep / 2 + 0.01]}
+            radius={0.1}
+            to={[x, 0.4, HALL.at[2] + HALL.size[2] / 2]}
+          >
+            <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
+          </Pipe>
+          <mesh castShadow position={[x, 0.4, BLOCK.deep / 2 + 0.01]}>
+            <sphereGeometry args={[0.15, 20, 12]} />
+            <MetalMaterial color={MATERIAL.castIron} roughness={0.5} />
+          </mesh>
+        </group>
+      ))}
+      <Pipe
+        from={[-0.6, 0.5, HALL.at[2] - HALL.size[2] / 2]}
+        radius={0.09}
+        to={[-0.6, 0.5, TOWER.at[2] + 0.6]}
+      >
+        <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
+      </Pipe>
+      <Pipe
+        from={[0.6, 0.3, TOWER.at[2] + 0.6]}
+        radius={0.09}
+        to={[0.6, 0.3, HALL.at[2] - HALL.size[2] / 2]}
+      >
+        <MetalMaterial color={MATERIAL.galvanizedSteel} roughness={0.45} />
+      </Pipe>
+      <mesh castShadow position={[...TOWER.at]} receiveShadow>
+        <latheGeometry args={[TOWER_SHELL, 40]} />
+        <meshStandardMaterial
+          color={MATERIAL.concrete}
+          roughness={0.85}
+          side={DoubleSide}
+        />
       </mesh>
       <Puffs
         amount={0.4 + warmth * 0.6}
-        at={[0, 1.2, -1.6]}
+        at={[TOWER.at[0], TOWER.tall, TOWER.at[2]]}
         rise={2.4}
-        size={0.45}
+        size={0.4}
       />
       {Arr.map([-1, 1] as const, (side) => (
         <Pipe

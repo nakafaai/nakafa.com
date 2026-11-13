@@ -1,6 +1,5 @@
 import { useFrame } from "@react-three/fiber";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo, useRef } from "react";
@@ -8,16 +7,16 @@ import { type Mesh, Quaternion, Vector3 } from "three";
 
 /**
  * The parts the renewable-energy scenes share: straight pipes and rods,
- * parcels of water or steam moving along a pipe, puffs of steam rising from a
- * stack, and a small house whose window lights up. Every part stands in the
- * stage's light; none draws a backdrop or a light of its own.
+ * parcels of water or steam moving along a pipe, and puffs of steam rising
+ * from a stack. Every part stands in the stage's light; none draws a backdrop
+ * or a light of its own.
  */
 
 /** A point in the scene, in scene units. */
 type Spot = readonly [number, number, number];
 
 /** The time a scene has played, in seconds, held while the card is paused. */
-export function useSceneTime() {
+function useSceneTime() {
   const playing = useVisualScene((card) => card.playing, false);
   const time = useRef(0);
   useFrame((_, delta) => {
@@ -124,18 +123,15 @@ export function Parcels({
   );
 }
 
-/** Puffs of steam or shimmering warm air rising from `at`, as many and as big as `amount`, from 0 to 1. */
+/** Puffs of steam rising from `at`, as many and as big as `amount`, from 0 to 1. */
 export function Puffs({
   amount,
   at,
-  color = MATERIAL.cloud,
   rise,
   size,
 }: {
   readonly amount: number;
   readonly at: Spot;
-  /** The puffs' colour: white steam by default. */
-  readonly color?: string;
   readonly rise: number;
   readonly size: number;
 }) {
@@ -172,50 +168,13 @@ export function Puffs({
         >
           <sphereGeometry args={[1, 16, 12]} />
           <meshStandardMaterial
-            color={color}
+            color={MATERIAL.cloud}
             depthWrite={false}
             roughness={1}
             transparent
           />
         </mesh>
       ))}
-    </group>
-  );
-}
-
-/** A small house of plaster and terracotta, `size` wide, its window glowing when lit. */
-export function House({
-  at,
-  lit,
-  size,
-}: {
-  readonly at: Spot;
-  readonly lit: boolean;
-  readonly size: number;
-}) {
-  return (
-    <group position={at}>
-      <mesh castShadow position={[0, size * 0.35, 0]} receiveShadow>
-        <boxGeometry args={[size, size * 0.7, size * 0.8]} />
-        <meshStandardMaterial color={MATERIAL.wallPlaster} roughness={0.9} />
-      </mesh>
-      <mesh
-        castShadow
-        position={[0, size * 0.88, 0]}
-        rotation={[0, Math.PI / 4, 0]}
-        scale={[1, 0.55, 1]}
-      >
-        <coneGeometry args={[size * 0.8, size * 0.7, 4]} />
-        <meshStandardMaterial color={MATERIAL.roofTerracotta} roughness={0.8} />
-      </mesh>
-      <mesh position={[0, size * 0.38, size * 0.401]}>
-        <planeGeometry args={[size * 0.3, size * 0.24]} />
-        <meshStandardMaterial
-          color={lit ? MATERIAL.windowGlow : getColor("ZINC", 900)}
-          emissive={lit ? MATERIAL.windowGlow : getColor("BLACK")}
-          emissiveIntensity={lit ? 2.4 : 0}
-        />
-      </mesh>
     </group>
   );
 }
