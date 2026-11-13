@@ -59,9 +59,10 @@ const PLAY_SECONDS_PER_HUNDRED = 2;
 const HOLD_SECONDS = 2;
 
 /** What the sketch reads on every frame: how far the runner goes. */
-interface TrackFrame {
-  readonly stop: TrackStop;
-}
+const TrackFrameSchema = Schema.Struct({
+  stop: TrackStopSchema,
+});
+type TrackFrame = typeof TrackFrameSchema.Type;
 
 /** The plan that fits the whole stadium. */
 function stadiumPlan(sketch: p5): Plan {

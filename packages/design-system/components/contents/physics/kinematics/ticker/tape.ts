@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /**
  * A ticker timer on a school bench: a striker hits a carbon disc 50 times a
@@ -24,6 +24,13 @@ export const TapeMotionSchema = Schema.Literals([
 ]);
 export type TapeMotion = typeof TapeMotionSchema.Type;
 
+/** One motion: its acceleration, how long it lasts and the velocity it starts with. */
+const MotionSchema = Schema.Struct({
+  acceleration: Schema.Finite,
+  duration: Schema.Finite,
+  initialVelocity: Schema.Finite,
+});
+
 /**
  * Each motion in metres and seconds. All three cover 0.48 m in 0.8 s, so
  * their average velocity is the same 0.6 m/s and only the spacing of the dots
@@ -33,10 +40,7 @@ export const TAPE_MOTIONS = {
   slowing: { acceleration: -1, duration: 0.8, initialVelocity: 1 },
   speeding: { acceleration: 1, duration: 0.8, initialVelocity: 0.2 },
   uniform: { acceleration: 0, duration: 0.8, initialVelocity: 0.6 },
-} as const satisfies Record<
-  TapeMotion,
-  { acceleration: number; duration: number; initialVelocity: number }
->;
+} as const satisfies Record<TapeMotion, typeof MotionSchema.Type>;
 
 /** How far the trolley has moved after `time` seconds, in metres. */
 export function tapePosition(motion: TapeMotion, time: number) {
@@ -67,8 +71,8 @@ export function tapeStrips(motion: TapeMotion) {
  * before, over a strip's time squared.
  */
 export function stripAcceleration(strips: readonly number[]) {
-  const first = strips.at(0) ?? 0;
-  const last = strips.at(-1) ?? 0;
+  const first = Option.getOrElse(Arr.head(strips), () => 0);
+  const last = Option.getOrElse(Arr.last(strips), () => 0);
   const steps = Math.max(strips.length - 1, 1);
   const acceleration = (last - first) / steps / (STRIP_SECONDS * STRIP_SECONDS);
   // Equal strips differ by rounding alone; a reading of zero is never negative.

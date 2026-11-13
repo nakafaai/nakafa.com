@@ -27,7 +27,8 @@ export function riverCrossing(river: River, heading: number) {
   const angle = (heading * Math.PI) / 180;
   const across = river.boatSpeed * Math.cos(angle);
   const downstream = river.current + river.boatSpeed * Math.sin(angle);
-  if (across <= 0) {
+  // Heading along the bank leaves a rounding remainder of cos 90 degrees, not zero.
+  if (across <= river.boatSpeed * 1e-9) {
     return;
   }
   const time = river.width / across;

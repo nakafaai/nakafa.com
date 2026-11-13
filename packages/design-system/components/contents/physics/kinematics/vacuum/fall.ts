@@ -10,7 +10,7 @@ import { Schema } from "effect";
  */
 
 /** Gravitational acceleration, in m/s². */
-export const TUBE_GRAVITY = 10;
+const TUBE_GRAVITY = 10;
 
 /** How far the two fall inside the tube, in metres. */
 export const TUBE_DROP = 1.1;
@@ -20,7 +20,7 @@ export const TUBE_DROP = 1.1;
  * settle at a few tenths of a metre per second; the card states the value it
  * uses, so the times it reads follow from it.
  */
-export const FEATHER_SETTLING = 0.5;
+const FEATHER_SETTLING = 0.5;
 
 /** What fills the tube. */
 export const TubeAirSchema = Schema.Literals(["air", "vacuum"]);

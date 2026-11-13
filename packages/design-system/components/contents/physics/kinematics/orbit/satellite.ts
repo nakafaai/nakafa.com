@@ -22,7 +22,7 @@ export const EARTH_RADIUS = 6.371e6;
  */
 export const OrbitSchema = Schema.Literals(["station", "gps", "geostationary"]);
 export type Orbit = typeof OrbitSchema.Type;
-export const ORBIT_HEIGHTS = {
+const ORBIT_HEIGHTS = {
   geostationary: 3.5786e7,
   gps: 2.02e7,
   station: 4e5,

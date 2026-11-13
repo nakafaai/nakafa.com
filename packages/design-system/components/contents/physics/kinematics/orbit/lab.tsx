@@ -43,9 +43,10 @@ import { type ReactNode, useState } from "react";
 const LAP_SECONDS = 8;
 
 /** What the sketch reads on every frame. */
-interface OrbitFrame {
-  readonly orbit: Orbit;
-}
+const OrbitFrameSchema = Schema.Struct({
+  orbit: OrbitSchema,
+});
+type OrbitFrame = typeof OrbitFrameSchema.Type;
 
 /** Space: black with a scatter of faint stars that never move. */
 function paintSpace(sketch: p5) {

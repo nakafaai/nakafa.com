@@ -14,6 +14,7 @@ import {
 import {
   STROBE_SHOTS,
   type StrobeShot,
+  StrobeShotSchema,
   strobeBalls,
   strobeFacts,
   strobeFlashes,
@@ -33,7 +34,7 @@ import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Match } from "effect";
+import { Array as Arr, Match, Schema } from "effect";
 import type p5 from "p5";
 import type { ReactNode } from "react";
 
@@ -69,9 +70,10 @@ const BALL_COLORS = [
 ] as const;
 
 /** What the sketch reads on every frame: the photograph it develops. */
-interface StrobeFrame {
-  readonly shot: StrobeShot;
-}
+const StrobeFrameSchema = Schema.Struct({
+  shot: StrobeShotSchema,
+});
+type StrobeFrame = typeof StrobeFrameSchema.Type;
 
 /** Maps the shot's frame, in metres, onto the canvas, keeping its proportions. */
 function camera(sketch: p5, shot: StrobeShot) {

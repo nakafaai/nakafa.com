@@ -9,11 +9,10 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** One straight leg: how far east and how far north it goes, in metres (negative for west or south). */
-export const LegSchema = Schema.Struct({
+const LegSchema = Schema.Struct({
   east: Schema.Finite,
   north: Schema.Finite,
 });
-export type Leg = typeof LegSchema.Type;
 
 /** A walk: its legs in order and the walking pace in m/s. */
 export const WalkSchema = Schema.Struct({
@@ -46,21 +45,18 @@ export function walkDuration(walk: Walk) {
 
 /** Where the walker stands after walking `distance` metres along the path. */
 export function walkPoint(walk: Walk, distance: number) {
-  let left = Math.min(Math.max(distance, 0), walkLength(walk));
-  let at = { east: 0, north: 0 };
-  for (const leg of walk.legs) {
+  const start = { east: 0, left: Math.max(distance, 0), north: 0 };
+  const end = Arr.reduce(walk.legs, start, (at, leg) => {
     const length = Math.hypot(leg.east, leg.north);
-    if (left <= length) {
-      const part = length === 0 ? 0 : left / length;
-      return {
-        east: at.east + leg.east * part,
-        north: at.north + leg.north * part,
-      };
-    }
-    left -= length;
-    at = { east: at.east + leg.east, north: at.north + leg.north };
-  }
-  return at;
+    // The share of this leg already walked: none before it, all of it after.
+    const part = length === 0 ? 0 : Math.min(Math.max(at.left / length, 0), 1);
+    return {
+      east: at.east + leg.east * part,
+      left: at.left - length,
+      north: at.north + leg.north * part,
+    };
+  });
+  return { east: end.east, north: end.north };
 }
 
 /**

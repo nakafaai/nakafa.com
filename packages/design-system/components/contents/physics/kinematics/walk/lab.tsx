@@ -51,9 +51,10 @@ const PLAY_SECONDS = 8;
 const HOLD_SECONDS = 2;
 
 /** What the sketch reads on every frame: the walk. */
-interface WalkFrame {
-  readonly walk: Walk;
-}
+const WalkFrameSchema = Schema.Struct({
+  walk: WalkSchema,
+});
+type WalkFrame = typeof WalkFrameSchema.Type;
 
 /** The plan that fits the walk's corners, a block of town around them included. */
 function walkPlan(sketch: p5, walk: Walk): Plan {
@@ -99,7 +100,7 @@ function walkProgram(sketch: p5, read: () => WalkFrame) {
     }
     const now = shownTime(time, duration);
     const plan = walkPlan(sketch, walk);
-    backdrop(sketch, JSON.stringify(walk.legs), (layer) =>
+    backdrop(sketch, `${plan.originX} ${plan.originY} ${plan.scale}`, (layer) =>
       paintTown(layer, plan, BLOCK)
     );
     const corners = Arr.map(walkCorners(walk), (corner) =>

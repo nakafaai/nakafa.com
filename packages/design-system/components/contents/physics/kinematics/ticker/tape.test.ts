@@ -7,6 +7,7 @@ import {
   tapeStrips,
   tapeTicks,
 } from "@repo/design-system/components/contents/physics/kinematics/ticker/tape";
+import { Array as Arr, Option } from "effect";
 
 describe("tape motions", () => {
   it("cover the same 0.48 m in 0.8 s, so only the spacing differs", () => {
@@ -27,8 +28,8 @@ describe("tapeTicks", () => {
   it("strikes 50 times a second, from the start to the end", () => {
     const ticks = tapeTicks("uniform");
     expect(ticks).toHaveLength(41);
-    expect(ticks.at(1)).toBeCloseTo(0.02);
-    expect(ticks.at(-1)).toBeCloseTo(0.8);
+    expect(Option.getOrThrow(Arr.get(ticks, 1))).toBeCloseTo(0.02);
+    expect(Option.getOrThrow(Arr.last(ticks))).toBeCloseTo(0.8);
   });
 });
 
@@ -43,15 +44,15 @@ describe("tapeStrips", () => {
 
   it("grows each strip by a·t² when speeding up", () => {
     const strips = tapeStrips("speeding");
-    expect(strips.at(0)).toBeCloseTo(0.025);
-    expect(strips.at(1)).toBeCloseTo(0.035);
-    expect(strips.at(-1)).toBeCloseTo(0.095);
+    expect(Option.getOrThrow(Arr.head(strips))).toBeCloseTo(0.025);
+    expect(Option.getOrThrow(Arr.get(strips, 1))).toBeCloseTo(0.035);
+    expect(Option.getOrThrow(Arr.last(strips))).toBeCloseTo(0.095);
   });
 
   it("shrinks each strip when slowing down", () => {
     const strips = tapeStrips("slowing");
-    expect(strips.at(0)).toBeCloseTo(0.095);
-    expect(strips.at(-1)).toBeCloseTo(0.025);
+    expect(Option.getOrThrow(Arr.head(strips))).toBeCloseTo(0.095);
+    expect(Option.getOrThrow(Arr.last(strips))).toBeCloseTo(0.025);
   });
 });
 

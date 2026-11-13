@@ -50,10 +50,11 @@ const PLAY_SECONDS = 6;
 const HOLD_SECONDS = 1.5;
 
 /** What the sketch reads on every frame: the river and the boat's heading. */
-interface RiverFrame {
-  readonly heading: number;
-  readonly river: River;
-}
+const RiverFrameSchema = Schema.Struct({
+  heading: Schema.Finite,
+  river: RiverSchema,
+});
+type RiverFrame = typeof RiverFrameSchema.Type;
 
 /** The plan that fits both banks and the widest drift a heading can give. */
 function riverPlan(sketch: p5, river: River): Plan {
