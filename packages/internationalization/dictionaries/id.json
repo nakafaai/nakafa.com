@@ -3793,76 +3793,6 @@
     },
     "comment-photo-fixed": {
       "title": "Fotonya tidak bisa diubah lagi."
-    },
-    "island-refused-outside": {
-      "title": "Itu tidak muat di pulaumu."
-    },
-    "island-refused-overlap": {
-      "title": "Sudah ada yang berdiri di sana."
-    },
-    "island-refused-unsupported": {
-      "title": "Ini perlu blok di bawahnya."
-    },
-    "island-refused-carrying": {
-      "title": "Ada yang berdiri di atasnya."
-    },
-    "island-refused-locked": {
-      "title": "Ini terbuka di level lebih tinggi."
-    },
-    "island-refused-unaffordable": {
-      "title": "Bintangmu belum cukup untuk ini."
-    },
-    "island-refused-starter": {
-      "title": "Ini bawaan pulaumu, jadi tetap ada."
-    },
-    "island-refused-missing": {
-      "title": "Benda itu sudah tidak ada."
-    },
-    "island-refused-top": {
-      "title": "Ini sudah di tahap tertinggi."
-    },
-    "island-refused-bottom": {
-      "title": "Ini sudah di tahap pertama."
-    },
-    "island-stale": {
-      "title": "Pulaumu berubah di tempat lain.",
-      "description": "Sudah kami muat ulang, coba lagi ya."
-    },
-    "island-refused-grows": {
-      "title": "Ini tumbuh saat kamu menyiramnya."
-    },
-    "island-refused-rooted": {
-      "title": "Ini sudah berakar, pindahkan saja."
-    },
-    "island-refused-materials": {
-      "title": "Hasil kebunmu belum cukup untuk ini."
-    },
-    "island-farm-unlearned": {
-      "title": "Belajar dulu, lalu siram kebunmu."
-    },
-    "island-farm-watered": {
-      "title": "Kebunmu sudah disiram hari ini."
-    },
-    "island-farm-barren": {
-      "title": "Tanam pohon atau bunga dulu."
-    },
-    "island-farm-missing": {
-      "title": "Tanaman itu sudah tidak ada."
-    },
-    "island-farm-unripe": {
-      "title": "Ini belum siap dipanen."
-    },
-    "island-link-copied": {
-      "title": "Tautan pulaumu sudah disalin."
-    },
-    "island-watered": {
-      "title": "Kebunmu sudah disiram."
-    },
-    "island-harvested-wood": {
-      "title": "Kamu mengumpulkan kayu."
-    },
-    "island-harvested-petals": {
-      "title": "Kamu mengumpulkan kelopak bunga."
     }
   },
   "Ai": {
@@ -4631,6 +4561,9 @@
     "demo-kind-link": "Tautan",
     "demo-exam-title": "UTS Fisika",
     "demo-exam-question": "Bola <mass></mass> menggelinding dengan kecepatan <speed></speed>. Berapa momentumnya?",
+    "demo-exam-numeric": "Troli <cart></cart> bergerak dengan kecepatan <pace></pace>. Berapa momentumnya dalam <unit></unit>?",
+    "demo-exam-essay": "Mengapa truk bermuatan lebih sulit dihentikan daripada sepeda pada kecepatan yang sama?",
+    "demo-exam-rubric": "Nilai penuh kalau menyebut momentum, mengaitkannya dengan massa, dan membandingkan keduanya pada kecepatan yang sama.",
     "demo-exam-explanation": "Momentum adalah massa kali kecepatan: <formula></formula>.",
     "demo-exam-answer": "Jawaban",
     "demo-exam-progress": "Soal {current} dari {total}",
@@ -4676,61 +4609,5 @@
     "faq-credits-answer": "Nina, AI Nakafa, memakai kredit untuk setiap jawaban. Seluruh sekolah berbagi satu kuota, dan paket 1.000 kredit tambahan berlaku 12 bulan.",
     "faq-change-question": "Bisakah ganti paket nanti?",
     "faq-change-answer": "Bisa. Pindah antara Pro dan Max atau tambah akun kapan saja, dan perubahannya berlaku mulai tagihan berikutnya yang dibayar."
-  },
-  "Island": {
-    "title": "Pulau",
-    "description": "Pulaumu tumbuh di setiap materi dan try-out.",
-    "name": "Pulau {name}",
-    "level": "Level {level}",
-    "stars": "Bintang",
-    "next": "Level berikutnya",
-    "next-value": "{stars} Bintang",
-    "top": "Level tertinggi",
-    "turn-left": "Putar ke kiri",
-    "turn-right": "Putar ke kanan",
-    "build": "Bangun",
-    "done": "Selesai",
-    "undo": "Urungkan",
-    "redo": "Ulangi",
-    "rotate": "Putar",
-    "move": "Pindah",
-    "remove": "Hapus",
-    "upgrade": "Tingkatkan",
-    "items": "Barang",
-    "price": "{stars} Bintang",
-    "locked": "Level {level}",
-    "item-house": "Rumah",
-    "item-tree": "Pohon",
-    "item-pond": "Kolam",
-    "item-grass": "Rumput",
-    "item-soil": "Tanah",
-    "item-stone": "Batu",
-    "item-sand": "Pasir",
-    "item-planks": "Papan",
-    "item-brick": "Bata",
-    "item-glass": "Kaca",
-    "item-tile": "Genteng merah",
-    "item-slate": "Genteng biru",
-    "item-flowers": "Bunga",
-    "item-bush": "Semak",
-    "item-rock": "Batu besar",
-    "item-lamp": "Lampu",
-    "water": "Siram kebun",
-    "harvest": "Panen",
-    "sound": "Suara",
-    "enter": "Masuk",
-    "enter-next": "{stars} Bintang lagi membuat pulaumu naik level.",
-    "enter-top": "Pulaumu sudah sebesar pulau bisa tumbuh.",
-    "earn-lesson": "+{stars} Bintang per materi",
-    "earn-section": "+{stars} Bintang per bagian",
-    "badges": "Lencana",
-    "share": "Bagikan",
-    "share-title": "Pulauku di Nakafa",
-    "clip": "Rekam klip",
-    "clip-file": "pulau-nakafa",
-    "visit-description": "Pulau {name}, tumbuh dari belajar di Nakafa.",
-    "materials": "Kebun",
-    "materials-value": "{wood} kayu, {petals} kelopak",
-    "price-wood": "{stars} Bintang, {wood} kayu"
   }
 }
