@@ -34,6 +34,12 @@ const FIRST_GRADED = /^Question 1, (?:correct|wrong)$/u;
 /** The name of the button that opens the result's sheet on a phone. */
 const OPENER = /^Open your result, /u;
 
+/** The result's opener as a selector, for a script in the page that counts its mounts. */
+const OPENER_SELECTOR = '[aria-label^="Open your result, "]';
+
+/** The global that counts how many times the result's opener mounted while the test watches. */
+const OPENER_MOUNTS = "__nakafaOpenerMounts";
+
 /** The browser storage key of the width of the player's pane. */
 const PANE_WIDTH_KEY = "nakafa-pane-player";
 
@@ -362,6 +368,26 @@ test.describe("The result of a finished try-out", () => {
         Effect.gen(function* () {
           const { learner } = yield* openChatPage(page, origin);
           yield* runFixture(seedXendit(learner.userId, "plan"));
+          // The review mounts once: the page's read of the ended attempt lands after the live answer has shown
+          // the review, and swaps nothing then, so a press on the opener that first shows is never lost.
+          yield* Effect.promise(() =>
+            page.addInitScript(
+              ({ key, selector }) => {
+                Reflect.set(window, key, 0);
+                const opens = (node: Node) =>
+                  node instanceof Element &&
+                  (node.matches(selector) ||
+                    node.querySelector(selector) !== null);
+                new MutationObserver((records) => {
+                  const mounts = records
+                    .flatMap((record) => [...record.addedNodes])
+                    .filter(opens).length;
+                  Reflect.set(window, key, Reflect.get(window, key) + mounts);
+                }).observe(document, { childList: true, subtree: true });
+              },
+              { key: OPENER_MOUNTS, selector: OPENER_SELECTOR }
+            )
+          );
           yield* Effect.promise(() =>
             page.goto(entrySetHref, { waitUntil: "commit" })
           );
@@ -374,12 +400,6 @@ test.describe("The result of a finished try-out", () => {
             await expect(opener).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
-            // A Pro learner's review reads the section whole once the page's read of the ended attempt returns
-            // its keys, and the player then holds every question to move through, so the opener pressed below
-            // belongs to the review that stays.
-            await expect(
-              page.getByRole("button", { name: "Next question" })
-            ).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
             await page.evaluate(() =>
               window.scrollTo({
                 behavior: "instant",
@@ -409,6 +429,12 @@ test.describe("The result of a finished try-out", () => {
             await expect
               .poll(() => clearanceOf(page, questionHeading(page, JUMP)))
               .toBeGreaterThanOrEqual(8);
+            expect(
+              await page.evaluate<number, string>(
+                (key) => Reflect.get(window, key),
+                OPENER_MOUNTS
+              )
+            ).toBe(1);
           });
         })
       );
