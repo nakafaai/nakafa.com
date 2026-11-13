@@ -10,7 +10,6 @@ import {
   CancelCircleIcon,
   ChartHistogramIcon,
   CheckmarkCircle02Icon,
-  HelpCircleIcon,
   HourglassIcon,
   MinusSignCircleIcon,
   UserGroupIcon,
@@ -402,11 +401,7 @@ export function QuestionsSheet({
                     </SelectTrigger>
                     <SelectContent label={common("menu-question")}>
                       {Arr.map(items, (item) => (
-                        <SelectItem
-                          icon={HelpCircleIcon}
-                          key={item.value}
-                          value={item.value}
-                        >
+                        <SelectItem key={item.value} plain value={item.value}>
                           {item.label}
                         </SelectItem>
                       ))}

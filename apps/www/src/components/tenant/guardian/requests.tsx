@@ -11,7 +11,6 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   Copy01Icon,
-  Message01Icon,
   PencilEdit02Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
@@ -243,11 +242,7 @@ export function AskDialog({
             </SelectTrigger>
             <SelectContent label={common("menu-kind")}>
               {Arr.map(items, (item) => (
-                <SelectItem
-                  icon={Message01Icon}
-                  key={item.value}
-                  value={item.value}
-                >
+                <SelectItem key={item.value} plain value={item.value}>
                   {item.label}
                 </SelectItem>
               ))}

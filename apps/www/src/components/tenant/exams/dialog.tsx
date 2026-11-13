@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { Add01Icon, SchoolIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   EXAM_TITLE_MAX_LENGTH,
@@ -267,11 +267,7 @@ export function CreateExam({
               </SelectTrigger>
               <SelectContent label={common("menu-unit")}>
                 {Arr.map(unitItems, (item) => (
-                  <SelectItem
-                    icon={SchoolIcon}
-                    key={item.value}
-                    value={item.value}
-                  >
+                  <SelectItem key={item.value} plain value={item.value}>
                     {item.label}
                   </SelectItem>
                 ))}

@@ -1,5 +1,4 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { Globe02Icon } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { type UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
@@ -188,11 +187,7 @@ function SchoolUnitCreateForm({
             </SelectTrigger>
             <SelectContent label={common("menu-zone")}>
               {Arr.map(timeZoneItems, (item) => (
-                <SelectItem
-                  icon={Globe02Icon}
-                  key={item.value}
-                  value={item.value}
-                >
+                <SelectItem key={item.value} plain value={item.value}>
                   {item.label}
                 </SelectItem>
               ))}

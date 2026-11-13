@@ -1,7 +1,3 @@
-import {
-  ChartBubble01Icon,
-  ChartLineData01Icon,
-} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -118,7 +114,7 @@ function GraphFields({
           </SelectTrigger>
           <SelectContent label={common("menu-curve")}>
             {Arr.map(GraphCurve.literals, (value) => (
-              <SelectItem icon={ChartLineData01Icon} key={value} value={value}>
+              <SelectItem key={value} plain value={value}>
                 {t(CURVE_NAME[value])}
               </SelectItem>
             ))}
@@ -238,7 +234,7 @@ function ChartFields({
           </SelectTrigger>
           <SelectContent label={common("menu-mark")}>
             {Arr.map(ChartMark.literals, (value) => (
-              <SelectItem icon={ChartBubble01Icon} key={value} value={value}>
+              <SelectItem key={value} plain value={value}>
                 {t(MARK_NAME[value])}
               </SelectItem>
             ))}

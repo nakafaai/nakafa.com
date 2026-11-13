@@ -1,8 +1,4 @@
-import {
-  ArrowExpandIcon,
-  FitToScreenIcon,
-  ZoomIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowExpandIcon, FitToScreenIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -77,8 +73,8 @@ export function ZoomMenu({
             {Arr.map(ZOOM_PRESETS, (preset) => (
               <DropdownMenuRadioItem
                 className="tabular-nums"
-                icon={ZoomIcon}
                 key={preset}
+                plain
                 value={String(preset)}
               >
                 {preset}%

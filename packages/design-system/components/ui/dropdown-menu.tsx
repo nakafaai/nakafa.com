@@ -3,6 +3,7 @@ import { ArrowRight01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import {
   HugeIcons,
   OptionIcon,
+  type OptionMark,
 } from "@repo/design-system/components/ui/huge-icons";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
@@ -264,9 +265,10 @@ function DropdownMenuRadioItem({
   closeOnClick = true,
   icon,
   inset,
+  plain,
   ...props
 }: MenuPrimitive.RadioItem.Props &
-  Pick<React.ComponentProps<typeof OptionIcon>, "icon"> & {
+  OptionMark & {
     inset?: boolean;
   }) {
   return (
@@ -288,7 +290,7 @@ function DropdownMenuRadioItem({
           <HugeIcons icon={Tick01Icon} />
         </MenuPrimitive.RadioItemIndicator>
       </span>
-      <OptionIcon icon={icon} />
+      {plain ? null : <OptionIcon icon={icon} />}
       {children}
     </MenuPrimitive.RadioItem>
   );

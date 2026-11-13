@@ -1,5 +1,4 @@
 import { QueryResult, useMutation } from "@confect/react";
-import { TranslateIcon } from "@hugeicons/core-free-icons";
 import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
@@ -245,11 +244,7 @@ function SchoolInviteDialog({
             </SelectTrigger>
             <SelectContent label={common("menu-language")}>
               {Arr.map(localeItems, (item) => (
-                <SelectItem
-                  icon={TranslateIcon}
-                  key={item.value}
-                  value={item.value}
-                >
+                <SelectItem key={item.value} plain value={item.value}>
                   {item.label}
                 </SelectItem>
               ))}

@@ -10,7 +10,6 @@ import {
   Key01Icon,
   PencilEdit02Icon,
   Refresh01Icon,
-  SchoolIcon,
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import identity from "@repo/backend/confect/_generated/refs/identity";
@@ -394,11 +393,7 @@ function SchoolStudentDialog({
               </SelectTrigger>
               <SelectContent label={common("menu-unit")}>
                 {Arr.map(unitItems, (item) => (
-                  <SelectItem
-                    icon={SchoolIcon}
-                    key={item.value}
-                    value={item.value}
-                  >
+                  <SelectItem key={item.value} plain value={item.value}>
                     {item.label}
                   </SelectItem>
                 ))}
