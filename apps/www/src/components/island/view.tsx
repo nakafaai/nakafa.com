@@ -37,14 +37,22 @@ function tour(
   let frame = 0;
   let last = 0;
   let orbit = openingOrbit(size, 1);
-  // A tour runs by itself, so it keeps to its share of the thread (ADR 0039, D5) and rests while hidden.
+  // A tour runs by itself, so it keeps to its share of the thread (ADR 0039,
+  // D5) and rests while hidden or scrolled away (ADR 0047, D26).
   const pace = createFramePace();
+  let inSight = true;
+  const sight = new IntersectionObserver((entries) => {
+    inSight = Arr.some(entries, (entry) => entry.isIntersecting);
+  });
+  sight.observe(canvas);
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
-    if (!pace.isDue(now) || document.hidden) {
+    if (!(pace.isDue(now) && inSight) || document.hidden) {
       return;
     }
-    orbit = turnOrbit(orbit, last === 0 ? 0 : ((now - last) / 1000) * TOUR);
+    // A tour back in sight goes on from where it stopped rather than jumping.
+    const seconds = last === 0 ? 0 : Math.min(0.25, (now - last) / 1000);
+    orbit = turnOrbit(orbit, seconds * TOUR);
     last = now;
     painter.bodies(bodiesOf(world, [], now / 1000));
     painter.herd(flatQuads(size, now / 1000));
@@ -76,6 +84,7 @@ function tour(
   return () => {
     cancelAnimationFrame(frame);
     resize.disconnect();
+    sight.disconnect();
     painter.release();
   };
 }

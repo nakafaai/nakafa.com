@@ -2,6 +2,7 @@
 
 import { keyOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
+import { createFramePace } from "@repo/design-system/lib/pace";
 import {
   Array as Arr,
   DateTime,
@@ -359,6 +360,10 @@ function start(
   /** The cell a hovering mouse would change, outlined before it presses (D5). */
   let aim: Option.Option<readonly [number, number, number]> = Option.none();
 
+  // The world moving by itself, its water and its wandering life, keeps to its
+  // share of the thread on a slow phone (ADR 0047, D26); the learner's own
+  // moves still draw at once.
+  const pace = createFramePace();
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick);
     const moving =
@@ -373,7 +378,8 @@ function start(
     const { weather } = store.getState();
     const falling =
       weather === "rain" || weather === "storm" || weather === "snow";
-    const waterDue = now - lastWater > (falling ? 33 : 66);
+    const waterDue =
+      now - lastWater > (falling ? 33 : 66) && pace.isDue(now);
     if (
       !(needsDraw || waterDue || route.length > 0 || rod.active()) ||
       document.hidden
@@ -407,6 +413,7 @@ function start(
     painter.draw(orbit, lightOf(hour, weather), now / 1000, weather, aim);
     canvas.dataset.drawn = "true";
     canvas.dataset.weather = weather;
+    pace.rest(now, performance.now());
   };
   frame = requestAnimationFrame(tick);
 
