@@ -95,6 +95,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Keep static content in prerendering, and never hide a current-time error behind a dynamic boundary. Request-time work that must not block the first HTML streams behind its own boundary.
 - Keep `experimental.instantInsights.validationLevel` at `"warning"`. Add no redundant `instant = true` exports; use `instant = false` only for a route deliberately allowed to block navigation.
 - The shared App Shell is the default prefetch. Use `<Link prefetch={true}>` only when URL-dependent cached content justifies one server invocation per link; grids and long lists prefetch on user intent.
+- A page header shows at most two standalone pills, and its secondary icon actions, such as More or the outline toggle, stand in its one `ButtonGroup`; a search field, a header's `search` prop and the dialogs a control opens are not actions. `scripts/check/actions.ts` reads the `PageActions` row through every header component that places a prop there, such as `SchoolHeader`'s children, and refuses a third pill and an icon action standing apart from the group.
 - Keep truthful stable UI outside `Suspense`; when no truthful fallback exists use `fallback={null}`, never invented skeletons or fake content.
 - Keep the real root layout in `src/routes/$locale`, read the locale on the server from the route params (`getLocaleOrThrow`), and do not thread it through components that do not use it.
 
