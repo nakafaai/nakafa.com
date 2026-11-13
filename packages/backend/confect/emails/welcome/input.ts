@@ -4,6 +4,7 @@ import {
   type PageCatalogInput,
   resolveLegalLinks,
 } from "@repo/backend/confect/emails/legal";
+import { unsubscribePage } from "@repo/backend/confect/emails/unsubscribe/token";
 import {
   deferWelcomeIntent,
   toWelcomeIntentError,
@@ -67,6 +68,10 @@ export const readWelcomeIntentInput = Effect.fn(
     );
     return {
       locale: intent.locale,
+      unsubscribeUrl: yield* unsubscribePage(
+        { _tag: "Account", userId: intent.userId },
+        intent.locale
+      ),
       ...links,
     };
   },

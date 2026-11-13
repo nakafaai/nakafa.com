@@ -9,6 +9,7 @@ const links = {
   extendUrl: "https://nakafa.com/en/user/settings/subscriptions",
   privacyPolicyUrl: "https://nakafa.com/en/privacy-policy",
   termsOfServiceUrl: "https://nakafa.com/en/terms-of-service",
+  unsubscribeUrl: "https://nakafa.com/en/unsubscribe?token=signed",
 };
 
 describe("pass reminder content", () => {
