@@ -83,6 +83,8 @@ const keepSaved = (versions: Versions) => (saved: typeof SavedView.Type) => {
  * Keeps one open tab present in its room for the tab's scope, as the player's heartbeat does: a
  * beat at once and one each interval, under a session of its own. A real sitting sends more of
  * these than answers, and a beat that fails waits for the next one, as it does in the browser.
+ * The heartbeat starts on this fiber's turn, so its first beat leaves before the tab goes on: a
+ * tab whose scope closes at once, as a second tab's does after its one answer, still beat.
  */
 const keepPresent = Effect.fn("load.student.present")(function* (
   wire: Wire,
@@ -92,7 +94,7 @@ const keepPresent = Effect.fn("load.student.present")(function* (
   yield* timed("mutation:beat", send(wire, beat, { ...seat, session })).pipe(
     Effect.result,
     Effect.repeat(Schedule.spaced(PRESENCE_INTERVAL)),
-    Effect.forkScoped
+    Effect.forkScoped({ startImmediately: true })
   );
 });
 
