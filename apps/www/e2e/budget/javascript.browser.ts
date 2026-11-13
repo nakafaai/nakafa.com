@@ -52,7 +52,7 @@ const LESSON_MAX_DECODED_BYTES = 3_545_000;
 // AdSense reads the site as down (`BOOT_SCRIPT_LIMIT` in src/lib/static/scripts.ts
 // holds the measurement). A route's whole graph, its warmed links included,
 // leaves the rest of that count to its stylesheets, fonts, images and ads.
-const ROUTE_MAX_SCRIPTS = 150;
+const ROUTE_MAX_SCRIPTS = 120;
 
 const routeBudgets = [
   {

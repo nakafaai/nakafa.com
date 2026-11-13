@@ -51,10 +51,11 @@ class StaticScriptsUnreadable extends Schema.TaggedError<
  * Results Test and AdSense's site review render this way, so a page over that
  * count never starts for Google, and AdSense reads the site as down (13 November
  * 2026: 249 of 300 independent modules loaded, and every page booted 246 to 399).
- * The limit leaves the rest of that count to the page's stylesheets, fonts,
- * images, later sections and ads.
+ * A page loads about twice the scripts it boots (a lesson booted 35 and loaded
+ * 73 in all), so the limit keeps a page near half of that count and leaves the
+ * rest to its stylesheets, fonts, images and ads.
  */
-export const BOOT_SCRIPT_LIMIT = 100;
+export const BOOT_SCRIPT_LIMIT = 60;
 
 /** A prerendered page that boots more scripts than Google's renderer can load beside the rest of the page. */
 class StaticScriptsOverLimit extends Schema.TaggedError<
