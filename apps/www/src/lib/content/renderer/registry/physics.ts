@@ -35,6 +35,7 @@ import {
 import { StreetOriginPositionLab } from "@/lib/content/renderer/client/physics/street";
 import { StrobePhotoMotionLab } from "@/lib/content/renderer/client/physics/strobe";
 import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticker";
+import { RunningTrackDisplacementLab } from "@/lib/content/renderer/client/physics/track";
 import { SpeedTrapInstantSpeedLab } from "@/lib/content/renderer/client/physics/trap";
 import { CarTripAverageVelocityLab } from "@/lib/content/renderer/client/physics/trip";
 import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
@@ -43,6 +44,7 @@ import {
   InstantaneousVelocitySpeedLab,
   VelocitySpeedLab,
 } from "@/lib/content/renderer/client/physics/velocity";
+import { CityWalkDisplacementLab } from "@/lib/content/renderer/client/physics/walk";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 /** Every physics visual, which any lesson in any domain may use. */
@@ -158,5 +160,13 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.strobePhotoMotionLab,
     component: StrobePhotoMotionLab,
+  },
+  {
+    name: physicsComponentNames.cityWalkDisplacementLab,
+    component: CityWalkDisplacementLab,
+  },
+  {
+    name: physicsComponentNames.runningTrackDisplacementLab,
+    component: RunningTrackDisplacementLab,
   },
 ] satisfies readonly RendererImplementation[];

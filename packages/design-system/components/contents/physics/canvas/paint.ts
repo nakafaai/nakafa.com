@@ -274,3 +274,24 @@ export function vignette(sketch: p5, strength: number) {
   drawing.fillRect(0, 0, width, height);
   drawing.restore();
 }
+
+/**
+ * A layer for the scenery that never moves: it is painted once into an
+ * offscreen buffer and copied onto the canvas every frame after, so a slow
+ * phone spends its frame on what moves. It paints again only when the
+ * canvas size or the `key` of what it shows changes.
+ */
+export function createBackdrop() {
+  let layer: p5.Graphics | undefined;
+  let shown = "";
+  return (sketch: p5, key: string, paint: (layer: p5) => void) => {
+    const id = `${key}:${sketch.width}x${sketch.height}`;
+    if (!layer || shown !== id) {
+      layer?.remove();
+      layer = sketch.createGraphics(sketch.width, sketch.height);
+      paint(layer);
+      shown = id;
+    }
+    context(sketch)?.drawImage(layer.elt, 0, 0, sketch.width, sketch.height);
+  };
+}
