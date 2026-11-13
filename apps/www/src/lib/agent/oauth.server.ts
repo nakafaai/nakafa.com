@@ -46,7 +46,7 @@ const TokenRequest = Schema.Union([
 class AgentCallFailed extends Schema.TaggedError<
   AgentCallFailed,
   { readonly brand: unique symbol }
->()("AgentCallFailed", { cause: Schema.Defect }) {}
+>()("AgentCallFailed", { cause: Schema.Unknown }) {}
 
 /** A refusal that `auth/grant` raised, as the error data Convex returns. */
 const Refusal = Schema.Struct({
