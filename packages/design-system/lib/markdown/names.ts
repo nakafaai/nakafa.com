@@ -147,6 +147,7 @@ export const physicsComponentNames = {
   dimensionLab: "DimensionLab",
   displacementDistanceLab: "DisplacementDistanceLab",
   fallingTargetAimLab: "FallingTargetAimLab",
+  featherCoinVacuumLab: "FeatherCoinVacuumLab",
   followingDistanceLab: "FollowingDistanceLab",
   instantaneousVelocitySpeedLab: "InstantaneousVelocitySpeedLab",
   measurementToolsLab: "MeasurementToolsLab",

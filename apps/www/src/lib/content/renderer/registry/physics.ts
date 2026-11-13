@@ -42,6 +42,7 @@ import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticke
 import { RunningTrackDisplacementLab } from "@/lib/content/renderer/client/physics/track";
 import { SpeedTrapInstantSpeedLab } from "@/lib/content/renderer/client/physics/trap";
 import { CarTripSecantSlopeLab } from "@/lib/content/renderer/client/physics/trip";
+import { FeatherCoinVacuumLab } from "@/lib/content/renderer/client/physics/vacuum";
 import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
 import {
   AverageVelocitySpeedLab,
@@ -193,5 +194,9 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.fallingTargetAimLab,
     component: FallingTargetAimLab,
+  },
+  {
+    name: physicsComponentNames.featherCoinVacuumLab,
+    component: FeatherCoinVacuumLab,
   },
 ] satisfies readonly RendererImplementation[];
