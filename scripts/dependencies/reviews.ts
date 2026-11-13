@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.2",
-    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 6.2.0 peers effect 4.1.2 exactly. Checked 7 November 2026.",
+    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 6.3.0 peers effect 4.1.2 exactly. Checked 7 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "6.2.0",
-    "nakafa.com declares 6.2.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort, and 6.2.0 describes the MathVisual formula objects (curves, regions, surfaces, solids, sliders, markers and readouts). Checked 9 November 2026.",
+    "6.3.0",
+    "nakafa.com declares 6.3.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort, and 6.3.0 adds the MathVisual vector (a segment with an arrowhead) to the formula objects of 6.2.0. Checked 13 November 2026.",
   ],
   [
     "tsrs@latest",
@@ -108,8 +108,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "node@26",
-    "26.13.0",
-    "Node 26 is the Active LTS line since 28 October 2026, and the tooling, CI and devEngines run it. Convex Node actions stay on 24 until a dev deployment proves 26.",
+    "26.13.1",
+    "Node 26 is the Active LTS line since 28 October 2026, and the tooling, CI and devEngines run it. 26.13.1 is the security release of 10 November 2026: nine high CVEs in HTTP/2, TLS and HTTP, with undici 8.12.4 and llhttp 9.4.4. Convex Node actions stay on 24 until a dev deployment proves 26.",
   ],
   [
     "react-doctor@latest",

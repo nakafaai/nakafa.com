@@ -81,6 +81,7 @@
     "format:doctor": "ultracite doctor",
     "lint": "bun run effect:source:check && bun run check && ultracite check && turbo run lint --filter=cas",
     "prepare": "effect-tsgo patch --tsrs --no-typescript",
+    "proof": "node scripts/proof/main.ts",
     "security:audit": "bash scripts/osv apps/cas/uv.lock",
     "seo:audit": "bunx squirrelscan@latest audit https://nakafa.com --level surface --format llm",
     "start": "turbo run start",
@@ -88,6 +89,7 @@
     "test:scripts": "bun run typecheck:scripts && vitest run --config scripts/vitest.config.mts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
+    "train": "node scripts/landing/main.ts",
     "typecheck:scripts": "tsrs --project scripts/tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },
@@ -112,6 +114,7 @@
     "@effect/platform-node": "catalog:",
     "@effect/tsgo": "0.67.5",
     "@effect/vitest": "catalog:",
+    "@repo/backend": "workspace:*",
     "@repo/testing": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@sigstore/bundle": "5.0.1",
@@ -132,7 +135,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "26.13.0",
+      "version": "26.13.1",
       "onFail": "download"
     }
   },
