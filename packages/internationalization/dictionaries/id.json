@@ -4982,6 +4982,11 @@
     "block-chili-sprout": "Tunas cabai",
     "block-carrot-sprout": "Tunas wortel",
     "block-cassava-sprout": "Tunas singkong",
-    "block-sweet-potato-sprout": "Tunas ubi jalar"
+    "block-sweet-potato-sprout": "Tunas ubi jalar",
+    "home-top": "Rumah besarmu sudah paling keren",
+    "home-cottage": "Pondok",
+    "home-house": "Rumah dua lantai",
+    "home-manor": "Rumah besar",
+    "upgrade": "Tingkatkan rumahmu jadi {name}"
   }
 }
