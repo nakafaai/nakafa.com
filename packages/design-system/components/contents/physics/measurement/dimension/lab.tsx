@@ -106,7 +106,7 @@ export function DimensionLab({
       </VisualCardToolbar>
 
       <VisualCardBody className={threeSceneFrameVariants()}>
-        <ScienceStage frameloop="demand">
+        <ScienceStage frameloop="demand" setting="studio">
           <Suspense>
             <ResponsiveDimensionCamera />
             <DimensionScene

@@ -125,7 +125,7 @@ export function ChemicalReactionCharacteristicsLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="lab">
           <Suspense>
             <ReactionCameraControls />
             <ReactionCharacteristicsSceneProvider

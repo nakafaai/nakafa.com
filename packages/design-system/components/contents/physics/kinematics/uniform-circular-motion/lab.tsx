@@ -110,7 +110,7 @@ export function UniformCircularMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" reach={SCENE_REACH}>
+        <ScienceStage frameloop="always" reach={SCENE_REACH} setting="field">
           <Suspense>
             <CircularMotionCamera />
             <group>

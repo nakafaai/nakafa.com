@@ -108,7 +108,7 @@ export function DisplacementDistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="field">
           <Suspense>
             <DisplacementDistanceCamera view={view} />
             <DisplacementDistanceScene motion={motion} />

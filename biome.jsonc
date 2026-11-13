@@ -240,9 +240,11 @@
                   "shadow-mapSize-height",
                   "shadow-mapSize-width",
                   "shadow-normalBias",
+                  "shadow-radius",
                   "side",
                   "toneMapped",
                   "transparent",
+                  "userData",
                   "visible",
                   "wireframe"
                 ]

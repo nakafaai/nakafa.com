@@ -131,7 +131,11 @@ export function UniformLinearMotionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={ROAD_Y + ROAD_HEIGHT / 2} frameloop="always">
+        <ScienceStage
+          floor={ROAD_Y + ROAD_HEIGHT / 2}
+          frameloop="always"
+          setting="field"
+        >
           <Suspense>
             <CameraControls
               cameraPosition={UNIFORM_LINEAR_MOTION_CAMERA.cameraPosition}
