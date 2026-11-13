@@ -1,165 +1,103 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Effect, FileSystem, MutableRef, Option } from "effect";
 import {
-  Array as Arr,
-  Effect,
-  Fiber,
-  FileSystem,
-  Layer,
-  MutableRef,
-  Option,
-  Ref,
-  Schema,
-} from "effect";
-import { ChildProcess, type ChildProcessSpawner } from "effect/process";
-import { TestClock } from "effect/testing";
-import { githubRepository } from "#scripts/landing/repository";
-import { type Candidate, Repository } from "#scripts/landing/train";
-import { collectText, runText } from "#scripts/process";
-import { type Answer, scriptedShell } from "#scripts/test.shell";
-
-/** A test that runs real Git or many scripted processes waits for them on a loaded machine. */
-const PROCESS_TIMEOUT = 60_000;
-
-const toJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-
-const git = (cwd: string, ...args: readonly string[]) =>
-  runText("git", args, cwd).pipe(
-    Effect.tap((output) =>
-      output.code === 0
-        ? Effect.void
-        : Effect.die(`git ${Arr.join(args, " ")}: ${output.stderr}`)
-    ),
-    Effect.map((output) => output.stdout.trim())
-  );
-
-/**
- * An origin with main and two pull request heads, #1 and #2, which change the
- * same line, and a clone of it where the train runs.
- */
-const origins = Effect.fn("RepositoryTest.origins")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const base = yield* fs.makeTempDirectoryScoped({ prefix: "train-" });
-  const origin = `${base}/origin.git`;
-  const work = `${base}/work`;
-  yield* git(
-    base,
-    "init",
-    "--quiet",
-    "--bare",
-    "--initial-branch=main",
-    origin
-  );
-  yield* git(base, "clone", "--quiet", origin, work);
-  const identity = ["-c", "user.name=Train", "-c", "user.email=train@test"];
-  const commit = Effect.fn(function* (file: string, text: string) {
-    yield* fs.writeFileString(`${work}/${file}`, text);
-    yield* git(work, "add", file);
-    yield* git(work, ...identity, "commit", "--quiet", "-m", file);
-    return yield* git(work, "rev-parse", "HEAD");
-  });
-  const main = yield* commit("readme.md", "base\n");
-  yield* git(work, "push", "--quiet", "origin", "HEAD:refs/heads/main");
-  const heads = yield* Effect.forEach(
-    [
-      [1, "one\n"],
-      [2, "two\n"],
-      [3, "three\n"],
-    ] as const,
-    Effect.fn(function* ([number, text]) {
-      yield* git(work, "checkout", "--quiet", "--detach", main);
-      const sha = yield* commit(number === 3 ? "other.md" : "readme.md", text);
-      yield* git(
-        work,
-        "push",
-        "--quiet",
-        "origin",
-        `${sha}:refs/pull/${number}/head`
-      );
-      return { number, sha, title: `Change ${number}` };
-    })
-  );
-  return { origin, work, main, heads };
-});
-
-/** Runs a program against the repository of `root`, with gh answered by `script`. */
-const withRepository = <A, E>(
-  root: string,
-  script: (args: readonly string[]) => Answer | undefined,
-  program: Effect.Effect<
-    A,
-    E,
-    Repository | ChildProcessSpawner.ChildProcessSpawner
-  >
-) =>
-  Effect.gen(function* () {
-    const calls = yield* Ref.make<readonly string[]>([]);
-    const shell = scriptedShell(
-      (command, args) => (command === "gh" ? script(args) : undefined),
-      calls
-    );
-    const value = yield* program.pipe(
-      Effect.provide(Layer.provideMerge(githubRepository(root), shell))
-    );
-    return { value, calls: yield* Ref.get(calls) };
-  });
-
-const STATUS = (state: string) =>
-  toJson({ statuses: [{ context: "proof", state }] });
+  git,
+  origins,
+  PROCESS_TIMEOUT,
+  STATUS,
+  statusOf,
+  toJson,
+  withRepository,
+} from "#scripts/landing/test.repository";
+import { Repository } from "#scripts/landing/train";
+import { runText } from "#scripts/process";
 
 describe("train repository", () => {
-  it.effect("takes the open, ready pull requests whose proof passed", () =>
-    Effect.gen(function* () {
-      const { value } = yield* withRepository(
-        "/root",
-        (args) => {
-          if (args[0] === "pr") {
+  it.effect(
+    "takes the open, ready pull requests whose gate and proof passed",
+    () =>
+      Effect.gen(function* () {
+        const { value } = yield* withRepository(
+          "/root",
+          (args) => {
+            if (args[0] === "pr") {
+              return {
+                stdout: toJson([
+                  {
+                    number: 9,
+                    headRefOid: "c".repeat(40),
+                    headRefName: "branch-9",
+                    baseRefName: "main",
+                    title: "C",
+                    isDraft: false,
+                    files: [
+                      { path: "apps/www/e2e/c/one.browser.ts" },
+                      { path: "apps/www/src/c.ts" },
+                    ],
+                  },
+                  {
+                    number: 4,
+                    headRefOid: "a".repeat(40),
+                    headRefName: "branch-4",
+                    baseRefName: "main",
+                    title: "A",
+                    isDraft: false,
+                    files: [],
+                  },
+                  {
+                    number: 5,
+                    headRefOid: "b".repeat(40),
+                    headRefName: "branch-5",
+                    baseRefName: "main",
+                    title: "B",
+                    isDraft: true,
+                    files: [],
+                  },
+                  {
+                    number: 7,
+                    headRefOid: "e".repeat(40),
+                    headRefName: "branch-7",
+                    baseRefName: "main",
+                    title: "E",
+                    isDraft: false,
+                    files: [],
+                  },
+                  {
+                    number: 6,
+                    headRefOid: "d".repeat(40),
+                    headRefName: "branch-6",
+                    baseRefName: "main",
+                    title: "D",
+                    isDraft: false,
+                    files: [],
+                  },
+                ]),
+              };
+            }
             return {
-              stdout: toJson([
-                {
-                  number: 9,
-                  headRefOid: "c".repeat(40),
-                  title: "C",
-                  isDraft: false,
-                },
-                {
-                  number: 4,
-                  headRefOid: "a".repeat(40),
-                  title: "A",
-                  isDraft: false,
-                },
-                {
-                  number: 5,
-                  headRefOid: "b".repeat(40),
-                  title: "B",
-                  isDraft: true,
-                },
-                {
-                  number: 6,
-                  headRefOid: "d".repeat(40),
-                  title: "D",
-                  isDraft: false,
-                },
-              ]),
+              stdout: statusOf(String(args[1])),
             };
-          }
-          return {
-            stdout: String(args[1]).includes("d".repeat(40))
-              ? STATUS("failure")
-              : STATUS("success"),
-          };
-        },
-        Effect.gen(function* () {
-          const repository = yield* Repository;
-          return {
-            all: yield* repository.proven([]),
-            named: yield* repository.proven([9]),
-          };
-        })
-      );
-      expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
-      expect(Arr.map(value.named, (one) => one.number)).toEqual([9]);
-    }).pipe(Effect.provide(NodeServices.layer))
+          },
+          Effect.gen(function* () {
+            const repository = yield* Repository;
+            return {
+              all: yield* repository.proven([]),
+              named: yield* repository.proven([9]),
+              ready: yield* repository.ready([]),
+              chosen: yield* repository.ready([7]),
+            };
+          })
+        );
+        expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
+        // A batch takes every open pull request that is no draft, proven or not.
+        expect(Arr.map(value.ready, (one) => one.number)).toEqual([4, 6, 7, 9]);
+        expect(Arr.map(value.chosen, (one) => one.number)).toEqual([7]);
+        expect(Arr.map(value.named, (one) => one.number)).toEqual([9]);
+        expect(Arr.map(value.named, (one) => one.specs)).toEqual([
+          ["e2e/c/one.browser.ts"],
+        ]);
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect(
@@ -252,6 +190,90 @@ describe("train repository", () => {
     PROCESS_TIMEOUT
   );
 
+  it.effect(
+    "carries the members of a stack below its highest proven head, bottom-up",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { work, heads } = yield* origins();
+        const [one, two, three] = Arr.map([0, 1, 2], (index) =>
+          Option.getOrThrow(Arr.get(heads, index))
+        );
+        // #4 is built on #1's branch, and #5 targets it without its change.
+        yield* git(work, "checkout", "--quiet", "--detach", one.sha);
+        yield* fs.writeFileString(`${work}/stack.md`, "four\n");
+        yield* git(work, "add", "stack.md");
+        yield* git(
+          work,
+          "-c",
+          "user.name=Train",
+          "-c",
+          "user.email=train@test",
+          "commit",
+          "--quiet",
+          "-m",
+          "stack"
+        );
+        const four = yield* git(work, "rev-parse", "HEAD");
+        yield* git(
+          work,
+          "push",
+          "--quiet",
+          "origin",
+          `${four}:refs/pull/4/head`
+        );
+        yield* git(
+          work,
+          "push",
+          "--quiet",
+          "origin",
+          `${two.sha}:refs/pull/5/head`
+        );
+        const pull = (
+          number: number,
+          sha: string,
+          base: string,
+          files: readonly string[] = []
+        ) => ({
+          number,
+          headRefOid: sha,
+          headRefName: `branch-${number}`,
+          baseRefName: base,
+          title: `Change ${number}`,
+          isDraft: false,
+          files: Arr.map(files, (path) => ({ path })),
+        });
+        const green = [four, two.sha];
+        const { value } = yield* withRepository(
+          work,
+          (args) => {
+            if (args[0] === "pr") {
+              return {
+                stdout: toJson([
+                  pull(5, two.sha, "branch-1"),
+                  pull(4, four, "branch-1", ["apps/www/e2e/four.browser.ts"]),
+                  pull(3, three.sha, "main"),
+                  pull(1, one.sha, "main"),
+                ]),
+              };
+            }
+            return {
+              stdout: Arr.some(green, (sha) => String(args[1]).includes(sha))
+                ? STATUS("success")
+                : STATUS("failure"),
+            };
+          },
+          Effect.flatMap(Repository, (repository) => repository.proven([]))
+        );
+        expect(Arr.map(value, (one) => [one.number, one.specs])).toEqual([
+          [1, []],
+          [4, ["e2e/four.browser.ts"]],
+          [5, []],
+        ]);
+      }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
   it.effect("cancels the push deploys still running and starts one", () =>
     Effect.gen(function* () {
       const { calls } = yield* withRepository(
@@ -273,157 +295,71 @@ describe("train repository", () => {
       ]);
     }).pipe(Effect.provide(NodeServices.layer))
   );
-});
 
-const CANDIDATE: Candidate = {
-  number: 42,
-  sha: "e".repeat(40),
-  title: "Land me",
-};
-
-/** A pull request view as `gh pr view` prints it. */
-const view = (overrides: Record<string, string> = {}) => ({
-  stdout: toJson({
-    state: "OPEN",
-    headRefOid: CANDIDATE.sha,
-    mergeable: "MERGEABLE",
-    baseRefName: "main",
-    ...overrides,
-  }),
-});
-
-const land = (script: (args: readonly string[]) => Answer | undefined) =>
-  withRepository(
-    "/root",
-    script,
-    Effect.flatMap(Repository, (repository) => repository.land(CANDIDATE))
-  );
-
-describe("train landing", () => {
   it.effect(
-    "squash-merges at the proven head, and skips what moved or cannot merge",
+    "gates a combination on the free runners and reads its verdict, and fails for a head GitHub does not know",
     () =>
       Effect.gen(function* () {
-        const landed = yield* land((args) =>
-          args[1] === "view" ? view() : {}
-        );
-        expect(landed.value).toEqual({ _tag: "landed", candidate: CANDIDATE });
-        expect(landed.calls[1]).toBe(
-          `gh pr merge 42 --repo nakafaai/nakafa.com --squash --match-head-commit ${CANDIDATE.sha} --subject Land me (#42)`
-        );
-        const reasons = yield* Effect.forEach(
-          [
-            view({ state: "MERGED" }),
-            view({ headRefOid: "f".repeat(40) }),
-            view({ baseRefName: "nabil/base" }),
-            view({ mergeable: "CONFLICTING" }),
-          ],
-          (answer) =>
-            land((args) => (args[1] === "view" ? answer : {})).pipe(
-              Effect.map(({ value }) =>
-                value._tag === "skipped" ? value.reason : ""
-              )
-            )
-        );
-        const refused = yield* land((args) =>
-          args[1] === "view"
-            ? view()
-            : { code: 1, stderr: "Pull request is in clean status\n" }
-        );
-        expect([
-          ...reasons,
-          refused.value._tag === "skipped" ? refused.value.reason : "",
-        ]).toEqual([
-          "already merged",
-          "its head moved after its proof: prove the new head",
-          "it targets nabil/base: land its base first, then prove it again",
-          "GitHub reports it conflicting",
-          "Pull request is in clean status",
+        const sha = "f".repeat(40);
+        /** What `gh api graphql --include` prints for a head with these statuses, or for no commit. */
+        const look = (contexts: readonly unknown[] | null) => ({
+          stdout: Arr.join(
+            [
+              "HTTP/2.0 200 OK",
+              "Date: Fri, 13 Nov 2026 10:00:00 GMT",
+              "",
+              toJson({
+                data: {
+                  repository: {
+                    object: contexts === null ? null : { status: { contexts } },
+                  },
+                },
+              }),
+            ],
+            "\r\n"
+          ),
+        });
+        const verdict = (state: string) =>
+          look([
+            {
+              context: "gate",
+              state,
+              description: null,
+              targetUrl: "https://example.test/runs/3",
+              createdAt: "2026-11-13T10:20:00Z",
+            },
+          ]);
+        const gated = (answer: { readonly stdout: string }) => {
+          const looks = MutableRef.make(0);
+          return withRepository(
+            "/root",
+            (args) => {
+              if (args[0] === "workflow") {
+                return {};
+              }
+              return MutableRef.getAndIncrement(looks) === 0
+                ? look([])
+                : answer;
+            },
+            Effect.flatMap(Repository, (repository) => repository.gate(sha))
+          );
+        };
+        const passed = yield* gated(verdict("SUCCESS"));
+        expect(passed.value).toBe(true);
+        expect(
+          Arr.filter(passed.calls, (call) => call.startsWith("gh workflow"))
+        ).toEqual([
+          `gh workflow run gate.yml --repo nakafaai/nakafa.com --ref main -f sha=${sha}`,
         ]);
-      }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect("lands a stacked pull request through the asynchronous merge", () =>
-    Effect.gen(function* () {
-      const views = [
-        view({ mergeable: "UNKNOWN" }),
-        view(),
-        view({ state: "MERGED" }),
-      ];
-      const viewed = MutableRef.make(0);
-      const fiber = yield* land((args) => {
-        if (args[1] === "view") {
-          return views[MutableRef.getAndIncrement(viewed)] ?? view();
-        }
-        return args[1] === "merge"
-          ? {
-              code: 1,
-              stderr: "must be merged using the asynchronous merge REST API",
-            }
-          : {};
-      }).pipe(Effect.forkChild);
-      while (fiber.pollUnsafe() === undefined) {
-        yield* TestClock.withLive(Effect.sleep("20 millis"));
-        yield* TestClock.adjust("5 seconds");
-      }
-      const { value, calls } = yield* Fiber.join(fiber);
-      expect(value).toEqual({ _tag: "landed", candidate: CANDIDATE });
-      expect(calls).toContain(
-        `gh api -X PUT repos/nakafaai/nakafa.com/pulls/42/merge-async -f merge_action=direct_merge -f merge_method=squash -f sha=${CANDIDATE.sha} -f commit_title=Land me (#42)`
-      );
-
-      const stuck = yield* land((args) =>
-        args[1] === "merge" ? { code: 1, stderr: "asynchronous merge" } : view()
-      ).pipe(Effect.forkChild);
-      while (stuck.pollUnsafe() === undefined) {
-        yield* TestClock.withLive(Effect.sleep("5 millis"));
-        yield* TestClock.adjust("5 seconds");
-      }
-      const result = yield* Fiber.join(stuck);
-      expect(result.value).toEqual({
-        _tag: "skipped",
-        candidate: CANDIDATE,
-        reason: "the asynchronous merge did not finish in two minutes",
-      });
-    }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect(
-    "fails when GitHub answers what it cannot read, or gh cannot start",
-    () =>
-      Effect.gen(function* () {
-        const unreadable = yield* land(() => ({ stdout: "not json" })).pipe(
-          Effect.flip
-        );
-        expect(unreadable.message).toContain("GitHub answered unexpectedly");
-        const failing = yield* land(() => ({
-          code: 1,
-          stderr: "offline",
-        })).pipe(Effect.flip);
-        expect(failing.message).toBe("gh pr view failed: offline");
-        const missing = yield* withRepository(
-          "/nonexistent/train/root",
-          () => undefined,
-          Effect.flatMap(Repository, (repository) => repository.main)
+        expect((yield* gated(verdict("FAILURE"))).value).toBe(false);
+        const unknown = yield* withRepository(
+          "/root",
+          () => look(null),
+          Effect.flatMap(Repository, (repository) => repository.gate(sha))
         ).pipe(Effect.flip);
-        expect(missing.message).toBe("git could not start.");
-      }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect("runs a pipeline that no script answers as it is", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make<readonly string[]>([]);
-      const piped = yield* Effect.gen(function* () {
-        const child = yield* ChildProcess.make("printf", ["piped"]).pipe(
-          ChildProcess.pipeTo(ChildProcess.make("cat"))
+        expect(unknown.message).toBe(
+          `GitHub has no commit ${sha}: push it first.`
         );
-        return yield* collectText(child.stdout);
-      }).pipe(
-        Effect.scoped,
-        Effect.provide(scriptedShell(() => undefined, calls))
-      );
-      expect(piped).toBe("piped");
-      expect(yield* Ref.get(calls)).toEqual([]);
-    })
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 });

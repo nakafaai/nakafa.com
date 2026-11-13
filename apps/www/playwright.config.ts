@@ -156,6 +156,15 @@ type ProjectShape = Omit<
   "dependencies" | "name"
 >;
 
+/**
+ * Firefox on a machine without a GPU, such as a proof runner, blocks WebGL by
+ * default, so a scene that needs WebGL2 would fall back there and nowhere else.
+ * Every Firefox project forces it on, as Chromium and WebKit already render it.
+ */
+const FIREFOX_USE = {
+  launchOptions: { firefoxUserPrefs: { "webgl.force-enabled": true } },
+};
+
 /** The engines that every UI suite runs in, which a proof job selects one of. */
 const ENGINES = ["chromium", "firefox", "webkit"] as const;
 type Engine = (typeof ENGINES)[number];
@@ -176,13 +185,13 @@ function inEngine(
       ...CHROMIUM_TESTS,
       SCHOOL_TESTS,
     ],
-    use: { ...project.use, browserName: engine },
+    use: {
+      ...project.use,
+      browserName: engine,
+      ...(engine === "firefox" ? FIREFOX_USE : {}),
+    },
   };
 }
-
-// The try-out catalog, whose header, cards and phone table the browsers suite
-// proves in Firefox and Safari too, as the runtime suite proves them in Chromium.
-const CATALOG_TESTS = ["**/tryout/groups.browser.ts"];
 
 // The School pages of the timing specs, which the browser timing suite runs in
 // the other four browsers.
@@ -264,7 +273,7 @@ const PROJECTS = {
       ...TIMING_TESTS,
     ],
     testMatch: SCHOOL_TESTS,
-    use: devices["Desktop Firefox"],
+    use: { ...devices["Desktop Firefox"], ...FIREFOX_USE },
   },
   "school-safari": {
     testIgnore: [
@@ -273,14 +282,6 @@ const PROJECTS = {
       ...TIMING_TESTS,
     ],
     testMatch: SCHOOL_TESTS,
-    use: devices["Desktop Safari"],
-  },
-  "catalog-firefox": {
-    testMatch: CATALOG_TESTS,
-    use: devices["Desktop Firefox"],
-  },
-  "catalog-safari": {
-    testMatch: CATALOG_TESTS,
     use: devices["Desktop Safari"],
   },
   "school-android": {
@@ -309,7 +310,7 @@ const PROJECTS = {
   "school-timing-firefox": {
     testIgnore: CHROMIUM_SCHOOL_TESTS,
     testMatch: SCHOOL_TIMING_TESTS,
-    use: devices["Desktop Firefox"],
+    use: { ...devices["Desktop Firefox"], ...FIREFOX_USE },
     workers: 1,
   },
   "school-timing-safari": {
@@ -359,8 +360,6 @@ const SUITES = {
   },
   browsers: {
     projects: [
-      "catalog-firefox",
-      "catalog-safari",
       "school-firefox",
       "school-safari",
       "school-android",

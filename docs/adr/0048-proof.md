@@ -41,3 +41,19 @@ CI was deleted on 17 October because required checks made merges wait on a runne
 - Required checks, which brought back the wait that the 17 October decision removed.
 - Preview deploys or a cloud Convex deployment per proof, which cost money and touch production infrastructure.
 - A cache keyed by a prefix or restored from the nearest key, which could reuse state that a changed input no longer produces.
+
+## Amendment: The Static Gate On The Same Runners, 13 November 2026
+
+The browser proofs moved, and the Mac's queue stayed the bottleneck for the rest of the verification: on 13 November its load ran 60 to 130 with its swap full and about 30 static gates waiting, so nothing landed for two hours.
+
+1. **Gate.** `.github/workflows/gate.yml` runs that rest on the same free runners, dispatched only by `workflow_dispatch` with the head's SHA. Gates share the account's 20 concurrent jobs with the proofs, so a gate takes three machines: `static` (every workspace typecheck, judged by exit code and with the inert loopback Convex addresses `AGENTS.md` names, the committed bindings unchanged, `bun run lint` with the Effect source parity, `check:patches`, `check:tests`, Ultracite and the CAS lint, React Doctor on the head's changes against main, the dependency audit, the scripts suite and every workspace suite but two), and `www` and `backend`, the two large suites, beside it. Every suite keeps its per-file 100% coverage gate, and the static part runs every command, so one failure never hides another. Each part posts `gate/<part>` on the head, and the report posts `gate`. It reads no secret, and no ruleset names it.
+2. **One command.** `bun run gate <sha>` (`scripts/gate`) dispatches it and reads the head's statuses until the run posts a `gate` verdict newer than the dispatch, by GitHub's clock. It reads them through GraphQL, one point per look every 90 seconds, so it spends nothing of the REST limit that every session of the account shares, and when fewer than 200 points remain it sleeps until the reset that GitHub's rate-limit headers name.
+3. **Train.** `bun run train` takes only a head whose `gate` passed and whose `proof` or `proof/new` passed, both on that exact head.
+
+## Amendment: The Batch Train, 13 November 2026
+
+The free runners stayed the wall: about 90 runs waited for about 7 running jobs, and each open pull request spent a gate and a proof of its own before the train proved their combination again.
+
+1. **Batch.** `bun run train --batch [pr...]` takes every open pull request that is no draft, whatever its own statuses say, each stack whole and bottom-up. The combined tree holds each exact head merged with main, which is what lands, so one gate and one proof of it, side by side, on the union of the specs the pull requests change, replace a gate and a proof per pull request. A failed gate of the combination is a failure no spec on main shares, so it bisects like a new failing spec, and every pull request still lands by its exact head with one production deploy.
+2. **Stacks.** A stack's members below a proven top ride with it when the top's head contains theirs, so the top's gate and proof cover them; a lane gates and proves only its stack's top. The train lands a stack bottom-up and waits for GitHub to retarget each member at main before it lands it.
+3. **Queue.** A proof sweep never cancels a head that is on main, so a baseline that the CLI or the train dispatches keeps its run, and `bun run proof` waits on the head's statuses through GraphQL for as long as the run stays queued, reading the run itself over REST only every fifth look.

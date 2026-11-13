@@ -9,11 +9,10 @@ import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
 import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
+import { mainHead, ProofError } from "#scripts/proof/client";
 import {
   DEFAULT_SHARDS,
   githubProver,
-  mainHead,
-  ProofError,
   postVerdict,
   proveOnGithub,
   type RunTimings,
@@ -31,14 +30,15 @@ const Shards = Schema.NumberFromString.check(
 export const parseProofArguments = Effect.fn("proof.parseArguments")(
   function* (argv: readonly string[]) {
     const local = Arr.contains(argv, "--local");
+    const [sha, ...specs] = Arr.filter(argv, (arg) => !arg.startsWith("--"));
+    // A proof narrowed to some specs runs on one machine for all three engines.
     const shards = yield* Option.match(
       Arr.findFirst(argv, (arg) => arg.startsWith("--shards=")),
       {
-        onNone: () => Effect.succeed(DEFAULT_SHARDS),
+        onNone: () => Effect.succeed(specs.length === 0 ? DEFAULT_SHARDS : 1),
         onSome: (arg) => Schema.decodeEffect(Shards)(arg.slice(9)),
       }
     );
-    const [sha, ...specs] = Arr.filter(argv, (arg) => !arg.startsWith("--"));
     return {
       local,
       shards,
@@ -111,8 +111,16 @@ export const runProof = Effect.fn("proof.run")(function* (
   );
   const main = yield* mainHead;
   const failures = failuresOf(result);
+  if (main === input.sha) {
+    // Main has nothing to be judged against: its failures are its own, and the
+    // run's statuses already say so.
+    yield* writeOutput(
+      `${formatProof(result, timings)}Verdict: this is main, which fails ${failures.length} specs\n`
+    );
+    return failures.length === 0 ? 0 : 1;
+  }
   const shared =
-    failures.length === 0 || main === input.sha
+    failures.length === 0
       ? []
       : yield* makeBaseline(main).pipe(
           Effect.flatMap((baseline) => baseline.shared(failures)),
