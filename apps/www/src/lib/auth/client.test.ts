@@ -1,7 +1,7 @@
 import type { AuthClientConfig } from "@convex-dev/auth/browser";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { makeFunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 
 /** One AuthClient the module made: the configuration it was given, its doubles, and the token it holds. */
 interface Made {
@@ -11,8 +11,8 @@ interface Made {
   token: string | null;
 }
 
-/** Each AuthClient the module made, in order. */
-const made = vi.hoisted(() => ({ clients: [] as Made[] }));
+/** Each AuthClient the module made, in order; the mocked class reads it only once a test makes a client. */
+const made = MutableList.make<Made>();
 
 vi.mock("@convex-dev/auth/browser", () => ({
   /** Convex Auth's client, as far as the module drives it. */
@@ -25,7 +25,7 @@ vi.mock("@convex-dev/auth/browser", () => ({
         signOut: vi.fn(() => Promise.resolve()),
         token: null,
       };
-      made.clients.push(this.made);
+      MutableList.append(made, this.made);
     }
     init() {
       return this.made.init();
@@ -96,13 +96,14 @@ const loadModule = async () => {
 };
 
 /** The only client the module made. */
-const configOf = () => Effect.fromNullishOr(made.clients[0]).pipe(Effect.orDie);
+const configOf = () =>
+  Effect.fromOption(Arr.head(MutableList.toArray(made))).pipe(Effect.orDie);
 
 const RANDOM = makeFunctionReference<"mutation">("auth/school:signIn");
 const ACTION = makeFunctionReference<"action">("auth/school:signIn");
 
 beforeEach(() => {
-  made.clients.length = 0;
+  MutableList.clear(made);
   fetcher.mockReset();
   remembered.mockReset();
   for (const double of [
@@ -121,7 +122,7 @@ describe("readAuthClient", () => {
     () =>
       Effect.gen(function* () {
         const { readAuthClient } = yield* Effect.promise(loadModule);
-        expect(made.clients).toHaveLength(0);
+        expect(MutableList.toArray(made)).toHaveLength(0);
 
         const [first, second] = yield* Effect.all(
           [readAuthClient(convex), readAuthClient(convex)],
@@ -129,7 +130,7 @@ describe("readAuthClient", () => {
         );
 
         expect(first).toBe(second);
-        expect(made.clients).toHaveLength(1);
+        expect(MutableList.toArray(made)).toHaveLength(1);
         expect((yield* configOf()).init).toHaveBeenCalledOnce();
         expect((yield* configOf()).config).toMatchObject({
           mode: "ssr",

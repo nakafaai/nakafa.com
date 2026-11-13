@@ -10,14 +10,14 @@ import {
 
 /** Convex Auth's client as the sign-ins drive it: the oauth actions it publishes and the session it adopts. */
 const auth = vi.hoisted(() => ({
-  actions: new Map<string, unknown>(),
+  actions: vi.fn<(key: string) => unknown>(),
   setSession: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("@/lib/auth/client", () => ({
   readAuthClient: () =>
     Effect.succeed({
-      ambientSignInValues: () => auth.actions,
+      ambientSignInValues: () => ({ get: auth.actions }),
       setSession: auth.setSession,
     }),
   SIGN_IN_ROUTE: "/api/auth/signin",
@@ -51,7 +51,7 @@ const convex = {
 const LOGIN = { loginName: "ayu", password: "secret-1", slug: "harapan" };
 
 beforeEach(() => {
-  auth.actions.clear();
+  auth.actions.mockReset();
   auth.setSession.mockClear();
   proxy.mutation.mockReset();
   remembered.mockReset();
@@ -63,7 +63,7 @@ describe("startGoogleSignIn", () => {
       const signIn = vi.fn<
         (provider: unknown, options: unknown) => Promise<{ status: string }>
       >(() => Promise.resolve({ status: "redirect" }));
-      auth.actions.set("actions", { signIn });
+      auth.actions.mockReturnValue({ signIn });
 
       yield* startGoogleSignIn(convex, "https://nakafa.com/en/home");
 
@@ -85,7 +85,7 @@ describe("startGoogleSignIn", () => {
     },
   ])("fails when $case", ({ actions }) =>
     Effect.gen(function* () {
-      auth.actions.set("actions", actions);
+      auth.actions.mockReturnValue(actions);
 
       const failure = yield* Effect.flip(
         startGoogleSignIn(convex, "https://nakafa.com/en/home")

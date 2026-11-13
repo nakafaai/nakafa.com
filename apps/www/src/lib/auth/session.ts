@@ -23,6 +23,19 @@ export const previewAuthSession = AuthSession.make({
   userId: null,
 });
 
+/** The account of one session, as a sign-in's or a refresh's answer names it. */
+export const SessionUser = Schema.Struct({
+  sessionId: Schema.String,
+  userId: Schema.String,
+});
+
+/** What the page knows of Convex Auth's client: whether it loads, its token, and whether its last refresh failed. */
+const ClientState = Schema.Struct({
+  hasError: Schema.Boolean,
+  isLoading: Schema.Boolean,
+  token: Schema.NullOr(Schema.String),
+});
+
 /**
  * Reads the state of Convex Auth's client (`AuthClient`) as the page's session.
  * The access token names the session; the account comes from the latest answer
@@ -30,12 +43,8 @@ export const previewAuthSession = AuthSession.make({
  * it named. `hasError` marks a refresh that failed.
  */
 export function readClientSession(
-  state: {
-    readonly hasError: boolean;
-    readonly isLoading: boolean;
-    readonly token: string | null;
-  },
-  user: { readonly sessionId: string; readonly userId: string } | null
+  state: typeof ClientState.Type,
+  user: typeof SessionUser.Type | null
 ) {
   const sessionId = Option.getOrNull(
     Option.map(

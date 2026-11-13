@@ -5,7 +5,7 @@ import {
   expect,
 } from "@playwright/test";
 import type { SessionCookies } from "@repo/backend/scripts/content/acceptance/fixture";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /**
  * Headed-Chrome identity without the automation markers.
@@ -48,7 +48,7 @@ export const addSessionCookies = Effect.fn("NakafaE2E.addSessionCookies")(
   ) {
     yield* Effect.promise(() =>
       context.addCookies(
-        cookies.map((cookie) => ({
+        Arr.map(cookies, (cookie) => ({
           httpOnly: true,
           name: cookie.name,
           sameSite: "Lax" as const,

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { AUTH_JWT_COOKIE, AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema, String as Str } from "effect";
 import {
   expiredHintCookie,
   hintScopeFor,
@@ -54,11 +54,13 @@ const post = (site: string, route: string, cookie?: string) =>
 
 /** The name and value of each Set-Cookie header of an answer. */
 const pairsOf = (response: Response) =>
-  response.headers.getSetCookie().map((value) => value.split(";")[0]);
+  Arr.map(response.headers.getSetCookie(), (value) =>
+    Arr.headNonEmpty(Str.split(value, ";"))
+  );
 
 /** What the deployment was asked, as the decoded body of each call. */
 const calls = () =>
-  fetcher.mock.calls.map(([, init]) =>
+  Arr.map(fetcher.mock.calls, ([, init]) =>
     Schema.decodeUnknownSync(MutationCall)(init?.body)
   );
 
@@ -140,7 +142,7 @@ describe("readAuthRoutes", () => {
         );
 
         expect(calls()[0]?.args).toEqual([{ refreshToken: "production" }]);
-        expect(response.headers.getSetCookie().slice(0, 2)).toEqual([
+        expect(Arr.take(response.headers.getSetCookie(), 2)).toEqual([
           expect.stringMatching(
             new RegExp(`^${AUTH_JWT_COOKIE}=access;.*Domain=nakafa\\.com`, "u")
           ),

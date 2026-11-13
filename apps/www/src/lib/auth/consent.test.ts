@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { Array as Arr, Option, Record } from "effect";
 import {
   agentAnswerAddress,
   agentHost,
@@ -40,9 +40,9 @@ describe("readAgentRequest", () => {
     expect(readAgentRequest({ ...REQUEST, response_type: "token" })).toEqual(
       Option.none()
     );
-    expect(
-      readAgentRequest({ ...REQUEST, redirect_uri: "/callback" })
-    ).toEqual(Option.none());
+    expect(readAgentRequest({ ...REQUEST, redirect_uri: "/callback" })).toEqual(
+      Option.none()
+    );
     expect(readAgentRequest({ ...REQUEST, client_id: "" })).toEqual(
       Option.none()
     );
@@ -63,7 +63,7 @@ describe("agentAnswerAddress", () => {
     expect(address.origin + address.pathname).toBe(
       "http://127.0.0.1:33418/callback"
     );
-    expect(Object.fromEntries(address.searchParams)).toEqual({
+    expect(Record.fromEntries(Arr.fromIterable(address.searchParams))).toEqual({
       code: "c0de",
       session: "1",
       state: REQUEST.state,
@@ -73,7 +73,7 @@ describe("agentAnswerAddress", () => {
   it("returns access_denied when the person says no, without a state the agent never sent", () => {
     const { state: _, ...stateless } = request;
     const address = new URL(agentAnswerAddress(stateless, { _tag: "Denied" }));
-    expect(Object.fromEntries(address.searchParams)).toEqual({
+    expect(Record.fromEntries(Arr.fromIterable(address.searchParams))).toEqual({
       error: "access_denied",
       session: "1",
     });

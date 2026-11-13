@@ -2,12 +2,7 @@ import { Effect, Option, Schema } from "effect";
 import { createStore } from "zustand/vanilla";
 import { readTokenClaims } from "@/lib/auth/claims";
 import { SESSION_USER_KEY } from "@/lib/auth/keys";
-
-/** The account of one session, as a sign-in's or a refresh's answer names it. */
-const SessionUser = Schema.Struct({
-  sessionId: Schema.String,
-  userId: Schema.String,
-});
+import { SessionUser } from "@/lib/auth/session";
 
 /** The account the browser stored for its last session, or none when storage holds none, refuses, or is absent, as on the server. */
 const loadSessionUser = () =>

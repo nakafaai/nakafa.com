@@ -29,7 +29,7 @@ export const AgentRequest = Schema.Struct({
 export const readAgentRequest = Schema.decodeUnknownOption(AgentRequest);
 
 /** What the person answered: a code for the agent to trade, or no. */
-export const AgentAnswer = Schema.Union([
+const AgentAnswer = Schema.Union([
   Schema.TaggedStruct("Allowed", { code: Schema.String }),
   Schema.TaggedStruct("Denied", {}),
 ]);

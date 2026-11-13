@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import {
   expiredHintCookie,
   hintScopeFor,
@@ -56,8 +56,8 @@ describe("withSessionHint", () => {
       ""
     );
 
-    expect(answer.headers.getSetCookie().at(-1)).toBe(
-      signedInHintCookie(scope)
+    expect(Arr.last(answer.headers.getSetCookie())).toStrictEqual(
+      Option.some(signedInHintCookie(scope))
     );
   });
 
@@ -73,9 +73,13 @@ describe("withSessionHint", () => {
 
     expect(withSessionHint(production, SITE, "nakafa-dev.")).toBe(production);
     expect(
-      withSessionHint(answerWith([own]), SITE, "nakafa-dev.")
-        .headers.getSetCookie()
-        .at(-1)
-    ).toBe(signedInHintCookie(scope));
+      Arr.last(
+        withSessionHint(
+          answerWith([own]),
+          SITE,
+          "nakafa-dev."
+        ).headers.getSetCookie()
+      )
+    ).toStrictEqual(Option.some(signedInHintCookie(scope)));
   });
 });

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import { followClientSession } from "@/lib/auth/feed";
 import type { AuthSession } from "@/lib/auth/session";
@@ -19,17 +19,17 @@ const TOKEN = Arr.join(
 );
 
 /** What Convex Auth's client shows of its session. */
-interface Snapshot {
-  readonly isLoading: boolean;
-  readonly token: string | null;
-}
+const Snapshot = Schema.Struct({
+  isLoading: Schema.Boolean,
+  token: Schema.NullOr(Schema.String),
+});
 
-/** Convex Auth's client as the feed reads it: its snapshot, its listeners and its refresh. */
+/** Convex Auth's client as the feed reads it: its snapshot, how many listeners follow it, and its refresh. */
 const auth = vi.hoisted(() => {
-  const snapshot: Snapshot = { isLoading: false, token: null };
+  const snapshot: typeof Snapshot.Type = { isLoading: false, token: null };
   return {
     fetchAccessToken: vi.fn<() => Promise<string | null>>(),
-    listeners: new Set<() => void>(),
+    listening: 0,
     snapshot,
   };
 });
@@ -40,9 +40,11 @@ vi.mock("@/lib/auth/client", () => ({
       fetchAccessToken: auth.fetchAccessToken,
       getAccessToken: () => auth.snapshot.token,
       getSnapshot: () => auth.snapshot,
-      subscribe: (listener: () => void) => {
-        auth.listeners.add(listener);
-        return () => auth.listeners.delete(listener);
+      subscribe: () => {
+        auth.listening += 1;
+        return () => {
+          auth.listening -= 1;
+        };
       },
     }),
 }));
@@ -58,16 +60,21 @@ const settle = Effect.sleep("20 millis");
 
 /** Follows the feed and collects what it reports. */
 function follow() {
-  const seen: AuthSession[] = [];
+  const reports = MutableList.make<AuthSession>();
   const unsubscribe = followClientSession(convex).subscribe((session) => {
-    seen.push(session);
+    MutableList.append(reports, session);
   });
-  return { seen, unsubscribe };
+  const seen = () => MutableList.toArray(reports);
+  return {
+    first: () => Arr.head(seen()).pipe(Option.getOrUndefined),
+    last: () => Arr.last(seen()).pipe(Option.getOrUndefined),
+    unsubscribe,
+  };
 }
 
 beforeEach(() => {
   auth.fetchAccessToken.mockReset();
-  auth.listeners.clear();
+  auth.listening = 0;
   auth.snapshot = { isLoading: false, token: null };
   sessionUser.setState({ user: null });
 });
@@ -80,10 +87,10 @@ describe("followClientSession", () => {
         user: { sessionId: "session-1", userId: "user-1" },
       });
 
-      const { seen, unsubscribe } = follow();
+      const { last, unsubscribe } = follow();
       yield* settle;
 
-      expect(seen.at(-1)).toEqual({
+      expect(last()).toEqual({
         hasError: false,
         isPending: false,
         sessionId: "session-1",
@@ -92,11 +99,11 @@ describe("followClientSession", () => {
       expect(auth.fetchAccessToken).not.toHaveBeenCalled();
 
       sessionUser.setState({ user: { sessionId: "other", userId: "user-2" } });
-      expect(seen.at(-1)?.userId).toBeNull();
+      expect(last()?.userId).toBeNull();
 
       unsubscribe();
       yield* settle;
-      expect(auth.listeners.size).toBe(0);
+      expect(auth.listening).toBe(0);
     })
   );
 
@@ -107,11 +114,11 @@ describe("followClientSession", () => {
         return Promise.resolve(TOKEN);
       });
 
-      const { seen, unsubscribe } = follow();
+      const { first, last, unsubscribe } = follow();
       yield* settle;
 
-      expect(seen[0]?.isPending).toBe(true);
-      expect(seen.at(-1)).toMatchObject({
+      expect(first()?.isPending).toBe(true);
+      expect(last()).toMatchObject({
         hasError: false,
         isPending: false,
         sessionId: "session-1",
@@ -129,10 +136,10 @@ describe("followClientSession", () => {
       Effect.gen(function* () {
         auth.fetchAccessToken.mockRejectedValue(new Error("offline"));
 
-        const { seen, unsubscribe } = follow();
+        const { last, unsubscribe } = follow();
         yield* settle;
 
-        expect(seen.at(-1)).toMatchObject({
+        expect(last()).toMatchObject({
           hasError: true,
           isPending: false,
         });
