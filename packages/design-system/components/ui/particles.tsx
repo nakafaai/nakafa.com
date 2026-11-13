@@ -379,7 +379,7 @@ export function Particles({
       MutableList.toArray(queue)
     );
     animationFrameRef.current = window.requestAnimationFrame(animate);
-    pace.rest(startedAt, performance.now());
+    pace.rest(startedAt);
   }, [
     circleParams,
     clearContext,

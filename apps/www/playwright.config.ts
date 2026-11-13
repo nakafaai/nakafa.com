@@ -38,6 +38,7 @@ const TIMING_TESTS = [
   "**/navigation/instant.browser.ts",
   "**/navigation/prefetch.browser.ts",
   "**/state/popups.browser.ts",
+  "**/reading/idle.browser.ts",
   "**/reading/press.browser.ts",
   "**/reading/shift.browser.ts",
   "**/settings/sections.browser.ts",
