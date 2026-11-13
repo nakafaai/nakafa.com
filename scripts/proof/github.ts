@@ -255,68 +255,66 @@ const PROOF_TITLE = /^Proof (?<sha>[0-9a-f]{40}) /u;
  * hold one of the 20 jobs that every proof and gate of the account shares.
  * Runs that already started keep going. Returns how many it cancelled.
  */
-export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(
-  function* () {
-    const lines = (text: string) =>
-      Arr.filter(Str.split(text, "\n"), (line) => line !== "");
-    const heads = yield* gh([
-      "pr",
-      "list",
-      "--repo",
-      REPOSITORY,
-      "--state",
-      "open",
-      "--limit",
-      "300",
-      "--json",
-      "headRefOid",
-      "--jq",
-      ".[].headRefOid",
-    ]);
-    const trains = yield* gh([
-      "api",
-      `repos/${REPOSITORY}/git/matching-refs/heads/nabil/train-`,
-      "--jq",
-      ".[].object.sha",
-    ]);
-    const keep = HashSet.fromIterable([
-      ...lines(heads),
-      ...lines(trains),
-      yield* mainHead,
-    ]);
-    const queued = yield* gh([
-      "run",
-      "list",
-      "--repo",
-      REPOSITORY,
-      "--workflow",
-      "proof.yml",
-      "--status",
-      "queued",
-      "--limit",
-      "200",
-      "--json",
-      "databaseId,displayTitle",
-    ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
-    const stale = Arr.filter(queued, (run) =>
-      Option.match(
-        Option.fromNullishOr(PROOF_TITLE.exec(run.displayTitle)?.groups?.sha),
-        {
-          onNone: () => false,
-          onSome: (sha) => !HashSet.has(keep, sha),
-        }
+export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
+  const lines = (text: string) =>
+    Arr.filter(Str.split(text, "\n"), (line) => line !== "");
+  const heads = yield* gh([
+    "pr",
+    "list",
+    "--repo",
+    REPOSITORY,
+    "--state",
+    "open",
+    "--limit",
+    "300",
+    "--json",
+    "headRefOid",
+    "--jq",
+    ".[].headRefOid",
+  ]);
+  const trains = yield* gh([
+    "api",
+    `repos/${REPOSITORY}/git/matching-refs/heads/nabil/train-`,
+    "--jq",
+    ".[].object.sha",
+  ]);
+  const keep = HashSet.fromIterable([
+    ...lines(heads),
+    ...lines(trains),
+    yield* mainHead,
+  ]);
+  const queued = yield* gh([
+    "run",
+    "list",
+    "--repo",
+    REPOSITORY,
+    "--workflow",
+    "proof.yml",
+    "--status",
+    "queued",
+    "--limit",
+    "200",
+    "--json",
+    "databaseId,displayTitle",
+  ]).pipe(Effect.flatMap(Schema.decodeEffect(RunListJson)));
+  const stale = Arr.filter(queued, (run) =>
+    Option.match(
+      Option.fromNullishOr(PROOF_TITLE.exec(run.displayTitle)?.groups?.sha),
+      {
+        onNone: () => false,
+        onSome: (sha) => !HashSet.has(keep, sha),
+      }
+    )
+  );
+  yield* Effect.forEach(stale, (run) =>
+    gh(["run", "cancel", String(run.databaseId), "--repo", REPOSITORY]).pipe(
+      Effect.catchTag("ProofError", (error) =>
+        Effect.logWarning(`Run ${run.databaseId} stays: ${error.message}`)
       )
-    );
-    yield* Effect.forEach(stale, (run) =>
-      gh(["run", "cancel", String(run.databaseId), "--repo", REPOSITORY]).pipe(
-        Effect.catchTag("ProofError", (error) =>
-          Effect.logWarning(`Run ${run.databaseId} stays: ${error.message}`)
-        )
-      )
-    );
-    return stale.length;
-  }
-);
+    )
+  );
+  return stale.length;
+});
 
 /**
  * Proves one head on GitHub's runners: dispatches the proof workflow, waits for
