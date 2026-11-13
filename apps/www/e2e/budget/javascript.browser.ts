@@ -13,13 +13,9 @@ import { appRoutes } from "@/e2e/support/route";
 // but never the sections under its first screen (ADR 0039 D3). Measured on the
 // Start build of 8 November 2026 (production build, 1440 by 900, three uncached
 // runs, all equal). Each limit keeps the ~6% margin over its measurement.
-//
-// Since 13 November 2026 the build copies each shared chunk under 16 KB into
-// the chunks that use it and runs every module in source order (output.config.ts),
-// so a route loads about a tenth of the files it did. The copies and the order
-// wrappers add text that compression removes: the bytes a route transfers held
-// or fell, while the decoded bytes of a graph that warms other pages grew by up
-// to 7%, and those two limits rose with them.
+// The Quran and Memory decoded limits were measured again on 13 November 2026,
+// when the build began copying small shared chunks into their users (ADR 0039
+// D9 holds both measurements and the trade).
 
 // 897,759 encoded / 2,532,335 decoded: 758,203 at first paint, and the warmed
 // links on screen.
@@ -35,7 +31,7 @@ const PRICING_MAX_DECODED_BYTES = 2_038_000;
 // analytics baseline included. With the copied chunks: 822,414 encoded /
 // 2,456,884 decoded.
 const QURAN_MAX_ENCODED_BYTES = 884_000;
-const QURAN_MAX_DECODED_BYTES = 2_604_000;
+const QURAN_MAX_DECODED_BYTES = 2_605_000;
 
 // 567,013 encoded / 1,619,294 decoded, all at first paint with the animal pool
 // a wide screen loads; it warms nothing. Since the Start migration every first
