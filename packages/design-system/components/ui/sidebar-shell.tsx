@@ -16,12 +16,7 @@ import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
-/**
- * Renders the responsive sidebar panel around composed sidebar content. The content renders in one place: in the
- * phone's sheet below the desktop width, and in the panel beside the page from it. The sheet stays mounted while
- * closed, so opening it slides in content that is already drawn, its reads answered and its pictures decoded,
- * instead of drawing a second copy of the sidebar each time it opens.
- */
+/** Renders the responsive sidebar panel around composed sidebar content. */
 export function Sidebar({
   side = "left",
   variant = "sidebar",
@@ -40,7 +35,6 @@ export function Sidebar({
   label: string;
 }) {
   const state = useSidebar((sidebar) => sidebar.state);
-  const isMobile = useSidebar((sidebar) => sidebar.isMobile);
   const openMobile = useSidebar((sidebar) => sidebar.openMobile);
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   // A collapsed off-canvas panel is slid out of view, so its links must leave the tab order.
@@ -70,7 +64,6 @@ export function Sidebar({
           data-mobile="true"
           data-sidebar="sidebar"
           data-slot="sidebar"
-          keepMounted
           onClick={(event) => {
             // A link pressed in the phone sidebar opens its page in this tab, so the sheet steps
             // aside for it; a press that opens another tab leaves the sheet where it is.
@@ -87,9 +80,7 @@ export function Sidebar({
           <SheetHeader className="sr-only">
             <SheetTitle>{label}</SheetTitle>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">
-            {isMobile ? children : null}
-          </div>
+          <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
       </Sheet>
 
@@ -135,7 +126,7 @@ export function Sidebar({
             data-sidebar="sidebar"
             data-slot="sidebar-inner"
           >
-            {isMobile ? null : children}
+            {children}
           </div>
         </div>
       </div>

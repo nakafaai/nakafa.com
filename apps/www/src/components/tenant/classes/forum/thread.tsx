@@ -283,7 +283,6 @@ export function ThreadPane({
                 discussion: kept.number,
                 everyone,
                 jump,
-                shown: true,
                 slug,
               }}
             >

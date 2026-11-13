@@ -26,6 +26,7 @@ import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import { showsUnreadStart } from "@/components/tenant/classes/forum/marks";
 import {
   ChannelScopeContext,
+  PlaceShownContext,
   useChannelScope,
   usePlaceChat,
   useReadPlace,
@@ -105,34 +106,35 @@ export function ForumChannel({
         discussion: undefined,
         everyone,
         jump,
-        shown,
         slug,
       }}
     >
-      <div
-        aria-hidden={shown ? undefined : true}
-        className={chatPlaceVariants({ shown })}
-        inert={!shown}
-      >
-        <ChannelMessages drawn={drawn} />
-        {drawn ? (
-          <footer
-            className={cn(
-              readingMeasureVariants(),
-              pageGutterVariants(),
-              "shrink-0 pt-2 pb-4"
-            )}
-          >
-            {canPost ? (
-              <ForumComposer />
-            ) : (
-              <p className="text-muted-foreground text-center text-sm">
-                {t(archived ? "channel-archived" : "read-only")}
-              </p>
-            )}
-          </footer>
-        ) : null}
-      </div>
+      <PlaceShownContext value={shown}>
+        <div
+          aria-hidden={shown ? undefined : true}
+          className={chatPlaceVariants({ shown })}
+          inert={!shown}
+        >
+          <ChannelMessages drawn={drawn} />
+          {drawn ? (
+            <footer
+              className={cn(
+                readingMeasureVariants(),
+                pageGutterVariants(),
+                "shrink-0 pt-2 pb-4"
+              )}
+            >
+              {canPost ? (
+                <ForumComposer />
+              ) : (
+                <p className="text-muted-foreground text-center text-sm">
+                  {t(archived ? "channel-archived" : "read-only")}
+                </p>
+              )}
+            </footer>
+          ) : null}
+        </div>
+      </PlaceShownContext>
     </ChannelScopeContext>
   );
 }

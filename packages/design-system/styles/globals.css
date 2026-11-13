@@ -487,24 +487,37 @@
   }
 }
 
-/* Nina's answers read as a lesson reads, at one size smaller: the lesson's
- * 16px base is the chat's 15px here (`--text-chat`), and every size and room of
- * the prose scales with it by 15/16. The prose takes its type scale, its spacing
- * and its measure from the theme (`lib/prose.ts`), so restating them inside the
- * answer scales its headings, paragraphs, lists, formulas, code and tables
- * together, with no rule of their own. */
-@utility prose-chat {
-  --spacing: calc(0.25rem * 15 / 16);
-  --container-xl: calc(36rem * 15 / 16);
-  --text-xs: calc(0.75rem * 15 / 16);
-  --text-sm: calc(0.875rem * 15 / 16);
-  --text-base: calc(1rem * 15 / 16);
-  --text-lg: calc(1.125rem * 15 / 16);
-  --text-xl: calc(1.25rem * 15 / 16);
-  --text-2xl: calc(1.5rem * 15 / 16);
-  --text-3xl: calc(1.875rem * 15 / 16);
+/* Nina's answers step their headings down so the order of her thinking shows:
+ * 22px for level one, 19px for level two, 17px for level three, and the size
+ * of the answer from level four. A heading element sets its own leading,
+ * tracking and weight, which a theme token's companions would yield to, so
+ * each level states all four. */
+@utility text-chat-h1 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: -0.015em;
+}
+
+@utility text-chat-h2 {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+
+@utility text-chat-h3 {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 26px;
+  letter-spacing: normal;
+}
+
+@utility text-chat-h4 {
   font-size: --theme(--text-chat inline);
+  font-weight: 600;
   line-height: --theme(--text-chat--line-height inline);
+  letter-spacing: normal;
 }
 
 /* Measured fallback heights keep skipped learn blocks close to their rendered size. */

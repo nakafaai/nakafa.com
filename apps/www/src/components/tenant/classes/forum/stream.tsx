@@ -21,7 +21,7 @@ import {
 } from "@shadcn/react/message-scroller";
 import { cn } from "cn";
 import { Array as Arr, DateTime, Option } from "effect";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   pageGutterVariants,
@@ -41,6 +41,7 @@ import {
   markUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
 import {
+  PlaceShownContext,
   useChannelScope,
   usePlaceChat,
   useReadPlace,
@@ -223,7 +224,8 @@ function ReadTracker({
   at: number | null;
   messages: readonly ForumMessage[];
 }) {
-  const { classId, shown, slug } = useChannelScope();
+  const { classId, slug } = useChannelScope();
+  const shown = use(PlaceShownContext);
   const place = useReadPlace();
   const mark = useMutation(classroom.forum.reads.mark);
   const { visibleMessageIds } = useMessageScrollerVisibility();

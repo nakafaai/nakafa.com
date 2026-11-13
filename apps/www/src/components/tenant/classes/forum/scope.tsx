@@ -18,10 +18,14 @@ const ChannelScope = Schema.Struct({
   discussion: Schema.UndefinedOr(DiscussionNumber),
   everyone: Schema.Boolean,
   jump: Schema.Option(Id("classroomMessages")),
-  /** Whether the place is on screen, not read ahead out of sight for the reader's next press. */
-  shown: Schema.Boolean,
   slug: TenantSlug,
 });
+
+/**
+ * Whether the place around the caller is on screen, not kept out of sight for the reader's next press. It stands apart
+ * from the scope every message reads, so showing a kept chat renders none of its messages again.
+ */
+export const PlaceShownContext = createContext(true);
 
 /** The channel, or the discussion, that the view provides to its messages and its composer. */
 export const ChannelScopeContext = createContext<
