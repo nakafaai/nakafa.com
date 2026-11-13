@@ -2,7 +2,7 @@ import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
 import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
-import { ball, rod, slab, tube } from "@/lib/island/models/solids";
+import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
 
 /** How a fish's body departs from the common torpedo: taller, rounder, or with long fins. */
 const BUILDS: Partial<Record<Species["key"], readonly [number, number]>> = {
@@ -71,7 +71,7 @@ export function fish(species: Species, coat: Coat): readonly Face[] {
 
 /** An eel, a moray, a barracuda (ADR 0047, D21): long and narrow along a gentle wave, one long, centered on the origin. */
 export function eel(_species: Species, coat: Coat): readonly Face[] {
-  const rings = Arr.makeBy(9, (index) => {
+  const rings = Arr.makeBy(9, (index): Ring => {
     const along = index / 8;
     const wave = Math.sin(along * Math.PI * 2) * 0.03;
     const thick =
@@ -79,7 +79,7 @@ export function eel(_species: Species, coat: Coat): readonly Face[] {
         ? 0
         : 0.035 * Math.sin(Math.min(1, (1 - along) * 1.4 + 0.2) * 1.4);
     return {
-      at: [wave, 0, 0.5 - along] as Vec,
+      at: [wave, 0, 0.5 - along],
       high: index === 8 ? 0 : thick * 1.2,
       wide: index === 8 ? 0 : thick,
     };
