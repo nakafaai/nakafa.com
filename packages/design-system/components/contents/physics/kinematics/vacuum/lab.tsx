@@ -11,6 +11,7 @@ import { SimulationTicker } from "@repo/design-system/components/contents/simula
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -60,15 +61,7 @@ function GlassTube() {
             true,
           ]}
         />
-        <meshPhysicalMaterial
-          clearcoat={1}
-          color={MATERIAL.glass}
-          ior={1.5}
-          roughness={0.08}
-          thickness={0.006}
-          transmission={0.92}
-          transparent
-        />
+        <GlassMaterial color={MATERIAL.glass} opacity={0.2} />
       </mesh>
       {Arr.map([TUBE.base + 0.02, TUBE.base + TUBE.height - 0.02], (height) => (
         <mesh castShadow key={height} position={[0, height, 0]}>
