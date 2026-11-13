@@ -20,7 +20,7 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.4;
  */
 export function ShellModelStage() {
   return (
-    <ScienceStage frameloop="always">
+    <ScienceStage frameloop="always" setting="studio">
       <Suspense>
         <ResponsiveShellModelCamera />
         <ShellModelScene />

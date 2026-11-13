@@ -124,7 +124,11 @@ export function InstantaneousVelocitySpeedLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={ROAD_Y + ROAD_HEIGHT / 2} frameloop="always">
+        <ScienceStage
+          floor={ROAD_Y + ROAD_HEIGHT / 2}
+          frameloop="always"
+          setting="field"
+        >
           <Suspense>
             <CameraControls
               cameraPosition={INSTANTANEOUS_SPEED_CAMERA.cameraPosition}

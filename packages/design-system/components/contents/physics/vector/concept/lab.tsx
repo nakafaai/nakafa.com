@@ -107,7 +107,7 @@ export function VectorConceptLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="demand">
+        <ScienceStage frameloop="demand" setting="studio">
           <Suspense>
             <ResponsiveVectorConceptCamera />
             <VectorConceptScene

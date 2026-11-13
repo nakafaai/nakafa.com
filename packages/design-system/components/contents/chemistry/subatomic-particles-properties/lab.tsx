@@ -132,7 +132,7 @@ export function SubatomicParticlePropertiesLab({
       </VisualCardToolbar>
 
       <VisualCardBody className={threeSceneFrameVariants()}>
-        <ScienceStage>
+        <ScienceStage setting="studio">
           <Suspense>
             <ResponsivePropertyCamera viewConfig={viewConfig} />
             <SubatomicParticlePropertiesSceneProvider

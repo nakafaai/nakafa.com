@@ -1,0 +1,11 @@
+Source: Poly Haven HDRIs, 1k Radiance files
+  lab.exr     Vintage Measuring Lab by Oliksiy Yakovlyev, https://polyhaven.com/a/vintage_measuring_lab
+  field.exr   J&E Gray Park by Greg Zaal, https://polyhaven.com/a/je_gray_park
+  studio.exr  Studio Small 08 by Sergej Majboroda, https://polyhaven.com/a/studio_small_08
+Project: https://polyhaven.com
+License: CC0 1.0 Universal, https://polyhaven.com/license
+
+Each file is the 1k HDRI with its brightest pixels clamped to 64, so the stage's
+key light plays the sun, written as an RGB half-float OpenEXR with DWAB
+compression at level 400. desktop/ holds 1024 by 512 files and phone/ holds the
+same images box-filtered to 512 by 256.

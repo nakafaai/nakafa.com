@@ -147,7 +147,7 @@ export function ParabolicMovementAnalysisLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="sky">
           <Suspense>
             <CameraControls
               cameraPosition={PROJECTILE_SCENE.cameraPosition}

@@ -109,7 +109,7 @@ export function RelativeMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" reach={SCENE_REACH}>
+        <ScienceStage frameloop="always" reach={SCENE_REACH} setting="field">
           <Suspense>
             <RelativeMovementCamera />
             <group>

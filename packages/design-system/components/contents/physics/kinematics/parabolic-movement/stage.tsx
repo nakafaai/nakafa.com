@@ -11,7 +11,7 @@ import { Suspense } from "react";
  */
 export function ParabolicMovementStage() {
   return (
-    <ScienceStage floor={0} frameloop="always">
+    <ScienceStage floor={0} frameloop="always" setting="field">
       <Suspense>
         <CameraControls
           cameraPosition={PARABOLIC_SCENE.cameraPosition}

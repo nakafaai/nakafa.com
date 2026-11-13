@@ -33,7 +33,7 @@ export function BiologyStage({
   view: NarrowCameraPose;
 }) {
   return (
-    <ScienceStage frameloop="always">
+    <ScienceStage frameloop="always" setting="studio">
       <Suspense>
         <BiologyLabProvider colors={colors} store={store} view={view}>
           <BiologyCamera />

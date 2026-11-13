@@ -318,6 +318,7 @@
         "@number-flow/react": "^0.6.2",
         "@react-three/drei": "^10.7.9",
         "@react-three/fiber": "9.8.2",
+        "@react-three/postprocessing": "3.2.2",
         "@repo/analytics": "workspace:*",
         "@repo/editor": "workspace:*",
         "@repo/internationalization": "workspace:*",
@@ -355,6 +356,7 @@
         "mermaid": "12.3.0",
         "motion": "catalog:",
         "p5": "2.3.4",
+        "postprocessing": "6.39.6",
         "prosemirror-collab": "1.3.1",
         "react": "catalog:",
         "react-day-picker": "^10.0.2",
@@ -1157,6 +1159,8 @@
     "@react-three/drei": ["@react-three/drei@10.7.9", "", { "dependencies": { "@babel/runtime": "7.29.10", "@mediapipe/tasks-vision": "0.10.17", "@monogrid/gainmap-js": "3.4.0", "@use-gesture/react": "10.3.1", "camera-controls": "3.1.2", "cross-env": "7.0.3", "detect-gpu": "5.0.70", "glsl-noise": "0.0.0", "hls.js": "1.7.3", "maath": "0.10.8", "meshline": "3.3.1", "stats-gl": "2.4.2", "stats.js": "0.17.0", "suspend-react": "0.1.3", "three-mesh-bvh": "0.8.3", "three-stdlib": "2.36.1", "troika-three-text": "0.52.5", "tunnel-rat": "0.1.2", "use-sync-external-store": "1.7.0", "utility-types": "3.11.0", "zustand": "5.0.16" }, "peerDependencies": { "@react-three/fiber": "^9.0.0", "react": "19.3.1", "react-dom": "19.3.1", "three": ">=0.159" }, "optionalPeers": ["react-dom"] }, "sha512-wP4Y6o58KFi+hT1zCfjJarRtPCT6WW/lo53WMiA/aCORuUvBzW916XsCtadnIB1KB+3IQNcDU5JeVh/gYb8MYw=="],
 
     "@react-three/fiber": ["@react-three/fiber@9.8.2", "", { "dependencies": { "@babel/runtime": "7.29.10", "@types/webxr": "0.5.24", "base64-js": "1.5.1", "buffer": "6.0.3", "its-fine": "2.1.1", "react-use-measure": "2.1.7", "scheduler": "0.28.0", "suspend-react": "0.1.3", "use-sync-external-store": "1.7.0", "zustand": "5.0.16" }, "peerDependencies": { "expo": ">=43.0", "expo-asset": ">=8.4", "expo-file-system": ">=11.0", "expo-gl": ">=11.0", "react": "19.3.1", "react-dom": "19.3.1", "react-native": ">=0.78", "three": ">=0.156" }, "optionalPeers": ["expo", "expo-asset", "expo-file-system", "expo-gl", "react-dom", "react-native"] }, "sha512-6s0ejw0bT1myQ/aLLugcil8/zBmNnnHw/AISWF1yfDLOxfX3yYaTS+0IkpJITEnm/SSMLtxje6CJDt0i5Wu1Sw=="],
+
+    "@react-three/postprocessing": ["@react-three/postprocessing@3.2.2", "", { "dependencies": { "maath": "^0.10.8", "n8ao": "^2.0.0" }, "peerDependencies": { "@react-three/fiber": ">=9.7.0", "postprocessing": "^6.36.0", "react": "^19.0.0", "three": ">= 0.156.0" } }, "sha512-y/ePU8gytOCAjQMy7At9gZFr/Xi/YGSHlNEir3fCY88+FoBpzL4RsTpzyKnrGshcD8wmJ5ppI5kWzz0dtNPkWQ=="],
 
     "@redis/bloom": ["@redis/bloom@6.2.1", "", { "peerDependencies": { "@redis/client": "^6.2.1" } }, "sha512-huQgNLaCIZfQ9SeLn4q9124uOUd8HbZDYHwwUzNcRgHqCHiHKl2dDxMqJCeWh8cMqZAoWuHR8XnWbDMIf+o7ag=="],
 
@@ -2474,6 +2478,8 @@
 
     "ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
+    "n8ao": ["n8ao@2.0.2", "", { "peerDependencies": { "postprocessing": ">=6.30.0", "three": ">=0.137" } }, "sha512-lS1CVf31V3u8NOPpOaHKW+1syIAQCsz+KKmQJAYu0hldTh8UwwkFzdnPnuJc9hYozP+0ZZ4o5b8LPkoMytzb8Q=="],
+
     "nanoid": ["nanoid@3.3.20", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ=="],
 
     "nanostores": ["nanostores@1.5.2", "", {}, "sha512-B0UbxzK1s0CN8Xht6r+7iT5+xV8PTaRERR1nATeplRv1Rw5YLWfVAid0hkqY3EceqpG4RjTk8GAwIxQY39Rnwg=="],
@@ -2571,6 +2577,8 @@
     "posthog-js": ["posthog-js@1.444.0", "", { "dependencies": { "@posthog/browser-common": "^0.10.2", "@posthog/core": "^1.62.0", "@posthog/types": "^1.419.0", "core-js": "^3.49.0", "dompurify": "^3.4.13", "fflate": "^0.4.8", "preact": "^10.29.3", "query-selector-shadow-dom": "^1.0.1", "web-vitals": "^6.2.1", "web-vitals-soft-navs": "npm:web-vitals@6.2.1" }, "peerDependencies": { "@types/react": ">=16.8.0", "react": ">=16.8.0" }, "optionalPeers": ["@types/react", "react"] }, "sha512-4m+QsAFi1h5Zt8eFq6ciJGD8bcLMt1P/O1cLlo26RrX5F4oMOIKZsNIlf1SIMZWlRNNCFemSpzn6HhwtkZMrnA=="],
 
     "posthog-node": ["posthog-node@5.61.1", "", { "dependencies": { "@posthog/core": "^1.62.0" }, "peerDependencies": { "@opentelemetry/api": "^1.2.0", "rxjs": "^7.0.0" }, "optionalPeers": ["@opentelemetry/api", "rxjs"] }, "sha512-Az2H3hHyxxZ5PQpQAQEoJfa9FrLsM4OnuyIQwzi9hei5mtN0/mepw1yvLtAmPAbEkC6+muWXiBShBnVMKeBSXw=="],
+
+    "postprocessing": ["postprocessing@6.39.6", "", { "peerDependencies": { "three": ">= 0.168.0 < 0.188.0" } }, "sha512-HIVhnU8R9tF2YBMXOF2x+TKt3ia+caSHGsycSqrfkd426vH/jwm7w19YQCWsA8jMQJXvAsniLYMiJaNugxUFtA=="],
 
     "potpack": ["potpack@1.0.2", "", {}, "sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ=="],
 

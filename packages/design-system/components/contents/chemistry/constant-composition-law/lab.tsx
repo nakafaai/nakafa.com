@@ -115,7 +115,7 @@ export function ConstantCompositionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always">
+        <ScienceStage frameloop="always" setting="lab">
           <Suspense>
             <ConstantCompositionCameraControls />
             <ConstantCompositionScene
