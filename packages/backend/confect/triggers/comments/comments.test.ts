@@ -83,7 +83,6 @@ describe("triggers/comments/comments", () => {
       }),
       replier: await seedAuthenticatedUser(ctx, {
         now: NOW,
-        sessionToken: "session-thread-replier",
         suffix: "thread-replier",
       }),
     }));
@@ -192,7 +191,6 @@ describe("triggers/comments/comments", () => {
       }),
       replier: await seedAuthenticatedUser(ctx, {
         now: NOW,
-        sessionToken: "session-deleted-parent-replier",
         suffix: "deleted-parent-replier",
       }),
     }));

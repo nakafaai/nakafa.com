@@ -8,6 +8,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { AGENT_ISSUER } from "@repo/backend/test/agent/grant";
 import { seedAccountAgents } from "@repo/backend/test/deletion/seed";
 import { Effect } from "effect";
 
@@ -129,7 +130,7 @@ describe("auth/caller", () => {
 
   it("resolves an agent's token through its grant, and a revoked or malformed one to nobody", async () => {
     const t = createConvexTestWithAuth();
-    const issuer = process.env.CONVEX_CLOUD_URL;
+    const issuer = AGENT_ISSUER;
     const learner = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "agent-owner" })
     );
@@ -180,7 +181,7 @@ describe("auth/caller", () => {
     await expect(
       callerOf(
         t.withIdentity({
-          issuer: process.env.CONVEX_CLOUD_URL,
+          issuer: AGENT_ISSUER,
           subject: grantId,
         }),
         failRead

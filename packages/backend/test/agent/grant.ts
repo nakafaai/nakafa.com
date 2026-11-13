@@ -3,7 +3,7 @@ import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helper
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { sha256 } from "@repo/utilities/digest";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { Base64Url } from "effect/encoding";
 
 type BackendTest = ReturnType<typeof createConvexTestWithAuth>;
@@ -59,8 +59,16 @@ export async function letAgentIn(
   });
 }
 
+/**
+ * The issuer of every agent token: the deployment's own address, which
+ * `vitest.setup.ts` sets as convex-test signs with it.
+ */
+export const AGENT_ISSUER = Option.getOrThrow(
+  Option.fromUndefinedOr(process.env.CONVEX_CLOUD_URL)
+);
+
 /** The identity Convex derives from an agent's access token: the deployment issued it, for its grant. */
 export const agentIdentity = (accessToken: string) => ({
-  issuer: process.env.CONVEX_CLOUD_URL,
+  issuer: AGENT_ISSUER,
   subject: authTest.sessionIdentity({ accessToken }).subject,
 });
