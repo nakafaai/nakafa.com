@@ -3,11 +3,14 @@
 # landing train that call `bun run gate <sha>`: the typechecks with the committed
 # bindings unchanged, every unit suite at its per-file 100% coverage gate, the
 # source and policy checks with Ultracite, React Doctor for the head's React
-# changes against main, and the dependency audit, in parallel parts.
+# changes against main, and the dependency audit.
 #
-# Each part posts `gate/<part>` on the head and the report posts `gate`, which the
-# landing train requires beside the proof. It is a tool, not a required check: no
-# ruleset names it. It reads no secret, publishes nothing and touches no Convex or
+# Three parts share the account's 20 concurrent jobs with the proofs, so the gate
+# takes as few machines as its slowest suites allow: `static` runs everything but
+# the two large unit suites, which `www` and `backend` run beside it. Each part
+# posts `gate/<part>` on the head and the report posts `gate`, which the landing
+# train requires beside the proof. It is a tool, not a required check: no ruleset
+# names it. It reads no secret, publishes nothing and touches no Convex or
 # Cloudflare deployment (docs/adr/0048-proof.md, Gate).
 name: Gate
 run-name: Gate ${{ inputs.sha }}
@@ -24,16 +27,7 @@ on:
 # a newer run's, and `bun run gate` reads only statuses posted after it dispatched.
 permissions: {}
 
-# The typechecks and the www suites validate the app's environment while they load
-# its config; these inert loopback values are the ones AGENTS.md names, never a
-# deployment's.
 env:
-  CONVEX_SITE_URL: http://127.0.0.1:3211
-  CONVEX_URL: http://127.0.0.1:3210
-  SITE_URL: http://localhost:3000
-  VITE_CONVEX_SITE_URL: http://127.0.0.1:3211
-  VITE_CONVEX_URL: http://127.0.0.1:3210
-  VITE_SITE_URL: http://localhost:3000
   # The landing train's tests write commits, as the train does on the Mac, so the
   # runner names an author the way the Mac's Git configuration does.
   GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
@@ -52,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: [ typecheck, backend, www, workspaces, policy ]
+        part: [ static, www, backend ]
     env:
       GH_TOKEN: ${{ github.token }}
       PART: ${{ matrix.part }}
@@ -76,45 +70,43 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install
 
-      # The CAS engine's typecheck, lint and tests run its Python tools through uv.
+      # The CAS engine's typecheck, lint and tests in the static part run its Python tools through uv.
       - name: Set up uv for the CAS engine
-        if: matrix.part != 'backend' && matrix.part != 'www'
+        if: matrix.part == 'static'
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "0.13.6"
           # The default glob walks every folder, node_modules included, for 3.5 minutes.
           cache-dependency-glob: apps/cas/uv.lock
 
-      # The workspaces and policy parts run every command, so one failure never hides another.
+      # The static part runs every command, so one failure never hides another.
+      # The www typecheck validates its environment while it loads its config: it
+      # takes the inert loopback addresses AGENTS.md names, never a deployment's,
+      # and the unit suites run without them, as on the Mac.
       - name: Run ${{ matrix.part }}
         id: part
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           case "$PART" in
-            typecheck)
+            static)
+              failed=0
               # The Effect-patched compiler fails on suggestions without the word
               # "error", so the exit code is the verdict.
-              bun run turbo run typecheck --continue=dependencies-successful
+              CONVEX_URL=http://127.0.0.1:3210 CONVEX_SITE_URL=http://127.0.0.1:3211 \
+                bun run turbo run typecheck --continue=dependencies-successful || failed=1
               # A head whose committed bindings differ from what its code generates is not ready.
               git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated
-              test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)"
-              ;;
-            backend) bun run turbo run test --filter=@repo/backend ;;
-            www) bun run turbo run test --filter=www ;;
-            workspaces)
-              failed=0
+              test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex/_generated)" || failed=1
+              bun run lint || failed=1
+              bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
+              bun run security:audit || failed=1
               bun run test:scripts || failed=1
               bun run turbo run test --filter='!@repo/backend' --filter='!www' || failed=1
               exit "$failed"
               ;;
-            policy)
-              failed=0
-              bun run lint || failed=1
-              bun run doctor --verbose --scope changed --base origin/main --blocking warning || failed=1
-              bun run security:audit || failed=1
-              exit "$failed"
-              ;;
+            www) bun run turbo run test --filter=www ;;
+            backend) bun run turbo run test --filter=@repo/backend ;;
             *) echo "Unknown part $PART." >&2; exit 1 ;;
           esac
 
