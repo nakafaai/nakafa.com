@@ -222,7 +222,7 @@ function FizzScene({ seal }: { readonly seal: Seal }) {
       <LabBench />
       <Scale ref={scale} unitLabel="g">
         <Flask />
-        <FlaskLiquid color={MATERIAL.vinegar} level={LEVEL} />
+        <FlaskLiquid color={MATERIAL.vinegar} level={LEVEL} opacity={0.42} />
         <mesh position={[0, LEVEL + 0.002, 0]} ref={foam}>
           <cylinderGeometry
             args={[

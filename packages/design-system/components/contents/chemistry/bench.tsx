@@ -199,9 +199,11 @@ export function Flask() {
 export function FlaskLiquid({
   color,
   level,
+  opacity = 0.72,
 }: {
   readonly color: string;
   readonly level: number;
+  readonly opacity?: number;
 }) {
   const points = useMemo(
     () =>
@@ -218,7 +220,7 @@ export function FlaskLiquid({
   return (
     <mesh>
       <latheGeometry args={[points, 40]} />
-      <LiquidMaterial color={color} opacity={0.72} />
+      <LiquidMaterial color={color} opacity={opacity} />
     </mesh>
   );
 }
