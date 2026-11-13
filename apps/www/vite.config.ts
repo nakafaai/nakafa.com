@@ -251,14 +251,15 @@ const STATIC_RUNNER_ALIASES = STATIC_RUNNER
   : [];
 
 /**
- * TanStack Start's RSC plugin keeps every server dependency inside Vite
- * (`ssr.noExternal: true`), so Vite reads the source map each one names. feed
- * names a map that its package does not publish. The static runner, its only
- * importer, runs in Node, so Node imports feed as it ships: a dependency listed
- * in `ssr.external` stays external over `ssr.noExternal: true`.
+ * TanStack Start's RSC plugin keeps every server dependency in Vite's module
+ * runner (`ssr.noExternal: true`). The static runner, their only importer, runs
+ * in Node, and `ssr.external` wins over that, so Node imports these as shipped:
+ * feed names a source map its package lacks, and jsdom, beside which Mermaid
+ * parses each diagram of the release, is CommonJS the runner cannot evaluate.
  * @see https://vite.dev/config/ssr-options#ssr-external
  */
-const STATIC_RUNNER_EXTERNALS = STATIC_RUNNER ? ["feed"] : [];
+const NODE_IMPORTS = ["feed", "jsdom", "mermaid"];
+const STATIC_RUNNER_EXTERNALS = STATIC_RUNNER ? NODE_IMPORTS : [];
 
 /** The Worker environments: `ssr` is the Worker entry and `rsc` its child. */
 const WORKER_ENVIRONMENTS = ["ssr", "rsc"];

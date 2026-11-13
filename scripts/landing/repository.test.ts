@@ -76,7 +76,7 @@ const origins = Effect.fn("RepositoryTest.origins")(function* () {
         "origin",
         `${sha}:refs/pull/${number}/head`
       );
-      return { number, sha, title: `Change ${number}` };
+      return { number, sha, title: `Change ${number}`, specs: [] };
     })
   );
   return { origin, work, main, heads };
@@ -121,24 +121,31 @@ describe("train repository", () => {
                   headRefOid: "c".repeat(40),
                   title: "C",
                   isDraft: false,
+                  files: [
+                    { path: "apps/www/e2e/c/one.browser.ts" },
+                    { path: "apps/www/src/c.ts" },
+                  ],
                 },
                 {
                   number: 4,
                   headRefOid: "a".repeat(40),
                   title: "A",
                   isDraft: false,
+                  files: [],
                 },
                 {
                   number: 5,
                   headRefOid: "b".repeat(40),
                   title: "B",
                   isDraft: true,
+                  files: [],
                 },
                 {
                   number: 6,
                   headRefOid: "d".repeat(40),
                   title: "D",
                   isDraft: false,
+                  files: [],
                 },
               ]),
             };
@@ -159,6 +166,9 @@ describe("train repository", () => {
       );
       expect(Arr.map(value.all, (one) => one.number)).toEqual([4, 9]);
       expect(Arr.map(value.named, (one) => one.number)).toEqual([9]);
+      expect(Arr.map(value.named, (one) => one.specs)).toEqual([
+        ["e2e/c/one.browser.ts"],
+      ]);
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
@@ -279,6 +289,7 @@ const CANDIDATE: Candidate = {
   number: 42,
   sha: "e".repeat(40),
   title: "Land me",
+  specs: [],
 };
 
 /** A pull request view as `gh pr view` prints it. */

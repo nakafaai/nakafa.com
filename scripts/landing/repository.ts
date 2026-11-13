@@ -2,8 +2,10 @@ import {
   Array as Arr,
   Effect,
   Layer,
+  Option,
   Order,
   Ref,
+  Result,
   Schedule,
   Schema,
   Scope,
@@ -19,6 +21,9 @@ import {
 } from "#scripts/landing/train";
 import { runText } from "#scripts/process";
 import { REPOSITORY, VERDICT_CONTEXT } from "#scripts/proof/github";
+
+/** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
+const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 
 /** A full commit SHA, as `git ls-remote` prints one. */
 const COMMIT_SHA = /^[0-9a-f]{40}$/u;
@@ -73,6 +78,7 @@ const PullListJson = Schema.fromJsonString(
       headRefOid: Schema.String,
       title: Schema.String,
       isDraft: Schema.Boolean,
+      files: Schema.Array(Schema.Struct({ path: Schema.String })),
     })
   )
 );
@@ -266,7 +272,7 @@ export const githubRepository = (root: string) =>
                 "--limit",
                 "200",
                 "--json",
-                "number,headRefOid,title,isDraft",
+                "number,headRefOid,title,isDraft,files",
               ]).pipe(Effect.flatMap(decoded(PullListJson)));
               const chosen = Arr.filter(
                 pulls,
@@ -282,6 +288,15 @@ export const githubRepository = (root: string) =>
                   number: pull.number,
                   sha: pull.headRefOid,
                   title: pull.title,
+                  specs: Arr.filterMap(pull.files, ({ path }) =>
+                    Option.match(
+                      Option.fromNullishOr(SPEC_FILE.exec(path)?.groups?.spec),
+                      {
+                        onNone: () => Result.failVoid,
+                        onSome: Result.succeed,
+                      }
+                    )
+                  ),
                 })),
                 Order.mapInput(Order.Number, (pull: Candidate) => pull.number)
               );
