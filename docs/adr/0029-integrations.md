@@ -130,21 +130,13 @@ and schemas of the school API. Everything else comes from it.
 - A token issued for the school API is never accepted as a Convex session, and a
   session is never accepted as an API token.
 
-Better Auth already offers the parts of an authorization server, as its pages say
-(read 13 October 2026). `@better-auth/oauth-provider` offers `client_credentials`
-for machine access, resources under RFC 8707, introspection, revocation, and a
-device grant. Its device authorization plugin implements RFC 8628, but in its
-standalone form it returns a Better Auth session token, which would give the CLI
-the power of a session. This repository pins `better-auth` 1.6.33 and the
-registry's latest is 1.7.7. `@better-auth/oauth-provider` has a 1.6.33 release
-that asks for `better-auth` ^1.6.33 (npm registry, 13 October 2026). So the
-change that builds the token endpoint reads the source of that release, and not
-only the pages, before it relies on a feature. It adopts the plugins if they meet
-these conditions, and otherwise it writes the endpoint and records here why:
+The token endpoint could adopt an auth library's authorization-server plugins or
+be Nakafa's own; the 26 October amendment chose Nakafa's own. Either way these
+conditions hold:
 
 - The tenant of a client stays owned by `confect/tenancy` (ADR 0011 keeps tenancy
-  out of Better Auth's schema), so a client row held by Better Auth carries only
-  a reference to its tenant.
+  out of the auth component's schema), so a client row carries only a reference
+  to its tenant.
 - A client secret is stored as a hash.
 - An access token is short-lived and bound to one resource. It is revoked at
   once, or its lifetime is no longer than the revocation delay Nakafa accepts.
@@ -265,7 +257,7 @@ released. Names and Role Provisioning Services 2.0 is a roster source like
 OneRoster. Each school registers its own platform, as school data. A platform
 user is identified by the platform's issuer and subject and never by email. How a
 launch becomes a session and finds its Person is left to the LTI change. The
-launch ends in the Better Auth session of ADR 0009 like every other sign-in path,
+launch ends in the Convex Auth session of ADR 0009 like every other sign-in path,
 and a launch that matches no Person shows the school's sign-in page.
 
 **OneRoster.** The CSV import reads academic sessions, orgs, users, courses,
@@ -329,7 +321,7 @@ What `pnpm-lock.yaml` held on 13 October 2026, before the move to `bun.lock`:
   check names it.
 - `convex-helpers` is a peer of `@convex-dev/agent`, `@convex-dev/resend`,
   `@convex-dev/workflow`, and `@convex-dev/workpool`. It is a dependency of
-  `@convex-dev/aggregate`, of `@convex-dev/better-auth`, and of
+  `@convex-dev/aggregate` and of
   `@convex-dev/batch-worker` 0.3.3 and 0.3.5, which `aggregate` and
   `@convex-dev/rate-limiter` 0.4.1 each install as a component inside their own
   (`src/component/convex.config.ts`). `packages/backend/package.json` declares
@@ -369,11 +361,10 @@ The decision:
   leaves without that, and the Convex components above keep the package in the
   lock anyway.
 
-The 15 files that import `convex-helpers`:
+The 14 files that imported `convex-helpers` (a fifteenth left with the earlier auth component on 13 November 2026):
 
 - `packages/backend/confect/functions.ts`: `customMutation`, `customCtx`, and
   `Triggers`, which wrap every mutation.
-- `packages/backend/components/betterAuth/deletion.ts`: `stream`.
 - Four trigger files under `packages/backend/confect/triggers`, which import
   only the `Change` type: `chats/chats.ts`, `comments/comments.ts`,
   `contents/views.ts`, and `tryouts/scores.ts`.
@@ -388,9 +379,10 @@ The 15 files that import `convex-helpers`:
 
 ## Left to the change that builds it
 
-- The token endpoint: Better Auth's plugins or Nakafa's own, by the conditions
-  above, and whether it lives on the school host or on the apex domain of the
-  cell. The metadata of the MCP server points to it either way.
+- The token endpoint: an auth library's plugins or Nakafa's own, by the
+  conditions above, and whether it lives on the school host or on the apex
+  domain of the cell (decided on 26 October 2026: Nakafa's own). The metadata of
+  the MCP server points to it either way.
 - How the forward from the school host is built, and what it costs.
 - How a webhook delivery connects to the address it checked, because a name can
   resolve to another address between the check and the connection.
@@ -460,12 +452,11 @@ These decisions settle the open questions of the school API, and they bind every
 slice that follows. The client registry and the decision for a client are built
 first. The token endpoint, the bearer middleware, and the routes come later.
 
-1. **Token engine.** `@better-auth/oauth-provider` at the version that matches
-   the installed `better-auth`, since both move together. It serves the client
+1. **Token engine.** The authorization-server plugin of the auth library then
+   installed, at the version that matched it. It would serve the client
    credentials grant with resource indicators (RFC 8707), introspection, and
-   revocation. The registry slice does not add it. The token endpoint slice
-   adds it after the package-upgrades lane settles the Better Auth version.
-2. **Token format.** A JWT signed with Better Auth's JWT plugin keys, with the
+   revocation. The registry slice did not add it (superseded on 26 October 2026).
+2. **Token format.** A JWT signed with that library's JWT keys, with the
    audience set to the school's API resource (`https://<school host>/api/v1`),
    never `convex`. Convex then never accepts an integration token as a session
    identity.
@@ -543,8 +534,8 @@ first. The token endpoint, the bearer middleware, and the routes come later.
 The token endpoint, the bearer check, and the roster routes are built. Two
 decisions of the amendment of 14 October changed, and this section records why.
 
-1. **Token engine.** Nakafa issues its own opaque access tokens and does not
-   install `@better-auth/oauth-provider`. The 14 October amendment chose the
+1. **Token engine.** Nakafa issues its own opaque access tokens and installs no
+   authorization-server plugin. The 14 October amendment chose the
    plugin with JWT access tokens. A JWT cannot be ended before it expires, so
    revoking a client would leave its tokens working for their lifetime, which the
    condition "revoked at once, or its lifetime is no longer than the revocation
@@ -552,7 +543,7 @@ decisions of the amendment of 14 October changed, and this section records why.
    An opaque token is 256 random bits from `issueToken` (`@repo/utilities/token`,
    the one owner of Nakafa's bearer tokens), only its SHA-256 digest is stored in
    `integrationTokens`, and revoking or rotating a client deletes its tokens in the
-   same transaction. It needs no new package and no Better Auth table, so the
+   same transaction. It needs no new package and no auth component table, so the
    tenant of a client stays in `confect/tenancy` (ADR 0011).
 2. **Token format.** An access token is an opaque string, not a JWT. Its
    audience is the `resource` field of its row: `api` for
@@ -683,8 +674,6 @@ A request carries `nakafa-signature: t=<seconds>,v1=<hex>`, `nakafa-event`,
   RFC 9457 (problem details), and RFC 9728 (protected resource metadata).
 - Model Context Protocol, authorization, version 2026-07-28
   (modelcontextprotocol.io/specification/latest/basic/authorization).
-- Better Auth, the OAuth provider and device authorization plugin pages
-  (better-auth.com/docs/plugins).
 - IETF `draft-ietf-httpapi-idempotency-key-header-07`.
 - 1EdTech pages for OneRoster, LTI, and QTI (1edtech.org/standards).
 - `pnpm-lock.yaml` and `scripts/dependencies` on main at `f8a5610808`, and the
@@ -704,10 +693,13 @@ same value twice leaves one draft, which is why this write needs no idempotency 
 
 The API and MCP exist so a person signs in with their own account and their agent does what the app does for them. A client credential cannot be that: it holds the Integration role, an Admin makes it, and no person's permissions decide its calls. The School UI runs on 462 public functions, and a client reaches ten of those actions.
 
-A person's agent signs in over OAuth, which is what an MCP client speaks. The server's 401 names its resource metadata (RFC 9728), that names the main site as the authorization server (RFC 8414), and Better Auth's `mcp` plugin serves registration (RFC 7591), the code flow with PKCE, and refresh tokens. A school host signs in on the main site, whose cookie it shares.
+A person's agent signs in over OAuth, which is what an MCP client speaks. The server's 401 names its resource metadata (RFC 9728), that names the main site as the authorization server (RFC 8414), and Nakafa's own authorization server serves registration (RFC 7591), the code flow with PKCE, and refresh tokens (amended 13 November 2026, below). A school host signs in on the main site, whose cookie it shares.
 
-- Every authorization asks the person. The plugin issues a code without asking unless the request says `prompt=consent`, and a client that registers itself is untrusted, so `auth/grant` sets it. The consent page shows the name and the address the agent gave, because both are unverified.
-- The access token is a Convex token of the person, with a session of its own. This replaces two rules above for this one caller: "A token issued for the school API is never accepted as a Convex session" and the CLI row's limit to the actions it needs. The agent is one more signed-in device of its person, so it holds the person's full power, and the consent says so. A refresh token renews it, ending its session ends it for writes at once and for reads within the token's 15 minutes.
+- Every authorization asks the person: the consent page shows the name and the address the agent gave, because both are unverified, and issues a code only on the person's yes.
+- The access token is a Convex token of the person's grant. This replaces two rules above for this one caller: "A token issued for the school API is never accepted as a Convex session" and the CLI row's limit to the actions it needs. The agent is one more signed-in device of its person, so it holds the person's full power, and the consent says so. A refresh token renews it, and revoking the grant ends every read and write at once.
 - Three tools reach every public function: list, describe, call. A call goes through Convex's HTTP API with the person's own token, which serves public functions alone and decides for its caller, so no surface keeps a list of what an agent may do and a new function needs no new tool. A tool per function would put 462 tools into every client's context.
 - A client credential stays what it is, for a system that acts as itself.
-- Better Auth's `mcp` plugin is built on its `oidc-provider` plugin, which the installed 1.6.33 marks deprecated in favour of `@better-auth/oauth-provider` and removes in its next major version. The `mcp` plugin hides that warning. The move to the new package belongs to the Better Auth major upgrade, and `auth/oauth` and `auth/grant` are the two modules it touches.
+- On 13 November 2026 the auth library that served this flow left with the move to Convex Auth (ADR 0009), and Nakafa's own server replaced it in `confect/auth/grant`, served at `/api/agent/register`, `/agent` (the consent page) and `/api/agent/token`:
+  - A registered agent is a public client that proves itself with PKCE (S256 only). Registration is rate limited, and a registration that no grant holds for 30 days goes.
+  - A code lives 10 minutes and is spent by its first exchange, refused or not. A grant holds only the SHA-256 of its refresh token, every refresh rotates it, and a grant unused for 30 days lapses. An hourly sweep deletes what lapsed.
+  - The access token is ES256, signed by the deployment for the audience `nakafa-agent` with the grant as its subject, and lives 15 minutes. `confect/auth/caller.ts` resolves it through the grant row on every call, so revoking a grant in the settings, or deleting the account, ends the agent at once.

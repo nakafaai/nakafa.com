@@ -665,10 +665,10 @@ second step. The deployment must hold the signed release of that lesson.
 The command prints one table: the steps, input, cached, output and reasoning
 tokens, the cost in US dollars, and the seconds the turn took, for each agent and
 in total. A line under it shows the cached input tokens of each chat step. The
-command prints no message text. Then it removes the chat and claims the deletion
-of the learner, the same claim that Better Auth's before-delete hook makes. It
-does not run the hook's own check that PostHog erasure is configured. The account
-recovery sweep finishes the deletion in about twenty minutes. A removal that
+command prints no message text. Then it removes the chat and deletes the
+learner's account as the learner (`auth/deletion:deleteAccount`), as the
+settings page does: its sessions end at once, and the scheduled finalize erases
+every row the app keeps for it. A removal that
 fails is logged with the learner or chat it left behind, and it does not change
 the verdict.
 

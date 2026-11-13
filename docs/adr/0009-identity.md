@@ -1,348 +1,235 @@
-# ADR 0009: Token-Verified Reads, Session-Validated Writes, And School Sign-In
+# ADR 0009: Convex Auth Sessions, Checked On Every Call, And School Sign-In
 
 > Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Decision
 
-The session middleware resolves one caller identity per Convex function and
-provides it as `Session`: the Better Auth user id and the matching app user.
-How it gets the Better Auth user id depends on the function type.
+Nakafa signs people in with Convex Auth 2.0.0, whose components run inside the
+deployment, and with nothing else. `packages/backend/convex/convex.config.ts`
+mounts its core (`auth`: sessions and refresh tokens), Google (`authGoogle`,
+served under `/oauth/google`), and the username and password methods
+(`authUsername`, `authPassword`). `confect/auth/core.ts` sets them up and is the
+one owner of the session rules:
 
-- Queries read the identity Convex already verified from the Better Auth token
-  (`Auth.getUserIdentity`) and look up the app user by its `authId` index. They
-  never call the Better Auth component.
-- For mutations and actions the middleware also confirms, before they write,
-  that the token's session still exists, has not expired and belongs to the
-  token's user, and that the user still exists. One read answers this:
-  `session.live`, a query of the Better Auth component that reads the two rows
-  by their ids and imports no Better Auth code. A verified token that does not
-  name its session fails the write with `AuthReadError`: Better Auth puts the
-  session in every token it issues, so the claim is never simply absent.
-- `prepareCurrentAccountDeletion` runs without the middleware and reads the
-  signed-in Better Auth user through the adapter (`getAuthUser`), as it did
-  before.
+- An access token lives 15 minutes, a session ends after 7 days without use,
+  and no session lasts longer than 90 days.
+- The deployment signs every access token with its own key
+  (`ctx.auth.signJwt`, ES256), so no signing key or auth secret is configured,
+  stored, or rotated by Nakafa. `confect/auth.ts` accepts these tokens
+  (`convexAuthProvider`) and the agent tokens of ADR 0029, whose issuer is the
+  deployment's own address.
+- An access token's subject is its session. The session middleware
+  (`confect/middleware/session.impl.ts`) resolves the caller once per function
+  through `confect/auth/caller.ts`: an agent token names its grant, and every
+  other token is a Convex Auth session whose row says whose it is
+  (`getAuthUserId`). Queries, mutations and actions all read that row, so a
+  session that signed out or was revoked stops reading and writing at once,
+  not at its token's expiry. `Session` then carries the user id and the app
+  user row, which every function reads for account state such as `deletedAt`.
 
-`getCurrentUser` projects the account profile (name, email, image) from the app
-user row. Better Auth's user triggers and the rename mutation keep those fields
-current in the same transaction as the Better Auth write.
+The web app keeps the refresh token where no script reaches it. Its routes
+`/api/auth/signin`, `/api/auth/refresh` and `/api/auth/signout`
+(`apps/www/src/lib/auth/server.server.ts`, Convex Auth's
+`setupConvexAuthServer`) hold the refresh token in an httpOnly cookie and hand
+the browser only the access token. The sign-in route forwards exactly two
+functions, Google's completion and the school login, and refuses every other.
+The page's client (`apps/www/src/lib/auth/client.ts`, Convex Auth's
+`AuthClient` in its SSR mode) refreshes through the refresh route, and the
+server reads a request's session from the same cookies
+(`apps/www/src/lib/auth/session.server.ts`).
 
 ## Consequences
 
-- A revoked or signed-out session can still read for the rest of its token's
-  lifetime, which the Convex plugin sets to 15 minutes. Writes stop at once.
-- Signed-in queries skip the Better Auth component. Production measured
-  `getCurrentUser` at about one second at the median while it asked Better Auth
-  through `safeGetAuthUser`, and every signed-in page waits on it before
-  identity settles.
-- A write pays one small component read. `safeGetAuthUser` answered the same
-  question with two lookups through Better Auth's adapter. Measured on 12
-  October 2026: the adapter's module bundles to 2,830 KiB in 1,438 modules and
-  `session.live` to 56 KiB in 33 (the Convex CLI's bundler options); production
-  ran one adapter lookup in 327 to 615 ms, and `nina/turns:start`, which reads
-  23 rows, took 1,034 to 1,201 ms with two of them.
-- Account state that must take effect immediately for reads, such as deletion,
-  lives on the app user row, which every query reads.
+- Signing out or revoking a session ends every read and write of it at once.
+  The earlier design let a revoked session read for the rest of its token's
+  15 minutes.
+- Every signed-in function pays one small component query for the session row.
+  The earlier design read a second system's component on every write and
+  measured 327 to 615 ms for one adapter lookup on production; the before and
+  after numbers of the cutover are recorded under Moving To Convex Auth.
+- A refresh that cannot reach the route fails and is tried again; it never reads
+  as signed out (`apps/www/src/lib/auth/token.ts`, `followAuthSession`).
+- Account state that must take effect immediately lives on the app user row,
+  which every function reads.
 
 ## Stored Secrets
 
-### Provider tokens
+Nakafa stores no token that Google issues at sign-in. Convex Auth's Google
+method keeps one row per Google account, its subject (`sub`) and the Nakafa
+user it signs in (`authGoogle` `accounts`), and the short-lived state of a
+sign-in that is under way. The sign-in asks for `openid email profile` with
+PKCE (S256) and sends no `access_type`, which Google reads as `online` and
+answers with no refresh token. A connector token never sits on the account: it
+is sealed in the vault (`confect/vault`) under the key of the connection's
+owner, the learner's key for a personal connection and the school's key for a
+school connection.
 
-Nakafa stores no token that Google issues at sign-in. Nothing reads one after
-sign-in (the Search Console scripts use their own service account), and a token
-that nothing reads only widens what a leaked database or a leaked secret
-exposes. A connector token never sits on the account either. It is sealed in
-the vault (`confect/vault`) under the key of the connection's owner: the
-learner's key for a personal connection, and the school's key for a school
-connection.
-
-- Sign-in sends `prompt=select_account`, so a learner with several Google
-  accounts still picks one. It sends no `access_type`, which Google reads as
-  `online` and answers with no refresh token. It no longer sends the `consent`
-  prompt, which showed Google's consent screen at every sign-in. Google still
-  returns an access token and an ID token at the code exchange, and Better Auth
-  reads the profile from the ID token.
-- Two Better Auth database hooks (`confect/auth/tokens.ts`) set the access,
-  refresh and ID tokens and their expiry times to `undefined` before every
-  write to `account`. Better Auth merges what a hook returns over the data it
-  writes, so a column left out of the result would still be written. The
-  adapter leaves an `undefined` column out of the write. Sign-up, an implicit
-  link, a link through the callback, the update at each sign-in and a token
-  refresh all write through Better Auth's internal adapter, which runs the
-  hooks, so one rule covers every path. The one place outside the table that
-  could hold the tokens, the account cookie, is off, because Better Auth turns
-  it on only when no database is configured.
-- The same hooks keep one claim of the ID token before they drop it: the
-  hosted domain (`hd`), which only a Google Workspace account carries. A write
-  that carries an ID token stores its hosted domain on the account as
-  `hostedDomain`, lowercase, or null for a token without one, as a personal
-  Google account's token is; a write without one, such as a token refresh,
-  leaves it as it is. The token comes from Google's token endpoint during the
-  sign-in that writes it, so its payload is read without its signature, as
-  Better Auth reads the profile in it. The School Sign-In section says what
-  reads it.
-- `/get-access-token`, `/account-info` and `/refresh-token`, the routes that
-  read or refresh a stored token (`confect/auth/routes.ts`), answer 404 like the
-  retired credential routes, and the API reference leaves them out. Better Auth
-  checks `disabledPaths` in the HTTP router only, and `auth.api` runs an
-  endpoint without that check. A server call that sends no headers and names a
-  `userId` is taken to speak for that learner, so a before hook of a plugin
-  refuses the same three routes with 404 for server code too. Without it, such
-  a call would return a token that an older sign-in stored, until the clearing
-  below has run.
-- `disableIdTokenSignIn` stays on. With it off, Better Auth would accept any
-  Google ID token that was issued to Nakafa in the last hour as a credential, to
-  sign a learner in and to link an account. Only the redirect flow signs a
-  learner in.
-- `account.encryptOAuthTokens` stays on, so that a token that a later plugin
-  writes is sealed.
-
-### Clearing the tokens already stored
-
-The hooks never touch a row they do not write, so every account written before
-them held the tokens, sealed except for the ID token. A temporary internal
-mutation of the Better Auth component (#1052) removed the five columns from
-those rows, one page of accounts a call, and left every other row and column
-alone. On 14 October 2026, after the release with the hooks was live, it found
-1 account holding a token on dev and 734 of 734 on production, cleared them,
-and a dry pass after it found none on either. The cleanup change deleted the
-mutation and its test. Clearing removed Nakafa's copy; a refresh token that
-Google issued earlier is not revoked by it. The columns stay in the schema,
-because Better Auth generates the table, and stay unset.
-
-### Signing keys and the session token
-
-Better Auth seals the private half of each signing key in `jwks`, also in the
-static `JWKS` value, with the Better Auth secret. It stores the session token as
-issued. The session token signs a learner in: the bearer hook that the Convex
-plugin installs accepts it in an `Authorization` header, and Better Auth has no
-option to seal it. Rotating the secret signs every learner out. List the new
-secret first in `BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old
-value, and keep each older version listed while anything is still sealed with
-it.
+A school password is stored only as an argon2id hash in the password component.
+Convex Auth throttles password checks per account with a token bucket of 5
+attempts that refills one attempt a minute. A refresh token is stored only as a
+hash, and a spent one is remembered for an hour so a replay is detected.
 
 ## The Shared Session Cookie
 
-Nakafa and every school host of the `us` cell share one session cookie. Better
-Auth sets it with a `Domain` attribute that is the host of `SITE_URL`
-(`advanced.crossSubDomainCookies`, Better Auth 1.6.33, `cookies/index.mjs`). The
-name stays `better-auth.session_token`, with the `__Secure-` prefix on HTTPS,
-because the app sets no cookie name or prefix of its own, and ADR 0026 rejects a
-session cookie named for each cell.
+Nakafa and every school host of the `us` cell share one session. The routes set
+both cookies, `__convexAuthRefreshToken` (httpOnly) and `__convexAuthJWT`,
+with `Domain=nakafa.com` on production, so a school host reads the session that
+the main site wrote (ADR 0026). A route answers only a request whose `Origin`
+is its own host.
 
-Before school hosts, the cookie had no `Domain` attribute. A browser that still
-holds that older host-only cookie sends it next to the shared one under the same
-name, and the two readers pick different values:
+Staging, `staging.nakafa.com`, is a subdomain of the production domain, so the
+browser sends production's cookies there too. Staging names its own cookies
+apart (`nakafa-dev.` before each name, `siteAuthCookies` in
+`apps/www/src/lib/auth/cookies.ts`): its routes read only those, under Convex
+Auth's names, and drop production's, so staging never reads a production
+session as its own. A local site uses the plain names without a domain.
 
-- The identity route (`get-session` and `sign-out`) reads the first value of a
-  name (better-call `parseCookies`, which skips a name it already has). The
-  browser sends the older cookie first (RFC 6265 section 5.4), so the identity
-  route reads the older host-only cookie.
-- The presence check of the app (`getSessionCookie` in `cookies/index.mjs`,
-  which parses with `cookie-utils.mjs`) reads the last value.
-
-A response that sets or clears the shared cookie also expires the older host-only
-cookie of the host that answered, when the shared cookie reaches that host
-(`packages/backend/confect/auth/host.ts`). The shared cookie reaches the site's
-own host and, when its domain has a dot, every subdomain of that domain. A
-response from a host that the shared cookie does not reach leaves that host's
-cookie alone. The expiry has no `Domain` attribute, so it reaches only the host
-that answered. The expiry comes before the shared cookie in the response, because
-a browser that stores both as one cookie, as Chromium does for `localhost`, must
-keep the shared one.
-
-The pair would form if a school host wrote the shared cookie while an older
-host-only cookie existed. The browser would send the older cookie first, and the
-identity route reads the first value, so the main site would serve the older
-session. No flow of this change does that, since the Google callback runs on the
-main site. A school sign-in endpoint must not write the shared cookie while an
-older host-only cookie can exist: it must end on the main site, where a response
-that sets the shared cookie expires that older cookie.
-
-A session that exists only as the older cookie keeps working on the main site
-until its next refresh or sign-in, and it shows as signed out on a school host
-until then. A rollback to the build before this change has one known effect: a
-sign-out in that build clears only its own host-only cookie, so the shared
-cookie can still identify a valid session until that session expires.
+Every answer that starts or ends a session also sets the signed-in hint
+(`withSessionHint`), so a static page knows at once whether to start the live
+session.
 
 ## School Sign-In
 
-Program wave A, the first delivery wave of the School program, changes how
-school members sign in. Each path below is planned unless it says live. Every
-path ends in the Better Auth session that the rest of this ADR checks. The
-username, the login card, and the parent code are served on the school host
-only, each at its own address (ADR 0026).
+Every path below ends in a Convex Auth session. The username, the login card,
+and the parent's sign-in are served on the school host (ADR 0026).
 
-- **Google.** Google sign-in covers a school's Workspace account and belajar.id
-  accounts. When the school has set allowed email domains, the invite claim
-  checks the hosted domain claim (`hd`) of the account's Google sign-ins against
-  them, and an empty list restricts nothing (ADR 0011). The claim admits an
-  account only when it holds a Google account and the latest sign-in of each
-  Google account it holds stored one of the domains (Provider tokens, above).
-  A personal Google account made on a school address, a Google account that has
-  not signed in since the hosted domain is kept, and an account that never
-  signed in with Google leave the invite pending. A Google sign-in that stores a
-  new hosted domain asks for the claim again, because Google signs a new learner
-  up by writing the user before the account, so the claim that the new user
-  asks for can run before the domain is stored. A school account is matched by
-  its Google issuer and subject, never by its email address. The one exception
-  is an invite claim (ADR 0011), which matches the verified email of an account
-  to the address of an invite once, to bind a Person. Google sign-in, on the main site and from the school host's
-  login page, and the domain check are live. belajar.id is the ministry's
-  Workspace, which gives each level and role its own subdomain, such as
-  `guru.sma.belajar.id`, so a listed `belajar.id` stands for all of its subdomains.
-  Every other domain matches as written. The owner decided on 31 October 2026 not to
-  wait for a pilot school's accounts: the published forms are enough, and the match
-  covers any subdomain, so a form not yet seen passes too.
-- **Username.** A school issues a username that is unique within the school. It
-  is stored in the school's login table and maps to a Better Auth username that
-  is unique within the cell, because each cell holds its own Better Auth rows
-  (ADR 0026), and is created automatically. A username signs in with a password.
-  The student sets the password when redeeming a login card (below), and the
-  password is the daily credential. Better Auth's `/sign-in/username` endpoint
-  finds a user by username among every user of the deployment and has no host
-  check, so it is switched off on main and stays off on every host. Username
-  sign-in is served only by an endpoint of the school host, never by the generic
-  endpoint on `nakafa.com`, and that endpoint needs a test before it opens. A
-  username account has an address in the reserved `.invalid` domain (RFC 2606)
-  that never receives mail, and every sender refuses that domain. Its Person is
-  bound by the card claim (claim method `card`). A school username is a login
-  name only, never a public profile handle (K15).
+- **Google.** Google sign-in covers a school's Workspace accounts, belajar.id
+  accounts and personal accounts alike. A sign-in starts on the main site,
+  which is the only address it may return to besides staging's
+  (`allowedRedirectOrigins`), and Google returns through the deployment's
+  `/oauth/google/callback` to the page that completes it. Nakafa's user
+  callbacks (`confect/auth/account.ts`) decide what a Google identity is:
+  - An identity without an address, or whose address Google did not verify, is
+    refused (`GoogleAddressRefused`).
+  - A new identity whose verified address a live account holds signs in to
+    that account. Addresses are stored lowercase, so the match is exact. This
+    is how every account made before Convex Auth keeps its id.
+  - Any other new identity makes an account: a username, an animal, the plan's
+    credits, the welcome email, and the claim of any invite that waits for its
+    address (ADR 0011).
+  - A deleted account cannot sign in again (`AccountDeleted`), and each sign-in
+    binds the guardian Persons that a school linked to the address (ADR 0034).
+  An invite claim matches the verified address to the invite's, and a school's
+  email domains still decide which addresses it may invite and claim
+  (`admitsAddress`, ADR 0011). The earlier check of the Google account's hosted
+  domain (`hd`), which told a Workspace account from a personal account made on
+  a school address, is gone, because Convex Auth's Google profile carries no
+  `hd` claim; at the cutover no school had set a domain. It returns when
+  upstream passes `hd` through (Moving To Convex Auth).
+- **Username.** A school issues a login name that is unique within the school
+  (`schoolLogins`). Convex Auth's username of a school account is the account's
+  own id, which nobody types: `auth/school:signIn` resolves the school and the
+  login name to the account a card made (`loginAccountOf`), and Convex Auth's
+  password method checks the password and makes the session. A name that is not
+  a login of that school, a wrong password, and a throttled attempt all answer
+  the same refusal. Nobody signs up with a password: the password method's
+  `createUser` refuses (`SchoolSignUpRefused`), because only a card makes a
+  school account. A school account holds an address in the reserved `.invalid`
+  domain (RFC 2606) that never receives mail. A login name is never a public
+  profile handle (K15).
 - **Login card.** A card is a one-time setup secret, not a daily credential. It
   carries a 10-character Crockford base32 code, without the letters I, L, O, and
   U, and the school's host beside the code, such as `harapan.nakafa.com`.
   Nakafa stores only a keyed hash of the code. A code is single use, expires
-  after 14 days, and is rate limited by the existing rate-limit component. The QR
-  code on the card holds only the code. A student redeems the code on the card
-  page of the school host (`/kartu`, ADR 0026). No other host accepts a card
-  code, so a card typed at `nakafa.com` finds nothing. Redeeming creates the
-  username account, runs the card claim, and asks the student to set a password.
-  A teacher or an admin prints a card again, which voids the old code and writes
-  a journal entry, and redeeming the new card lets the student set a new
-  password. A card is not an invite row (ADR 0011), but the same rules apply to
-  it: a card never goes to a Person who holds the Owner or Admin role, and it goes
-  only to a Person with no account yet or with an account that a card made. A code
-  is shown with dashes and accepted with or without them. A typed code reads O as 0
-  and I or L as 1, as Crockford base32 does, and U is refused.
-- **Parent.** A parent signs in with an email code: six digits, valid for five
-  minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
-  under a server secret, like the login-card code, with its own purpose label,
-  `guardian-code`, ADR 0034), because six digits have only a million values and
-  a plain digest would give the code to anyone who reads the row. Better Auth's `emailOTP` plugin keeps codes in plain text by
-  default, so Nakafa stores its own keyed hash. `confect/emails` sends the code.
-  The parent enters it on the code entry page of the school host
-  (`/parents`, ADR 0026), the only page that accepts it. It is the one code
-  that an email carries (ADR 0027): it lives five minutes, rests as a keyed hash,
-  and is useless without that page. A parent's consent to the link is recorded
-  with a second check, and ADR 0012 defines the verified parent relation. Built on 26 October 2026 (ADR 0034, Implementation Status): the
-  school host's endpoint `/school/guardian/sign-in` redeems the code, and an
-  address that the school did not link gets the same answer and no mail.
+  after 14 days, and is rate limited. Redeeming it creates the account, runs the
+  card claim, and sets the password the student chooses. A teacher or an admin
+  prints a card again, which voids the old code, and redeeming the new card sets
+  a new password and ends the account's sessions. A card never goes to a Person
+  who holds the Owner or Admin role, and it goes only to a Person with no
+  account yet or with an account that a card made.
+- **Parent.** A parent signs in with Google. The school links the parent's
+  address, and the parent's first sign-in with that verified address binds the
+  guardian Person (claim method `address`, ADR 0034). Signing in is not consent
+  for a child: the consent still waits for the NISN check or for staff.
 - **Microsoft Entra ID and SAML.** These come after Google, for the schools that
   ask for them.
 
-A learner under 18 whose Workspace account is blocked until a Workspace admin
-marks Nakafa as trusted redeems a login card once, sets a password, and then
-signs in with the username and that password. The status name that Google shows
-for that block comes from third-party documentation and is not yet tested on a
-Workspace account.
-
 ### As built: login cards and the password store
 
-`confect/identity` builds the login card, the school login, the password store,
-and the placeholder address. The school host's username sign-in is built on that
-host alone (`auth/login`), and the card code is typed on the school's entry page
-for now, not yet on the card page of `/kartu`. The Workspace domain check is not
-built yet.
+`confect/identity` builds the login card, the school login, and the placeholder
+address; Convex Auth's password component is the password store.
 
-- **Password store.** `emailAndPassword` is enabled only as the store of school
-  passwords, with `disableSignUp`, so Better Auth refuses a public sign-up even
-  from server code. Sign-in with an email and a password is closed on every host:
-  the router answers 404 (`disabledPaths`), and server code gets the same refusal
-  from `auth/routes`, because `auth.api` runs an endpoint without the router's
-  check. Sign-in with a school username is served on the school host alone, and a
-  server call to it is refused, because a server call names no host.
-  The minimum length is Better Auth's default, 8 (`context/create-context`). A
-  password reset ends the sessions it replaces (`revokeSessionsOnPasswordReset`).
-- **Username.** The `username` plugin holds the global username of the account,
-  under the rule of `users/username.ts`, so the Better Auth username and
-  `users.username` are one value. A rename changes both in one transaction
-  (`auth/username`, which changes only an account that holds a Better Auth
-  username). `update-user` refuses a username field (`usernameUpdatesDisabled`),
-  so the app's rename is the only writer. `/is-username-available` stays closed,
-  because it would tell any visitor which usernames exist. `/sign-in/username`
-  answers on a school host only: the school login name it reads maps to the
-  account's username (`usernameOf`), and a name that is not a login of that school
-  is refused with the same error as a wrong password.
+- **Password store.** `setLoginPassword` (`identity/account.ts`) sets a school
+  account's password through the password component, with Convex Auth's
+  minimum length of 8, and ends every session of the account, so a reprinted
+  card signs the old device out.
 - **Login name.** A school login name is 3 to 32 characters of lowercase letters,
   digits, dots, underscores, and hyphens, unique within its school. It refuses
   the names that could pass for Nakafa, the one list in `users/reserved.ts` that
-  a username also refuses. It does not refuse a route word, because a login is
-  never a URL.
+  a username also refuses.
 - **Login card.** `loginCards` keeps one row per Person: the HMAC-SHA-256 of the
   canonical code under `LOGIN_CARD_SECRET`, read through `Config` and never
   printed or stored (declared in `convex/convex.config.ts`, so Convex refuses a
-  push to a deployment without it), its issuer, its dates, and `redeemedAt`. The code has ten
-  characters of Crockford base32. It is drawn from Effect's `SecureRandom` service,
-  because the default `Random` is not secure. A card works for `CARD_TERM`, 14
-  days. Issuing or reissuing replaces the row, so the old code matches nothing.
-  `card.issue` is an Admin's right. A card never goes to a Person who holds the
-  Owner or Admin role: issuing or reissuing for one answers `CardRoleRefused`, and
-  redeeming a card for one reads as `invalid`. `cardRefusalOf` (`identity/card`)
-  is the one rule that issue, reissue, and redeem all call. A card goes only to a
-  Person with no account or with an account a card made. Issuing for any other
-  Person answers `PersonClaimed`, the refusal an invite gives, and redeeming a card
-  for one reads as `invalid`.
-- **Redeem.** `identity/cards:redeem` is one mutation, in this order: it
-  refuses a request that carries a signed-in identity as `invalid` before any
-  limit is spent, counts the attempt against the device limit, reads the code and
-  the typed login name, which must be the card's own (`invalid`, before `used`
-  and `expired`), reads the Person and refuses one that is removed or that the card rule
-  refuses (the Owner or Admin role, or an account that a card did not make) as
-  `invalid` whatever the card says, opens the card on the school's host (`used`,
-  then `expired`), refuses a password outside Better Auth's length before any
-  write, creates the account if the Person has none (the global username from
-  `users/allocation`, the placeholder address named by a random key, no Google
-  link), binds the Person with method `card`, stores the password through Better
-  Auth's reset endpoint, marks the card used, and journals `card.redeemed` with
-  the Person and the card. A reissue keeps the card's row, so the `card.issued`
-  or `card.reissued` entry before it in journal order names the printing that
-  was redeemed. A refusal is a value, so the attempt still counts.
-  A failure that throws rolls back the whole mutation, so an account, a claim,
-  or a redemption never survives without the others. A card whose Person has no
-  school login cannot exist: issuing writes the login first and nothing deletes
-  one, so the login is a required read, and a broken row fails the mutation.
-- **Rate limits.** Per device (the UUID the sign-in page keeps): five attempts at
-  once, then five more every 15 minutes. These are design choices, not
-  measurements. Every attempt counts against it. A code is 50 bits, ten characters
-  of five bits each, so guessing one takes about 2^49, or 5.6 x 10^14, tries on
-  average. That figure is computed from the alphabet, not measured. A bucket shared
-  by every device would add no protection against that guessing, and it would let
-  one person block another's card, so there is no limit per code prefix.
-- **Username attempts.** Per school login, on the school host: ten sign-in attempts
-  at once, then ten more every 15 minutes. The count belongs to the account that the
-  login names, so one login's attempts never refuse another login. An attempt takes
-  one before the password is checked, so parallel guesses cannot all pass a limit
-  that none of them has reached. A successful sign-in clears the count, so a success
-  never counts against the login. A refused attempt answers the same 401 as a wrong
-  password, whether or not the limit refused it, so the answer reveals nothing about
-  a login name. These are design choices, not measurements.
+  push to a deployment without it), its issuer, its dates, and `redeemedAt`. The
+  code is drawn from Effect's `SecureRandom` service. A card works for
+  `CARD_TERM`, 14 days. Issuing or reissuing replaces the row, so the old code
+  matches nothing. `cardRefusalOf` (`identity/card`) is the one rule that issue,
+  reissue, and redeem all call.
+- **Redeem.** `identity/cards:redeem` is one mutation: it refuses a signed-in
+  caller, counts the attempt against the device limit, checks the code, the
+  typed login name and the Person, creates the account if the Person has none
+  (`createLoginAccount`: the placeholder address, a username, and the account's
+  id as its Convex Auth username), binds the Person with method `card`, sets the
+  password, marks the card used, and journals `card.redeemed`. A refusal is a
+  value, so the attempt still counts, and a failure that throws rolls the whole
+  mutation back.
+- **Rate limits.** Per device (the UUID the sign-in page keeps): five card
+  attempts at once, then five more every 15 minutes. A code is 50 bits, so
+  guessing one takes about 2^49 tries on average, computed from the alphabet.
 - **Placeholder address.** An account made from a school login holds
-  `<random key>@login.nakafa.invalid`, where the key is a random UUID drawn for that
-  account, so the address names no one. The Convex adapter writes the Better Auth
-  id itself, so the id is not known before the write. The handle is allocated from
-  the Person's name, as it is for every account. `identity/address` owns the domain.
-  `emails/client` refuses a message to it before the provider is called, in any
-  recipient field and in any written form of the address. No welcome intent and
-  no payment customer is made for it, on creation or on a profile change, and an
-  invitation to it sends nothing. The address is an internal key, not personal
-  data, and RFC 2606 keeps mail from ever reaching it.
+  `<random key>@login.nakafa.invalid`, where the key is a random UUID, so the
+  address names no one. `identity/address` owns the domain. `emails/client`
+  refuses a message to it before the provider is called. No welcome intent and
+  no payment customer is made for it.
+
+## Account Deletion
+
+`auth/deletion:deleteAccount` deletes the signed-in account in one transaction:
+every Convex Auth session of the account ends, its school username is freed,
+and the account is marked deleted, so nothing reaches it from that commit on.
+A scheduled finalize releases its Persons, writes the tombstone, and starts the
+durable cleanup of its data (`confect/auth/deletion`).
+
+Two rows outlive the account, because Convex Auth 2.0.0 offers no deletion of a
+user's rows in its Google and password components: the Google account row (the
+Google subject and the tombstone's id) and, for a school account, the password
+hash. They are why a deleted account's Google sign-in is refused with
+`AccountDeleted` rather than making a new account. GDPR note: a Google subject
+is a stable pseudonymous identifier and therefore personal data under Article
+4(1). It is kept only to refuse that sign-in and is erased by the deletion
+workflow as soon as the components can delete by user; the hash cannot sign in
+once the username is freed. The owner accepted this bounded gap on 13 November
+2026, and the upstream changes below close it.
+
+## Moving To Convex Auth
+
+The cutover of 13 November 2026 (#2423) replaced the earlier auth system in one
+release, with no compatibility window and no migration function.
+
+- At the cutover production held 752 Google sign-ins and no password, school
+  login, login card, or guardian link, so every account moves by its first
+  Google sign-in, which signs in to the account that holds its verified address
+  and keeps its id. Each learner signs in once more, because the earlier
+  sessions do not carry over.
+- `users.authId`, the earlier id, cannot leave the schema in the same deploy,
+  because Convex refuses a schema that drops a field every row holds. The
+  cutover makes it optional and unread, the Convex CLI clears it from every row
+  right after the deploy (`convex import --table users --replace` of the rows
+  without it, which keeps each id and creation time), and the next change drops
+  the field. This is the one exception to the one-step change rule.
+- The earlier component's data is deleted, and the deployment variables it read,
+  its secret and its key set, are removed by name.
+- Upstream changes that close the gaps of Account Deletion and of the hosted
+  domain check: deletion by user for the Google (OAuth) and password
+  components, and `hd` in the Google profile (convex/convex-auth).
 
 ## Usernames And Profiles
 
 A profile lives at `/{locale}/@username`. The username belongs to the app user
 row (`users.username`, with the index `by_username`). It is the only namespace
 of profile names, and it is no credential: a password or a Google sign-in is.
-The Better Auth username plugin holds this same value for school accounts, and
-never a second one.
+Convex Auth's username of a school account is the account's id, never this
+handle (School Sign-In, below).
 
 - A live account holds exactly one username. A deleted account keeps none: the
   tombstone removes the username and the bio, which frees the name at once, so
@@ -429,22 +316,19 @@ October 2026, and was then deleted with its tests and bindings. The schema keeps
 
 ## Rejected Alternatives
 
-Validating the session inside every query closes the read window after
-revocation, but it adds a Better Auth component read to every signed-in read to
-protect a credential that is already short-lived and that the client discards
-on sign-out.
+Keeping the earlier auth system and tuning it was rejected by the owner on 13
+November 2026: it read a separate component on every signed-in write, its
+adapter bundled to 2,830 KiB, and its performance and stability cost Convex
+function time and learner latency.
 
-Confirming a write through `safeGetAuthUser` gives the same answer as
-`session.live` for a token Better Auth issued, at the cost above. It also does
-not compare the session's user with the token's, which `session.live` does.
+Reading the session only on writes, as the earlier design did, saves one
+component query per read but leaves a revoked session reading for the rest of
+its token's lifetime.
 
-Turning off `account.updateAccountOnSignIn` stops the update at each sign-in,
-but not the writes at sign-up and at a link, and it stops the granted scopes
-from following Google. The hooks cover every write with one rule.
-
-Clearing the stored tokens from the app through the component's `updateOne`
-would write `null` instead of removing the columns, and would cost one
-component call for each row.
+A migration function that copies the earlier sessions into Convex Auth was
+rejected: it would ship a temporary function and a second session format for
+the sake of 19 live sessions, and a learner's next Google sign-in links the
+account by itself.
 
 A public query of a profile by username, closed by a rule, was rejected until an
 age is stored. With no age, the rule would answer not found for every account
@@ -453,68 +337,22 @@ repeat it.
 
 ## References
 
-- https://docs.convex.dev/auth/functions-auth
+- https://docs.convex.dev/auth/convex-auth/getting-started and
+  https://docs.convex.dev/auth/convex-auth/ssr-nextjs/setup: the components, the
+  SSR routes, and the cookie names.
+- `@convex-dev/auth` 2.0.0: `server/userId.js` (`getAuthUserId` reads the
+  session row on every call), `ssr/handlers.js` (the refresh and sign-out
+  routes, and the origin check of `ssr/origin.js`), `components/password/public.js`
+  (the throttle), `component/sessions.js` (the refresh grace and the spent-token
+  horizon), `lib/oauth/authorize.js` (PKCE and the parameters Google receives),
+  `components/google/constants.js` (the scopes), and `lib/oauth/schema.js` (the
+  Google account row, indexed by provider id only).
+- https://developers.google.com/identity/protocols/oauth2/web-server: the
+  default `access_type` is `online`, which returns no refresh token.
 - https://tanstack.com/router/latest/docs/framework/react/guide/url-rewrites
   and `apps/www/src/lib/profile/rewrite.ts`: the router path that serves the
   `@username` address.
-- `@convex-dev/better-auth` `plugins/convex`: the default token lifetime of
-  15 minutes (`jwtExpirationSeconds`), which Nakafa does not override.
-- `better-auth` `oauth2/utils` (`setTokenUtil`, `decryptOAuthToken`) and
-  `plugins/jwt/utils` (`createJwk`): the encryption of stored provider tokens
-  and signing keys.
-- `better-auth` `api/routes/sign-in` and `api/routes/account` (`link-social`):
-  the ID token branches that `disableIdTokenSignIn` closes.
-- `better-auth` `context/create-context` and `cookies`: the secret list, and
-  the cookie signature that a rotation invalidates.
-- `better-auth` `plugins/bearer` and `@convex-dev/better-auth` `plugins/convex`:
-  the hook that accepts a session token in an `Authorization` header.
-- `better-auth` 1.6.33, `dist/db/with-hooks` (`createWithHooks` line 7,
-  `updateWithHooks` line 44): a hook's `data` is merged over the data to write.
-  `dist/db/internal-adapter` (`createOAuthUser` 75, `createAccount` 102,
-  `linkAccount` 509, `updateAccount` 577) runs the hooks for every account
-  write. Its callers are `oauth2/link-account` (lines 31, 64, 97),
-  `api/routes/callback` (114, 115) and `api/routes/account` (185, 315, 456).
-  `dist/context/create-context` reads the hooks from `options.databaseHooks`
-  (line 198) and turns `storeAccountCookie` on only without a database (line
-  54).
-- `@better-auth/core` 1.6.33, `dist/db/adapter/factory` (`transformInput`, lines
-  115 and 141): the adapter leaves an `undefined` column out of the write.
-- `better-auth` `dist/api/routes/account`: the routes that read a stored token,
-  `/get-access-token` (line 344), `/refresh-token` (381) and `/account-info`
-  (484), and `getValidAccessToken` (284) that two of them share.
-  `resolveUserId` (265 to 274) takes the `userId` of the call when it carries no
-  headers and no session. `dist/api/index` (lines 166 to 168) answers a disabled
-  path with 404, and `dist/plugins/open-api/generator` (lines 426 and 474)
-  leaves it out of the API reference.
-- `better-auth` 1.6.33, `dist/auth/base` (line 9) and `dist/api/index` (line
-  114): `auth.api` and the router are built from the same endpoints, and
-  `dist/api/to-auth-endpoints` (line 34) wraps each one in the hook pipeline of
-  `dist/api/dispatch`. `getHooks` (line 137) collects the before hooks of every
-  plugin, `dispatchAuthEndpoint` (186 and 210) runs them for a router request
-  and for an `auth.api` call alike, and a hook that rejects ends the call. Only
-  the router checks `disabledPaths`.
-- `convex` 1.46.0, `browser/http_client` (`setAdminAuth`, line 167) and the CLI
-  `run` command (`runFunctionAndLog`, line 121210 of `dist/cli.bundle.cjs`): the
-  admin key may call internal queries, mutations and actions, and `run` sends it
-  with the component path of `--component`.
-- https://docs.convex.dev/components/authoring: a component exposes only its
-  public functions to the app, and `npx convex run` and the dashboard run public
-  and internal functions alike.
-- `@better-auth/core` 1.6.33, `dist/social-providers/google` (lines 45 to 73)
-  and `dist/oauth2/create-authorization-url` (lines 15 and 17): `prompt` and
-  `access_type` reach Google only when set. `getUserInfo` (line 105) reads the
-  profile from the ID token of the code exchange, and `verifyIdToken` (line 95)
-  refuses every ID token when `disableIdTokenSignIn` is set.
-- https://developers.google.com/identity/protocols/oauth2/web-server: the
-  default `access_type` is `online`, `prompt=consent` asks for consent and
-  `prompt=select_account` shows the account chooser, and a request without
-  `prompt` asks the learner only the first time.
-- https://developers.google.com/identity/openid-connect/openid-connect: the
-  token response holds a `refresh_token` only when `access_type` is `offline`.
-- `better-auth` `plugins/username`: the sign-in endpoint takes a username and a
-  password, finds the user by username among every user of the deployment, and
-  has no host check. The same plugin keeps a username unique within one
-  deployment, which is why a school username maps to a Better Auth username that
-  is unique per cell.
+- GDPR Article 4(1) and Article 17: an online identifier is personal data, and
+  the right to erasure.
 - RFC 2606, section 2: `.invalid` is a reserved top-level domain whose names are
   sure to be invalid, so mail to an address in it never arrives.

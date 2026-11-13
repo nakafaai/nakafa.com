@@ -160,7 +160,8 @@ that `satisfies` a `...Config` type which a package imports, such as Convex's
 `AuthConfig`. A configuration file that a product module imports is still
 configuration. Of 29 configuration files measured, one is imported by product
 code: `packages/backend/confect/auth.ts`, which Convex evaluates as its auth
-configuration and which the Better Auth plugin must receive as the same object.
+configuration and which imports the audience of the agent tokens from
+`confect/auth/grant/audience.ts`.
 
 A `throw` of `ConvexError` in a Convex handler is exempt only when all of these
 hold:

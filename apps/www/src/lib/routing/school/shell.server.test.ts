@@ -133,7 +133,7 @@ describe("answerSchoolPage", () => {
       Effect.gen(function* () {
         for (const other of [
           request("https://harapan.nakafa.com/exams", "POST"),
-          request("https://harapan.nakafa.com/api/auth/get-session"),
+          request("https://harapan.nakafa.com/api/auth/refresh"),
           request("https://harapan.nakafa.com/assets/old.js"),
           request("https://nakafa.com/en/exams"),
         ]) {
