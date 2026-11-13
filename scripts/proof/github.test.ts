@@ -231,6 +231,28 @@ describe("GitHub proof runner", () => {
       }).pipe(Effect.provide(NodeServices.layer))
   );
 
+  it.effect("waits out GitHub's rate limit and goes on", () =>
+    Effect.gen(function* () {
+      const answer = github({
+        "result-chromium-1": shard("chromium"),
+        "result-firefox-1": shard("firefox"),
+        "result-webkit-1": shard("webkit"),
+      });
+      const refusals = MutableRef.make(2);
+      const { exit, calls } = yield* withGithub(
+        (args) =>
+          args[0] === "workflow" && MutableRef.getAndDecrement(refusals) > 0
+            ? { code: 1, stderr: "HTTP 403: API rate limit exceeded for user" }
+            : answer(args),
+        proveOnGithub(SHA, [], 1)
+      );
+      expect((yield* exit).result.passed).toBe(true);
+      expect(
+        Arr.filter(calls, (call) => call.startsWith("gh workflow run"))
+      ).toHaveLength(3);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
   it.effect("fails with what GitHub said, or answered unexpectedly", () =>
     Effect.gen(function* () {
       const refused = yield* withGithub(
@@ -417,6 +439,18 @@ describe("proof command line", () => {
         ).toBe(true);
         const onMain = yield* withGithub(github({}), runProof("/root", [MAIN]));
         expect(yield* onMain.exit).toBe(1);
+        expect(
+          Arr.some(onMain.calls, (call) => call.includes("context=proof/new"))
+        ).toBe(false);
+        const greenMain = yield* withGithub(
+          github({
+            "result-chromium-1": shard("chromium"),
+            "result-firefox-1": shard("firefox"),
+            "result-webkit-1": shard("webkit"),
+          }),
+          runProof("/root", [MAIN, "--shards=1"])
+        );
+        expect(yield* greenMain.exit).toBe(0);
         const answer = github({});
         const nameless = yield* withGithub(
           (args) => (args[0] === "api" ? { stdout: "main\n" } : answer(args)),
