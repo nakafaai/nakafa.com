@@ -103,6 +103,8 @@ describe("molecule catalog", () => {
     expect(angle("propane", 0, 1, 2)).toBeCloseTo(112.4, 6);
     expect(angle("ethanol", 0, 1, 2)).toBeCloseTo(107.8, 6);
     expect(angle("ethanol", 1, 2, 3)).toBeCloseTo(105.4, 6);
+    expect(angle("methanol", 0, 1, 2)).toBeCloseTo(108.5, 6);
+    expect(distance("methanol", 0, 1)).toBeCloseTo(142.7, 6);
     expect(angle("hydrogen-peroxide", 2, 0, 1)).toBeCloseTo(94.8, 6);
     expect(distance("hydrogen-peroxide", 0, 1)).toBeCloseTo(147.5, 6);
   });

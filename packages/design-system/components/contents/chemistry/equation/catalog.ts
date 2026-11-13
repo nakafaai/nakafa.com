@@ -30,6 +30,7 @@ export const ReactionIdSchema = Schema.Literals([
   "ethene-hydration",
   "ethanol-dehydration",
   "ozone-formation",
+  "methanol-synthesis",
 ]);
 export type ReactionId = typeof ReactionIdSchema.Type;
 
@@ -98,6 +99,16 @@ const REACTIONS = {
     reactants: [
       ["hydrogen", 1],
       ["chlorine", 1],
+    ],
+  },
+  "methanol-synthesis": {
+    products: [
+      ["methanol", 1],
+      ["water", 1],
+    ],
+    reactants: [
+      ["carbon-dioxide", 1],
+      ["hydrogen", 3],
     ],
   },
   "methane-combustion": {

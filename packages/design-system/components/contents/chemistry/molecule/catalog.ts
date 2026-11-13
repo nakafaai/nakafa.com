@@ -33,6 +33,7 @@ export const MoleculeIdSchema = Schema.Literals([
   "ethyne",
   "propane",
   "ethanol",
+  "methanol",
 ]);
 export type MoleculeId = typeof MoleculeIdSchema.Type;
 
@@ -298,6 +299,20 @@ const SOURCES = {
         dihedral: { degrees: 111.5, to: 2 },
         element: "H",
       },
+    ],
+  },
+  methanol: {
+    angle: { arms: [0, 2], vertex: 1 },
+    formula: "\\mathrm{CH_3OH}",
+    placements: [
+      { element: "C" },
+      { bond: { length: 142.7, to: 0 }, element: "O" },
+      {
+        angle: { degrees: 108.5, to: 0 },
+        bond: { length: 95.6, to: 1 },
+        element: "H",
+      },
+      ...methyl(0, 1, 2, 180, 109.5),
     ],
   },
   methane: {

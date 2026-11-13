@@ -54,7 +54,7 @@ const PATHS_PER_SIDE = 7;
 const GOLD_ATOM = 144_000;
 
 /** The kinetic energies the slider offers, in MeV: radium and polonium alphas fall inside. */
-const ENERGY = { max: 9, min: 2, start: 5, step: 0.5 } as const;
+const ENERGY = { max: 9, min: 2, start: 5, step: 0.1 } as const;
 
 /** How fast an alpha crosses the view far from the nucleus, in femtometres a second. */
 const SPEED = 90;
@@ -92,15 +92,20 @@ interface ScatteringLabels {
  */
 export function RutherfordScatteringLab({
   description,
+  energy: start = ENERGY.start,
   labels,
   title,
 }: {
   readonly description: ReactNode;
+  /** The alpha energy the slider starts at, in MeV: 5.3 for polonium, 7.7 for radium C. */
+  readonly energy?: number;
   readonly labels: ScatteringLabels;
   readonly title: ReactNode;
 }) {
   const format = useFormatter();
-  const [energy, setEnergy] = useState<number>(ENERGY.start);
+  const [energy, setEnergy] = useState<number>(
+    Math.min(ENERGY.max, Math.max(ENERGY.min, start))
+  );
   const approach = closestApproach(energy, GOLD_CHARGE);
   const number = (value: number, digits: number) =>
     mathNumber(

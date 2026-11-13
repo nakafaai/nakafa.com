@@ -62,6 +62,9 @@ describe("reaction catalog", () => {
     expect(economyTex("ethanol-dehydration", indonesian)).toEqual(
       Option.some("\\dfrac{28}{46} \\times 100\\% = 60{,}9\\%")
     );
+    expect(economyTex("methanol-synthesis", indonesian)).toEqual(
+      Option.some("\\dfrac{32}{50} \\times 100\\% = 64\\%")
+    );
     expect(economyTex("water-synthesis", indonesian)).toEqual(
       Option.some("\\dfrac{2(18)}{36} \\times 100\\% = 100\\%")
     );
