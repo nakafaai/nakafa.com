@@ -14,6 +14,7 @@ import type {
 import {
   AtomBall,
   BondSticks,
+  FixedBond,
   placeBond,
 } from "@repo/design-system/components/contents/chemistry/molecule/model";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
@@ -29,6 +30,9 @@ import type { Group, Mesh } from "three";
 export type ReactionLayout = Result.Result.Success<
   ReturnType<typeof layoutReaction>
 >;
+
+/** How much of an atom a ghost of the molecules before and after keeps. */
+const GHOST = 0.14;
 
 /** The least change of progress the slider is told about while the card plays. */
 const SLIDER_STEP = 0.01;
@@ -142,6 +146,7 @@ export function ReactionScene({
           ref={ref}
         />
       ))}
+      <ReactionGhosts layout={layout} />
       <ReactionArrow />
       <ThreeLabel color={colors.text} fontSize="compact" position={[-sideX, labelY, 0]}>
         {reactants}
@@ -149,6 +154,62 @@ export function ReactionScene({
       <ThreeLabel color={colors.text} fontSize="compact" position={[sideX, labelY, 0]}>
         {products}
       </ThreeLabel>
+    </group>
+  );
+}
+
+/**
+ * Faint outlines of the reactants where they started and the products where
+ * they end, so the whole equation stays in view while the atoms travel.
+ */
+function ReactionGhosts({ layout }: { readonly layout: ReactionLayout }) {
+  const sides = [
+    {
+      bonds: layout.reactantBonds,
+      key: "start",
+      place: (particle: ReactionLayout["particles"][number]) => particle.start,
+    },
+    {
+      bonds: layout.productBonds,
+      key: "end",
+      place: (particle: ReactionLayout["particles"][number]) => particle.end,
+    },
+  ] as const;
+
+  return (
+    <group>
+      {Arr.map(sides, (side) => (
+        <group key={side.key}>
+          {Arr.map(layout.particles, (particle, index) => (
+            <AtomBall
+              element={particle.element}
+              key={`${side.key}-${index}`}
+              opacity={GHOST}
+              position={side.place(particle)}
+              style="ball"
+            />
+          ))}
+          {Arr.flatMap(side.bonds, (bond) =>
+            Option.match(
+              Option.all([
+                Option.map(Arr.get(layout.particles, bond.from), side.place),
+                Option.map(Arr.get(layout.particles, bond.to), side.place),
+              ]),
+              {
+                onNone: () => [],
+                onSome: (ends) => [
+                  <FixedBond
+                    bond={bond}
+                    ends={ends}
+                    key={`${side.key}-${bond.from}-${bond.to}`}
+                    opacity={GHOST}
+                  />,
+                ],
+              }
+            )
+          )}
+        </group>
+      ))}
     </group>
   );
 }

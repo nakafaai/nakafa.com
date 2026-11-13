@@ -70,7 +70,7 @@ type MoleculeLabels = {
  *
  * @param molecules - Each molecule to offer, in order: its catalog id and its name in the lesson's language
  */
-export function MoleculeLab({
+export function MoleculeShapeLab({
   description,
   labels,
   molecules,
@@ -146,7 +146,10 @@ export function MoleculeLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={moleculeReach(molecule, style) + 1}>
+        <ScienceStage
+          reach={moleculeReach(molecule, style) + 1}
+          setting="studio"
+        >
           <Suspense>
             <MoleculeCamera reach={moleculeReach(molecule, style)} />
             <MoleculeScene molecule={molecule} style={style} />

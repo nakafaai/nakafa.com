@@ -3,18 +3,18 @@
 import { lazy } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
-export const MoleculeLab = withHydrationBoundary(
+export const MoleculeShapeLab = withHydrationBoundary(
   lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/molecule/lab"
-    ).then((module) => ({ default: module.MoleculeLab }))
+    ).then((module) => ({ default: module.MoleculeShapeLab }))
   )
 );
 
-export const ReactionLab = withHydrationBoundary(
+export const ReactionBalanceLab = withHydrationBoundary(
   lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/equation/lab"
-    ).then((module) => ({ default: module.ReactionLab }))
+    ).then((module) => ({ default: module.ReactionBalanceLab }))
   )
 );

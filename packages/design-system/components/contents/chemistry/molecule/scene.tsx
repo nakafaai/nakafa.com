@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import type { getMolecule } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
@@ -132,9 +132,10 @@ export function MoleculeScene({
         : null}
       {Arr.map(molecule.atoms, (atom, index) => (
         <ThreeLabel
+          anchorY="bottom"
           color={colors.text}
           fontSize="compact"
-          gap={atomRadius(atom.element, style) + 0.12}
+          gap={atomRadius(atom.element, style) + 0.06}
           key={`label-${index}-${atom.element}`}
           position={atom.position}
         >
@@ -150,7 +151,9 @@ export function MoleculeScene({
  * its outermost atom fills about two thirds of the view.
  */
 export function MoleculeCamera({ reach }: { readonly reach: number }) {
-  const distance = Math.max(2.4, reach * 3.4);
+  const size = useThree((state) => state.size);
+  const narrow = size.width < size.height * 1.2;
+  const distance = Math.max(2.6, reach * (narrow ? 4.6 : 3.6));
   return (
     <CameraControls
       cameraPosition={[distance * 0.32, distance * 0.28, distance * 0.9]}

@@ -21,6 +21,7 @@ import {
   MATH_NUMBER_OPTIONS,
   mathNumber,
 } from "@repo/design-system/components/contents/mathematics/number";
+import { useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -88,7 +89,7 @@ type ReactionLabels = {
  * @param reactions - Each reaction to offer, in order
  * @param reading - Which fourth reading the footer shows
  */
-export function ReactionLab(props: {
+export function ReactionBalanceLab(props: {
   readonly description: ReactNode;
   readonly labels: ReactionLabels;
   readonly reactions: readonly ReactionChoice[];
@@ -108,7 +109,7 @@ function ReactionCard({
   reactions,
   reading,
   title,
-}: Parameters<typeof ReactionLab>[0]) {
+}: Parameters<typeof ReactionBalanceLab>[0]) {
   const format = useFormatter();
   const offered = Arr.filter(reactions, (each) =>
     Schema.is(ReactionIdSchema)(each.id)
@@ -177,7 +178,7 @@ function ReactionCard({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={layout.span / 2 + 1} frameloop="demand">
+        <ScienceStage reach={layout.span / 2 + 1} setting="studio">
           <Suspense>
             <ReactionCamera layout={layout} />
             <ReactionScene
@@ -255,9 +256,14 @@ function ReactionSlider({ label }: { readonly label: string }) {
   );
 }
 
-/** Frames both sides of the reaction from a little above, wide enough for the whole run. */
+/**
+ * Frames both sides of the reaction from a little above, wide enough for the
+ * whole run: farther back on a narrow card, where the width runs out first.
+ */
 function ReactionCamera({ layout }: { readonly layout: ReactionLayout }) {
-  const distance = Math.max(6, layout.span * 1.05);
+  const size = useThree((state) => state.size);
+  const narrow = size.width < size.height * 1.2;
+  const distance = Math.max(5, layout.span * (narrow ? 1.5 : 1.02));
   return (
     <CameraControls
       cameraPosition={[0, distance * 0.22, distance]}

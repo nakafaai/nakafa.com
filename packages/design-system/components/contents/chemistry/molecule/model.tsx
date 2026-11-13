@@ -12,7 +12,7 @@ import {
   subtract,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import { Array as Arr } from "effect";
-import type { RefObject } from "react";
+import { type RefObject, useLayoutEffect, useRef } from "react";
 import { type Group, Matrix4, type Mesh, Vector3 } from "three";
 
 /** How a molecule is drawn: atoms on sticks, or atoms at their true size. */
@@ -105,7 +105,7 @@ export function AtomBall({
   readonly element: ElementSymbol;
   readonly opacity?: number;
   readonly position: Point;
-  readonly ref: RefObject<Mesh | null>;
+  readonly ref?: RefObject<Mesh | null> | undefined;
   readonly style: ModelStyle;
 }) {
   const radius = atomRadius(element, style);
@@ -118,6 +118,7 @@ export function AtomBall({
         clearcoatRoughness={0.14}
         color={ELEMENTS[element].color}
         metalness={0}
+        depthWrite={opacity === 1}
         opacity={opacity}
         roughness={0.34}
         transparent={opacity < 1}
@@ -133,10 +134,12 @@ export function AtomBall({
  */
 export function BondSticks({
   elements,
+  opacity = 1,
   order,
   ref,
 }: {
   readonly elements: readonly [ElementSymbol, ElementSymbol];
+  readonly opacity?: number;
   readonly order: Bond["order"];
   readonly ref: RefObject<Group | null>;
 }) {
@@ -151,12 +154,46 @@ export function BondSticks({
                 clearcoat={0.6}
                 clearcoatRoughness={0.2}
                 color={ELEMENTS[elements[half]].color}
+                depthWrite={opacity === 1}
+                opacity={opacity}
                 roughness={0.4}
+                transparent={opacity < 1}
               />
             </mesh>
           ))}
         </group>
       ))}
     </group>
+  );
+}
+
+/**
+ * A bond that never moves, stood between its atoms once when it mounts, as
+ * the faint outline of a molecule before or after a reaction.
+ */
+export function FixedBond({
+  bond,
+  ends,
+  opacity,
+}: {
+  readonly bond: Bond;
+  readonly ends: BondEnds;
+  readonly opacity: number;
+}) {
+  const ref = useRef<Group>(null);
+
+  useLayoutEffect(() => {
+    if (ref.current !== null) {
+      placeBond(ref.current, ends);
+    }
+  }, [ends]);
+
+  return (
+    <BondSticks
+      elements={bond.elements}
+      opacity={opacity}
+      order={bond.order}
+      ref={ref}
+    />
   );
 }
