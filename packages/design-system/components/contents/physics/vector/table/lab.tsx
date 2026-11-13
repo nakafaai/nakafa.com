@@ -77,22 +77,26 @@ function Table() {
       <mesh castShadow position={[0, TOP - 0.006, 0]} receiveShadow>
         <cylinderGeometry args={[RADIUS, RADIUS, 0.012, 96]} />
         <meshStandardMaterial
-          color={MATERIAL.aluminium}
-          metalness={0.75}
-          roughness={0.38}
+          color={MATERIAL.epoxy}
+          metalness={0.2}
+          roughness={0.55}
         />
       </mesh>
       {Arr.makeBy(72, (index) => {
         const long = index % 6 === 0;
-        const at = onTable(RADIUS - (long ? 0.016 : 0.01), index * 5, TOP);
+        const at = onTable(
+          RADIUS - (long ? 0.016 : 0.01),
+          index * 5,
+          TOP + 0.0004
+        );
         return (
           <mesh
             key={index}
             position={at}
             rotation={[0, (index * 5 * Math.PI) / 180, 0]}
           >
-            <boxGeometry args={[long ? 0.026 : 0.014, 0.0008, 0.0014]} />
-            <meshStandardMaterial color={MATERIAL.epoxy} roughness={0.6} />
+            <boxGeometry args={[long ? 0.026 : 0.014, 0.0008, 0.0016]} />
+            <meshStandardMaterial color={MATERIAL.deckWhite} roughness={0.6} />
           </mesh>
         );
       })}

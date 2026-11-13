@@ -177,7 +177,7 @@ export function DroneScene({
     }
     const at = hopPoint(hops, Math.min(time.current, duration) * FLIGHT_SPEED);
     const [x, y, z] = scenePoint(at);
-    drone.current?.position.set(x, y + 0.12, z);
+    drone.current?.position.set(x, y + 0.2, z);
     for (const rotor of rotors.current?.getObjectsByProperty("name", "rotor") ??
       []) {
       rotor.rotation.y += playing ? Math.min(delta, 0.1) * 40 : 0;
@@ -212,7 +212,7 @@ export function DroneScene({
         points={corners}
         transparent
       />
-      <group ref={drone}>
+      <group ref={drone} scale={1.7}>
         <Quadcopter rotors={rotors} />
       </group>
       <VectorArrow
