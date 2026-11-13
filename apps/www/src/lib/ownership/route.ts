@@ -122,6 +122,11 @@ export function isApplicationRoutePath(
     return segments.length === 1;
   }
 
+  // The island game, one full-screen page.
+  if (root === "island") {
+    return segments.length === 0;
+  }
+
   if (root === "og") {
     return segments.length >= 1;
   }
