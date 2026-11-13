@@ -94,6 +94,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Route UI reuses established Nakafa and design-system surfaces; a route migration may change data or URL shape but not introduce bespoke shells, cards, hover treatments, or list styling. Every interactive content visual composes the `VisualCard` parts in `packages/design-system/components/visual/card.tsx`; Mermaid diagrams (`DiagramFrame`) and embedded video keep their own frames.
 - Keep static content in prerendering, and never hide a current-time error behind a dynamic boundary. Request-time work that must not block the first HTML streams behind its own boundary.
 - Keep `experimental.instantInsights.validationLevel` at `"warning"`. Add no redundant `instant = true` exports; use `instant = false` only for a route deliberately allowed to block navigation.
+- A chart keeps its aspect as it widens, so `ChartContainer` caps its height at `max-h-96` and a chart may only lower that cap, which `scripts/check/charts.ts` requires.
 - The shared App Shell is the default prefetch. Use `<Link prefetch={true}>` only when URL-dependent cached content justifies one server invocation per link; grids and long lists prefetch on user intent.
 - Keep truthful stable UI outside `Suspense`; when no truthful fallback exists use `fallback={null}`, never invented skeletons or fake content.
 - Keep the real root layout in `src/routes/$locale`, read the locale on the server from the route params (`getLocaleOrThrow`), and do not thread it through components that do not use it.
