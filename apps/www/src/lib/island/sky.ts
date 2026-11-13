@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { rgbOf } from "@/lib/island/palette";
 
 const Color = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
@@ -19,8 +19,14 @@ export const Light = Schema.Struct({
 export type Light = typeof Light.Type;
 
 /** The weather the island shows, from the owner's own weather (D8). */
-const Weather = Schema.Literals(["clear", "clouds", "rain", "storm", "snow"]);
-type Weather = typeof Weather.Type;
+export const Weather = Schema.Literals([
+  "clear",
+  "clouds",
+  "rain",
+  "storm",
+  "snow",
+]);
+export type Weather = typeof Weather.Type;
 
 /** A color written as `#rrggbb`, with each channel from 0 to 1. */
 function rgb(hex: string) {
@@ -143,4 +149,70 @@ export function lightOf(hour: number, weather: Weather): Light {
     sun: mix([0, 0, 0], greyed(blend("sun"), grey), sun),
     zenith: greyed(blend("zenith"), grey),
   };
+}
+
+/**
+ * The island's weather from an OpenWeather icon code, as the weather route
+ * reports it: thunder is a storm, rain and drizzle are rain, snow is snow, a
+ * sky with clouds, mist or haze is clouds, and anything else is clear.
+ */
+export function weatherOf(icon: string): Weather {
+  const code = icon.slice(0, 2);
+  if (code === "11") {
+    return "storm";
+  }
+  if (code === "09" || code === "10") {
+    return "rain";
+  }
+  if (code === "13") {
+    return "snow";
+  }
+  return code === "01" ? "clear" : "clouds";
+}
+
+/**
+ * How the weather falls (ADR 0047, D8): its speed in cells a second, the length
+ * of a streak and the sway of a flake in cells, its linear RGBA color, and
+ * whether it falls as flakes (points) or streaks (lines).
+ */
+export const Fall = Schema.Struct({
+  color: Schema.Tuple([
+    Schema.Finite,
+    Schema.Finite,
+    Schema.Finite,
+    Schema.Finite,
+  ]),
+  flakes: Schema.Boolean,
+  length: Schema.Finite,
+  speed: Schema.Finite,
+  sway: Schema.Finite,
+});
+export type Fall = typeof Fall.Type;
+
+/** Rain: fast slanted streaks. */
+const RAIN: Fall = {
+  color: [0.8, 0.88, 1, 0.8],
+  flakes: false,
+  length: 1.8,
+  speed: 22,
+  sway: 0,
+};
+
+/** What falls from each sky: rain, heavier rain in a storm, slow drifting snow, and nothing from a clear or cloudy one. */
+export function fallOf(weather: Weather): Option.Option<Fall> {
+  if (weather === "rain") {
+    return Option.some(RAIN);
+  }
+  if (weather === "storm") {
+    return Option.some({ ...RAIN, length: 2.4, speed: 30 });
+  }
+  return weather === "snow"
+    ? Option.some({
+        color: [0.97, 0.98, 1, 0.95],
+        flakes: true,
+        length: 0,
+        speed: 2.2,
+        sway: 0.6,
+      })
+    : Option.none();
 }

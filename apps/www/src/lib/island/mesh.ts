@@ -232,7 +232,9 @@ function addCube(
     LOOK.kinds[block] === KIND.liquid && blockAt(cells, x, y + 1, z) !== block;
   for (const face of FACES) {
     const front = [x + face.n[0], y + face.n[1], z + face.n[2]] as const;
-    if (!isVisible(block, blockAt(cells, ...front))) {
+    // The sea goes on past the world's edge, so water shows no wall there.
+    const shown = LOOK.kinds[block] !== KIND.liquid || isInside(...front);
+    if (!(shown && isVisible(block, blockAt(cells, ...front)))) {
       continue;
     }
     const slot = slotOf(block, face.side, face.n[1]);
