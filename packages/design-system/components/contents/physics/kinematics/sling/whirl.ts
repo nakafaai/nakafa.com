@@ -25,7 +25,7 @@ export const RELEASE_ANGLES = {
 } as const satisfies Record<ReleasePoint, number>;
 
 /** How many full turns the ball makes before it is released. */
-export const TURNS_BEFORE_RELEASE = 2;
+const TURNS_BEFORE_RELEASE = 2;
 
 /** The speed and centripetal acceleration of a whirl of `radius` metres and `period` seconds. */
 export function whirl(radius: number, period: number) {

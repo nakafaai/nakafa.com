@@ -46,11 +46,12 @@ const DROPS = 160;
 const SPAN = 24;
 
 /** What the sketch reads on every frame. */
-interface RainFrame {
-  readonly car: number;
-  readonly frame: Frame;
-  readonly rain: number;
-}
+const RainFrameSchema = Schema.Struct({
+  car: Schema.Finite,
+  frame: FrameSchema,
+  rain: Schema.Finite,
+});
+type RainFrame = typeof RainFrameSchema.Type;
 
 /** The road band, its metres mapped so the car stands in the middle. */
 function rainRoad(sketch: p5): Road {

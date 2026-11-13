@@ -62,9 +62,10 @@ const STREET = { east: 62, west: -6 } as const;
 const HOLD_SECONDS = 1.5;
 
 /** What the sketch reads on every frame: the landmark taken as zero. */
-interface OriginFrame {
-  readonly origin: Landmark;
-}
+const OriginFrameSchema = Schema.Struct({
+  origin: LandmarkSchema,
+});
+type OriginFrame = typeof OriginFrameSchema.Type;
 
 /** The street band above and the graph below, for one canvas size. */
 function layout(sketch: p5) {

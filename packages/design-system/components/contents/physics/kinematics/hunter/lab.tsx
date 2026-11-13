@@ -36,6 +36,7 @@ import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { MATERIAL } from "@repo/design-system/lib/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
@@ -52,9 +53,10 @@ const PLAY_RATE = 0.3;
 const HOLD_SECONDS = 1.5;
 
 /** What the sketch reads on every frame. */
-interface HunterFrame {
-  readonly speed: number;
-}
+const HunterFrameSchema = Schema.Struct({
+  speed: Schema.Finite,
+});
+type HunterFrame = typeof HunterFrameSchema.Type;
 
 /** Maps the room in metres onto the canvas, keeping its proportions. */
 function roomView(sketch: p5) {

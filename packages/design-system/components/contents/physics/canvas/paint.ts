@@ -10,7 +10,7 @@ import type p5 from "p5";
  */
 
 /** A point on the canvas, in pixels. */
-export const PointSchema = Schema.Struct({
+const PointSchema = Schema.Struct({
   x: Schema.Finite,
   y: Schema.Finite,
 });

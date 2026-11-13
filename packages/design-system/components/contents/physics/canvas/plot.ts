@@ -14,7 +14,7 @@ import type p5 from "p5";
  * velocity-time graph beside its scene maps through one of these, so every
  * curve, secant, and tangent lands where its value says.
  */
-export const GraphSchema = Schema.Struct({
+const GraphSchema = Schema.Struct({
   box: Schema.Struct({
     height: Schema.Finite,
     width: Schema.Finite,

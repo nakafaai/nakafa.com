@@ -27,6 +27,8 @@ import {
   changeOver,
   type Trip,
   type TripGraph,
+  TripGraphSchema,
+  TripSchema,
   tripDuration,
   tripIntervals,
   tripReach,
@@ -52,7 +54,7 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
 import { type ReactNode, useState } from "react";
 
@@ -63,11 +65,12 @@ const PLAY_RATE = 2;
 const HOLD_SECONDS = 1.5;
 
 /** What the sketch reads on every frame: the trip and the chosen interval. */
-interface SecantFrame {
-  readonly graph: TripGraph;
-  readonly interval: readonly [number, number];
-  readonly trip: Trip;
-}
+const SecantFrameSchema = Schema.Struct({
+  graph: TripGraphSchema,
+  interval: Schema.Tuple([Schema.Finite, Schema.Finite]),
+  trip: TripSchema,
+});
+type SecantFrame = typeof SecantFrameSchema.Type;
 
 /** The road band above and the graph below, for one canvas size. */
 function layout(sketch: p5, trip: Trip, plotted: TripGraph) {
