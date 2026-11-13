@@ -146,6 +146,35 @@ describe("GitHub proof runner", () => {
     PROCESS_TIMEOUT
   );
 
+  it.effect(
+    "dispatches a run again that was cancelled from outside, instead of reading it as a failure",
+    () =>
+      Effect.gen(function* () {
+        const answer = github({
+          chromium: shard("chromium"),
+          firefox: shard("firefox"),
+          webkit: shard("webkit"),
+        });
+        const views = MutableRef.make(0);
+        const { exit, calls } = yield* withGithub(
+          (args) =>
+            args[1] === "view" &&
+            Arr.some(args, (arg) => arg.endsWith(",jobs")) &&
+            MutableRef.getAndIncrement(views) === 0
+              ? { stdout: toJson({ ...RUN, conclusion: "cancelled" }) }
+              : answer(args),
+          Effect.flatMap(Prover, (prover) => prover.verify(SHA, [])).pipe(
+            Effect.provide(githubProver)
+          )
+        );
+        expect((yield* exit).gated).toBe(true);
+        expect(
+          Arr.filter(calls, (call) => call.startsWith("gh workflow run"))
+        ).toHaveLength(2);
+      }).pipe(Effect.provide(NodeServices.layer)),
+    PROCESS_TIMEOUT
+  );
+
   it.effect("waits out GitHub's rate limit and goes on", () =>
     Effect.gen(function* () {
       const answer = github({

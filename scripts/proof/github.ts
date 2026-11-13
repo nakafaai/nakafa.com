@@ -312,6 +312,7 @@ export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
       result: combineShards(sha, run.url, 1, results),
       gated: gateOf(run),
       timings: runTimings(run),
+      cancelled: run.conclusion === "cancelled",
     };
   },
   Effect.catchTag("SchemaError", (error) =>
@@ -322,6 +323,9 @@ export const proveOnGithub = Effect.fn("proof.proveOnGithub")(
     )
   )
 );
+
+/** How many times the prover dispatches a run again after it was cancelled from outside. */
+const REDISPATCHES = 3;
 
 /** A combination's gate and proof, read from the one run that verified it. */
 const Verification = Schema.Struct({
@@ -358,12 +362,18 @@ export const githubProver = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+    // A run cancelled from outside, such as one a session moved back in the
+    // runner queue, is dispatched again instead of read as a failure.
     const run = (
       sha: string,
       specs: readonly string[],
       scope: typeof Scope.Type
     ) =>
       proveOnGithub(sha, specs, scope).pipe(
+        Effect.repeat({
+          until: (outcome) => !outcome.cancelled,
+          times: REDISPATCHES,
+        }),
         Effect.provideService(FileSystem.FileSystem, fs),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
       );
