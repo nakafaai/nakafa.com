@@ -1,8 +1,6 @@
-import { HttpClient } from "@confect/js";
 import { useMutation } from "@confect/react";
 import { Delete02Icon, Login01Icon } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { FieldError } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -19,18 +17,10 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import {
-  clearAccountDeletionAttempt,
-  loadOrCreateAccountDeletionAttempt,
-  saveAccountDeletionAttempt,
-} from "@/lib/auth/deletion/attempt";
-import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
-import {
-  clearDeletedAccountBrowserIdentity,
-  signOutAccountBrowserIdentity,
-} from "@/lib/auth/identity/browser";
+import { reportClientException } from "@/lib/analytics/client";
+import { signOutSession } from "@/lib/auth/client";
+import { clearDeletedAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
-import { httpLayer } from "@/lib/convex/http";
 import { requireConvexOnline } from "@/lib/convex/online";
 import { useCurrentLocale } from "@/lib/routing/link";
 
@@ -39,52 +29,45 @@ const dialogError = {
   sessionExpired: "session-expired",
 } as const;
 type DialogError = (typeof dialogError)[keyof typeof dialogError] | null;
-/** Renders the destructive account-deletion card and confirmation flow. */
-export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
+
+/** Renders the destructive account-deletion card and its one confirmation. */
+export function UserSettingsDeleteAccount() {
   const t = useTranslations("Auth");
   const locale = useCurrentLocale();
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
-  const cancelAccountDeletion = useMutation(
-    auth.deletion.cancelAccountDeletionAttempt
-  );
-  const prepareAccountDeletion = useMutation(
-    auth.deletion.prepareCurrentAccountDeletion
-  );
+  const deleteAccount = useMutation(auth.deletion.deleteAccount);
   const convex = useConvex();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
   const [isPending, startTransition] = useTransition();
-  /** Keeps the confirmation dialog open while deletion work is in flight. */
+  /** Keeps the confirmation dialog open while the deletion is in flight. */
   function handleOpenChange(nextOpen: boolean) {
     if (isPending && !nextOpen) {
       return;
     }
     setOpen(nextOpen);
   }
-  /** Runs the durable account-deletion flow from the browser event boundary. */
+  /**
+   * Deletes the account in one mutation, then ends the page's session and
+   * clears the browser's account state on the way home. The server has already
+   * ended every session of the account, so a sign-out that fails here is
+   * reported and never holds the person on a page of an account that is gone.
+   */
   function handleDelete() {
     // A refusal stays on its line while the deletion is tried again: the next
     // answer replaces it, and it is forgotten once the dialog has closed.
     startTransition(async () => {
       const result = await Effect.runPromise(
         requireConvexOnline(convex).pipe(
-          Effect.andThen(loadOrCreateAccountDeletionAttempt(userId)),
-          Effect.flatMap((attempt) =>
-            deleteCurrentAccount({
-              attempt,
-              cancelPreparation: (attemptId) =>
-                cancelAccountDeletion({ attemptId }),
-              clearAttempt: clearAccountDeletionAttempt(),
-              persist: saveAccountDeletionAttempt,
-              prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
-              reconcile: (attemptId) =>
-                Effect.flatMap(HttpClient.HttpClient, (client) =>
-                  client.query(auth.deletion.getAccountDeletionAttemptStatus, {
-                    attemptId,
-                  })
-                ).pipe(Effect.provide(httpLayer())),
-            })
+          Effect.andThen(Effect.tryPromise(() => deleteAccount())),
+          Effect.flatMap(Effect.fromResult),
+          Effect.andThen(
+            signOutSession(convex).pipe(
+              Effect.catchTag("SignOutFailed", (error) =>
+                reportClientException(error, { source: "account-deletion" })
+              )
+            )
           ),
           Effect.andThen(clearDeletedAccountBrowserIdentity()),
           Effect.result
@@ -94,19 +77,18 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         window.location.replace(localizeInternalHref("/", locale));
         return;
       }
-
-      let nextError: Exclude<DialogError, null> = dialogError.generic;
-      if (result.failure._tag === "AccountDeletionSessionExpired") {
-        nextError = dialogError.sessionExpired;
-      }
+      const nextError =
+        result.failure._tag === "SessionRequired"
+          ? dialogError.sessionExpired
+          : dialogError.generic;
       startTransition(() => setError(nextError));
     });
   }
-  /** Signs out an expired session before returning to the localized auth page. */
+  /** Ends the stale session before returning to the localized sign-in page. */
   function handleReauthenticate() {
     startTransition(async () => {
       const result = await Effect.runPromise(
-        Effect.result(signOutAccountBrowserIdentity())
+        Effect.result(signOutSession(convex))
       );
       if (Result.isSuccess(result)) {
         window.location.replace(

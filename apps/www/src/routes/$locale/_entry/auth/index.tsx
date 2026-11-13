@@ -18,10 +18,13 @@ import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readStaticData } from "@/lib/static/data";
 
-/** The sign-in screen. A provider failure and the intent travel in the query string. */
+/**
+ * The sign-in screen. The intent, and for a school host's visitor the school
+ * address to return to, travel in the query string.
+ */
 const AuthSearch = Schema.Struct({
-  error: TextSearchParam,
   redirect: TextSearchParam,
+  school: TextSearchParam,
 });
 
 /**
@@ -30,12 +33,13 @@ const AuthSearch = Schema.Struct({
  * static page. A signed-in visitor never sees it: a move between pages passes the
  * gate, which sends them on to the page the intent names, or home, before the loader
  * runs, and the static page hides its body before the first paint and sends them on
- * once Better Auth confirms the session.
+ * once Convex Auth confirms the session.
  */
 export const Route = createFileRoute("/$locale/_entry/auth/")({
   validateSearch: Schema.toStandardSchemaV1(AuthSearch),
   beforeLoad: async ({ params, search }) => {
-    if (!(await isSignedIn())) {
+    // A school host's visitor leaves for the school, which the page itself does once signed in.
+    if (search.school !== undefined || !(await isSignedIn())) {
       return;
     }
     // The intent is a validated path of any page, so it stays an href, not a typed route.

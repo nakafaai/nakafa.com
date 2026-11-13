@@ -5,13 +5,10 @@ import {
   getPostAuthDestination,
   getPostAuthIntentSource,
   getPostAuthOnboardingHref,
-  getPostAuthProviderErrorHref,
-  getPostAuthProviderRetrySearch,
   getPostAuthSignInHref,
   getPostAuthSignInHrefForLocation,
   getPostAuthSignInTarget,
   getSignedInHref,
-  isPostAuthProviderError,
   PostAuthIntentSchema,
   resolvePostAuthIntent,
   startsSchool,
@@ -87,8 +84,6 @@ describe("post-auth admission", () => {
     for (const href of [
       getPostAuthSignInHref(resume),
       getPostAuthOnboardingHref(source, "en"),
-      getPostAuthProviderErrorHref(source, "en"),
-      new URLSearchParams(getPostAuthProviderRetrySearch(resume)).toString(),
       getPostAuthDestination(resume, "en").href,
     ]) {
       expect(href).not.toContain(token);
@@ -281,21 +276,6 @@ describe("post-auth admission", () => {
       href: "/home",
       locale: "en",
     });
-    expect(getPostAuthProviderErrorHref("/id/search?q=geometry", "id")).toBe(
-      "/id/auth/error?intent=%2Fid%2Fsearch%3Fq%3Dgeometry"
-    );
-    expect(
-      getPostAuthProviderErrorHref("https://evil.example", "unsupported")
-    ).toBe("/en/auth/error");
-    expect(getPostAuthProviderRetrySearch(resume)).toStrictEqual({
-      error: "oauth",
-      redirect: "/en/chat/chat-id",
-    });
-    expect(getPostAuthProviderRetrySearch(none)).toStrictEqual({
-      error: "oauth",
-    });
-    expect(isPostAuthProviderError("oauth")).toBe(true);
-    expect(isPostAuthProviderError("access_denied")).toBe(false);
   });
   it("lets the page that opens a school stand in for the learner's first run", () => {
     expect(startsSchool(resolvePostAuthIntent("/id/school/new", "id"))).toBe(

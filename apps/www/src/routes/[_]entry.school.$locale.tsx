@@ -5,7 +5,7 @@ import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import { IntlProvider, useTranslations } from "use-intl";
-import { AuthGoogle } from "@/components/auth/google";
+import { SchoolGoogle } from "@/components/auth/google";
 import { AuthLegal } from "@/components/auth/legal";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellArtwork } from "@/components/entry/artwork";
@@ -100,7 +100,7 @@ function SchoolEntryActions() {
   const tGuardian = useTranslations("SchoolGuardians");
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <AuthGoogle />
+      <SchoolGoogle />
       <a
         className={buttonVariants({ variant: "outline" })}
         href="?sign-in=username"

@@ -1,44 +1,69 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Schema } from "effect";
+import { HttpClient } from "@confect/js";
+import auth from "@repo/backend/confect/_generated/refs/auth";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Effect, Option, Schema } from "effect";
 import { AgentConsent } from "@/components/entry/agent";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { readAuthClient } from "@/lib/auth/client";
+import { getPostAuthSignInTarget } from "@/lib/auth/admission";
+import { readAgentRequest } from "@/lib/auth/consent";
+import { isSignedIn } from "@/lib/auth/gate";
+import { httpLayer } from "@/lib/convex/http";
+import { TextSearchParam } from "@/lib/entry/search";
 
-/** The authorization that Better Auth holds while a person answers. */
+/**
+ * An agent's authorization request, each key as text. The loader reads it as a
+ * whole (`readAgentRequest`), so a malformed link shows the refusal instead of
+ * failing the page.
+ */
 const AgentSearch = Schema.Struct({
-  client_id: Schema.String,
-  consent_code: Schema.String,
-});
-
-/** The agent that asks, as it registered itself. */
-const AgentClient = Schema.Struct({
-  name: Schema.NullOr(Schema.String),
-  redirect: Schema.NullOr(Schema.String),
+  client_id: TextSearchParam,
+  code_challenge: TextSearchParam,
+  code_challenge_method: TextSearchParam,
+  redirect_uri: TextSearchParam,
+  response_type: TextSearchParam,
+  scope: TextSearchParam,
+  state: TextSearchParam,
 });
 
 /**
- * Asks a signed-in person whether an agent may act as them. Better Auth redirects here from an
- * agent's authorization, so the page renders only in the browser and its loader reads the
- * agent's own name.
+ * Asks a signed-in person whether an agent may act as them: the authorization
+ * endpoint that the agent discovery names (ADR 0029). A visitor signs in first
+ * and comes back to the same request. The page renders only in the browser, and
+ * its loader reads the agent's own name.
  */
 export const Route = createFileRoute("/$locale/_entry/agent")({
   validateSearch: Schema.toStandardSchemaV1(AgentSearch),
-  loaderDeps: ({ search }) => ({ clientId: search.client_id }),
   ssr: false,
+  beforeLoad: async ({ location, params }) => {
+    if (await isSignedIn()) {
+      return;
+    }
+    throw redirect(getPostAuthSignInTarget(location.publicHref, params.locale));
+  },
+  loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const { data } = await readAuthClient().$fetch("/agent/client", {
-      query: { client_id: deps.clientId },
-    });
-    return Schema.decodeUnknownSync(AgentClient)(data);
+    const request = readAgentRequest(deps);
+    if (Option.isNone(request)) {
+      return { _tag: "Refused" } as const;
+    }
+    const agent = await Effect.runPromise(
+      Effect.flatMap(HttpClient.HttpClient, (client) =>
+        client.query(auth.grant.describe, {
+          clientId: request.value.client_id,
+        })
+      ).pipe(Effect.provide(httpLayer()))
+    );
+    if (agent === null) {
+      return { _tag: "Refused" } as const;
+    }
+    return { _tag: "Ask", name: agent.name, request: request.value } as const;
   },
   component: AgentPage,
 });
 
 /** The consent of one agent in the entry frame. */
 function AgentPage() {
-  const client = Route.useLoaderData();
-  const { consent_code: consentCode } = Route.useSearch();
   return (
     <>
       <EntryShellHeader>
@@ -47,11 +72,7 @@ function AgentPage() {
         </div>
       </EntryShellHeader>
       <EntryShellBody>
-        <AgentConsent
-          consentCode={consentCode}
-          name={client.name}
-          redirect={client.redirect}
-        />
+        <AgentConsent />
       </EntryShellBody>
     </>
   );
