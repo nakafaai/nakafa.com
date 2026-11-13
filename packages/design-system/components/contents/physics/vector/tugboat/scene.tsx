@@ -19,8 +19,8 @@ const BOW = [4, 0.6, 0] as const;
 /** How far ahead of the bow each tug runs, in scene units. */
 const CABLE = 5.5;
 
-/** Scene units of arrow per kN of pull. */
-const ARROW_SCALE = 0.1;
+/** The length of the stronger pull's arrow, in scene units; the other arrows keep their proportion to it. */
+const LONGEST = 4.5;
 
 /** A point at a distance from the bow along a heading, degrees toward port from the ship's line. */
 function fromBow(distance: number, heading: number, height: number) {
@@ -96,14 +96,16 @@ function Pull({
   color,
   heading,
   math,
+  scale,
   size,
 }: {
   readonly color: string;
   readonly heading: number;
   readonly math: string;
+  readonly scale: number;
   readonly size: number;
 }) {
-  const vector = fromBow(size * ARROW_SCALE, heading, 0);
+  const vector = fromBow(size * scale, heading, 0);
   return (
     <group>
       <FixedArrow
@@ -116,7 +118,7 @@ function Pull({
       <ThreeLabel
         color={color}
         fontSize="reading"
-        position={fromBow(size * ARROW_SCALE + 0.7, heading, 1.4)}
+        position={fromBow(size * scale + 0.7, heading, 1.4)}
       >
         <InlineMath math={math} />
       </ThreeLabel>
@@ -138,9 +140,10 @@ export function TugboatScene({
 }) {
   const resultant = towResultant(tugs, between);
   const half = between / 2;
-  const first = fromBow(tugs.first * ARROW_SCALE, half, 1.4);
-  const second = fromBow(tugs.second * ARROW_SCALE, -half, 1.4);
-  const tip = fromBow(resultant.size * ARROW_SCALE, resultant.fromLine, 1.4);
+  const scale = LONGEST / Math.max(tugs.first, tugs.second);
+  const first = fromBow(tugs.first * scale, half, 1.4);
+  const second = fromBow(tugs.second * scale, -half, 1.4);
+  const tip = fromBow(resultant.size * scale, resultant.fromLine, 1.4);
 
   return (
     <group>
@@ -175,18 +178,21 @@ export function TugboatScene({
         color={PLOT_COLORS.teal}
         heading={half}
         math="\vec F_1"
+        scale={scale}
         size={tugs.first}
       />
       <Pull
         color={PLOT_COLORS.amber}
         heading={-half}
         math="\vec F_2"
+        scale={scale}
         size={tugs.second}
       />
       <Pull
         color={PLOT_COLORS.violet}
         heading={resultant.fromLine}
         math="\vec R"
+        scale={scale}
         size={resultant.size}
       />
       <Line

@@ -361,7 +361,7 @@ export function ForceTableResultantLab({
           <VisualFactTabular
             label={labels.direction}
             value={
-              <InlineMath math={quantity(resultant.angle, "^\\circ", 0)} />
+              <InlineMath math={quantity(resultant.angle, "^\\circ", 1)} />
             }
           />
         </VisualCardFacts>
