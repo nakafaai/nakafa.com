@@ -63,9 +63,10 @@ describe("island/mesh", () => {
     expect(quadsOf(meshChunk(cells, lightingOf(cells), 0, 0).water)).toBe(5);
   });
 
-  it("draws a plant as two crossed planes seen from both sides, and glass beside glass with no face between", () => {
+  it("draws a flower patch as two crossed planes seen from both sides, a plant of the catalog not at all (its model does), and glass beside glass with no face between", () => {
     const cells = emptyCells();
     cells[cellOf(2, 9, 2)] = idOf("flowers");
+    cells[cellOf(4, 9, 4)] = idOf("rose");
     cells[cellOf(8, 9, 8)] = idOf("glass");
     cells[cellOf(9, 9, 8)] = idOf("glass");
     expect(quadsOf(meshChunk(cells, lightingOf(cells), 0, 0).solid)).toBe(
