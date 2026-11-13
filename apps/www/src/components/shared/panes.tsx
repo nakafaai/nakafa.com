@@ -323,6 +323,20 @@ export function PanesList({
 }
 
 /**
+ * The phone's sheet of a detail: as tall as what it holds, or, for a detail that scrolls inside itself such as a
+ * chat's thread, as tall as a drawer may be, so its list has a height to scroll in.
+ */
+const paneSheetVariants = cva("", {
+  defaultVariants: { fill: false },
+  variants: {
+    fill: {
+      false: "",
+      true: "h-(--drawer-content-max-height)",
+    },
+  },
+});
+
+/**
  * The pane: the detail at the screen's right, or beside the first pane of a row, and the phone's
  * sheet from the bottom of the screen. A row's detail shows only while a row is open, so the page
  * has the whole width until a press opens one, and it closes the row as its sheet closes. An `alwaysOn`
@@ -333,6 +347,7 @@ export function PanesList({
 export function PanesDetail({
   alwaysOn = false,
   children,
+  fill = false,
   label,
   onClose,
   open,
@@ -341,6 +356,8 @@ export function PanesDetail({
   alwaysOn?: boolean;
   /** The detail's header, body and footer. */
   children: ReactNode;
+  /** Whether the phone's sheet is as tall as a drawer may be, for a detail that scrolls inside itself. */
+  fill?: boolean;
   /** The pane's name for a screen reader. */
   label: string;
   /** Closes a row that the page's own selection holds, in place of the panes' own. */
@@ -417,7 +434,7 @@ export function PanesDetail({
         }}
         open={!wide && sheet}
       >
-        <DrawerContent>
+        <DrawerContent className={paneSheetVariants({ fill })}>
           <PaneModeContext value={{ close, place: "sheet" }}>
             {children}
           </PaneModeContext>

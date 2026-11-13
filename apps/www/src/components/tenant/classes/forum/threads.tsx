@@ -33,7 +33,7 @@ import {
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
 import { Array as Arr } from "effect";
-import { useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
@@ -54,35 +54,65 @@ import { schoolClassDiscussionTarget } from "@/lib/routing/school/target";
 /** How many threads the list asks for each time its end comes into view. */
 const THREAD_PAGE_SIZE = 20;
 
+/** The class's threads, page by page: the open ones, or the archived ones for whoever manages the forum. */
+function useThreadPages(archived: boolean, asked: boolean) {
+  const { classId, slug } = useClassScope();
+  const pagination = usePaginatedQuery(
+    classroom.forum.threads.list,
+    asked ? { classId, slug, ...(archived ? { archived } : {}) } : "skip",
+    { initialNumItems: THREAD_PAGE_SIZE }
+  );
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    isLostAccess(pagination.error)
+  ) {
+    throw pagination.error;
+  }
+  return pagination;
+}
+
+/** The two lists of the class's threads. */
+type ThreadLists = Record<
+  "active" | "archived",
+  ReturnType<typeof useThreadPages>
+>;
+
+const ThreadListsContext = createContext<ThreadLists | null>(null);
+
+/**
+ * Reads the class's open threads, and its archived ones for whoever manages the forum, for as long as the list of
+ * chats stands, so the Threads filter and its Active and Archived views show their rows at once, as a chat app
+ * switches its tabs, and never empty the list while a read starts.
+ */
+export function ThreadListsProvider({ children }: { children: ReactNode }) {
+  const { can } = useClassScope();
+  const active = useThreadPages(false, true);
+  const archived = useThreadPages(true, Arr.contains(can, "forum.manage"));
+
+  return (
+    <ThreadListsContext value={{ active, archived }}>
+      {children}
+    </ThreadListsContext>
+  );
+}
+
 /**
  * The class's threads in the list of chats, the newest first, as Slack gathers them in one view: the
  * search keeps the ones whose title holds its text, and each opens its discussion beside its chat. A
  * class with no thread, like a search that keeps none, says so. The next page loads when the end of
- * the list comes into view.
+ * the list comes into view. Whoever manages the forum switches between the open and the archived
+ * threads, and the views stay while a list reads its first page.
  */
 export function ThreadRows() {
   const t = useTranslations("Classroom");
-  const { can, classId, slug } = useClassScope();
+  const { can } = useClassScope();
+  const lists = use(ThreadListsContext);
   const search = useTableFilters((state) => state.search);
   const [view, setView] = useState<"active" | "archived">("active");
-  const archived = view === "archived";
-  const pagination = usePaginatedQuery(
-    classroom.forum.threads.list,
-    { classId, slug, ...(archived ? { archived } : {}) },
-    { initialNumItems: THREAD_PAGE_SIZE }
-  );
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    if (isLostAccess(pagination.error)) {
-      throw pagination.error;
-    }
-    return <LoadFailure onRetry={reloadPage} />;
+  if (lists === null) {
+    throw new Error("ThreadRows must be used within ThreadListsProvider");
   }
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  const rows = Arr.filter(pagination.results, (row) =>
-    matchesSearch(row.discussion.title, search)
-  );
+  const pagination = lists[view];
 
   return (
     <>
@@ -107,14 +137,22 @@ export function ThreadRows() {
           />
         </div>
       ) : null}
-      <ThreadList
-        onLoadMore={
-          PaginatedQueryResult.isCanLoadMore(pagination)
-            ? () => pagination.loadMore(THREAD_PAGE_SIZE)
-            : null
-        }
-        rows={rows}
-      />
+      {PaginatedQueryResult.isFailure(pagination) ? (
+        <LoadFailure onRetry={reloadPage} />
+      ) : null}
+      {pagination._tag === "LoadingFirstPage" ||
+      PaginatedQueryResult.isFailure(pagination) ? null : (
+        <ThreadList
+          onLoadMore={
+            PaginatedQueryResult.isCanLoadMore(pagination)
+              ? () => pagination.loadMore(THREAD_PAGE_SIZE)
+              : null
+          }
+          rows={Arr.filter(pagination.results, (row) =>
+            matchesSearch(row.discussion.title, search)
+          )}
+        />
+      )}
     </>
   );
 }

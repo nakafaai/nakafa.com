@@ -20,7 +20,7 @@ for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`a channel opens at the first unread message, follows the newest edge only from the bottom, keeps its place while older history loads, and jumps to a message, at ${viewport.width} px`, async ({
+  test(`a channel opens at the first unread message, follows the newest edge only from the bottom, keeps its place while older history loads, jumps to a message, and opens again where the reader left it, at ${viewport.width} px`, async ({
     browser,
     baseURL,
   }) => {
@@ -144,11 +144,13 @@ for (const viewport of [
       timeout: readinessTimeoutMilliseconds,
     });
 
-    // Opened again after reading to the newest message, the channel opens at its end.
+    // Opened again with nothing unread, the channel stands where the reader left it: at the message the address
+    // brought into view, not at its end.
+    await page.waitForTimeout(900);
     await page.goto(address(channel));
-    await expect(
-      page.getByText("Pesan 1", { exact: true }).last()
-    ).toBeInViewport({ timeout: readinessTimeoutMilliseconds });
+    await expect(page.getByText("Pesan 3", { exact: true })).toBeInViewport({
+      timeout: readinessTimeoutMilliseconds,
+    });
     await expect(page.getByText("New messages")).toHaveCount(0);
     await context.close();
   });

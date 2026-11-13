@@ -8,29 +8,37 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
+import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
   pageGutterVariants,
   readingMeasureVariants,
 } from "@/components/shared/content/width";
+import { useKeptPlace } from "@/components/shared/place";
 import { reloadPage } from "@/components/shared/reload";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
+import { showsUnreadStart } from "@/components/tenant/classes/forum/marks";
 import {
   ChannelScopeContext,
   useChannelScope,
+  usePlaceChat,
   useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { MessageStream } from "@/components/tenant/classes/forum/stream";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { firstPageOf } from "@/lib/scroll/place";
 
 /** How many messages a place reads each time its oldest loaded message comes into view. */
 export const MESSAGE_PAGE_SIZE = 30;
+
+/** The most messages a place reads before it opens: four pages, to reach its first unread message or its kept place. */
+export const MESSAGE_OPEN_MOST = 4 * MESSAGE_PAGE_SIZE;
 
 /**
  * One channel of a class as a chat: its messages fill the room it is given, oldest at the top and
@@ -103,25 +111,54 @@ export function ForumChannel({
 
 /**
  * The messages of the channel, read once Convex has settled the session with the viewer's read
- * mark, so the channel opens where the viewer stopped reading. The next older page loads when the
- * oldest loaded message comes into view, so the list has no button. A channel with no message shows
- * its empty state, a failed read its sentence and Try again, and a viewer who lost the school's
- * access is sent to the refused page.
+ * mark, so the channel opens where the viewer stopped reading. The first read holds the place the
+ * reader left the channel at in this browser, and when every message it holds is unread it reads
+ * older ones once more, up to `MESSAGE_OPEN_MOST`, so the channel opens at its first unread message.
+ * Once open, the next older page loads when the oldest loaded message comes into view, so the list
+ * has no button. A channel with no message shows its empty state, a failed read its sentence and
+ * Try again, and a viewer who lost the school's access is sent to the refused page.
  */
 function ChannelMessages() {
   const t = useTranslations("Classroom");
   const { channelId, classId, slug } = useChannelScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const place = useReadPlace();
+  const kept = useKeptPlace(usePlaceChat());
   const pagination = usePaginatedQuery(
     classroom.forum.messages.page,
     isSettled ? { channelId, classId, slug } : "skip",
-    { initialNumItems: MESSAGE_PAGE_SIZE }
+    { initialNumItems: firstPageOf(kept, MESSAGE_PAGE_SIZE, MESSAGE_OPEN_MOST) }
   );
   const read = useQuery(
     classroom.forum.reads.get,
     isSettled ? { classId, place, slug } : "skip"
   );
+  // Whether the messages are drawn: once they are, a later read of older pages never takes them away.
+  const [open, setOpen] = useState(false);
+  const loaded =
+    !(
+      pagination._tag === "LoadingFirstPage" ||
+      PaginatedQueryResult.isFailure(pagination)
+    ) && QueryResult.isSuccess(read);
+  const messages = Arr.reverse(loaded ? pagination.results : []);
+  const short =
+    loaded &&
+    !showsUnreadStart(
+      messages,
+      read.value.at,
+      PaginatedQueryResult.isCanLoadMore(pagination)
+    ) &&
+    pagination.results.length < MESSAGE_OPEN_MOST;
+  const opens = loaded && !short && pagination._tag !== "LoadingMore";
+  if (opens && !open) {
+    setOpen(true);
+  }
+  useEffect(() => {
+    if (short && PaginatedQueryResult.isCanLoadMore(pagination)) {
+      pagination.loadMore(MESSAGE_OPEN_MOST - pagination.results.length);
+    }
+  }, [short, pagination]);
+
   if (
     PaginatedQueryResult.isFailure(pagination) &&
     isLostAccess(pagination.error)
@@ -138,10 +175,10 @@ function ChannelMessages() {
       </div>
     );
   }
-  if (pagination._tag === "LoadingFirstPage" || !QueryResult.isSuccess(read)) {
+  if (!((open || opens) && QueryResult.isSuccess(read))) {
     return <div className="flex-1" />;
   }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+  if (Arr.isReadonlyArrayEmpty(messages)) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <EmptyState
@@ -161,7 +198,7 @@ function ChannelMessages() {
           ? () => pagination.loadMore(MESSAGE_PAGE_SIZE)
           : undefined
       }
-      messages={Arr.reverse(pagination.results)}
+      messages={messages}
       opening={Option.none()}
     />
   );

@@ -8,15 +8,18 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { threadTitle } from "@repo/backend/confect/classroom/forum/thread";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useState } from "react";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+import { createContext, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PaneHeader } from "@/components/shared/pane";
 import { PanesDetail, useWide } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { LoadFailure } from "@/components/state/failure";
-import { MESSAGE_PAGE_SIZE } from "@/components/tenant/classes/forum/channel";
+import {
+  MESSAGE_OPEN_MOST,
+  MESSAGE_PAGE_SIZE,
+} from "@/components/tenant/classes/forum/channel";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import { isTitled } from "@/components/tenant/classes/forum/marks";
 import {
@@ -25,12 +28,14 @@ import {
 } from "@/components/tenant/classes/forum/open";
 import {
   ChannelScopeContext,
+  placeChatOf,
   useChannelScope,
 } from "@/components/tenant/classes/forum/scope";
 import { MessageStream } from "@/components/tenant/classes/forum/stream";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { schoolClassChannelTarget } from "@/lib/routing/school/target";
+import { firstPageOf, readPlace } from "@/lib/scroll/place";
 
 /** The thread the pane shows. */
 type ShownThread = typeof OpenedThread.Type;
@@ -97,18 +102,39 @@ const nextLanes = (
     : lanes;
 };
 
-/** What a thread's body draws from: its replies, page by page, and the viewer's read mark in it. */
+/**
+ * What a thread's body draws from: its replies, page by page, and the viewer's read mark in it. The first read holds
+ * the place the reader left the thread at in this browser.
+ */
 function useThreadFeed(thread: Option.Option<ShownThread>) {
   const { classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const asked = Option.filter(thread, () => isSettled);
+  const shown = Option.getOrUndefined(thread);
+  const place = useMemo(
+    () =>
+      shown === undefined
+        ? Option.none()
+        : Effect.runSync(
+            readPlace(
+              placeChatOf({
+                channelId: shown.channelId,
+                classId,
+                discussion: shown.number,
+              })
+            )
+          ),
+    [classId, shown]
+  );
   const replies = usePaginatedQuery(
     classroom.forum.threads.replies,
     Option.match(asked, {
       onNone: () => "skip" as const,
       onSome: (kept) => ({ classId, number: kept.number, slug }),
     }),
-    { initialNumItems: MESSAGE_PAGE_SIZE }
+    {
+      initialNumItems: firstPageOf(place, MESSAGE_PAGE_SIZE, MESSAGE_OPEN_MOST),
+    }
   );
   const read = useQuery(
     classroom.forum.reads.get,
@@ -206,6 +232,7 @@ export function ThreadPane({
 
   return (
     <PanesDetail
+      fill
       label={Option.match(front, {
         onNone: () => "",
         onSome: (kept) =>
