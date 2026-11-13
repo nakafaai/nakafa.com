@@ -110,6 +110,17 @@ export function paintRoad(
     [0, mix(MATERIAL.asphalt, MATERIAL.skyHaze, 0.12)],
     [1, mix(MATERIAL.asphalt, getColor("BLACK"), 0.35)],
   ]);
+  const below = road.surface + depth;
+  if (below < sketch.height) {
+    gradientRect(
+      sketch,
+      { height: sketch.height - below, width, x: 0, y: below },
+      [
+        [0, mix(MATERIAL.grass, MATERIAL.foliageDark, 0.4)],
+        [1, mix(MATERIAL.foliageDark, getColor("BLACK"), 0.35)],
+      ]
+    );
+  }
   sketch.push();
   sketch.noStroke();
   sketch.fill(fade(MATERIAL.roadPaint, 0.8));

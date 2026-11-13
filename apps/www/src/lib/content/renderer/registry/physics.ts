@@ -15,6 +15,7 @@ import {
   StoppingDistanceLab,
 } from "@/lib/content/renderer/client/physics/distance";
 import { WindEnergyConversionLab } from "@/lib/content/renderer/client/physics/energy";
+import { FallingTargetAimLab } from "@/lib/content/renderer/client/physics/hunter";
 import {
   NonUniformLinearMotionGraphCard,
   NonUniformLinearMotionLab,
@@ -32,7 +33,9 @@ import {
   ParabolicMovementAnalysisLab,
   ParabolicMovementLab,
 } from "@/lib/content/renderer/client/physics/parabolic";
+import { RainDriveRelativeVelocityLab } from "@/lib/content/renderer/client/physics/rain";
 import { RiverBoatCrossingLab } from "@/lib/content/renderer/client/physics/river";
+import { StringWhirlReleaseLab } from "@/lib/content/renderer/client/physics/sling";
 import { StreetOriginPositionLab } from "@/lib/content/renderer/client/physics/street";
 import { StrobePhotoMotionLab } from "@/lib/content/renderer/client/physics/strobe";
 import { TickerTapeMotionLab } from "@/lib/content/renderer/client/physics/ticker";
@@ -178,5 +181,17 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.riverBoatCrossingLab,
     component: RiverBoatCrossingLab,
+  },
+  {
+    name: physicsComponentNames.rainDriveRelativeVelocityLab,
+    component: RainDriveRelativeVelocityLab,
+  },
+  {
+    name: physicsComponentNames.stringWhirlReleaseLab,
+    component: StringWhirlReleaseLab,
+  },
+  {
+    name: physicsComponentNames.fallingTargetAimLab,
+    component: FallingTargetAimLab,
   },
 ] satisfies readonly RendererImplementation[];
