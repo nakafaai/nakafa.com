@@ -19,6 +19,7 @@ import {
   landingOrder,
   Pull,
   type Rider,
+  ridersOf,
   stacksOf,
 } from "#scripts/landing/stack";
 import {
@@ -33,9 +34,10 @@ import { VERDICT_CONTEXT } from "#scripts/proof/github";
 /** A spec file of the browser suites, as a path in the repository; its group is the path under `apps/www`. */
 const SPEC_FILE = /^apps\/www\/(?<spec>e2e\/.+\.browser\.ts)$/u;
 
-/** A pull request as a candidate of the train, with the spec files it adds or changes. */
-const candidateOf = (pull: Pull): Candidate => ({
+/** A pull request as a candidate of the train, with its stack and the spec files it adds or changes. */
+const candidateOf = ({ pull, stack }: Rider): Candidate => ({
   number: pull.number,
+  stack,
   sha: pull.headRefOid,
   title: pull.title,
   specs: Arr.filterMap(pull.files, ({ path }) =>
@@ -209,9 +211,8 @@ export const githubRepository = (root: string) =>
                               (pull) => pull.number
                             )
                           );
-                          return Arr.filter(
-                            Arr.map(stack, (pull, depth) => ({ pull, depth })),
-                            (rider) => HashSet.has(chosen, rider.pull.number)
+                          return Arr.filter(ridersOf(stack), (rider) =>
+                            HashSet.has(chosen, rider.pull.number)
                           );
                         })
                       ),
@@ -221,7 +222,7 @@ export const githubRepository = (root: string) =>
               return Arr.map(
                 Arr.filter(
                   landingOrder(Arr.flatten(riding)),
-                  (pull) =>
+                  ({ pull }) =>
                     numbers.length === 0 || Arr.contains(numbers, pull.number)
                 ),
                 candidateOf
@@ -234,12 +235,8 @@ export const githubRepository = (root: string) =>
               Effect.map((pulls) =>
                 Arr.map(
                   Arr.filter(
-                    landingOrder(
-                      Arr.flatMap(stacksOf(pulls), (stack) =>
-                        Arr.map(stack, (pull, depth) => ({ pull, depth }))
-                      )
-                    ),
-                    (pull) =>
+                    landingOrder(Arr.flatMap(stacksOf(pulls), ridersOf)),
+                    ({ pull }) =>
                       numbers.length === 0 || Arr.contains(numbers, pull.number)
                   ),
                   candidateOf

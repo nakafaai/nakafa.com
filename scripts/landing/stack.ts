@@ -57,26 +57,38 @@ export function highestProven(
   );
 }
 
-/** A pull request that rides a train, with its depth in its stack: 0 for the one on main. */
-export const Rider = Schema.Struct({ pull: Pull, depth: Schema.Int });
+/**
+ * A pull request that rides a train, with its depth in its stack (0 for the one
+ * on main) and its stack, named by the number of the pull request at its bottom.
+ */
+export const Rider = Schema.Struct({
+  pull: Pull,
+  depth: Schema.Int,
+  stack: Schema.Int,
+});
 export type Rider = typeof Rider.Type;
 
 /**
  * The riders in the order they land: a base before what is built on it, then
  * by number, each pull request once.
  */
-export function landingOrder(riders: readonly Rider[]): readonly Pull[] {
+export function landingOrder(riders: readonly Rider[]): readonly Rider[] {
   return Arr.dedupeWith(
-    Arr.map(
-      Arr.sort(
-        riders,
-        Order.combine(
-          Order.mapInput(Order.Number, (rider: Rider) => rider.depth),
-          Order.mapInput(Order.Number, (rider: Rider) => rider.pull.number)
-        )
-      ),
-      (rider) => rider.pull
+    Arr.sort(
+      riders,
+      Order.combine(
+        Order.mapInput(Order.Number, (rider: Rider) => rider.depth),
+        Order.mapInput(Order.Number, (rider: Rider) => rider.pull.number)
+      )
     ),
-    (one, other) => one.number === other.number
+    (one, other) => one.pull.number === other.pull.number
   );
 }
+
+/** The members of a stack as riders, bottom-up. */
+export const ridersOf = (stack: Arr.NonEmptyReadonlyArray<Pull>) =>
+  Arr.map(stack, (pull, depth) => ({
+    pull,
+    depth,
+    stack: Arr.headNonEmpty(stack).number,
+  }));

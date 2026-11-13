@@ -350,7 +350,8 @@ export class Prover extends Context.Service<
 
 /**
  * The prover that runs every proof on GitHub's runners: a proof alone, such as
- * main's baseline, skips the gate, and a verification gates every workspace.
+ * main's baseline, skips the gate, and a verification gates the workspaces the
+ * combination changes against main, which holds every head it merges.
  */
 export const githubProver = Layer.effect(
   Prover,
@@ -372,7 +373,7 @@ export const githubProver = Layer.effect(
           Effect.map(({ result }) => result)
         ),
       verify: (sha, specs) =>
-        run(sha, specs, { gate: true, full: true }).pipe(
+        run(sha, specs, { gate: true, full: false }).pipe(
           Effect.map(({ result, gated }) => ({
             result,
             gated: Option.getOrElse(gated, () => false),

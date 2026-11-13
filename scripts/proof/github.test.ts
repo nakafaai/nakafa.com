@@ -125,7 +125,7 @@ describe("GitHub proof runner", () => {
         expect((yield* passed.exit).gated).toBe(true);
         expect(
           Arr.some(passed.calls, (call) =>
-            call.includes("-f gate=true -f full=true")
+            call.includes("-f gate=true -f full=false")
           )
         ).toBe(true);
         const failed = yield* verify({

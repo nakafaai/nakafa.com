@@ -7,7 +7,7 @@ import { writeOutput } from "#scripts/output";
 import { githubProver } from "#scripts/proof/github";
 
 const USAGE =
-  "Usage: bun run train [--batch] [pull-request-number...] [--specs=<spec>,<spec>]";
+  "Usage: bun run train [--batch] [--red] [pull-request-number...] [--specs=<spec>,<spec>]";
 
 const Numbers = Schema.Array(
   Schema.NumberFromString.check(Schema.isInt(), Schema.isGreaterThan(0))
@@ -23,6 +23,7 @@ export const parseTrainArguments = Effect.fn("landing.parseArguments")(
     );
     return {
       batch: Arr.contains(argv, "--batch"),
+      red: Arr.contains(argv, "--red"),
       numbers: yield* Schema.decodeEffect(Numbers)(
         Arr.filter(argv, (arg) => !arg.startsWith("--"))
       ),
@@ -41,8 +42,8 @@ export const runTrainCli = Effect.fn("landing.cli")(function* (
   root: string,
   argv: readonly string[]
 ) {
-  const { batch, numbers, specs } = yield* parseTrainArguments(argv);
-  const report = yield* runTrain(numbers, specs, batch).pipe(
+  const { batch, numbers, red, specs } = yield* parseTrainArguments(argv);
+  const report = yield* runTrain(numbers, specs, batch, red).pipe(
     Effect.provide(Layer.merge(githubProver, githubRepository(root)))
   );
   yield* writeOutput(formatTrain(report));

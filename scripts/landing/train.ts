@@ -5,8 +5,10 @@ import {
   HashSet,
   Option,
   Order,
+  Record as Rec,
   Ref,
   Schema,
+  Semaphore,
 } from "effect";
 import { failuresOf, makeBaseline } from "#scripts/proof/baseline";
 import type { ProofError } from "#scripts/proof/client";
@@ -15,6 +17,8 @@ import { Prover } from "#scripts/proof/github";
 /** A pull request that may ride the train: its number, the exact head its own proof passed, and its title. */
 export const Candidate = Schema.Struct({
   number: Schema.Int,
+  /** The stack it belongs to, named by the number of the pull request at its bottom. */
+  stack: Schema.Int,
   sha: Schema.String,
   title: Schema.String,
   /** The spec files the pull request adds or changes, which its combination is proven on. */
@@ -95,6 +99,9 @@ type TrainReport = typeof TrainReport.Type;
 /** The failure of a combination whose gate failed, which no spec on main can share. */
 const GATE_FAILURE = "gate:combination";
 
+/** The failure of a batch that an earlier train already verified red. */
+const RED_BATCH = "batch:red";
+
 /**
  * The specs a combination is proven on: those the caller names and those its
  * pull requests add or change. None at all proves every suite, which a batch of
@@ -114,15 +121,18 @@ const proofSpecs = (
  * main: those whose own gate and proof passed, or with `batch` every ready one,
  * each stack whole. A failing spec that fails on main too belongs to main: the
  * train reports it and ignores it. Any other failure, a failed gate included,
- * splits the batch in halves, so the passing half lands and the failing pull
- * request is named. Each half is proven on top of what the train already
- * accepted, so what lands is always one gated and proven combination, and each
- * pull request lands by its exact head.
+ * splits the batch. A batch of several stacks verifies every stack on its own,
+ * side by side, so a split costs one wait in the runner queue, not one for each
+ * half; the stacks that passed are verified together once more, and a failing
+ * stack splits in halves. Everything is verified on top of what the train
+ * already accepted, so what lands is always one gated and proven combination,
+ * and each pull request lands by its exact head.
  */
 export const runTrain = Effect.fn("landing.runTrain")(function* (
   numbers: readonly number[],
   specs: readonly string[],
-  batch: boolean
+  batch: boolean,
+  red: boolean
 ) {
   const repository = yield* Repository;
   const prover = yield* Prover;
@@ -133,36 +143,41 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
   const accepted = yield* Ref.make<readonly Candidate[]>([]);
   const rejected = yield* Ref.make<readonly Rejection[]>([]);
   const baseline = yield* makeBaseline(main);
+  // Stacks verified side by side ask main about their failures one at a time,
+  // so main proves each spec once.
+  const asking = yield* Semaphore.make(1);
 
   const reject = (candidate: Candidate, reason: string) =>
     Ref.update(rejected, Arr.append({ candidate, reason }));
+  const accept = (riding: readonly Candidate[]) =>
+    Ref.update(accepted, Arr.appendAll(riding));
 
-  const attempt = (
-    batch: readonly Candidate[]
-  ): Effect.Effect<void, TrainError | ProofError> =>
+  /**
+   * Verifies heads on main above what the train accepted, in one job. Answers
+   * the heads that conflicted, the heads that rode, and the failures that main
+   * does not share.
+   */
+  const check = (heads: readonly Candidate[]) =>
     Effect.gen(function* () {
       const before = yield* Ref.get(accepted);
       const combination = yield* repository.combine(main, [
         ...before,
-        ...batch,
+        ...heads,
       ]);
       const conflicted = HashSet.fromIterable(
         Arr.map(combination.conflicted, (candidate) => candidate.number)
       );
-      for (const candidate of batch) {
-        if (HashSet.has(conflicted, candidate.number)) {
-          yield* reject(
-            candidate,
-            "conflicts with main or an earlier pull request: merge main into it"
-          );
-        }
-      }
       const riding = Arr.filter(
-        batch,
+        heads,
         (candidate) => !HashSet.has(conflicted, candidate.number)
       );
+      const verdict = {
+        conflicted: combination.conflicted,
+        riding,
+        caused: Arr.empty<string>(),
+      };
       if (riding.length === 0) {
-        return;
+        return verdict;
       }
       // One job gates and proves the combination: it holds every head merged
       // with main, which is what lands.
@@ -174,27 +189,112 @@ export const runTrain = Effect.fn("landing.runTrain")(function* (
         ...failuresOf(result),
         ...(gated ? [] : [GATE_FAILURE]),
       ];
-      const known = HashSet.fromIterable(yield* baseline.shared(failures));
-      const caused = Arr.filter(
-        failures,
-        (failure) => !HashSet.has(known, failure)
+      const known = HashSet.fromIterable(
+        yield* asking.withPermit(baseline.shared(failures))
       );
+      return {
+        ...verdict,
+        caused: Arr.filter(failures, (failure) => !HashSet.has(known, failure)),
+      };
+    });
+
+  /** Sets aside the heads that conflicted. */
+  const rejectConflicts = (conflicted: readonly Candidate[]) =>
+    Effect.forEach(conflicted, (candidate) =>
+      reject(
+        candidate,
+        "conflicts with main or an earlier pull request: merge main into it"
+      )
+    );
+
+  const attempt = (
+    heads: readonly Candidate[]
+  ): Effect.Effect<void, TrainError | ProofError> =>
+    Effect.gen(function* () {
+      const { conflicted, riding, caused } = yield* check(heads);
+      yield* rejectConflicts(conflicted);
       if (caused.length === 0) {
-        yield* Ref.update(accepted, Arr.appendAll(riding));
+        return yield* accept(riding);
+      }
+      yield* split(riding, caused);
+    });
+
+  /** Finds what failed in heads that failed together. */
+  const split = (
+    riding: readonly Candidate[],
+    caused: readonly string[]
+  ): Effect.Effect<void, TrainError | ProofError> =>
+    Effect.gen(function* () {
+      if (riding.length === 1) {
+        return yield* Effect.forEach(riding, (candidate) =>
+          reject(candidate, `fails ${Arr.join(caused, ", ")}`)
+        );
+      }
+      const stacks = Rec.values(
+        Arr.groupBy(riding, (candidate) => String(candidate.stack))
+      );
+      if (stacks.length === 1) {
+        const middle = Math.ceil(riding.length / 2);
+        yield* attempt(Arr.take(riding, middle));
+        return yield* attempt(Arr.drop(riding, middle));
+      }
+      const verdicts = yield* Effect.forEach(stacks, check, {
+        concurrency: "unbounded",
+      });
+      yield* Effect.forEach(verdicts, (verdict) =>
+        rejectConflicts(verdict.conflicted)
+      );
+      const passing = Arr.filter(
+        verdicts,
+        (verdict) => verdict.caused.length === 0
+      );
+      // When every stack passed on its own, they already failed together.
+      yield* together(
+        Arr.map(passing, (verdict) => verdict.riding),
+        passing.length < stacks.length
+      );
+      yield* Effect.forEach(
+        Arr.filter(verdicts, (verdict) => verdict.caused.length > 0),
+        (verdict) => split(verdict.riding, verdict.caused)
+      );
+    });
+
+  /**
+   * Accepts stacks that passed on their own, after one more job verifies them
+   * together unless they already failed together. When they pass alone and fail
+   * together, the first is accepted and each other one is verified on top of it,
+   * one at a time.
+   */
+  const together = (
+    stacks: readonly (readonly Candidate[])[],
+    untried: boolean
+  ) =>
+    Effect.gen(function* () {
+      const [first, ...rest] = stacks;
+      if (first === undefined) {
         return;
       }
-      const [only] = riding;
-      if (riding.length === 1 && only !== undefined) {
-        yield* reject(only, `fails ${Arr.join(caused, ", ")}`);
-        return;
+      if (rest.length === 0) {
+        return yield* accept(first);
       }
-      const middle = Math.ceil(riding.length / 2);
-      yield* attempt(Arr.take(riding, middle));
-      yield* attempt(Arr.drop(riding, middle));
+      if (untried) {
+        const { conflicted, riding, caused } = yield* check(
+          Arr.flatten(stacks)
+        );
+        if (caused.length === 0) {
+          yield* rejectConflicts(conflicted);
+          return yield* accept(riding);
+        }
+      }
+      yield* accept(first);
+      yield* Effect.forEach(rest, attempt);
     });
 
   if (candidates.length > 0) {
-    yield* attempt(candidates);
+    // A batch that `red` says already failed together starts at its split.
+    yield* red && candidates.length > 1
+      ? split(candidates, [RED_BATCH])
+      : attempt(candidates);
   }
   const landings = yield* Effect.forEach(
     yield* Ref.get(accepted),
