@@ -25,7 +25,7 @@ import {
 import { signInLearner } from "@/e2e/support/learner";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { LINE_SCENE, lineSceneCards } from "@/e2e/support/selector";
+import { MATH_SCENE, mathSceneCards } from "@/e2e/support/selector";
 import {
   readinessTimeoutMilliseconds,
   revealTimeoutMilliseconds,
@@ -284,8 +284,8 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
     route.href,
     readinessTimeoutMilliseconds
   );
-  const card = lineSceneCards(page).filter({ visible: true }).first();
-  const scene = card.locator(LINE_SCENE);
+  const card = mathSceneCards(page).filter({ visible: true }).first();
+  const scene = card.locator(MATH_SCENE);
   const canvases = page.locator("canvas");
   yield* Effect.promise(() => expect(scene).toBeAttached());
   yield* Effect.promise(() => expect(canvases).toHaveCount(0));

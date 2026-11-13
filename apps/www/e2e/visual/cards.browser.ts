@@ -17,7 +17,7 @@ import {
 } from "@/e2e/support/canvas";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { LINE_SCENE, SCENE_ACTIONS } from "@/e2e/support/selector";
+import { MATH_SCENE, SCENE_ACTIONS } from "@/e2e/support/selector";
 import {
   BACTERIA_SCENE,
   expectLabStill,
@@ -70,7 +70,7 @@ function countLabelsInView(card: Locator) {
         );
       }
     ).length;
-  }, LINE_SCENE);
+  }, MATH_SCENE);
 }
 
 /** Proves playback still works: the band's first view back replays the growth from its start. */
