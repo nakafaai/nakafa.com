@@ -17,10 +17,10 @@ import { cn } from "cn";
 import type { ComponentProps } from "react";
 
 /**
- * Renders the responsive sidebar panel around composed sidebar content. The content renders in one place: in the
- * phone's sheet below the desktop width, and in the panel beside the page from it. The sheet stays mounted while
- * closed, so opening it slides in content that is already drawn, its reads answered and its pictures decoded,
- * instead of drawing a second copy of the sidebar each time it opens.
+ * Renders the responsive sidebar panel around composed sidebar content. The panel beside the page holds the content
+ * at every width, its own CSS deciding where it shows. Below the desktop width the phone's sheet holds a second copy,
+ * drawn once and kept in the page while the sheet is closed, so opening it slides in content that is already drawn,
+ * its reads answered and its pictures decoded, instead of drawing the sidebar again on every open.
  */
 export function Sidebar({
   side = "left",
@@ -135,7 +135,7 @@ export function Sidebar({
             data-sidebar="sidebar"
             data-slot="sidebar-inner"
           >
-            {isMobile ? null : children}
+            {children}
           </div>
         </div>
       </div>

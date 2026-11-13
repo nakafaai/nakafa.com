@@ -46,7 +46,7 @@ test("moves the sidebar's mark from the Quran to Try out when Try out is pressed
 });
 
 /**
- * A phone's sidebar is a sheet drawn once, while the page loads, and kept in the page while it is closed, so opening
+ * A phone's sidebar is a sheet drawn once, as the page settles, and kept in the page while it is closed, so opening
  * it adds no link and no picture: it slides in whole, the first time and every time after.
  */
 test("opens the phone's sidebar on what it already drew, the second time too", async ({
@@ -58,11 +58,10 @@ test("opens the phone's sidebar on what it already drew, the second time too", a
   const sheet = page.locator('[data-mobile="true"]');
   const trigger = page.locator(VISIBLE_SIDEBAR_TRIGGER).first();
   await waitUntilTakenOver(trigger);
-  // The sidebar's links are in the page, unseen, before the first press, and no second copy waits beside them.
+  // The sheet's links are in the page, unseen, before the first press.
   await expect(sheet.locator("a[href]").first()).toBeAttached({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page.locator(`${SIDEBAR} a[href]`)).toHaveCount(0);
 
   for (let open = 0; open < 2; open += 1) {
     await sheet.evaluate((element) => {
