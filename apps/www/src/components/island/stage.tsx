@@ -38,6 +38,7 @@ import { rayThrough } from "@/lib/island/matrix";
 import { lightingOf, meshChunk } from "@/lib/island/mesh";
 import { pathOf } from "@/lib/island/path";
 import { planOf } from "@/lib/island/plan";
+import { plantBodies } from "@/lib/island/plants";
 import { castRay } from "@/lib/island/ray";
 import { touches } from "@/lib/island/room";
 import { hourOf, lightOf } from "@/lib/island/sky";
@@ -100,6 +101,8 @@ function start(
   let lastWater = 0;
 
   let glow = glowOf(store.getState().cells);
+  // Every plant as its model (D25), read again only when the world changes.
+  let plants = plantBodies(store.getState().cells);
   let herd = herdOf(store.getState().cells, store.getState().seed, size);
   // The wild visitors change with the day, so the island meets new species as the days go by (ADR 0047, D11).
   let wild = wildOf(
@@ -147,6 +150,7 @@ function start(
       const relit = glowOf(state.cells);
       const moved = changedChunks(glow, relit);
       glow = relit;
+      plants = plantBodies(state.cells);
       remesh(HashSet.union(store.getState().takeDirty(), moved));
       canvas.dataset.revision = String(state.revision);
     }
@@ -326,7 +330,7 @@ function start(
     return next;
   };
 
-  /** Hands the painter every creature this frame as true 3D bodies: the herd and the fox facing its way or its float (D21), the open sea's swimmers (D24) and the wild visitors (D25); then Nina and the float, still flat. */
+  /** Hands the painter every creature this frame as true 3D bodies: the herd and the fox facing its way or its float (D21), the open sea's swimmers (D24), the wild visitors and the plants (D25); then Nina and the float, still flat. */
   const drawLife = (
     cells: Cells,
     next: Option.Option<readonly [number, number]>,
@@ -348,6 +352,7 @@ function start(
       ...bodiesOf(cells, Arr.append(herd, fox), seconds),
       ...seaBodies(store.getState().seed, seconds),
       ...wildBodies(cells, wild, size, seconds),
+      ...plants,
     ]);
     painter.herd(flatQuads(size, seconds, rod.quads(seconds, orbit.yaw)));
   };

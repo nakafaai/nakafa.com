@@ -16,7 +16,7 @@ function meadow() {
     cells[cellOf(10, 9, z)] = idOf("stone");
     cells[cellOf(10, 10, z)] = idOf("stone");
   }
-  cells[cellOf(4, 9, 4)] = idOf("rose");
+  cells[cellOf(4, 9, 4)] = idOf("tulip");
   return cells;
 }
 
@@ -37,10 +37,13 @@ const at = (
 });
 
 describe("island/room", () => {
-  it("fits a body on open ground and over a flower, never across a wall, up a step or over nothing", () => {
+  it("fits a body on open ground and over a low flower, never through a rose bush, across a wall, up a step or over nothing", () => {
     const cells = meadow();
     expect(roomOf(cells, "cat", 5.5, 5.5, 0)).toBe(true);
     expect(roomOf(cells, "hen", 4.5, 4.5, 0)).toBe(true);
+    // A rose bush stands taller than a knee: a hen goes round it.
+    cells[cellOf(6, 9, 6)] = idOf("rose");
+    expect(roomOf(cells, "hen", 6.5, 6.5, 0)).toBe(false);
     // Atop the wall is a floor of its own, which a walker on the meadow never climbs to.
     expect(roomOf(cells, "cat", 10.5, 5.5, 0, Option.some(9))).toBe(false);
     expect(roomOf(cells, "cat", 9.8, 5.5, 0)).toBe(false);
