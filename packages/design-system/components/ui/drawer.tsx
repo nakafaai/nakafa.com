@@ -202,8 +202,28 @@ function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
  * comes from what it holds, up to what the drawer leaves for it. The scroller is the flex item itself, because a
  * drawer only caps its height: a percentage inside a wrapper resolves to nothing, and the form then runs under the footer.
  */
-/** The body of a drawer. What it holds keeps its edges and stands apart, as a form's fields do. */
-function DrawerPanel({ className, ...props }: ComponentProps<"div">) {
+/**
+ * The body of a drawer. What it holds keeps its edges and stands apart, as a form's fields do. A `fill` body
+ * does not scroll: what it holds shrinks to the height the drawer leaves and scrolls on its own, so the drawer
+ * never holds a scroll inside a scroll.
+ */
+function DrawerPanel({
+  className,
+  fill = false,
+  ...props
+}: ComponentProps<"div"> & { fill?: boolean }) {
+  if (fill) {
+    return (
+      <div
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 flex-col gap-6 p-4",
+          className
+        )}
+        data-slot="drawer-panel"
+        {...props}
+      />
+    );
+  }
   return (
     <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade>
       <div
