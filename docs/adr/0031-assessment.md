@@ -100,8 +100,12 @@ that the model must change:
   write of an item version (a publication or a teacher's save) checks the encoded
   size of the whole record, its documents, interactions, rules and hash included,
   against Convex's 1 MiB per document, and refuses it before the write.
-- A figure is one of the published components (`MathVisual`, `NumberLine`,
-  `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. The
+- A figure is a `MathVisual` scene, a `Chart` of values, or a `Mermaid` diagram,
+  or an image with alternative text. Every mathematical figure is a `MathVisual`
+  scene (D36): contracts 7.0.0 retired `NumberLine`, `LineEquation` and
+  `UnitCircle`, and a teacher builds a graph from points, segments, lines, rays,
+  vectors, polygons, circles, angles, functions, equations, regions and sliders
+  in the School exam editor's builder. The
   image form has no schema yet, and wave A adds one with the document contract.
   The per-set figure components of the SNBT question bank (`Set<N>Question<M>`,
   with kinds such as `Graph` and `SalesChart`) are not in this list. Each kind

@@ -11,14 +11,13 @@ import {
   Schema,
   String as Str,
 } from "effect";
+import { PlaneDraft, sceneOf } from "@/components/tenant/exams/figure/plane";
+import { newShape, numberOf } from "@/components/tenant/exams/figure/shapes";
+import { planeOf } from "@/components/tenant/exams/figure/stored";
 
-/** The figures a teacher makes: a graph of a function, a chart of values, or a diagram. */
+/** The figures a teacher makes: a graph on a plane, a chart of values, or a diagram. */
 export const FigureKind = Schema.Literals(["graph", "chart", "diagram"]);
 export type FigureKind = typeof FigureKind.Type;
-
-/** The curves a graph draws: y = ax + b, or y = ax² + bx + c. */
-export const GraphCurve = Schema.Literals(["line", "quadratic"]);
-export type GraphCurve = typeof GraphCurve.Type;
 
 /** How a chart draws its values. */
 export const ChartMark = Schema.Literals(["bar", "line"]);
@@ -26,56 +25,44 @@ export type ChartMark = typeof ChartMark.Type;
 
 /**
  * What a teacher writes for a figure, as the fields hold it: every number as typed, so a value on its way never
- * jumps. Each kind reads its own fields and leaves the others as they stand.
+ * jumps. A graph reads its plane: the objects on it, the sliders, and the range it shows. A chart and a diagram
+ * read their own fields, and each kind leaves the others as they stand.
  */
 export const FigureDraft = Schema.Struct({
-  a: Schema.String,
+  ...PlaneDraft.fields,
   alt: Schema.String,
-  b: Schema.String,
-  c: Schema.String,
   categories: Schema.String,
   chart: Schema.String,
-  curve: GraphCurve,
-  from: Schema.String,
   kind: FigureKind,
   mark: ChartMark,
   title: Schema.String,
-  to: Schema.String,
   values: Schema.String,
 });
 export type FigureDraft = typeof FigureDraft.Type;
 
-/** A new figure of a kind, with a graph's axis laid out from minus five to five. */
+/** A new figure of a kind. A graph starts with one function on a plane that fits itself around it. */
 export const emptyDraft = (kind: FigureKind): FigureDraft => ({
-  a: "1",
   alt: "",
-  b: "0",
-  c: "0",
   categories: "",
   chart: "",
-  curve: "line",
-  from: "-5",
   kind,
   mark: "bar",
+  shapes: kind === "graph" ? [newShape("function", "function-1", 0)] : [],
+  sliders: [],
+  space: "plane",
   title: "",
-  to: "5",
   values: "",
+  view: "auto",
+  xMax: "5",
+  xMin: "-5",
+  yMax: "5",
+  yMin: "-5",
+  zMax: "5",
+  zMin: "-5",
 });
-
-/** The room around a curve in its frame, so nothing touches the edge of the graph. */
-const GRAPH_MARGIN = 1;
-
-/** The one curve of a graph, which the scene names. */
-const CURVE_ID = "curve";
 
 /** Rich text of one line of plain words, as a figure's title and description hold it. */
 const richText = (text: string) => [{ text, type: "text" }];
-
-/** The number a teacher typed, with either decimal point, or none when it is no number. */
-const numberOf = (text: string) =>
-  Schema.decodeOption(Schema.FiniteFromString)(
-    pipe(text, Str.trim, Str.replace(",", "."))
-  );
 
 /** The words of a comma-separated list, each trimmed, without empty ones. */
 const wordsOf = (text: string) =>
@@ -93,105 +80,15 @@ const numbersOf = (text: string) =>
     Option.all
   );
 
-/** The frame around a curve: its own range with a margin, and always the origin, so both axes show. */
-const frameAround = (
-  from: number,
-  to: number,
-  values: readonly [number, ...number[]]
-) => ({
-  kind: "cartesian",
-  x: {
-    max: Math.max(to, 0) + GRAPH_MARGIN,
-    min: Math.min(from, 0) - GRAPH_MARGIN,
-  },
-  y: {
-    max: Math.max(...values, 0) + GRAPH_MARGIN,
-    min: Math.min(...values, 0) - GRAPH_MARGIN,
-  },
-});
-
-/** The scene of a line y = ax + b from `from` to `to`. */
-const lineScene = (a: number, b: number, from: number, to: number) => {
-  const start = { x: from, y: a * from + b };
-  const end = { x: to, y: a * to + b };
-  return {
-    frame: frameAround(from, to, [start.y, end.y]),
-    objects: [
-      {
-        appearance: "primary",
-        id: CURVE_ID,
-        kind: "line",
-        through: [start, end],
-      },
-    ],
-    space: "plane",
-    view: { kind: "fit" },
-  };
-};
-
-/**
- * The scene of a parabola y = ax² + bx + c from `from` to `to`. Its frame holds both ends and its turning point
- * when that falls in the range, so the whole curve stands inside the graph, computed from its formula.
- */
-const quadraticScene = (
-  coefficients: { readonly a: number; readonly b: number; readonly c: number },
-  from: number,
-  to: number
-) => {
-  const { a, b, c } = coefficients;
-  const at = (x: number) => (a * x + b) * x + c;
-  const turning = -b / (2 * a);
-  return {
-    frame: frameAround(
-      from,
-      to,
-      turning > from && turning < to
-        ? [at(from), at(to), at(turning)]
-        : [at(from), at(to)]
-    ),
-    objects: [
-      {
-        appearance: "primary",
-        coefficients,
-        domain: { max: to, min: from },
-        id: CURVE_ID,
-        inputAxis: "x",
-        kind: "quadratic",
-      },
-    ],
-    space: "plane",
-    view: { kind: "fit" },
-  };
-};
-
-/** The scene of a draft's graph, or none while a number is missing or its range runs backwards. */
-const sceneOf = (draft: FigureDraft) =>
-  Option.map(
-    Option.filter(
-      Option.all({
-        a: numberOf(draft.a),
-        b: numberOf(draft.b),
-        c: numberOf(draft.c),
-        from: numberOf(draft.from),
-        to: numberOf(draft.to),
-      }),
-      ({ from, to }) => from < to
-    ),
-    ({ a, b, c, from, to }) =>
-      draft.curve === "line"
-        ? lineScene(a, b, from, to)
-        : quadraticScene({ a, b, c }, from, to)
-  );
-
 /** The component and the props of a draft, before the contract reads them. */
 const propsOf = (draft: FigureDraft) => {
   const title = richText(draft.title);
   const description = richText(draft.alt);
   return Match.value(draft.kind).pipe(
     Match.when("graph", () =>
-      Option.map(sceneOf(draft), (scene) => ({
+      Option.map(sceneOf(draft), ({ labels, scene }) => ({
         component: "MathVisual",
-        props: { description, labels: {}, scene, title },
+        props: { description, labels, scene, title },
       }))
     ),
     Match.when("chart", () =>
@@ -222,7 +119,8 @@ const propsOf = (draft: FigureDraft) => {
 
 /**
  * The figure a draft makes, or none while the contract refuses it: a name or a text alternative still empty, a
- * number that is no number, a range that runs backwards, or a chart whose values do not match its labels.
+ * number that is no number, a formula that does not read, an object outside the plane, or a chart whose values
+ * do not match its labels.
  */
 export const figureOf = (draft: FigureDraft): Option.Option<FigureAttrs> =>
   Option.flatMap(propsOf(draft), (made) =>
@@ -240,48 +138,19 @@ const plainOf = (nodes: readonly InlineNode[]) =>
     ""
   );
 
-/** The numbers of a graph as its fields show them: `a` and `b` of a line read from its two ends. */
-const graphFields = (
-  attrs: Extract<FigureAttrs, { readonly component: "MathVisual" }>
-): Partial<FigureDraft> => {
-  const [object] = attrs.props.scene.objects;
-  if (object.kind === "quadratic") {
-    return {
-      a: String(object.coefficients.a),
-      b: String(object.coefficients.b),
-      c: String(object.coefficients.c),
-      curve: "quadratic",
-      from: String(object.domain.min),
-      to: String(object.domain.max),
-    };
-  }
-  if (object.kind !== "line") {
-    return {};
-  }
-  const [start, end] = object.through;
-  const a = (end.y - start.y) / (end.x - start.x);
-  return {
-    a: String(a),
-    b: String(start.y - a * start.x),
-    curve: "line",
-    from: String(start.x),
-    to: String(end.x),
-  };
-};
-
 /**
- * The draft of a figure already in a text, so the teacher edits what stands there. A figure of a component a
- * teacher cannot make here, as one a file brought in, has none, and its text stays as it is.
+ * The draft of a figure already in a text, so the teacher edits what stands there. A figure the builder cannot
+ * write, as a solid or a parametric curve a release brought in, has none, and its text stays as it is.
  */
 export const draftOf = (attrs: FigureAttrs): Option.Option<FigureDraft> =>
   Match.value(attrs).pipe(
     Match.when({ component: "MathVisual" }, (graph) =>
-      Option.some({
+      Option.map(planeOf(graph), (plane) => ({
         ...emptyDraft("graph"),
+        ...plane,
         alt: attrs.alt,
         title: plainOf(graph.props.title),
-        ...graphFields(graph),
-      })
+      }))
     ),
     Match.when({ component: "Chart" }, ({ props }) =>
       Option.some({
@@ -304,5 +173,5 @@ export const draftOf = (attrs: FigureAttrs): Option.Option<FigureDraft> =>
         title: props.title,
       })
     ),
-    Match.orElse(() => Option.none())
+    Match.exhaustive
   );

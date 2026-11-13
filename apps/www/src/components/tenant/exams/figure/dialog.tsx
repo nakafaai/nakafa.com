@@ -1,7 +1,4 @@
-import {
-  ChartBubble01Icon,
-  ChartLineData01Icon,
-} from "@hugeicons/core-free-icons";
+import { ChartBubble01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -19,26 +16,25 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, Suspense, useId, useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { PendingFigure } from "@/components/tenant/exams/editing";
+import { GraphBuilder } from "@/components/tenant/exams/figure/builder";
 import {
   ChartMark,
-  type FigureDraft,
   type FigureKind,
-  figureOf,
-  GraphCurve,
 } from "@/components/tenant/exams/figure/draft";
+import {
+  AltField,
+  FigurePreview,
+  NameField,
+} from "@/components/tenant/exams/figure/fields";
+import {
+  FigureProvider,
+  useFigure,
+} from "@/components/tenant/exams/figure/provider";
 import { useExamEditing } from "@/components/tenant/exams/provider";
-
-/** The figure's code loads when a dialog first shows one. */
-const LazyFigure = lazy(() =>
-  import("@/components/assessment/figure").then((module) => ({
-    default: module.DocumentFigure,
-  }))
-);
 
 /** The dialog's title for each figure a teacher makes. */
 const FIGURE_NAME = {
@@ -47,180 +43,51 @@ const FIGURE_NAME = {
   graph: "figure-graph",
 } as const satisfies Record<FigureKind, string>;
 
-/** The name of each curve of a graph. */
-const CURVE_NAME = {
-  line: "figure-line",
-  quadratic: "figure-quadratic",
-} as const satisfies Record<GraphCurve, string>;
-
 /** The name of each way a chart draws its values. */
 const MARK_NAME = {
   bar: "figure-bars",
   line: "figure-lines",
 } as const satisfies Record<ChartMark, string>;
 
-/** Whether a value the select gives is one of the curves. */
-const isCurve = Schema.is(GraphCurve);
-
 /** Whether a value the select gives is one of the marks. */
 const isMark = Schema.is(ChartMark);
 
-/** One field of the figure's form: its name, its control, and a line on how to fill it. */
-function FigureField({
-  children,
-  hint,
-  id,
-  label,
-}: {
-  readonly children: ReactNode;
-  readonly hint?: string;
-  readonly id: string;
-  readonly label: string;
-}) {
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      {children}
-      {hint === undefined ? null : <FieldDescription>{hint}</FieldDescription>}
-    </Field>
-  );
-}
-
-/** The fields of a graph: its curve, the numbers of its formula, and the range of x it draws. */
-function GraphFields({
-  draft,
-  onChange,
-}: {
-  readonly draft: FigureDraft;
-  readonly onChange: (change: Partial<FigureDraft>) => void;
-}) {
-  const common = useTranslations("Common");
-  const t = useTranslations("Exams");
-  const id = useId();
-
-  return (
-    <>
-      <FigureField id={`${id}-curve`} label={t("figure-curve")}>
-        <Select
-          items={Arr.map(GraphCurve.literals, (value) => ({
-            label: t(CURVE_NAME[value]),
-            value,
-          }))}
-          onValueChange={(value) => {
-            if (isCurve(value)) {
-              onChange({ curve: value });
-            }
-          }}
-          value={draft.curve}
-        >
-          <SelectTrigger className="w-full" id={`${id}-curve`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent label={common("menu-curve")}>
-            {Arr.map(GraphCurve.literals, (value) => (
-              <SelectItem icon={ChartLineData01Icon} key={value} value={value}>
-                {t(CURVE_NAME[value])}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FigureField>
-      <div className="grid grid-cols-3 gap-3">
-        <FigureField id={`${id}-a`} label="a">
-          <Input
-            id={`${id}-a`}
-            inputMode="decimal"
-            onChange={(event) => onChange({ a: event.target.value })}
-            placeholder="1"
-            value={draft.a}
-          />
-        </FigureField>
-        <FigureField id={`${id}-b`} label="b">
-          <Input
-            id={`${id}-b`}
-            inputMode="decimal"
-            onChange={(event) => onChange({ b: event.target.value })}
-            placeholder="0"
-            value={draft.b}
-          />
-        </FigureField>
-        {draft.curve === "quadratic" ? (
-          <FigureField id={`${id}-c`} label="c">
-            <Input
-              id={`${id}-c`}
-              inputMode="decimal"
-              onChange={(event) => onChange({ c: event.target.value })}
-              placeholder="0"
-              value={draft.c}
-            />
-          </FigureField>
-        ) : null}
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <FigureField id={`${id}-from`} label={t("figure-from")}>
-          <Input
-            id={`${id}-from`}
-            inputMode="decimal"
-            onChange={(event) => onChange({ from: event.target.value })}
-            placeholder="-5"
-            value={draft.from}
-          />
-        </FigureField>
-        <FigureField id={`${id}-to`} label={t("figure-to")}>
-          <Input
-            id={`${id}-to`}
-            inputMode="decimal"
-            onChange={(event) => onChange({ to: event.target.value })}
-            placeholder="5"
-            value={draft.to}
-          />
-        </FigureField>
-      </div>
-    </>
-  );
-}
-
 /** The fields of a chart: its labels, its values, and how it draws them. */
-function ChartFields({
-  draft,
-  onChange,
-}: {
-  readonly draft: FigureDraft;
-  readonly onChange: (change: Partial<FigureDraft>) => void;
-}) {
+function ChartFields() {
   const common = useTranslations("Common");
   const t = useTranslations("Exams");
+  const categories = useFigure((state) => state.draft.categories);
+  const values = useFigure((state) => state.draft.values);
+  const mark = useFigure((state) => state.draft.mark);
+  const change = useFigure((state) => state.change);
   const id = useId();
 
   return (
     <>
-      <FigureField
-        hint={t("figure-labels-hint")}
-        id={`${id}-labels`}
-        label={t("figure-labels")}
-      >
+      <Field>
+        <FieldLabel htmlFor={`${id}-labels`}>{t("figure-labels")}</FieldLabel>
         <Input
           dir="auto"
           id={`${id}-labels`}
-          onChange={(event) => onChange({ categories: event.target.value })}
+          onChange={(event) => change({ categories: event.target.value })}
           placeholder={t("figure-labels-placeholder")}
-          value={draft.categories}
+          value={categories}
         />
-      </FigureField>
-      <FigureField
-        hint={t("figure-values-hint")}
-        id={`${id}-values`}
-        label={t("figure-values")}
-      >
+        <FieldDescription>{t("figure-labels-hint")}</FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`${id}-values`}>{t("figure-values")}</FieldLabel>
         <Input
           id={`${id}-values`}
           inputMode="decimal"
-          onChange={(event) => onChange({ values: event.target.value })}
+          onChange={(event) => change({ values: event.target.value })}
           placeholder="70 80 90"
-          value={draft.values}
+          value={values}
         />
-      </FigureField>
-      <FigureField id={`${id}-mark`} label={t("figure-mark")}>
+        <FieldDescription>{t("figure-values-hint")}</FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`${id}-mark`}>{t("figure-mark")}</FieldLabel>
         <Select
           items={Arr.map(ChartMark.literals, (value) => ({
             label: t(MARK_NAME[value]),
@@ -228,10 +95,10 @@ function ChartFields({
           }))}
           onValueChange={(value) => {
             if (isMark(value)) {
-              onChange({ mark: value });
+              change({ mark: value });
             }
           }}
-          value={draft.mark}
+          value={mark}
         >
           <SelectTrigger className="w-full" id={`${id}-mark`}>
             <SelectValue />
@@ -244,12 +111,39 @@ function ChartFields({
             ))}
           </SelectContent>
         </Select>
-      </FigureField>
+      </Field>
     </>
   );
 }
 
-/** The form of one figure, with the figure itself under its fields as it takes shape. */
+/** The source of a diagram, written in Mermaid. */
+function DiagramField() {
+  const t = useTranslations("Exams");
+  const chart = useFigure((state) => state.draft.chart);
+  const change = useFigure((state) => state.change);
+  const id = useId();
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{t("figure-source")}</FieldLabel>
+      <Textarea
+        className="font-mono"
+        dir="ltr"
+        id={id}
+        onChange={(event) => change({ chart: event.target.value })}
+        placeholder="graph TD; A-->B"
+        value={chart}
+      />
+      <FieldDescription>{t("figure-source-hint")}</FieldDescription>
+    </Field>
+  );
+}
+
+/**
+ * The dialog of one figure. A graph opens the builder, the plane beside the objects on it; a chart and a diagram
+ * open their fields over the figure as it takes shape. Saving places the figure at once: at the caret, or in the
+ * place of the one it edits.
+ */
 function FigureForm({
   onClose,
   pending,
@@ -258,12 +152,9 @@ function FigureForm({
   readonly pending: PendingFigure;
 }) {
   const t = useTranslations("Exams");
-  const id = useId();
-  const [draft, setDraft] = useState(pending.draft);
+  const kind = useFigure((state) => state.draft.kind);
+  const made = useFigure((state) => state.figure);
   const [open, setOpen] = useState(true);
-  const made = figureOf(draft);
-  const change = (next: Partial<FigureDraft>) =>
-    setDraft((current) => ({ ...current, ...next }));
 
   /** Places the figure at the caret, or in the place of the one it edits. */
   const save = () => {
@@ -292,7 +183,9 @@ function FigureForm({
           {t("figure-save")}
         </Button>
       }
-      description={t("figure-description")}
+      description={t(
+        kind === "graph" ? "figure-graph-description" : "figure-description"
+      )}
       onOpenChangeComplete={(next) => {
         if (!next) {
           onClose();
@@ -300,59 +193,19 @@ function FigureForm({
       }}
       open={open}
       setOpen={setOpen}
-      title={t(FIGURE_NAME[draft.kind])}
+      size={kind === "graph" ? "wide" : "default"}
+      title={t(FIGURE_NAME[kind])}
     >
-      <FieldGroup>
-        <FigureField id={`${id}-title`} label={t("figure-name")}>
-          <Input
-            dir="auto"
-            id={`${id}-title`}
-            onChange={(event) => change({ title: event.target.value })}
-            placeholder={t("figure-name-placeholder")}
-            value={draft.title}
-          />
-        </FigureField>
-        {draft.kind === "graph" ? (
-          <GraphFields draft={draft} onChange={change} />
-        ) : null}
-        {draft.kind === "chart" ? (
-          <ChartFields draft={draft} onChange={change} />
-        ) : null}
-        {draft.kind === "diagram" ? (
-          <FigureField
-            hint={t("figure-source-hint")}
-            id={`${id}-source`}
-            label={t("figure-source")}
-          >
-            <Textarea
-              className="font-mono"
-              dir="ltr"
-              id={`${id}-source`}
-              onChange={(event) => change({ chart: event.target.value })}
-              placeholder="graph TD; A-->B"
-              value={draft.chart}
-            />
-          </FigureField>
-        ) : null}
-        <FigureField
-          hint={t("figure-alt-hint")}
-          id={`${id}-alt`}
-          label={t("figure-alt")}
-        >
-          <Input
-            dir="auto"
-            id={`${id}-alt`}
-            onChange={(event) => change({ alt: event.target.value })}
-            placeholder={t("figure-alt-placeholder")}
-            value={draft.alt}
-          />
-        </FigureField>
-        {Option.isSome(made) ? (
-          <Suspense fallback={null}>
-            <LazyFigure attrs={made.value} />
-          </Suspense>
-        ) : null}
-      </FieldGroup>
+      {kind === "graph" ? (
+        <GraphBuilder />
+      ) : (
+        <FieldGroup>
+          <NameField />
+          {kind === "chart" ? <ChartFields /> : <DiagramField />}
+          <AltField />
+          <FigurePreview />
+        </FieldGroup>
+      )}
     </ResponsiveDialog>
   );
 }
@@ -363,6 +216,8 @@ export function FigureDialog() {
   const closeFigure = useExamEditing((state) => state.closeFigure);
 
   return figure === null ? null : (
-    <FigureForm onClose={closeFigure} pending={figure} />
+    <FigureProvider draft={figure.draft}>
+      <FigureForm onClose={closeFigure} pending={figure} />
+    </FigureProvider>
   );
 }
