@@ -73,7 +73,7 @@ export function readFirstLoad(
         )
       : reached;
   };
-  const reached = reach(HashSet.empty(), [entry, ...painted]);
+  const reached = reach(HashSet.empty<string>(), [entry, ...painted]);
   return HashSet.fromIterable(
     Arr.filter(preloads, (href) => HashSet.has(reached, href))
   );

@@ -14,7 +14,6 @@ import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
   deferStaticPageScripts,
-  recordClientChunks,
   standalonePages,
   verifyPrerenderedPages,
   writeStandalonePages,
@@ -392,7 +391,6 @@ const FONT_FILE_PATTERN = /\.woff2?$/u;
 
 export default defineConfig(async ({ command, isPreview }) => {
   const prerenderedPages = await listPrerenderedPages(command);
-  const builtChunks = recordClientChunks();
   return {
     build: {
       // The font-src policy allows only this origin, so a font file stays a file
@@ -486,9 +484,8 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeRobotsFile,
       serveRobotsFile,
       writeStaticArtifacts,
-      builtChunks.plugin,
       writeStaticAnswers(prerenderedPages),
-      deferStaticPageScripts(prerenderedPages, builtChunks.read),
+      deferStaticPageScripts(prerenderedPages),
       writeStandalonePages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
       // `vite dev` runs the Worker as Node runs a development server. `vite build`
