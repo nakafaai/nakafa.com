@@ -6,7 +6,13 @@ import {
   type Question,
 } from "@repo/backend/scripts/nina/deployment";
 import { DeploymentLive } from "@repo/backend/scripts/nina/live";
+import {
+  ACCOUNT_SEED,
+  PASSWORD_SIGN_IN,
+  SIGN_IN_ANSWERS,
+} from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
+import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   ConfigProvider,
@@ -16,7 +22,7 @@ import {
   Schema,
 } from "effect";
 
-const LEARNER = { authId: "user-1", sessionId: "session-1" };
+const LEARNER = { sessionId: "session-1" };
 const CHAT = Schema.decodeUnknownSync(Id("chats"))("chat-1");
 const QUESTION = {
   kind: "message",
@@ -27,6 +33,9 @@ const RECEIPT =
   '{"prompt":{"text":"Explain this lesson.","files":[]},"chatId":"chat-1","threadId":"thread-1","turnId":"turn-1","promptMessageId":"message-1","order":0}';
 const TURN =
   '{"order":0,"promptMessageId":"message-1","promptedAt":1000,"state":{"status":"complete","finishedAt":2000},"usage":[]}';
+/** The seed's account and Convex Auth's sign-in, as the CLI prints them. */
+const SEEDED = encodeJsonText(SIGN_IN_ANSWERS[ACCOUNT_SEED]);
+const SIGNED_IN = encodeJsonText(SIGN_IN_ANSWERS[PASSWORD_SIGN_IN]);
 const JOURNAL =
   '{"page":[{"_id":"message-1","agentName":"nina","finishReason":"stop","message":{"role":"assistant","content":"Done."},"order":0,"status":"success","stepOrder":1,"usage":{"cachedInputTokens":4000,"completionTokens":90,"promptTokens":4500}}],"isDone":true,"continueCursor":""}';
 
@@ -61,16 +70,13 @@ if (fn !== undefined && process.env.LIVE_TEST_GARBLES === fn) {
   process.stdout.write("not a value");
   process.exit(0);
 }
-const last = args[args.length - 1];
 const answers = {
-  "adapter:create": () =>
-    JSON.parse(last).input.model === "user"
-      ? { _creationTime: 1, _id: "user-1" }
-      : { _creationTime: 2, _id: "session-1" },
+  "acceptance/accounts:create": () => (${SEEDED}),
+  "auth/core:signInWithUsernamePassword": () => (${SIGNED_IN}),
   "nina/turns:start": () => (${RECEIPT}),
   "nina/conversation:get": () => ({ chat: {}, turn: ${TURN} }),
   "messages:listMessagesByThreadId": () => (${JOURNAL}),
-  "auth/deletion:claimAccountDeletion": () => "ready",
+  "auth/deletion:deleteAccount": () => null,
 };
 const answer = fn === undefined ? undefined : answers[fn]?.();
 if (answer !== undefined) {
@@ -154,14 +160,13 @@ describe("the deployment of the release gate over the Convex CLI", () => {
 
       const calls = yield* loggedCalls(log);
       expect(Arr.map(calls, ({ fn }) => fn)).toEqual([
-        "adapter:create",
-        "adapter:create",
-        "auth/lifecycle:onCreate",
+        "acceptance/accounts:create",
+        "auth/core:signInWithUsernamePassword",
         "nina/turns:start",
         "nina/conversation:get",
         "messages:listMessagesByThreadId",
         "chats/mutations:deleteChat",
-        "auth/deletion:claimAccountDeletion",
+        "auth/deletion:deleteAccount",
       ]);
     }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
@@ -236,7 +241,7 @@ describe("the deployment of the release gate over the Convex CLI", () => {
           settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" }),
           Effect.provideService(ConvexCli, {
             ...cli,
-            env: { LIVE_TEST_FAILS: "adapter:create" },
+            env: { LIVE_TEST_FAILS: "acceptance/accounts:create" },
           }),
           Effect.flip
         );
@@ -262,7 +267,7 @@ describe("the deployment of the release gate over the Convex CLI", () => {
           settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" }),
           Effect.provideService(ConvexCli, {
             ...cli,
-            env: { LIVE_TEST_GARBLES: "adapter:create" },
+            env: { LIVE_TEST_GARBLES: "acceptance/accounts:create" },
           }),
           Effect.flip
         );

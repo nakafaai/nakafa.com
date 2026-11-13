@@ -10,6 +10,11 @@ import {
   gateError,
   type NinaGateError,
 } from "@repo/backend/scripts/nina/error";
+import {
+  ACCOUNT_SEED,
+  PASSWORD_SIGN_IN,
+  SIGN_IN_ANSWERS,
+} from "@repo/backend/test/acceptance";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
@@ -22,7 +27,13 @@ const UUID =
 const ACCOUNT_STEP = /^Learner account: /u;
 const JOURNAL_STEP = /^Agent journal: /u;
 const TURN_STEP = /^Nina turn: /u;
-const LEARNER = { authId: "user-1", sessionId: "session-1" };
+const LEARNER = { sessionId: "session-1" };
+const REMOVAL_STEP = /^Learner removal: /u;
+/** What the seed and Convex Auth's password sign-in answer, by the step that calls them. */
+const SIGN_IN = {
+  "Learner account": Effect.succeed(SIGN_IN_ANSWERS[ACCOUNT_SEED]),
+  "Learner sign-in": Effect.succeed(SIGN_IN_ANSWERS[PASSWORD_SIGN_IN]),
+};
 const CHAT = Schema.decodeUnknownSync(Id("chats"))("chat-1");
 const QUESTION = {
   kind: "message",
@@ -64,10 +75,7 @@ const deploymentOver = (run: RunConvex<NinaGateError, never>) =>
     makeDeployment(run, random)
   ).pipe(Effect.provide(SecureRandom.layerWebCrypto));
 
-const Identity = Schema.Struct({
-  sessionId: Schema.String,
-  subject: Schema.String,
-});
+const Identity = Schema.Struct({ subject: Schema.String });
 const StartArguments = Schema.Struct({
   input: Schema.Unknown,
   requestId: Schema.String,
@@ -81,59 +89,36 @@ const JournalArguments = Schema.Struct({
   }),
   threadId: Schema.String,
 });
-const RemovalArguments = Schema.Struct({
-  attemptId: Schema.String,
-  authId: Schema.String,
-});
 
 describe("the deployment of the release gate over a runner", () => {
   it.effect(
-    "signs a learner in through the account, session and profile rows",
+    "signs a learner in with the seed's password and keeps the session it made",
     () =>
       Effect.gen(function* () {
-        const { run } = scripted({
-          "Learner account": Effect.succeed({
-            _creationTime: 1,
-            _id: "user-1",
-          }),
-          "Learner session": Effect.succeed({
-            _creationTime: 2,
-            _id: "session-1",
-          }),
-        });
+        const { calls, run } = scripted(SIGN_IN);
         const deployment = yield* deploymentOver(run);
 
         expect(yield* deployment.signIn).toEqual(LEARNER);
+        expect(
+          Arr.map(MutableList.toArray(calls), ([step, call]) => [step, call.path])
+        ).toEqual([
+          ["Learner account", "acceptance/accounts:create"],
+          ["Learner sign-in", "auth/core:signInWithUsernamePassword"],
+        ]);
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 
-  it.effect(
-    "keeps the failure of a command as it is, and removes the rows written before it",
-    () =>
-      Effect.gen(function* () {
-        const failure = gateError("Learner profile failed: no such function");
-        const { calls, run } = scripted({
-          "Learner account": Effect.succeed({
-            _creationTime: 1,
-            _id: "user-1",
-          }),
-          "Learner profile": Effect.fail(failure),
-          "Learner session": Effect.succeed({
-            _creationTime: 2,
-            _id: "session-1",
-          }),
-        });
-        const deployment = yield* deploymentOver(run);
+  it.effect("keeps the failure of a step as it is", () =>
+    Effect.gen(function* () {
+      const failure = gateError("Learner sign-in failed: no such function");
+      const { run } = scripted({
+        ...SIGN_IN,
+        "Learner sign-in": Effect.fail(failure),
+      });
+      const deployment = yield* deploymentOver(run);
 
-        expect(yield* deployment.signIn.pipe(Effect.flip)).toBe(failure);
-        expect(Arr.map(MutableList.toArray(calls), ([step]) => step)).toEqual([
-          "Learner account",
-          "Learner session",
-          "Learner profile",
-          "Learner session removal",
-          "Learner account removal",
-        ]);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      expect(yield* deployment.signIn.pipe(Effect.flip)).toBe(failure);
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.effect(
@@ -166,10 +151,7 @@ describe("the deployment of the release gate over a runner", () => {
       expect(call.path).toBe("nina/turns:start");
       expect(
         yield* Schema.decodeUnknownEffect(Identity)(call.identity)
-      ).toEqual({
-        sessionId: "session-1",
-        subject: "user-1",
-      });
+      ).toEqual({ subject: "session-1" });
       const sent = yield* Schema.decodeUnknownEffect(StartArguments)(call.args);
       expect(sent.input).toEqual(QUESTION);
       expect(sent.requestId).toMatch(UUID);
@@ -297,28 +279,25 @@ describe("the deployment of the release gate over a runner", () => {
   );
 
   it.effect(
-    "starts the removal of the learner by claiming the deletion that Better Auth's before-delete hook claims",
+    "deletes the learner's account as the learner, as the settings page does",
     () =>
       Effect.gen(function* () {
-        const { calls, run } = scripted({
-          "Learner removal": Effect.succeed("ready"),
-        });
+        const { calls, run } = scripted({});
         const deployment = yield* deploymentOver(run);
 
         yield* deployment.retire(LEARNER);
 
         const [step, call] = onlyCall(calls);
         expect(step).toBe("Learner removal");
-        expect(call.path).toBe("auth/deletion:claimAccountDeletion");
-        const removal = yield* Schema.decodeUnknownEffect(RemovalArguments)(
-          call.args
-        );
-        expect(removal.authId).toBe("user-1");
-        expect(removal.attemptId).toMatch(UUID);
+        expect(call).toMatchObject({
+          args: {},
+          identity: { subject: "session-1" },
+          path: "auth/deletion:deleteAccount",
+        });
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 
-  it.effect("fails when the deletion does not answer ready", () =>
+  it.effect("names the step when the deletion answers anything but null", () =>
     Effect.gen(function* () {
       const { run } = scripted({
         "Learner removal": Effect.succeed("continue"),
@@ -327,9 +306,7 @@ describe("the deployment of the release gate over a runner", () => {
 
       const error = yield* deployment.retire(LEARNER).pipe(Effect.flip);
 
-      expect(error.message).toBe(
-        "Learner removal answered continue instead of ready."
-      );
+      expect(error.message).toMatch(REMOVAL_STEP);
     }).pipe(Effect.provide(nodeServicesLayer))
   );
 });

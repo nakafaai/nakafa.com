@@ -4,6 +4,7 @@ import {
   LocalConvex,
 } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
@@ -17,6 +18,7 @@ import {
   Sink,
   Stream,
 } from "effect";
+import { Base64Url } from "effect/encoding";
 import { HttpServer } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
@@ -190,16 +192,33 @@ export const ACCOUNT_SEED = "acceptance/accounts:create";
 export const PASSWORD_SIGN_IN = "auth/core:signInWithUsernamePassword";
 
 /**
+ * An access token as Convex Auth issues one, unsigned: only its claims matter
+ * to a reader that decodes it, and its subject is the session.
+ */
+export const accessTokenOf = (claims: object) =>
+  Arr.join(
+    [
+      Base64Url.encode(encodeJsonText({ alg: "ES256", typ: "JWT" })),
+      Base64Url.encode(encodeJsonText(claims)),
+      "signature",
+    ],
+    "."
+  );
+
+/** The access token of the session `session-1`. */
+export const ACCESS_TOKEN = accessTokenOf({ sub: "session-1" });
+
+/**
  * What a running backend answers a sign-in of the acceptance runtime: the seed
  * makes account `user-1` with a fresh password, and Convex Auth's password
- * method makes its session.
+ * method makes its session `session-1`.
  */
 export const SIGN_IN_ANSWERS = {
   [ACCOUNT_SEED]: { password: "seed-password", userId: "user-1" },
   [PASSWORD_SIGN_IN]: {
     status: "complete",
     tokens: {
-      accessToken: "access-token",
+      accessToken: ACCESS_TOKEN,
       refreshToken: "refresh-token",
       refreshTokenExpiresAt: 1,
       userId: "user-1",
@@ -209,7 +228,7 @@ export const SIGN_IN_ANSWERS = {
 
 /** The session cookies that `SIGN_IN_ANSWERS` make. */
 export const SESSION_COOKIES = [
-  { name: "__convexAuthJWT", value: "access-token" },
+  { name: "__convexAuthJWT", value: ACCESS_TOKEN },
   { name: "__convexAuthRefreshToken", value: "refresh-token" },
 ];
 

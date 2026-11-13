@@ -127,7 +127,7 @@ describe("the local backend over HTTP", () => {
       Effect.gen(function* () {
         const received = serve(() => json({ status: "success", value: null }));
         const convex = yield* backend;
-        const identity = { sessionId: "session-1", subject: "user-1" };
+        const identity = { subject: "session-1" };
 
         yield* convex.run("Nina turn", {
           args: {},
