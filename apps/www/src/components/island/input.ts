@@ -36,8 +36,8 @@ interface Controls {
 const STILL = 8;
 
 /**
- * Reads the learner's pointer, wheel and keys over the canvas until the
- * returned cleanup stops it: one finger or the left button drags the world,
+ * Reads the learner's pointer, wheel and keys over the canvas until
+ * `release` stops it: one finger or the left button drags the world,
  * the right button or Shift turns it, two fingers pan, pinch and twist, the
  * wheel zooms, a tap builds, and a press held still digs. Keys walk the fox,
  * pan, turn and zoom, and pick a hotbar slot.
@@ -70,16 +70,6 @@ export function bindInput(
       start: point,
       used: MutableHashMap.size(presses) > 0,
     });
-    // A press held still digs out the block under it, without waiting for the lift.
-    window.setTimeout(() => {
-      Option.map(MutableHashMap.get(presses, id), (press) => {
-        if (press.used || press.moved >= STILL) {
-          return;
-        }
-        MutableHashMap.set(presses, id, { ...press, used: true });
-        controls.press(press.start, true);
-      });
-    }, LONG_PRESS);
   };
 
   /** Moves the camera as one press moved from its last point to `point`. */
@@ -197,12 +187,29 @@ export function bindInput(
   canvas.addEventListener("pointercancel", onUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });
   window.addEventListener("keydown", onKey);
-  return () => {
-    canvas.removeEventListener("pointerdown", onDown);
-    canvas.removeEventListener("pointermove", onMove);
-    canvas.removeEventListener("pointerup", onUp);
-    canvas.removeEventListener("pointercancel", onUp);
-    canvas.removeEventListener("wheel", onWheel);
-    window.removeEventListener("keydown", onKey);
+  return {
+    /** Stops reading the learner's hands and keys. */
+    release: () => {
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerup", onUp);
+      canvas.removeEventListener("pointercancel", onUp);
+      canvas.removeEventListener("wheel", onWheel);
+      window.removeEventListener("keydown", onKey);
+    },
+    /**
+     * Digs out the block under every press held still for a long press by
+     * `now`, without waiting for the lift. The stage calls it each frame, and
+     * a frame's time and a pointer event's share one clock.
+     */
+    tend: (now: number) => {
+      MutableHashMap.forEach(presses, (press, id) => {
+        if (press.used || press.moved >= STILL || now - press.at < LONG_PRESS) {
+          return;
+        }
+        MutableHashMap.set(presses, id, { ...press, used: true });
+        controls.press(press.start, true);
+      });
+    },
   };
 }
