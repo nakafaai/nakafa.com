@@ -37,7 +37,7 @@ export type Spot = typeof Spot.Type;
 export type Paint = Rgb | ((spot: Spot) => Rgb);
 
 /** One tone of one ramp of the island's palette, as red, green and blue from 0 to 1. */
-export function tint(ramp: Ramp, tone: Tone = 1): Rgb {
+export function tint(ramp: Ramp, tone: Tone): Rgb {
   const [red, green, blue] = colorOf(ramp, tone);
   return [red / 255, green / 255, blue / 255];
 }
@@ -95,7 +95,7 @@ const isTip = (ring: Ring) => ring.wide === 0 && ring.high === 0;
 export function tube(
   rings: Arr.NonEmptyReadonlyArray<Ring>,
   paint: Paint,
-  sides = 6
+  sides: number
 ): readonly Face[] {
   const corners = Arr.map(rings, (ring, index) =>
     cornersOf(ring, headingAt(rings, index), sides)
@@ -151,15 +151,16 @@ export function tube(
 }
 
 /**
- * A low-poly ball (ADR 0047, D21): a tube along `axis` (z unless given) from
- * tip to tip through `bands` rings, its radii along that axis and across it.
+ * A low-poly ball (ADR 0047, D21): a tube along z from tip to tip through
+ * `bands` rings of `sides` corners, `wide` and `high` across it and `deep`
+ * along it.
  */
 export function ball(
   center: Vec,
   [wide, high, deep]: Vec,
   paint: Paint,
-  bands = 3,
-  sides = 6
+  bands: number,
+  sides: number
 ): readonly Face[] {
   const ring = (index: number): Ring => {
     const angle = (Math.PI * index) / (bands + 1);
