@@ -21,12 +21,13 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { IntlProvider, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { getLocaleOrThrow } from "@/lib/routing/locale/address";
 import { readStaticData } from "@/lib/static/data";
 
@@ -91,7 +92,7 @@ function LocaleRoot() {
   const { locale } = Route.useParams();
   const { messages, now } = Route.useLoaderData();
   return (
-    <IntlProvider
+    <MessagesProvider
       formats={FORMATS}
       locale={locale}
       messages={messages}
@@ -110,7 +111,7 @@ function LocaleRoot() {
         content index.
       </div>
       <TailwindIndicator />
-    </IntlProvider>
+    </MessagesProvider>
   );
 }
 

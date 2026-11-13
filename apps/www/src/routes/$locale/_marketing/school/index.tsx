@@ -8,13 +8,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import {
-  IntlProvider,
-  useLocale,
-  useMessages,
-  useTimeZone,
-  useTranslations,
-} from "use-intl";
+import { useLocale, useMessages, useTimeZone, useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { DeferredSchoolToys } from "@/components/marketing/school/deferred";
@@ -26,6 +20,7 @@ import {
 import { PageField } from "@/components/marketing/shared/field";
 import { LaterSection } from "@/components/marketing/shared/later";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 import {
   schoolLandingQuestions,
@@ -217,12 +212,12 @@ function InAppMessages({ children }: { children: ReactNode }) {
   const timeZone = useTimeZone();
 
   return (
-    <IntlProvider
+    <MessagesProvider
       locale={locale}
       messages={{ ...messages, ...inApp }}
       {...(timeZone === undefined ? {} : { timeZone })}
     >
       {children}
-    </IntlProvider>
+    </MessagesProvider>
   );
 }

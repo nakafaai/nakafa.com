@@ -5,7 +5,7 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { IntlProvider } from "use-intl";
+
 import { EntryShellArtwork } from "@/components/entry/artwork";
 import {
   EntryShell,
@@ -18,6 +18,7 @@ import { ThemePicker } from "@/components/shared/theme/picker";
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { readStaticData } from "@/lib/static/data";
 
 /** The messages of the entry pages, which the locale route's messages join. */
@@ -56,7 +57,10 @@ function EntryLayout() {
   const messages = Route.useLoaderData();
   const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
-    <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
+    <MessagesProvider
+      locale={locale}
+      messages={{ ...shellMessages, ...messages }}
+    >
       <EntryShell>
         <EntryShellPanel>
           {" "}
@@ -66,7 +70,7 @@ function EntryLayout() {
         </EntryShellPanel>
         <EntryShellArtwork />
       </EntryShell>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }
 

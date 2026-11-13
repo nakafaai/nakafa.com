@@ -5,7 +5,7 @@ import { FORMATS } from "@repo/internationalization/src/formats";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
-import { IntlProvider, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
 import { AuthLegal } from "@/components/auth/legal";
 import { SignInScreen } from "@/components/auth/screen";
@@ -18,6 +18,7 @@ import {
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { authLegalLinks } from "@/lib/auth/legal";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readNotFoundRouteLocale } from "@/lib/routing/missing";
 import { SCHOOL_ENTRY_ID } from "@/lib/routing/shell";
@@ -61,7 +62,7 @@ export const Route = createFileRoute("/_entry/school/$locale")({
 function SchoolEntryPage() {
   const { legal, locale, messages } = Route.useLoaderData();
   return (
-    <IntlProvider
+    <MessagesProvider
       formats={FORMATS}
       locale={locale}
       messages={messages}
@@ -92,7 +93,7 @@ function SchoolEntryPage() {
           </EntryShell>
         </div>
       </DesignSystemProvider>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }
 

@@ -17,7 +17,7 @@ import {
   testSignedEmptyRelease,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import {
   readPublishedMaterial,
@@ -35,6 +35,7 @@ const readMock = vi.hoisted(() => vi.fn());
 const headMock = vi.hoisted(() => vi.fn());
 const partsMocks = vi.hoisted(() => ({ artifact: vi.fn(), frame: vi.fn() }));
 const bodyMock = vi.hoisted(() => vi.fn());
+const slotsMock = vi.hoisted(() => vi.fn());
 const releaseId = ReleaseIdSchema.make("release-material-domain");
 /** Builds the signed material found response that each delivery test reads. */
 const makeFound = Effect.fn("test.www.publishedMaterial.found")(function* () {
@@ -90,6 +91,12 @@ vi.mock("@/lib/content/renderer/manifest", () => ({
 vi.mock("@/lib/content/published/body", () => ({
   readRenderedBody: bodyMock,
 }));
+vi.mock("@/lib/content/published/ads", () => ({
+  withAdSlots: slotsMock,
+}));
+
+/** The arrangement that the ad slots of a body hand to its reader. */
+const arrange = (blocks: readonly unknown[]) => blocks;
 
 /** The Convex answers that the found response of each test is composed from. */
 const parts = () =>
@@ -111,6 +118,7 @@ beforeEach(() => {
       parts().pipe(Effect.map(({ artifactJson }) => artifactJson))
     );
   bodyMock.mockReset().mockReturnValue(Effect.succeed("cached-material-body"));
+  slotsMock.mockReset().mockReturnValue(arrange);
 });
 
 describe("published material delivery", () => {
@@ -142,10 +150,11 @@ describe("published material delivery", () => {
       expect(partsMocks.frame).toHaveBeenCalledExactlyOnceWith(
         found.activeReleaseId
       );
-      expect(bodyMock).toHaveBeenCalledExactlyOnceWith(
+      expect(slotsMock).toHaveBeenCalledExactlyOnceWith(
         found.artifact,
-        Option.some("material")
+        "material"
       );
+      expect(bodyMock).toHaveBeenCalledExactlyOnceWith(found.artifact, arrange);
     })
   );
 

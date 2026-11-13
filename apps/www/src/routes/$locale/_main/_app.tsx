@@ -4,9 +4,10 @@ import {
   getRouteApi,
   Outlet,
 } from "@tanstack/react-router";
-import { IntlProvider } from "use-intl";
+
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 
 /**
@@ -54,12 +55,12 @@ function AppLayout() {
   const { messages: mainMessages } = mainRoute.useLoaderData();
   const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
-    <IntlProvider
+    <MessagesProvider
       locale={locale}
       messages={{ ...shellMessages, ...mainMessages, ...messages }}
     >
       <Outlet />
-    </IntlProvider>
+    </MessagesProvider>
   );
 }
 

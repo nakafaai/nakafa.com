@@ -3,9 +3,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
 import { testSignedArtifact } from "@repo/backend/test/content/proof";
-import { Array as Arr, Effect, Option, Result } from "effect";
+import { Array as Arr, Effect, Function as Fn } from "effect";
 import { isValidElement, type ReactNode } from "react";
-import { AdSlot } from "@/components/ads/slot";
 import { readRenderedBody } from "@/lib/content/published/body";
 
 const renderServerComponentMock = vi.hoisted(() =>
@@ -67,7 +66,7 @@ describe("published body reader", () => {
         rawMdx: VERIFIED_BODY_TEXT,
       });
 
-      expect(yield* readRenderedBody(artifact, Option.none())).toBe(
+      expect(yield* readRenderedBody(artifact, Fn.identity)).toBe(
         "server markup"
       );
       expect(renderServerComponentMock).toHaveBeenCalledOnce();
@@ -75,42 +74,16 @@ describe("published body reader", () => {
     })
   );
 
-  it.effect(
-    "sets a lesson's ad frames after its second section and before its last",
-    () =>
-      Effect.gen(function* () {
-        const artifact = yield* testSignedArtifact("site", {
-          contentKey: "test:sections",
-          contentTree: SECTIONED_TREE,
-          rawMdx: "Introduction",
-        });
-
-        yield* readRenderedBody(artifact, Option.some("material"));
-
-        const slots = Arr.filterMap(renderedBlocks(), (child, index) =>
-          isValidElement<{ readonly unit: string }>(child) &&
-          child.type === AdSlot
-            ? Result.succeed({ index, key: child.key, unit: child.props.unit })
-            : Result.failVoid
-        );
-        // Blocks: p, h2, p, h2, p, [slot], h2, p, [slot], h2, p.
-        expect(slots).toEqual([
-          { index: 5, key: "test:sections:5", unit: "material" },
-          { index: 8, key: "test:sections:7", unit: "material" },
-        ]);
-      })
-  );
-
-  it.effect("sets no ad frame in a body that names no unit", () =>
+  it.effect("renders the blocks as the page arranges them", () =>
     Effect.gen(function* () {
       const artifact = yield* testSignedArtifact("site", {
         contentTree: SECTIONED_TREE,
         rawMdx: "Introduction",
       });
 
-      yield* readRenderedBody(artifact, Option.none());
+      yield* readRenderedBody(artifact, (blocks) => Arr.take(blocks, 2));
 
-      expect(renderedBlocks()).toHaveLength(SECTIONED_TREE.children.length);
+      expect(renderedBlocks()).toHaveLength(2);
     })
   );
 
@@ -124,7 +97,7 @@ describe("published body reader", () => {
         });
 
         expect(
-          yield* readRenderedBody(artifact, Option.none()).pipe(Effect.flip)
+          yield* readRenderedBody(artifact, Fn.identity).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "RendererImplementationMissing",
           componentName: "NoSuchComponent",
@@ -145,7 +118,7 @@ describe("published body reader", () => {
       renderServerComponentMock.mockRejectedValueOnce(cause);
 
       expect(
-        yield* readRenderedBody(artifact, Option.none()).pipe(Effect.flip)
+        yield* readRenderedBody(artifact, Fn.identity).pipe(Effect.flip)
       ).toMatchObject({
         _tag: "ContentExecutionError",
         contentKey: artifact.payload.contentKey,

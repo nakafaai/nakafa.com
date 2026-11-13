@@ -1,30 +1,14 @@
 import { laterCode, openLaterCode } from "@/components/marketing/shared/code";
 
 /**
- * The sections under the first screen of the School pages, each one's code on its
- * own, so a phone loads only what the reader nears (ADR 0039). The pricing page's
- * plans hydrate with the page; its comparison, calculator, add-ons, questions and
- * closing wait here.
+ * The sections under the first screen of the School landing, each one's code on
+ * its own, so a phone loads only what the reader nears (ADR 0039). The pricing
+ * page keeps its own registry beside its plans.
  */
 export const schoolSections = {
-  addons: laterCode(() =>
-    import("@/components/marketing/school/pricing/addons").then(
-      (module) => module.SchoolAddOns
-    )
-  ),
-  calculator: laterCode(() =>
-    import("@/components/marketing/school/pricing/calculator").then(
-      (module) => module.SchoolCalculator
-    )
-  ),
   closing: laterCode(() =>
     import("@/components/marketing/school/closing").then(
       (module) => module.SchoolClosing
-    )
-  ),
-  compare: laterCode(() =>
-    import("@/components/marketing/school/pricing/compare").then(
-      (module) => module.SchoolCompare
     )
   ),
   exams: laterCode(() =>
@@ -98,16 +82,5 @@ export function openSchoolLanding() {
     openLaterCode(schoolSections.player),
     openLaterCode(schoolSections.reports),
     openLaterCode(schoolSections.tasks),
-  ]);
-}
-
-/** Loads the code of the School pricing page's later sections, as `openSchoolLanding` does for the landing. */
-export function openSchoolPricing() {
-  return Promise.all([
-    openLaterCode(schoolSections.addons),
-    openLaterCode(schoolSections.calculator),
-    openLaterCode(schoolSections.closing),
-    openLaterCode(schoolSections.compare),
-    openLaterCode(schoolSections.faq),
   ]);
 }

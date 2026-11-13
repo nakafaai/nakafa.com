@@ -1,7 +1,8 @@
 import { contentOutline } from "@repo/contents/toc";
 import "@tanstack/react-start/server-only";
 
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
+import { withAdSlots } from "@/lib/content/published/ads";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
@@ -47,7 +48,10 @@ export const readPublishedArticle = Effect.fn(
 export const renderArticleArtifact = Effect.fn(
   "NakafaContent.renderArticleArtifact"
 )(function* (data: PublishedArticleData) {
-  const body = yield* readRenderedBody(data.artifact, Option.some("article"));
+  const body = yield* readRenderedBody(
+    data.artifact,
+    withAdSlots(data.artifact, "article")
+  );
 
   return {
     activeReleaseId: data.activeReleaseId,

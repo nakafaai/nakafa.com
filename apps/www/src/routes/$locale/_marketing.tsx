@@ -1,10 +1,11 @@
 import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
-import { IntlProvider } from "use-intl";
+
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
 import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { MessagesProvider } from "@/lib/i18n/provider";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
 
@@ -65,7 +66,10 @@ function MarketingLayout() {
   const { messages, pageNavigation } = Route.useLoaderData();
   const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
-    <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
+    <MessagesProvider
+      locale={locale}
+      messages={{ ...shellMessages, ...messages }}
+    >
       <PageProviders pageNavigation={pageNavigation}>
         <SharedProviders>
           <main
@@ -78,6 +82,6 @@ function MarketingLayout() {
           </main>
         </SharedProviders>
       </PageProviders>
-    </IntlProvider>
+    </MessagesProvider>
   );
 }
