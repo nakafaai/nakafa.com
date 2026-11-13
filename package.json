@@ -79,6 +79,7 @@
     "effect:source:update": "node scripts/effect/source.ts update",
     "format": "ultracite fix && turbo run format --filter=cas",
     "format:doctor": "ultracite doctor",
+    "gate": "node scripts/gate/main.ts",
     "lint": "bun run effect:source:check && bun run check && ultracite check && turbo run lint --filter=cas",
     "prepare": "effect-tsgo patch --tsrs --no-typescript",
     "proof": "node scripts/proof/main.ts",
@@ -135,7 +136,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "26.13.0",
+      "version": "26.13.1",
       "onFail": "download"
     }
   },
