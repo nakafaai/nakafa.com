@@ -28,15 +28,33 @@ const MIDDLE = SPAN / 2;
 /** The flat ground around the middle: the village and a ring of open meadow to build on, so no hill climbs under a house. */
 const MEADOW = VILLAGE + 6;
 
+/** The home island's pond (ADR 0047, D23): how far from the middle it lies, and how wide it is. */
+const POND = { away: 18.5, radius: 2.4 } as const;
+
+/** Whether (x, z) is in the pond, which lies in the meadow beyond the village, toward a side the seed picks. */
+function isPond(seed: number, x: number, z: number) {
+  const angle = (0.1 + unitOf(seed + 12, 0, 0, 0) * 0.8) * Math.PI;
+  const centre = [
+    MIDDLE + Math.cos(angle) * POND.away,
+    MIDDLE - Math.sin(angle) * POND.away,
+  ] as const;
+  const reach = POND.radius * (0.85 + 0.3 * smoothOf(seed + 13, x, z, 3));
+  return Math.hypot(x + 0.5 - centre[0], z + 0.5 - centre[1]) < reach;
+}
+
 /**
  * The column at (x, z): the top cell of its ground and whether that ground is
  * land above the water. The island is a rounded patch whose edge wobbles with
- * noise; the sea floor slopes down away from it.
+ * noise, with a pond in its meadow at least three cells from the sea; the sea
+ * floor slopes down away from it.
  */
 export function columnOf(seed: number, size: number, x: number, z: number) {
   const distance = Math.hypot(x + 0.5 - MIDDLE, z + 0.5 - MIDDLE);
   const radius = size / 2 - 1.5;
   const edge = radius * (0.8 + 0.28 * smoothOf(seed, x, z, 5));
+  if (distance < edge - 3 && isPond(seed, x, z)) {
+    return { land: false, top: SEA_LEVEL - 2 };
+  }
   if (distance < edge) {
     const inland = Math.min(1, (edge - distance) / 4);
     const hills = smoothOf(seed + 1, x, z, 7) * 2 * inland;
