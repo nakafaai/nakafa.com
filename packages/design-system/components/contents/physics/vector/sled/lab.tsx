@@ -90,8 +90,8 @@ export function SledPullWorkLab({
         <ScienceStage floor={0} reach={2} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[0.6, 1.1, 3.4]}
-              cameraTarget={[0.7, 0.45, 0]}
+              cameraPosition={[0.35, 0.95, 2.6]}
+              cameraTarget={[0.55, 0.35, 0]}
               fov={38}
               maxDistance={6}
               minDistance={1.2}
