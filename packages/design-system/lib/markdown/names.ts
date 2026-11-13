@@ -149,6 +149,7 @@ export const physicsComponentNames = {
   fallingTargetAimLab: "FallingTargetAimLab",
   featherCoinVacuumLab: "FeatherCoinVacuumLab",
   followingDistanceLab: "FollowingDistanceLab",
+  galileoInclineBellsLab: "GalileoInclineBellsLab",
   instantaneousVelocitySpeedLab: "InstantaneousVelocitySpeedLab",
   measurementToolsLab: "MeasurementToolsLab",
   nonUniformLinearMotionGraphCard: "NonUniformLinearMotionGraphCard",

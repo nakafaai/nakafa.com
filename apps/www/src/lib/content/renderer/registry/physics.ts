@@ -15,6 +15,7 @@ import {
   StoppingDistanceLab,
 } from "@/lib/content/renderer/client/physics/distance";
 import { WindEnergyConversionLab } from "@/lib/content/renderer/client/physics/energy";
+import { GalileoInclineBellsLab } from "@/lib/content/renderer/client/physics/galileo";
 import { FallingTargetAimLab } from "@/lib/content/renderer/client/physics/hunter";
 import {
   NonUniformLinearMotionGraphCard,
@@ -198,5 +199,9 @@ export const physicsRenderers = [
   {
     name: physicsComponentNames.featherCoinVacuumLab,
     component: FeatherCoinVacuumLab,
+  },
+  {
+    name: physicsComponentNames.galileoInclineBellsLab,
+    component: GalileoInclineBellsLab,
   },
 ] satisfies readonly RendererImplementation[];
