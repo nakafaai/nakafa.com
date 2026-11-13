@@ -164,6 +164,16 @@ function readPopup(popups: string) {
       popup.querySelector(
         '[data-slot="dialog-footer"], [data-slot="sheet-footer"]'
       ) !== null,
+    // A footer's Cancel or Close, which the close in the corner already is, in every language the walk reads.
+    repeats: Array.from(
+      popup.querySelectorAll(
+        '[data-slot="dialog-footer"] button, [data-slot="drawer-footer"] button'
+      )
+    ).filter((button) =>
+      ["Cancel", "Close", "Batal", "Tutup", "Abbrechen", "Schließen"].includes(
+        button.textContent.trim()
+      )
+    ).length,
     closes: popup.querySelectorAll('[data-slot="sheet-close"]').length,
     inside:
       box.left >= -1 &&
@@ -191,9 +201,12 @@ const expectWhole = (
 ) => {
   expect.soft(popup.inside, `${label}: stands inside the screen`).toBe(true);
   expect.soft(popup.wide, `${label}: never scrolls sideways`).toBe(false);
-  if (popup.slot === "dialog-content" || popup.slot === "sheet-popup") {
+  if (popup.slot === "sheet-popup") {
     expect.soft(popup.footer, `${label}: has a footer`).toBe(true);
   }
+  expect
+    .soft(popup.repeats, `${label}: repeats no close in its footer`)
+    .toBe(0);
   if (popup.slot === "sheet-popup") {
     expect.soft(popup.closes, `${label}: closes from its corner only`).toBe(1);
   }

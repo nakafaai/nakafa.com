@@ -10,7 +10,8 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
+import { use } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { matchesSearch } from "@/components/shared/table/search";
@@ -19,6 +20,7 @@ import { EmptyState } from "@/components/state/empty";
 import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { ChannelMenu } from "@/components/tenant/classes/forum/menu";
+import { OpenChannelContext } from "@/components/tenant/classes/forum/open";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { TargetLink } from "@/lib/routing/link";
@@ -120,16 +122,18 @@ export function ChannelUnread() {
 /**
  * One saved chat as a row, as a chat app lists it: its mark, its name, which opens it across the
  * whole row, when its newest message came, how that message starts, and its menu. The general chat
- * shows its translated label and a topic its name. The open chat stands out, and a chat with a
- * message the viewer has not read carries one dot.
+ * shows its translated label and a topic its name. The open chat stands out, its thread open beside it or not
+ * (`OpenChannelContext`), and a chat with a message the viewer has not read carries one dot.
  */
 function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
   const t = useTranslations("Classroom");
   const { classSlug, slug } = useClassScope();
+  const open = Option.contains(use(OpenChannelContext), channel.id);
 
   return (
     <Item
-      className="group/chat hover:bg-muted has-[a[data-status=active]]:bg-accent relative"
+      className="group/chat hover:bg-muted data-[open=true]:bg-accent relative"
+      data-open={open}
       render={<li />}
       size="sm"
     >

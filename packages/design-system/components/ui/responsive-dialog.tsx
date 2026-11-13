@@ -1,5 +1,4 @@
 import { useMediaQuery } from "@mantine/hooks";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -34,12 +33,11 @@ import {
   type ReactNode,
   useRef,
 } from "react";
-import { useTranslations } from "use-intl";
 
 interface Props {
   /**
-   * The footer's action, beside the Cancel the dialog draws itself. A dialog that only shows something has none,
-   * and its footer offers Close.
+   * The footer's actions, the only buttons it holds: the close in the corner, a swipe or a press outside already
+   * leave, so no footer repeats them with Cancel or Close. A dialog that only shows something has none, and no footer.
    */
   action?: ReactNode;
   /** The body: what the action does or takes away, or the fields it asks for. Every dialog has one. */
@@ -65,11 +63,11 @@ interface Props {
 
 /**
  * A dialog on a wide screen and a drawer on a phone, with one anatomy on both, as shadcn's dialog and alert dialog
- * have it: a header with the title and its sentence; a body, which every dialog has; and a footer with Cancel beside
- * the action, or Close alone on a dialog that only shows something. The dialog shows its close in the top right
- * corner; the drawer closes as an iPhone sheet does, by its handle, a swipe or a press outside, so it draws no
- * close button. The dialog draws its header, its footer's way out and its close itself, so no dialog can leave
- * one out.
+ * have it: a header with the title and its sentence; a body, which every dialog has; and a footer with the caller's
+ * actions alone, which a dialog that only shows something leaves out. The dialog shows its close in the top right
+ * corner; the drawer closes as an iPhone sheet does, by its handle, a swipe or a press outside, so it draws no close
+ * button. That close is the one way out, so no footer repeats it with Cancel or Close. The dialog draws its header
+ * and its close itself, so no dialog can leave one out.
  */
 export function ResponsiveDialog({
   action,
@@ -121,10 +119,9 @@ export function ResponsiveDialog({
           <DialogPanel fill={size === "wide"} onKeyDown={pressMain}>
             {children}
           </DialogPanel>
-          <DialogFooter ref={footerPart}>
-            <ResponsiveDialogCancel action={action} setOpen={setOpen} />
-            {action}
-          </DialogFooter>
+          {action === undefined || action === null ? null : (
+            <DialogFooter ref={footerPart}>{action}</DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     );
@@ -140,32 +137,11 @@ export function ResponsiveDialog({
         <DrawerPanel fill={size === "wide"} onKeyDown={pressMain}>
           {children}
         </DrawerPanel>
-        <DrawerFooter ref={footerPart}>
-          <ResponsiveDialogCancel action={action} setOpen={setOpen} />
-          {action}
-        </DrawerFooter>
+        {action === undefined || action === null ? null : (
+          <DrawerFooter ref={footerPart}>{action}</DrawerFooter>
+        )}
       </DrawerContent>
     </Drawer>
-  );
-}
-
-/**
- * The footer's way out, the first of its buttons: Cancel beside an action, or Close on a dialog that only shows
- * something. The action stays the footer's last button, the one an Enter in a field presses.
- */
-function ResponsiveDialogCancel({
-  action,
-  setOpen,
-}: {
-  action: ReactNode;
-  setOpen: (open: boolean) => void;
-}) {
-  const t = useTranslations("Common");
-
-  return (
-    <Button onClick={() => setOpen(false)} type="button" variant="outline">
-      {t(action === undefined ? "close" : "cancel")}
-    </Button>
   );
 }
 

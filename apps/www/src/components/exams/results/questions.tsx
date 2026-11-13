@@ -364,7 +364,7 @@ export function QuestionsSheet({
     <Sheet onOpenChange={onOpenChange} open={open}>
       <SheetContent className="sm:max-w-3xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
-          <HugeIcons className="size-5 shrink-0" icon={ChartHistogramIcon} />
+          <HugeIcons icon={ChartHistogramIcon} />
           <SheetTitle>{t("questions")}</SheetTitle>
         </SheetHeader>
         {Option.match(current, {

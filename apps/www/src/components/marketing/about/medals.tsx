@@ -140,7 +140,7 @@ export function Medals() {
               aria-hidden="true"
               className="text-muted-foreground grid size-16 place-items-center rounded-full border border-dashed"
             >
-              <HugeIcons className="size-5" icon={FavouriteIcon} />
+              <HugeIcons icon={FavouriteIcon} />
             </span>
             <span className="text-muted-foreground text-center text-sm leading-5">
               {t("medals-hook")}

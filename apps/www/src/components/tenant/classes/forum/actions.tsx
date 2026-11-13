@@ -13,6 +13,7 @@ import {
   threadTitle,
 } from "@repo/backend/confect/classroom/forum/thread";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,8 +64,8 @@ function useMessageRights({ discussion, mine, poll }: ForumMessage) {
 
 /**
  * The toolbar of a message, as Slack and Discord float one over the row's top corner on the bubble's inner side: an
- * emoji, Reply in thread, then what the row composes after them, its menu, each a square button of one size with its
- * tooltip. With a mouse it shows on the row's hover or focus and while one of its popups is open; a tap on the row
+ * emoji, Reply in thread, then what the row composes after them, its menu, small square buttons joined in one
+ * `ButtonGroup`, which gives them its one variant, each with its tooltip. With a mouse it shows on the row's hover or focus and while one of its popups is open; a tap on the row
  * shows it on a touch screen. A message the server is still saving keeps its controls in place, pressed by nobody,
  * since it has no ID to act on yet.
  */
@@ -81,7 +82,7 @@ export function MessageToolbar({
   const { threads } = useMessageRights(message);
 
   return (
-    <div
+    <ButtonGroup
       aria-label={t("message-actions")}
       className={messageToolbarVariants({ mine: message.mine })}
       role="toolbar"
@@ -91,7 +92,7 @@ export function MessageToolbar({
         <ThreadButton message={message} />
       ) : null}
       {children}
-    </div>
+    </ButtonGroup>
   );
 }
 
@@ -158,9 +159,8 @@ function ThreadButton({ message }: { message: ForumMessage }) {
       aria-busy={starting || undefined}
       disabled={isPending(message) || starting}
       onClick={press}
-      size="icon"
+      size="icon-sm"
       tooltip={t("reply-thread")}
-      variant="ghost"
     >
       <Spinner icon={BubbleChatIcon} isLoading={starting} />
     </Button>
@@ -212,9 +212,8 @@ export function MessageMenu({
           render={
             <Button
               disabled={isPending(message)}
-              size="icon"
+              size="icon-sm"
               tooltip={common("more-actions")}
-              variant="ghost"
             />
           }
         >

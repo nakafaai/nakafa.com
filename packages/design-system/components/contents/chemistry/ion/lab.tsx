@@ -129,12 +129,12 @@ export function IonLab({ title, description, labels }: IonLabProps) {
         >
           <HugeIcons
             aria-hidden="true"
-            className="size-7 md:hidden"
+            className="size-4 md:hidden"
             icon={ArrowDown02Icon}
           />
           <HugeIcons
             aria-hidden="true"
-            className="hidden size-7 md:block"
+            className="hidden size-4 md:block"
             icon={ArrowRight02Icon}
           />
         </section>

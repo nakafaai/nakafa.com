@@ -1,7 +1,9 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { ArrowRight01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { OptionIcon } from "@repo/design-system/components/ui/huge-icons";
+import {
+  HugeIcons,
+  OptionIcon,
+} from "@repo/design-system/components/ui/huge-icons";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
@@ -179,7 +181,7 @@ function DropdownMenuSubTrigger({
     >
       <OptionIcon icon={icon} />
       {children}
-      <HugeiconsIcon className="ml-auto opacity-80" icon={ArrowRight01Icon} />
+      <HugeIcons className="ml-auto opacity-80" icon={ArrowRight01Icon} />
     </MenuPrimitive.SubmenuTrigger>
   );
 }
@@ -233,7 +235,7 @@ function DropdownMenuCheckboxItem({
         data-slot="dropdown-menu-checkbox-item-indicator"
       >
         <MenuPrimitive.CheckboxItemIndicator>
-          <HugeiconsIcon icon={Tick01Icon} />
+          <HugeIcons icon={Tick01Icon} />
         </MenuPrimitive.CheckboxItemIndicator>
       </span>
       <OptionIcon icon={icon} />
@@ -283,7 +285,7 @@ function DropdownMenuRadioItem({
         data-slot="dropdown-menu-radio-item-indicator"
       >
         <MenuPrimitive.RadioItemIndicator>
-          <HugeiconsIcon icon={Tick01Icon} />
+          <HugeIcons icon={Tick01Icon} />
         </MenuPrimitive.RadioItemIndicator>
       </span>
       <OptionIcon icon={icon} />

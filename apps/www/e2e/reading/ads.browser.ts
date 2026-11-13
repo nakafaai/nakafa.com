@@ -226,7 +226,7 @@ test("a filled ad comes in a frame of its own height that moves nothing the read
           name: "Why does Nakafa show ads?",
         });
         await expect(note.getByText("Nabil, founder of Nakafa")).toBeVisible();
-        await note.getByRole("button", { name: "Cancel" }).click();
+        await page.keyboard.press("Escape");
         await expect(note).toBeHidden();
       });
     })
