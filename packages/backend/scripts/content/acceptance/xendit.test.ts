@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/xendit";
 import { localConvexDouble } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { TestClock } from "effect/testing";
 
 const mocks = vi.hoisted(() => ({ layer: vi.fn() }));
@@ -28,6 +28,14 @@ const INVOICE = {
   dueAt: NOW + 86_400_000,
   number: "INV-2026-0001",
 };
+/** The pay session a checkout's admit step names. */
+const Admitted = Schema.Struct({
+  session: Schema.Struct({ sessionId: Schema.String }),
+});
+
+/** The key a webhook delivery carries to the inbox. */
+const Delivered = Schema.Struct({ key: Schema.String });
+
 /** What the local backend answers: an account for the checkout, an event for the inbox, and one invoice. */
 const ANSWERS = {
   "_system/cli/tableData": {
@@ -81,6 +89,37 @@ describe("acceptance xendit", () => {
         expect(plan.argsOf("billing/events:record")).toMatchObject({
           payload: expect.stringContaining("payment_token_id"),
         });
+      })
+  );
+
+  it.effect(
+    "gives two seeds of the same millisecond their own pay session and webhook key, so the inbox applies both",
+    () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(NOW);
+        const first = localConvexDouble(ANSWERS);
+        const second = localConvexDouble(ANSWERS);
+
+        yield* seedXendit("app-user-1", "plan").pipe(
+          Effect.provide(first.layer)
+        );
+        yield* seedXendit("app-user-2", "plan").pipe(
+          Effect.provide(second.layer)
+        );
+
+        const sessionOf = (backend: typeof first) =>
+          Schema.decodeUnknownSync(Admitted)(
+            backend.argsOf("billing/xendit/checkout:admit")
+          ).session.sessionId;
+        const keyOf = (backend: typeof first) =>
+          Schema.decodeUnknownSync(Delivered)(
+            backend.argsOf("billing/events:record")
+          ).key;
+        expect(sessionOf(first)).not.toBe(sessionOf(second));
+        expect(keyOf(first)).not.toBe(keyOf(second));
+        expect(keyOf(first)).toBe(
+          `acceptance:payment_session.completed:${sessionOf(first)}`
+        );
       })
   );
 
