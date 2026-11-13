@@ -70,7 +70,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     approvedSha: "68559e99cc807c1eb7e9238fd43a15bba460eec2",
     expectedInputs: {
       "cache-dependency-glob": "apps/cas/uv.lock",
-      version: "0.13.6",
+      version: "0.13.8",
     },
     expectedTag: "v10.3.3",
     expectedUsages: 2,
