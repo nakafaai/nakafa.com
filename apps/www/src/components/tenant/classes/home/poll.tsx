@@ -12,7 +12,7 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
+import { PageHeaderLabel } from "@/components/shared/page/header";
 import { NewPoll, PollCard } from "@/components/tenant/classes/forum/poll";
 import {
   type ClassPost,
@@ -54,7 +54,7 @@ export function NewPostPoll() {
             className="@2xl/header:hidden"
             icon={ChartBarLineIcon}
           />
-          <HeaderLabel>{t("post-new-poll")}</HeaderLabel>
+          <PageHeaderLabel>{t("post-new-poll")}</PageHeaderLabel>
         </TooltipTrigger>
         <TooltipContent side="bottom">{t("post-new-poll")}</TooltipContent>
       </Tooltip>

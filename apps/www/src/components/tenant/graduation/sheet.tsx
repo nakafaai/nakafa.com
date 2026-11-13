@@ -14,6 +14,7 @@ import records from "@repo/backend/confect/_generated/refs/records";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
+import { PageList } from "@/components/shared/page/body";
 import { PaneOpen } from "@/components/shared/pane";
 import {
   Panes,
@@ -24,7 +25,6 @@ import {
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { TableList } from "@/components/shared/table/list";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -122,14 +122,14 @@ function CohortGraduationBody() {
     return <GraduationStudents />;
   }
   return (
-    <TablePageBody>
+    <PageList>
       {QueryResult.isFailure(page) ? (
         <LoadFailure onRetry={reloadPage} />
       ) : null}
       {QueryResult.isSuccess(page) && page.value._tag === "NotGraduating" ? (
         <GraduationElsewhere page={page.value} />
       ) : null}
-    </TablePageBody>
+    </PageList>
   );
 }
 
@@ -215,7 +215,7 @@ function GraduationStudents() {
   return (
     <Panes id="graduation">
       <PanesList>
-        <TablePageBody>
+        <PageList>
           <TablePages pageSize={PAGE_SIZE} pagination={pagination}>
             <DataTable
               columns={columns}
@@ -225,7 +225,7 @@ function GraduationStudents() {
               search="student"
             />
           </TablePages>
-        </TablePageBody>
+        </PageList>
       </PanesList>
       <PanesDetail label={t("detail")}>
         <GraduationLineDetail lines={pagination.results} />

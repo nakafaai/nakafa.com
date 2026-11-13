@@ -11,7 +11,7 @@ describe("the page frame policy", () => {
         `const a = 1;\nconst view = "mx-auto max-w-7xl";\n`
       )
     ).toEqual([
-      `${PAGE}:2: read the page's frame from shared/content/width.ts instead of max-w-7xl.`,
+      `${PAGE}:2: read the page's frame from shared/page/width.ts instead of max-w-7xl.`,
     ]);
   });
 
@@ -24,7 +24,7 @@ describe("the page frame policy", () => {
   it("leaves the width module, tests, marketing pages and other packages", () => {
     const source = `const view = "max-w-3xl";\n`;
     for (const file of [
-      "apps/www/src/components/shared/content/width.ts",
+      "apps/www/src/components/shared/page/width.ts",
       "apps/www/src/components/page.test.ts",
       "apps/www/src/components/marketing/hero.tsx",
       "apps/www/src/routes/$locale/_marketing/pricing.tsx",

@@ -14,10 +14,10 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -103,7 +103,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         <TableSearch placeholder={t("search-cohorts")} />
       </SchoolHeader>
-      <TablePageBody>
+      <PageList>
         {QueryResult.isSuccess(cohorts) && Arr.isReadonlyArrayEmpty(loaded) ? (
           <EmptyState
             description={t("cohorts-empty-description")}
@@ -119,7 +119,7 @@ export function GraduationCohorts({ slug }: { slug: TenantSlug }) {
             search="cohort"
           />
         ) : null}
-      </TablePageBody>
+      </PageList>
     </TableFiltersProvider>
   );
 }

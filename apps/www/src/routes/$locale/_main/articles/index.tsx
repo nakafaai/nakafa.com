@@ -8,9 +8,9 @@ import { createTranslator } from "use-intl/core";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { RefContent } from "@/components/shared/content/references";
+import { PageStack } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
 import { SubjectItem } from "@/components/shared/subject/item";
 import { SubjectList } from "@/components/shared/subject/list";
 import {
@@ -165,7 +165,7 @@ function ArticleIndexPage() {
           title: page.title,
         }}
       />
-      <LayoutContent className="py-6">
+      <PageStack>
         <SubjectList>
           {Arr.zipWith(
             page.categories,
@@ -180,12 +180,12 @@ function ArticleIndexPage() {
             )
           )}
         </SubjectList>
-      </LayoutContent>
+      </PageStack>
       {page.nextSearch ? <ArticleNext search={page.nextSearch} /> : null}
       {page.sourceUrl ? (
-        <FooterContent className="mt-0">
+        <PageFooter>
           <RefContent githubUrl={page.sourceUrl} />
-        </FooterContent>
+        </PageFooter>
       ) : null}
     </>
   );

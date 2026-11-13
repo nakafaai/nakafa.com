@@ -2,8 +2,8 @@ import { Menu02Icon } from "@hugeicons/core-free-icons";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
+import { PageActions, PageHeader } from "@/components/shared/page/header";
 import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 import { HOME_TARGET, QURAN_TARGET } from "@/lib/routing/target";
 
@@ -35,10 +35,7 @@ export function QuranSurahHeader({
 }) {
   const tCommon = useTranslations("Common");
   return (
-    <BreadcrumbHeaderFrame
-      className="h-(--surah-header-height)"
-      contentClassName="flex-nowrap"
-    >
+    <PageHeader>
       <h1 className="sr-only">
         {title}{" "}
         <span dir="rtl" lang="ar">
@@ -53,16 +50,13 @@ export function QuranSurahHeader({
         homeLabel={tCommon("home")}
         items={[{ label: quranLabel, target: QURAN_TARGET }, { label: title }]}
       />
-      <div
-        className="flex shrink-0 items-center gap-2"
-        data-slot="surah-header-actions"
-      >
+      <PageActions>
         {search}
         <ButtonGroup aria-label={tCommon("content-actions")}>
           {actions}
         </ButtonGroup>
         <PanelSheetTrigger icon={Menu02Icon} label={tCommon("on-this-page")} />
-      </div>
-    </BreadcrumbHeaderFrame>
+      </PageActions>
+    </PageHeader>
   );
 }

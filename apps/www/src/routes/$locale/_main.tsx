@@ -5,7 +5,7 @@ import { cn } from "cn";
 import { IntlProvider } from "use-intl";
 import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
-import { pageFrameVariants } from "@/components/shared/content/width";
+import { pageFrameVariants } from "@/components/shared/page/width";
 import { AppShell } from "@/components/sidebar/shell";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";

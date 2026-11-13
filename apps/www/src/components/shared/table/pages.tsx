@@ -2,11 +2,10 @@ import { PaginatedQueryResult } from "@confect/react";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { type ReactNode, useEffect, useEffectEvent } from "react";
-import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { useNeedsEveryRow } from "@/components/shared/table/toolbar";
 import { TableWaitingContext } from "@/components/shared/table/waiting";
-import { LoadFailure } from "@/components/state/failure";
+import { DataFailure, LoadFailure } from "@/components/state/failure";
 
 /** How many rows a page of the rest of a list holds, once the page needs every row: a school's list holds thousands. */
 const REST_PAGE = 50;

@@ -15,11 +15,7 @@ import { CurriculumSelector } from "@/components/curriculum/selector";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { ContainerList } from "@/components/shared/card/list";
 import { CardMaterial } from "@/components/shared/card/material";
-import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { RefContent } from "@/components/shared/content/references";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
   SidebarRightFooter,
   SidebarRightHeader,
@@ -27,6 +23,9 @@ import {
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
 import { SidebarTree } from "@/components/shared/outline/tree";
+import { PageBody } from "@/components/shared/page/body";
+import { PageFooter } from "@/components/shared/page/footer";
+import { Page } from "@/components/shared/page/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
@@ -219,80 +218,78 @@ function CurriculumRoutePage() {
   const { labels, route } = page;
   const hasOutline = page.materialCards.length > 0;
   return (
-    <LayoutMaterial>
-      <CurriculumOutline enabled={hasOutline}>
-        <LayoutMaterialContent>
-          {route.level === "track" ? (
-            <BreadcrumbHeader
-              value={{
-                action: (
-                  <CurriculumSelector
-                    currentValue={route.publicPath}
-                    label={labels.selector}
-                    options={page.options}
-                  />
-                ),
-                home: HOME_TARGET,
-                homeLabel: labels.home,
-                items: [{ label: labels.subject }],
-                title: route.title,
-              }}
-            />
-          ) : (
-            <CurriculumNestedHeader
-              ancestors={page.ancestors}
-              currentRoute={route}
-              homeLabel={labels.home}
-              subjectLabel={labels.subject}
-            >
-              {hasOutline ? <CurriculumOutlineToggle /> : null}
-            </CurriculumNestedHeader>
-          )}
-          <LayoutContent>
-            {page.materialCards.length > 0 ? (
-              <ContainerList className="pt-6 sm:grid-cols-1">
-                {Arr.map(page.materialCards, (material) => (
-                  <CardMaterial
-                    key={material.link.publicPath}
-                    material={material}
-                  />
-                ))}
-              </ContainerList>
-            ) : null}
-            {page.materialCards.length === 0 && page.childCards.length === 0 ? (
-              <ComingSoon />
-            ) : null}
-            {page.materialCards.length === 0 && page.childCards.length > 0 ? (
-              <CurriculumCardGrid
-                actionLabel={labels.routeAction}
-                cards={page.childCards}
-              />
-            ) : null}
-          </LayoutContent>
-          {page.sourceUrl ? (
-            <FooterContent>
-              <RefContent githubUrl={page.sourceUrl} />
-            </FooterContent>
-          ) : null}
-        </LayoutMaterialContent>
-        {hasOutline ? (
-          <SidebarRightPanel
-            footer={
-              <SidebarRightFooter>
-                <ReportButton />
-                {page.sourceUrl ? (
-                  <GithubButton githubUrl={page.sourceUrl} />
-                ) : null}
-                <ShareButton />
-              </SidebarRightFooter>
-            }
-            header={<SidebarRightHeader {...page.toc} />}
+    <CurriculumOutline enabled={hasOutline}>
+      <Page>
+        {route.level === "track" ? (
+          <BreadcrumbHeader
+            value={{
+              action: (
+                <CurriculumSelector
+                  currentValue={route.publicPath}
+                  label={labels.selector}
+                  options={page.options}
+                />
+              ),
+              home: HOME_TARGET,
+              homeLabel: labels.home,
+              items: [{ label: labels.subject }],
+              title: route.title,
+            }}
+          />
+        ) : (
+          <CurriculumNestedHeader
+            ancestors={page.ancestors}
+            currentRoute={route}
+            homeLabel={labels.home}
+            subjectLabel={labels.subject}
           >
-            <SidebarTree data={page.chapters} title={route.title} />
-          </SidebarRightPanel>
+            {hasOutline ? <CurriculumOutlineToggle /> : null}
+          </CurriculumNestedHeader>
+        )}
+        <PageBody>
+          {page.materialCards.length > 0 ? (
+            <ContainerList className="pt-6 sm:grid-cols-1">
+              {Arr.map(page.materialCards, (material) => (
+                <CardMaterial
+                  key={material.link.publicPath}
+                  material={material}
+                />
+              ))}
+            </ContainerList>
+          ) : null}
+          {page.materialCards.length === 0 && page.childCards.length === 0 ? (
+            <ComingSoon />
+          ) : null}
+          {page.materialCards.length === 0 && page.childCards.length > 0 ? (
+            <CurriculumCardGrid
+              actionLabel={labels.routeAction}
+              cards={page.childCards}
+            />
+          ) : null}
+        </PageBody>
+        {page.sourceUrl ? (
+          <PageFooter>
+            <RefContent githubUrl={page.sourceUrl} />
+          </PageFooter>
         ) : null}
-      </CurriculumOutline>
-    </LayoutMaterial>
+      </Page>
+      {hasOutline ? (
+        <SidebarRightPanel
+          footer={
+            <SidebarRightFooter>
+              <ReportButton />
+              {page.sourceUrl ? (
+                <GithubButton githubUrl={page.sourceUrl} />
+              ) : null}
+              <ShareButton />
+            </SidebarRightFooter>
+          }
+          header={<SidebarRightHeader {...page.toc} />}
+        >
+          <SidebarTree data={page.chapters} title={route.title} />
+        </SidebarRightPanel>
+      ) : null}
+    </CurriculumOutline>
   );
 }
 

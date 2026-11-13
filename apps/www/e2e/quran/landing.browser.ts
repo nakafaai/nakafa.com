@@ -36,7 +36,7 @@ function readVerseGap(id: string) {
  */
 function readHeaderOverflow() {
   const header = document
-    .querySelector('[data-slot="surah-header-actions"]')
+    .querySelector('[data-slot="page-actions"]')
     ?.closest("header");
   if (!header) {
     return Number.NaN;

@@ -26,9 +26,9 @@ import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { PageFrame } from "@/components/shared/content/frame";
-import { pageRowVariants } from "@/components/shared/content/width";
-import { TablePageBody } from "@/components/shared/table/frame";
+import { PageList } from "@/components/shared/page/body";
+import { Page } from "@/components/shared/page/frame";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
@@ -62,7 +62,7 @@ function StudentInsight() {
   const t = useTranslations("SchoolInsight");
 
   return (
-    <PageFrame width="page">
+    <Page width="page">
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")} />
       <Tabs className="min-h-0 flex-1 shrink gap-0" defaultValue="mastery">
         <TabsList aria-label={t("tabs-label")} className={pageRowVariants()}>
@@ -77,20 +77,20 @@ function StudentInsight() {
         </TabsList>
         <TabsPanel className="flex min-h-0 flex-col" value="mastery">
           <TableFiltersProvider>
-            <TablePageBody>
+            <PageList>
               <OwnMastery />
-            </TablePageBody>
+            </PageList>
           </TableFiltersProvider>
         </TabsPanel>
         <TabsPanel className="flex min-h-0 flex-col" value="practice">
           <TableFiltersProvider>
-            <TablePageBody>
+            <PageList>
               <OwnPractice />
-            </TablePageBody>
+            </PageList>
           </TableFiltersProvider>
         </TabsPanel>
       </Tabs>
-    </PageFrame>
+    </Page>
   );
 }
 
@@ -148,7 +148,7 @@ function TeacherInsight() {
     : Option.none();
 
   return (
-    <PageFrame width="page">
+    <Page width="page">
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {Option.isSome(chosen) ? (
           <>
@@ -195,11 +195,11 @@ function TeacherInsight() {
       {settled &&
       Arr.isReadonlyArrayEmpty(held) &&
       (!leads || PaginatedQueryResult.isExhausted(school)) ? (
-        <TablePageBody>
+        <PageList>
           <NoClass />
-        </TablePageBody>
+        </PageList>
       ) : null}
-    </PageFrame>
+    </Page>
   );
 }
 

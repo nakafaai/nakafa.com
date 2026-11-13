@@ -5,7 +5,7 @@ import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { searchHead } from "@/lib/account/head";
 import { searchScreenFn } from "@/lib/account/home.functions";
 import { SearchInput } from "@/lib/search/input";

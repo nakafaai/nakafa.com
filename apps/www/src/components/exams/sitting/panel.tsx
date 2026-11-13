@@ -37,11 +37,11 @@ import {
   seenOffline,
 } from "@/components/exams/sitting/seat";
 import { useNow } from "@/components/player/now";
-import { DataFailure } from "@/components/shared/failure";
 import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import { PanesDetail } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { EmptyState } from "@/components/state/empty";
+import { DataFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";

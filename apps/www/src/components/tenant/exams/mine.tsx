@@ -13,10 +13,10 @@ import { useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
+import { PageList } from "@/components/shared/page/body";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -66,9 +66,9 @@ export function StudentExams() {
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         <TableSearch placeholder={t("exams-search")} />
       </SchoolHeader>
-      <TablePageBody>
+      <PageList>
         <StudentExamsTable />
-      </TablePageBody>
+      </PageList>
     </TableFiltersProvider>
   );
 }

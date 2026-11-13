@@ -14,11 +14,11 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { useFormatTimeZone } from "@/components/shared/table/calendar";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -58,9 +58,9 @@ export function SchoolOwnReports() {
       <SchoolHeader items={[{ label: t("own-title") }]} title={t("own-title")}>
         <TableSearch placeholder={t("own-search")} />
       </SchoolHeader>
-      <TablePageBody>
+      <PageList>
         <OwnReportTable />
-      </TablePageBody>
+      </PageList>
     </TableFiltersProvider>
   );
 }

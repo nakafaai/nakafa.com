@@ -7,7 +7,7 @@ import { useSearch } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import type { InboxTopic } from "@/components/notifications/topic";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { Link } from "@/lib/routing/link";
 
 /** The tab the address names, All without one, so a reload and a shared link return to it. */

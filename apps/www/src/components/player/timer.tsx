@@ -5,6 +5,7 @@ import {
 import { cva, type VariantProps } from "class-variance-authority";
 import { useTranslations } from "use-intl";
 import { readTimeNotice, splitTime } from "@/components/player/time";
+import { PageCenter } from "@/components/shared/page/header";
 
 /** The digits at the size of a running timer, or of a metric on a summary card. */
 const digitsVariants = cva(
@@ -71,7 +72,7 @@ export function PlayerTimer({ seconds }: { seconds: number }) {
   const notice = readTimeNotice(seconds);
 
   return (
-    <>
+    <PageCenter>
       <div
         aria-label={t("time-left", splitTime(seconds))}
         className="shrink-0"
@@ -82,6 +83,6 @@ export function PlayerTimer({ seconds }: { seconds: number }) {
       <output className="sr-only">
         {notice === "none" ? "" : t(`time-${notice}`)}
       </output>
-    </>
+    </PageCenter>
   );
 }

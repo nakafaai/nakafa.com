@@ -19,10 +19,10 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { RowItems } from "@/components/shared/table/menu";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
@@ -73,9 +73,9 @@ export function SchoolOwnGrades() {
       <SchoolHeader items={[{ label: t("own-title") }]} title={t("own-title")}>
         <TableSearch placeholder={t("own-search")} />
       </SchoolHeader>
-      <TablePageBody>
+      <PageList>
         <OwnGradeTable />
-      </TablePageBody>
+      </PageList>
     </TableFiltersProvider>
   );
 }

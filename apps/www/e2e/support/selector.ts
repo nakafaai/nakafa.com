@@ -53,7 +53,7 @@ export const LINE_SCENE = '[data-scene="line"]';
 export const SCENE_ACTIONS = "[data-scene-actions]";
 /** The sidebar trigger in a Quran surah's header, which opens its outline. */
 export const SURAH_SIDEBAR_TRIGGER =
-  'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]';
+  'header [data-slot="page-actions"] button[data-sidebar="trigger"]';
 /** The sidebar trigger that a narrow viewport shows, which opens the sidebar. */
 export const VISIBLE_SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]:visible';
 /** The main element of a marketing page, which marks the page as one. */

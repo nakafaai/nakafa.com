@@ -27,7 +27,7 @@ import { useTranslations } from "use-intl";
 import { reloadPage } from "@/components/shared/reload";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
-import { TableFrame } from "@/components/shared/table/frame";
+import { TableFrame } from "@/components/shared/table/inset";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
 import { TableName } from "@/components/shared/table/title";

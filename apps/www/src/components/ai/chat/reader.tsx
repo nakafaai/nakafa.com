@@ -23,7 +23,7 @@ import { createChatStore } from "@/components/ai/chat/store";
 import { turnOf, turnsByOrder } from "@/components/ai/chat/turns";
 import { AiChat } from "@/components/ai/chat/view";
 import { useLiveSession } from "@/components/providers/live";
-import { pageRowVariants } from "@/components/shared/content/width";
+import { pageRowVariants } from "@/components/shared/page/width";
 import { getPostAuthSignInTarget } from "@/lib/auth/admission";
 import type { ReaderRead } from "@/lib/chat/reader";
 import { readReaderFn, readReaderOlderFn } from "@/lib/chat/reader.functions";

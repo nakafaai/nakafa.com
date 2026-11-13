@@ -1,18 +1,29 @@
 import { cva } from "class-variance-authority";
 
 /**
- * The page's one width, which its header, its tab row and its body all read, so they cannot disagree: the column of
- * articles, lessons and settings, or the app's page width of a working surface. A frame around the page sets it
- * (`PageFrame`), and the root's value, the page width, is the widest any page may be.
+ * The page's one width, which its header, its tab row, its body and its footer all read, so they cannot disagree: the
+ * column of articles, lessons and settings, or the app's page width of a working surface. The page (`Page`) sets it,
+ * and the root's value, the page width, is the widest any page may be. The page fills the height its shell leaves and
+ * never grows past the width beside the sidebar.
  */
-export const pageFrameVariants = cva("contents", {
-  variants: {
-    width: {
-      column: "[--page-width:var(--container-3xl)]",
-      page: "[--page-width:var(--container-7xl)]",
+export const pageFrameVariants = cva(
+  "flex min-h-0 w-full min-w-0 flex-1 flex-col",
+  {
+    defaultVariants: { height: "content", width: "page" },
+    variants: {
+      /** A page as tall as its content, or as tall as the screen under the shell's bar, which a list fills and scrolls inside. */
+      height: {
+        content: "",
+        screen:
+          "h-[calc(100svh-var(--app-header-top,4rem))] overflow-clip lg:h-svh",
+      },
+      width: {
+        column: "[--page-width:var(--container-3xl)]",
+        page: "[--page-width:var(--container-7xl)]",
+      },
     },
-  },
-});
+  }
+);
 
 /** A box as wide as the page's frame, centred, for what draws its own gutter inside, such as two panes. */
 export const pageBoxVariants = cva("mx-auto w-full max-w-(--page-width)");

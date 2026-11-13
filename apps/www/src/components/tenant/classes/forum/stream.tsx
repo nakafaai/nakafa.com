@@ -26,7 +26,7 @@ import { useFormatter, useTranslations } from "use-intl";
 import {
   pageGutterVariants,
   readingMeasureVariants,
-} from "@/components/shared/content/width";
+} from "@/components/shared/page/width";
 import {
   firstUnread,
   headToKeep,

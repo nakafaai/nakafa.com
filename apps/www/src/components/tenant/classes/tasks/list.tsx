@@ -24,12 +24,12 @@ import { Array as Arr, DateTime, Option, Result, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PageList } from "@/components/shared/page/body";
 import { PaneOpen } from "@/components/shared/pane";
 import { Panes, PanesDetail, PanesList } from "@/components/shared/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
-import { TablePageBody } from "@/components/shared/table/frame";
 import { TablePages } from "@/components/shared/table/pages";
 import { TableTitle } from "@/components/shared/table/title";
 import {
@@ -156,7 +156,7 @@ function TaskListBody() {
       <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
         <Panes id="tasks">
           <PanesList>
-            <TablePageBody
+            <PageList
               views={
                 manages ? (
                   <TableViews
@@ -192,7 +192,7 @@ function TaskListBody() {
                   search="title"
                 />
               </TablePages>
-            </TablePageBody>
+            </PageList>
           </PanesList>
           <PanesDetail label={t("task-detail")}>
             <TaskDetail rows={Option.getOrElse(kept, Arr.empty)} />

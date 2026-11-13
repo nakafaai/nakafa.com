@@ -8,7 +8,7 @@ import { Effect } from "effect";
 import { useTranslations } from "use-intl";
 import type { InboxScope } from "@/components/notifications/inbox";
 import { markAllReadInLists } from "@/components/notifications/mutation";
-import { HeaderLabel } from "@/components/shared/breadcrumb/frame";
+import { PageHeaderLabel } from "@/components/shared/page/header";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
@@ -56,7 +56,7 @@ export function MarkAllRead({
       variant="outline"
     >
       <HugeIcons icon={CheckmarkCircle02Icon} />
-      <HeaderLabel>{t("mark-all-read")}</HeaderLabel>
+      <PageHeaderLabel>{t("mark-all-read")}</PageHeaderLabel>
     </Button>
   );
 }
