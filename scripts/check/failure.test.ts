@@ -73,12 +73,12 @@ export function other(cause: unknown) {
             {
               file: "apps/www/src/components/guard.tsx",
               sourceText:
-                'export function useCard() { if (!ready) throw new Error("outside provider"); return ready; }\n',
+                'export function useCard() { if (!ready) throw new OutsideProvider({ part: "useCard" }); return ready; }\n',
             },
             {
               file: "apps/www/src/[locale]/page.tsx",
               sourceText:
-                'export default function Page() { throw new Error("no page"); }\n',
+                "export default function Page() { throw new PageMissing(); }\n",
             },
             {
               file: "apps/www/src/api/route.ts",
@@ -93,12 +93,12 @@ export function other(cause: unknown) {
             {
               file: "apps/www/src/lib/client.ts",
               sourceText:
-                '"use client";\nexport const read = () => { throw new Error("client"); };\n',
+                '"use client";\nexport const read = () => { throw new ClientFailure(); };\n',
             },
             {
               file: "apps/www/src/lib/hook.ts",
               sourceText:
-                'import { useState } from "react";\nexport const read = () => { throw new Error("hook"); };\n',
+                'import { useState } from "react";\nexport const read = () => { throw new HookFailure(); };\n',
             },
             {
               file: "apps/www/vite.config.ts",

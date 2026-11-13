@@ -3,6 +3,7 @@ import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type {
   FunctionArgs,
   FunctionReference,
@@ -10,7 +11,6 @@ import type {
 } from "convex/server";
 import {
   createContext,
-  use,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -51,11 +51,7 @@ export const ChatFeedContext = createContext<ReturnType<
 
 /** The messages of the chat the transcript shows, from whichever feed provides them. */
 export function useChatFeed() {
-  const feed = use(ChatFeedContext);
-  if (!feed) {
-    throw new Error("useChatFeed must be used within a chat feed");
-  }
-  return feed;
+  return useRequired(ChatFeedContext, "useChatFeed");
 }
 
 /**

@@ -24,6 +24,7 @@ import {
   InputGroup,
   InputGroupAddon,
 } from "@repo/design-system/components/ui/input-group";
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   learnerTextVariants,
   linkVariants,
@@ -47,7 +48,6 @@ import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  use,
   useMemo,
   useState,
 } from "react";
@@ -122,12 +122,7 @@ const LearnerLabelsContext = createContext<LearnerLabels | null>(null);
 
 /** Reads the names of the controls from the surrounding editor. */
 function useLearnerLabels() {
-  const labels = use(LearnerLabelsContext);
-  if (labels === null) {
-    // A missing editor is a programmer composition error at this React seam.
-    throw new Error("The learner editor's bar requires LearnerEditor.");
-  }
-  return labels;
+  return useRequired(LearnerLabelsContext, "useLearnerLabels");
 }
 
 /** The formats of a learner's text, each its own control: bold, italic, code, two lists, a link and a formula. */

@@ -3,10 +3,10 @@
 import { GridIcon } from "@hugeicons/core-free-icons";
 import { DropdownMenuCheckboxItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   createContext,
   type ReactNode,
-  use,
   useLayoutEffect,
   useState,
 } from "react";
@@ -49,11 +49,7 @@ export function CoordinateProvider({ children }: { children: ReactNode }) {
 
 /** Selects one part of the surrounding coordinate controls. */
 export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
-  const store = use(ControlsContext);
-  if (!store) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("Coordinate controls require CoordinateProvider.");
-  }
+  const store = useRequired(ControlsContext, "useCoordinateControls");
   return useStore(store, selector);
 }
 

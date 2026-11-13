@@ -1,4 +1,5 @@
-import { createContext, type MouseEventHandler, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type MouseEventHandler } from "react";
 
 interface QuranInterpretationContextValue {
   isActive: boolean;
@@ -11,12 +12,10 @@ export const QuranInterpretationContext =
 
 /** Reads whether one tafsir trigger is inactive, idle, or loading. */
 export function useQuranInterpretationState(verseNumber: number) {
-  const context = use(QuranInterpretationContext);
-  if (!context) {
-    throw new Error(
-      "Quran tafsir button must be rendered within QuranInterpretationControls."
-    );
-  }
+  const context = useRequired(
+    QuranInterpretationContext,
+    "useQuranInterpretationState"
+  );
 
   if (!context.isActive) {
     return "inactive";
@@ -31,12 +30,10 @@ export function useQuranInterpretationState(verseNumber: number) {
 
 /** Reads the shared React event handler for selecting tafsir. */
 export function useQuranInterpretationSelection() {
-  const context = use(QuranInterpretationContext);
-  if (!context) {
-    throw new Error(
-      "Quran tafsir button must be rendered within QuranInterpretationControls."
-    );
-  }
+  const context = useRequired(
+    QuranInterpretationContext,
+    "useQuranInterpretationSelection"
+  );
 
   return context.selectInterpretation;
 }

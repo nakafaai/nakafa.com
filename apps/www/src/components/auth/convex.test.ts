@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { OutsideProvider } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
 import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -192,13 +193,13 @@ describe("useConvexAuth on the server", () => {
 
   it("refuses a page that reads the state outside its Convex provider", () => {
     expect(() => renderToString(createElement(ConvexAuthProbe))).toThrow(
-      "useConvexAuth must be used within ConvexProvider"
+      new OutsideProvider({ part: "useConvexAuth" })
     );
   });
 
   it("refuses a page that reads the session outside its session provider", () => {
     expect(() => renderToString(createElement(SessionProbe))).toThrow(
-      "useAuthSession must be used within AuthSessionProvider"
+      new OutsideProvider({ part: "useAuthSessionStore" })
     );
   });
 });

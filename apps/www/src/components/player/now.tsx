@@ -1,8 +1,8 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Effect, Fiber } from "effect";
 import {
   createContext,
   type ReactNode,
-  use,
   useEffect,
   useState,
   useSyncExternalStore,
@@ -36,11 +36,7 @@ export function ClockProvider({
 
 /** The clock of the nearest provider; a part outside one is a mistake in the page. */
 function useClockStore() {
-  const store = use(ClockContext);
-  if (!store) {
-    throw new Error("A clock reader must be used within ClockProvider.");
-  }
-  return store;
+  return useRequired(ClockContext, "useClockStore");
 }
 
 /** A reader that does not watch takes no ticks, so it renders only for its own reasons. */

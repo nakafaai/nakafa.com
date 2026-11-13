@@ -1,5 +1,6 @@
 import type { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
-import { createContext, type ReactNode, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode } from "react";
 
 /** The authored side names of a triangle, keyed by each side. */
 export type TriangleLabels = Record<
@@ -29,10 +30,5 @@ export function TriangleProvider({
 
 /** Reads the configuration of the surrounding triangle card. */
 export function useTriangle() {
-  const config = use(TriangleContext);
-  if (!config) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useTriangle must be used within TriangleProvider");
-  }
-  return config;
+  return useRequired(TriangleContext, "useTriangle");
 }

@@ -31,10 +31,11 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
@@ -131,12 +132,7 @@ const BacteriaContext = createContext<{
 
 /** Reads the surrounding growth card's settings and store. */
 function useBacteria() {
-  const value = use(BacteriaContext);
-  if (!value) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("Growth parts require BacterialGrowth.");
-  }
-  return value;
+  return useRequired(BacteriaContext, "useBacteria");
 }
 
 /** The generation the card shows now, and the counts of that generation and the next. */

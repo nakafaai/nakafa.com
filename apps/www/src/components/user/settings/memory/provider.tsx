@@ -1,4 +1,5 @@
-import { createContext, type ReactNode, use, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -62,11 +63,7 @@ export function MemoryProvider({
  * whether memory is paused.
  */
 export function useMemory<T>(selector: (reading: MemoryReading) => T) {
-  const reading = use(ReadingContext);
-
-  if (!reading) {
-    throw new Error("useMemory must be used within MemoryProvider");
-  }
+  const reading = useRequired(ReadingContext, "useMemory");
 
   return selector(reading);
 }
@@ -89,22 +86,12 @@ export function useShownMemories() {
  * count from it, so the browser and the server render the same words.
  */
 export function useMemoryNow() {
-  const now = use(NowContext);
-
-  if (now === null) {
-    throw new Error("useMemoryNow must be used within MemoryProvider");
-  }
-
-  return now;
+  return useRequired(NowContext, "useMemoryNow");
 }
 
 /** Reads one selected slice of what the learner is doing on the page. */
 export function useMemoryPage<T>(selector: (state: MemoryStore) => T) {
-  const store = use(StoreContext);
-
-  if (!store) {
-    throw new Error("useMemoryPage must be used within MemoryProvider");
-  }
+  const store = useRequired(StoreContext, "useMemoryPage");
 
   return useStore(store, useShallow(selector));
 }
@@ -115,11 +102,7 @@ export function useMemoryPage<T>(selector: (state: MemoryStore) => T) {
  * it.
  */
 export function useMemoryLatest() {
-  const store = use(StoreContext);
-
-  if (!store) {
-    throw new Error("useMemoryLatest must be used within MemoryProvider");
-  }
+  const store = useRequired(StoreContext, "useMemoryLatest");
 
   return store.getState;
 }

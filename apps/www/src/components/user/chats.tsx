@@ -17,9 +17,10 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option } from "effect";
-import { createContext, use, useState } from "react";
+import { createContext, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { ChatDeletionDialog } from "@/components/ai/chat/deletion";
@@ -82,11 +83,7 @@ const UserChatsContext = createContext<{
 
 /** Reads the chats list around a variant or a row. */
 function useUserChats() {
-  const value = use(UserChatsContext);
-  if (value === null) {
-    throw new Error("useUserChats must be used within UserChats");
-  }
-  return value;
+  return useRequired(UserChatsContext, "useUserChats");
 }
 
 /** The age clock of the rows, and whether they are live, so only a live row mounts its menu. */
@@ -180,10 +177,7 @@ function ChatRows({
  */
 function ChatRow({ chat }: { chat: ChatView }) {
   const { profile } = useUserChats();
-  const rows = use(ChatRowsContext);
-  if (rows === null) {
-    throw new Error("ChatRow must be used within ChatRowsContext");
-  }
+  const rows = useRequired(ChatRowsContext, "ChatRow");
   const { clock, live } = rows;
   const tAi = useTranslations("Ai");
   const locale = useCurrentLocale();

@@ -1,6 +1,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { useLocale } from "use-intl";
@@ -88,13 +89,7 @@ const TryoutSectionPageContext = createContext<Pick<
 
 /** Reads the page of the surrounding section client. */
 function useTryoutSectionPage() {
-  const value = use(TryoutSectionPageContext);
-  if (value === null) {
-    throw new Error(
-      "useTryoutSectionPage must be used within TryoutSectionPageClient"
-    );
-  }
-  return value;
+  return useRequired(TryoutSectionPageContext, "useTryoutSectionPage");
 }
 
 /** Renders one stable page with an active-only mutable subscription. */

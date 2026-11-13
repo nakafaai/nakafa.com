@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import { createStore, useStore } from "zustand";
 
 /**
@@ -76,11 +77,8 @@ export const SidebarContext = createContext<SidebarControls | null>(null);
  * sidebar opens, closes, or measures the viewport.
  */
 export function useSidebar<T>(selector: (sidebar: SidebarContextValue) => T) {
-  const store = use(SidebarStoreContext);
-  const controls = use(SidebarContext);
-  if (!(store && controls)) {
-    throw new Error("useSidebar must be used within a SidebarProvider.");
-  }
+  const store = useRequired(SidebarStoreContext, "useSidebar");
+  const controls = useRequired(SidebarContext, "useSidebar");
 
   return useStore(store, (sidebar) =>
     selector(buildSidebarValue(sidebar, controls))

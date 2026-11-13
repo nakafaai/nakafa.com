@@ -1,8 +1,8 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
 import {
   createContext,
   type ReactNode,
-  use,
   useEffect,
   useEffectEvent,
   useState,
@@ -36,11 +36,7 @@ export function TryoutStartProvider({ children }: { children: ReactNode }) {
 
 /** Reads the start store of the surrounding page. */
 function useTryoutStartStore() {
-  const store = use(TryoutStartContext);
-  if (store === null) {
-    throw new Error("useTryoutStart must be used within TryoutStartProvider");
-  }
-  return store;
+  return useRequired(TryoutStartContext, "useTryoutStartStore");
 }
 
 /** Where the page's start stands. */
@@ -69,11 +65,7 @@ export function TryoutPressProvider({ children }: { children: ReactNode }) {
 
 /** Reads the press store of the surrounding page. */
 function useTryoutPressStore() {
-  const store = use(TryoutPressContext);
-  if (store === null) {
-    throw new Error("useTryoutPress must be used within TryoutPressProvider");
-  }
-  return store;
+  return useRequired(TryoutPressContext, "useTryoutPressStore");
 }
 
 /** Whether a press waits for the page to answer it. */

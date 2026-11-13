@@ -9,8 +9,9 @@ import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -71,11 +72,7 @@ const LinksContext = createContext<readonly LinkItem[] | null>(null);
 
 /** Reads the links loaded so far. */
 function useLinks() {
-  const links = use(LinksContext);
-  if (links === null) {
-    throw new Error("useLinks must be used within LinksFrame");
-  }
-  return links;
+  return useRequired(LinksContext, "useLinks");
 }
 
 /**

@@ -2,7 +2,8 @@ import type {
   ReactionCueId,
   ReactionSceneColors,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -52,14 +53,10 @@ export function ReactionCharacteristicsSceneProvider({
 }
 
 function useReactionCharacteristicsScene() {
-  const scene = use(ReactionCharacteristicsSceneContext);
-  if (!scene) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useReactionCharacteristicsScene must be used within ReactionCharacteristicsSceneProvider"
-    );
-  }
-  return scene;
+  return useRequired(
+    ReactionCharacteristicsSceneContext,
+    "useReactionCharacteristicsScene"
+  );
 }
 
 /** Reads the colors of the surrounding lab. */

@@ -1,7 +1,8 @@
 "use client";
 
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { type AiStoreApi, createAiStore } from "@/components/ai/store/create";
@@ -40,11 +41,7 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
 
 /** Reads the Nina store instance from context. */
 function useAiContext() {
-  const context = use(AiContext);
-  if (!context) {
-    throw new Error("useAi must be used within AiContextProvider");
-  }
-  return context;
+  return useRequired(AiContext, "useAiContext");
 }
 
 /** Reads one selected slice of Nina UI state. */

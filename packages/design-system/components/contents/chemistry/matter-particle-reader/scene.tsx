@@ -16,8 +16,9 @@ import { atomSymbol } from "@repo/design-system/components/contents/chemistry/sy
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Option } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 
 const SCENE_SCALE = 1.9;
 const FORMULA_LABEL_Y = 0.62;
@@ -43,14 +44,10 @@ export function MatterParticleSceneColorsProvider({
 
 /** Reads the colors of the surrounding matter-particle lab. */
 function useMatterParticleSceneColors() {
-  const colors = use(MatterParticleSceneColorsContext);
-  if (!colors) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useMatterParticleSceneColors must be used within MatterParticleSceneColorsProvider"
-    );
-  }
-  return colors;
+  return useRequired(
+    MatterParticleSceneColorsContext,
+    "useMatterParticleSceneColors"
+  );
 }
 
 export function MatterParticleReaderScene({

@@ -7,12 +7,12 @@ import {
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { MutableHashMap } from "effect";
 import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  use,
   useCallback,
   useEffect,
   useMemo,
@@ -72,12 +72,7 @@ const LabelContext = createContext<LabelValues | null>(null);
 
 /** Selects the overlay values of the surrounding label. */
 function useThreeLabel() {
-  const label = use(LabelContext);
-  if (label === null) {
-    // A missing label is a programmer composition error at this React seam.
-    throw new Error("The label content requires ThreeLabel.");
-  }
-  return label;
+  return useRequired(LabelContext, "useThreeLabel");
 }
 
 /**

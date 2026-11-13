@@ -20,8 +20,9 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 48;
@@ -125,14 +126,10 @@ export function SubatomicParticlesSceneProvider({
 
 /** Reads the colors and labels of the surrounding subatomic-particles lab. */
 function useSubatomicParticlesScene() {
-  const scene = use(SubatomicParticlesSceneContext);
-  if (!scene) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useSubatomicParticlesScene must be used within SubatomicParticlesSceneProvider"
-    );
-  }
-  return scene;
+  return useRequired(
+    SubatomicParticlesSceneContext,
+    "useSubatomicParticlesScene"
+  );
 }
 
 /**

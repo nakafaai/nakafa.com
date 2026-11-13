@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { fieldBoxVariants } from "@repo/design-system/lib/input";
 import { NEW_FORMULA } from "@repo/editor/math";
 import { cn } from "cn";
@@ -26,7 +27,6 @@ import {
   type KeyboardEvent,
   type ReactNode,
   type RefObject,
-  use,
   useEffect,
   useMemo,
   useRef,
@@ -152,12 +152,7 @@ const KeypadContext = createContext<{
 
 /** The keypad's state, from the MathLive view around the field. */
 function useKeypad() {
-  const keypad = use(KeypadContext);
-  if (keypad === null) {
-    // The field is drawn only inside its view, so a missing view is a composition error.
-    throw new Error("MathField requires MathPanel.");
-  }
-  return keypad;
+  return useRequired(KeypadContext, "useKeypad");
 }
 
 /**

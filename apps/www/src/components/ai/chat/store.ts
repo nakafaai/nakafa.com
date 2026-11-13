@@ -1,7 +1,8 @@
 import type { Ref } from "@confect/core";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import { createStore, useStore } from "zustand";
 import type {
   NinaConnectionError,
@@ -76,9 +77,6 @@ export const ChatStoreContext = createContext<ChatStoreApi | null>(null);
 
 /** Reads one selected slice of the conversation's own state and actions. */
 export function useChatStore<T>(selector: (state: ChatStore) => T) {
-  const store = use(ChatStoreContext);
-  if (!store) {
-    throw new Error("useChatStore must be used within ChatProvider");
-  }
+  const store = useRequired(ChatStoreContext, "useChatStore");
   return useStore(store, selector);
 }

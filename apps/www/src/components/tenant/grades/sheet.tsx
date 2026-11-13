@@ -21,8 +21,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
-import { createContext, use, useState, useTransition } from "react";
+import { createContext, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
@@ -92,11 +93,7 @@ const GradebookContext = createContext<
 
 /** The gradebook's context, which its provider always holds. */
 function useGradebook() {
-  const value = use(GradebookContext);
-  if (value === undefined) {
-    throw new Error("A gradebook cell renders outside ClassGradebook.");
-  }
-  return value;
+  return useRequired(GradebookContext, "useGradebook");
 }
 
 /** The gradebook's search by student, in the class page's header; the note and state columns filter the lines. */

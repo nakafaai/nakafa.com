@@ -2,8 +2,9 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { DiscussionNumber } from "@repo/backend/confect/classroom/forum/message";
 import type { ReadPlace } from "@repo/backend/confect/classroom/forum/read";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 /**
  * The channel a forum shows, its class and school, whether the viewer manages the forum, writes in
@@ -28,13 +29,7 @@ export const ChannelScopeContext = createContext<
 
 /** Reads the channel of the channel view around the caller. */
 export function useChannelScope() {
-  const value = use(ChannelScopeContext);
-
-  if (value === null) {
-    throw new Error("useChannelScope must be used within a channel view");
-  }
-
-  return value;
+  return useRequired(ChannelScopeContext, "useChannelScope");
 }
 
 /**

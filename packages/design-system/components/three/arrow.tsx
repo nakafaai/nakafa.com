@@ -5,9 +5,10 @@ import {
 } from "@repo/design-system/components/three/data/constants";
 import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Predicate } from "effect";
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { createContext, type ReactNode, useMemo } from "react";
 import { type Color, Quaternion, Vector3 } from "three";
 
 const ARROW_SEGMENT_OFFSET = 0.2;
@@ -51,12 +52,7 @@ const ArrowLabelContext = createContext<ArrowLabelValues | null>(null);
 
 /** Selects the label of the surrounding arrow. */
 function useArrowLabel() {
-  const label = use(ArrowLabelContext);
-  if (label === null) {
-    // A missing arrow is a programmer composition error at this React seam.
-    throw new Error("An arrow label requires ArrowHelper.");
-  }
-  return label;
+  return useRequired(ArrowLabelContext, "useArrowLabel");
 }
 
 /** The label of one arrow, placed at its label point in the arrow's color. */

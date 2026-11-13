@@ -6,9 +6,10 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useId, useState, useTransition } from "react";
+import { createContext, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
@@ -49,11 +50,7 @@ const CohortsUnitContext = createContext<{
 
 /** Reads the unit of the cohorts tab. */
 function useCohortsUnit() {
-  const value = use(CohortsUnitContext);
-  if (value === null) {
-    throw new Error("useCohortsUnit must be used within SchoolCohortsContent");
-  }
-  return value;
+  return useRequired(CohortsUnitContext, "useCohortsUnit");
 }
 
 /**

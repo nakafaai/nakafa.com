@@ -1,11 +1,11 @@
 "use client";
 
+import { useRequired } from "@repo/design-system/hooks/required";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect } from "effect";
 import {
   createContext,
   type ReactNode,
-  use,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
@@ -103,9 +103,5 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
 
 /** Sends one prompt through the surrounding page's ask owner. */
 export function useNinaAsk() {
-  const ask = use(AskContext);
-  if (!ask) {
-    throw new Error("useNinaAsk must be used within NinaAskProvider");
-  }
-  return ask;
+  return useRequired(AskContext, "useNinaAsk");
 }

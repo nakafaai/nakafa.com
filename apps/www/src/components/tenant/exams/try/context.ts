@@ -1,6 +1,7 @@
 import type { GenericId } from "@confect/core";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import { type StoreApi, useStore } from "zustand";
 import type { ExamTry } from "@/components/tenant/exams/try/store";
 
@@ -22,27 +23,16 @@ export const TryStoreContext = createContext<StoreApi<ExamTry> | null>(null);
 
 /** Reads the exam of the try. It throws outside the try page, which always provides it. */
 export function useTryExamId() {
-  const examId = use(TryExamIdContext);
-  if (examId === null) {
-    throw new TypeError("useTryExamId must be used within ExamTryPaper");
-  }
-  return examId;
+  return useRequired(TryExamIdContext, "useTryExamId");
 }
 
 /** Reads the school of the try. It throws outside the try page, which always provides it. */
 export function useTrySlug() {
-  const slug = use(TrySlugContext);
-  if (slug === null) {
-    throw new TypeError("useTrySlug must be used within ExamTryPaper");
-  }
-  return slug;
+  return useRequired(TrySlugContext, "useTrySlug");
 }
 
 /** Reads one part of the try's answers. It throws outside the try page, which always provides it. */
 export function useExamTry<Selected>(selector: (state: ExamTry) => Selected) {
-  const store = use(TryStoreContext);
-  if (store === null) {
-    throw new TypeError("useExamTry must be used within ExamTryPaper");
-  }
+  const store = useRequired(TryStoreContext, "useExamTry");
   return useStore(store, selector);
 }

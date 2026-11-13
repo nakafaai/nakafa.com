@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 
 /** One series of a chart, with the name and the color its legend shows. */
 const ChartSeriesSchema = Schema.Struct({
@@ -36,10 +37,5 @@ export function ChartDataProvider({
 
 /** Reads the data of the surrounding chart card. */
 export function useChartData() {
-  const data = use(ChartDataContext);
-  if (!data) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useChartData must be used within ChartDataProvider");
-  }
-  return data;
+  return useRequired(ChartDataContext, "useChartData");
 }

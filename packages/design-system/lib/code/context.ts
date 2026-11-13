@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, use, useMemo } from "react";
+import { createContext, useMemo } from "react";
 
 const CodeBlockDataSchema = Schema.Struct({
   code: Schema.String,
@@ -39,10 +40,7 @@ export const CodeBlockContext = createContext<CodeBlockContextValue | null>(
 export function useCodeBlock<T>(
   selector: (state: CodeBlockContextValue) => T
 ): T {
-  const value = use(CodeBlockContext);
-  if (!value) {
-    throw new Error("CodeBlock components must be used within CodeBlock.");
-  }
+  const value = useRequired(CodeBlockContext, "useCodeBlock");
 
   return selector(value);
 }

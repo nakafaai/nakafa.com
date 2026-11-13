@@ -7,6 +7,7 @@ import {
   ResizableHandle,
   ResizablePanel,
 } from "@repo/design-system/components/ui/resizable";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -123,11 +124,7 @@ export function PanesProvider({
 
 /** Reads one selected slice of the page's panes. */
 export function usePanes<T>(selector: (state: PanesStore) => T) {
-  const store = use(PanesContext);
-
-  if (store === null) {
-    throw new Error("usePanes must be used within PanesProvider");
-  }
+  const store = useRequired(PanesContext, "usePanes");
 
   return useStore(store, selector);
 }

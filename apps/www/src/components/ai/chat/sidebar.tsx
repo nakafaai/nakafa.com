@@ -30,6 +30,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useParams } from "@tanstack/react-router";
 import { cn } from "cn";
@@ -60,11 +61,7 @@ const ChatFirstPageContext = createContext<Option.Option<ChatFirstPage>>(
 
 /** Reads the chat search that the sidebar applies. */
 function useChatSearch() {
-  const search = use(ChatSearchContext);
-  if (search === null) {
-    throw new Error("useChatSearch must be used within AiChatSidebar");
-  }
-  return search;
+  return useRequired(ChatSearchContext, "useChatSearch");
 }
 
 /**

@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 /** The content an open-in menu links to, and the source it was published from. */
 const OpenTarget = Schema.Struct({
@@ -17,9 +18,5 @@ export const OpenTargetContext = createContext<typeof OpenTarget.Type | null>(
 
 /** Reads the content that the open-in submenu links to. */
 export function useOpenTarget() {
-  const target = use(OpenTargetContext);
-  if (target === null) {
-    throw new Error("useOpenTarget must be used within OpenContent");
-  }
-  return target;
+  return useRequired(OpenTargetContext, "useOpenTarget");
 }

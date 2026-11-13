@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { ClassTabs } from "@/components/tenant/classes/tabs";
@@ -38,12 +39,8 @@ export function ClassHeaderProvider({
  * keeps its search and its action beside the rows it reads.
  */
 export function ClassHeader({ children }: { children?: ReactNode }) {
-  const header = use(ClassHeaderContext);
+  const header = useRequired(ClassHeaderContext, "ClassHeader");
   const { can, classSlug } = useClassScope();
-
-  if (header === null) {
-    throw new Error("ClassHeader must be used within a resolved class page");
-  }
 
   return (
     <>

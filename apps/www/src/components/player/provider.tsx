@@ -1,4 +1,5 @@
-import { createContext, type ReactNode, use, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useState } from "react";
 import { useStore } from "zustand";
 import type { PlayerMode } from "@/components/player/mode";
 import {
@@ -40,11 +41,7 @@ export function PlayerProvider({
 
 /** Reads one selected slice of the player store; a part re-renders only when its slice changes. */
 export function usePlayer<T>(selector: (state: PlayerStore) => T) {
-  const store = use(StoreContext);
-
-  if (!store) {
-    throw new Error("usePlayer must be used within PlayerProvider.");
-  }
+  const store = useRequired(StoreContext, "usePlayer");
 
   return useStore(store, selector);
 }

@@ -8,8 +8,9 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent, PageFrame } from "@/components/shared/content/frame";
@@ -50,13 +51,7 @@ const ClassViewContext = createContext<typeof ClassView.Type | null>(null);
 
 /** Reads what the class page around the caller shows. */
 function useClassView() {
-  const view = use(ClassViewContext);
-
-  if (view === null) {
-    throw new Error("useClassView must be used within a class shell");
-  }
-
-  return view;
+  return useRequired(ClassViewContext, "useClassView");
 }
 
 /**

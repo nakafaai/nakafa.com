@@ -11,16 +11,11 @@ import { TASK_VIEW } from "@repo/design-system/components/editor/task";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
 import { EditorPreview } from "@repo/design-system/components/editor/words";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { cn } from "cn";
-import {
-  type ComponentProps,
-  createContext,
-  use,
-  useMemo,
-  useState,
-} from "react";
+import { type ComponentProps, createContext, useMemo, useState } from "react";
 
 interface RichEditorProps {
   /**
@@ -61,12 +56,7 @@ const EditorLabelsContext = createContext<RichEditorProps["labels"] | null>(
 
 /** Selects the names of the toolbar's controls from the surrounding editor. */
 function useEditorLabels() {
-  const labels = use(EditorLabelsContext);
-  if (labels === null) {
-    // A missing editor is a programmer composition error at this React seam.
-    throw new Error("The editor toolbar requires RichEditor.");
-  }
-  return labels;
+  return useRequired(EditorLabelsContext, "useEditorLabels");
 }
 
 /** The toolbar above the text, with the names of its controls. */

@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, type ReactNode, use, useState } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { createSearchStore, type SearchStore } from "@/lib/search/store";
@@ -16,9 +17,6 @@ export function SearchContextProvider({ children }: { children: ReactNode }) {
 }
 
 export function useSearch<T>(selector: (state: SearchStore) => T): T {
-  const ctx = use(SearchContext);
-  if (!ctx) {
-    throw new Error("useSearch must be used within a SearchContextProvider");
-  }
+  const ctx = useRequired(SearchContext, "useSearch");
   return useStore(ctx, useShallow(selector));
 }

@@ -24,11 +24,12 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
@@ -121,13 +122,7 @@ const NumberLineConfigContext = createContext<NumberLineConfig | null>(null);
 
 /** Reads the configuration of the surrounding number line card. */
 function useNumberLineConfig() {
-  const config = use(NumberLineConfigContext);
-  if (config === null) {
-    throw new Error(
-      "useNumberLineConfig must be used within NumberLineConfigContext"
-    );
-  }
-  return config;
+  return useRequired(NumberLineConfigContext, "useNumberLineConfig");
 }
 
 /** Draws one number line's scale, its segments, their labels, and its full screen action. */

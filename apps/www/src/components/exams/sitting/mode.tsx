@@ -1,4 +1,5 @@
-import { createContext, type ReactNode, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type ReactNode } from "react";
 import type { PlayerMode } from "@/components/player/mode";
 
 const ModeContext = createContext<PlayerMode | null>(null);
@@ -19,9 +20,5 @@ export function SittingModeProvider({
 
 /** Reads the view of the sitting's paper. It throws outside the provider, which the sitting page always provides. */
 export function useSittingMode(): PlayerMode {
-  const mode = use(ModeContext);
-  if (mode === null) {
-    throw new Error("useSittingMode must be used within SittingModeProvider");
-  }
-  return mode;
+  return useRequired(ModeContext, "useSittingMode");
 }

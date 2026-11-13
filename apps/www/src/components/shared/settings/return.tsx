@@ -10,9 +10,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { type AnyRouter, useNavigate, useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option, String as Str } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { isTyping } from "@/components/shared/typing";
 import { Link, type LinkTarget } from "@/lib/routing/link";
@@ -72,12 +73,7 @@ export function SettingsReturnProvider({
 
 /** The last page read outside settings, when there was one. */
 function useSettingsReturn(): Option.Option<string> {
-  const store = use(SettingsReturnContext);
-  if (store === null) {
-    throw new TypeError(
-      "useSettingsReturn must be used within SettingsReturnProvider"
-    );
-  }
+  const store = useRequired(SettingsReturnContext, "useSettingsReturn");
   return useStore(store);
 }
 

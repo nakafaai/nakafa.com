@@ -1,10 +1,10 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import { useNavigate } from "@tanstack/react-router";
 import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  use,
   useEffect,
   useState,
 } from "react";
@@ -48,12 +48,7 @@ const NewChatContext = createContext<{
 
 /** Reads the surface's new chat, which every part of the composer renders inside. */
 function useNewChatContext() {
-  const value = use(NewChatContext);
-  if (value === null) {
-    // A part of the composer outside its new chat is a composition error at this seam.
-    throw new Error("A new-chat composer renders inside NewChat.");
-  }
-  return value;
+  return useRequired(NewChatContext, "useNewChatContext");
 }
 
 /** Reads one part of the send held by the new chat. */
@@ -77,11 +72,7 @@ const ComposerContext = createContext<NewChatComposer | null>(null);
 
 /** Reads the composer its variant drew. */
 function useComposer() {
-  const value = use(ComposerContext);
-  if (value === null) {
-    throw new Error("A new-chat composer part renders inside NewChat.");
-  }
-  return value;
+  return useRequired(ComposerContext, "useComposer");
 }
 
 /**

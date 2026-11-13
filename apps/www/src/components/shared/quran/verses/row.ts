@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, use } from "react";
+import { createContext } from "react";
 
 /** One verse of a surah as its row of the list shows it. */
 const QuranVerseRow = Schema.Struct({
@@ -18,9 +19,5 @@ export const QuranVerseRowContext = createContext<
 
 /** Reads the row of the verse that renders the part. */
 export function useQuranVerseRow() {
-  const row = use(QuranVerseRowContext);
-  if (row === null) {
-    throw new Error("useQuranVerseRow must be used within a Quran verse");
-  }
-  return row;
+  return useRequired(QuranVerseRowContext, "useQuranVerseRow");
 }

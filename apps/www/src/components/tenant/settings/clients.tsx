@@ -26,8 +26,9 @@ import {
   ResponsiveDialog,
   ResponsiveDialogSubject,
 } from "@repo/design-system/components/ui/responsive-dialog";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, use, useState, useTransition } from "react";
+import { createContext, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -82,11 +83,7 @@ const SecretIssueContext = createContext<
 
 /** Reads what shows an issued secret. It throws outside the clients page, which always provides it. */
 function useIssueSecret() {
-  const issue = use(SecretIssueContext);
-  if (issue === null) {
-    throw new Error("useIssueSecret must be used within SchoolClientsSettings");
-  }
-  return issue;
+  return useRequired(SecretIssueContext, "useIssueSecret");
 }
 
 /**

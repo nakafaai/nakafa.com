@@ -1,5 +1,6 @@
 import type { usePromptInputFiles } from "@repo/design-system/components/ai/files";
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 
 /** Attachment state shared by prompt input composition components. */
 type AttachmentsContext = ReturnType<typeof usePromptInputFiles>["attachments"];
@@ -13,11 +14,9 @@ export const LocalAttachmentsContext = createContext<AttachmentsContext | null>(
 export function usePromptInputAttachments<T>(
   selector: (attachments: AttachmentsContext) => T
 ) {
-  const value = use(LocalAttachmentsContext);
-  if (!value) {
-    throw new Error(
-      "usePromptInputAttachments must be used within PromptInput"
-    );
-  }
+  const value = useRequired(
+    LocalAttachmentsContext,
+    "usePromptInputAttachments"
+  );
   return selector(value);
 }

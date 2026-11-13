@@ -1,4 +1,5 @@
-import { createContext, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext } from "react";
 import type {
   TryoutSetSort,
   TryoutSetStatusFilter,
@@ -14,9 +15,5 @@ export const TryoutSetTableContext = createContext<{
 
 /** Reads the selection of the surrounding try-out set table. */
 export function useTryoutSetTable() {
-  const value = use(TryoutSetTableContext);
-  if (value === null) {
-    throw new Error("useTryoutSetTable must be used within TryoutSetTable");
-  }
-  return value;
+  return useRequired(TryoutSetTableContext, "useTryoutSetTable");
 }

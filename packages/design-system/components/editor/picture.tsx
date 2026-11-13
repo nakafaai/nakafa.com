@@ -10,6 +10,7 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { useRequired } from "@repo/design-system/hooks/required";
 import {
   blockGapVariants,
   pictureVariants,
@@ -27,7 +28,6 @@ import { Option, Schema } from "effect";
 import {
   createContext,
   type ReactNode,
-  use,
   useEffect,
   useId,
   useMemo,
@@ -72,12 +72,7 @@ export function PicturesProvider({
 
 /** The pictures' context, from the provider above the editor, which a picture needs to draw. */
 export function usePictures(): PictureContextValue {
-  const pictures = use(PictureContext);
-  if (pictures === null) {
-    // A picture is drawn only inside its editor, so a missing provider is a composition error.
-    throw new Error("A picture requires PicturesProvider.");
-  }
-  return pictures;
+  return useRequired(PictureContext, "usePictures");
 }
 
 /**

@@ -1,5 +1,6 @@
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, type RefObject, use } from "react";
+import { createContext, type RefObject } from "react";
 import type { StoreApi } from "zustand";
 import type { lineNames } from "@/components/player/lines/curve";
 import type { LinesStore } from "@/components/player/lines/store";
@@ -39,9 +40,5 @@ export const LinesContext = createContext<LinesBoard | null>(null);
 
 /** Reads the board a part belongs to. It throws outside a board, which always provides it. */
 export function useLines() {
-  const board = use(LinesContext);
-  if (board === null) {
-    throw new Error("useLines must be used within LinesProvider");
-  }
-  return board;
+  return useRequired(LinesContext, "useLines");
 }

@@ -3,7 +3,8 @@
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
-import { createContext, type PropsWithChildren, use } from "react";
+import { useRequired } from "@repo/design-system/hooks/required";
+import { createContext, type PropsWithChildren } from "react";
 import type { Locale as RouteLocale } from "use-intl";
 import { SignedInIsland } from "@/components/providers/island";
 import { useRecordContentView } from "@/lib/content/views/record";
@@ -67,12 +68,7 @@ export function ContentViewTracker({
 
 /** Records one view of the page on the page's Convex client. */
 function ContentViewRecorder() {
-  const view = use(ContentViewContext);
-  if (view === null) {
-    throw new Error(
-      "ContentViewRecorder must be used within ContentViewTracker"
-    );
-  }
+  const view = useRequired(ContentViewContext, "ContentViewRecorder");
   const { contentId, context, delay, locale, publicPath, section } = view;
   useRecordContentView({
     ...(contentId === undefined ? {} : { contentId }),

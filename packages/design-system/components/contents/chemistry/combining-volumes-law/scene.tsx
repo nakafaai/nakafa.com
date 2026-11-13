@@ -22,8 +22,9 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
+import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
-import { createContext, type ReactNode, use, useRef } from "react";
+import { createContext, type ReactNode, useRef } from "react";
 import type { Group } from "three";
 
 const REACTANTS_X = -1.05;
@@ -94,14 +95,7 @@ const CombiningVolumesSceneContext = createContext<{
 
 /** Reads the colors and the volume unit of the surrounding combining-volumes scene. */
 function useCombiningVolumesScene() {
-  const scene = use(CombiningVolumesSceneContext);
-  if (!scene) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error(
-      "useCombiningVolumesScene must be used within CombiningVolumesScene"
-    );
-  }
-  return scene;
+  return useRequired(CombiningVolumesSceneContext, "useCombiningVolumesScene");
 }
 
 export function CombiningVolumesScene({
