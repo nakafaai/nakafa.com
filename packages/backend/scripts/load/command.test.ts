@@ -5,7 +5,7 @@ import { runLoadCommand } from "@repo/backend/scripts/load/command";
 import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
 import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
 import type { LoadInput } from "@repo/backend/scripts/load/run";
-import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
+import { TokenFailed } from "@repo/backend/scripts/load/token";
 import { localConvexDouble } from "@repo/backend/test/acceptance";
 import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   backend: vi.fn(),
   capture: vi.fn(),
   issue: vi.fn(),
+  seat: vi.fn(),
   layer: vi.fn(),
   open: vi.fn(),
   lease: vi.fn(),
@@ -74,11 +75,12 @@ vi.mock("@repo/backend/scripts/load/logs", () => ({
   captureLogs: mocks.capture,
 }));
 vi.mock("@repo/backend/scripts/load/run", () => ({ runLoad: mocks.run }));
+// A seat's token source answers what `mocks.issue` answers; `token.test.ts` proves the real one.
 vi.mock("@repo/backend/scripts/load/token", async (importOriginal) => ({
   ...(await importOriginal<
     typeof import("@repo/backend/scripts/load/token")
   >()),
-  issueToken: mocks.issue,
+  seatTokens: mocks.seat,
 }));
 vi.mock("@repo/backend/scripts/load/wire", () => ({ openWire: mocks.open }));
 
@@ -147,19 +149,20 @@ describe("load command", () => {
           rooms: 5,
           students: 300,
         });
-        mocks.open.mockReturnValue("the connection");
+        mocks.open.mockReturnValue(Effect.succeed("the connection"));
         mocks.issue.mockReturnValue(Effect.succeed("jwt"));
-        expect(load.connect("session-1")).toBe("the connection");
+        mocks.seat.mockReturnValue(Effect.succeed(mocks.issue()));
+        const seat = { token: "seat-token-1", userId: "user-1" };
+        expect(
+          yield* load.connect(seat).pipe(Effect.provide(recorderLayer(ledger)))
+        ).toBe("the connection");
+        expect(mocks.seat).toHaveBeenCalledWith(runtime.query, seat);
         const address: string = mocks.open.mock.calls[0]?.[0];
         const token: Effect.Effect<string | null, never, Recorder> =
           mocks.open.mock.calls[0]?.[1];
         expect(address).toBe(runtime.query);
         const recording = Effect.provide(recorderLayer(ledger));
         expect(yield* token.pipe(recording)).toBe("jwt");
-        expect(mocks.issue).toHaveBeenCalledWith(
-          runtime.site,
-          yield* sessionCookie("session-1")
-        );
         expect(yield* load.school).toBe("acc-1");
         expect(mocks.owner).toHaveBeenCalledWith("acc-1");
         expect(mocks.layer).toHaveBeenCalledWith("/root");
@@ -202,8 +205,11 @@ describe("load command", () => {
             return Effect.fail(new TokenFailed({ status: 503 }));
           })
         );
-        mocks.open.mockReturnValue("the connection");
-        expect(load.connect("session-1")).toBe("the connection");
+        mocks.seat.mockReturnValue(Effect.succeed(mocks.issue()));
+        mocks.open.mockReturnValue(Effect.succeed("the connection"));
+        yield* load
+          .connect({ token: "seat-token-1", userId: "user-1" })
+          .pipe(Effect.provide(recorderLayer(`${output}.acknowledged.jsonl`)));
         const token: Effect.Effect<string | null, never, Recorder> =
           mocks.open.mock.calls[0]?.[1];
         const signedOut = yield* Effect.gen(function* () {
