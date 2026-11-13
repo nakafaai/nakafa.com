@@ -33,43 +33,37 @@ export const step = (
   completedAt: at(to),
 });
 
-/** A completed run whose build restored the prepared runtime, and one machine per engine. */
+/** The one job of a run: its gate passed, its build restored the prepared runtime. */
+export const JOB = {
+  name: "Verify",
+  conclusion: "success",
+  startedAt: at(5),
+  completedAt: at(49),
+  steps: [
+    step("Gate static", 5, 12),
+    step("Gate www", 12, 14),
+    step("Gate backend", 14, 16),
+    step("Prepare", 16, 20),
+    step("Save the prepared runtime", 20, 20, "skipped"),
+    step("Build", 20, 38),
+    step("Run specs", 38, 48),
+  ],
+};
+
+/** A completed run of that job. */
 export const RUN = {
   status: "completed",
   conclusion: "success",
   url: "https://github.com/nakafaai/nakafa.com/actions/runs/7",
   createdAt: at(0),
   updatedAt: at(50),
-  jobs: [
-    {
-      name: "Build",
-      conclusion: "success",
-      startedAt: at(5),
-      completedAt: at(30),
-      steps: [
-        step("Prepare", 6, 10),
-        step("Save the prepared runtime", 10, 10, "skipped"),
-        step("Build", 10, 28),
-      ],
-    },
-    ...Arr.map(["chromium", "firefox", "webkit"], (engine, index) => ({
-      name: `Specs ${engine} 1`,
-      conclusion: "success",
-      startedAt: at(31),
-      completedAt: at(45),
-      steps: [step("Run specs", 32, 40 + index)],
-    })),
-  ],
+  jobs: [JOB],
 };
 
 export const shard = (engine: string, failures: readonly string[] = []) =>
   toJson({ engine, shard: 1, passed: failures.length === 0, failures });
 
-/**
- * A GitHub CLI that names the dispatched run after the nonce it was given, lists
- * it only on the second look, and downloads these shard results.
- */
-/** The shard results a download writes into the directory it was given. */
+/** The result of each engine that a download writes into the directory it was given. */
 const download = (
   directory: string,
   chosen: Readonly<Record<string, string>> | undefined
@@ -129,6 +123,10 @@ const housekeeping = (args: readonly string[]): Answer | undefined => {
   }
 };
 
+/**
+ * A GitHub CLI that names the dispatched run after the nonce it was given, lists
+ * it only on the second look, and downloads these results.
+ */
 export const github = (
   results: Readonly<Record<string, string>> | undefined,
   run: unknown = RUN,
