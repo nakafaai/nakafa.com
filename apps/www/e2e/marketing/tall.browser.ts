@@ -57,6 +57,8 @@ for (const window of CRAWLER_WINDOWS) {
         Effect.forEach(PAGES, (href) =>
           Effect.gen(function* () {
             yield* loadMarketingPage(page, href);
+            // The page finishes its own requests before the next one opens, so no fetch is cut off on the way.
+            yield* Effect.promise(() => page.waitForLoadState("networkidle"));
             expect(yield* readLargestScreen(page), href).toBeLessThanOrEqual(
               SCREEN_CAP
             );
