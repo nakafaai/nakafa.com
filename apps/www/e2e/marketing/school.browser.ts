@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { stepTo } from "@/e2e/support/scroll";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 // The School prices show in the currency of the visitor's time zone, and these checks read the
@@ -63,8 +64,9 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
     }
     // The paper names every type of question, and each press opens that type's question in the player.
     const paper = page.locator("#player");
-    yield* Effect.promise(() => paper.scrollIntoViewIfNeeded());
     const types = paper.getByRole("group", { name: "Question types" });
+    // WebKit's scrollIntoView skips a part the page has not drawn yet, so the page steps to it as a reader does.
+    yield* stepTo(page, types);
     yield* Effect.promise(() =>
       expect(types.getByRole("button")).toHaveCount(TYPES)
     );
@@ -117,7 +119,7 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
 
     // Max with 550 added accounts holds a school of 1,050 for Rp16.735.000 a month.
     const calculator = page.locator("#accounts");
-    yield* Effect.promise(() => calculator.scrollIntoViewIfNeeded());
+    yield* stepTo(page, calculator.getByRole("button", { name: "Max" }));
     yield* Effect.promise(() =>
       calculator.getByRole("button", { name: "Max" }).click()
     );

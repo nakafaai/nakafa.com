@@ -46,6 +46,25 @@ const makeClient = () => {
 };
 
 describe("the demo's Convex client", () => {
+  it("answers its connection from memory, open and idle, and never opens a socket", () => {
+    const socket = vi.fn();
+    vi.stubGlobal("WebSocket", socket);
+    const { client } = makeClient();
+    const told = vi.fn();
+
+    const unsubscribe = client.subscribeToConnectionState(told);
+    unsubscribe();
+
+    expect(client.connectionState()).toMatchObject({
+      connectionRetries: 0,
+      hasInflightRequests: false,
+      isWebSocketConnected: true,
+    });
+    expect(told).toHaveBeenCalledExactlyOnceWith(client.connectionState());
+    expect(socket).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
   it("answers a watch from the demo with the same value until something changes", () => {
     const { backend, client } = makeClient();
     const watch = client.watchQuery(OPEN, backend.examArgs);
