@@ -16,6 +16,12 @@ import {
   MultipleProportionsLab,
 } from "@/lib/content/renderer/client/chemistry/laws";
 import {
+  BohrEmissionLab,
+  CathodeRayLab,
+  OrbitalCloudLab,
+  RutherfordScatteringLab,
+} from "@/lib/content/renderer/client/chemistry/model";
+import {
   MoleculeShapeLab,
   ReactionBalanceLab,
 } from "@/lib/content/renderer/client/chemistry/molecule";
@@ -50,6 +56,14 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.atomSymbolLab,
     component: AtomSymbolLab,
+  },
+  {
+    name: chemistryComponentNames.bohrEmissionLab,
+    component: BohrEmissionLab,
+  },
+  {
+    name: chemistryComponentNames.cathodeRayLab,
+    component: CathodeRayLab,
   },
   {
     name: chemistryComponentNames.chemicalReactionCharacteristicsLab,
@@ -108,12 +122,20 @@ export const chemistryRenderers = [
     component: MultipleProportionsLab,
   },
   {
+    name: chemistryComponentNames.orbitalCloudLab,
+    component: OrbitalCloudLab,
+  },
+  {
     name: chemistryComponentNames.periodicPropertiesLab,
     component: PeriodicPropertiesLab,
   },
   {
     name: chemistryComponentNames.reactionBalanceLab,
     component: ReactionBalanceLab,
+  },
+  {
+    name: chemistryComponentNames.rutherfordScatteringLab,
+    component: RutherfordScatteringLab,
   },
   {
     name: chemistryComponentNames.subatomicParticlePropertiesLab,
