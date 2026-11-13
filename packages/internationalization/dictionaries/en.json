@@ -4115,7 +4115,9 @@
     "lesson-tabs": "Lessons",
     "lab": {
       "circle": {
-        "view": "Unit circle visual"
+        "view": "Unit circle visual",
+        "title": "Unit circle",
+        "description": "Turn the angle and watch sine, cosine and tangent change."
       },
       "projectile": {
         "choose": "Choose launch angle",
@@ -4123,7 +4125,9 @@
         "initial-speed": "Initial speed",
         "flight-time": "Time in the air",
         "range": "Range",
-        "peak-height": "Peak height"
+        "peak-height": "Peak height",
+        "title": "Projectile motion",
+        "description": "Pick a launch and see how far and how high it flies."
       },
       "atom": {
         "choose": "Choose a neutral atom",
@@ -4131,7 +4135,9 @@
         "configuration": "Configuration",
         "electron-total": "Electron count",
         "capacity": "Capacity",
-        "outer-shell": "Outer shell"
+        "outer-shell": "Outer shell",
+        "title": "Electron shells",
+        "description": "Pick an atom and see how its electrons fill each shell."
       },
       "bacteria": {
         "choose": "Choose a bacterial view",
@@ -4144,7 +4150,9 @@
         },
         "wall": {
           "tab": "Wall"
-        }
+        },
+        "title": "A bacterial cell",
+        "description": "Look at a bacterium from the outside, the inside and through its wall."
       }
     },
     "tryout-title": "Practice tests that score you right away",

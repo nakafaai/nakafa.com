@@ -60,7 +60,7 @@ const Z_INDEX_CHAIR = 20;
 
 interface TableChairsProps {
   labels: {
-    title: ReactNode;
+    title: NonNullable<ReactNode>;
     table: string;
     chair: string;
     reset: string;

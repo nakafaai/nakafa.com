@@ -35,14 +35,14 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 interface ElectabilityChartProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   footnote: ReactNode;
   labels: {
     aniesMuhaimin: ReactNode;
     ganjarMahfud: ReactNode;
     prabowoGibran: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   yLabel: string;
 }
 

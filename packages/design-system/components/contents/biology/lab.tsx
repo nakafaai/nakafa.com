@@ -56,7 +56,7 @@ export interface BiologyLabProps<
 > {
   /** The item the lab opens on. It starts at the first item when none is given. */
   defaultItemIndex?: number | undefined;
-  description?: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseMode: string;
     focusLabel?: string;
@@ -71,7 +71,7 @@ export interface BiologyLabProps<
   live?: boolean;
   /** Reports each item the reader picks, so a window can keep it while this lab is unmounted. */
   onItemIndexChange?: (index: number) => void;
-  title?: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** The props of a lab scene: the item the reader picked. Colors and the selection come from the lab. */

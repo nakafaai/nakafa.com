@@ -101,13 +101,13 @@ interface Props {
     name: string;
     points: { x: number; y: number }[];
   }[];
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   regressionLineStyle?: {
     color?: string;
     strokeDasharray?: string;
   };
   showResiduals?: boolean;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   xAxisDomain?: "min-max";
   xAxisLabel?: string;
   yAxisLabel?: string;

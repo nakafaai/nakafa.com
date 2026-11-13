@@ -48,7 +48,7 @@ const POSITION_MARK_Y = 0.08;
 const TRACK_Z = UNIFORM_LINEAR_MOTION_SCENE.roadWidth * 0.22;
 
 interface UniformLinearMotionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseSpeed: string;
     duration: ReactNode;
@@ -57,7 +57,7 @@ interface UniformLinearMotionLabProps {
     stepDistance: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function UniformLinearMotionLab({

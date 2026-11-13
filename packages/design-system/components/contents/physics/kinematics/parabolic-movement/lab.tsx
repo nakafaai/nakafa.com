@@ -41,7 +41,7 @@ interface ParabolicMovementLabProps {
   decimalSeparator?: DecimalSeparator;
   /** The launch the lab opens on. It starts at the default launch when none is given. */
   defaultLaunchId?: ParabolicLaunchId | undefined;
-  description?: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseLaunch: string;
     factLabels: {
@@ -59,7 +59,7 @@ interface ParabolicMovementLabProps {
    */
   /** Reports each launch the reader picks, so a window can keep it while this lab is unmounted. */
   onLaunchIdChange?: (launchId: ParabolicLaunchId) => void;
-  title?: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function ParabolicMovementLab({

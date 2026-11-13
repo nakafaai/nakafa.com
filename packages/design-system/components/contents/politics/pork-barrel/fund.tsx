@@ -25,12 +25,12 @@ import { useTranslations } from "use-intl";
 const FUND_CHART_MARGIN = { right: 16 } as const;
 
 interface FundChartProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   footnote: ReactNode;
   labels: {
     fund: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
   yLabel: string;
 }
 

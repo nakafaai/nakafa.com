@@ -27,13 +27,13 @@ const VALUE_AXIS_PADDING_RATIO = 0.12;
 const VALUE_LABEL_MARGIN = 16;
 
 interface Props {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   footnote: ReactNode;
   labels: {
     electability: ReactNode;
     notAnswering: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** Renders the candidate electability comparison used by the KIM Plus article. */

@@ -39,7 +39,7 @@ const WIND_GUSTS = Array.from({ length: WIND_GUST_COUNT }, (_, index) => ({
 }));
 
 interface WindEnergyConversionLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     flow: ReactNode;
     flowLabel: string;
@@ -49,7 +49,7 @@ interface WindEnergyConversionLabProps {
     speedUnit: string;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

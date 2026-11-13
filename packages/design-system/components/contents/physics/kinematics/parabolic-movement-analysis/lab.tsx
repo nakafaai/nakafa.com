@@ -39,7 +39,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface ProjectileAnalysisLabProps {
   decimalSeparator?: DecimalSeparator;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseScenario: string;
     factLabels: {
@@ -53,7 +53,7 @@ interface ProjectileAnalysisLabProps {
     scenarioNames: Record<ProjectileScenarioId, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function ParabolicMovementAnalysisLab({

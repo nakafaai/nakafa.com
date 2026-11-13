@@ -46,10 +46,10 @@ const TriangleReadout = lazy(() =>
 
 interface Props {
   angle?: number;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels?: TriangleLabels;
   size?: number;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function Triangle({

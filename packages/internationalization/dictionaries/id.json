@@ -4115,7 +4115,9 @@
     "lesson-tabs": "Pelajaran",
     "lab": {
       "circle": {
-        "view": "Visual lingkaran satuan"
+        "view": "Visual lingkaran satuan",
+        "title": "Lingkaran satuan",
+        "description": "Putar sudutnya dan lihat sinus, kosinus, dan tangen berubah."
       },
       "projectile": {
         "choose": "Pilih sudut lontar",
@@ -4123,7 +4125,9 @@
         "initial-speed": "Kelajuan awal",
         "flight-time": "Waktu di udara",
         "range": "Jangkauan",
-        "peak-height": "Tinggi puncak"
+        "peak-height": "Tinggi puncak",
+        "title": "Gerak parabola",
+        "description": "Pilih lemparan dan lihat seberapa jauh dan setinggi apa bendanya terbang."
       },
       "atom": {
         "choose": "Pilih atom netral",
@@ -4131,7 +4135,9 @@
         "configuration": "Konfigurasi",
         "electron-total": "Jumlah elektron",
         "capacity": "Kapasitas",
-        "outer-shell": "Kulit terluar"
+        "outer-shell": "Kulit terluar",
+        "title": "Kulit elektron",
+        "description": "Pilih atom dan lihat cara elektronnya mengisi tiap kulit."
       },
       "bacteria": {
         "choose": "Pilih tampilan bakteri",
@@ -4144,7 +4150,9 @@
         },
         "wall": {
           "tab": "Dinding"
-        }
+        },
+        "title": "Sel bakteri",
+        "description": "Lihat bakteri dari luar, dari dalam, dan lewat dindingnya."
       }
     },
     "tryout-title": "Skor try out langsung keluar",

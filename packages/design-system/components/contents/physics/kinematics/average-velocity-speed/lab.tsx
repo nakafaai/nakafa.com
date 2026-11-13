@@ -37,7 +37,7 @@ import { type ReactNode, useMemo, useState } from "react";
 
 interface AverageVelocitySpeedLabProps {
   decimalSeparator?: DecimalSeparator;
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseCase: string;
     factLabels: {
@@ -50,7 +50,7 @@ interface AverageVelocitySpeedLabProps {
     modeLabels: Record<AverageVelocitySpeedCaseId, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function AverageVelocitySpeedLab({

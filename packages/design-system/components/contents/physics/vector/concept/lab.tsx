@@ -39,7 +39,7 @@ import { Suspense, useMemo, useState } from "react";
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
 export interface VectorConceptLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     bridgeView: string;
     chooseLoadPosition: string;
@@ -52,7 +52,7 @@ export interface VectorConceptLabProps {
     netIdeaValue: string;
     rightCable: ReactNode;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

@@ -39,43 +39,26 @@ interface SceneProps {
 }
 
 interface Props extends SceneProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   /** The scene's readouts, drawn where the card is composed (`LineFacts`), so their math stays there. */
   facts: ReactNode;
-  title: ReactNode;
-}
-
-interface CardProps extends SceneProps {
-  /** The scene's readouts for the footer (`LineFacts`), drawn by the caller. */
-  facts: ReactNode;
-  /** The card's header. A graph that builds its own title and description passes it here. */
-  header: ReactNode;
-}
-
-/** The line-equation card of authored content, with the title and description of its lesson. */
-export function LineEquation({ description, title, ...scene }: Props) {
-  return (
-    <LineEquationCard
-      {...scene}
-      header={<VisualCardHeader description={description} title={title} />}
-    />
-  );
+  title: NonNullable<ReactNode>;
 }
 
 /**
- * The line-equation card under a header its caller builds, as the unit-circle card takes one:
- * the scene with its actions, and the readouts of the scene in the footer. A lesson draws the
- * readouts on the server, so their math never reaches the browser; the scene parts read the
- * scene from `LineEquationProvider`.
+ * The line-equation card of authored content: its title and description, the scene with its actions, and the readouts
+ * of the scene in the footer. A lesson draws the readouts on the server, so their math never reaches the browser; the
+ * scene parts read the scene from `LineEquationProvider`.
  */
-function LineEquationCard({
+export function LineEquation({
   cameraPosition,
   cameraTarget,
   data,
+  description,
   facts,
-  header,
   showZAxis,
-}: CardProps) {
+  title,
+}: Props) {
   const config = Effect.runSync(
     resolveLineScene({
       cameraPosition,
@@ -88,7 +71,7 @@ function LineEquationCard({
   return (
     <LineEquationProvider config={config}>
       <VisualCard>
-        {header}
+        <VisualCardHeader description={description} title={title} />
         <DeferredLineScene />
         <CoordinateControls />
         <VisualCardFooter>{facts}</VisualCardFooter>

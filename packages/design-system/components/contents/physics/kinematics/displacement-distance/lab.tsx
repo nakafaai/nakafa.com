@@ -49,7 +49,7 @@ const MIN_TRAVEL_SECONDS = 4.8;
 const TRAVEL_SECONDS_PER_METER = 0.56;
 
 interface DisplacementDistanceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseCase: string;
     factLabels: {
@@ -62,7 +62,7 @@ interface DisplacementDistanceLabProps {
     modeLabels: Record<DisplacementDistanceCaseId, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function DisplacementDistanceLab({

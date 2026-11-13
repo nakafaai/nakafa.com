@@ -42,7 +42,7 @@ const PIECE_COLORS = [
 ] as const;
 
 interface AncientAtomLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     aristotleBody: ReactNode;
     aristotleLabel: string;
@@ -51,7 +51,7 @@ interface AncientAtomLabProps {
     democritusLabel: string;
     levels: Record<AncientAtomLevelId, AncientAtomLevelLabels>;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

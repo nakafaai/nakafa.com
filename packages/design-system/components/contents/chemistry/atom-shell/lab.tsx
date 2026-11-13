@@ -31,7 +31,7 @@ import { useStore } from "zustand";
 interface AtomShellLabProps {
   /** The sample the lab opens on. It starts at calcium when none is given. */
   defaultSampleId?: AtomShellSampleId | undefined;
-  description?: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     atomicNumber: string;
     chooseAtom: string;
@@ -55,7 +55,7 @@ interface AtomShellLabProps {
   live?: boolean;
   /** Reports each sample the reader picks, so a window can keep it while this lab is unmounted. */
   onSampleIdChange?: (sampleId: AtomShellSampleId) => void;
-  title?: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** Renders a 3D Bohr shell reader for neutral atoms up to calcium. */

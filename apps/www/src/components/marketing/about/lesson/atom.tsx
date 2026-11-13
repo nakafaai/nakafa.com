@@ -12,8 +12,10 @@ export function AtomLesson() {
   return (
     <AtomShellLab
       defaultSampleId={defaultSampleId ?? undefined}
+      description={t("lab.atom.description")}
       labels={getAtomLabels(t)}
       onSampleIdChange={onSampleIdChange}
+      title={t("lab.atom.title")}
     />
   );
 }

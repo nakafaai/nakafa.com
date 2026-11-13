@@ -32,9 +32,9 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 interface DaltonEvidenceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: DaltonEvidenceLabLabels;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**
