@@ -99,11 +99,15 @@ export function DroneDisplacementLab({
         <ScienceStage floor={0} reach={reach} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[-reach * 0.55, reach * 0.75, reach * 1.45]}
+              cameraPosition={[
+                moved.east * 0.5 - reach * 0.6,
+                moved.up * 0.5 + reach * 0.75,
+                -moved.north * 0.5 + reach * 1.5,
+              ]}
               cameraTarget={[
-                moved.east * 0.4,
-                moved.up * 0.4,
-                -moved.north * 0.4,
+                moved.east * 0.5,
+                moved.up * 0.5,
+                -moved.north * 0.5,
               ]}
               fov={40}
               maxDistance={reach * 4}
