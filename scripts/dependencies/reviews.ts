@@ -14,7 +14,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.2",
-    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 6.2.0 peers effect 4.1.2 exactly. Checked 7 November 2026.",
+    "Effect 4.1.2 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.1 and 4.1.2 are patch releases with fixes only. The contracts lead the cohort: @nakafa/aksara-contracts 6.3.0 peers effect 4.1.2 exactly. Checked 7 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "6.2.0",
-    "nakafa.com declares 6.2.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort, and 6.2.0 describes the MathVisual formula objects (curves, regions, surfaces, solids, sliders, markers and readouts). Checked 9 November 2026.",
+    "6.3.0",
+    "nakafa.com declares 6.3.0, the newest release, which peers effect 4.1.2 exactly: the contracts lead the Effect cohort, and 6.3.0 adds the MathVisual vector (a segment with an arrowhead) to the formula objects of 6.2.0. Checked 13 November 2026.",
   ],
   [
     "tsrs@latest",
