@@ -17,6 +17,7 @@ export function PanelSheetTrigger({
   return (
     <SidebarTrigger
       className="xl:hidden"
+      data-hides="xl"
       icon={icon}
       label={label}
       size="icon"

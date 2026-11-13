@@ -237,13 +237,14 @@ export function ChatHeader({
     <PageHeader>
       <div className="min-w-0 flex-1">{children}</div>
       <PageActions>
-        {actions === undefined ? null : (
-          <ButtonGroup aria-label={t("chat-actions")}>{actions}</ButtonGroup>
-        )}
-        <PanelSheetTrigger
-          icon={MessageMultiple02Icon}
-          label={t("chat-history")}
-        />
+        {/* The chat's actions and its history, which leaves from the xl width for the sidebar, are one group. */}
+        <ButtonGroup aria-label={t("chat-actions")}>
+          {actions}
+          <PanelSheetTrigger
+            icon={MessageMultiple02Icon}
+            label={t("chat-history")}
+          />
+        </ButtonGroup>
       </PageActions>
     </PageHeader>
   );

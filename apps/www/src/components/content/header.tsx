@@ -22,8 +22,11 @@ export function ContentHeader({
     <PageHeader>
       <div className="min-w-0">{breadcrumb}</div>
       <PageActions>
-        <ButtonGroup aria-label={t("content-actions")}>{children}</ButtonGroup>
-        <PanelSheetTrigger icon={Menu02Icon} label={t("on-this-page")} />
+        {/* The page's actions and its outline, which leaves from the xl width for the sidebar, are one group. */}
+        <ButtonGroup aria-label={t("content-actions")}>
+          {children}
+          <PanelSheetTrigger icon={Menu02Icon} label={t("on-this-page")} />
+        </ButtonGroup>
       </PageActions>
     </PageHeader>
   );
