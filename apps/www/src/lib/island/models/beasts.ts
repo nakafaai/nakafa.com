@@ -8,7 +8,7 @@ import {
   tailOf,
 } from "@/lib/island/models/features";
 import { type Face, mirrored, type Vec } from "@/lib/island/models/parts";
-import { ball, rod, slab, tube } from "@/lib/island/models/solids";
+import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
 
 const Size = Schema.Struct({
   high: Schema.Finite,
@@ -23,7 +23,7 @@ const Size = Schema.Struct({
  * the legs' half thickness; the tail's and an ear's length; whether the feet
  * end in dark hooves; and a hump on the back.
  */
-export const Plan = Schema.Struct({
+const Plan = Schema.Struct({
   body: Size,
   bow: Schema.Finite,
   ear: Schema.Finite,
@@ -35,7 +35,7 @@ export const Plan = Schema.Struct({
   snout: Size,
   tail: Schema.Finite,
 });
-export type Plan = typeof Plan.Type;
+type Plan = typeof Plan.Type;
 
 /** How the body swells from the rump (0) to the chest (1). */
 const PROFILE = [
@@ -80,15 +80,18 @@ export function quadruped(
   const { body, head, neck, snout } = plan;
   const middle = 1 - body.high / 2;
   const back = -body.long / 2;
-  const rings = Arr.map(PROFILE, ([along, swell]) => ({
-    at: [
-      0,
-      middle + body.high * 0.04 * (1 - swell),
-      back + body.long * along,
-    ] as Vec,
-    high: (body.high / 2) * swell,
-    wide: body.wide * swell,
-  }));
+  const rings = Arr.map(
+    PROFILE,
+    ([along, swell]): Ring => ({
+      at: [
+        0,
+        middle + body.high * 0.04 * (1 - swell),
+        back + body.long * along,
+      ],
+      high: (body.high / 2) * swell,
+      wide: body.wide * swell,
+    })
+  );
   const [first, ...rest] = rings;
   const chest: Vec = [0, middle + body.high * 0.22, -back - body.long * 0.12];
   const throat: Vec = [
