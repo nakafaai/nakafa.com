@@ -3,6 +3,7 @@ name: Perf
 on:
   push:
     branches: [nabil/perf-lh]
+    paths: [.perf/**, .github/workflows/perf.yml]
 permissions:
   contents: read
   actions: read
