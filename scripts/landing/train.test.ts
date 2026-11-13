@@ -29,14 +29,33 @@ const proof = (sha: string, failures: readonly string[]): ProofResult => ({
   },
 });
 
+/** The pull requests a combination's SHA names. */
+const numbersOf = (sha: string) =>
+  Arr.map(
+    Arr.filter(sha.slice(6).split(","), (part) => part !== ""),
+    Number
+  );
+
+/** The named pull requests of a list, or all of them when none is named. */
+const named = (pulls: readonly Candidate[], numbers: readonly number[]) =>
+  Effect.succeed(
+    numbers.length === 0
+      ? pulls
+      : Arr.filter(pulls, (one) => Arr.contains(numbers, one.number))
+  );
+
 /**
  * A repository and a prover where each combination's SHA names the pull
  * requests it merged, and the proof fails the specs that `fails` gives for
- * those pull requests, or main's specs when it proves main.
+ * those pull requests, or main's specs when it proves main. Waiting pull
+ * requests have no proof of their own, so only a batch takes them, and the gate
+ * of a combination fails when `gateFails` says so.
  */
 const world = (options: {
   readonly pulls: readonly Candidate[];
   readonly fails: (numbers: readonly number[]) => readonly string[];
+  readonly waiting?: readonly Candidate[];
+  readonly gateFails?: (numbers: readonly number[]) => boolean;
   readonly mainFails?: readonly string[];
   readonly conflicts?: readonly number[];
   readonly skips?: readonly number[];
@@ -45,13 +64,12 @@ const world = (options: {
     const log = yield* Ref.make<readonly string[]>([]);
     const record = (line: string) => Ref.update(log, Arr.append(line));
     const repository = Layer.succeed(Repository, {
-      proven: (numbers) =>
-        Effect.succeed(
-          numbers.length === 0
-            ? options.pulls
-            : Arr.filter(options.pulls, (one) =>
-                Arr.contains(numbers, one.number)
-              )
+      proven: (numbers) => named(options.pulls, numbers),
+      ready: (numbers) =>
+        named([...options.pulls, ...(options.waiting ?? [])], numbers),
+      gate: (sha) =>
+        record(`gate ${sha}`).pipe(
+          Effect.as(!(options.gateFails?.(numbersOf(sha)) ?? false))
         ),
       main: Effect.succeed(MAIN),
       combine: (base, heads) =>
@@ -103,18 +121,7 @@ const world = (options: {
                     Arr.contains(specs, spec)
                   )
                 )
-              : proof(
-                  sha,
-                  options.fails(
-                    Arr.map(
-                      Arr.filter(
-                        sha.slice(6).split(","),
-                        (part) => part !== ""
-                      ),
-                      Number
-                    )
-                  )
-                )
+              : proof(sha, options.fails(numbersOf(sha)))
           )
         ),
     });
@@ -128,11 +135,12 @@ describe("landing train", () => {
         pulls: [pull(1), pull(2), pull(3)],
         fails: () => [],
       });
-      const report = yield* runTrain([], []).pipe(Effect.provide(layer));
+      const report = yield* runTrain([], [], false).pipe(Effect.provide(layer));
       expect(Arr.map(report.landed, (one) => one.number)).toEqual([1, 2, 3]);
       expect(yield* Ref.get(log)).toEqual([
         "combine 0 1,2,3",
         "prove merge:1,2,3",
+        "gate merge:1,2,3",
         "land 1",
         "land 2",
         "land 3",
@@ -151,7 +159,9 @@ describe("landing train", () => {
         ],
         fails: () => [],
       });
-      yield* runTrain([], ["e2e/c.browser.ts"]).pipe(Effect.provide(layer));
+      yield* runTrain([], ["e2e/c.browser.ts"], false).pipe(
+        Effect.provide(layer)
+      );
       expect(yield* Ref.get(log)).toContain(
         "prove merge:1,2 e2e/a.browser.ts e2e/b.browser.ts e2e/c.browser.ts"
       );
@@ -167,7 +177,9 @@ describe("landing train", () => {
           fails: () => ["e2e/main/red.browser.ts"],
           mainFails: ["e2e/main/red.browser.ts"],
         });
-        const report = yield* runTrain([], []).pipe(Effect.provide(layer));
+        const report = yield* runTrain([], [], false).pipe(
+          Effect.provide(layer)
+        );
         expect(report.landed).toHaveLength(2);
         expect(report.mainFailures).toEqual(["e2e/main/red.browser.ts"]);
         expect(yield* Ref.get(log)).toContain(
@@ -188,9 +200,11 @@ describe("landing train", () => {
           fails: (numbers) =>
             Arr.contains(numbers, 4) ? ["e2e/four/broken.browser.ts"] : [],
         });
-        const report = yield* runTrain([], ["e2e/four/broken.browser.ts"]).pipe(
-          Effect.provide(layer)
-        );
+        const report = yield* runTrain(
+          [],
+          ["e2e/four/broken.browser.ts"],
+          false
+        ).pipe(Effect.provide(layer));
         expect(Arr.map(report.landed, (one) => one.number)).toEqual([
           1, 2, 3, 5,
         ]);
@@ -218,7 +232,9 @@ describe("landing train", () => {
           fails: (numbers) =>
             Arr.contains(numbers, 3) ? ["suite:visual"] : [],
         });
-        const report = yield* runTrain([], []).pipe(Effect.provide(layer));
+        const report = yield* runTrain([], [], false).pipe(
+          Effect.provide(layer)
+        );
         expect(Arr.map(report.landed, (one) => one.number)).toEqual([1]);
         expect(Arr.map(report.rejected, (one) => one.candidate.number)).toEqual(
           [2, 3]
@@ -238,7 +254,7 @@ describe("landing train", () => {
               }),
           })
         );
-        const incomplete = yield* runTrain([], []).pipe(
+        const incomplete = yield* runTrain([], [], false).pipe(
           Effect.provide(failing)
         );
         expect(incomplete.rejected).toEqual([
@@ -257,7 +273,9 @@ describe("landing train", () => {
           fails: () => [],
           skips: [2],
         });
-        const report = yield* runTrain([2], []).pipe(Effect.provide(layer));
+        const report = yield* runTrain([2], [], false).pipe(
+          Effect.provide(layer)
+        );
         expect(report.landed).toEqual([]);
         expect(report.skipped).toEqual([
           {
@@ -269,7 +287,9 @@ describe("landing train", () => {
         expect(formatTrain(report)).toContain("skipped #2");
 
         const empty = yield* world({ pulls: [], fails: () => [] });
-        const none = yield* runTrain([], []).pipe(Effect.provide(empty.layer));
+        const none = yield* runTrain([], [], false).pipe(
+          Effect.provide(empty.layer)
+        );
         expect(none.landed).toEqual([]);
         expect(yield* Ref.get(empty.log)).toEqual([]);
 
@@ -278,7 +298,7 @@ describe("landing train", () => {
           conflicts: [3],
           fails: () => [],
         });
-        const rejected = yield* runTrain([], []).pipe(
+        const rejected = yield* runTrain([], [], false).pipe(
           Effect.provide(conflicting.layer)
         );
         expect(rejected.rejected[0]?.reason).toContain("merge main into it");
@@ -287,6 +307,40 @@ describe("landing train", () => {
             line.startsWith("prove")
           )
         ).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "in a batch takes every ready pull request and bisects a failed gate of their combination",
+    () =>
+      Effect.gen(function* () {
+        const options = {
+          pulls: [pull(1)],
+          waiting: [pull(2), pull(3)],
+          fails: () => [],
+          gateFails: (numbers: readonly number[]) => Arr.contains(numbers, 3),
+        };
+        const { layer, log } = yield* world(options);
+        const report = yield* runTrain([], [], true).pipe(
+          Effect.provide(layer)
+        );
+        expect(Arr.map(report.landed, (one) => one.number)).toEqual([1, 2]);
+        expect(report.rejected).toEqual([
+          { candidate: pull(3), reason: "fails gate:combination" },
+        ]);
+        expect(
+          Arr.filter(yield* Ref.get(log), (line) => line.startsWith("gate"))
+        ).toEqual(["gate merge:1,2,3", "gate merge:1,2", "gate merge:1,2,3"]);
+        // A failed gate is no spec, so the train never proves main for it.
+        expect(
+          Arr.filter(yield* Ref.get(log), (line) => line.includes(MAIN))
+        ).toEqual([]);
+
+        const proven = yield* world(options);
+        const alone = yield* runTrain([], [], false).pipe(
+          Effect.provide(proven.layer)
+        );
+        expect(Arr.map(alone.landed, (one) => one.number)).toEqual([1]);
       })
   );
 });

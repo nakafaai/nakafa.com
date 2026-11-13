@@ -301,6 +301,8 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: traces-${{ strategy.job-index }}
+          # Playwright writes into .cache, which the action skips unless told.
+          include-hidden-files: true
           path: |
             .cache/playwright/www
             ${{ runner.temp }}/start.log
