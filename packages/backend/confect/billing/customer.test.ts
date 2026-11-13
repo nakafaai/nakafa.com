@@ -23,7 +23,6 @@ const seedUser = Effect.fn("billing.customer.test.seedUser")(function* (
 ) {
   const writer = yield* DatabaseWriter;
   return yield* writer.table("users").insert({
-    authId: `auth-customer-${deleting ? "deleting" : "active"}`,
     credits: 0,
     creditsResetAt: NOW,
     ...(deleting ? { deletionPreparedAt: NOW } : {}),

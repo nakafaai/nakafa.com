@@ -17,7 +17,6 @@ describe("billing/accounts", () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const userId = await ctx.db.insert("users", {
-        authId: "auth-billing-account",
         credits: 0,
         creditsResetAt: 0,
         email: "billing-account@example.com",
@@ -70,7 +69,6 @@ describe("billing/accounts", () => {
         status: "active",
       });
       const userId = await ctx.db.insert("users", {
-        authId: "auth-billing-tenant",
         credits: 0,
         creditsResetAt: 0,
         email: "billing-tenant@example.com",
@@ -101,14 +99,14 @@ describe("billing/accounts", () => {
     expect(result).toEqual({ distinct: true });
   });
 
-  it("links a Polar customer to the account of the user whose auth ID it names, opening the account in the country Polar holds", async () => {
+  it("links a Polar customer to the account of the user whose id it names, opening the account in the country Polar holds", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const userId = await seedUser(ctx, "auth-link-open");
+      const userId = await seedUser(ctx, "link-open");
       const outcome = await runInMutation(
         ctx,
         linkPolarCustomer({
-          authId: "auth-link-open",
+          externalId: userId,
           country: "ID",
           providerCustomerId: "cust_link_open",
         })
@@ -128,33 +126,37 @@ describe("billing/accounts", () => {
     ]);
   });
 
-  it("reports a customer whose auth ID names no user, and opens no account", async () => {
+  it("reports a customer whose external id names no account, and opens no account", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const outcome = await runInMutation(
-        ctx,
-        linkPolarCustomer({
-          authId: "auth-nobody",
-          country: "ZZ",
-          providerCustomerId: "cust_nobody",
-        })
-      );
+      const gone = await seedUser(ctx, "gone");
+      await ctx.db.delete("users", gone);
+      const link = (externalId: string) =>
+        runInMutation(
+          ctx,
+          linkPolarCustomer({
+            country: "ZZ",
+            externalId,
+            providerCustomerId: "cust_nobody",
+          })
+        );
+      const outcomes = [await link("not-a-user"), await link(gone)];
       return {
-        outcome,
         accounts: await ctx.db.query("billingAccounts").collect(),
+        outcomes,
       };
     });
-    expect(result).toEqual({ accounts: [], outcome: "noUser" });
+    expect(result).toEqual({ accounts: [], outcomes: ["noUser", "noUser"] });
   });
 
   it("links nothing for a user whose account is being deleted", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      await seedUser(ctx, "auth-link-deleting", 1);
+      const userId = await seedUser(ctx, "link-deleting", 1);
       const outcome = await runInMutation(
         ctx,
         linkPolarCustomer({
-          authId: "auth-link-deleting",
+          externalId: userId,
           country: "ZZ",
           providerCustomerId: "cust_deleting",
         })
@@ -170,12 +172,12 @@ describe("billing/accounts", () => {
   it("records the customer on an account that holds none, and reports the same customer as linked again", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const userId = await seedUser(ctx, "auth-link-existing");
+      const userId = await seedUser(ctx, "link-existing");
       await insertPolarAccount(ctx, userId, null);
       const first = await runInMutation(
         ctx,
         linkPolarCustomer({
-          authId: "auth-link-existing",
+          externalId: userId,
           country: "ZZ",
           providerCustomerId: "cust_existing",
         })
@@ -183,7 +185,7 @@ describe("billing/accounts", () => {
       const again = await runInMutation(
         ctx,
         linkPolarCustomer({
-          authId: "auth-link-existing",
+          externalId: userId,
           country: "ZZ",
           providerCustomerId: "cust_existing",
         })
@@ -204,12 +206,12 @@ describe("billing/accounts", () => {
   it("reports a conflict when the account holds another customer, and changes nothing", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const userId = await seedUser(ctx, "auth-link-conflict");
+      const userId = await seedUser(ctx, "link-conflict");
       await insertPolarAccount(ctx, userId, "cust_held");
       const outcome = await runInMutation(
         ctx,
         linkPolarCustomer({
-          authId: "auth-link-conflict",
+          externalId: userId,
           country: "ZZ",
           providerCustomerId: "cust_other",
         })
@@ -226,17 +228,16 @@ describe("billing/accounts", () => {
   });
 });
 
-/** Inserts one user with the given auth ID, optionally marked as being deleted. */
+/** Inserts one user under the given name, optionally deleted. */
 function seedUser(
   ctx: Parameters<typeof insertPolarAccount>[0],
-  authId: string,
+  name: string,
   deletedAt?: number
 ) {
   return ctx.db.insert("users", {
-    authId,
     credits: 0,
     creditsResetAt: 0,
-    email: `${authId}@example.com`,
+    email: `${name}@example.com`,
     mascot: MASCOT_CODE,
     name: "Link Account",
     plan: "free",

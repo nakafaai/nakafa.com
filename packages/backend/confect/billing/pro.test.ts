@@ -53,7 +53,7 @@ const setup = Effect.fn("billing.pro.test.setup")(function* (
   );
   const customer = {
     email: "billing@example.com",
-    externalId: user.authUserId,
+    externalId: user.userId,
     id: "polar-billing",
     name: "User billing",
   };

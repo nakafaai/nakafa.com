@@ -148,7 +148,7 @@ describe("billing/xendit/checkout", () => {
         expect(ensureCustomer).toHaveBeenCalledExactlyOnceWith({
           email: expect.any(String),
           individual_detail: { given_names: expect.any(String) },
-          reference_id: user.authUserId,
+          reference_id: user.userId,
           type: "INDIVIDUAL",
         });
         expect(vi.mocked(createSession).mock.calls[0]?.[0]).toMatchObject({

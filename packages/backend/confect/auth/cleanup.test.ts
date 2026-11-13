@@ -41,7 +41,6 @@ describe("auth/cleanup", () => {
       const state = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const userId = await ctx.db.insert("users", {
-            authId: "bounded-cleanup-user",
             credits: 10,
             creditsResetAt: NOW,
             email: "bounded@example.com",
@@ -55,7 +54,6 @@ describe("auth/cleanup", () => {
             createDeletedUserTombstone(userId, NOW)
           );
           const otherUserId = await ctx.db.insert("users", {
-            authId: "bounded-cleanup-reader",
             credits: 10,
             creditsResetAt: NOW,
             email: "reader@example.com",
@@ -116,7 +114,6 @@ describe("auth/cleanup", () => {
         const result = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const userId = await ctx.db.insert("users", {
-              authId: "deleted-auth-user",
               credits: 10,
               creditsResetAt: NOW,
               email: "deleted@example.com",
@@ -130,7 +127,6 @@ describe("auth/cleanup", () => {
               createDeletedUserTombstone(userId, NOW)
             );
             const otherUserId = await ctx.db.insert("users", {
-              authId: "retained-auth-user",
               credits: 10,
               creditsResetAt: NOW,
               email: "retained@example.com",
@@ -258,7 +254,6 @@ describe("auth/cleanup", () => {
     const seeded = await t.mutation(async (ctx) => {
       const seedUser = (name: string) =>
         ctx.db.insert("users", {
-          authId: `connections-${name}`,
           credits: 10,
           creditsResetAt: NOW,
           email: `connections-${name}@example.com`,

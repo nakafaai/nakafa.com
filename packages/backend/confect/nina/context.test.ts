@@ -36,7 +36,6 @@ const seedUser = Effect.fn("test.nina.context.user")(function* () {
   const writer = yield* DatabaseWriter;
   const id = yield* writer.table("users").insert({
     email: "context@example.invalid",
-    authId: "context",
     mascot: MASCOT,
     name: "Learner",
     plan: "free",

@@ -46,7 +46,6 @@ describe("users/directory", () => {
                 ids,
                 yield* Effect.promise(() =>
                   tCtx.db.insert("users", {
-                    authId: `auth-${suffix}`,
                     credits: 100,
                     creditsResetAt: 0,
                     email: `${suffix}@example.com`,
@@ -102,7 +101,6 @@ describe("users/directory", () => {
             const tCtx = yield* MutationCtx;
             const userId = yield* Effect.promise(() =>
               tCtx.db.insert("users", {
-                authId: "auth-known",
                 credits: 100,
                 creditsResetAt: 0,
                 email: "known@example.com",
@@ -130,7 +128,6 @@ describe("users/directory", () => {
             const tCtx = yield* MutationCtx;
             const userId = yield* Effect.promise(() =>
               tCtx.db.insert("users", {
-                authId: "auth-handle",
                 credits: 100,
                 creditsResetAt: 0,
                 email: "handle@example.com",

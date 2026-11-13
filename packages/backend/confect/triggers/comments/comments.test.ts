@@ -37,7 +37,6 @@ describe("triggers/comments/comments", () => {
     await t.mutation(async (ctx) => {
       for (let index = 0; index < 100; index += 1) {
         const userId = await ctx.db.insert("users", {
-          authId: `replier-${index}`,
           credits: 0,
           creditsResetAt: NOW,
           email: `replier-${index}@example.com`,

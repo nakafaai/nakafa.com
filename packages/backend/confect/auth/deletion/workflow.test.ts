@@ -43,7 +43,6 @@ describe("auth/deletion/workflow", () => {
             Effect.gen(function* () {
               const insertedUserId = yield* Effect.promise(() =>
                 ctx.db.insert("users", {
-                  authId: "deleted-auth-user",
                   credits: 0,
                   creditsResetAt: 0,
                   deletedAt,
@@ -55,7 +54,6 @@ describe("auth/deletion/workflow", () => {
               );
               yield* Effect.promise(() =>
                 ctx.db.insert("accountDeletionPreparations", {
-                  authId: "deleted-auth-user",
                   finalizedAt: deletedAt,
                   recoveryGeneration: 0,
                   userId: insertedUserId,
@@ -84,7 +82,6 @@ describe("auth/deletion/workflow", () => {
       expect(starters.startBilling).toHaveBeenCalledOnce();
       expect(starters.startData).toHaveBeenCalledOnce();
       const expectedIdentity = {
-        authId: "deleted-auth-user",
         userId: user._id,
       };
       expect(starters.startAnalytics).toHaveBeenCalledWith(expectedIdentity);
@@ -104,7 +101,6 @@ describe("auth/deletion/workflow", () => {
             Effect.gen(function* () {
               const userId = yield* Effect.promise(() =>
                 ctx.db.insert("users", {
-                  authId: "removed-auth-user",
                   credits: 0,
                   creditsResetAt: 0,
                   email: "removed@example.com",
@@ -162,7 +158,6 @@ describe("auth/deletion/workflow", () => {
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
           ctx.db.insert("users", {
-            authId: "failing-auth-user",
             credits: 0,
             creditsResetAt: 0,
             deletedAt,

@@ -56,7 +56,6 @@ async function createActivatedIntent(
       );
     }
     const userId = await ctx.db.insert("users", {
-      authId: `${suffix}-welcome-owner`,
       credits: 0,
       creditsResetAt: 0,
       email: "delivered@resend.dev",
@@ -300,7 +299,6 @@ describe("emails/welcome/delivery", () => {
     const test = convexTest(schema, convexModules);
     const userId = await test.mutation((ctx) =>
       ctx.db.insert("users", {
-        authId: "awaiting-render-owner",
         credits: 0,
         creditsResetAt: 0,
         email: "delivered@resend.dev",

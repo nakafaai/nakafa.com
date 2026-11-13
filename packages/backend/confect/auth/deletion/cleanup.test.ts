@@ -130,7 +130,6 @@ it("drains all four deletion workflows and their delayed reconciliation before r
     }),
   }));
   expect(state.user).toMatchObject({
-    authId: `deleted:${userId}`,
     email: `deleted-${userId}@account.nakafa.invalid`,
     name: "Deleted user",
     deletedAt: NOW,

@@ -60,7 +60,6 @@ describe("users/queries", () => {
 
     const userId = await t.mutation(async (ctx) =>
       ctx.db.insert("users", {
-        authId: "auth_user_real_example",
         email: "nabil@example.com",
         mascot: MASCOT_CODE,
         name: "Test Learner",
@@ -72,10 +71,8 @@ describe("users/queries", () => {
 
     const [byAuthId, missingByAuthId] = await Promise.all([
       t.query(internal.users.queries.getUserByAuthId, {
-        authId: "auth_user_real_example",
       }),
       t.query(internal.users.queries.getUserByAuthId, {
-        authId: "missing_auth_user",
       }),
     ]);
 

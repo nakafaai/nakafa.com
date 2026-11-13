@@ -36,7 +36,6 @@ type Learner = Awaited<ReturnType<typeof seedLearner>>;
 /** One learner with a Polar account, the owner every pack and payment names. */
 async function seedLearner(ctx: MutationCtx) {
   const userId = await ctx.db.insert("users", {
-    authId: "auth-lots",
     credits: 0,
     creditsResetAt: NOW,
     email: "lots@example.com",

@@ -63,7 +63,7 @@ const setup = Effect.fn("billing.pack.test.setup")(function* (
   }
   const customer = {
     email: "billing@example.com",
-    externalId: user.authUserId,
+    externalId: user.userId,
     id: "polar-billing",
     name: "User billing",
   };

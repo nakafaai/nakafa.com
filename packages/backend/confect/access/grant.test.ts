@@ -51,7 +51,6 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
   const claimedAccount = Effect.fn(function* () {
     const index = yield* Ref.updateAndGet(accounts, (count) => count + 1);
     const userId = yield* writer.table("users").insert({
-      authId: `grants-${index}`,
       credits: 0,
       creditsResetAt: 0,
       email: "person@example.com",
