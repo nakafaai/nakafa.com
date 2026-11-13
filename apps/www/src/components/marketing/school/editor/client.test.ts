@@ -33,7 +33,7 @@ const REGISTER = makeFunctionReference<"action">("exams/assets:register");
 const makeClient = () => {
   const backend = createDemoBackend(
     demoExam({
-      answer: en.SchoolSite["demo-exam-answer"],
+      answer: en.Common.answer,
       essay: en.SchoolSite["demo-exam-essay"],
       explanation: en.SchoolSite["demo-exam-explanation"],
       numeric: en.SchoolSite["demo-exam-numeric"],

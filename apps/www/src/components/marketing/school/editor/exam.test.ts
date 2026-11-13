@@ -16,8 +16,8 @@ import { Array as Arr, Record as Rec, Schema } from "effect";
 import { demoExam } from "@/components/marketing/school/editor/exam";
 
 /** The demo's sentences in one language, as the landing reads them from the dictionary. */
-const textsOf = (site: typeof en.SchoolSite) => ({
-  answer: site["demo-exam-answer"],
+const textsOf = ({ Common: common, SchoolSite: site }: typeof en) => ({
+  answer: common.answer,
   essay: site["demo-exam-essay"],
   explanation: site["demo-exam-explanation"],
   numeric: site["demo-exam-numeric"],
@@ -58,14 +58,14 @@ const inlineOf = (text: string) =>
 
 describe("the School landing's demo exam", () => {
   it.each([
-    ["de", de.SchoolSite],
-    ["en", en.SchoolSite],
-    ["id", id.SchoolSite],
-    ["ms", ms.SchoolSite],
+    ["de", de],
+    ["en", en],
+    ["id", id],
+    ["ms", ms],
   ] as const)(
     "is an exam the server would hold, with its formulas drawn as math, in %s",
-    (_locale, site) => {
-      const { documents, exam } = demoExam(textsOf(site));
+    (_locale, dictionary) => {
+      const { documents, exam } = demoExam(textsOf(dictionary));
 
       expect(Schema.is(Schema.toEncoded(ExamView))(exam)).toBe(true);
       expect(Arr.map(exam.questions, (question) => question.template)).toEqual([
@@ -98,7 +98,7 @@ describe("the School landing's demo exam", () => {
 
   it("draws an empty text as one empty paragraph, and draws nothing for a formula it does not know", () => {
     const { documents } = demoExam({
-      ...textsOf(en.SchoolSite),
+      ...textsOf(en),
       essay: "Explain <unknown></unknown>.",
     });
 
