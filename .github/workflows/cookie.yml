@@ -14,7 +14,7 @@ jobs:
         with:
           sparse-checkout: .cookie
       - run: |
-          cd .cookie
+          mkdir "$RUNNER_TEMP/probe" && cp .cookie/probe.mjs "$RUNNER_TEMP/probe/" && cd "$RUNNER_TEMP/probe"
           npm init -y >/dev/null
           npm install playwright@1.65.0 >/dev/null
           npx playwright install --with-deps webkit chromium firefox >/dev/null
