@@ -19,7 +19,7 @@ export type Orbit = typeof Orbit.Type;
 export const FIELD_OF_VIEW = (32 * Math.PI) / 180;
 
 /** The closest and farthest the camera may be. */
-export const DISTANCE = { far: 120, near: 10 } as const;
+export const DISTANCE = { far: 180, near: 10 } as const;
 
 /** The lowest and highest tilt, from almost level to almost straight down. */
 export const PITCH = { high: 1.35, low: 0.32 } as const;
