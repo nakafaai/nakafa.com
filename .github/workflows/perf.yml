@@ -1,0 +1,48 @@
+# Measurement only, on a throwaway branch that is never merged: Lighthouse on proof builds.
+name: Perf
+on:
+  push:
+    branches: [nabil/perf-lh]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          sparse-checkout: .perf
+      - id: plan
+        run: echo "shards=$(node -e 'const c=require("./.perf/config.json");console.log(JSON.stringify(c.pages.map((_,i)=>i)))')" >> "$GITHUB_OUTPUT"
+  measure:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        page: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          sparse-checkout: .perf
+      - name: Receive the builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for row in $(node -e 'const c=require("./.perf/config.json");for(const b of c.builds)console.log(b.label+":"+b.run)'); do
+            label=${row%%:*}; run=${row##*:}
+            gh run download "$run" -R "$GITHUB_REPOSITORY" -n build -D "builds/$label"
+          done
+      - name: Measure
+        run: |
+          npm i -g lighthouse@13.0.1 > /dev/null
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 2 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost" 2> /dev/null
+          node .perf/measure.mjs ${{ matrix.page }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: lighthouse-${{ matrix.page }}
+          path: reports
+          retention-days: 3

@@ -1,0 +1,17 @@
+{
+  "slowdown": 4,
+  "runs": 3,
+  "builds": [{ "label": "main", "run": 43387502291 }],
+  "pages": [
+    "/en",
+    "/en/school",
+    "/en/pricing",
+    "/en/subjects/mathematics/function-composition-inverse-function/function-concept",
+    "/en/articles/politics/regional-elections-turmoil",
+    "/en/quran/2",
+    "/en/try-out/indonesia/snbt/2027/utbk",
+    "/en/curriculum/merdeka",
+    "/en/privacy-policy",
+    "/en/auth"
+  ]
+}
