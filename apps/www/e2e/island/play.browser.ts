@@ -52,7 +52,7 @@ for (const viewport of [desktopViewport, touchViewport]) {
               await page.getByRole("button", { name: en.Island.redo }).click();
               await expectRevision(page, 4);
               await page.getByRole("button", { name: en.Island.book }).click();
-              const book = page.getByRole("region", { name: en.Island.book });
+              const book = page.getByRole("dialog", { name: en.Island.book });
               await expect(
                 book.getByRole("button", { name: en.Island["block-flowers"] })
               ).toBeEnabled();
