@@ -21,11 +21,10 @@ import { signInReturn } from "@/components/tenant/resume";
 import {
   pageDeviceIdOf,
   RedeemUnanswered,
-  SignInUnanswered,
   submitLogin,
 } from "@/components/tenant/signin";
 import { clientEnv } from "@/env.public";
-import { signInSchoolLogin } from "@/lib/auth/client";
+import { signInSchoolLogin } from "@/lib/auth/signin";
 
 /** The school layout's route, which holds the profile of the school the student signs in to. */
 const schoolRoute = getRouteApi("/school/$slug");
@@ -77,9 +76,7 @@ function TenantLoginForm() {
                 catch: () => new RedeemUnanswered(),
               }),
             signIn: (credentials) =>
-              signInSchoolLogin(convex, { ...credentials, slug }).pipe(
-                Effect.catchDefect(() => Effect.fail(new SignInUnanswered()))
-              ),
+              signInSchoolLogin(convex, { ...credentials, slug }),
           }
         )
       );

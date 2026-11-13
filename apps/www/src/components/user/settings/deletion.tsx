@@ -64,8 +64,8 @@ export function UserSettingsDeleteAccount() {
           Effect.flatMap(Effect.fromResult),
           Effect.andThen(
             signOutSession(convex).pipe(
-              Effect.catchCause((cause) =>
-                reportClientException(cause, { source: "account-deletion" })
+              Effect.catchTag("SignOutFailed", (error) =>
+                reportClientException(error, { source: "account-deletion" })
               )
             )
           ),

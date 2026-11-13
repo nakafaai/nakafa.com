@@ -7,9 +7,9 @@ import {
   RedeemUnanswered,
   redeemRefusalKey,
   redeemRequestOf,
-  SignInUnanswered,
   submitLogin,
 } from "@/components/tenant/signin";
+import { SchoolSignInFailed } from "@/lib/auth/signin";
 
 const slug = Schema.decodeSync(TenantSlug)("harapan");
 const UUID =
@@ -45,7 +45,7 @@ const portsOf = (
       signIn: () => {
         requests.signIns += 1;
         return signedIn === "failure"
-          ? Effect.fail(new SignInUnanswered())
+          ? Effect.fail(new SchoolSignInFailed())
           : Effect.succeed(signedIn);
       },
     },

@@ -20,7 +20,7 @@ import {
   usePricingPress,
 } from "@/components/marketing/about/pricing/button";
 import { reportClientException } from "@/lib/analytics/client";
-import { startGoogleSignIn } from "@/lib/auth/client";
+import { startGoogleSignIn } from "@/lib/auth/signin";
 import { googleReturnAddress } from "@/lib/auth/return";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import { isActiveLocale } from "@/lib/i18n/active";

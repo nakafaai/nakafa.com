@@ -96,7 +96,7 @@ const BillingButton = lazy(() =>
 async function startVisitorSignIn(locale: Locale) {
   const [convex, auth, env] = await Promise.all([
     import("@/lib/convex/client"),
-    import("@/lib/auth/client"),
+    import("@/lib/auth/signin"),
     import("@/env.public"),
   ]);
   const redirectTo = googleReturnAddress({

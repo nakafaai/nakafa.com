@@ -7,6 +7,7 @@ import type {
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Match, Option, Result, Schema } from "effect";
+import type { SchoolSignInFailed } from "@/lib/auth/signin";
 
 /** What the login form holds when a student submits it, before the card is read. */
 const LoginFormValues = Schema.Struct({
@@ -59,15 +60,6 @@ export class RedeemUnanswered extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("RedeemUnanswered", {}) {}
 
-/**
- * A password sign-in whose request got no answer. It is not a refusal: a wrong login name or
- * password answers a refusal, so an outage never reads as a wrong password.
- */
-export class SignInUnanswered extends Schema.TaggedError<
-  SignInUnanswered,
-  { readonly brand: unique symbol }
->()("SignInUnanswered", {}) {}
-
 /** The copy key of a submission that does not sign the student in. */
 type SubmitMessage =
   | "card-invalid"
@@ -92,7 +84,7 @@ interface SubmitPorts {
   readonly signIn: (credentials: {
     readonly loginName: string;
     readonly password: string;
-  }) => Effect.Effect<boolean, SignInUnanswered>;
+  }) => Effect.Effect<boolean, SchoolSignInFailed>;
 }
 
 /** The credentials of one password sign-in, as the form sends them. */
@@ -110,7 +102,7 @@ const passwordSignIn = (
 ): Effect.Effect<SubmitStep> =>
   ports.signIn(credentials).pipe(
     Effect.map((signedIn) => (signedIn ? "signed-in" : refusal)),
-    Effect.catchTag("SignInUnanswered", () =>
+    Effect.catchTag("SchoolSignInFailed", () =>
       Effect.succeed<SubmitStep>("failed")
     )
   );
