@@ -9,7 +9,7 @@ import {
 } from "@/e2e/support/layout";
 import {
   CARD,
-  LINE_SCENE,
+  MATH_SCENE,
   VISUAL_CARD,
   VISUAL_CARD_TOOLBAR,
 } from "@/e2e/support/selector";
@@ -136,11 +136,11 @@ export const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
   page: Page,
   index = 0
 ) {
-  const card = yield* revealCard(page, LINE_SCENE, index);
-  const canvas = card.locator(`${LINE_SCENE} canvas`);
+  const card = yield* revealCard(page, MATH_SCENE, index);
+  const canvas = card.locator(`${MATH_SCENE} canvas`);
   yield* Effect.promise(() =>
     expect(async () => {
-      await scrollToElement(card.locator(LINE_SCENE), "start");
+      await scrollToElement(card.locator(MATH_SCENE), "start");
       expect(await canvas.isVisible()).toBe(true);
     }).toPass({ timeout: revealTimeoutMilliseconds })
   );

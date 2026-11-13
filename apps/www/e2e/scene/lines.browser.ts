@@ -17,7 +17,7 @@ import {
 } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { isKnownSceneDiagnostic, revealLineScene } from "@/e2e/support/scene";
-import { lineSceneCards, SCENE_ACTIONS } from "@/e2e/support/selector";
+import { mathSceneCards, SCENE_ACTIONS } from "@/e2e/support/selector";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/u;
@@ -55,7 +55,7 @@ const openLessonScenes = Effect.fn("NakafaE2E.openLessonScenes")(function* (
 ) {
   yield* openRoute(page, pinnedRoutes.material.en, "denied");
 
-  const cards = lineSceneCards(page);
+  const cards = mathSceneCards(page);
   const count = yield* Effect.promise(() => cards.count());
   yield* Effect.sync(() => expect(count).toBeGreaterThan(0));
   return { cards, count };

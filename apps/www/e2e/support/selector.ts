@@ -47,8 +47,8 @@ export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
  * Nina's sheet stays mounted while closed, so only the open one is selected.
  */
 export const SHEET_POPUP = '[data-slot="sheet-popup"][data-open]';
-/** A deferred 3D line scene inside a lesson card. */
-export const LINE_SCENE = '[data-scene="line"]';
+/** A deferred MathVisual scene inside a lesson card, plane or space. */
+export const MATH_SCENE = '[data-scene="math"]';
 /** The actions band of a 3D scene: its own actions, then play, reset and full screen. */
 export const SCENE_ACTIONS = "[data-scene-actions]";
 /** The sidebar trigger in a Quran surah's header, which opens its outline. */
@@ -71,9 +71,9 @@ export const STATE_FIGURE = '[data-slot="empty-icon"]';
 /** A link to a subject lesson, such as the neighbors that lesson pagination shows. */
 export const SUBJECT_LINK = 'a[href^="/en/subjects/"]';
 
-/** The cards that hold a deferred 3D line scene. */
-export function lineSceneCards(page: Page) {
-  return page.locator(CARD).filter({ has: page.locator(LINE_SCENE) });
+/** The cards that hold a deferred MathVisual scene. */
+export function mathSceneCards(page: Page) {
+  return page.locator(CARD).filter({ has: page.locator(MATH_SCENE) });
 }
 
 /** The pagination navigation that links a lesson to its neighbors, named in the page's language. */

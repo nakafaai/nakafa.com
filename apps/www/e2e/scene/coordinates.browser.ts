@@ -11,7 +11,7 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   CARD,
-  LINE_SCENE,
+  MATH_SCENE,
   SCENE_ACTIONS,
   VISUAL_CARD_FOOTER,
 } from "@/e2e/support/selector";
@@ -62,7 +62,7 @@ const expectStableCoordinateSystem = Effect.fn(
   const card = page.locator(CARD).filter({
     hasText: MANY_SOLUTIONS_TITLE,
   });
-  const scene = card.locator(LINE_SCENE);
+  const scene = card.locator(MATH_SCENE);
   const canvas = scene.locator("canvas");
   const footer = card.locator(SCENE_ACTIONS);
   // The grid is a checked item of the menu at the end of the actions band,
