@@ -111,8 +111,16 @@ export const runProof = Effect.fn("proof.run")(function* (
   );
   const main = yield* mainHead;
   const failures = failuresOf(result);
+  if (main === input.sha) {
+    // Main has nothing to be judged against: its failures are its own, and the
+    // run's statuses already say so.
+    yield* writeOutput(
+      `${formatProof(result, timings)}Verdict: this is main, which fails ${failures.length} specs\n`
+    );
+    return failures.length === 0 ? 0 : 1;
+  }
   const shared =
-    failures.length === 0 || main === input.sha
+    failures.length === 0
       ? []
       : yield* makeBaseline(main).pipe(
           Effect.flatMap((baseline) => baseline.shared(failures)),
