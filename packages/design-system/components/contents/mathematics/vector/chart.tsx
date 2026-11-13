@@ -27,8 +27,8 @@ import type { ReactNode } from "react";
 import { useFormatter } from "use-intl";
 
 interface Props {
-  description: ReactNode;
-  title: ReactNode;
+  description: NonNullable<ReactNode>;
+  title: NonNullable<ReactNode>;
   /** Each vector's geometry, with its name and an optional color. */
   vectors: (typeof VectorGeometrySchema.Type & {
     color?: string;

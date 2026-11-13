@@ -4115,7 +4115,9 @@
     "lesson-tabs": "Lektionen",
     "lab": {
       "circle": {
-        "view": "Visualisierung des Einheitskreises"
+        "view": "Visualisierung des Einheitskreises",
+        "title": "Einheitskreis",
+        "description": "Dreh den Winkel und sieh, wie sich Sinus, Kosinus und Tangens ändern."
       },
       "projectile": {
         "choose": "Abwurfwinkel wählen",
@@ -4123,7 +4125,9 @@
         "initial-speed": "Anfangsgeschwindigkeitsbetrag",
         "flight-time": "Zeit in der Luft",
         "range": "Wurfweite",
-        "peak-height": "Maximale Höhe"
+        "peak-height": "Maximale Höhe",
+        "title": "Schräger Wurf",
+        "description": "Wähl einen Wurf und sieh, wie weit und wie hoch er fliegt."
       },
       "atom": {
         "choose": "Neutrales Atom auswählen",
@@ -4131,7 +4135,9 @@
         "configuration": "Konfiguration",
         "electron-total": "Anzahl der Elektronen",
         "capacity": "Kapazität",
-        "outer-shell": "Äußerste Schale"
+        "outer-shell": "Äußerste Schale",
+        "title": "Elektronenschalen",
+        "description": "Wähl ein Atom und sieh, wie seine Elektronen jede Schale füllen."
       },
       "bacteria": {
         "choose": "Ansicht auswählen",
@@ -4144,7 +4150,9 @@
         },
         "wall": {
           "tab": "Wand"
-        }
+        },
+        "title": "Eine Bakterienzelle",
+        "description": "Sieh dir ein Bakterium von außen, von innen und durch seine Wand an."
       }
     },
     "tryout-title": "Probetests mit sofortigem Ergebnis",

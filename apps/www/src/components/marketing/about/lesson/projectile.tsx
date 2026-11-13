@@ -19,8 +19,10 @@ export function ProjectileLesson({ decimalSeparator }: LessonLabProps) {
     <ParabolicMovementLab
       decimalSeparator={decimalSeparator}
       defaultLaunchId={defaultLaunchId ?? undefined}
+      description={t("lab.projectile.description")}
       labels={getProjectileLabels(t)}
       onLaunchIdChange={onLaunchIdChange}
+      title={t("lab.projectile.title")}
     />
   );
 }

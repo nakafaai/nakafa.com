@@ -42,7 +42,7 @@ import { useStore } from "zustand";
 const NARROW_CANVAS_ASPECT_RATIO = 1.25;
 
 interface ChemicalReactionTypesLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     after: string;
     before: string;
@@ -64,7 +64,7 @@ interface ChemicalReactionTypesLabProps {
     >;
     visibleCueLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

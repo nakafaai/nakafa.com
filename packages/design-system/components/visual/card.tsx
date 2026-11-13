@@ -216,26 +216,20 @@ function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
 }
 
 /**
- * The visual's title and, when it has one, its description. A visual without a
- * title draws no header, because the page around it already names the visual.
+ * The visual's title and its description, which every visual has: the card says what it shows and what to look for,
+ * whatever page it stands on.
  */
 function VisualCardHeader({
   description,
   title,
 }: {
-  description?: ReactNode;
-  title?: ReactNode;
+  description: NonNullable<ReactNode>;
+  title: NonNullable<ReactNode>;
 }) {
-  if (title === undefined) {
-    return null;
-  }
-
   return (
     <CardHeader className="py-(--card-spacing) group-data-fullscreen/visual:shrink-0">
       <CardTitle>{title}</CardTitle>
-      {description === undefined ? null : (
-        <CardDescription>{description}</CardDescription>
-      )}
+      <CardDescription>{description}</CardDescription>
     </CardHeader>
   );
 }

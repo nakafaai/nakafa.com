@@ -37,7 +37,7 @@ import { useTranslations } from "use-intl";
 const NARROW_CANVAS_ASPECT_RATIO = 1.27;
 
 interface CombiningVolumesLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseMode: string;
     exampleLabel: string;
@@ -57,7 +57,7 @@ interface CombiningVolumesLabProps {
     reactionView: string;
     volumeUnit: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function CombiningVolumesLab({

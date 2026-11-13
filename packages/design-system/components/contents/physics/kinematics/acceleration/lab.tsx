@@ -34,7 +34,7 @@ import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface AccelerationLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseCase: string;
     factLabels: {
@@ -46,7 +46,7 @@ interface AccelerationLabProps {
     scenarioNames: Record<AccelerationCaseId, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function AccelerationLab({

@@ -17,8 +17,8 @@ interface Props {
   cameraPosition?: ComponentProps<typeof CoordinateSystem>["cameraPosition"];
   cameraTarget?: ComponentProps<typeof CoordinateSystem>["cameraTarget"];
   data: ComponentProps<typeof Inequality3D>[];
-  description: ReactNode;
-  title: ReactNode;
+  description: NonNullable<ReactNode>;
+  title: NonNullable<ReactNode>;
 }
 /**
  * Renders one card-wrapped inequality visualization with a shared coordinate

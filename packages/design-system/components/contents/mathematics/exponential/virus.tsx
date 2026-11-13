@@ -35,8 +35,8 @@ const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
 
 interface Props {
   labels: {
-    title: ReactNode;
-    description: ReactNode;
+    title: NonNullable<ReactNode>;
+    description: NonNullable<ReactNode>;
     exponential: ReactNode;
     linear: ReactNode;
     logarithmic: ReactNode;

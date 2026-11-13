@@ -47,7 +47,7 @@ const RAIL_COLOR = getColor("SLATE", 400);
 const SLEEPER_COLOR = getColor("STONE", 600);
 
 interface GlbbLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseScenario: string;
     factLabels: {
@@ -59,7 +59,7 @@ interface GlbbLabProps {
     scenarioNames: Record<GlbbScenarioId, ReactNode>;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function NonUniformLinearMotionLab({

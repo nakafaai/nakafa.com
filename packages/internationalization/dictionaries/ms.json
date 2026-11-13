@@ -4115,7 +4115,9 @@
     "lesson-tabs": "Bahan",
     "lab": {
       "circle": {
-        "view": "Visual bulatan unit"
+        "view": "Visual bulatan unit",
+        "title": "Bulatan unit",
+        "description": "Putar sudutnya dan lihat sinus, kosinus dan tangen berubah."
       },
       "projectile": {
         "choose": "Pilih sudut lontaran",
@@ -4123,7 +4125,9 @@
         "initial-speed": "Laju awal",
         "flight-time": "Masa di udara",
         "range": "Jarak mengufuk",
-        "peak-height": "Tinggi maksimum"
+        "peak-height": "Tinggi maksimum",
+        "title": "Gerakan projektil",
+        "description": "Pilih lontaran dan lihat sejauh dan setinggi mana ia terbang."
       },
       "atom": {
         "choose": "Pilih atom neutral",
@@ -4131,7 +4135,9 @@
         "configuration": "Susunan elektron",
         "electron-total": "Bilangan elektron",
         "capacity": "Kapasiti",
-        "outer-shell": "Petala terluar"
+        "outer-shell": "Petala terluar",
+        "title": "Petala elektron",
+        "description": "Pilih atom dan lihat cara elektronnya mengisi setiap petala."
       },
       "bacteria": {
         "choose": "Pilih paparan bakteria",
@@ -4144,7 +4150,9 @@
         },
         "wall": {
           "tab": "Dinding"
-        }
+        },
+        "title": "Sel bakteria",
+        "description": "Lihat bakteria dari luar, dari dalam dan melalui dindingnya."
       }
     },
     "tryout-title": "Ujian latihan yang terus memberi skor",

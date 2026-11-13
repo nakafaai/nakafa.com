@@ -54,13 +54,13 @@ export function SeriesChart({
 }: {
   readonly bars?: "apart" | "touching" | undefined;
   readonly categories: readonly string[];
-  readonly description: ReactNode;
+  readonly description: NonNullable<ReactNode>;
   readonly series: readonly {
     readonly label: string;
     readonly mark: "bar" | "line";
     readonly values: readonly (number | null)[];
   }[];
-  readonly title: ReactNode;
+  readonly title: NonNullable<ReactNode>;
   readonly valueLabel?: string | undefined;
   readonly valueRange?:
     | { readonly max: number; readonly min: number }

@@ -28,7 +28,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 interface IonLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     afterChange: string;
     beforeChange: string;
@@ -48,7 +48,7 @@ interface IonLabProps {
       }
     >;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

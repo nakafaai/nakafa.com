@@ -49,7 +49,9 @@ interface BacterialGrowthProps {
   initialCount?: number;
   /** The labels to use for the animation. */
   labels?: {
-    title?: ReactNode;
+    title: NonNullable<ReactNode>;
+    /** What the dish asks the reader to watch, under the title. */
+    description: NonNullable<ReactNode>;
     bacterial?: string;
   };
   /** The maximum number of generations to display. @default 6 */
@@ -255,6 +257,7 @@ export function BacterialGrowth({
   timeUnit = "h",
   labels = {
     title: "Bacterial Growth",
+    description: "Each generation, every cell divides in two.",
     bacterial: "Bacterial",
   },
 }: BacterialGrowthProps) {
@@ -275,7 +278,10 @@ export function BacterialGrowth({
     >
       <BacterialTimeProvider time={time}>
         <VisualCard>
-          <VisualCardHeader title={labels.title} />
+          <VisualCardHeader
+            description={labels.description}
+            title={labels.title}
+          />
           <BacteriaToolbar />
           <BacteriaDish />
           <VisualCardSceneActions />

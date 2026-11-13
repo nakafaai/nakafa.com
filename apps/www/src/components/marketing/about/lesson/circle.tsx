@@ -11,7 +11,9 @@ export function CircleLesson() {
   return (
     <UnitCircleCard
       angle={angle ?? undefined}
+      description={t("lab.circle.description")}
       onAngleChange={onAngleChange}
+      title={t("lab.circle.title")}
       viewLabel={t("lab.circle.view")}
     />
   );

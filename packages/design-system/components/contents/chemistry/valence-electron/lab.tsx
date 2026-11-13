@@ -29,7 +29,7 @@ import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 interface ValenceElectronLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     atomicNumber: string;
     behavior: string;
@@ -47,7 +47,7 @@ interface ValenceElectronLabProps {
     >;
     valenceElectron: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** Renders a 3D reader for valence electrons in neutral atoms. */

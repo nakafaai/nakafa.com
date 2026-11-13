@@ -26,7 +26,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 interface AtomSymbolLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     atomicNumber: string;
     chooseAtom: string;
@@ -45,7 +45,7 @@ interface AtomSymbolLabProps {
       }
     >;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

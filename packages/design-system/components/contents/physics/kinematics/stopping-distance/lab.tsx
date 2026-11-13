@@ -52,7 +52,7 @@ const BRAKING_DISTANCE_COLOR = PLOT_COLORS.orange;
 const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
 
 interface StoppingDistanceLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     brakingDistance: ReactNode;
     chooseSpeed: string;
@@ -61,7 +61,7 @@ interface StoppingDistanceLabProps {
     stoppingDistance: ReactNode;
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function StoppingDistanceLab({

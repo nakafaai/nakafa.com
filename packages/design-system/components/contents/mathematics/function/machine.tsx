@@ -30,9 +30,9 @@ import { useFormatter, useTranslations } from "use-intl";
 const DEFAULT_INPUT = 5;
 
 interface Props {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   inputLabel: string;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** Renders the interactive function-machine lesson card: its input and output controls, and its values. */

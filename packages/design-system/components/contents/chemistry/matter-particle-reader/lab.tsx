@@ -40,7 +40,7 @@ import { useTranslations } from "use-intl";
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
 interface MatterParticleReaderLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     categoryLabel: string;
     chooseMode: string;
@@ -57,7 +57,7 @@ interface MatterParticleReaderLabProps {
     particleView: string;
     readingLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

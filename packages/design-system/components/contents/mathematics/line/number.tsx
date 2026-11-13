@@ -70,11 +70,11 @@ export interface NumberLineSegment {
 }
 
 interface NumberLineProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   max?: number;
   min?: number;
   segments: NumberLineSegment[];
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** The range and segments of one number line, which its body and its facts both draw from. */
@@ -296,23 +296,7 @@ function NumberLineFacts() {
   );
 }
 
-/**
- * Draws one number line card under the header its caller composes: its scale,
- * and the readouts of its footer, from the configuration its context holds.
- */
-function NumberLineFrame({ children }: { children: ReactNode }) {
-  return (
-    <VisualCard>
-      {children}
-      <NumberLineBody />
-      <VisualCardFooter>
-        <NumberLineFacts />
-      </VisualCardFooter>
-    </VisualCard>
-  );
-}
-
-/** Draws one authored number line card, with the title and description of its lesson. */
+/** Draws one authored number line card: the title and description of its lesson, its scale, and its readouts. */
 export function NumberLine({
   description,
   max,
@@ -322,9 +306,13 @@ export function NumberLine({
 }: NumberLineProps) {
   return (
     <NumberLineConfigContext value={{ max, min, segments }}>
-      <NumberLineFrame>
+      <VisualCard>
         <VisualCardHeader description={description} title={title} />
-      </NumberLineFrame>
+        <NumberLineBody />
+        <VisualCardFooter>
+          <NumberLineFacts />
+        </VisualCardFooter>
+      </VisualCard>
     </NumberLineConfigContext>
   );
 }

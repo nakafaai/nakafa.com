@@ -39,7 +39,7 @@ const particleDotVariants = cva(
 );
 
 interface IsotopeLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     abundance: string;
     atomicNumber: string;
@@ -59,7 +59,7 @@ interface IsotopeLabProps {
       }
     >;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /**

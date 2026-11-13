@@ -47,7 +47,7 @@ const ROAD_Y = -0.03;
 const ROAD_HEIGHT = 0.08;
 
 interface InstantaneousVelocitySpeedLabProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: {
     chooseMoment: string;
     factLabels: {
@@ -57,7 +57,7 @@ interface InstantaneousVelocitySpeedLabProps {
     };
     viewLabel: string;
   };
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 export function InstantaneousVelocitySpeedLab({

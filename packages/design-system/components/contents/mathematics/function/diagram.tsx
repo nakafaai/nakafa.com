@@ -21,8 +21,8 @@ import type { ReactNode } from "react";
 
 interface DiagramProps {
   children: ReactNode;
-  description: ReactNode;
-  title: ReactNode;
+  description: NonNullable<ReactNode>;
+  title: NonNullable<ReactNode>;
 }
 
 /** Frames a relation diagram with the lesson's title and explanation. */

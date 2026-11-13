@@ -16,6 +16,8 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface ReadingRoomProblemProps {
+  /** What the room asks the reader to find, under its measures. */
+  description: NonNullable<ReactNode>;
   heightLabel: ReactNode;
   widthLabel: ReactNode;
 }
@@ -39,6 +41,7 @@ const CORNERS = [
 
 /** Composes the room and its four equal square corners on the shared plane. */
 export function ReadingRoomProblem({
+  description,
   heightLabel,
   widthLabel,
 }: ReadingRoomProblemProps) {
@@ -46,6 +49,7 @@ export function ReadingRoomProblem({
     <CoordinateProvider>
       <VisualCard className="my-6">
         <VisualCardHeader
+          description={description}
           title={
             <>
               {widthLabel} × {heightLabel}

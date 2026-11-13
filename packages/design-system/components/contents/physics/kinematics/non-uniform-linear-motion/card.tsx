@@ -30,9 +30,9 @@ import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 interface NonUniformLinearMotionGraphCardProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: GlbbLabels;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** Creates one card's store, which holds the scenario its reader picked. */

@@ -30,9 +30,9 @@ import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 interface AccelerationGraphCardProps {
-  description: ReactNode;
+  description: NonNullable<ReactNode>;
   labels: AccelerationLabels;
-  title: ReactNode;
+  title: NonNullable<ReactNode>;
 }
 
 /** Creates one card's store, which holds the case its reader picked. */
