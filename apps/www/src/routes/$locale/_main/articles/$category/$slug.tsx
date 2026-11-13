@@ -11,7 +11,7 @@ import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ContentByline } from "@/components/content/byline";
 import { ContentHeader } from "@/components/content/header";
-import { ContentLead } from "@/components/content/title";
+import { ContentTitle } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
 import { SidebarTree } from "@/components/shared/outline/tree";
@@ -253,12 +253,9 @@ function ArticlePage() {
                     label: article.categoryLabel,
                     target: articleCategoryTarget(article.category),
                   },
-                  { label: metadata.title },
                 ]}
-                visibleItemCount={1}
               />
             }
-            title={metadata.title}
           >
             <OpenContent
               content={article.content}
@@ -269,7 +266,7 @@ function ArticlePage() {
               <AiMenuItem contextTitle={metadata.title} />
             </OpenContent>
           </ContentHeader>
-          <ContentLead>
+          <ContentTitle title={metadata.title}>
             <ContentByline
               authors={metadata.authors}
               {...(metadata.dateModified === undefined
@@ -277,7 +274,7 @@ function ArticlePage() {
                 : { dateModified: metadata.dateModified })}
               datePublished={metadata.datePublished}
             />
-          </ContentLead>
+          </ContentTitle>
           <PageBody>
             {headings.length === 0 ? <ComingSoon /> : article.body}
           </PageBody>

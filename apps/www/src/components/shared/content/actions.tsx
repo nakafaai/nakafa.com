@@ -16,11 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
@@ -137,24 +132,13 @@ export function OpenContent({
 
   return (
     <DropdownMenu onOpenChange={set} open={open}>
-      <Tooltip disabled={open}>
-        <TooltipTrigger
-          render={
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  size="icon"
-                  tooltip={t("more-actions")}
-                  variant="outline"
-                />
-              }
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </DropdownMenuTrigger>
-          }
-        />
-        <TooltipContent side="bottom">{t("more-actions")}</TooltipContent>
-      </Tooltip>
+      <DropdownMenuTrigger
+        render={
+          <Button size="icon" tooltip={t("more-actions")} variant="outline" />
+        }
+      >
+        <HugeIcons icon={MoreHorizontalIcon} />
+      </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
         className="w-48"

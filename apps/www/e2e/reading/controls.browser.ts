@@ -76,30 +76,12 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       })
     );
     yield* Effect.sync(() => expect(interLoaded).toBe(true));
-    // The summary follows the title, apart from the byline's author and dates.
+    // A reading page's title stands alone over its byline: no summary paragraph follows it.
     const summary = page
       .locator("header")
       .filter({ has: title })
       .locator("h1 + p");
-    if (href === routes[0]) {
-      yield* Effect.promise(() => expect(summary).toHaveCount(0));
-    } else {
-      yield* Effect.promise(() => expect(summary).toBeVisible());
-      yield* Effect.promise(() => expect(summary).not.toBeEmpty());
-      yield* Effect.promise(() =>
-        expect(summary).toHaveCSS("text-align", "start")
-      );
-      yield* Effect.promise(() =>
-        expect(summary).toHaveCSS("text-wrap-style", "pretty")
-      );
-      const titleLeft = yield* Effect.promise(() =>
-        title.evaluate((element) => element.getBoundingClientRect().left)
-      );
-      const summaryLeft = yield* Effect.promise(() =>
-        summary.evaluate((element) => element.getBoundingClientRect().left)
-      );
-      yield* Effect.sync(() => expect(summaryLeft).toBe(titleLeft));
-    }
+    yield* Effect.promise(() => expect(summary).toHaveCount(0));
 
     const sectionHeading = page
       .locator("article")
@@ -147,15 +129,8 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     });
     const header = page.locator("header").filter({ has: actions });
     yield* Effect.promise(() => expect(header).toBeVisible());
-    if (href === routes[0]) {
-      yield* Effect.promise(() =>
-        expect(
-          header.getByRole("navigation", { name: "breadcrumb" })
-        ).toContainText(titleText)
-      );
-    } else {
-      yield* Effect.promise(() => expect(header).not.toContainText(titleText));
-    }
+    // A reading page names itself in its title block, never in its header's path.
+    yield* Effect.promise(() => expect(header).not.toContainText(titleText));
     yield* Effect.promise(() =>
       expect(
         header.getByRole("group", { name: "Content actions", exact: true })
@@ -288,12 +263,23 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => expect(openIn).toBeFocused());
     yield* Effect.promise(() => page.keyboard.press("Escape"));
     yield* Effect.promise(() => expect(more).toBeFocused());
-    const clipboardPermissions =
-      page.context().browser()?.browserType().name() === "webkit"
-        ? ["clipboard-read"]
-        : ["clipboard-read", "clipboard-write"];
+    // What the page hands the clipboard, read in every engine: only Chromium can grant a test the right to read the
+    // system clipboard back, so the page's clipboard keeps what it is given.
     yield* Effect.promise(() =>
-      page.context().grantPermissions(clipboardPermissions)
+      page.evaluate(() => {
+        const kept = { text: "" };
+        Object.assign(window, { copied: kept });
+        navigator.clipboard.writeText = async (text) => {
+          kept.text = text;
+        };
+        navigator.clipboard.write = async (items) => {
+          for (const item of items) {
+            if (item.types.includes("text/plain")) {
+              kept.text = await (await item.getType("text/plain")).text();
+            }
+          }
+        };
+      })
     );
     yield* Effect.promise(() => more.click());
     yield* Effect.promise(() =>
@@ -305,7 +291,14 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       })
     );
     const copiedContent = yield* Effect.promise(() =>
-      page.evaluate(() => navigator.clipboard.readText())
+      page.evaluate(() =>
+        "copied" in window &&
+        typeof window.copied === "object" &&
+        window.copied !== null &&
+        "text" in window.copied
+          ? String(window.copied.text)
+          : ""
+      )
     );
     yield* Effect.sync(() => expect(copiedContent).toContain(titleText));
     yield* Effect.promise(() => more.click());
@@ -429,10 +422,7 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
   // React's inline streaming scripts reveal the served lesson on their own.
   yield* Effect.promise(() => expect(paginationNavigation(page)).toBeVisible());
   const servedLesson = yield* Effect.promise(() =>
-    page
-      .getByRole("navigation", { name: "breadcrumb" })
-      .locator('[aria-current="page"]')
-      .count()
+    page.locator("main h1").count()
   );
   yield* Effect.sync(() => expect(servedLesson).toBe(1));
   const served = yield* Effect.promise(() =>

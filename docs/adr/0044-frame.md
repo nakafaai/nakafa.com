@@ -46,6 +46,8 @@ D6. Delivery is one stack with no compatibility path. The first change lands the
 
 D7. `e2e/support/frame.ts` measures the rule from what is drawn: header and body edges at 320 to 1920 px, and every right-edge surface flush with the window's right, top and bottom, with the header ending where the pane begins, at 390 px and on a desktop.
 
+D8. A reading page, a lesson or an article, names itself once, in the title block that opens its body (`ContentTitle` in `components/content/title.tsx`: one visible `h1`, then the byline). Its header (`ContentHeader`) holds the path to its parent and the reading controls and draws no heading, so the path ends at the parent: Home, Articles, Politics over an article; Home, the curriculum down to the card over a lesson, or Home alone when it was opened from no curriculum. A list (`BreadcrumbHeader`) keeps its path ending at itself with a heading for assistive technology, because its body is the list. The Quran is the one exception, by the owner's word: a surah names itself in its header (`QuranSurahHeader`, Home, Quran, the surah), and its verses start under it. The owner rejected the article header that put its title only in the path (9 November): a reader compares an article with a lesson and sees two designs. `e2e/content/titles.browser.ts` refuses a lesson or an article whose path names it or whose title is not seen under its header, at 390 and 1440 px, and names the surah as its exception with its own test.
+
 ## Consequences
 
 Positive: a page is a few lines of slots; the width rule and the pane rule each live in one module; try-out, the player, School and the reading pages draw the same header row; about a dozen modules go.

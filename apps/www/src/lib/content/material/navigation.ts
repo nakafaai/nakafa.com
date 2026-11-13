@@ -185,15 +185,17 @@ export function readMaterialNavigation(
 }
 
 /**
- * The breadcrumb of one lesson: its title, or the curriculum it was opened from
- * down to the card that lists it. A path that names no page keeps the title.
+ * The breadcrumb of one lesson after Home: the curriculum it was opened from down
+ * to the card that lists it, every item a link. A lesson names itself in its title
+ * block, never in its path, so a lesson opened from no curriculum, or from a path
+ * that names no page, has Home alone.
  */
-export function readMaterialPath(
-  { link, trail }: ReturnType<typeof readMaterialNavigation>,
-  title: string
-) {
+export function readMaterialPath({
+  link,
+  trail,
+}: ReturnType<typeof readMaterialNavigation>) {
   if (!link) {
-    return [{ label: title }];
+    return [];
   }
   return Option.getOrElse(
     Option.all([
@@ -208,6 +210,6 @@ export function readMaterialPath(
         target: { ...target, hash: link.hash },
       })),
     ]),
-    () => [{ label: title }]
+    () => []
   );
 }
