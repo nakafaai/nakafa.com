@@ -140,22 +140,12 @@ export function ForumChannel({
 }
 
 /**
- * The messages of the channel, read once Convex has settled the session with the viewer's read
- * mark, so the channel opens where the viewer stopped reading. The first read holds the place the
- * reader left the channel at in this browser, and when every message it holds is unread it reads
- * older ones once more, up to `MESSAGE_OPEN_MOST`, so the channel opens at its first unread message.
- * Once open, the next older page loads when the oldest loaded message comes into view, so the list
- * has no button. A channel with no message shows its empty state, a failed read its sentence and
- * Try again, and a viewer who lost the school's access is sent to the refused page. A chat out of
- * sight that was never shown reads all of this and draws nothing yet.
+ * The channel's messages, read once Convex has settled the session, with the viewer's read mark. The first read holds
+ * the place the reader left the channel at in this browser, and when every message it holds is unread it reads older
+ * ones too, up to `MESSAGE_OPEN_MOST`, so the channel opens at its first unread message. `open` tells when the
+ * messages can be drawn, and stays true once they are, so a later read of older pages never takes them away.
  */
-function ChannelMessages({
-  drawn,
-}: {
-  /** Whether the chat draws its messages, or only reads them while it waits out of sight. */
-  drawn: boolean;
-}) {
-  const t = useTranslations("Classroom");
+function useChannelFeed() {
   const { channelId, classId, slug } = useChannelScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const place = useReadPlace();
@@ -169,7 +159,6 @@ function ChannelMessages({
     classroom.forum.reads.get,
     isSettled ? { classId, place, slug } : "skip"
   );
-  // Whether the messages are drawn: once they are, a later read of older pages never takes them away.
   const [open, setOpen] = useState(false);
   const loaded =
     !(
@@ -195,6 +184,24 @@ function ChannelMessages({
     }
   }, [short, pagination]);
 
+  return { messages, open: open || opens, pagination, read };
+}
+
+/**
+ * The messages of the channel, oldest at the top, opening where the viewer stopped reading (`useChannelFeed`). The
+ * next older page loads when the oldest loaded message comes into view, so the list has no button. A channel with no
+ * message shows its empty state, a failed read its sentence and Try again, and a viewer who lost the school's access
+ * is sent to the refused page. A chat out of sight that was never shown reads all of this and draws nothing yet.
+ */
+function ChannelMessages({
+  drawn,
+}: {
+  /** Whether the chat draws its messages, or only reads them while it waits out of sight. */
+  drawn: boolean;
+}) {
+  const t = useTranslations("Classroom");
+  const { messages, open, pagination, read } = useChannelFeed();
+
   if (
     PaginatedQueryResult.isFailure(pagination) &&
     isLostAccess(pagination.error)
@@ -214,7 +221,7 @@ function ChannelMessages({
   if (!drawn) {
     return null;
   }
-  if (!((open || opens) && QueryResult.isSuccess(read))) {
+  if (!(open && QueryResult.isSuccess(read))) {
     return <div className="flex-1" />;
   }
   if (Arr.isReadonlyArrayEmpty(messages)) {

@@ -1,7 +1,13 @@
 import { useDebouncedCallback } from "@mantine/hooks";
 import { useMessageScroller } from "@shadcn/react/message-scroller";
 import { Array as Arr, Effect, Option } from "effect";
-import { type RefObject, useEffect, useLayoutEffect, useState } from "react";
+import {
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { type ChatPlace, keepPlace, readPlace } from "@/lib/scroll/place";
 
 /** How close to the newest edge, in pixels, the reader still stands at it, as the scroller's own edge does. */
@@ -73,7 +79,8 @@ export function KeepPlace({
   viewport: RefObject<HTMLDivElement | null>;
 }) {
   const { scrollToMessage } = useMessageScroller();
-  const [opening] = useState(restore);
+  // The place comes back once, as the chat opens: a later change of the address or the read mark moves no one.
+  const restored = useRef(false);
   const keep = useDebouncedCallback(() => {
     const view = viewport.current;
     // A list that left the page has no place to measure, and the place it had was kept as it settled.
@@ -87,15 +94,19 @@ export function KeepPlace({
   // does, learns in a mutation observer's microtask after this effect: a later microtask brings the kept place back
   // after that position and before the first paint.
   useLayoutEffect(() => {
+    if (restored.current) {
+      return;
+    }
+    restored.current = true;
     queueMicrotask(() => {
-      Option.map(opening, (place) =>
+      Option.map(restore, (place) =>
         scrollToMessage(place.id, {
           align: "start",
           scrollMargin: place.offset,
         })
       );
     });
-  }, [opening, scrollToMessage]);
+  }, [restore, scrollToMessage]);
 
   useEffect(() => {
     const view = viewport.current;
