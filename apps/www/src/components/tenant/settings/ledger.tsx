@@ -60,72 +60,67 @@ export function SchoolInvoices({
 
   return (
     <TableFiltersProvider>
-      <div className="bg-card flex min-h-0 flex-1 flex-col">
-        <DataTable
-          columns={[
-            invoiceColumns.text((invoice) => invoice.number, {
-              cell: (info) => (
-                <span className="font-medium">{info.getValue()}</span>
-              ),
-              header: t("invoice-number"),
-              id: "number",
-            }),
-            invoiceColumns.days((invoice) => invoice.periodStart, {
-              cell: (info) =>
-                t("billing-term-dates", {
-                  end: formatBillingDate(
-                    info.row.original.periodEnd - 1,
-                    locale
-                  ),
-                  start: formatBillingDate(info.getValue(), locale),
-                }),
-              header: t("invoice-term"),
-              id: "term",
-              timeZone: () => BILLING_TIME_ZONE,
-            }),
-            invoiceColumns.number((invoice) => invoice.accounts, {
-              cell: (info) => formatCount(info.getValue(), locale),
-              header: t("invoice-accounts"),
-              id: "accounts",
-            }),
-            invoiceColumns.number((invoice) => invoice.total, {
-              cell: (info) =>
-                formatMinorAmount(info.getValue(), info.row.original.currency),
-              header: t("invoice-total"),
-              id: "total",
-            }),
-            invoiceColumns.days((invoice) => invoice.dueAt, {
-              cell: (info) => formatBillingDate(info.getValue(), locale),
-              header: t("invoice-due"),
-              id: "due",
-              timeZone: () => BILLING_TIME_ZONE,
-            }),
-            invoiceColumns.values((invoice) => invoiceStanding(invoice, now), {
-              cell: (info) => (
-                <TableStatus
-                  {...INVOICE_LOOKS[info.getValue()]}
-                  label={t(`invoice-${info.getValue()}`)}
-                />
-              ),
-              header: t("invoice-status"),
-              id: "status",
-              options: Arr.map(
-                Rec.toEntries(INVOICE_LOOKS),
-                ([status, look]) => ({
-                  icon: look.icon,
-                  label: t(`invoice-${status}`),
-                  value: status,
-                })
-              ),
-            }),
-            invoiceColumns.menu((info) => (
-              <SchoolInvoiceMenu invoice={info.row.original} now={now} />
-            )),
-          ]}
-          data={overview.invoices}
-          rowId={(invoice) => `${invoice.number}-${invoice.periodStart}`}
-        />
-      </div>
+      <DataTable
+        columns={[
+          invoiceColumns.text((invoice) => invoice.number, {
+            cell: (info) => (
+              <span className="font-medium">{info.getValue()}</span>
+            ),
+            header: t("invoice-number"),
+            id: "number",
+          }),
+          invoiceColumns.days((invoice) => invoice.periodStart, {
+            cell: (info) =>
+              t("billing-term-dates", {
+                end: formatBillingDate(info.row.original.periodEnd - 1, locale),
+                start: formatBillingDate(info.getValue(), locale),
+              }),
+            header: t("invoice-term"),
+            id: "term",
+            timeZone: () => BILLING_TIME_ZONE,
+          }),
+          invoiceColumns.number((invoice) => invoice.accounts, {
+            cell: (info) => formatCount(info.getValue(), locale),
+            header: t("invoice-accounts"),
+            id: "accounts",
+          }),
+          invoiceColumns.number((invoice) => invoice.total, {
+            cell: (info) =>
+              formatMinorAmount(info.getValue(), info.row.original.currency),
+            header: t("invoice-total"),
+            id: "total",
+          }),
+          invoiceColumns.days((invoice) => invoice.dueAt, {
+            cell: (info) => formatBillingDate(info.getValue(), locale),
+            header: t("invoice-due"),
+            id: "due",
+            timeZone: () => BILLING_TIME_ZONE,
+          }),
+          invoiceColumns.values((invoice) => invoiceStanding(invoice, now), {
+            cell: (info) => (
+              <TableStatus
+                {...INVOICE_LOOKS[info.getValue()]}
+                label={t(`invoice-${info.getValue()}`)}
+              />
+            ),
+            header: t("invoice-status"),
+            id: "status",
+            options: Arr.map(
+              Rec.toEntries(INVOICE_LOOKS),
+              ([status, look]) => ({
+                icon: look.icon,
+                label: t(`invoice-${status}`),
+                value: status,
+              })
+            ),
+          }),
+          invoiceColumns.menu((info) => (
+            <SchoolInvoiceMenu invoice={info.row.original} now={now} />
+          )),
+        ]}
+        data={overview.invoices}
+        rowId={(invoice) => `${invoice.number}-${invoice.periodStart}`}
+      />
     </TableFiltersProvider>
   );
 }

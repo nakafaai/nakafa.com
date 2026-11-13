@@ -45,7 +45,6 @@ export function NewPostPoll() {
               disabled={viewer._tag !== "Success"}
               onClick={() => setOpen(true)}
               type="button"
-              variant="outline"
             />
           }
         >

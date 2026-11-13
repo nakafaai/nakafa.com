@@ -4,7 +4,9 @@ import {
   Edit02Icon,
   PencilEdit02Icon,
   PlayIcon,
+  TaskDone01Icon,
   TaskEdit01Icon,
+  UserRemove01Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskText } from "@repo/backend/confect/classroom/tasks/schema";
@@ -33,6 +35,7 @@ import {
   PaneBody,
   PaneFact,
   PaneFacts,
+  PaneFill,
   PaneFooter,
   PaneHeader,
 } from "@/components/shared/page/pane";
@@ -42,6 +45,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { TableViews } from "@/components/shared/table/views";
 import { LoadFailure } from "@/components/state/failure";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -219,31 +223,51 @@ function TaskInfo() {
 }
 
 /**
- * The teacher's task: what it asks, then the work handed in with its own search over the students'
- * names, and the students who have handed nothing in; Edit task in the footer.
+ * The teacher's task: what it asks above one list, the work handed in or the students who have handed nothing in,
+ * one view at a time with the work's own search over the students' names, so the pane's body is one table in its
+ * card; Edit task in the footer.
  */
 function TeacherTask() {
   const t = useTranslations("Classroom");
   const task = useOpenTask();
   const [openings, setOpenings] = useState(0);
+  const [view, setView] = useState<"missing" | "work">("work");
 
   return (
     <>
-      <PaneBody>
-        <div className="flex flex-col gap-6">
-          <TaskInfo />
-          <TableFiltersProvider>
-            <section className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-medium">{t("task-submissions")}</h3>
-                <TableSearch placeholder={t("task-work-search")} />
-              </div>
-              <TaskWorkTable task={task} />
-            </section>
+      <TableFiltersProvider>
+        <PaneFill
+          head={<TaskInfo />}
+          views={
+            <>
+              <TableViews
+                label={t("task-views")}
+                onChoose={setView}
+                view={view}
+                views={[
+                  {
+                    icon: TaskDone01Icon,
+                    label: t("task-submissions"),
+                    value: "work",
+                  },
+                  {
+                    icon: UserRemove01Icon,
+                    label: t("task-not-handed-in"),
+                    value: "missing",
+                  },
+                ]}
+              />
+              <TableSearch placeholder={t("task-work-search")} />
+            </>
+          }
+        >
+          {view === "work" ? (
+            <TaskWorkTable task={task} />
+          ) : (
             <TaskMissingTable task={task} />
-          </TableFiltersProvider>
-        </div>
-      </PaneBody>
+          )}
+        </PaneFill>
+      </TableFiltersProvider>
       <PaneFooter>
         <Button
           onClick={() => setOpenings((count) => count + 1)}
