@@ -1,4 +1,5 @@
 import type { Ref } from "@confect/core";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
@@ -21,6 +22,9 @@ type ForumView = Extract<
   typeof ClassView.Type,
   { _tag: "channel" | "discussion" | "forum" }
 >;
+
+/** How many chats the forum keeps drawn: the open one and the last ones the reader left, so going back waits on nothing. */
+const KEPT_CHATS = 3;
 
 /** One discussion as its own page reads it from the server. */
 type FoundThread = Ref.Returns<typeof classroom.forum.threads.get>;
@@ -55,7 +59,9 @@ function useShownThread(
  * The forum of a class as one page that stays mounted while the reader moves between its chat and the chat's
  * threads, as Slack and Discord keep a channel while a thread opens beside it: the header with New discussion, the
  * list of chats beside the open chat, and the thread pane at the screen's right. The forum's route keeps the pressed
- * thread, so a thread opens from the message the reader pressed before the server answers.
+ * thread, so a thread opens from the message the reader pressed before the server answers. The forum keeps the last
+ * chats the reader opened drawn out of sight, and reads ahead the chat they reach for in the list, so a chat opens,
+ * and opens again, with its messages already there.
  */
 export function ForumBody({
   archived,
@@ -88,6 +94,24 @@ export function ForumBody({
   }
   const channelId =
     view._tag === "forum" ? Option.none() : Option.orElse(known, () => last);
+  // The chats kept drawn, the open one first, and the chat the reader reaches for in the list, read ahead.
+  const [kept, setKept] = useState<readonly Id<"classroomChannels">[]>([]);
+  if (
+    Option.isSome(channelId) &&
+    !Option.contains(Arr.head(kept), channelId.value)
+  ) {
+    setKept(
+      Arr.take(
+        Arr.prepend(
+          Arr.filter(kept, (id) => id !== channelId.value),
+          channelId.value
+        ),
+        KEPT_CHATS
+      )
+    );
+  }
+  const reaching = useOpening((state) => state.reaching);
+  const chats = Arr.dedupe(Arr.appendAll(kept, Option.toArray(reaching)));
 
   return (
     <OpenRootContext
@@ -102,25 +126,28 @@ export function ForumBody({
         <Panes fill="parent" id="thread">
           <PanesList wide>
             <ForumFrame shown={view._tag === "forum" ? "rail" : "chat"}>
-              {Option.match(channelId, {
-                // A discussion the server has not answered for yet keeps the chat's place empty.
-                onNone: () =>
-                  view._tag === "forum" ? (
-                    <ForumPick />
-                  ) : (
-                    <div className="flex-1" />
-                  ),
-                onSome: (id) => (
+              <div className="relative flex min-h-0 flex-1 flex-col">
+                {view._tag === "forum" ? <ForumPick /> : null}
+                {/* A discussion the server has not answered for yet keeps the chat's place empty. */}
+                {view._tag !== "forum" && Option.isNone(channelId) ? (
+                  <div className="flex-1" />
+                ) : null}
+                {Arr.map(chats, (id) => (
                   <ForumChannel
                     canManage={canManage}
                     canPost={canPost}
                     channelId={id}
                     everyone={everyone}
-                    jump={view._tag === "channel" ? view.jump : Option.none()}
+                    jump={
+                      view._tag === "channel" && view.channelId === id
+                        ? view.jump
+                        : Option.none()
+                    }
                     key={id}
+                    shown={Option.contains(channelId, id)}
                   />
-                ),
-              })}
+                ))}
+              </div>
             </ForumFrame>
           </PanesList>
           <ThreadPane

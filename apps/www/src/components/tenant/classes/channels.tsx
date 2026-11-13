@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { ChannelMenu } from "@/components/tenant/classes/forum/menu";
+import { useOpening } from "@/components/tenant/classes/forum/open";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { TargetLink } from "@/lib/routing/link";
@@ -122,11 +123,14 @@ export function ChannelUnread() {
  * One saved chat as a row, as a chat app lists it: its mark, its name, which opens it across the
  * whole row, when its newest message came, how that message starts, and its menu. The general chat
  * shows its translated label and a topic its name. The open chat stands out, and a chat with a
- * message the viewer has not read carries one dot.
+ * message the viewer has not read carries one dot. Reaching for a row reads its chat's messages, so
+ * the press opens it drawn.
  */
 function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
   const t = useTranslations("Classroom");
   const { classSlug, slug } = useClassScope();
+  const reachChannel = useOpening((state) => state.reachChannel);
+  const reach = () => reachChannel(channel.id);
 
   return (
     <Item
@@ -142,6 +146,8 @@ function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
           <TargetLink
             className="flex min-w-0 flex-1 items-center gap-2 font-medium after:absolute after:inset-0"
             dir="auto"
+            onFocus={reach}
+            onPointerDown={reach}
             target={schoolClassChannelTarget(slug, classSlug, channel.id)}
           >
             <span className="min-w-0 truncate">

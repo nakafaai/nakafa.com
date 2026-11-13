@@ -65,34 +65,56 @@ const holds = (lane: Option.Option<ShownThread>, thread: ShownThread) =>
 
 /**
  * The lanes after the asked thread: kept as they are while they already show it; a thread asked while none was
- * open, or with none drawn, in front at once; the next thread in the back lane while the one on screen stays, and in
- * front once its replies are in (`backSettled`). Closing keeps the last thread in front while the phone's sheet slides
- * away.
+ * open, or with none drawn, in front at once, or by turning to the back lane when the thread the reader reached for
+ * waits there with its replies read; beside the thread on screen, the one the reader reaches for in the back lane;
+ * the next thread in the back lane while the one on screen stays, and in front once its replies are in
+ * (`backSettled`). With no thread asked, an open pane closes and keeps the last thread in
+ * front while the phone's sheet slides away, and a closed pane reads the thread the reader reaches for (`warm`) in
+ * its back lane, so it opens drawn.
  */
 const nextLanes = (
   lanes: typeof Lanes.Type,
   asked: Option.Option<ShownThread>,
-  backSettled: boolean
+  backSettled: boolean,
+  warm: Option.Option<ShownThread>
 ): typeof Lanes.Type => {
   const back = otherLane(lanes.front);
   const front = lanes[lanes.front];
   if (Option.isNone(asked)) {
-    return lanes.open || Option.isSome(lanes[back])
-      ? { ...lanes, [back]: Option.none(), open: false }
-      : lanes;
+    if (lanes.open) {
+      return { ...lanes, [back]: Option.none(), open: false };
+    }
+    return Option.match(
+      Option.filter(
+        warm,
+        (reached) => !(holds(front, reached) || holds(lanes[back], reached))
+      ),
+      {
+        onNone: () => lanes,
+        onSome: (reached) => ({ ...lanes, [back]: Option.some(reached) }),
+      }
+    );
   }
   if (holds(front, asked.value)) {
-    return lanes.open && Option.isNone(lanes[back])
+    // Beside an open thread, the back lane reads the one the reader reaches for next, or nothing.
+    const reached = Option.filter(warm, (next) => !holds(front, next));
+    const kept = Option.match(reached, {
+      onNone: () => Option.isNone(lanes[back]),
+      onSome: (next) => holds(lanes[back], next),
+    });
+    return lanes.open && kept
       ? lanes
-      : { ...lanes, [back]: Option.none(), open: true };
+      : { ...lanes, [back]: reached, open: true };
   }
   if (!lanes.open || Option.isNone(front)) {
-    return {
-      ...lanes,
-      [back]: Option.none(),
-      [lanes.front]: asked,
-      open: true,
-    };
+    return holds(lanes[back], asked.value)
+      ? { ...lanes, front: back, [lanes.front]: Option.none(), open: true }
+      : {
+          ...lanes,
+          [back]: Option.none(),
+          [lanes.front]: asked,
+          open: true,
+        };
   }
   if (!holds(lanes[back], asked.value)) {
     return { ...lanes, [back]: asked };
@@ -202,6 +224,7 @@ export function ThreadPane({
   const wide = useWide();
   const { classId, classSlug, slug } = useClassScope();
   const forget = useOpening((state) => state.forget);
+  const warm = useOpening((state) => state.warm);
   const [lanes, setLanes] = useState<typeof Lanes.Type>({
     a: thread,
     b: Option.none(),
@@ -215,7 +238,8 @@ export function ThreadPane({
   const next = nextLanes(
     lanes,
     thread,
-    Option.exists(lanes[back], (kept) => isSettledFeed(kept, feeds[back]))
+    Option.exists(lanes[back], (kept) => isSettledFeed(kept, feeds[back])),
+    warm
   );
   if (next !== lanes) {
     setLanes(next);
@@ -259,6 +283,7 @@ export function ThreadPane({
                 discussion: kept.number,
                 everyone,
                 jump,
+                shown: true,
                 slug,
               }}
             >

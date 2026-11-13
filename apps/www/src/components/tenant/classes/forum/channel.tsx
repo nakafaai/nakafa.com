@@ -6,6 +6,7 @@ import {
 } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { useEffect, useState } from "react";
@@ -40,11 +41,23 @@ export const MESSAGE_PAGE_SIZE = 30;
 /** The most messages a place reads before it opens: four pages, to reach its first unread message or its kept place. */
 export const MESSAGE_OPEN_MOST = 4 * MESSAGE_PAGE_SIZE;
 
+/** A chat on screen fills its room; a chat kept out of sight keeps its layout and its scroll, unseen and inert. */
+const chatPlaceVariants = cva("flex min-h-0 w-full min-w-0 flex-1 flex-col", {
+  variants: {
+    shown: {
+      false: "invisible absolute inset-0",
+      true: "",
+    },
+  },
+});
+
 /**
  * One channel of a class as a chat: its messages fill the room it is given, oldest at the top and
  * the newest at the bottom, and the composer is its footer, for a member of the class or a subject
  * teacher. The school's leaders read the channel and write in none, so they see a sentence that
  * says who writes there in place of the composer, and an archived channel says so in its place.
+ * A chat the forum keeps out of sight (`shown` false) reads its messages and draws nothing until
+ * it is first shown, and once drawn it keeps its place while hidden, so opening it waits on no read.
  */
 export function ForumChannel({
   canManage,
@@ -52,6 +65,7 @@ export function ForumChannel({
   channelId,
   everyone,
   jump,
+  shown,
 }: {
   canManage: boolean;
   canPost: boolean;
@@ -59,9 +73,16 @@ export function ForumChannel({
   /** Whether the viewer, a subject teacher, may mention everyone. */
   everyone: boolean;
   jump: Option.Option<Id<"classroomMessages">>;
+  /** Whether the chat is on screen, not kept out of sight for the reader's next press. */
+  shown: boolean;
 }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
+  // Whether the chat was ever on screen: it draws from then on, shown or kept.
+  const [drawn, setDrawn] = useState(shown);
+  if (shown && !drawn) {
+    setDrawn(true);
+  }
   const channels = usePaginatedQuery(
     classroom.forum.channels.list,
     { classId, slug },
@@ -84,26 +105,33 @@ export function ForumChannel({
         discussion: undefined,
         everyone,
         jump,
+        shown,
         slug,
       }}
     >
-      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-        <ChannelMessages key={channelId} />
-        <footer
-          className={cn(
-            readingMeasureVariants(),
-            pageGutterVariants(),
-            "shrink-0 pt-2 pb-4"
-          )}
-        >
-          {canPost ? (
-            <ForumComposer />
-          ) : (
-            <p className="text-muted-foreground text-center text-sm">
-              {t(archived ? "channel-archived" : "read-only")}
-            </p>
-          )}
-        </footer>
+      <div
+        aria-hidden={shown ? undefined : true}
+        className={chatPlaceVariants({ shown })}
+        inert={!shown}
+      >
+        <ChannelMessages drawn={drawn} />
+        {drawn ? (
+          <footer
+            className={cn(
+              readingMeasureVariants(),
+              pageGutterVariants(),
+              "shrink-0 pt-2 pb-4"
+            )}
+          >
+            {canPost ? (
+              <ForumComposer />
+            ) : (
+              <p className="text-muted-foreground text-center text-sm">
+                {t(archived ? "channel-archived" : "read-only")}
+              </p>
+            )}
+          </footer>
+        ) : null}
       </div>
     </ChannelScopeContext>
   );
@@ -116,9 +144,15 @@ export function ForumChannel({
  * older ones once more, up to `MESSAGE_OPEN_MOST`, so the channel opens at its first unread message.
  * Once open, the next older page loads when the oldest loaded message comes into view, so the list
  * has no button. A channel with no message shows its empty state, a failed read its sentence and
- * Try again, and a viewer who lost the school's access is sent to the refused page.
+ * Try again, and a viewer who lost the school's access is sent to the refused page. A chat out of
+ * sight that was never shown reads all of this and draws nothing yet.
  */
-function ChannelMessages() {
+function ChannelMessages({
+  drawn,
+}: {
+  /** Whether the chat draws its messages, or only reads them while it waits out of sight. */
+  drawn: boolean;
+}) {
   const t = useTranslations("Classroom");
   const { channelId, classId, slug } = useChannelScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -174,6 +208,9 @@ function ChannelMessages() {
         <LoadFailure onRetry={reloadPage} />
       </div>
     );
+  }
+  if (!drawn) {
+    return null;
   }
   if (!((open || opens) && QueryResult.isSuccess(read))) {
     return <div className="flex-1" />;

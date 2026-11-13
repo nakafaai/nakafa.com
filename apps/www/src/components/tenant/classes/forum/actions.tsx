@@ -107,6 +107,7 @@ function ThreadButton({ message }: { message: ForumMessage }) {
   const navigate = useNavigate();
   const start = useMutation(classroom.forum.threads.start);
   const keep = useOpening((state) => state.keep);
+  const reach = useOpening((state) => state.reach);
   const mark = useOpening((state) => state.start);
   const starting = useOpening((state) =>
     Option.contains(state.starting, message.clientKey)
@@ -153,11 +154,24 @@ function ThreadButton({ message }: { message: ForumMessage }) {
     );
   };
 
+  /** Reads the replies of a thread the message already has, as the reader reaches for its button. */
+  const warm = () => {
+    if (message.discussion !== null) {
+      reach({
+        channelId: scope.channelId,
+        number: message.discussion.number,
+        opening: message,
+      });
+    }
+  };
+
   return (
     <Button
       aria-busy={starting || undefined}
       disabled={isPending(message) || starting}
       onClick={press}
+      onFocus={warm}
+      onPointerDown={warm}
       size="icon"
       tooltip={t("reply-thread")}
       variant="ghost"

@@ -213,7 +213,8 @@ export function MessageStream({
 
 /**
  * Moves the viewer's read mark to the newest message in view once the view has been still for a
- * moment, so scrolling through history writes once. A mark that would not move is not sent.
+ * moment, so scrolling through history writes once. A mark that would not move is not sent, and a
+ * place out of sight moves none.
  */
 function ReadTracker({
   at,
@@ -222,7 +223,7 @@ function ReadTracker({
   at: number | null;
   messages: readonly ForumMessage[];
 }) {
-  const { classId, slug } = useChannelScope();
+  const { classId, shown, slug } = useChannelScope();
   const place = useReadPlace();
   const mark = useMutation(classroom.forum.reads.mark);
   const { visibleMessageIds } = useMessageScrollerVisibility();
@@ -230,7 +231,8 @@ function ReadTracker({
   const [settled] = useDebouncedValue(seen, MARK_DELAY_MILLISECONDS);
 
   useEffect(() => {
-    if (settled === null || (at !== null && settled <= at)) {
+    // A place read ahead out of sight marks nothing: its messages are in the page, unseen.
+    if (!shown || settled === null || (at !== null && settled <= at)) {
       return;
     }
     runSchoolWrite(
@@ -244,7 +246,7 @@ function ReadTracker({
       ),
       { onRefused: () => undefined }
     );
-  }, [at, classId, mark, place, settled, slug]);
+  }, [at, classId, mark, place, settled, shown, slug]);
 
   return null;
 }

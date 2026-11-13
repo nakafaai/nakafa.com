@@ -18,6 +18,8 @@ const ChannelScope = Schema.Struct({
   discussion: Schema.UndefinedOr(DiscussionNumber),
   everyone: Schema.Boolean,
   jump: Schema.Option(Id("classroomMessages")),
+  /** Whether the place is on screen, not read ahead out of sight for the reader's next press. */
+  shown: Schema.Boolean,
   slug: TenantSlug,
 });
 

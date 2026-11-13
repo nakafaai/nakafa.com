@@ -117,6 +117,80 @@ for (const viewport of SCREENS) {
     await context.close();
   });
 
+  test(`moving from a chat to another and back keeps the first chat's messages on the page, drawn at once, at ${viewport.width} px`, async ({
+    baseURL,
+    browser,
+  }) => {
+    const school = await Effect.runPromise(createSchool());
+    const address = (path: string) =>
+      hostAddress(baseURL, `${school.slug}.localhost`, path);
+    const context = await browser.newContext({ viewport });
+    await Effect.runPromise(
+      signInClassTeacher(context, school.slug, address("/"))
+    );
+    await Effect.runPromise(seedForum(school.slug, 12, 12));
+    const page = await context.newPage();
+    await page.goto(address("/classes/fisika-x-1/forum"));
+    const rail = page.getByRole("complementary", { name: "Chats" });
+    const add = rail.getByRole("button", { name: "Add chat" });
+    await expect(add).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await add.click();
+    await page
+      .getByRole("dialog")
+      .getByRole("textbox", { name: "Chat name" })
+      .fill("Tugas");
+    await page.getByRole("dialog").getByRole("button", { name: "Add" }).click();
+    const tasks = rail.getByRole("link", { exact: true, name: "Tugas" });
+    const general = rail.getByRole("link", { exact: true, name: "General" });
+    await expect(tasks).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+    await general.click();
+    await expect(page.getByText("Pesan 12", { exact: true })).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await page.evaluate(() => {
+      const removed = { count: 0 };
+      Reflect.set(window, "__generalRemoved", removed);
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of Array.from(record.removedNodes)) {
+            if (
+              node instanceof Element &&
+              (node.matches("[data-slot=message]") ||
+                node.querySelector("[data-slot=message]") !== null)
+            ) {
+              removed.count += 1;
+            }
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+
+    // To the other chat and back, twice: through the list on a phone, as WhatsApp moves, and beside it on a laptop.
+    // The general chat's messages never leave the page.
+    const phone = viewport.width < 1024;
+    for (let round = 0; round < 2; round += 1) {
+      if (phone) {
+        await page.goBack();
+      }
+      await tasks.click();
+      await expect(
+        page.getByRole("textbox", { name: "Write a message" })
+      ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      if (phone) {
+        await page.goBack();
+      }
+      await general.click();
+      await expect(page.getByText("Pesan 12", { exact: true })).toBeVisible();
+    }
+    expect(
+      await page.evaluate(() =>
+        Number(Reflect.get(window, "__generalRemoved").count)
+      )
+    ).toBe(0);
+    await context.close();
+  });
+
   test(`a long thread scrolls inside its pane or sheet, opens at its newest reply, and opens again where the reader left it, at ${viewport.width} px`, async ({
     baseURL,
     browser,
