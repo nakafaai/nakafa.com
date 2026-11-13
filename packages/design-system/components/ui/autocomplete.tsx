@@ -60,7 +60,7 @@ function AutocompleteInput({
       {!!startAddon && (
         <span
           aria-hidden="true"
-          className="text-muted-foreground pointer-events-none absolute inset-y-0 inset-s-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg]:-mx-0.5 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4"
+          className="text-muted-foreground pointer-events-none absolute inset-y-0 inset-s-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg]:-mx-0.5 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-4"
           data-slot="autocomplete-start-addon"
         >
           {startAddon}
@@ -195,7 +195,7 @@ function AutocompleteItem({
   return (
     <AutocompletePrimitive.Item
       className={cn(
-        "data-highlighted:bg-accent data-highlighted:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground data-highlighted:[&_svg:not([class*='text-'])]:text-accent-foreground relative flex min-h-8 items-center gap-2 rounded-sm px-2 py-1 text-base outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-64 sm:min-h-7 sm:text-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4",
+        "data-highlighted:bg-accent data-highlighted:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground data-highlighted:[&_svg:not([class*='text-'])]:text-accent-foreground relative flex min-h-8 items-center gap-2 rounded-sm px-2 py-1 text-base outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-64 sm:min-h-7 sm:text-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-4",
         className
       )}
       data-slot="autocomplete-item"
@@ -281,7 +281,7 @@ function AutocompleteClear({
   return (
     <AutocompletePrimitive.Clear
       className={cn(
-        "pressable focus-visible:ring-ring inline-flex size-8 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none not-data-visible:pointer-events-none not-data-visible:opacity-0 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:transition-none sm:size-7 pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4",
+        "pressable focus-visible:ring-ring inline-flex size-8 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none not-data-visible:pointer-events-none not-data-visible:opacity-0 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:transition-none sm:size-7 pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-4",
         className
       )}
       data-slot="autocomplete-clear"

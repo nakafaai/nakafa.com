@@ -85,7 +85,6 @@ function MessagePhoto({
   single: boolean;
 }) {
   const t = useTranslations("Classroom");
-  const common = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const height = photo.height ?? 1;
   const width = photo.width ?? 1;
@@ -112,29 +111,20 @@ function MessagePhoto({
       <ResponsiveDialog
         action={
           photo.address === null ? null : (
-            <>
-              <Button
-                onClick={() => setOpen(false)}
-                type="button"
-                variant="outline"
-              >
-                {common("close")}
-              </Button>
-              <Button
-                render={
-                  <a
-                    download={photo.name}
-                    href={photo.address}
-                    rel="noopener"
-                    target="_blank"
-                    title={t("media-download")}
-                  />
-                }
-              >
-                <HugeIcons icon={Download04Icon} />
-                {t("media-download")}
-              </Button>
-            </>
+            <Button
+              render={
+                <a
+                  download={photo.name}
+                  href={photo.address}
+                  rel="noopener"
+                  target="_blank"
+                  title={t("media-download")}
+                />
+              }
+            >
+              <HugeIcons icon={Download04Icon} />
+              {t("media-download")}
+            </Button>
           )
         }
         description={t("media-description")}

@@ -4409,7 +4409,6 @@
     "class-empty-description": "Gib die Ergebnisse einer Prüfung dieser Klasse frei, dann erscheint hier der Stand jeder Person.",
     "exams-action": "Prüfungen öffnen",
     "tags-empty": "Erstelle zuerst eine Prüfung, dann nenne, was ihre Fragen prüfen.",
-    "tags-done": "Fertig",
     "tags-none": "Diese Prüfung hat noch keine Fragen.",
     "exam-placeholder": "Prüfung wählen",
     "question-placeholder": "Optional, zum Beispiel Brüche",

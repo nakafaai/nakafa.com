@@ -308,7 +308,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
     "Stored, type a new one to replace it"
   );
   await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveValue("");
-  await kept.getByRole("button", { name: "Cancel" }).click();
+  await page.keyboard.press("Escape");
 
   // An archived cohort takes no one new, and its student still moves out of it.
   await page.goto(address("/settings/cohorts"));

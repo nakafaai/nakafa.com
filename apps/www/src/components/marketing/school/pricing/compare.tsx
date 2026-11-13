@@ -65,7 +65,7 @@ function Included() {
     <>
       <HugeIcons
         aria-hidden="true"
-        className="text-primary inline size-5"
+        className="text-primary inline size-4"
         icon={Tick02Icon}
       />
       <span className="sr-only">{t("value-included")}</span>

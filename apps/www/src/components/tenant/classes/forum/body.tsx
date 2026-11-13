@@ -10,6 +10,7 @@ import {
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { ForumFrame, ForumPick } from "@/components/tenant/classes/forum/frame";
 import {
+  OpenChannelContext,
   type OpenedThread,
   OpenRootContext,
   useOpening,
@@ -97,46 +98,48 @@ export function ForumBody({
     <OpenRootContext
       value={Option.map(thread, (shown) => shown.opening.clientKey)}
     >
-      <PanesProvider>
-        <ClassHeader>
-          {opens && Option.isSome(channelId) ? (
-            <StartDiscussion channelId={channelId.value} />
-          ) : null}
-        </ClassHeader>
-        <Panes fill="parent" id="thread">
-          <PanesList wide>
-            <ForumFrame shown={view._tag === "forum" ? "rail" : "chat"}>
-              {Option.match(channelId, {
-                // A discussion the server has not answered for yet keeps the chat's place empty.
-                onNone: () =>
-                  view._tag === "forum" ? (
-                    <ForumPick />
-                  ) : (
-                    <div className="flex-1" />
+      <OpenChannelContext value={channelId}>
+        <PanesProvider>
+          <ClassHeader>
+            {opens && Option.isSome(channelId) ? (
+              <StartDiscussion channelId={channelId.value} />
+            ) : null}
+          </ClassHeader>
+          <Panes fill="parent" id="thread">
+            <PanesList wide>
+              <ForumFrame shown={view._tag === "forum" ? "rail" : "chat"}>
+                {Option.match(channelId, {
+                  // A discussion the server has not answered for yet keeps the chat's place empty.
+                  onNone: () =>
+                    view._tag === "forum" ? (
+                      <ForumPick />
+                    ) : (
+                      <div className="flex-1" />
+                    ),
+                  onSome: (id) => (
+                    <ForumChannel
+                      canManage={canManage}
+                      canPost={canPost}
+                      channelId={id}
+                      everyone={everyone}
+                      jump={view._tag === "channel" ? view.jump : Option.none()}
+                      key={id}
+                    />
                   ),
-                onSome: (id) => (
-                  <ForumChannel
-                    canManage={canManage}
-                    canPost={canPost}
-                    channelId={id}
-                    everyone={everyone}
-                    jump={view._tag === "channel" ? view.jump : Option.none()}
-                    key={id}
-                  />
-                ),
-              })}
-            </ForumFrame>
-          </PanesList>
-          <ThreadPane
-            asked={view._tag === "discussion"}
-            canManage={canManage}
-            canPost={canPost}
-            everyone={everyone}
-            jump={view._tag === "discussion" ? view.jump : Option.none()}
-            thread={thread}
-          />
-        </Panes>
-      </PanesProvider>
+                })}
+              </ForumFrame>
+            </PanesList>
+            <ThreadPane
+              asked={view._tag === "discussion"}
+              canManage={canManage}
+              canPost={canPost}
+              everyone={everyone}
+              jump={view._tag === "discussion" ? view.jump : Option.none()}
+              thread={thread}
+            />
+          </Panes>
+        </PanesProvider>
+      </OpenChannelContext>
     </OpenRootContext>
   );
 }

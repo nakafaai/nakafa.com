@@ -54,7 +54,7 @@ test("a teacher draws a graph and a chart in a question, edits the graph, and th
   await expect(
     dialog.getByRole("textbox", { exact: true, name: "a" })
   ).toHaveValue("2");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
 
   await page.getByRole("link", { name: "Try as student" }).click();

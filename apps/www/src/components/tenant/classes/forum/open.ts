@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
 import {
   DiscussionNumber,
   MessageView,
@@ -78,3 +79,11 @@ export const OpenRootContext = createContext<Option.Option<string>>(
 export function useIsOpenRoot(clientKey: string) {
   return Option.contains(use(OpenRootContext), clientKey);
 }
+
+/**
+ * The chat the forum shows, which its row in the list marks as open. The forum owns it, not the address: while a
+ * thread of the chat stands in the pane beside it, the address names the thread, and the chat stays the open one.
+ */
+export const OpenChannelContext = createContext<
+  Option.Option<(typeof ChannelView.Type)["id"]>
+>(Option.none());

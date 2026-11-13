@@ -138,12 +138,14 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
       .getByRole("dialog", { name: "Join this room" })
       .getByText(sitting.token, { exact: true })
   ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
-  // The room's dialog has an action, Change token, so its footer's way out is Cancel (ResponsiveDialog).
-  await proctor
-    .getByRole("dialog", { name: "Join this room" })
-    .locator('[data-slot="dialog-footer"]')
-    .getByRole("button", { exact: true, name: "Cancel" })
-    .click();
+  // The room's dialog holds its action, Change token, alone in its footer, and Escape leaves it (ResponsiveDialog).
+  await expect(
+    room
+      .locator('[data-slot="dialog-footer"]')
+      .getByRole("button", { exact: true, name: "Cancel" })
+  ).toHaveCount(0);
+  await proctor.keyboard.press("Escape");
+  await expect(room).toBeHidden();
 
   // The Proctor locks the student's attempt, and unlocks it again.
   await proctor

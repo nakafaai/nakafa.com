@@ -21,13 +21,34 @@ const buttonGroupVariants = cva(
   {
     variants: {
       orientation: {
-        horizontal:
-          "[&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-r-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-l-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-l-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-l-0",
-        vertical:
-          "flex-col [&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-b-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-t-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-t-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-t-0",
+        horizontal: "",
+        vertical: "flex-col",
+      },
+      /**
+       * Whether the parts share one frame. Ghost parts draw no border to share, so they keep their own radius and
+       * stand side by side with no gap, as a toolbar's icons do.
+       */
+      joined: {
+        false: "",
+        true: "",
       },
     },
+    compoundVariants: [
+      {
+        className:
+          "[&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-r-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-l-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-l-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-l-0",
+        joined: true,
+        orientation: "horizontal",
+      },
+      {
+        className:
+          "[&>:is([data-slot],a,button,div):has(~:is([data-slot],a,button,div))]:rounded-b-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:rounded-t-none [&>:is([data-slot],a,button,div)~:is([data-slot],a,button,div)]:border-t-0 [&>:is([data-slot],a,button,div)~div:not([data-slot])>[data-slot]]:border-t-0",
+        joined: true,
+        orientation: "vertical",
+      },
+    ],
     defaultVariants: {
+      joined: true,
       orientation: "horizontal",
     },
   }
@@ -36,7 +57,8 @@ const buttonGroupVariants = cva(
 /**
  * Joins controls of one kind. The group names the one variant its buttons wear, outline unless it says otherwise,
  * and every `Button` inside takes it, one drawn by another component included: the page's primary stands alone,
- * and a pressed part says so with `aria-pressed`, never with a variant of its own.
+ * and a pressed part says so with `aria-pressed`, never with a variant of its own. A row of ghost icon buttons, such
+ * as a sheet header's, is a ghost group: its parts touch, with no gap between them.
  */
 function ButtonGroup({
   className,
@@ -50,7 +72,10 @@ function ButtonGroup({
   return (
     <ButtonGroupVariant value={variant}>
       <fieldset
-        className={cn(buttonGroupVariants({ orientation }), className)}
+        className={cn(
+          buttonGroupVariants({ joined: variant !== "ghost", orientation }),
+          className
+        )}
         data-orientation={orientation}
         data-slot="button-group"
         {...props}

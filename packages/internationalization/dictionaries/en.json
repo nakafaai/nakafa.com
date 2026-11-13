@@ -4409,7 +4409,6 @@
     "class-empty-description": "Release the results of an exam this class sat, and each student's standing shows here.",
     "exams-action": "Open exams",
     "tags-empty": "Create an exam first, then name what its questions test.",
-    "tags-done": "Done",
     "tags-none": "This exam has no questions yet.",
     "exam-placeholder": "Choose an exam",
     "question-placeholder": "Optional, such as Fractions",

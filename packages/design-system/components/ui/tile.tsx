@@ -60,7 +60,7 @@ function TileIcon({ icon }: { icon: IconSvgElement }) {
   return (
     <HugeIcons
       aria-hidden
-      className="size-4 group-data-[variant=card]/tile:size-6"
+      className="size-4"
       data-slot="tile-icon"
       icon={icon}
     />

@@ -134,9 +134,8 @@ export function ReactButton({ message }: { message: ForumMessage }) {
         render={
           <Button
             disabled={isPending(message)}
-            size="icon"
+            size="icon-sm"
             tooltip={t("reaction-add")}
-            variant="ghost"
           />
         }
       />
