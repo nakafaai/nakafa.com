@@ -13,18 +13,23 @@ import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
+import type { CrumbSiblings } from "@/components/shared/breadcrumb/pages";
+import { BreadcrumbSiblingsSegment } from "@/components/shared/breadcrumb/siblings";
 import { Link, type LinkTarget } from "@/lib/routing/link";
 
 /**
  * Builds one segment of a breadcrumb path. A segment without a target is the
- * current page. Its type is the parameter of this builder, so every segment has
- * the one shape the breadcrumb renders.
+ * current page. A segment with `siblings` opens them, its own page among them
+ * (`crumbSiblings`). Its type is the parameter of this builder, so every segment
+ * has the one shape the breadcrumb renders.
  */
 function breadcrumbItem(item: {
   readonly label: string;
   /** BCP 47 language of the label when it differs from the page. */
   readonly language?: string | undefined;
   readonly menuLabel?: string | undefined;
+  /** The pages at this place of the path, which the crumb opens instead of linking to its own page. */
+  readonly siblings?: CrumbSiblings | undefined;
   readonly target?: LinkTarget | undefined;
 }) {
   return item;
@@ -219,6 +224,20 @@ function BreadcrumbHeaderSegment({
   /** Hides the separator alone, as a phone does before the one item of a path. */
   separatorClassName?: string;
 }) {
+  if (item.siblings !== undefined) {
+    return (
+      <>
+        <BreadcrumbSeparator
+          className={cn("shrink-0", className, separatorClassName)}
+        />
+        <BreadcrumbSiblingsSegment
+          label={item.label}
+          siblings={item.siblings}
+          {...(className === undefined ? {} : { className })}
+        />
+      </>
+    );
+  }
   if (item.target === undefined) {
     return (
       <>
