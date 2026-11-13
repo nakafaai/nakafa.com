@@ -349,7 +349,10 @@ function squareFrame(sketch: p5) {
 /** Stone paving, a fountain in the middle and shade trees in the corners. */
 function drawSquare(sketch: p5) {
   const frame = squareFrame(sketch);
-  sketch.background(MATERIAL.grass);
+  sketch.clear();
+  sketch.noStroke();
+  sketch.fill(MATERIAL.grass);
+  sketch.rect(0, 0, sketch.width, sketch.height * 0.72);
   sketch.noStroke();
   sketch.fill(MATERIAL.pavement);
   sketch.rect(
@@ -445,9 +448,6 @@ function drawGraph(sketch: p5, town: Town, today: number) {
   const right = sketch.width - 12;
   const x = (dayIndex: number) => left + ((right - left) * dayIndex) / DAYS;
   const y = (share: number) => bottom - (bottom - top) * share;
-  sketch.noStroke();
-  sketch.fill(getColor("SLATE", 50));
-  sketch.rect(0, top - 8, sketch.width, sketch.height - top + 8);
   const series = [
     ["susceptible", (each: Day) => each.susceptible],
     ["infected", (each: Day) => each.infected],

@@ -211,6 +211,7 @@ function fieldProgram(sketch: p5, read: () => Field) {
 
 /** Flooded paddies with rows of rice, split by dikes. */
 function drawPaddy(sketch: p5, height: number) {
+  sketch.clear();
   sketch.noStroke();
   sketch.fill(MATERIAL.mud);
   sketch.rect(0, 0, sketch.width, height);
@@ -293,9 +294,6 @@ function drawHistory(sketch: p5, field: Field, today: number, top: number) {
   );
   const x = (year: number) => left + ((right - left) * year) / YEARS;
   const y = (count: number) => bottom - ((bottom - top - 12) * count) / most;
-  sketch.noStroke();
-  sketch.fill(getColor("SLATE", 50));
-  sketch.rect(0, top, sketch.width, sketch.height - top);
   sketch.noFill();
   sketch.strokeWeight(2);
   Arr.forEach(["prey", "predators"] as const, (kind) => {

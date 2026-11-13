@@ -306,7 +306,7 @@ function tubProgram(sketch: p5, read: () => Tub) {
       END_YEAR,
       drawnTo + Math.min(0.1, sketch.deltaTime / 1000) * 10
     );
-    sketch.background(getColor("SLATE", 50));
+    sketch.clear();
     const current = tub.record
       ? { emitted: 0, level: recordLevel(tub.year), taken: 0 }
       : yearOf(tub.pathway, drawnTo);
